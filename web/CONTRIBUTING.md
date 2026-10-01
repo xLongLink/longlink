@@ -47,14 +47,15 @@ Theme preferences are defined in `src/theme.ts` and applied through the root pro
 
 ## Primitives
 
-```xml
+```view
 <Avatar>, <Badge>, <Banner>, <Button>, <ButtonGroup>, <Card>, <CheckboxInput>, <Dialog>, <Divider>, <FileInput>, <FileViewer>, <Grid>, <GridSpan>, <Heading>, <Icon>, <Link>, <NumberInput>, <Option>, <RadioList>, <Selector>, <Slider>, <Stack>, <StackItem>, <Switch>, <Tab>, <Tabs>, <Table>, <TableColumn>, <Text>, <TextArea>, <TextInput>
 ```
 
-Runtime tags are `<longlink>`, `<State>`, `<Query>`, and `<For>`. Buttons and Links with a `label` can contain ordered `Validate`, `Request`, and `Patch` effects.
+Runtime tags are `<view>`, `<State>`, `<Query>`, and `<For>`. Buttons and Links with a `label` can contain ordered `Validate`, `Request`, and `Patch` effects.
 
 ## Views
 
+- A View is a `.view` file using case-sensitive LongLink markup, not standard XML or browser HTML. Documentation examples use `.view` filenames and hide the syntax highlighter's XML label.
 - Case-sensitive `.view` files are parsed by `htmlparser2` in `src/xml/core/parser.ts` into an AST. XML-mode tokenization preserves component names and self-closing tags without requiring XML entity escaping in quoted attributes.
 - Raw `&&`, `<`, and `>` work inside quoted attributes. XML declarations, schema hints, DOCTYPE, ENTITY, and CDATA are not supported.
 - Parsing rejects duplicate or unquoted attributes, unmatched tags, and implicit tag repair. SDK validation applies shared component constraints to the parsed tree rather than parsing the source as XML.

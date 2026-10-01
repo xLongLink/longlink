@@ -38,7 +38,10 @@
       <xsd:documentation>TextInput collects short-form text like names, emails, or search queries. Use it for single-line values where the expected input is brief. Pair it with validation status to guide users through required or formatted fields.</xsd:documentation>
       <xsd:appinfo source="urn:longlink:xml-example">
         <longlink:docs slug="text-input" category="Form" lastUpdated="2026-09-01"/>
-        <longlink:example>&lt;TextInput label="Customer name" value="$form.name" /&gt;</longlink:example>
+        <longlink:example>&lt;view&gt;
+  &lt;State id="form" name="" /&gt;
+  &lt;TextInput label="Customer name" value="$form.name" /&gt;
+&lt;/view&gt;</longlink:example>
       </xsd:appinfo>
     </xsd:annotation>
   </xsd:element>

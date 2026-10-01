@@ -1,4 +1,4 @@
-<longlink name="Invoices" icon="banknote">
+<view name="Invoices" icon="banknote">
     <Query id="item" path="/api/items/${params.item}" />
     <Query id="attachments" path="/api/items/${params.item}/attachments" />
     <State id="status" value="$item.status" />
@@ -89,4 +89,4 @@
             <FileViewer src="/api/items/${params.item}/attachments/${preview.file}" title="$preview.name" />
         </Dialog>
     </Stack>
-</longlink>
+</view>

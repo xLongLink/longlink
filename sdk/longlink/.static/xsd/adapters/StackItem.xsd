@@ -25,11 +25,14 @@
     <xsd:annotation>
       <xsd:documentation>Stack arranges items in a row or column with consistent spacing. Use StackItem when an individual child needs to fill available space, scroll, or override cross-axis alignment.</xsd:documentation>
       <xsd:appinfo source="urn:longlink:xml-example">
-        <longlink:example><![CDATA[<Stack direction="horizontal" align="center">
-  $order.number
-  <StackItem size="fill">Order details</StackItem>
-  <Button>Open</Button>
-</Stack>]]></longlink:example>
+        <longlink:example><![CDATA[<view>
+  <State id="order" number="ORD-001" />
+  <Stack direction="horizontal" align="center">
+    $order.number
+    <StackItem size="fill">Order details</StackItem>
+    <Button>Open</Button>
+  </Stack>
+</view>]]></longlink:example>
       </xsd:appinfo>
     </xsd:annotation>
   </xsd:element>

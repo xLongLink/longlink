@@ -1,4 +1,4 @@
-<longlink name="Users" icon="users">
+<view name="Users" icon="users">
     <State id="pages" value="${1}" />
     <Query
         id="users"
@@ -58,4 +58,4 @@
             </Stack>
         </Stack>
     </Stack>
-</longlink>
+</view>

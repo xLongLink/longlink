@@ -57,7 +57,7 @@ export const componentDocumentation: ComponentDocumentation[] = [
             }
         ],
         "description": "Avatar represents a person or team with a profile photo, initials, or a default icon. Use it in comment headers, contact lists, chat messages, user cards, and anywhere you need to identify someone visually.",
-        "example": "<Avatar src=\"$user.avatarUrl\" name=\"$user.name\" alt=\"$user.name\" />",
+        "example": "<view>\n  <State id=\"user\" avatarUrl=\"/avatar.png\" name=\"Ada Lovelace\" />\n  <Avatar src=\"$user.avatarUrl\" name=\"$user.name\" alt=\"$user.name\" />\n</view>",
         "name": "Avatar",
         "category": "Content",
         "lastUpdated": "2026-08-26",
@@ -77,7 +77,7 @@ export const componentDocumentation: ComponentDocumentation[] = [
             }
         ],
         "description": "Badge highlights a status or category at a glance. Use it sparingly: only when a value represents a distinct state (Active, Failed) or a grouping tag (Engineering, Design). Most metadata (dates, durations, counts, descriptions) should be plain description text, not badges.",
-        "example": "<Badge>$order.status</Badge>",
+        "example": "<view>\n  <State id=\"order\" status=\"Open\" />\n  <Badge>$order.status</Badge>\n</view>",
         "name": "Badge",
         "category": "Content",
         "lastUpdated": "2026-07-21",
@@ -89,7 +89,7 @@ export const componentDocumentation: ComponentDocumentation[] = [
         "attributes": [],
         "category": "Runtime",
         "description": "Connects writable control values to State objects declared in the View runtime. A $state.property binding reads the current property and writes user changes back to it.",
-        "example": "<State id=\"form\" name=\"\" active=\"true\" />\n\n<TextInput label=\"Name\" value=\"$form.name\" />\n<Switch label=\"Active\" value=\"$form.active\" />",
+        "example": "<view>\n  <State id=\"form\" name=\"\" active=\"true\" />\n\n  <TextInput label=\"Name\" value=\"$form.name\" />\n  <Switch label=\"Active\" value=\"$form.active\" />\n</view>",
         "lastUpdated": "2026-09-30",
         "name": "Bindings",
         "nested": [],
@@ -120,7 +120,7 @@ export const componentDocumentation: ComponentDocumentation[] = [
             }
         ],
         "description": "Button runs child effects in order when clicked, then navigates to its to destination after they succeed. Use label for buttons with effects.",
-        "example": "<Button label=\"Save\" variant=\"primary\">\n  <Request url=\"/api/orders\" method=\"POST\" />\n</Button>\n<Button to=\"/orders\">View orders</Button>",
+        "example": "<view>\n  <Button label=\"Save\" variant=\"primary\">\n    <Request url=\"/api/orders\" method=\"POST\" />\n  </Button>\n  <Button to=\"/orders\">View orders</Button>\n</view>",
         "name": "Button",
         "category": "Actions",
         "lastUpdated": "2026-09-30",
@@ -194,7 +194,7 @@ export const componentDocumentation: ComponentDocumentation[] = [
             }
         ],
         "description": "Card is a bordered, elevated container for discrete, self-contained items: things you could reorder, remove, or interact with independently. Cards are not the default layout tool. Most content groups do not need a container; spacing and alignment create visual grouping naturally. Only use a Card when items need clear interaction boundaries or visual comparison in a grid.",
-        "example": "<Card>\n  Lorem ipsum dolor sit amet.\n</Card>",
+        "example": "<view>\n  <Card>\n    Lorem ipsum dolor sit amet.\n  </Card>\n</view>",
         "name": "Card",
         "category": "Layouts",
         "lastUpdated": "2026-07-21",
@@ -218,7 +218,7 @@ export const componentDocumentation: ComponentDocumentation[] = [
             }
         ],
         "description": "CheckboxInput toggles a single on/off value. Use it for settings like \"Enable notifications\", terms acceptance, or opt-in choices. Compose multiple CheckboxInput elements in a Stack when several choices are needed.",
-        "example": "<CheckboxInput label=\"Active\" value=\"$form.active\" />",
+        "example": "<view>\n  <State id=\"form\" active=\"true\" />\n  <CheckboxInput label=\"Active\" value=\"$form.active\" />\n</view>",
         "name": "CheckboxInput",
         "category": "Form",
         "lastUpdated": "2026-09-01",
@@ -242,7 +242,7 @@ export const componentDocumentation: ComponentDocumentation[] = [
             }
         ],
         "description": "Displays text or an array value as a code block, optionally with line numbers.",
-        "example": "<CodeBlock value=\"${['Order created', 'Order saved']}\" hasLineNumbers=\"true\" />",
+        "example": "<view>\n  <CodeBlock value=\"${['Order created', 'Order saved']}\" hasLineNumbers=\"true\" />\n</view>",
         "name": "CodeBlock",
         "category": "Content",
         "lastUpdated": "2026-09-30",
@@ -270,7 +270,7 @@ export const componentDocumentation: ComponentDocumentation[] = [
             }
         ],
         "description": "Displays a numeric amount with its currency code, locale-specific grouping, and standard currency fraction digits. Use locale=\"de-CH\" for Swiss formatting such as CHF 1’275.50. Keep the underlying amount numeric and use Text for surrounding typography.",
-        "example": "<Text color=\"secondary\">\n  <Currency value=\"$item.price\" currency=\"CHF\" locale=\"de-CH\" />\n</Text>",
+        "example": "<view>\n  <State id=\"item\" price=\"1275.50\" />\n  <Text color=\"secondary\">\n    <Currency value=\"$item.price\" currency=\"CHF\" locale=\"de-CH\" />\n  </Text>\n</view>",
         "name": "Currency",
         "category": "Display",
         "lastUpdated": "2026-09-30",
@@ -322,7 +322,7 @@ export const componentDocumentation: ComponentDocumentation[] = [
             }
         ],
         "description": "Renders a modal workflow from one flat owner element.",
-        "example": "<Dialog title=\"Edit order\" isOpen=\"$dialog.open\">\n  <TextInput label=\"Name\" value=\"$form.name\" />\n</Dialog>",
+        "example": "<view>\n  <State id=\"dialog\" open=\"true\" />\n  <State id=\"form\" name=\"New order\" />\n  <Dialog title=\"Edit order\" isOpen=\"$dialog.open\">\n    <TextInput label=\"Name\" value=\"$form.name\" />\n  </Dialog>\n</view>",
         "name": "Dialog",
         "category": "Layouts",
         "lastUpdated": "2026-07-21",
@@ -338,7 +338,7 @@ export const componentDocumentation: ComponentDocumentation[] = [
             }
         ],
         "description": "A visual separator that divides content into distinct sections. Use it to create clear boundaries between groups of related content, or to demarcate interactive regions within a layout.",
-        "example": "<Divider>Or</Divider>",
+        "example": "<view>\n  <Divider>Or</Divider>\n</view>",
         "name": "Divider",
         "category": "Content",
         "lastUpdated": "2026-07-21",
@@ -350,7 +350,7 @@ export const componentDocumentation: ComponentDocumentation[] = [
         "attributes": [],
         "category": "Runtime",
         "description": "Evaluates a safe JavaScript expression subset against the View runtime scope. Use ${...} for computed values and interpolation; use $state.property for writable bindings. View files support raw logical and comparison operators inside quoted attributes, including &&, ||, <, and >. Keep literal text character references outside attributes when needed; XML declarations and schema hints are not supported.",
-        "example": "<Text if=\"${order.ready && order.total < 100}\">Total: ${order.total}</Text>\n<Link to=\"/orders/${order.id}\">Open order</Link>",
+        "example": "<view>\n  <State id=\"order\" number=\"ORD-001\" ready=\"true\" total=\"50\" />\n  <Text if=\"${order.ready && order.total < 100}\">Total: ${order.total}</Text>\n  <Link to=\"/orders/${order.number}\">Open order</Link>\n</view>",
         "lastUpdated": "2026-10-01",
         "name": "Expressions",
         "nested": [],
@@ -377,7 +377,7 @@ export const componentDocumentation: ComponentDocumentation[] = [
             }
         ],
         "description": "FileInput provides single-file upload.",
-        "example": "<FileInput label=\"Attachment\" value=\"$form.file\" accept=\".pdf\" />",
+        "example": "<view>\n  <State id=\"form\" file=\"${null}\" />\n  <FileInput label=\"Attachment\" value=\"$form.file\" accept=\".pdf\" />\n</view>",
         "name": "FileInput",
         "category": "Form",
         "lastUpdated": "2026-07-21",
@@ -401,7 +401,7 @@ export const componentDocumentation: ComponentDocumentation[] = [
             }
         ],
         "description": "FileViewer previews PDF documents, images, video, and audio inline and falls back to a download link for other file types. Place it inside a Dialog for document review workflows such as signatures.",
-        "example": "<FileViewer src=\"/api/items/${item.id}/attachments/${attachment.id}\" title=\"$attachment.name\" />",
+        "example": "<view>\n  <State id=\"item\" key=\"1\" />\n  <State id=\"attachment\" key=\"1\" name=\"Invoice.pdf\" />\n  <FileViewer src=\"/api/items/${item.key}/attachments/${attachment.key}\" title=\"$attachment.name\" />\n</view>",
         "name": "FileViewer",
         "category": "Content",
         "lastUpdated": "2026-09-17",
@@ -425,7 +425,7 @@ export const componentDocumentation: ComponentDocumentation[] = [
             }
         ],
         "description": "Use For to turn a collection, such as a list of orders, into repeated content in a View.",
-        "example": "<For each=\"$orders.items\" as=\"order\">\n  <Card>\n    $order.number\n  </Card>\n</For>",
+        "example": "<view>\n  <State id=\"orders\" items=\"${[{ number: 'ORD-001' }, { number: 'ORD-002' }]}\" />\n  <For each=\"$orders.items\" as=\"order\">\n    <Card>\n      $order.number\n    </Card>\n  </For>\n</view>",
         "name": "For",
         "category": "Runtime",
         "lastUpdated": "2026-07-21",
@@ -461,7 +461,7 @@ export const componentDocumentation: ComponentDocumentation[] = [
             }
         ],
         "description": "A CSS grid layout container for arranging children in rows and columns. Use Grid for card galleries, dashboards, and any multi-column layout. Use GridSpan to make a direct child span columns or rows.",
-        "example": "<Grid minColumnWidth=\"240\" maxColumns=\"3\" repeat=\"fit\">\n  <Card>First</Card>\n  <Card>Second</Card>\n</Grid>\n\n<Grid columns=\"3\">\n  <GridSpan columns=\"2\"><Card>Featured</Card></GridSpan>\n  <Card>Standard</Card>\n</Grid>",
+        "example": "<view>\n  <Grid minColumnWidth=\"240\" maxColumns=\"3\" repeat=\"fit\">\n    <Card>First</Card>\n    <Card>Second</Card>\n  </Grid>\n\n  <Grid columns=\"3\">\n    <GridSpan columns=\"2\"><Card>Featured</Card></GridSpan>\n    <Card>Standard</Card>\n  </Grid>\n</view>",
         "name": "Grid",
         "category": "Layouts",
         "lastUpdated": "2026-09-01",
@@ -482,7 +482,7 @@ export const componentDocumentation: ComponentDocumentation[] = [
                     }
                 ],
                 "description": "A CSS grid layout container for arranging children in rows and columns. Use Grid for card galleries, dashboards, and any multi-column layout. Use GridSpan to make a direct child span columns or rows.",
-                "example": "<Grid minColumnWidth=\"240\" maxColumns=\"3\" repeat=\"fit\">\n  <Card>First</Card>\n  <Card>Second</Card>\n</Grid>\n\n<Grid columns=\"3\">\n  <GridSpan columns=\"2\"><Card>Featured</Card></GridSpan>\n  <Card>Standard</Card>\n</Grid>",
+                "example": "<view>\n  <Grid minColumnWidth=\"240\" maxColumns=\"3\" repeat=\"fit\">\n    <Card>First</Card>\n    <Card>Second</Card>\n  </Grid>\n\n  <Grid columns=\"3\">\n    <GridSpan columns=\"2\"><Card>Featured</Card></GridSpan>\n    <Card>Standard</Card>\n  </Grid>\n</view>",
                 "name": "GridSpan"
             }
         ],
@@ -505,7 +505,7 @@ export const componentDocumentation: ComponentDocumentation[] = [
             }
         ],
         "description": "Semantic heading component that renders h1-h6 elements with themed styling, themed sizing via type scale tokens, and line-clamp truncation.",
-        "example": "<Heading level=\"1\">Orders</Heading>",
+        "example": "<view>\n  <Heading level=\"1\">Orders</Heading>\n</view>",
         "name": "Heading",
         "category": "Content",
         "lastUpdated": "2026-07-21",
@@ -529,7 +529,7 @@ export const componentDocumentation: ComponentDocumentation[] = [
             }
         ],
         "description": "Icons are small visual symbols that represent actions, objects, or concepts. They improve scannability and reinforce meaning alongside text. Use a supported semantic icon name so it adapts to the active theme.",
-        "example": "<Icon icon=\"info\" />",
+        "example": "<view>\n  <Icon icon=\"info\" />\n</view>",
         "name": "Icon",
         "category": "Content",
         "lastUpdated": "2026-09-01",
@@ -557,7 +557,7 @@ export const componentDocumentation: ComponentDocumentation[] = [
             }
         ],
         "description": "A styled navigation link. With label and child effects, it runs them in order before navigating and behaves like a link-styled button.",
-        "example": "<Link to=\"/orders/${order.id}\">Open order</Link>\n\n<Link label=\"Create and open order\" to=\"/orders/${order.id}\">\n  <Request method=\"POST\" url=\"/api/orders\" json=\"${order}\" />\n</Link>",
+        "example": "<view>\n  <State id=\"order\" number=\"ORD-001\" />\n  <Link to=\"/orders/${order.number}\">Open order</Link>\n\n  <Link label=\"Create and open order\" to=\"/orders/${order.number}\">\n    <Request method=\"POST\" url=\"/api/orders\" json=\"${order}\" />\n  </Link>\n</view>",
         "name": "Link",
         "category": "Actions",
         "lastUpdated": "2026-07-21",
@@ -626,26 +626,6 @@ export const componentDocumentation: ComponentDocumentation[] = [
     {
         "attributes": [
             {
-                "description": "",
-                "name": "name"
-            },
-            {
-                "description": "",
-                "name": "icon"
-            }
-        ],
-        "description": "Defines a LongLink View.",
-        "example": "<longlink name=\"Welcome\" icon=\"layout-dashboard\">\n  <Text>Welcome</Text>\n</longlink>",
-        "name": "longlink",
-        "category": "Runtime",
-        "lastUpdated": "2026-09-30",
-        "nested": [],
-        "slug": "longlink",
-        "source": "adapters/Longlink.xsd"
-    },
-    {
-        "attributes": [
-            {
                 "description": "Space between selected menu content elements.",
                 "name": "gap"
             },
@@ -655,7 +635,7 @@ export const componentDocumentation: ComponentDocumentation[] = [
             }
         ],
         "description": "Renders hash-selected Solution sections in the shared menu layout.",
-        "example": "<Menu>\n  <MenuSection title=\"Settings\">\n    <MenuItem label=\"General\" icon=\"viewColumns\">\n      <Heading level=\"2\">General</Heading>\n    </MenuItem>\n    <MenuItem label=\"Workflow\" icon=\"arrowsUpDown\">\n      <Heading level=\"2\">Workflow</Heading>\n    </MenuItem>\n  </MenuSection>\n</Menu>",
+        "example": "<view>\n  <Menu>\n    <MenuSection title=\"Settings\">\n      <MenuItem label=\"General\" icon=\"viewColumns\">\n        <Heading level=\"2\">General</Heading>\n      </MenuItem>\n      <MenuItem label=\"Workflow\" icon=\"arrowsUpDown\">\n        <Heading level=\"2\">Workflow</Heading>\n      </MenuItem>\n    </MenuSection>\n  </Menu>\n</view>",
         "name": "Menu",
         "category": "Layouts",
         "lastUpdated": "2026-08-19",
@@ -733,7 +713,7 @@ export const componentDocumentation: ComponentDocumentation[] = [
             }
         ],
         "description": "An overflow menu for secondary actions.",
-        "example": "<MoreMenu value=\"$metadata\">\n  <Option value=\"${{ item: row, open: true }}\" label=\"Metadata\" icon=\"info\" />\n</MoreMenu>",
+        "example": "<view>\n  <State id=\"metadata\" item=\"${null}\" open=\"false\" />\n  <State id=\"row\" number=\"ORD-001\" />\n  <MoreMenu value=\"$metadata\">\n    <Option value=\"${{ item: row, open: true }}\" label=\"Metadata\" icon=\"info\" />\n  </MoreMenu>\n</view>",
         "name": "MoreMenu",
         "category": "Actions",
         "lastUpdated": "2026-09-14",
@@ -758,7 +738,7 @@ export const componentDocumentation: ComponentDocumentation[] = [
                     }
                 ],
                 "description": "A selectable option in a Selector, RadioList, or MoreMenu.",
-                "example": "",
+                "example": "<view>\n  <State id=\"filters\" status=\"open\" />\n  <Selector label=\"Status\" value=\"$filters.status\">\n    <Option value=\"open\" label=\"Open\" icon=\"info\" />\n  </Selector>\n</view>",
                 "name": "Option"
             }
         ],
@@ -793,7 +773,7 @@ export const componentDocumentation: ComponentDocumentation[] = [
             }
         ],
         "description": "A form input for numeric values with built-in validation, min/max constraints, and step controls. Use NumberInput for quantities, measurements, percentages, and similar inputs.",
-        "example": "<NumberInput label=\"Quantity\" value=\"$form.quantity\" min=\"1\" step=\"1\" />",
+        "example": "<view>\n  <State id=\"form\" quantity=\"1\" />\n  <NumberInput label=\"Quantity\" value=\"$form.quantity\" min=\"1\" step=\"1\" />\n</view>",
         "name": "NumberInput",
         "category": "Form",
         "lastUpdated": "2026-07-21",
@@ -821,7 +801,7 @@ export const componentDocumentation: ComponentDocumentation[] = [
             }
         ],
         "description": "Displays byte usage against a fixed allocation or quota.",
-        "example": "<ProgressBar label=\"Storage\" value=\"$storage.space_used\" max=\"$storage.quota_bytes\" />",
+        "example": "<view>\n  <State id=\"storage\" space_used=\"60\" quota_bytes=\"100\" />\n  <ProgressBar label=\"Storage\" value=\"$storage.space_used\" max=\"$storage.quota_bytes\" />\n</view>",
         "name": "ProgressBar",
         "category": "Content",
         "lastUpdated": "2026-09-14",
@@ -845,7 +825,7 @@ export const componentDocumentation: ComponentDocumentation[] = [
             }
         ],
         "description": "Use Query to bring the information a View needs into scope, such as a list of orders or customer details.",
-        "example": "<Query id=\"orders\" path=\"/api/orders\" />",
+        "example": "<view>\n  <Query id=\"orders\" path=\"/api/orders\" />\n</view>",
         "name": "Query",
         "category": "Runtime",
         "lastUpdated": "2026-07-21",
@@ -869,7 +849,7 @@ export const componentDocumentation: ComponentDocumentation[] = [
             }
         ],
         "description": "A group of options where only one can be selected at a time. All options are visible at once, making it easy to compare choices. Use it when users need to pick one option from a small set.",
-        "example": "<RadioList label=\"Plan\" value=\"$form.plan\">\n  <Option value=\"solo\" label=\"Solo\" />\n  <Option value=\"team\" label=\"Team\" />\n</RadioList>",
+        "example": "<view>\n  <State id=\"form\" plan=\"solo\" />\n  <RadioList label=\"Plan\" value=\"$form.plan\">\n    <Option value=\"solo\" label=\"Solo\" />\n    <Option value=\"team\" label=\"Team\" />\n  </RadioList>\n</view>",
         "name": "RadioList",
         "category": "Form",
         "lastUpdated": "2026-07-21",
@@ -894,7 +874,7 @@ export const componentDocumentation: ComponentDocumentation[] = [
                     }
                 ],
                 "description": "A selectable option in a Selector, RadioList, or MoreMenu.",
-                "example": "",
+                "example": "<view>\n  <State id=\"filters\" status=\"open\" />\n  <Selector label=\"Status\" value=\"$filters.status\">\n    <Option value=\"open\" label=\"Open\" icon=\"info\" />\n  </Selector>\n</view>",
                 "name": "Option"
             }
         ],
@@ -917,7 +897,7 @@ export const componentDocumentation: ComponentDocumentation[] = [
             }
         ],
         "description": "A dropdown selector for choosing a single value from a list of options. Use it in forms and settings when presenting a moderate number of options.",
-        "example": "<Selector label=\"Status\" value=\"$filters.status\">\n  <Option value=\"open\" label=\"Open\" />\n  <Option value=\"closed\" label=\"Closed\" />\n</Selector>",
+        "example": "<view>\n  <State id=\"filters\" status=\"open\" />\n  <Selector label=\"Status\" value=\"$filters.status\">\n    <Option value=\"open\" label=\"Open\" />\n    <Option value=\"closed\" label=\"Closed\" />\n  </Selector>\n</view>",
         "name": "Selector",
         "category": "Form",
         "lastUpdated": "2026-07-21",
@@ -942,7 +922,7 @@ export const componentDocumentation: ComponentDocumentation[] = [
                     }
                 ],
                 "description": "A selectable option in a Selector, RadioList, or MoreMenu.",
-                "example": "",
+                "example": "<view>\n  <State id=\"filters\" status=\"open\" />\n  <Selector label=\"Status\" value=\"$filters.status\">\n    <Option value=\"open\" label=\"Open\" icon=\"info\" />\n  </Selector>\n</view>",
                 "name": "Option"
             }
         ],
@@ -977,7 +957,7 @@ export const componentDocumentation: ComponentDocumentation[] = [
             }
         ],
         "description": "A draggable control for selecting a numeric value within defined bounds. Use it when users need to explore a continuous range, such as volume, price, or percentage.",
-        "example": "<Slider label=\"Budget\" value=\"$form.budget\" min=\"500\" max=\"10000\" step=\"500\" />",
+        "example": "<view>\n  <State id=\"form\" budget=\"500\" />\n  <Slider label=\"Budget\" value=\"$form.budget\" min=\"500\" max=\"10000\" step=\"500\" />\n</view>",
         "name": "Slider",
         "category": "Form",
         "lastUpdated": "2026-07-21",
@@ -1017,7 +997,7 @@ export const componentDocumentation: ComponentDocumentation[] = [
             }
         ],
         "description": "Stack arranges items in a row or column with consistent spacing. Use StackItem when an individual child needs to fill available space, scroll, or override cross-axis alignment.",
-        "example": "<Stack direction=\"horizontal\" align=\"center\">\n  $order.number\n  <StackItem size=\"fill\">Order details</StackItem>\n  <Button>Open</Button>\n</Stack>",
+        "example": "<view>\n  <State id=\"order\" number=\"ORD-001\" />\n  <Stack direction=\"horizontal\" align=\"center\">\n    $order.number\n    <StackItem size=\"fill\">Order details</StackItem>\n    <Button>Open</Button>\n  </Stack>\n</view>",
         "name": "Stack",
         "category": "Layouts",
         "lastUpdated": "2026-09-16",
@@ -1042,7 +1022,7 @@ export const componentDocumentation: ComponentDocumentation[] = [
                     }
                 ],
                 "description": "Stack arranges items in a row or column with consistent spacing. Use StackItem when an individual child needs to fill available space, scroll, or override cross-axis alignment.",
-                "example": "<Stack direction=\"horizontal\" align=\"center\">\n  $order.number\n  <StackItem size=\"fill\">Order details</StackItem>\n  <Button>Open</Button>\n</Stack>",
+                "example": "<view>\n  <State id=\"order\" number=\"ORD-001\" />\n  <Stack direction=\"horizontal\" align=\"center\">\n    $order.number\n    <StackItem size=\"fill\">Order details</StackItem>\n    <Button>Open</Button>\n  </Stack>\n</view>",
                 "name": "StackItem"
             }
         ],
@@ -1061,7 +1041,7 @@ export const componentDocumentation: ComponentDocumentation[] = [
             }
         ],
         "description": "Use State for information that changes while someone uses a View, such as form entries or selected options.",
-        "example": "<State id=\"form\" name=\"\" active=\"true\" />\n\n<TextInput label=\"Name\" value=\"$form.name\" />",
+        "example": "<view>\n  <State id=\"form\" name=\"\" active=\"true\" />\n\n  <TextInput label=\"Name\" value=\"$form.name\" />\n</view>",
         "name": "State",
         "category": "Runtime",
         "lastUpdated": "2026-07-21",
@@ -1081,7 +1061,7 @@ export const componentDocumentation: ComponentDocumentation[] = [
             }
         ],
         "description": "Displays a lifecycle status using the runtime's status presentation.",
-        "example": "<StatusBadge status=\"${order.status}\" />",
+        "example": "<view>\n  <State id=\"order\" status=\"creating\" />\n  <StatusBadge status=\"${order.status}\" />\n</view>",
         "name": "StatusBadge",
         "category": "Content",
         "lastUpdated": "2026-09-30",
@@ -1117,7 +1097,7 @@ export const componentDocumentation: ComponentDocumentation[] = [
             }
         ],
         "description": "Stepper displays progress through a short sequence of related workflow steps.",
-        "example": "<Stepper activeStep=\"$form.step\" orientation=\"vertical\">\n  <Step step=\"0\" label=\"Details\" />\n  <Step step=\"1\" label=\"Review\" />\n  <Step step=\"2\" label=\"Complete\" />\n</Stepper>",
+        "example": "<view>\n  <State id=\"form\" step=\"0\" />\n  <Stepper activeStep=\"$form.step\" orientation=\"vertical\">\n    <Step step=\"0\" label=\"Details\" />\n    <Step step=\"1\" label=\"Review\" />\n    <Step step=\"2\" label=\"Complete\" />\n  </Stepper>\n</view>",
         "name": "Stepper",
         "category": "Layouts",
         "lastUpdated": "2026-09-22",
@@ -1158,7 +1138,7 @@ export const componentDocumentation: ComponentDocumentation[] = [
                     }
                 ],
                 "description": "Step identifies one logical point in a Stepper and may render its active content.",
-                "example": "<Step step=\"0\" label=\"Details\" description=\"Enter the required information.\" />",
+                "example": "<view>\n  <Stepper activeStep=\"0\">\n    <Step step=\"0\" label=\"Details\" description=\"Enter the required information.\" />\n  </Stepper>\n</view>",
                 "name": "Step"
             }
         ],
@@ -1181,7 +1161,7 @@ export const componentDocumentation: ComponentDocumentation[] = [
             }
         ],
         "description": "A toggle control for on/off states that take effect immediately. Use it for settings or preferences that apply instantly. For changes requiring a form submission, use a checkbox instead.",
-        "example": "<Switch label=\"Notifications\" value=\"$settings.notifications\" />",
+        "example": "<view>\n  <State id=\"settings\" notifications=\"true\" />\n  <Switch label=\"Notifications\" value=\"$settings.notifications\" />\n</view>",
         "name": "Switch",
         "category": "Form",
         "lastUpdated": "2026-07-21",
@@ -1209,7 +1189,7 @@ export const componentDocumentation: ComponentDocumentation[] = [
             }
         ],
         "description": "Displays tabular data from an array.",
-        "example": "<Table data=\"$orders.items\">\n  <TableColumn field=\"number\" header=\"Number\" />\n  <TableColumn field=\"status\" header=\"Status\" />\n</Table>",
+        "example": "<view>\n  <State id=\"orders\" items=\"${[{ number: 'ORD-001', status: 'Open' }]}\" />\n  <Table data=\"$orders.items\">\n    <TableColumn field=\"number\" header=\"Number\" />\n    <TableColumn field=\"status\" header=\"Status\" />\n  </Table>\n</view>",
         "name": "Table",
         "category": "Layouts",
         "lastUpdated": "2026-09-16",
@@ -1234,7 +1214,7 @@ export const componentDocumentation: ComponentDocumentation[] = [
                     }
                 ],
                 "description": "Displays tabular data from an array.",
-                "example": "",
+                "example": "<view>\n  <State id=\"orders\" items=\"${[{ number: 'ORD-001', status: 'Open' }]}\" />\n  <Table data=\"$orders.items\">\n    <TableColumn field=\"number\" header=\"Number\" />\n    <TableColumn field=\"status\" header=\"Status\" />\n  </Table>\n</view>",
                 "name": "TableColumn"
             }
         ],
@@ -1257,7 +1237,7 @@ export const componentDocumentation: ComponentDocumentation[] = [
             }
         ],
         "description": "Displays tab navigation and the active tab content.",
-        "example": "<Tabs value=\"$tabs.value\">\n  <Tab value=\"overview\" label=\"Overview\">Overview content</Tab>\n  <Tab value=\"activity\" label=\"Activity\">Activity content</Tab>\n</Tabs>",
+        "example": "<view>\n  <State id=\"tabs\" value=\"overview\" />\n  <Tabs value=\"$tabs.value\">\n    <Tab value=\"overview\" label=\"Overview\">Overview content</Tab>\n    <Tab value=\"activity\" label=\"Activity\">Activity content</Tab>\n  </Tabs>\n</view>",
         "name": "Tabs",
         "category": "Layouts",
         "lastUpdated": "2026-07-21",
@@ -1278,7 +1258,7 @@ export const componentDocumentation: ComponentDocumentation[] = [
                     }
                 ],
                 "description": "Displays tab navigation and the active tab content.",
-                "example": "",
+                "example": "<view>\n  <State id=\"tabs\" value=\"overview\" />\n  <Tabs value=\"$tabs.value\">\n    <Tab value=\"overview\" label=\"Overview\">Overview content</Tab>\n    <Tab value=\"activity\" label=\"Activity\">Activity content</Tab>\n  </Tabs>\n</view>",
                 "name": "Tab"
             }
         ],
@@ -1305,7 +1285,7 @@ export const componentDocumentation: ComponentDocumentation[] = [
             }
         ],
         "description": "Renders normal body text with standard bold and italic inline elements.",
-        "example": "<Text color=\"secondary\">Supporting <b>bold</b> and <i>italic</i> text.</Text>",
+        "example": "<view>\n  <Text color=\"secondary\">Supporting <b>bold</b> and <i>italic</i> text.</Text>\n</view>",
         "name": "Text",
         "category": "Content",
         "lastUpdated": "2026-08-25",
@@ -1342,7 +1322,7 @@ export const componentDocumentation: ComponentDocumentation[] = [
             }
         ],
         "description": "TextArea is a multi-line text input for collecting longer-form content like comments, descriptions, or messages. Use it when the expected input spans multiple lines. For shorter, single-line values, use TextInput.",
-        "example": "<TextArea label=\"Notes\" value=\"$form.notes\" />",
+        "example": "<view>\n  <State id=\"form\" notes=\"\" />\n  <TextArea label=\"Notes\" value=\"$form.notes\" />\n</view>",
         "name": "TextArea",
         "category": "Form",
         "lastUpdated": "2026-07-21",
@@ -1382,7 +1362,7 @@ export const componentDocumentation: ComponentDocumentation[] = [
             }
         ],
         "description": "TextInput collects short-form text like names, emails, or search queries. Use it for single-line values where the expected input is brief. Pair it with validation status to guide users through required or formatted fields.",
-        "example": "<TextInput label=\"Customer name\" value=\"$form.name\" />",
+        "example": "<view>\n  <State id=\"form\" name=\"\" />\n  <TextInput label=\"Customer name\" value=\"$form.name\" />\n</view>",
         "name": "TextInput",
         "category": "Form",
         "lastUpdated": "2026-09-01",
@@ -1406,12 +1386,32 @@ export const componentDocumentation: ComponentDocumentation[] = [
             }
         ],
         "description": "Displays a timestamp using Astryx's locale-aware date, time, and relative formats. Use Text for surrounding typography.",
-        "example": "<Timestamp value=\"$item.created_at\" format=\"date\" />",
+        "example": "<view>\n  <State id=\"item\" created_at=\"2026-10-01T12:00:00Z\" />\n  <Timestamp value=\"$item.created_at\" format=\"date\" />\n</view>",
         "name": "Timestamp",
         "category": "Display",
         "lastUpdated": "2026-09-30",
         "nested": [],
         "slug": "timestamp",
         "source": "adapters/Timestamp.xsd"
+    },
+    {
+        "attributes": [
+            {
+                "description": "",
+                "name": "name"
+            },
+            {
+                "description": "",
+                "name": "icon"
+            }
+        ],
+        "description": "Defines a LongLink View.",
+        "example": "<view name=\"Welcome\" icon=\"layout-dashboard\">\n  <Text>Welcome</Text>\n</view>",
+        "name": "view",
+        "category": "Runtime",
+        "lastUpdated": "2026-10-01",
+        "nested": [],
+        "slug": "view",
+        "source": "adapters/View.xsd"
     }
 ];

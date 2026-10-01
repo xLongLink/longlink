@@ -106,8 +106,8 @@ INVALID_FRAGMENTS = [
 ]
 
 UNSUPPORTED_MARKUP = [
-    pytest.param("<!DOCTYPE longlink><longlink />", id="doctype"),
-    pytest.param("<longlink><![CDATA[content]]></longlink>", id="cdata"),
+    pytest.param("<!DOCTYPE view><view />", id="doctype"),
+    pytest.param("<view><![CDATA[content]]></view>", id="cdata"),
 ]
 
 
@@ -116,7 +116,7 @@ def test_view_validation_rejects_malformed_document() -> None:
 
     # Act and assert
     with pytest.raises(ValueError, match="View syntax is invalid"):
-        validate_view("<longlink>")
+        validate_view("<view>")
 
 
 @pytest.mark.parametrize("content", UNSUPPORTED_MARKUP)
@@ -128,7 +128,7 @@ def test_view_validation_rejects_unsupported_markup(content: str) -> None:
         validate_view(content)
 
 
-@pytest.mark.parametrize("content", [pytest.param(f"<longlink>{content}</longlink>", id=name) for name, content in VALID_FRAGMENTS])
+@pytest.mark.parametrize("content", [pytest.param(f"<view>{content}</view>", id=name) for name, content in VALID_FRAGMENTS])
 def test_root_schema_accepts_valid_fragments(content: str) -> None:
     """Validate representative View fragments through the component constraints."""
 
@@ -138,7 +138,7 @@ def test_root_schema_accepts_valid_fragments(content: str) -> None:
 
 @pytest.mark.parametrize(
     ("content", "expected"),
-    [pytest.param(f"<longlink>{content}</longlink>", expected, id=name) for name, content, expected in INVALID_FRAGMENTS],
+    [pytest.param(f"<view>{content}</view>", expected, id=name) for name, content, expected in INVALID_FRAGMENTS],
 )
 def test_root_schema_rejects_invalid_fragments(content: str, expected: str) -> None:
     """Reject representative invalid View fragments through the component constraints."""

@@ -1,4 +1,4 @@
-<longlink name="Operations" icon="arrowUpDown">
+<view name="Operations" icon="arrowUpDown">
     <State id="pages" value="${1}" />
     <State id="metadata" item="${null}" open="${false}" />
     <Query
@@ -94,4 +94,4 @@
             </Text>
         </Stack>
     </Dialog>
-</longlink>
+</view>

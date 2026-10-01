@@ -30,12 +30,12 @@ describe('renderNode', () => {
         const container = document.createElement('div');
         const context = createContext();
         const invalidAst: ASTNode = {
-            name: 'longlink',
+            name: 'view',
             params: {},
             children: [{ name: 'Unknown', params: {}, children: [] }],
         };
         const validAst: ASTNode = {
-            name: 'longlink',
+            name: 'view',
             params: {},
             children: parseFragment('<Heading level="1">Recovered</Heading>'),
         };

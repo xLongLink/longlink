@@ -1,4 +1,4 @@
-<longlink name="Invoices" icon="banknote">
+<view name="Invoices" icon="banknote">
     <State id="pages" value="${1}" />
     <Query id="items" path="/api/items?page=${pages.value}&page_size=8" />
     <State id="draft" status="draft" />
@@ -85,4 +85,4 @@
             </Stack>
         </Stack>
     </Stack>
-</longlink>
+</view>

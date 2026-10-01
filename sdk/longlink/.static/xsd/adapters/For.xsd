@@ -21,11 +21,14 @@
       <xsd:documentation>Use For to turn a collection, such as a list of orders, into repeated content in a View.</xsd:documentation>
       <xsd:appinfo source="urn:longlink:xml-example">
         <longlink:docs slug="for" category="Runtime" lastUpdated="2026-07-21"/>
-        <longlink:example>&lt;For each="$orders.items" as="order"&gt;
-  &lt;Card&gt;
-    $order.number
-  &lt;/Card&gt;
-&lt;/For&gt;</longlink:example>
+        <longlink:example>&lt;view&gt;
+  &lt;State id="orders" items="${[{ number: 'ORD-001' }, { number: 'ORD-002' }]}" /&gt;
+  &lt;For each="$orders.items" as="order"&gt;
+    &lt;Card&gt;
+      $order.number
+    &lt;/Card&gt;
+  &lt;/For&gt;
+&lt;/view&gt;</longlink:example>
       </xsd:appinfo>
     </xsd:annotation>
   </xsd:element>

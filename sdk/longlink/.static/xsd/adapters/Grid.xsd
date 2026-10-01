@@ -36,15 +36,17 @@
       <xsd:documentation>A CSS grid layout container for arranging children in rows and columns. Use Grid for card galleries, dashboards, and any multi-column layout. Use GridSpan to make a direct child span columns or rows.</xsd:documentation>
       <xsd:appinfo source="urn:longlink:xml-example">
         <longlink:docs slug="grid" category="Layouts" lastUpdated="2026-09-01"/>
-        <longlink:example>&lt;Grid minColumnWidth="240" maxColumns="3" repeat="fit"&gt;
-  &lt;Card&gt;First&lt;/Card&gt;
-  &lt;Card&gt;Second&lt;/Card&gt;
-&lt;/Grid&gt;
+        <longlink:example>&lt;view&gt;
+  &lt;Grid minColumnWidth="240" maxColumns="3" repeat="fit"&gt;
+    &lt;Card&gt;First&lt;/Card&gt;
+    &lt;Card&gt;Second&lt;/Card&gt;
+  &lt;/Grid&gt;
 
-&lt;Grid columns="3"&gt;
-  &lt;GridSpan columns="2"&gt;&lt;Card&gt;Featured&lt;/Card&gt;&lt;/GridSpan&gt;
-  &lt;Card&gt;Standard&lt;/Card&gt;
-&lt;/Grid&gt;</longlink:example>
+  &lt;Grid columns="3"&gt;
+    &lt;GridSpan columns="2"&gt;&lt;Card&gt;Featured&lt;/Card&gt;&lt;/GridSpan&gt;
+    &lt;Card&gt;Standard&lt;/Card&gt;
+  &lt;/Grid&gt;
+&lt;/view&gt;</longlink:example>
       </xsd:appinfo>
     </xsd:annotation>
   </xsd:element>

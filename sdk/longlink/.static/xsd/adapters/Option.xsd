@@ -22,7 +22,12 @@
     <xsd:annotation>
       <xsd:documentation>A selectable option in a Selector, RadioList, or MoreMenu.</xsd:documentation>
       <xsd:appinfo source="urn:longlink:xml-example">
-        <ns2:example xmlns:ns2="urn:longlink:xsd-docs">&lt;Option value="open" label="Open" icon="info" /&gt;</ns2:example>
+        <longlink:example>&lt;view&gt;
+  &lt;State id="filters" status="open" /&gt;
+  &lt;Selector label="Status" value="$filters.status"&gt;
+    &lt;Option value="open" label="Open" icon="info" /&gt;
+  &lt;/Selector&gt;
+&lt;/view&gt;</longlink:example>
       </xsd:appinfo>
     </xsd:annotation>
   </xsd:element>

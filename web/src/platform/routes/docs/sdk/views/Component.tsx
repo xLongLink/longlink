@@ -54,7 +54,7 @@ export default function DocsArticleRoute() {
                 <Heading id="example" level={2}>
                     Example
                 </Heading>
-                <CodeBlock code={component.example} language="xml" />
+                <CodeBlock code={component.example} language="xml" title="example.view" hasLanguageLabel={false} />
                 {component.nested.map((nested) => (
                     <Stack key={nested.name} gap={3}>
                         <Heading id={nested.name.toLowerCase()} level={2}>
@@ -62,7 +62,14 @@ export default function DocsArticleRoute() {
                         </Heading>
                         <Text as="p">{nested.description}</Text>
                         {nested.attributes.length > 0 ? <AttributeTable attributes={nested.attributes} /> : null}
-                        {nested.example ? <CodeBlock code={nested.example} language="xml" /> : null}
+                        {nested.example ? (
+                            <CodeBlock
+                                code={nested.example}
+                                language="xml"
+                                title="example.view"
+                                hasLanguageLabel={false}
+                            />
+                        ) : null}
                     </Stack>
                 ))}
                 <Heading id="cli" level={2}>

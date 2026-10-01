@@ -6,15 +6,15 @@ describe('parseView', () => {
     it('parses view structure', () => {
         expect(
             parseView(
-                `<longlink>
+                `<view>
                     <!-- hidden -->
                     <Button>Save</Button>
                     <State id="first" />
                     <State id="second" />
-                </longlink>`
+                </view>`
             )
         ).toEqual({
-            name: 'longlink',
+            name: 'view',
             params: {},
             children: [
                 {
@@ -36,23 +36,22 @@ describe('parseView', () => {
     });
 
     it.each([
-        { name: 'malformed tags', xml: '<longlink><Button></longlink>' },
+        { name: 'malformed tags', xml: '<view><Button></view>' },
         { name: 'an empty document', xml: '' },
     ])('rejects $name', ({ xml }) => {
         expect(() => parseView(xml)).toThrow(/View.*invalid|Views must contain/);
     });
 
-    it.each(['<longlink /><longlink />', '<Button />'])('rejects a document without one longlink root: %s', (xml) => {
-        expect(() => parseView(xml)).toThrow('Views must contain exactly one longlink root');
+    it.each(['<view /><view />', '<Button />'])('rejects a document without one view root: %s', (xml) => {
+        expect(() => parseView(xml)).toThrow('Views must contain exactly one view root');
     });
 
-    it.each([
-        '<!DOCTYPE longlink><longlink />',
-        '<!ENTITY hidden "value"><longlink />',
-        '<longlink><![CDATA[hidden]]></longlink>',
-    ])('rejects unsupported View construct: %s', (xml) => {
-        expect(() => parseView(xml)).toThrow('not supported');
-    });
+    it.each(['<!DOCTYPE view><view />', '<!ENTITY hidden "value"><view />', '<view><![CDATA[hidden]]></view>'])(
+        'rejects unsupported View construct: %s',
+        (xml) => {
+            expect(() => parseView(xml)).toThrow('not supported');
+        }
+    );
 
     it.each([
         ['className', 'className is not supported in Views'],
@@ -63,7 +62,7 @@ describe('parseView', () => {
 
     it('rejects uppercase event handlers inside a valid view', () => {
         // Arrange
-        const xml = '<longlink><Button ONCLICK="value">Save</Button></longlink>';
+        const xml = '<view><Button ONCLICK="value">Save</Button></view>';
 
         // Act and assert
         expect(() => parseView(xml)).toThrow('Event handler attribute "ONCLICK" is not supported in Views');

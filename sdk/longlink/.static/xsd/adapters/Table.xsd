@@ -47,10 +47,13 @@
       <xsd:documentation>Displays tabular data from an array.</xsd:documentation>
       <xsd:appinfo source="urn:longlink:xml-example">
         <longlink:docs slug="table" category="Layouts" lastUpdated="2026-09-16"/>
-        <longlink:example>&lt;Table data="$orders.items"&gt;
-  &lt;TableColumn field="number" header="Number" /&gt;
-  &lt;TableColumn field="status" header="Status" /&gt;
-&lt;/Table&gt;</longlink:example>
+        <longlink:example>&lt;view&gt;
+  &lt;State id="orders" items="${[{ number: 'ORD-001', status: 'Open' }]}" /&gt;
+  &lt;Table data="$orders.items"&gt;
+    &lt;TableColumn field="number" header="Number" /&gt;
+    &lt;TableColumn field="status" header="Status" /&gt;
+  &lt;/Table&gt;
+&lt;/view&gt;</longlink:example>
       </xsd:appinfo>
     </xsd:annotation>
   </xsd:element>
@@ -58,10 +61,13 @@
     <xsd:annotation>
       <xsd:documentation>Displays tabular data from an array.</xsd:documentation>
       <xsd:appinfo source="urn:longlink:xml-example">
-        <ns2:example xmlns:ns2="urn:longlink:xsd-docs">&lt;Table data="$orders.items"&gt;
-  &lt;TableColumn field="number" header="Number" /&gt;
-  &lt;TableColumn field="status" header="Status" /&gt;
-&lt;/Table&gt;</ns2:example>
+        <longlink:example>&lt;view&gt;
+  &lt;State id="orders" items="${[{ number: 'ORD-001', status: 'Open' }]}" /&gt;
+  &lt;Table data="$orders.items"&gt;
+    &lt;TableColumn field="number" header="Number" /&gt;
+    &lt;TableColumn field="status" header="Status" /&gt;
+  &lt;/Table&gt;
+&lt;/view&gt;</longlink:example>
       </xsd:appinfo>
     </xsd:annotation>
   </xsd:element>

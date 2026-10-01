@@ -23,7 +23,10 @@
       <xsd:documentation>Displays byte usage against a fixed allocation or quota.</xsd:documentation>
       <xsd:appinfo source="urn:longlink:xml-example">
         <longlink:docs slug="progress-bar" category="Content" lastUpdated="2026-09-14"/>
-        <longlink:example>&lt;ProgressBar label="Storage" value="$storage.space_used" max="$storage.quota_bytes" /&gt;</longlink:example>
+        <longlink:example>&lt;view&gt;
+  &lt;State id="storage" space_used="60" quota_bytes="100" /&gt;
+  &lt;ProgressBar label="Storage" value="$storage.space_used" max="$storage.quota_bytes" /&gt;
+&lt;/view&gt;</longlink:example>
       </xsd:appinfo>
     </xsd:annotation>
   </xsd:element>

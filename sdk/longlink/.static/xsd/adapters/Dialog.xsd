@@ -56,9 +56,13 @@
       <xsd:documentation>Renders a modal workflow from one flat owner element.</xsd:documentation>
       <xsd:appinfo source="urn:longlink:xml-example">
         <longlink:docs slug="dialog" category="Layouts" lastUpdated="2026-07-21"/>
-        <longlink:example>&lt;Dialog title="Edit order" isOpen="$dialog.open"&gt;
-  &lt;TextInput label="Name" value="$form.name" /&gt;
-&lt;/Dialog&gt;</longlink:example>
+        <longlink:example>&lt;view&gt;
+  &lt;State id="dialog" open="true" /&gt;
+  &lt;State id="form" name="New order" /&gt;
+  &lt;Dialog title="Edit order" isOpen="$dialog.open"&gt;
+    &lt;TextInput label="Name" value="$form.name" /&gt;
+  &lt;/Dialog&gt;
+&lt;/view&gt;</longlink:example>
       </xsd:appinfo>
     </xsd:annotation>
   </xsd:element>

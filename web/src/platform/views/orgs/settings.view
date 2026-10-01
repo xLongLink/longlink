@@ -1,4 +1,4 @@
-<longlink name="Organization Settings" icon="settings2">
+<view name="Organization Settings" icon="settings2">
     <Query
         id="membership"
         path="/api/v1/organizations/slug/${params.organization}"
@@ -614,4 +614,4 @@
             </Stack>
         </Stack>
     </Dialog>
-</longlink>
+</view>

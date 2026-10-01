@@ -71,7 +71,7 @@ const previews: Record<string, ReactNode> = {
     ),
     CodeBlock: (
         <CodeBlock
-            code={'<Text>\n  Hello world\n</Text>'}
+            code={'<view>\n  <Text>Hello world</Text>\n</view>'}
             language="xml"
             size="sm"
             width="100%"
@@ -224,7 +224,7 @@ const article = {
         { id: 'views', label: 'Views', level: 1 },
         ...documentationCategories.map(({ name }) => ({ id: name.toLowerCase(), label: name, level: 2 })),
     ],
-    lastUpdated: '2026-09-30',
+    lastUpdated: '2026-10-01',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/sdk/longlink/.static/xsd/schema.xsd',
     title: 'Views | LongLink Documentation',
 };
@@ -238,8 +238,14 @@ export default function DocsArticleRoute() {
                     Views
                 </Heading>
                 <Text as="p">
-                    Create each interface as a single .view file. Use components, state, queries, and actions to define
-                    what the user sees, how data is displayed, and what happens when they interact with it.
+                    Create each interface as a single .view file using case-sensitive LongLink markup, not standard XML
+                    or browser HTML. Use components, state, queries, and actions to define what the user sees, how data
+                    is displayed, and what happens when they interact with it.
+                </Text>
+                <Text as="p">
+                    Use one &lt;view&gt; root and explicit closing or self-closing component tags. Quoted attributes
+                    support raw operators such as &amp;&amp;, &lt;, and &gt;; do not add XML declarations or schema
+                    hints.
                 </Text>
                 <Stack as="aside" className="border-s border-accent ps-4" gap={0}>
                     <Text weight="semibold">Why?</Text>
@@ -250,9 +256,10 @@ export default function DocsArticleRoute() {
                     </Text>
                 </Stack>
                 <CodeBlock
-                    code={'<longlink name="Welcome" icon="layout-dashboard">\n  <Text>Welcome</Text>\n</longlink>'}
+                    code={'<view name="Welcome" icon="layout-dashboard">\n  <Text>Welcome</Text>\n</view>'}
                     language="xml"
                     title="welcome.view"
+                    hasLanguageLabel={false}
                 />
                 {documentationCategories.map((category) => (
                     <Stack key={category.name} gap={3}>

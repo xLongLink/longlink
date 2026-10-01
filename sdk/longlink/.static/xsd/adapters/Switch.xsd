@@ -18,7 +18,10 @@
       <xsd:documentation>A toggle control for on/off states that take effect immediately. Use it for settings or preferences that apply instantly. For changes requiring a form submission, use a checkbox instead.</xsd:documentation>
       <xsd:appinfo source="urn:longlink:xml-example">
         <longlink:docs slug="switch" category="Form" lastUpdated="2026-07-21"/>
-        <longlink:example>&lt;Switch label="Notifications" value="$settings.notifications" /&gt;</longlink:example>
+        <longlink:example>&lt;view&gt;
+  &lt;State id="settings" notifications="true" /&gt;
+  &lt;Switch label="Notifications" value="$settings.notifications" /&gt;
+&lt;/view&gt;</longlink:example>
       </xsd:appinfo>
     </xsd:annotation>
   </xsd:element>

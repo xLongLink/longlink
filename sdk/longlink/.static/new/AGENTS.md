@@ -31,7 +31,7 @@ You are working on a LongLink Solution project:
 
 - A View uses case-sensitive LongLink markup in a `.view` file, not standard XML or browser HTML.
 - Keep attribute values quoted. Raw `&&`, `<`, and `>` are supported inside quoted expressions.
-- Use one `<longlink>` root and explicit closing or self-closing component tags; do not add XML declarations or schema hints.
+- Use one `<view>` root and explicit closing or self-closing component tags; do not add XML declarations or schema hints.
 - Run `longlink docs ui` to discover the supported components and runtime concepts by category.
 - Run `longlink docs ui --component <component>` before using a component to inspect its attributes, children, and examples.
 - Do not invent elements or attributes that are absent from the component documentation.

@@ -133,8 +133,8 @@ export function parseView(source: string): ASTNode {
     // Parse one document, then require its public View root.
     parser.end(source);
     const [root] = nodes;
-    if (nodes.length !== 1 || root?.name !== 'longlink') {
-        throw new Error('Views must contain exactly one longlink root');
+    if (nodes.length !== 1 || root?.name !== 'view') {
+        throw new Error('Views must contain exactly one view root');
     }
 
     return root;

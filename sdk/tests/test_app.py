@@ -177,13 +177,13 @@ def test_production_startup_installs_one_access_filter(monkeypatch: pytest.Monke
     [
         pytest.param(
             "dashboard.view",
-            '<longlink name="Dashboard" icon="layout-dashboard">Dashboard</longlink>',
+            '<view name="Dashboard" icon="layout-dashboard">Dashboard</view>',
             {"route": "/dashboard", "name": "Dashboard", "icon": "layout-dashboard"},
             id="root",
         ),
         pytest.param(
             "issues/[issue].view",
-            '<longlink name="Issue">Issue</longlink>',
+            '<view name="Issue">Issue</view>',
             {"route": "/issues/:issue", "name": "Issue"},
             id="dynamic",
         ),
@@ -219,7 +219,7 @@ def test_view_catalog_omits_blank_display_metadata(solution_source: Path) -> Non
 
     # Arrange
     (solution_source / "views" / "dashboard.view").write_text(
-        '<longlink name="  " icon="\t">Dashboard</longlink>',
+        '<view name="  " icon="\t">Dashboard</view>',
         encoding="utf-8",
     )
     client = create_runtime_client()
@@ -238,8 +238,8 @@ def test_view_catalog_uses_deterministic_path_order(solution_source: Path) -> No
     # Arrange
     nested_directory = solution_source / "views" / "admin"
     nested_directory.mkdir()
-    (nested_directory / "alpha.view").write_text("<longlink>Alpha</longlink>", encoding="utf-8")
-    (solution_source / "views" / "zebra.view").write_text("<longlink>Zebra</longlink>", encoding="utf-8")
+    (nested_directory / "alpha.view").write_text("<view>Alpha</view>", encoding="utf-8")
+    (solution_source / "views" / "zebra.view").write_text("<view>Zebra</view>", encoding="utf-8")
     client = create_runtime_client()
 
     # Act
@@ -262,8 +262,8 @@ def test_root_redirect_skips_dynamic_views(solution_source: Path) -> None:
     # Arrange
     issues_directory = solution_source / "views" / "issues"
     issues_directory.mkdir()
-    (issues_directory / "[issue].view").write_text("<longlink>Issue</longlink>", encoding="utf-8")
-    (solution_source / "views" / "overview.view").write_text("<longlink>Overview</longlink>", encoding="utf-8")
+    (issues_directory / "[issue].view").write_text("<view>Issue</view>", encoding="utf-8")
+    (solution_source / "views" / "overview.view").write_text("<view>Overview</view>", encoding="utf-8")
     client = create_runtime_client()
 
     # Act
@@ -278,7 +278,7 @@ def test_invalid_view_fails_during_registration(solution_source: Path) -> None:
     """Validate SDK Views against component constraints before registering routes."""
 
     # Arrange: Discover the valid view before the invalid catalog entry.
-    (solution_source / "views" / "valid.view").write_text("<longlink>Valid</longlink>", encoding="utf-8")
+    (solution_source / "views" / "valid.view").write_text("<view>Valid</view>", encoding="utf-8")
     (solution_source / "views" / "z-broken.view").write_text("<unknown />", encoding="utf-8")
 
     # Act and assert
@@ -311,8 +311,8 @@ def test_duplicate_browser_routes_are_rejected(
     second_path = solution_source / "views" / second_view
     first_path.parent.mkdir(parents=True, exist_ok=True)
     second_path.parent.mkdir(parents=True, exist_ok=True)
-    first_path.write_text("<longlink>First</longlink>", encoding="utf-8")
-    second_path.write_text("<longlink>Second</longlink>", encoding="utf-8")
+    first_path.write_text("<view>First</view>", encoding="utf-8")
+    second_path.write_text("<view>Second</view>", encoding="utf-8")
 
     # Act and assert
     with pytest.raises(ValueError, match=message):

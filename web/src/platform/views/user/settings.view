@@ -1,4 +1,4 @@
-<longlink name="Account Settings" icon="settings2">
+<view name="Account Settings" icon="settings2">
     <State id="profile" name="$params.userName" />
     <Query id="memberships" path="/api/v1/me/organizations" />
     <State id="deletion" item="${null}" open="${false}" />
@@ -178,4 +178,4 @@
             </Stack>
         </Stack>
     </Dialog>
-</longlink>
+</view>
