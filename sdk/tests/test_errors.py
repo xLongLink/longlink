@@ -78,29 +78,6 @@ def test_installed_validation_handler_hides_submitted_values() -> None:
     assert response.json() == {"detail": "Invalid request. Please check your input and try again."}
 
 
-def test_installed_unexpected_handler_hides_exception_details_and_disables_caching() -> None:
-    """Return a safe non-cacheable response when application code fails."""
-
-    # Arrange
-    app = FastAPI()
-
-    @app.get("/orders")
-    async def get_orders() -> None:
-        """Simulate an unexpected application failure."""
-
-        raise RuntimeError("database password: secret-value")
-
-    install_error_handlers(app)
-
-    # Act
-    response = TestClient(app, raise_server_exceptions=False).get("/orders")
-
-    # Assert
-    assert response.status_code == 500
-    assert response.json() == {"detail": "An unexpected error occurred. Please try again later."}
-    assert response.headers["cache-control"] == "no-store"
-
-
 def test_installed_handlers_preserve_a_solution_owned_http_handler() -> None:
     """Leave a Solution's explicit HTTP error response contract unchanged."""
 

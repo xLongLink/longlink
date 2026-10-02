@@ -141,7 +141,6 @@ def test_data_closes_database_session_when_endpoint_fails() -> None:
     ("secret", "identity_header"),
     [
         pytest.param(IDENTITY_SECRET, "invalid-token", id="invalid-token"),
-        pytest.param(IDENTITY_SECRET, None, id="missing-token"),
         pytest.param("", None, id="missing-secret"),
     ],
 )

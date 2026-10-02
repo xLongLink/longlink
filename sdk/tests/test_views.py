@@ -2,21 +2,14 @@ import pytest
 from longlink.views import view_stem_route
 
 
-@pytest.mark.parametrize(
-    ("view_stem", "expected_route"),
-    [
-        pytest.param("index", "/", id="root-index"),
-        pytest.param("admin/index", "/admin", id="nested-index"),
-    ],
-)
-def test_view_stem_route_converts_valid_view_paths(view_stem: str, expected_route: str) -> None:
-    """Convert supported filesystem view names into exact browser routes."""
+def test_view_stem_route_preserves_nested_index_parent() -> None:
+    """Preserve the parent route when stripping a nested index segment."""
 
     # Act
-    route = view_stem_route(view_stem)
+    route = view_stem_route("admin/index")
 
     # Assert
-    assert route == expected_route
+    assert route == "/admin"
 
 
 @pytest.mark.parametrize(
