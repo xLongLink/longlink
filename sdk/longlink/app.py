@@ -27,7 +27,7 @@ class RuntimeState:
     database: Database
 
 
-def _view_handler(content: str) -> Callable[[], Awaitable[Response]]:
+def _view_handler(content: bytes) -> Callable[[], Awaitable[Response]]:
     """Capture JSX source without exposing it as a request parameter."""
 
     # Bind each document in its own closure before FastAPI inspects the endpoint signature.
@@ -170,11 +170,11 @@ class LongLink(FastAPI):
                 raise ValueError(f"View endpoint '{view_path}' overlaps a Solution route")
 
     @staticmethod
-    def _discover_views(views_directory: Path) -> list[tuple[ViewDefinition, str]]:
+    def _discover_views(views_directory: Path) -> list[tuple[ViewDefinition, bytes]]:
         """Discover and validate all Views before registering any route."""
 
         registered_route_keys: set[str] = set()
-        discovered_views: list[tuple[ViewDefinition, str]] = []
+        discovered_views: list[tuple[ViewDefinition, bytes]] = []
 
         # Discover JSX source in deterministic order without compiling JavaScript in Python.
         for view_file in sorted(views_directory.rglob("*.jsx")):
@@ -183,7 +183,8 @@ class LongLink(FastAPI):
             view_path = f"views/{path_without_suffix}"
             # Read source without parsing or executing JavaScript.
             content = view_file.read_text(encoding="utf-8")
-            if not content.strip() or len(content.encode("utf-8")) > 1_000_000:
+            encoded_content = content.encode("utf-8")
+            if not content.strip() or len(encoded_content) > 1_000_000:
                 raise ValueError(f"View source must contain between 1 and 1000000 bytes: {view_file}")
 
             view_route = view_stem_route(path_without_suffix)
@@ -200,7 +201,7 @@ class LongLink(FastAPI):
                         path=view_path,
                         route=view_route,
                     ),
-                    content,
+                    encoded_content,
                 )
             )
             registered_route_keys.add(route_key)

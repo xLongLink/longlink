@@ -1,5 +1,6 @@
 import { api } from '@/lib/api';
 import { useState } from 'react';
+import { NoIndex } from '@/components/Seo';
 import { Menu } from '@/components/ui/Menu';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
@@ -14,14 +15,29 @@ import { Spinner } from '@astryxdesign/core/Spinner';
 import { useQueryClient } from '@tanstack/react-query';
 import { useApi, useAction } from '@/lib/hooks/use-api';
 import { TextInput } from '@astryxdesign/core/TextInput';
+import { PageContainer } from '@/components/PageContainer';
+import { useAuthenticatedUser } from '@/lib/hooks/use-user';
 import { Table, proportional } from '@astryxdesign/core/Table';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
+import CreateOrganization from '@/platform/views/user/CreateOrganization';
+
+/** Renders account metadata and resets drafts when the authenticated identity changes. */
+export default function Settings() {
+    const user = useAuthenticatedUser();
+
+    return (
+        <PageContainer padding={2}>
+            <NoIndex title="Account Settings | LongLink" />
+            <SettingsPage key={user.id} user={user} />
+        </PageContainer>
+    );
+}
 
 /** Edits the authenticated profile and manages owned organizations.
  * @param {{ user: import('zod').output<typeof schemas.zUserSummary> }} props
  */
-export default function Settings({ user }) {
+function SettingsPage({ user }) {
     const [name, setName] = useState(user.name);
     const [organizationName, setOrganizationName] = useState('');
     const [creating, setCreating] = useState(false);
@@ -156,55 +172,13 @@ export default function Settings({ user }) {
                     },
                 ]}
             />
-            <Dialog
+            <CreateOrganization
                 isOpen={creating}
-                purpose="form"
-                onOpenChange={(open) => {
-                    if (!action.isPending) setCreating(open);
-                }}
-            >
-                <DialogHeader
-                    title="New organization"
-                    onOpenChange={() => {
-                        if (!action.isPending) setCreating(false);
-                    }}
-                />
-                <Stack
-                    gap={3}
-                    as="form"
-                    onSubmit={(event) => {
-                        event.preventDefault();
-                        if (action.isPending || !organizationName.trim()) return;
-
-                        // Preserve the draft on failure and close only after creation succeeds.
-                        action.mutate(async () => {
-                            await api.post('/api/v1/organizations', {
-                                json: schemas.zOrganizationCreate.parse({ name: organizationName.trim() }),
-                            });
-                            await client.invalidateQueries({
-                                queryKey: ['api', '/api/v1/me/organizations'],
-                                exact: true,
-                            });
-                            setCreating(false);
-                        });
-                    }}
-                >
-                    <TextInput
-                        label="Name"
-                        value={organizationName}
-                        placeholder="Example LongLink"
-                        isRequired
-                        onChange={setOrganizationName}
-                    />
-                    <Button
-                        label="Create organization"
-                        variant="primary"
-                        type="submit"
-                        isDisabled={!organizationName.trim()}
-                        isLoading={action.isPending}
-                    />
-                </Stack>
-            </Dialog>
+                onOpenChange={setCreating}
+                name={organizationName}
+                onNameChange={setOrganizationName}
+                action={action}
+            />
             {deletion && (
                 <Dialog
                     isOpen

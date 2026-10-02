@@ -12,7 +12,7 @@ const document = ts.createSourceFile(input, source, ts.ScriptTarget.Latest, true
 if (document.parseDiagnostics.length) {
     throw new Error(ts.flattenDiagnosticMessageText(document.parseDiagnostics[0].messageText, '\n'));
 }
-const components = document.statements
+const declarations = document.statements
     .flatMap((statement) => {
         const declaration = ts.isVariableStatement(statement) ? statement.declarationList.declarations[0] : statement;
 
@@ -30,15 +30,32 @@ const components = document.statements
         if (!category) throw new Error(`Missing documentation category: ${name}`);
         if (typeof category !== 'string' || !documentationCategories.includes(category))
             throw new Error(`Unknown documentation category: ${name}: ${category}`);
+
+        // Let related runtime declarations publish one shared documentation entry.
+        const group = tags.find((tag) => tag.tagName.text === 'group')?.comment;
+        if (group !== undefined && (typeof group !== 'string' || !group.trim()))
+            throw new Error(`Invalid documentation group: ${name}`);
         return [
             {
-                name,
+                name: group?.trim() ?? name,
                 category,
                 declaration: statement.getText(document),
             },
         ];
-    })
-    .sort((left, right) => left.name.localeCompare(right.name));
+    });
+
+// Preserve declaration order within a group, and expose only the shared catalog contract.
+const groups = new Map();
+for (const entry of declarations) {
+    const existing = groups.get(entry.name);
+    if (existing) {
+        if (existing.category !== entry.category) throw new Error(`Conflicting documentation categories: ${entry.name}`);
+        existing.declaration += `\n\n${entry.declaration}`;
+    } else {
+        groups.set(entry.name, entry);
+    }
+}
+const components = [...groups.values()].sort((left, right) => left.name.localeCompare(right.name));
 
 const filename = path.resolve(root, '../sdk/longlink/.static/jsx/components.json');
 const output = `${JSON.stringify(components, null, 4)}\n`;

@@ -50,7 +50,7 @@ Theme preferences are defined in `src/theme.ts` and applied through the root pro
 Solution Views use native JSX components from `src/views/components.ts`. React,
 `request`, `navigate`, `params`, and `useApi` are provided by
 the sandbox runtime. State uses React hooks; inputs use controlled callbacks;
-queries and ordered actions are ordinary JavaScript rather than XML tags.
+queries and ordered actions use ordinary JavaScript.
 The runtime owns loading/error boundaries and refreshes cached View data after
 successful writes through `request()`.
 

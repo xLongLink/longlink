@@ -1,11 +1,11 @@
 // @vitest-environment happy-dom
 import { act } from 'react';
 import { ApiProvider } from '@/providers';
-import { MemoryRouter } from 'react-router';
 import { createRoot } from 'react-dom/client';
 import { cleanupMountedRoot } from './helpers';
 import { LayerProvider } from '@astryxdesign/core/Layer';
-import Settings from '@/platform/views/orgs/settings.jsx';
+import Settings from '@/platform/routes/orgs/Settings.jsx';
+import { MemoryRouter, Route, Routes } from 'react-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 const organizationId = '00000000-0000-4000-8000-000000000003';
@@ -86,8 +86,10 @@ describe('Solution source update dialog', () => {
             mountedRoot.render(
                 <LayerProvider>
                     <ApiProvider>
-                        <MemoryRouter initialEntries={['/#solutions']}>
-                            <Settings organization="development" />
+                        <MemoryRouter initialEntries={['/orgs/development/settings#solutions']}>
+                            <Routes>
+                                <Route path="/orgs/:organization/settings" element={<Settings />} />
+                            </Routes>
                         </MemoryRouter>
                     </ApiProvider>
                 </LayerProvider>

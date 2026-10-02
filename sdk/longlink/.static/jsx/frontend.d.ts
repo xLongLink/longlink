@@ -24,24 +24,24 @@ declare namespace React {
     }
 }
 
-/** @category Runtime */
+/** @category Runtime @group React */
 declare function createElement(type: unknown, props: unknown, ...children: ViewNode[]): React.JSX.Element;
 
-/** Groups JSX children without a DOM wrapper; documented in the Views guide. @ignore */
+/** Groups JSX children without a DOM wrapper. @category Runtime @group React */
 declare const Fragment: ViewComponent<{
     key?: string | number;
 }>;
 
-/** @category Runtime */
+/** @category Runtime @group React */
 declare function useState<T = undefined>(initial?: T | (() => T)): [T, (value: T | ((previous: T) => T)) => void];
 
-/** @category Runtime */
+/** @category Runtime @group React */
 declare function useEffect(effect: () => void | (() => void), dependencies?: readonly unknown[]): void;
 
-/** @category Runtime */
+/** @category Runtime @group React */
 declare function useMemo<T>(factory: () => T, dependencies: readonly unknown[]): T;
 
-/** @category Runtime */
+/** @category Runtime @group React */
 declare function useRef<T>(initial: T): { current: T };
 
 /** @category Runtime */
@@ -127,42 +127,6 @@ declare const Dialog: ViewComponent<{
     isOpen: boolean;
     onOpenChange: (open: boolean) => void;
     purpose?: 'form' | 'info' | 'required';
-}>;
-
-/** @category Form */
-declare const ApiForm: ViewComponent<{
-    action: string;
-    method?: 'POST' | 'PUT' | 'PATCH' | 'DELETE';
-    submitLabel?: string;
-}>;
-
-/** @category Form */
-declare const TextField: ViewComponent<{
-    name: string;
-    label: string;
-    type?: 'text' | 'email' | 'password';
-    required?: boolean;
-    placeholder?: string;
-    defaultValue?: string;
-}>;
-
-/** @category Form */
-declare const NumberField: ViewComponent<{
-    name: string;
-    label: string;
-    required?: boolean;
-    min?: string | number;
-    max?: string | number;
-    step?: string | number;
-    defaultValue?: number | null;
-}>;
-
-/** @category Form */
-declare const CheckboxField: ViewComponent<{
-    name: string;
-    label: string;
-    required?: boolean;
-    defaultValue?: boolean;
 }>;
 
 /** @category Form */

@@ -248,7 +248,7 @@ export default function DocsArticleRoute() {
                 </Text>
                 <Text as="p">
                     Solution code runs in a sandboxed iframe with an opaque origin, not inside the Platform page. Use
-                    useApi() to read data, ApiForm to submit named fields, and navigate() for your own Solution. Direct
+                    useApi() to read data, request() to submit changes, and navigate() for your own Solution. Direct
                     network access and Platform credentials are unavailable. Titles come from JSX filenames, and tabs
                     use the default icon. No metadata files are needed.
                 </Text>
@@ -282,29 +282,6 @@ export default function Item({ params }) {
 }`}
                     language="jsx"
                     title="items/[item].jsx"
-                    hasLanguageLabel={false}
-                />
-                <Text as="p">
-                    ApiForm submits named fields as JSON to its action with POST by default, adds a Save button, handles
-                    validation and submission feedback, and refreshes cached data after a successful write. No state or
-                    request() handler is needed. Use method="PUT" or method="PATCH" to update records and submitLabel to
-                    customize the button. Numbers are sent as numbers (or null when empty), and checkboxes as booleans.
-                    Set defaultValue on a field to populate an existing value. request() remains available for custom
-                    operations.
-                </Text>
-                <CodeBlock
-                    code={`export default function UserForm() {
-  return (
-    <ApiForm action="/users">
-      <TextField name="name" label="Name" required />
-      <TextField name="email" label="Email" type="email" required />
-      <NumberField name="age" label="Age" min="18" />
-      <CheckboxField name="active" label="Active" />
-    </ApiForm>
-  );
-}`}
-                    language="jsx"
-                    title="users.jsx"
                     hasLanguageLabel={false}
                 />
                 {documentationCategories.map((category) => (

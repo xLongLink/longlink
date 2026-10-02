@@ -20,15 +20,15 @@ import { zPageOrganizationIdentity } from '@/lib/generated/platform-api-v1/zod.g
 /** Lists organizations and confirms administrator deletion. */
 export default function Organizations() {
     const [page, setPage] = useState(1);
-    const [metadata, setMetadata] = useState(
-        /** @type {import('zod').output<typeof zPageOrganizationIdentity>['items'][number] | null} */ (null)
-    );
-    const [deletion, setDeletion] = useState(
-        /** @type {import('zod').output<typeof zPageOrganizationIdentity>['items'][number] | null} */ (null)
+    const [dialog, setDialog] = useState(
+        /** @type {{ kind: 'metadata' | 'deletion', item: import('zod').output<typeof zPageOrganizationIdentity>['items'][number] } | null} */ (
+            null
+        )
     );
     const client = useQueryClient();
     const action = useAction();
-    const organizations = useApi(`/api/v1/organizations?page=${page}&page_size=25`, zPageOrganizationIdentity);
+    const path = `/api/v1/organizations?page=${page}&page_size=25`;
+    const organizations = useApi(path, zPageOrganizationIdentity);
 
     // Keep loading and failures distinct from an empty result.
     if (organizations.error) return <Banner status="error" title="Unable to load organizations" />;
@@ -79,7 +79,7 @@ export default function Organizations() {
                                             id: 'metadata',
                                             label: 'Metadata',
                                             icon: <Info />,
-                                            onClick: () => setMetadata(row),
+                                            onClick: () => setDialog({ kind: 'metadata', item: row }),
                                         },
                                     ]}
                                 />
@@ -96,59 +96,56 @@ export default function Organizations() {
                     />
                 </Stack>
             </Stack>
-            {metadata && (
+            {dialog?.kind === 'metadata' && (
                 <Dialog
                     isOpen
                     onOpenChange={(open) => {
-                        if (!open) setMetadata(null);
+                        if (!open) setDialog(null);
                     }}
                 >
-                    <DialogHeader title="Organization metadata" onOpenChange={() => setMetadata(null)} />
+                    <DialogHeader title="Organization metadata" onOpenChange={() => setDialog(null)} />
                     <Stack gap={2}>
                         <Text>
-                            <b>Status</b> {metadata.status}
+                            <b>Status</b> {dialog.item.status}
                         </Text>
                         <Text>
-                            <b>Slug</b> {metadata.slug}
+                            <b>Slug</b> {dialog.item.slug}
                         </Text>
                         <Text>
-                            <b>ID</b> {metadata.id}
+                            <b>ID</b> {dialog.item.id}
                         </Text>
                         <Stack direction="horizontal" justify="end">
                             <Button
                                 label="Delete"
                                 variant="destructive"
-                                onClick={() => {
-                                    setDeletion(metadata);
-                                    setMetadata(null);
-                                }}
+                                onClick={() => setDialog({ kind: 'deletion', item: dialog.item })}
                             />
                         </Stack>
                     </Stack>
                 </Dialog>
             )}
-            {deletion && (
+            {dialog?.kind === 'deletion' && (
                 <Dialog
                     isOpen
                     purpose="form"
                     onOpenChange={(open) => {
-                        if (!open && !action.isPending) setDeletion(null);
+                        if (!open && !action.isPending) setDialog(null);
                     }}
                 >
                     <DialogHeader
                         title="Delete organization"
                         onOpenChange={() => {
-                            if (!action.isPending) setDeletion(null);
+                            if (!action.isPending) setDialog(null);
                         }}
                     />
                     <Stack gap={3}>
-                        <Text color="secondary">Delete organization {deletion.name}?</Text>
+                        <Text color="secondary">Delete organization {dialog.item.name}?</Text>
                         <Stack direction="horizontal" gap={2} justify="end">
                             <Button
                                 label="Cancel"
                                 variant="ghost"
                                 isDisabled={action.isPending}
-                                onClick={() => setDeletion(null)}
+                                onClick={() => setDialog(null)}
                             />
                             <Button
                                 label="Delete"
@@ -157,12 +154,12 @@ export default function Organizations() {
                                 onClick={() =>
                                     action.mutate(async () => {
                                         // Refresh the list only after deletion succeeds.
-                                        await api.delete(`/api/v1/organizations/${deletion.id}`);
+                                        await api.delete(`/api/v1/organizations/${dialog.item.id}`);
                                         await client.invalidateQueries({
-                                            queryKey: ['api', '/api/v1/organizations?page=' + page + '&page_size=25'],
+                                            queryKey: ['api', path],
                                             exact: true,
                                         });
-                                        setDeletion(null);
+                                        setDialog(null);
                                     })
                                 }
                             />

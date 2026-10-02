@@ -1,7 +1,8 @@
 import { api } from '@/lib/api';
 import { useState } from 'react';
+import { useParams } from 'react-router';
+import { NoIndex } from '@/components/Seo';
 import { Menu } from '@/components/ui/Menu';
-import CreateSolution from './CreateSolution';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Avatar } from '@/components/ui/Avatar';
@@ -23,16 +24,102 @@ import { ProgressBar } from '@astryxdesign/core/ProgressBar';
 import { Table, proportional } from '@astryxdesign/core/Table';
 import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
+import CreateSolution from '@/platform/views/orgs/CreateSolution';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { useOrganizationMembership } from '@/lib/hooks/use-organization';
 
 /** @typedef {import('zod').output<typeof schemas.zOrganizationSolutionSummary>} Solution */
 /** @typedef {{ item: Solution, candidate: import('zod').output<typeof schemas.zSolutionUpdateCheck>, envs: Record<string, string>, removed: Record<string, boolean> }} Update */
 
+/** Presents a deployment review while the parent owns the draft and submission.
+ * @param {{ update: Update, isPending: boolean, isDisabled: boolean, onClose: () => void, onSubmit: import('react').SubmitEventHandler<HTMLElement>, onEnvironmentChange: (name: string, value: string) => void, onRemovalChange: (name: string, value: boolean) => void }} props
+ */
+function DeploymentReview({ update, isPending, isDisabled, onClose, onSubmit, onEnvironmentChange, onRemovalChange }) {
+    return (
+        <Dialog
+            isOpen
+            purpose="form"
+            onOpenChange={(open) => {
+                if (!open) onClose();
+            }}
+        >
+            <DialogHeader title={`Update ${update.item.name}`} onOpenChange={onClose} />
+            <Stack gap={3} as="form" onSubmit={onSubmit}>
+                <Stack direction="horizontal" gap={2} align="center" wrap="wrap">
+                    <Text type="supporting" color="secondary">
+                        Current {update.candidate.current_image_digest}
+                    </Text>
+                    <Text type="supporting" color="primary">
+                        New {update.candidate.image_digest}
+                    </Text>
+                </Stack>
+                {(update.candidate.metadata.environments ?? []).map((environment) => {
+                    const configured = update.candidate.configured_envs.includes(environment.name);
+                    const removed = update.removed[environment.name] === true;
+
+                    // Configured secrets remain hidden; blank untouched inputs preserve them.
+                    return (
+                        <Stack key={environment.name} gap={2}>
+                            <TextInput
+                                label={environment.name}
+                                labelTooltip={environment.description ?? undefined}
+                                type="password"
+                                value={
+                                    Object.hasOwn(update.envs, environment.name) ? update.envs[environment.name] : ''
+                                }
+                                isDisabled={removed}
+                                isOptional={!environment.required}
+                                isRequired={environment.required && (!configured || removed)}
+                                placeholder={
+                                    removed
+                                        ? 'Will be removed'
+                                        : configured
+                                          ? 'Configured: preserve existing value'
+                                          : environment.description || 'Enter value'
+                                }
+                                onChange={(value) => onEnvironmentChange(environment.name, value)}
+                            />
+                            {configured && !environment.required && (
+                                <CheckboxInput
+                                    label={`Remove ${environment.name}`}
+                                    value={removed}
+                                    onChange={(value) => onRemovalChange(environment.name, value)}
+                                />
+                            )}
+                        </Stack>
+                    );
+                })}
+                <Stack direction="horizontal" gap={2} justify="end" wrap="wrap">
+                    <Button label="Cancel" variant="ghost" isDisabled={isPending} onClick={onClose} />
+                    <Button
+                        label="Update solution"
+                        variant="primary"
+                        type="submit"
+                        isDisabled={isDisabled}
+                        isLoading={isPending}
+                    />
+                </Stack>
+            </Stack>
+        </Dialog>
+    );
+}
+
+/** Renders organization metadata and resets drafts when the route identity changes. */
+export default function OrganizationSettings() {
+    const { organization = '' } = useParams();
+
+    return (
+        <>
+            <NoIndex title="Organization Settings | LongLink" />
+            <SettingsPage key={organization} organization={organization} />
+        </>
+    );
+}
+
 /** Manages organization access, storage, and Solution deployment operations.
  * @param {{ organization: string }} props
  */
-export default function Settings({ organization }) {
+function SettingsPage({ organization }) {
     const [invitation, setInvitation] = useState({ email: '', role: 'write' });
     const [inviting, setInviting] = useState(false);
     const [member, setMember] = useState(
@@ -482,120 +569,44 @@ export default function Settings({ organization }) {
                 <CreateSolution organizationId={membership.data.organization.id} onClose={() => setCreating(false)} />
             )}
             {update && (
-                <Dialog
-                    isOpen
-                    purpose="form"
-                    onOpenChange={(open) => {
-                        if (!open && !action.isPending) setUpdate(null);
+                <DeploymentReview
+                    update={update}
+                    isPending={action.isPending}
+                    isDisabled={Boolean(missingRequired || !hasChanges)}
+                    onClose={() => {
+                        if (!action.isPending) setUpdate(null);
                     }}
-                >
-                    <DialogHeader
-                        title={`Update ${update.item.name}`}
-                        onOpenChange={() => {
-                            if (!action.isPending) setUpdate(null);
-                        }}
-                    />
-                    <Stack
-                        gap={3}
-                        as="form"
-                        onSubmit={(event) => {
-                            event.preventDefault();
-                            if (action.isPending || missingRequired || !hasChanges) return;
+                    onEnvironmentChange={(name, value) =>
+                        setUpdate({ ...update, envs: { ...update.envs, [name]: value } })
+                    }
+                    onRemovalChange={(name, value) =>
+                        setUpdate({ ...update, removed: { ...update.removed, [name]: value } })
+                    }
+                    onSubmit={(event) => {
+                        event.preventDefault();
+                        if (action.isPending || missingRequired || !hasChanges) return;
 
-                            // Send edited secrets and explicit removals, preserving all omitted values.
-                            action.mutate(async () => {
-                                const envs = {
-                                    ...update.envs,
-                                    ...Object.fromEntries(
-                                        Object.entries(update.removed)
-                                            .filter(([, removed]) => removed)
-                                            .map(([name]) => [name, null])
-                                    ),
-                                };
-                                await api.post(`/api/v1/solutions/${update.item.id}/update`, {
-                                    json: schemas.zSolutionPatch.parse({
-                                        envs,
-                                        expected_revision_id: update.candidate.revision_id,
-                                    }),
-                                });
-                                await client.invalidateQueries({ queryKey: ['api', `${base}/solutions`], exact: true });
-                                setUpdate(null);
+                        // Send edited secrets and explicit removals, preserving all omitted values.
+                        action.mutate(async () => {
+                            const envs = {
+                                ...update.envs,
+                                ...Object.fromEntries(
+                                    Object.entries(update.removed)
+                                        .filter(([, removed]) => removed)
+                                        .map(([name]) => [name, null])
+                                ),
+                            };
+                            await api.post(`/api/v1/solutions/${update.item.id}/update`, {
+                                json: schemas.zSolutionPatch.parse({
+                                    envs,
+                                    expected_revision_id: update.candidate.revision_id,
+                                }),
                             });
-                        }}
-                    >
-                        <Stack direction="horizontal" gap={2} align="center" wrap="wrap">
-                            <Text type="supporting" color="secondary">
-                                Current {update.candidate.current_image_digest}
-                            </Text>
-                            <Text type="supporting" color="primary">
-                                New {update.candidate.image_digest}
-                            </Text>
-                        </Stack>
-                        {(update.candidate.metadata.environments ?? []).map((environment) => {
-                            const configured = update.candidate.configured_envs.includes(environment.name);
-                            const removed = update.removed[environment.name] === true;
-
-                            // Configured secrets remain hidden; blank untouched inputs preserve them.
-                            return (
-                                <Stack key={environment.name} gap={2}>
-                                    <TextInput
-                                        label={environment.name}
-                                        labelTooltip={environment.description ?? undefined}
-                                        type="password"
-                                        value={
-                                            Object.hasOwn(update.envs, environment.name)
-                                                ? update.envs[environment.name]
-                                                : ''
-                                        }
-                                        isDisabled={removed}
-                                        isOptional={!environment.required}
-                                        isRequired={environment.required && (!configured || removed)}
-                                        placeholder={
-                                            removed
-                                                ? 'Will be removed'
-                                                : configured
-                                                  ? 'Configured: preserve existing value'
-                                                  : environment.description || 'Enter value'
-                                        }
-                                        onChange={(value) =>
-                                            setUpdate({
-                                                ...update,
-                                                envs: { ...update.envs, [environment.name]: value },
-                                            })
-                                        }
-                                    />
-                                    {configured && !environment.required && (
-                                        <CheckboxInput
-                                            label={`Remove ${environment.name}`}
-                                            value={removed}
-                                            onChange={(value) =>
-                                                setUpdate({
-                                                    ...update,
-                                                    removed: { ...update.removed, [environment.name]: value },
-                                                })
-                                            }
-                                        />
-                                    )}
-                                </Stack>
-                            );
-                        })}
-                        <Stack direction="horizontal" gap={2} justify="end" wrap="wrap">
-                            <Button
-                                label="Cancel"
-                                variant="ghost"
-                                isDisabled={action.isPending}
-                                onClick={() => setUpdate(null)}
-                            />
-                            <Button
-                                label="Update solution"
-                                variant="primary"
-                                type="submit"
-                                isDisabled={missingRequired || !hasChanges}
-                                isLoading={action.isPending}
-                            />
-                        </Stack>
-                    </Stack>
-                </Dialog>
+                            await client.invalidateQueries({ queryKey: ['api', `${base}/solutions`], exact: true });
+                            setUpdate(null);
+                        });
+                    }}
+                />
             )}
             {logs && (
                 <Dialog

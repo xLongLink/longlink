@@ -20,11 +20,10 @@ import { zPageSolutionResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 /** Lists Solutions and manages administrator metadata and deletion dialogs. */
 export default function Solutions() {
     const [page, setPage] = useState(1);
-    const [metadata, setMetadata] = useState(
-        /** @type {import('zod').output<typeof zPageSolutionResponse>['items'][number] | null} */ (null)
-    );
-    const [deletion, setDeletion] = useState(
-        /** @type {import('zod').output<typeof zPageSolutionResponse>['items'][number] | null} */ (null)
+    const [dialog, setDialog] = useState(
+        /** @type {{ kind: 'metadata' | 'deletion', item: import('zod').output<typeof zPageSolutionResponse>['items'][number] } | null} */ (
+            null
+        )
     );
     const client = useQueryClient();
     const action = useAction();
@@ -104,7 +103,7 @@ export default function Solutions() {
                                             id: 'metadata',
                                             label: 'Metadata',
                                             icon: <Info />,
-                                            onClick: () => setMetadata(row),
+                                            onClick: () => setDialog({ kind: 'metadata', item: row }),
                                         },
                                     ]}
                                 />
@@ -121,79 +120,76 @@ export default function Solutions() {
                     />
                 </Stack>
             </Stack>
-            {metadata && (
+            {dialog?.kind === 'metadata' && (
                 <Dialog
                     isOpen
                     onOpenChange={(open) => {
-                        if (!open) setMetadata(null);
+                        if (!open) setDialog(null);
                     }}
                 >
-                    <DialogHeader title="Solution metadata" onOpenChange={() => setMetadata(null)} />
+                    <DialogHeader title="Solution metadata" onOpenChange={() => setDialog(null)} />
                     <Stack gap={2}>
                         <Text>
-                            <b>Status</b> {metadata.status}
+                            <b>Status</b> {dialog.item.status}
                         </Text>
                         <Text>
-                            <b>Organization</b> {metadata.organization.name}
+                            <b>Organization</b> {dialog.item.organization.name}
                         </Text>
                         <Text>
-                            <b>Desired image</b> {metadata.image_desired}
+                            <b>Desired image</b> {dialog.item.image_desired}
                         </Text>
                         <Text>
-                            <b>Desired revision</b> {metadata.desired_revision_id ?? 'Not selected'}
+                            <b>Desired revision</b> {dialog.item.desired_revision_id ?? 'Not selected'}
                         </Text>
                         <Text>
-                            <b>Last deployed revision</b> {metadata.deployed_revision_id ?? 'Never deployed'}
+                            <b>Last deployed revision</b> {dialog.item.deployed_revision_id ?? 'Never deployed'}
                         </Text>
                         <Text>
-                            <b>ID</b> {metadata.id}
+                            <b>ID</b> {dialog.item.id}
                         </Text>
                         <Text>
-                            <b>Slug</b> {metadata.slug}
+                            <b>Slug</b> {dialog.item.slug}
                         </Text>
-                        {metadata.description && (
+                        {dialog.item.description && (
                             <Text>
-                                <b>Description</b> {metadata.description}
+                                <b>Description</b> {dialog.item.description}
                             </Text>
                         )}
                         <Text>
-                            <b>Created</b> {metadata.created_at}
+                            <b>Created</b> {dialog.item.created_at}
                         </Text>
                         <Stack direction="horizontal" justify="end">
                             <Button
                                 label="Delete"
                                 variant="destructive"
-                                onClick={() => {
-                                    setDeletion(metadata);
-                                    setMetadata(null);
-                                }}
+                                onClick={() => setDialog({ kind: 'deletion', item: dialog.item })}
                             />
                         </Stack>
                     </Stack>
                 </Dialog>
             )}
-            {deletion && (
+            {dialog?.kind === 'deletion' && (
                 <Dialog
                     isOpen
                     purpose="form"
                     onOpenChange={(open) => {
-                        if (!open && !action.isPending) setDeletion(null);
+                        if (!open && !action.isPending) setDialog(null);
                     }}
                 >
                     <DialogHeader
                         title="Delete solution"
                         onOpenChange={() => {
-                            if (!action.isPending) setDeletion(null);
+                            if (!action.isPending) setDialog(null);
                         }}
                     />
                     <Stack gap={3}>
-                        <Text color="secondary">Delete solution {deletion.name}?</Text>
+                        <Text color="secondary">Delete solution {dialog.item.name}?</Text>
                         <Stack direction="horizontal" gap={2} justify="end">
                             <Button
                                 label="Cancel"
                                 variant="ghost"
                                 isDisabled={action.isPending}
-                                onClick={() => setDeletion(null)}
+                                onClick={() => setDialog(null)}
                             />
                             <Button
                                 label="Delete"
@@ -202,9 +198,9 @@ export default function Solutions() {
                                 onClick={() =>
                                     action.mutate(async () => {
                                         // Refresh the list only after deletion succeeds.
-                                        await api.delete(`/api/v1/solutions/${deletion.id}`);
+                                        await api.delete(`/api/v1/solutions/${dialog.item.id}`);
                                         await client.invalidateQueries({ queryKey: ['api', path], exact: true });
-                                        setDeletion(null);
+                                        setDialog(null);
                                     })
                                 }
                             />

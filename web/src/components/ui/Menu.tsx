@@ -23,15 +23,6 @@ export type MenuItem = {
 };
 export type MenuEntry = MenuItem | { icon?: StoneIconName; items: MenuItem[]; kind: 'subsection'; label: string };
 
-/** Converts a menu label into its default stable identifier. */
-export function menuItemId(label: string): string {
-    return label
-        .toLowerCase()
-        .trim()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-|-$/g, '');
-}
-
 /** Renders a menu icon when one is configured. */
 function renderMenuIcon(icon: StoneIconName | undefined) {
     return icon ? <Icon icon={icon} size="sm" /> : undefined;

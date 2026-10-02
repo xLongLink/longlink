@@ -47,7 +47,7 @@ describe('resolveRequestUrl', () => {
         'data:text/html,payload',
     ])('rejects request URL evasion paths: %s', (path) => {
         expect(() => resolveRequestUrl('/api/solutions/123/proxy', path)).toThrow(
-            'XML request URL must be solution-relative'
+            'Solution request URL must be solution-relative'
         );
     });
 
@@ -60,7 +60,7 @@ describe('resolveRequestUrl', () => {
         '/items%2f..%2fapi/v1/me',
     ])('rejects encoded path that could escape the solution proxy: %s', (path) => {
         expect(() => resolveRequestUrl('/api/solutions/123/proxy', path)).toThrow(
-            'XML request URL must remain within the solution'
+            'Solution request URL must remain within the solution'
         );
     });
 

@@ -173,18 +173,18 @@ def test_production_startup_installs_one_access_filter(monkeypatch: pytest.Monke
 
 
 @pytest.mark.parametrize(
-    ("relative_path", "content", "expected_metadata"),
+    ("relative_path", "content", "expected_route"),
     [
         pytest.param(
             "dashboard.jsx",
             "export default function Dashboard() { return <Text>Dashboard</Text>; }",
-            {"route": "/dashboard"},
+            "/dashboard",
             id="root",
         ),
         pytest.param(
             "issues/[issue].jsx",
             "export default function Issue() { return <Text>Issue</Text>; }",
-            {"route": "/issues/:issue"},
+            "/issues/:issue",
             id="dynamic",
         ),
     ],
@@ -193,7 +193,7 @@ def test_views_are_registered_from_default_views_directory(
     solution_source: Path,
     relative_path: str,
     content: str,
-    expected_metadata: dict[str, str],
+    expected_route: str,
 ) -> None:
     """Expose root, nested, and dynamic Views with filename-derived routes."""
 
@@ -211,7 +211,7 @@ def test_views_are_registered_from_default_views_directory(
     assert response.status_code == 200
     assert "text/plain" in response.headers["content-type"]
     assert response.text == content
-    assert views_response.json() == [{"path": f"views/{relative_path.removesuffix('.jsx')}", **expected_metadata}]
+    assert views_response.json() == [{"path": f"views/{relative_path.removesuffix('.jsx')}", "route": expected_route}]
 
 
 def test_view_catalog_ignores_json_sidecars(solution_source: Path) -> None:

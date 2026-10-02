@@ -1,5 +1,5 @@
-import { api } from '@/lib/api';
 import { useState } from 'react';
+import { NoIndex } from '@/components/Seo';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Avatar } from '@/components/ui/Avatar';
@@ -8,18 +8,26 @@ import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
 import { Heading } from '@astryxdesign/core/Heading';
 import { Spinner } from '@astryxdesign/core/Spinner';
-import { useQueryClient } from '@tanstack/react-query';
 import { useApi, useAction } from '@/lib/hooks/use-api';
-import { TextInput } from '@astryxdesign/core/TextInput';
+import { PageContainer } from '@/components/PageContainer';
 import { Table, proportional } from '@astryxdesign/core/Table';
-import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
+import CreateOrganization from '@/platform/views/user/CreateOrganization';
 
 /** Lists the current user's organizations and creates new organizations. */
 export default function Organizations() {
+    return (
+        <PageContainer padding={2}>
+            <NoIndex title="Organizations | LongLink" />
+            <OrganizationsPage />
+        </PageContainer>
+    );
+}
+
+/** Owns the organizations list and its creation draft. */
+function OrganizationsPage() {
     const [name, setName] = useState('');
     const [creating, setCreating] = useState(false);
-    const client = useQueryClient();
     const action = useAction();
     const memberships = useApi('/api/v1/me/organizations', schemas.zGetMyOrganizationsApiV1MeOrganizationsGetResponse);
 
@@ -55,49 +63,13 @@ export default function Organizations() {
                     },
                 ]}
             />
-            <Dialog
+            <CreateOrganization
                 isOpen={creating}
-                purpose="form"
-                onOpenChange={(open) => {
-                    if (!action.isPending) setCreating(open);
-                }}
-            >
-                <DialogHeader
-                    title="New organization"
-                    onOpenChange={() => {
-                        if (!action.isPending) setCreating(false);
-                    }}
-                />
-                <Stack
-                    gap={3}
-                    as="form"
-                    onSubmit={(event) => {
-                        event.preventDefault();
-                        if (action.isPending || !name.trim()) return;
-
-                        // Preserve the draft if creation fails and refresh memberships after success.
-                        action.mutate(async () => {
-                            await api.post('/api/v1/organizations', {
-                                json: schemas.zOrganizationCreate.parse({ name: name.trim() }),
-                            });
-                            await client.invalidateQueries({
-                                queryKey: ['api', '/api/v1/me/organizations'],
-                                exact: true,
-                            });
-                            setCreating(false);
-                        });
-                    }}
-                >
-                    <TextInput label="Name" value={name} placeholder="Example LongLink" isRequired onChange={setName} />
-                    <Button
-                        label="Create organization"
-                        variant="primary"
-                        type="submit"
-                        isDisabled={!name.trim()}
-                        isLoading={action.isPending}
-                    />
-                </Stack>
-            </Dialog>
+                onOpenChange={setCreating}
+                name={name}
+                onNameChange={setName}
+                action={action}
+            />
         </Stack>
     );
 }

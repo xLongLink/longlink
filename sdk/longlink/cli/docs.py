@@ -40,7 +40,7 @@ def docs_command(component: str | None = None, category: str | None = None) -> N
     typer.echo(
         "LongLink JSX View components\nExport one default React component from each .jsx file; no package imports or frontend build is required."
     )
-    typer.echo("React state and controlled callbacks replace State, Query, Patch, Validate, and expression strings.")
+    typer.echo("Use React state and controlled callbacks; express queries and ordered actions in ordinary JavaScript.")
     typer.echo(
         "Source runs in an opaque-origin sandbox. request() and navigate() access only the current Solution. Titles come from JSX filenames; tabs use the default icon."
     )

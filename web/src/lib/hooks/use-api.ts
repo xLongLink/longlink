@@ -14,5 +14,5 @@ export function useApi<T>(path: string | null, schema: z.ZodType<T>) {
 
 /** Runs a page action with pending state and root-owned mutation error reporting. */
 export function useAction() {
-    return useMutation({ mutationFn: async (run: () => Promise<void>) => run() });
+    return useMutation({ mutationFn: (run: () => Promise<void>) => run() });
 }

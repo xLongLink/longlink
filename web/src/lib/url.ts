@@ -50,12 +50,12 @@ export function resolveRequestUrl(baseUrl: string, path: string): string {
 
     // Reject requests that would leave the solution origin.
     if (!isSolutionRelativeUrl(value)) {
-        throw new Error('XML request URL must be solution-relative');
+        throw new Error('Solution request URL must be solution-relative');
     }
 
     // Reject encoded separators and dot segments before browser URL normalization can escape the proxy prefix.
     if (/(?:^|\/)(?=[^/]*%2e)(?:\.|%2e){1,2}(?=\/|$)|%2f|%5c/i.test(value.split(/[?#]/, 1)[0])) {
-        throw new Error('XML request URL must remain within the solution');
+        throw new Error('Solution request URL must remain within the solution');
     }
 
     // Preserve solution-relative leading slashes while resolving through the platform solution proxy.
@@ -65,7 +65,7 @@ export function resolveRequestUrl(baseUrl: string, path: string): string {
 
     // Require the normalized browser URL to retain the complete solution proxy path.
     if (!url.pathname.startsWith(basePathname)) {
-        throw new Error('XML request URL must remain within the solution');
+        throw new Error('Solution request URL must remain within the solution');
     }
 
     return base.origin === RELATIVE_URL_ORIGIN ? `${url.pathname}${url.search}${url.hash}` : url.toString();

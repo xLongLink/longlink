@@ -42,8 +42,8 @@ export default [
     layout('./layouts/Authenticated.tsx', [
         ...prefix('user', [
             layout('./layouts/User.tsx', [
-                route('organizations', './routes/user/Organizations.tsx'),
-                route('settings', './routes/user/Settings.tsx'),
+                route('organizations', './routes/user/Organizations.jsx'),
+                route('settings', './routes/user/Settings.jsx'),
             ]),
         ]),
         ...prefix('admin', [
@@ -54,8 +54,8 @@ export default [
         ]),
         ...prefix('orgs/:organization', [
             layout('./layouts/Organization.tsx', [
-                index('./routes/orgs/Organization.tsx'),
-                route('settings', './routes/orgs/Settings.tsx'),
+                index('./routes/orgs/Organization.jsx'),
+                route('settings', './routes/orgs/Settings.jsx'),
             ]),
             route('solutions/:solution/*', './routes/orgs/Solution.tsx'),
         ]),

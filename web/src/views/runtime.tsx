@@ -7,7 +7,6 @@ import { createRoot } from 'react-dom/client';
 import * as links from '@astryxdesign/core/Link';
 import { Theme } from '@astryxdesign/core/theme';
 import { LayerProvider } from '@astryxdesign/core/Layer';
-import { FormProvider, useController, useForm } from 'react-hook-form';
 import { QueryClient, QueryClientProvider, QueryErrorResetBoundary, useSuspenseQuery } from '@tanstack/react-query';
 import {
     requestSchema,
@@ -82,202 +81,6 @@ function useApi(path: string): unknown {
         queryFn: () => request(path),
     });
     return data;
-}
-
-type FormValues = Record<string, string | number | boolean | null>;
-type FieldProps = { name: string; label: string; required?: boolean };
-
-/** Submits named fields as JSON through the scoped bridge without a custom request handler. */
-function ApiForm({
-    action,
-    method = 'POST',
-    submitLabel = 'Save',
-    children,
-}: {
-    action: string;
-    method?: 'POST' | 'PUT' | 'PATCH' | 'DELETE';
-    submitLabel?: string;
-    children: React.ReactNode;
-}) {
-    const form = useForm<FormValues>({ shouldUnregister: true });
-    const submitting = React.useRef(false);
-
-    // Keep submission, validation, feedback, and duplicate-write protection owned by the form.
-    return (
-        <FormProvider {...form}>
-            <components.Stack
-                as="form"
-                gap={4}
-                onSubmit={(event) => {
-                    event.preventDefault();
-                    if (submitting.current) return;
-                    submitting.current = true;
-                    form.clearErrors('root');
-                    void form
-                        .handleSubmit(async (values) => {
-                            try {
-                                await request(action, { method, json: values });
-                            } catch (error) {
-                                form.setError('root', {
-                                    message: error instanceof Error ? error.message : 'Form could not be saved',
-                                });
-                            }
-                        })(event)
-                        .finally(() => {
-                            submitting.current = false;
-                        });
-                }}
-            >
-                {children}
-                {form.formState.errors.root && (
-                    <components.Banner status="error" title={form.formState.errors.root.message} />
-                )}
-                {form.formState.isSubmitSuccessful && !form.formState.errors.root && (
-                    <components.Banner status="success" title="Saved successfully" />
-                )}
-                <components.Button
-                    type="submit"
-                    label={submitLabel}
-                    variant="primary"
-                    isLoading={form.formState.isSubmitting}
-                />
-            </components.Stack>
-        </FormProvider>
-    );
-}
-
-/** Registers a text field and validates required values and email addresses. */
-function TextField({
-    name,
-    label,
-    required = false,
-    type = 'text',
-    placeholder,
-    defaultValue = '',
-}: FieldProps & { type?: 'text' | 'email' | 'password'; placeholder?: string; defaultValue?: string }) {
-    const {
-        field: { ref, value, onChange, onBlur },
-        fieldState,
-        formState,
-    } = useController<FormValues>({
-        name,
-        defaultValue,
-        rules: {
-            required: required ? `${label} is required` : false,
-            validate:
-                type === 'email'
-                    ? (value) => !value || z.email().safeParse(value).success || 'Enter a valid email address'
-                    : undefined,
-        },
-    });
-
-    // Use the shared input's accessibility and validation presentation.
-    return (
-        <components.TextInput
-            ref={ref}
-            htmlName={name}
-            label={label}
-            type={type}
-            placeholder={placeholder}
-            value={typeof value === 'string' ? value : ''}
-            onChange={onChange}
-            onBlur={onBlur}
-            isRequired={required}
-            isReadOnly={formState.isSubmitting}
-            status={fieldState.error ? { type: 'error', message: fieldState.error.message } : undefined}
-        />
-    );
-}
-
-/** Registers a numeric JSON field, accepting JSX string or numeric bounds. */
-function NumberField({
-    name,
-    label,
-    required = false,
-    min,
-    max,
-    step,
-    defaultValue = null,
-}: FieldProps & {
-    min?: string | number;
-    max?: string | number;
-    step?: string | number;
-    defaultValue?: number | null;
-}) {
-    // Normalize bounds at the component boundary before passing them to validation and the input.
-    const minimum = min === undefined ? undefined : z.coerce.number().finite().parse(min);
-    const maximum = max === undefined ? undefined : z.coerce.number().finite().parse(max);
-    const increment = step === undefined ? undefined : z.coerce.number().positive().parse(step);
-    const {
-        field: { ref, value, onChange, onBlur },
-        fieldState,
-        formState,
-    } = useController<FormValues>({
-        name,
-        defaultValue,
-        rules: {
-            required: required ? `${label} is required` : false,
-            min:
-                minimum === undefined ? undefined : { value: minimum, message: `${label} must be at least ${minimum}` },
-            max: maximum === undefined ? undefined : { value: maximum, message: `${label} must be at most ${maximum}` },
-        },
-    });
-
-    // Keep empty numbers null and populated numbers numeric in the submitted JSON.
-    return (
-        <components.NumberInput
-            ref={ref}
-            htmlName={name}
-            label={label}
-            value={typeof value === 'number' ? value : null}
-            onChange={onChange}
-            onBlur={onBlur}
-            min={minimum}
-            max={maximum}
-            step={increment}
-            hasClear
-            isRequired={required}
-            isReadOnly={formState.isSubmitting}
-            status={fieldState.error ? { type: 'error', message: fieldState.error.message } : undefined}
-        />
-    );
-}
-
-/** Registers a boolean field, including false when unchecked. */
-function CheckboxField({
-    name,
-    label,
-    required = false,
-    defaultValue = false,
-}: FieldProps & { defaultValue?: boolean }) {
-    const {
-        field: { ref, value, onChange, onBlur },
-        fieldState,
-        formState,
-    } = useController<FormValues>({
-        name,
-        defaultValue,
-        rules: { required: required ? `${label} is required` : false },
-    });
-
-    // Preserve boolean values instead of native checkbox submission strings.
-    return (
-        <components.CheckboxInput
-            ref={ref}
-            htmlName={name}
-            label={label}
-            value={value === true}
-            onChange={onChange}
-            onBlur={onBlur}
-            isRequired={required}
-            isReadOnly={formState.isSubmitting}
-            status={
-                fieldState.error
-                    ? { type: 'error', message: fieldState.error.message ?? `${label} is required` }
-                    : undefined
-            }
-        />
-    );
 }
 
 /** Limits navigation to a host capability rather than granting top-level browser access. */
@@ -463,10 +266,6 @@ function initialize(event: MessageEvent<unknown>): void {
             Currency,
             FileViewer,
             StatusBadge,
-            ApiForm,
-            TextField,
-            NumberField,
-            CheckboxField,
             request,
             navigate,
             useApi,
@@ -482,6 +281,7 @@ function initialize(event: MessageEvent<unknown>): void {
         const result: unknown = evaluate(module, module.exports, ...Object.values(bindings));
         if (typeof result !== 'function') throw new Error('A View must export a component as default');
         const View = result as React.ComponentType<{ params: Readonly<Record<string, string>> }>;
+        const params = Object.freeze(parsed.data.params);
         root.render(
             <Theme theme={stoneTheme} mode="dark">
                 <LayerProvider toast={{ position: 'bottomEnd' }}>
@@ -490,7 +290,7 @@ function initialize(event: MessageEvent<unknown>): void {
                             {({ reset }) => (
                                 <ViewBoundary onReset={reset}>
                                     <React.Suspense fallback={<components.Spinner label="Loading View" />}>
-                                        <View params={Object.freeze(parsed.data.params)} />
+                                        <View params={params} />
                                     </React.Suspense>
                                 </ViewBoundary>
                             )}

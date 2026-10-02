@@ -23,11 +23,10 @@ const registrationSchema = schemas.zComputeRegistryCreate.extend({ kubeconfig: z
 /** Lists registered Compute infrastructure and manages registration and removal. */
 export default function Compute() {
     const [page, setPage] = useState(1);
-    const [metadata, setMetadata] = useState(
-        /** @type {import('zod').output<typeof schemas.zComputeRegistryResponse> | null} */ (null)
-    );
-    const [deletion, setDeletion] = useState(
-        /** @type {import('zod').output<typeof schemas.zComputeRegistryResponse> | null} */ (null)
+    const [dialog, setDialog] = useState(
+        /** @type {{ kind: 'metadata' | 'deletion', item: import('zod').output<typeof schemas.zComputeRegistryResponse> } | null} */ (
+            null
+        )
     );
     const [registration, setRegistration] = useState(
         /** @type {import('zod').input<typeof registrationSchema> | null} */ (null)
@@ -81,7 +80,7 @@ export default function Compute() {
                                             id: 'metadata',
                                             label: 'Metadata',
                                             icon: <Info />,
-                                            onClick: () => setMetadata(row),
+                                            onClick: () => setDialog({ kind: 'metadata', item: row }),
                                         },
                                     ]}
                                 />
@@ -166,57 +165,54 @@ export default function Compute() {
                     </Stack>
                 </Dialog>
             )}
-            {metadata && (
+            {dialog?.kind === 'metadata' && (
                 <Dialog
                     isOpen
                     onOpenChange={(open) => {
-                        if (!open) setMetadata(null);
+                        if (!open) setDialog(null);
                     }}
                 >
-                    <DialogHeader title="Compute metadata" onOpenChange={() => setMetadata(null)} />
+                    <DialogHeader title="Compute metadata" onOpenChange={() => setDialog(null)} />
                     <Stack gap={2}>
                         <Text>
-                            <b>Gateway</b> {metadata.gateway_url}
+                            <b>Gateway</b> {dialog.item.gateway_url}
                         </Text>
                         <Text>
-                            <b>Database storage class</b> {metadata.database_storage_class}
+                            <b>Database storage class</b> {dialog.item.database_storage_class}
                         </Text>
                         <Text>
-                            <b>ID</b> {metadata.id}
+                            <b>ID</b> {dialog.item.id}
                         </Text>
                         <Text>
-                            <b>Storage endpoint</b> {metadata.storage_endpoint}
+                            <b>Storage endpoint</b> {dialog.item.storage_endpoint}
                         </Text>
                         <Stack direction="horizontal" justify="end">
                             <Button
                                 label="Delete"
                                 variant="destructive"
-                                onClick={() => {
-                                    setDeletion(metadata);
-                                    setMetadata(null);
-                                }}
+                                onClick={() => setDialog({ kind: 'deletion', item: dialog.item })}
                             />
                         </Stack>
                     </Stack>
                 </Dialog>
             )}
-            {deletion && (
+            {dialog?.kind === 'deletion' && (
                 <Dialog
                     isOpen
                     purpose="form"
                     onOpenChange={(open) => {
-                        if (!open && !action.isPending) setDeletion(null);
+                        if (!open && !action.isPending) setDialog(null);
                     }}
                 >
                     <DialogHeader
                         title="Delete compute"
                         onOpenChange={() => {
-                            if (!action.isPending) setDeletion(null);
+                            if (!action.isPending) setDialog(null);
                         }}
                     />
                     <Stack gap={3}>
                         <Text color="secondary">
-                            Remove compute {deletion.name} from the LongLink Platform? Its Kubernetes resources will
+                            Remove compute {dialog.item.name} from the LongLink Platform? Its Kubernetes resources will
                             remain unchanged.
                         </Text>
                         <Stack direction="horizontal" gap={2} justify="end">
@@ -224,7 +220,7 @@ export default function Compute() {
                                 label="Cancel"
                                 variant="ghost"
                                 isDisabled={action.isPending}
-                                onClick={() => setDeletion(null)}
+                                onClick={() => setDialog(null)}
                             />
                             <Button
                                 label="Delete"
@@ -233,9 +229,9 @@ export default function Compute() {
                                 onClick={() =>
                                     action.mutate(async () => {
                                         // Remove the registry entry without deleting its Kubernetes resources.
-                                        await api.delete(`/api/v1/computes/${deletion.id}`);
+                                        await api.delete(`/api/v1/computes/${dialog.item.id}`);
                                         await client.invalidateQueries({ queryKey: ['api', path], exact: true });
-                                        setDeletion(null);
+                                        setDialog(null);
                                     })
                                 }
                             />
