@@ -30,8 +30,6 @@ const viewSchema = z.object({
                 return false;
             }
         }, 'View path must be solution-relative'),
-    name: z.string().trim().min(1).max(200).optional(),
-    icon: z.string().trim().min(1).max(100).optional(),
     route: z.string().trim().min(1).refine(isRoute, 'Route must be a normalized solution path'),
 });
 

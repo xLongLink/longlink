@@ -102,7 +102,8 @@ describe('SolutionRuntime', () => {
     it('renders dynamic route parameters', async () => {
         // Arrange
         stubFetch((url) => {
-            if (url.endsWith('/views.json')) return Response.json([view('issue', '/issues/:issueId')]);
+            if (url.endsWith('/views.json'))
+                return Response.json([view('issue', '/issues/:issueId', 'views/issues/[item]')]);
             return sourceResponse('export default function Issue() { return <Text>{params.issueId}</Text>; }');
         });
 
@@ -121,6 +122,7 @@ describe('SolutionRuntime', () => {
             new MessageEvent('message', { source: frame.contentWindow, origin: 'null', data: session })
         );
         expect((await initialization).data.params).toEqual({ issueId: '42' });
+        expect(output.querySelector('[data-title]')?.getAttribute('data-title')).toBe('Item');
     });
 
     it('keeps a custom manifest URL and fetches JSX beside it without executing it in the host', async () => {
@@ -206,9 +208,12 @@ describe('SolutionRuntime', () => {
                                 <Route
                                     element={
                                         <SolutionRuntime viewsUrl={viewsUrl}>
-                                            {({ content, tabs }) => (
+                                            {({ content, tabs, title }) => (
                                                 <>
-                                                    <Location tabs={tabs.map((tab) => tab.href).join(',')} />
+                                                    <Location
+                                                        tabs={tabs.map((tab) => tab.href).join(',')}
+                                                        title={title}
+                                                    />
                                                     {content}
                                                 </>
                                             )}
@@ -228,10 +233,16 @@ describe('SolutionRuntime', () => {
 });
 
 /** Exposes the memory-router location for assertions. */
-function Location({ tabs }: { tabs: string }) {
+function Location({ tabs, title }: { tabs: string; title?: string }) {
     const location = useLocation();
 
-    return <output data-path={`${location.pathname}${location.search}${location.hash}`} data-tabs={tabs} />;
+    return (
+        <output
+            data-path={`${location.pathname}${location.search}${location.hash}`}
+            data-tabs={tabs}
+            data-title={title}
+        />
+    );
 }
 
 /** Creates a minimal manifest view. */

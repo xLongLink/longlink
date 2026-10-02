@@ -1,4 +1,3 @@
-import json
 import pytest
 import logging
 from pathlib import Path
@@ -179,13 +178,13 @@ def test_production_startup_installs_one_access_filter(monkeypatch: pytest.Monke
         pytest.param(
             "dashboard.jsx",
             "export default function Dashboard() { return <Text>Dashboard</Text>; }",
-            {"route": "/dashboard", "name": "Dashboard", "icon": "layout-dashboard"},
+            {"route": "/dashboard"},
             id="root",
         ),
         pytest.param(
             "issues/[issue].jsx",
             "export default function Issue() { return <Text>Issue</Text>; }",
-            {"route": "/issues/:issue", "name": "Issue"},
+            {"route": "/issues/:issue"},
             id="dynamic",
         ),
     ],
@@ -196,15 +195,12 @@ def test_views_are_registered_from_default_views_directory(
     content: str,
     expected_metadata: dict[str, str],
 ) -> None:
-    """Expose root, nested, and dynamic Views with derived metadata."""
+    """Expose root, nested, and dynamic Views with filename-derived routes."""
 
     # Build the default view tree.
     view_path = solution_source / "views" / relative_path
     view_path.parent.mkdir(parents=True, exist_ok=True)
     view_path.write_text(content, encoding="utf-8")
-    view_path.with_suffix(".json").write_text(
-        json.dumps({key: value for key, value in expected_metadata.items() if key != "route"}), encoding="utf-8"
-    )
 
     # Start LongLink and request the registered view and view catalog.
     client = create_runtime_client()
@@ -218,15 +214,15 @@ def test_views_are_registered_from_default_views_directory(
     assert views_response.json() == [{"path": f"views/{relative_path.removesuffix('.jsx')}", **expected_metadata}]
 
 
-def test_view_catalog_omits_blank_display_metadata(solution_source: Path) -> None:
-    """Normalize whitespace-only View metadata out of the public catalog."""
+def test_view_catalog_ignores_json_sidecars(solution_source: Path) -> None:
+    """Derive the catalog only from JSX filenames, ignoring former metadata sidecars."""
 
     # Arrange
     (solution_source / "views" / "dashboard.jsx").write_text(
         "export default function Dashboard() { return <Text>Dashboard</Text>; }",
         encoding="utf-8",
     )
-    (solution_source / "views" / "dashboard.json").write_text('{"name": "  ", "icon": "\\t"}', encoding="utf-8")
+    (solution_source / "views" / "dashboard.json").write_text('{"name": "Custom title", "icon": "banknote"}', encoding="utf-8")
     client = create_runtime_client()
 
     # Act

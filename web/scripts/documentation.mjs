@@ -8,7 +8,7 @@ const input = path.resolve(root, '../sdk/longlink/.static/new/src/views/frontend
 const source = await readFile(input, 'utf8');
 const document = ts.createSourceFile(input, source, ts.ScriptTarget.Latest, true);
 const categories = {
-    Runtime: ['React', 'params', 'request', 'navigate', 'useQuery', 'useQueryClient'],
+    Runtime: ['React', 'params', 'request', 'navigate', 'useApi'],
     Actions: ['Button', 'IconButton', 'Link', 'MoreMenu'],
     Content: ['Heading', 'Text', 'Avatar', 'Badge', 'Icon', 'CodeBlock', 'Divider', 'FileViewer', 'Spinner', 'Banner', 'EmptyState'],
     Display: ['Currency', 'Timestamp', 'ProgressBar', 'StatusBadge'],

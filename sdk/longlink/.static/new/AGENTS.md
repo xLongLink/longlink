@@ -30,11 +30,14 @@ You are working on a LongLink Solution project:
 ## Views
 
 - A View is a `.jsx` file exporting one default React component; no frontend build is needed in the Solution.
-- React, LongLink UI components, `request`, `navigate`, `params`, `useQuery`, and `useQueryClient` are supplied by the isolated renderer. Do not import packages.
+- React, LongLink UI components, `request`, `navigate`, `params`, and `useApi` are supplied by the isolated renderer. Do not import packages.
 - Use ordinary JSX props, React state, controlled input callbacks, and JavaScript expressions.
-- An optional adjacent `.json` file defines `name` and `icon`; Python validates metadata without executing JavaScript.
+- Display titles come from JSX filenames (`items.jsx` → Items, `[item].jsx` → Item); tabs use the default icon. Do not add metadata sidecars or exports.
 - Requests are Solution-relative and pass through a restricted host bridge. Never use direct fetch, Platform credentials, external resources, or parent-window access.
-- Keep loading and error states explicit. Use the sample Views as the current JSX API reference.
+- Prefer `useApi(path)` for required data: it returns data directly, while the renderer handles initial loading, errors, and retry. Cache keys are derived internally from the full path, including query parameters.
+- Successful writes through `request()` automatically refresh cached data within this isolated View. No explicit invalidation is needed.
+- Use separate `useApi` calls for multiple resources. Mount a component using `useApi` only when its resource is needed. Cached data remains visible if a background refresh fails.
+- Use the sample Views as the current JSX API reference.
 
 ## Python Guidelines
 

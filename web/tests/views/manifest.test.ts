@@ -34,11 +34,13 @@ describe('viewsSchema', () => {
         ).toBe(true);
     });
 
-    it.each([{ name: '  ' }, { icon: '' }])('rejects blank optional display metadata', (metadata) => {
-        expect(viewsSchema.safeParse([view(metadata)]).success).toBe(false);
+    it.each([{ name: '  ' }, { icon: '' }])('ignores former display metadata', (metadata) => {
+        expect(viewsSchema.parse([view(metadata)])).toEqual([{ path: 'home.jsx', route: '/home' }]);
     });
 
-    it('allows nonblank optional display metadata', () => {
-        expect(viewsSchema.safeParse([view({ name: 'Issues', icon: 'list' })]).success).toBe(true);
+    it('omits custom titles and icons from the parsed catalog', () => {
+        expect(viewsSchema.parse([view({ name: 'Issues', icon: 'list' })])).toEqual([
+            { path: 'home.jsx', route: '/home' },
+        ]);
     });
 });

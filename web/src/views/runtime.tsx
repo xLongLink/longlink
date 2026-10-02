@@ -6,7 +6,7 @@ import * as components from './components';
 import { createRoot } from 'react-dom/client';
 import { Theme } from '@astryxdesign/core/theme';
 import { LayerProvider } from '@astryxdesign/core/Layer';
-import { QueryClient, QueryClientProvider, useQuery, useQueryClient } from '@tanstack/react-query';
+import { QueryClient, QueryClientProvider, QueryErrorResetBoundary, useSuspenseQuery } from '@tanstack/react-query';
 import {
     commandSchema,
     messageSize,
@@ -25,6 +25,7 @@ declare global {
 }
 
 const session = window.__VIEW_SESSION__;
+const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
 const pending = new Map<
     number,
     { resolve: (value: unknown) => void; reject: (error: Error) => void; timer: ReturnType<typeof setTimeout> }
@@ -32,7 +33,7 @@ const pending = new Map<
 let sequence = 0;
 let port: MessagePort;
 
-/** Requests one Solution API operation without exposing any browser credentials to the View. */
+/** Requests a scoped Solution operation and refreshes cached data after successful writes. */
 async function request(
     path: string,
     options: Omit<RequestCommand, 'type' | 'id' | 'path' | 'method'> & { method?: RequestCommand['method'] } = {}
@@ -42,7 +43,7 @@ async function request(
     if (command.type !== 'request' || messageSize(command) > MAX_MESSAGE_SIZE)
         throw new Error('Solution request is too large');
     if (pending.size >= MAX_PENDING_REQUESTS) throw new Error('Too many pending requests');
-    return new Promise((resolve, reject) => {
+    const data = await new Promise<unknown>((resolve, reject) => {
         const timer = setTimeout(() => {
             pending.delete(id);
             reject(new Error('Solution request timed out'));
@@ -50,11 +51,26 @@ async function request(
         pending.set(id, { resolve, reject, timer });
         port.postMessage(command);
     });
+
+    // Refresh active data and mark inactive resources stale only after the write succeeds.
+    if (command.method !== 'GET') await client.invalidateQueries();
+
+    return data;
 }
 
 /** Requests navigation inside the host's Solution route prefix. */
 function navigate(path: string): void {
     port.postMessage({ type: 'navigate', path });
+}
+
+/** Reads Solution data through the bridge; the shared boundaries own initial loading and failures. */
+function useApi(path: string): unknown {
+    // Use the full request path as cache identity, including pagination parameters.
+    const { data } = useSuspenseQuery({
+        queryKey: ['api', path],
+        queryFn: () => request(path),
+    });
+    return data;
 }
 
 /** Limits navigation to a host capability rather than granting top-level browser access. */
@@ -127,7 +143,7 @@ function FileViewer({ src, title }: { src: string; title: string }) {
 }
 
 /** Contains render failures without exposing host data or internals. */
-class ViewBoundary extends React.Component<{ children: React.ReactNode }, { failed: boolean }> {
+class ViewBoundary extends React.Component<{ children: React.ReactNode; onReset: () => void }, { failed: boolean }> {
     state = { failed: false };
 
     static getDerivedStateFromError() {
@@ -136,7 +152,20 @@ class ViewBoundary extends React.Component<{ children: React.ReactNode }, { fail
 
     render() {
         return this.state.failed ? (
-            <components.Banner status="error" title="View rendering failed" />
+            <components.Banner
+                status="error"
+                title="View could not be loaded"
+                endContent={
+                    <components.Button
+                        label="Retry"
+                        clickAction={() => {
+                            // Allow failed queries to fetch again before remounting the View.
+                            this.props.onReset();
+                            this.setState({ failed: false });
+                        }}
+                    />
+                }
+            />
         ) : (
             this.props.children
         );
@@ -193,8 +222,7 @@ function initialize(event: MessageEvent<unknown>): void {
             StatusBadge,
             request,
             navigate,
-            useQuery,
-            useQueryClient,
+            useApi,
             params: parsed.data.params,
         };
         const module = { exports: {} as { default?: React.ComponentType } };
@@ -208,14 +236,19 @@ function initialize(event: MessageEvent<unknown>): void {
         const result: unknown = evaluate(module, module.exports, ...Object.values(bindings));
         if (typeof result !== 'function') throw new Error('A View must export a component as default');
         const View = result as React.ComponentType;
-        const client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
         root.render(
             <Theme theme={stoneTheme} mode="dark">
                 <LayerProvider toast={{ position: 'bottomEnd' }}>
                     <QueryClientProvider client={client}>
-                        <ViewBoundary>
-                            <View />
-                        </ViewBoundary>
+                        <QueryErrorResetBoundary>
+                            {({ reset }) => (
+                                <ViewBoundary onReset={reset}>
+                                    <React.Suspense fallback={<components.Spinner label="Loading View" />}>
+                                        <View />
+                                    </React.Suspense>
+                                </ViewBoundary>
+                            )}
+                        </QueryErrorResetBoundary>
                     </QueryClientProvider>
                 </LayerProvider>
             </Theme>

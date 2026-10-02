@@ -24,7 +24,7 @@ def dev_command(
         host=host,
         port=1707,
         reload=True,
-        reload_includes=["*.jsx", "*.json"],
+        reload_includes=["*.jsx"],
         app_dir=str(Path.cwd()),
         log_config=log_config,
     )

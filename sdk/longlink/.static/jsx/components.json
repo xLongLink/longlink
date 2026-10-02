@@ -360,19 +360,11 @@
         "slug": "timestamp"
     },
     {
-        "name": "useQuery",
+        "name": "useApi",
         "category": "Runtime",
-        "declaration": "declare function useQuery<T>(options: { queryKey: readonly unknown[]; queryFn: () => Promise<T>; enabled?: boolean }): {\n    data: T | undefined;\n    isPending: boolean;\n    isError: boolean;\n    error: Error | null;\n};",
-        "description": "useQuery is supplied by the isolated LongLink renderer.",
+        "declaration": "declare function useApi<T = unknown>(path: string): T;",
+        "description": "useApi is supplied by the isolated LongLink renderer.",
         "lastUpdated": "2026-10-02",
-        "slug": "use-query"
-    },
-    {
-        "name": "useQueryClient",
-        "category": "Runtime",
-        "declaration": "declare function useQueryClient(): { invalidateQueries(options: { queryKey: readonly unknown[] }): Promise<void> };",
-        "description": "useQueryClient is supplied by the isolated LongLink renderer.",
-        "lastUpdated": "2026-10-02",
-        "slug": "use-query-client"
+        "slug": "use-api"
     }
 ]

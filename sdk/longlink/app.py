@@ -4,7 +4,7 @@ from fastapi import FastAPI, APIRouter
 from pathlib import Path
 from dataclasses import dataclass
 from fsspec.spec import AbstractFileSystem
-from longlink.views import ViewMetadata, ViewDefinition, view_stem_route
+from longlink.views import ViewDefinition, view_stem_route
 from collections.abc import Callable
 from longlink.errors import install_error_handlers
 from longlink.logger import ApiAccessFilter
@@ -181,14 +181,10 @@ class LongLink(FastAPI):
             path_without_suffix = view_file.relative_to(views_directory).as_posix().removesuffix(".jsx")
 
             view_path = f"views/{path_without_suffix}"
-            # Read source and validate optional sidecar metadata, never JavaScript exports.
+            # Read source without parsing or executing JavaScript.
             content = view_file.read_text(encoding="utf-8")
             if not content.strip() or len(content.encode("utf-8")) > 1_000_000:
                 raise ValueError(f"View source must contain between 1 and 1000000 bytes: {view_file}")
-            metadata_file = view_file.with_suffix(".json")
-            metadata = ViewMetadata()
-            if metadata_file.is_file():
-                metadata = ViewMetadata.model_validate_json(metadata_file.read_text(encoding="utf-8"))
 
             view_route = view_stem_route(path_without_suffix)
             relative_route = view_route.removeprefix("/")
@@ -203,8 +199,6 @@ class LongLink(FastAPI):
                     ViewDefinition(
                         path=view_path,
                         route=view_route,
-                        name=metadata.name,
-                        icon=metadata.icon,
                     ),
                     content,
                 )

@@ -243,7 +243,8 @@ export default function DocsArticleRoute() {
                 <Text as="p">
                     Solution code runs in a sandboxed iframe with an opaque origin, not inside the Platform page. Use
                     request() and navigate() for your own Solution. Direct network access and Platform credentials are
-                    unavailable. Optional adjacent .json files supply name and icon metadata.
+                    unavailable. Titles come from JSX filenames, and tabs use the default icon. No metadata files are
+                    needed.
                 </Text>
                 <Stack as="aside" className="border-s border-accent ps-4" gap={0}>
                     <Text weight="semibold">Why?</Text>

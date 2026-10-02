@@ -3,17 +3,10 @@ export default function Invoice() {
     const [status, setStatus] = React.useState();
     const [open, setOpen] = React.useState(false);
     const [file, setFile] = React.useState(null);
-    const client = useQueryClient();
-    const invoice = useQuery({ queryKey: ['item', params.item], queryFn: () => request(`/api/items/${params.item}`) });
-    const attachments = useQuery({
-        queryKey: ['attachments', params.item],
-        queryFn: () => request(`/api/items/${params.item}/attachments`),
-    });
 
-    // Use explicit React state and controlled values instead of implicit writable strings.
-    if (invoice.isPending || attachments.isPending) return <Spinner label="Loading invoice" />;
-    if (invoice.isError || attachments.isError) return <Banner status="error" title="Invoice could not be loaded" />;
-    const item = invoice.data;
+    // Read required data; shared boundaries handle initial loading and failures.
+    const item = useApi(`/api/items/${params.item}`);
+    const attachments = useApi(`/api/items/${params.item}/attachments`);
 
     return (
         <Stack gap={6}>
@@ -40,7 +33,6 @@ export default function Invoice() {
                                 method: 'POST',
                                 form: [['file', file]],
                             });
-                            await client.invalidateQueries({ queryKey: ['attachments', params.item] });
                             setOpen(false);
                             setFile(null);
                         }}
@@ -51,7 +43,7 @@ export default function Invoice() {
             <Grid columns={3} gap={8}>
                 <GridSpan columns={2}>
                     <Table
-                        data={attachments.data}
+                        data={attachments}
                         idKey="id"
                         density="compact"
                         columns={[
@@ -89,7 +81,6 @@ export default function Invoice() {
                                     method: 'PATCH',
                                     json: { status },
                                 });
-                                await client.invalidateQueries({ queryKey: ['item', params.item] });
                                 setStatus(undefined);
                             }}
                         />

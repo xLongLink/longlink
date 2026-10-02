@@ -42,7 +42,7 @@ def docs_command(component: str | None = None, category: str | None = None) -> N
     )
     typer.echo("React state and controlled callbacks replace State, Query, Patch, Validate, and expression strings.")
     typer.echo(
-        "Source runs in an opaque-origin sandbox. request() and navigate() access only the current Solution. Optional .json sidecars define name and icon."
+        "Source runs in an opaque-origin sandbox. request() and navigate() access only the current Solution. Titles come from JSX filenames; tabs use the default icon."
     )
     for name in categories:
         if selected is None or name == selected:

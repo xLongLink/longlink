@@ -12,39 +12,6 @@ import { matchRoutes, Navigate, useParams } from 'react-router';
 import type { NavigationTab } from '@/platform/layouts/Platform';
 import { MAX_SOURCE_SIZE, MAX_MESSAGE_SIZE } from '@/views/protocol';
 import { resolveNavigationUrl, resolveRequestUrl } from '@/xml/core/url';
-import {
-    Activity,
-    ArrowRight,
-    Banknote,
-    Bell,
-    Box,
-    Boxes,
-    Building2,
-    Check,
-    ClipboardList,
-    Container,
-    Cpu,
-    Database,
-    Download,
-    HardDrive,
-    Layers,
-    LayoutDashboard,
-    LayoutGrid,
-    Link as LinkIcon,
-    List as ListIcon,
-    ListChecks,
-    MapPin,
-    Plus,
-    Rocket,
-    RotateCcw,
-    Settings2,
-    ShieldCheck,
-    SlidersHorizontal,
-    Timer,
-    Users,
-    X,
-    type LucideIcon,
-} from 'lucide-react';
 
 type SolutionRuntimeProps = {
     children: (solution: { content: ReactNode; tabs: readonly NavigationTab[]; title?: string }) => ReactNode;
@@ -56,51 +23,22 @@ const EMPTY_VIEWS = [] as const;
 // Allow the Platform's 120-second Solution proxy request timeout to finish, including cold starts.
 const SOLUTION_REQUEST_TIMEOUT_MS = 130_000;
 
-/** Maps Solution manifest icon names to their Lucide components. */
-const iconComponents: Record<string, LucideIcon> = {
-    activity: Activity,
-    'arrow-right': ArrowRight,
-    banknote: Banknote,
-    bell: Bell,
-    box: Box,
-    boxes: Boxes,
-    'building-2': Building2,
-    check: Check,
-    'clipboard-list': ClipboardList,
-    container: Container,
-    cpu: Cpu,
-    database: Database,
-    download: Download,
-    'hard-drive': HardDrive,
-    layers: Layers,
-    'layout-dashboard': LayoutDashboard,
-    'layout-grid': LayoutGrid,
-    link: LinkIcon,
-    list: ListIcon,
-    'list-check': ListChecks,
-    'map-pin': MapPin,
-    plus: Plus,
-    rocket: Rocket,
-    'rotate-ccw': RotateCcw,
-    'settings-2': Settings2,
-    'shield-check': ShieldCheck,
-    'sliders-horizontal': SlidersHorizontal,
-    timer: Timer,
-    users: Users,
-    x: X,
-};
-
-/** Formats the SDK's route-derived fallback label when a View has no explicit name. */
-function routeLabel(route: string): string {
-    // Remove the leading slash and truncate at the first nested dynamic segment.
-    return startCase(route.slice(1).split('/:', 1)[0] || 'index');
+/** Formats a View filename, including dynamic parameter files, as its display title. */
+function viewLabel(path: string): string {
+    // SDK paths omit the extension; custom manifests may retain it.
+    const filename =
+        path
+            .split('/')
+            .at(-1)
+            ?.replace(/\.jsx$/, '') ?? 'index';
+    return startCase(filename.replace(/^\[(.*)\]$/, '$1'));
 }
 
 /** Resolves and renders the current manifest-defined View. */
 export function SolutionRuntime({ children, navigationBaseUrl = '/', viewsUrl = '/views.json' }: SolutionRuntimeProps) {
     const { '*': routePath = '' } = useParams();
 
-    // Resolve XML requests beside the manifest without changing its URL form.
+    // Resolve JSX requests beside the manifest without changing its URL form.
     const viewsLocation = new URL(viewsUrl, 'http://longlink.local');
     const requestBaseLocation = new URL('.', viewsLocation);
     const requestBaseUrl = viewsUrl.startsWith('/') ? requestBaseLocation.pathname : requestBaseLocation.toString();
@@ -132,7 +70,7 @@ export function SolutionRuntime({ children, navigationBaseUrl = '/', viewsUrl = 
 
     // Let dynamic detail views share a tab with their matching list view.
     const activeView = routePath ? match?.route.view : undefined;
-    const activeViewTitle = activeView ? (activeView.name ?? routeLabel(activeView.route)) : undefined;
+    const activeViewTitle = activeView ? viewLabel(activeView.path) : undefined;
     const isNotFound = registeredViews !== undefined && routePath.length > 0 && match == null;
     const { data: activeViewSource, error: activeViewError } = useQuery({
         enabled: routePath.length > 0 && activeView !== undefined,
@@ -160,8 +98,7 @@ export function SolutionRuntime({ children, navigationBaseUrl = '/', viewsUrl = 
         (view) =>
             ({
                 href: resolveNavigationUrl(navigationBaseUrl, view.route),
-                icon: view.icon ? iconComponents[view.icon] : undefined,
-                label: view.name ?? routeLabel(view.route),
+                label: viewLabel(view.path),
             }) satisfies NavigationTab
     );
 

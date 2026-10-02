@@ -1,5 +1,4 @@
 import re
-from pydantic import Field, BaseModel, ConfigDict, field_validator
 from dataclasses import dataclass
 
 STATIC_ROUTE_SEGMENT_PATTERN = re.compile(r"[A-Za-z0-9._~-]+")
@@ -11,28 +10,6 @@ class ViewDefinition:
 
     path: str
     route: str
-    name: str | None = None
-    icon: str | None = None
-
-
-class ViewMetadata(BaseModel):
-    """Validate optional display metadata without parsing or executing JSX."""
-
-    model_config = ConfigDict(extra="forbid")
-
-    # Display metadata.
-    icon: str | None = Field(default=None, max_length=100)
-    name: str | None = Field(default=None, max_length=200)
-
-    @field_validator("icon", "name")
-    @classmethod
-    def normalize(cls, value: str | None) -> str | None:
-        """Omit blank metadata fields from the public catalog."""
-
-        # Keep whitespace-only values equivalent to omitted metadata.
-        if value is None:
-            return None
-        return value.strip() or None
 
 
 def view_stem_route(view_stem: str) -> str:

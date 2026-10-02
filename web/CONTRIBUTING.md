@@ -48,14 +48,16 @@ Theme preferences are defined in `src/theme.ts` and applied through the root pro
 ## Primitives
 
 Solution Views use native JSX components from `src/views/components.ts`. React,
-`request`, `navigate`, `params`, `useQuery`, and `useQueryClient` are provided by
+`request`, `navigate`, `params`, and `useApi` are provided by
 the sandbox runtime. State uses React hooks; inputs use controlled callbacks;
 queries and ordered actions are ordinary JavaScript rather than XML tags.
+The runtime owns loading/error boundaries and refreshes cached View data after
+successful writes through `request()`.
 
 ## Views
 
 - A Solution View is a `.jsx` file exporting one default React component, without package imports. Python discovers and serves source without compiling or executing JavaScript.
-- Optional adjacent `.json` files define `name` and `icon`. Routes still derive from filenames, including `[parameter]` segments.
+- Titles and routes derive from JSX filenames, including `[parameter]` segments. Tabs use the default icon; no metadata files or exports are needed.
 - Sucrase compiles source only inside `src/views/runtime.tsx`. The host must never import, compile, or evaluate Solution source.
 - `JsxView` uses an opaque-origin iframe with only `allow-scripts`; never add `allow-same-origin`, top navigation, popups, forms, or downloads.
 - CSP permits only the hashed bootstrap, isolated evaluation, native inline styles, and data/blob images. Direct fetch, workers, external assets, and nested document frames are blocked.

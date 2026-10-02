@@ -25,6 +25,7 @@ declare namespace React {
 
 declare const params: Readonly<Record<string, string>>;
 declare function navigate(path: string): void;
+/** Requests a Solution operation; successful writes automatically refresh cached View data. */
 declare function request<T = unknown>(
     path: string,
     options?: {
@@ -34,13 +35,8 @@ declare function request<T = unknown>(
         binary?: boolean;
     }
 ): Promise<T>;
-declare function useQuery<T>(options: { queryKey: readonly unknown[]; queryFn: () => Promise<T>; enabled?: boolean }): {
-    data: T | undefined;
-    isPending: boolean;
-    isError: boolean;
-    error: Error | null;
-};
-declare function useQueryClient(): { invalidateQueries(options: { queryKey: readonly unknown[] }): Promise<void> };
+/** Returns defined data cached by path; the renderer handles initial loading, errors, and retry. */
+declare function useApi<T = unknown>(path: string): T;
 
 declare const Stack: ViewComponent<{
     gap?: Spacing;

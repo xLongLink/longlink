@@ -3,15 +3,7 @@ export default function Invoices() {
     const [page, setPage] = React.useState(1);
     const [open, setOpen] = React.useState(false);
     const [draft, setDraft] = React.useState({ name: '', price: 0, status: 'draft' });
-    const client = useQueryClient();
-    const invoices = useQuery({
-        queryKey: ['items', page],
-        queryFn: () => request(`/api/items?page=${page}&page_size=8`),
-    });
-
-    // Keep loading and errors inside this View rather than accessing the Platform page.
-    if (invoices.isPending) return <Spinner label="Loading invoices" />;
-    if (invoices.isError) return <Banner status="error" title="Invoices could not be loaded" />;
+    const invoices = useApi(`/api/items?page=${page}&page_size=8`);
 
     return (
         <Stack gap={8}>
@@ -48,14 +40,13 @@ export default function Invoices() {
                         variant="primary"
                         clickAction={async () => {
                             await request('/api/items', { method: 'POST', json: draft });
-                            await client.invalidateQueries({ queryKey: ['items'] });
                             setOpen(false);
                         }}
                     />
                 </Stack>
             </Dialog>
             <Table
-                data={invoices.data.items}
+                data={invoices.items}
                 idKey="id"
                 density="compact"
                 columns={[
@@ -107,7 +98,7 @@ export default function Invoices() {
                 <Button label="Previous" isDisabled={page === 1} clickAction={() => setPage(page - 1)} />
                 <Button
                     label="Next"
-                    isDisabled={invoices.data.total <= page * 8}
+                    isDisabled={invoices.total <= page * 8}
                     clickAction={() => setPage(page + 1)}
                 />
             </Stack>
