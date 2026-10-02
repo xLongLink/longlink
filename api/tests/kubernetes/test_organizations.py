@@ -21,7 +21,7 @@ async def test_organization_apply_creates_namespace_boundary_resources(monkeypat
     monkeypatch.setattr(organizations.utils, "apply", apply)
 
     # Act
-    await kubernetes_client().organizations.apply(UUID("00000000-0000-4000-8000-000000000001"))
+    await organizations.apply(kubernetes_client(), UUID("00000000-0000-4000-8000-000000000001"))
 
     # Assert
     assert [resource["kind"] for resource in applied] == ["Namespace", "NetworkPolicy"]
@@ -62,7 +62,7 @@ async def test_organization_delete_waits_for_namespace_termination(monkeypatch: 
     monkeypatch.setattr(kubernetes_utils, "Namespace", Namespace)
 
     # Act
-    await kubernetes_client().organizations.delete(UUID("00000000-0000-4000-8000-000000000001"))
+    await organizations.delete(kubernetes_client(), UUID("00000000-0000-4000-8000-000000000001"))
 
     # Assert
     assert deleted == [True]

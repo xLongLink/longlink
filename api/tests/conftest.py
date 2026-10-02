@@ -140,16 +140,6 @@ class DatabaseKubernetes(AsyncKubernetes):
         return "test-database-ca"
 
 
-class OrganizationsDouble:
-    """Supply the Organization compute-boundary facade for lifecycle tests."""
-
-    async def apply(self, organization: UUID) -> None:
-        """Accept Organization boundary provisioning."""
-
-    async def delete(self, organization: UUID) -> None:
-        """Accept Organization boundary deletion."""
-
-
 class OperationKubernetes(AsyncKubernetes):
     """Expose the Solution lifecycle client without external Kubernetes I/O."""
 
@@ -158,7 +148,6 @@ class OperationKubernetes(AsyncKubernetes):
 
         self.solutions = self
         self.databases = DatabaseKubernetes()
-        self.organizations = OrganizationsDouble()
 
     async def forward_database(self, organization: UUID) -> int:
         """Supply a local transport port without depending on the replaced database facade."""
@@ -205,7 +194,6 @@ class SeedKubernetes(DatabaseKubernetes):
 
         super().__init__()
         self.solutions = SeedSolutions()
-        self.organizations = OrganizationsDouble()
 
     async def cluster_uid(self) -> str:
         """Return the identity submitted by the test Compute."""
@@ -243,11 +231,15 @@ def seed_runtime(monkeypatch: pytest.MonkeyPatch, database_runtime: None) -> Non
 
     from src.operations import databases, solutions, organizations
 
+    async def apply(client: object, organization_id: UUID) -> None:
+        """Accept Organization boundary provisioning without external I/O."""
+
     # Override the Compute registry boundary already installed by the database fixture.
     monkeypatch.setattr("src.routes.v1.computes.Kubernetes", SeedKubernetes)
     monkeypatch.setattr(databases, "Kubernetes", SeedKubernetes)
     monkeypatch.setattr(organizations, "Kubernetes", SeedKubernetes)
     monkeypatch.setattr(organizations, "Storage", StorageKubernetes)
+    monkeypatch.setattr(organizations.organizations, "apply", apply)
     monkeypatch.setattr(solutions, "Kubernetes", SeedKubernetes)
     monkeypatch.setattr(solutions, "Storage", StorageKubernetes)
     monkeypatch.setattr(databases.postgres, "Postgres", SeedPostgres)
@@ -289,13 +281,6 @@ def reject_provider_construction(monkeypatch: pytest.MonkeyPatch, *targets: tupl
 
 class FakeKubernetes(AsyncKubernetes):
     """Provide an opaque Kubernetes API client."""
-
-    def __init__(self, *_args: object) -> None:
-        """Expose production facade shapes without external I/O."""
-
-        from src.kubernetes.organizations import Organizations
-
-        self.organizations = Organizations(cast("Kubernetes", self))
 
     async def api(self) -> Api:
         """Return the fake API client used by resource fakes."""

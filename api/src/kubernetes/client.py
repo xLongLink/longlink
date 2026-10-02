@@ -8,7 +8,6 @@ from src.kubernetes import namespace
 from kr8s.asyncio.objects import Service, Namespace
 from src.kubernetes.databases import Databases
 from src.kubernetes.solutions import Solutions
-from src.kubernetes.organizations import Organizations
 
 
 class Kubernetes:
@@ -28,7 +27,6 @@ class Kubernetes:
 
         self.databases = Databases(self)
         self.solutions = Solutions(self)
-        self.organizations = Organizations(self)
 
     async def __aenter__(self) -> Self:
         """Return this Kubernetes client for an async resource scope."""

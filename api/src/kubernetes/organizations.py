@@ -9,30 +9,26 @@ if TYPE_CHECKING:
     from src.kubernetes.client import Kubernetes
 
 
-class Organizations:
-    """Reconcile and delete one Organization compute Namespace boundary."""
+async def apply(client: "Kubernetes", organization_id: UUID) -> None:
+    """Create one Organization Namespace boundary for its explicit lifecycle."""
 
-    def __init__(self, client: "Kubernetes") -> None:
-        """Share the Compute Kubernetes connection."""
+    # Render and apply only the requested Organization boundary.
+    compute_namespace = namespace.compute(organization_id)
+    namespace_manifest, network_policy = templates.readyml_list(
+        files("src.kubernetes.templates").joinpath("solution", "organization.yml"),
+        namespace=compute_namespace,
+    )
 
-        self._client = client
+    # Apply the Namespace before its policy through the lifecycle owner's connection.
+    api = await client.api()
+    compute_boundary = Namespace(namespace_manifest, api=api)
+    await utils.apply(compute_boundary)
+    boundary_policy = NetworkPolicy(network_policy, api=api)
+    await utils.apply(boundary_policy)
 
-    async def apply(self, organization_id: UUID) -> None:
-        """Create one Organization Namespace boundary for its explicit lifecycle."""
 
-        # Render and apply only the requested Organization boundary.
-        compute_namespace = namespace.compute(organization_id)
-        namespace_manifest, network_policy = templates.readyml_list(
-            files("src.kubernetes.templates").joinpath("solution", "organization.yml"),
-            namespace=compute_namespace,
-        )
+async def delete(client: "Kubernetes", organization_id: UUID) -> None:
+    """Delete one Organization Namespace and wait for completion."""
 
-        api = await self._client.api()
-        await utils.apply(Namespace(namespace_manifest, api=api))
-        await utils.apply(NetworkPolicy(network_policy, api=api))
-
-    async def delete(self, organization_id: UUID) -> None:
-        """Delete one Organization Namespace and wait for completion."""
-
-        # Namespace termination is the completion boundary for compute cleanup.
-        await utils.delete_namespace(await self._client.api(), namespace.compute(organization_id))
+    # Namespace termination is the completion boundary for compute cleanup.
+    await utils.delete_namespace(await client.api(), namespace.compute(organization_id))
