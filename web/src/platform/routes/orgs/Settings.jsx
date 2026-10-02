@@ -104,22 +104,9 @@ function DeploymentReview({ update, isPending, isDisabled, onClose, onSubmit, on
     );
 }
 
-/** Renders organization metadata and resets drafts when the route identity changes. */
+/** Manages organization access, storage, and deployments; the layout owns route-scoped resets. */
 export default function OrganizationSettings() {
     const { organization = '' } = useParams();
-
-    return (
-        <>
-            <NoIndex title="Organization Settings | LongLink" />
-            <SettingsPage key={organization} organization={organization} />
-        </>
-    );
-}
-
-/** Manages organization access, storage, and Solution deployment operations.
- * @param {{ organization: string }} props
- */
-function SettingsPage({ organization }) {
     const [invitation, setInvitation] = useState({ email: '', role: 'write' });
     const [inviting, setInviting] = useState(false);
     const [member, setMember] = useState(
@@ -148,10 +135,22 @@ function SettingsPage({ organization }) {
     );
 
     // Resolve membership first; the remaining organization reads can run independently.
-    if (membership.error || details.error || storage.error || solutions.error)
-        return <Banner status="error" title="Unable to load organization settings" />;
-    if (!membership.data || !details.data || !storage.data || !solutions.data)
-        return <Spinner label="Loading organization settings" />;
+    if (membership.error || details.error || storage.error || solutions.error) {
+        return (
+            <>
+                <NoIndex title="Organization Settings | LongLink" />
+                <Banner status="error" title="Unable to load organization settings" />
+            </>
+        );
+    }
+    if (!membership.data || !details.data || !storage.data || !solutions.data) {
+        return (
+            <>
+                <NoIndex title="Organization Settings | LongLink" />
+                <Spinner label="Loading organization settings" />
+            </>
+        );
+    }
 
     const canMaintain = ['maintain', 'admin', 'owner'].includes(membership.data.role);
     const canAdminister = ['admin', 'owner'].includes(membership.data.role);
@@ -174,6 +173,7 @@ function SettingsPage({ organization }) {
 
     return (
         <Stack gap={8}>
+            <NoIndex title="Organization Settings | LongLink" />
             <Stack direction="horizontal" gap={3} align="center">
                 <Avatar shape="rounded" name={details.data.organization.name} />
                 <Stack gap={0}>

@@ -23,7 +23,10 @@ type DocumentationPage = {
 // Derive website route identity from names without storing it in the SDK documentation catalog.
 export const componentDocumentation = componentCatalog.map((component) => ({
     ...component,
-    slug: component.name.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase(),
+    slug: component.name
+        .replace(/([a-z])([A-Z])/g, '$1-$2')
+        .replace(/\s+/g, '-')
+        .toLowerCase(),
 }));
 
 export const documentationSections: Array<{ title: string; pages: Array<DocumentationPage> }> = [

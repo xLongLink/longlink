@@ -104,16 +104,6 @@ function Currency({ value, currency, locale }: { value: number; currency: string
     return new Intl.NumberFormat(locale, { style: 'currency', currency }).format(value);
 }
 
-/** Presents Solution lifecycle states inside the isolated runtime. */
-function StatusBadge({ status }: { status: 'running' | 'creating' | 'failed' }) {
-    return status === 'running' ? null : (
-        <components.Badge
-            label={status === 'creating' ? 'Creating' : 'Failed'}
-            variant={status === 'creating' ? 'info' : 'error'}
-        />
-    );
-}
-
 /** Loads image attachments through the scoped bridge only after a user requests their preview. */
 function FileViewer({ src, title }: { src: string; title: string }) {
     const [open, setOpen] = React.useState(false);
@@ -265,7 +255,6 @@ function initialize(event: MessageEvent<unknown>): void {
             Link,
             Currency,
             FileViewer,
-            StatusBadge,
             request,
             navigate,
             useApi,

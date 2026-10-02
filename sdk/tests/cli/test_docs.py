@@ -11,11 +11,15 @@ def test_docs_command_lists_documented_component_categories() -> None:
     # Assert
     assert result.exit_code == 0
     assert "LongLink JSX View components" in result.output
-    assert all(category in result.output for category in ("Runtime", "Actions", "Content", "Form", "Layouts"))
+    assert all(
+        category in result.output
+        for category in ("Runtime", "Action", "Container", "Feedback & Status", "Content", "Form Controls", "Layouts", "Table & List")
+    )
     assert "React state and controlled callbacks" in result.output
     assert "- React" in result.output
     assert "- useState" not in result.output
-    assert "- request" in result.output
+    assert "- Solution API" in result.output
+    assert all(f"- {name}" not in result.output for name in ("navigate", "request", "useApi"))
     assert "- Button" in result.output
 
 
@@ -27,7 +31,7 @@ def test_docs_command_resolves_a_component_name_case_insensitively() -> None:
 
     # Assert
     assert result.exit_code == 0
-    assert "Button [Actions]" in result.output
+    assert "Button [Action]" in result.output
     assert "Props and types" in result.output
     assert "clickAction" in result.output
     assert "Example" in result.output

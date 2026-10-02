@@ -6,8 +6,8 @@
     },
     {
         "name": "Badge",
-        "category": "Content",
-        "declaration": "declare const Badge: ViewComponent<{\n    label?: string;\n    variant?: 'neutral' | 'info' | 'success' | 'warning' | 'error';\n}>;"
+        "category": "Feedback & Status",
+        "declaration": "declare const Badge: ViewComponent<{\n    label?: ViewNode;\n    icon?: ViewNode;\n    variant?:\n        | 'neutral'\n        | 'info'\n        | 'success'\n        | 'warning'\n        | 'error'\n        | 'blue'\n        | 'cyan'\n        | 'green'\n        | 'orange'\n        | 'pink'\n        | 'purple'\n        | 'red'\n        | 'teal'\n        | 'yellow';\n}>;"
     },
     {
         "name": "Banner",
@@ -16,18 +16,38 @@
     },
     {
         "name": "Button",
-        "category": "Actions",
-        "declaration": "declare const Button: ViewComponent<{\n    label: string;\n    variant?: 'primary' | 'secondary' | 'ghost' | 'destructive';\n    isDisabled?: boolean;\n    clickAction?: () => void | Promise<void>;\n}>;"
+        "category": "Action",
+        "declaration": "type ViewMouseEvent = Omit<MouseEvent, 'currentTarget'> & { currentTarget: HTMLElement; nativeEvent: MouseEvent };\n\ntype ButtonProps = {\n    label: string;\n    variant?: 'primary' | 'secondary' | 'ghost' | 'destructive';\n    size?: 'sm' | 'md' | 'lg';\n    elevation?: 'none' | 'low' | 'med' | 'high';\n    type?: 'button' | 'submit' | 'reset';\n    name?: string;\n    value?: string | number | readonly string[];\n    form?: string;\n    icon?: ViewNode;\n    endContent?: React.JSX.Element;\n    tooltip?: string;\n    width?: number | string;\n    isIconOnly?: boolean;\n    isLoading?: boolean;\n    isDisabled?: boolean;\n    isInterruptible?: boolean;\n    href?: string;\n    target?: string;\n    rel?: string;\n    onClick?: (event: ViewMouseEvent) => void;\n    clickAction?: (event: ViewMouseEvent) => void | Promise<void>;\n};\n\ndeclare const Button: ViewComponent<ButtonProps>;"
+    },
+    {
+        "name": "ButtonGroup",
+        "category": "Action",
+        "declaration": "declare const ButtonGroup: ViewComponent<{\n    label: string;\n    orientation?: 'horizontal' | 'vertical';\n    size?: 'sm' | 'md' | 'lg';\n    elevation?: 'none' | 'low' | 'med' | 'high';\n    isDisabled?: boolean;\n}>;"
+    },
+    {
+        "name": "Calendar",
+        "category": "Form Controls",
+        "declaration": "type ISODateString = `${number}${number}${number}${number}-${number}${number}-${number}${number}`;\n\ntype DateRange = { start: ISODateString; end: ISODateString };\n\ntype WeekStartsOn = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 'sun' | 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat';\n\ndeclare const Calendar: ViewComponent<\n    {\n        numberOfMonths?: 1 | 2;\n        min?: ISODateString;\n        max?: ISODateString;\n        dateConstraints?: readonly ((date: Date) => boolean)[];\n        minRangeSpan?: number;\n        maxRangeSpan?: number;\n        focusDate?: ISODateString;\n        onFocusDateChange?: (focusDate: ISODateString) => void;\n        hasOutsideDays?: boolean;\n        hasWeekNumbers?: boolean;\n        hasVariableRowCount?: boolean;\n        weekStartsOn?: WeekStartsOn;\n    } & (\n        | {\n              mode?: 'single';\n              value?: ISODateString;\n              defaultValue?: ISODateString;\n              onChange?: (value: ISODateString, valueAsDate: Date) => void;\n          }\n        | { mode: 'range'; value?: DateRange; defaultValue?: DateRange; onChange?: (value: DateRange) => void }\n    )\n>;"
     },
     {
         "name": "Card",
-        "category": "Layouts",
-        "declaration": "declare const Card: ViewComponent<{\n    padding?: Spacing;\n    elevation?: 'none' | 'low' | 'medium' | 'high';\n}>;"
+        "category": "Container",
+        "declaration": "type CardProps = {\n    padding?: Spacing;\n    elevation?: 'none' | 'low' | 'med' | 'high';\n    variant?:\n        | 'default'\n        | 'transparent'\n        | 'muted'\n        | 'blue'\n        | 'cyan'\n        | 'gray'\n        | 'green'\n        | 'orange'\n        | 'pink'\n        | 'purple'\n        | 'red'\n        | 'teal'\n        | 'yellow';\n    width?: number | string;\n    height?: number | string;\n    maxWidth?: number | string;\n    minHeight?: number | string;\n    className?: string;\n};\n\ndeclare const Card: ViewComponent<CardProps>;"
+    },
+    {
+        "name": "Carousel",
+        "category": "Container",
+        "declaration": "declare const Carousel: ViewComponent<{\n    gap?: 0 | 0.5 | 1 | 1.5 | 2 | 3 | 4;\n    padding?: Spacing;\n    hasButtons?: boolean;\n    hasEdgeFade?: boolean;\n    hasLoop?: boolean;\n    hasSnap?: boolean;\n    'aria-label'?: string;\n    className?: string;\n}>;"
     },
     {
         "name": "CheckboxInput",
-        "category": "Form",
-        "declaration": "declare const CheckboxInput: ViewComponent<{\n    label: string;\n    value: boolean;\n    onChange?: (value: boolean) => void;\n}>;"
+        "category": "Form Controls",
+        "declaration": "declare const CheckboxInput: ViewComponent<\n    FieldProps & {\n        value: boolean | 'indeterminate';\n        onChange?: (value: boolean) => void;\n        changeAction?: (value: boolean) => void | Promise<void>;\n        isLoading?: boolean;\n        isReadOnly?: boolean;\n        disabledMessage?: string;\n        htmlName?: string;\n        size?: 'sm' | 'md';\n        labelIcon?: ViewNode;\n    }\n>;"
+    },
+    {
+        "name": "ClickableCard",
+        "category": "Container",
+        "declaration": "declare const ClickableCard: ViewComponent<\n    Omit<CardProps, 'minHeight'> & {\n        label: string;\n        onClick?: (event: ViewMouseEvent) => void;\n        href?: string;\n        target?: string;\n        isDisabled?: boolean;\n    }\n>;"
     },
     {
         "name": "CodeBlock",
@@ -35,9 +55,34 @@
         "declaration": "declare const CodeBlock: ViewComponent<{\n    code: string;\n    language?: string;\n    title?: string;\n    isWrapped?: boolean;\n}>;"
     },
     {
+        "name": "Collapsible",
+        "category": "Container",
+        "declaration": "declare const Collapsible: ViewComponent<{\n    trigger: ViewNode;\n    defaultIsOpen?: boolean;\n    isOpen?: boolean;\n    isDisabled?: boolean;\n    onOpenChange?: (isOpen: boolean) => void;\n    chevronPosition?: 'start' | 'end';\n    value?: string;\n}>;"
+    },
+    {
+        "name": "ComplexSelector",
+        "category": "Form Controls",
+        "declaration": "declare function ComplexSelector<Value>(\n    props: FieldProps & {\n        value: Value;\n        onChange?: (value: Value) => void;\n        changeAction?: (value: Value) => void | Promise<void>;\n        children: (\n            value: Value,\n            onChange: (value: Value) => void,\n            close: () => void,\n            state: {\n                isOpen: boolean;\n                isBusy: boolean;\n                triggerId: string;\n                contentId: string;\n            }\n        ) => ViewNode;\n        triggerLabel?: ViewNode;\n        placeholder?: ViewNode;\n        isLoading?: boolean;\n        size?: 'sm' | 'md' | 'lg';\n        variant?: 'input' | 'ghost';\n        startIcon?: ViewNode;\n        placement?: 'above' | 'below' | 'start' | 'end';\n        alignment?: 'start' | 'center' | 'end';\n        onOpenChange?: (isOpen: boolean) => void;\n    }\n): React.JSX.Element;"
+    },
+    {
         "name": "Currency",
         "category": "Display",
         "declaration": "declare const Currency: ViewComponent<{\n    value: number;\n    currency: string;\n    locale?: string;\n}>;"
+    },
+    {
+        "name": "DateInput",
+        "category": "Form Controls",
+        "declaration": "type DateInputProps = FieldProps & {\n    value?: ISODateString;\n    onChange?: (value: ISODateString | undefined) => void;\n    changeAction?: (value: ISODateString | undefined) => void | Promise<void>;\n    min?: ISODateString;\n    max?: ISODateString;\n    dateConstraints?: readonly ((date: Date) => boolean)[];\n    disabledMessage?: string;\n    isLoading?: boolean;\n    placeholder?: string;\n    size?: 'sm' | 'md' | 'lg';\n    hasClear?: boolean;\n    numberOfMonths?: 1 | 2;\n    weekStartsOn?: WeekStartsOn;\n    format?: 'date' | 'date_long' | 'date_weekday' | 'system_date' | ((value: ISODateString) => string);\n    presentation?: 'popover' | 'bottom-sheet' | 'native' | 'adaptive-bottom-sheet' | 'adaptive-native';\n};\n\ndeclare const DateInput: ViewComponent<DateInputProps>;"
+    },
+    {
+        "name": "DateRangeInput",
+        "category": "Form Controls",
+        "declaration": "declare const DateRangeInput: ViewComponent<\n    Omit<DateInputProps, 'value' | 'onChange' | 'changeAction' | 'format' | 'presentation'> & {\n        value: DateRange | null;\n        onChange: (value: DateRange | null) => void;\n        changeAction?: (value: DateRange | null) => void | Promise<void>;\n        minRangeSpan?: number;\n        maxRangeSpan?: number;\n        presets?: readonly { label: string; getRange: () => DateRange }[];\n    }\n>;"
+    },
+    {
+        "name": "DateTimeInput",
+        "category": "Form Controls",
+        "declaration": "type ISODateTimeString = string & { readonly __brand: 'ISODateTimeString' };\n\ndeclare const DateTimeInput: ViewComponent<\n    Omit<DateInputProps, 'value' | 'onChange' | 'changeAction' | 'min' | 'max' | 'format' | 'statusVariant'> & {\n        value?: ISODateTimeString;\n        onChange: (value: ISODateTimeString | undefined) => void;\n        changeAction?: (value: ISODateTimeString | undefined) => void | Promise<void>;\n        min?: ISODateTimeString;\n        max?: ISODateTimeString;\n        hasSeconds?: boolean;\n        hourFormat?: '12h' | '24h';\n        timeIncrement?: 1 | 5 | 10 | 15 | 30;\n        timeOptionInterval?: 5 | 10 | 15 | 30 | 60;\n        timePlaceholder?: string;\n        timeLabel?: string;\n    }\n>;"
     },
     {
         "name": "Dialog",
@@ -50,14 +95,24 @@
         "declaration": "declare const Divider: ViewComponent<Record<string, never>>;"
     },
     {
+        "name": "DropdownMenu",
+        "category": "Action",
+        "declaration": "type DropdownMenuItemData = {\n    id?: string;\n    label: ViewNode;\n    icon?: ViewNode;\n    description?: ViewNode;\n    endContent?: ViewNode;\n    variant?: 'default' | 'destructive';\n    isDisabled?: boolean;\n    hasCloseOnSelect?: boolean;\n    onClick?: () => void;\n    items?: DropdownMenuOption[];\n};\n\ntype DropdownMenuOption =\n    | DropdownMenuItemData\n    | { type: 'divider' }\n    | {\n          type: 'section';\n          id?: string;\n          title?: string;\n          items: DropdownMenuItemData[];\n      };\n\ndeclare const DropdownMenu: ViewComponent<{\n    button?: Omit<ButtonProps, 'onClick'>;\n    items: DropdownMenuOption[];\n    presentation?: 'popover' | 'bottom-sheet' | 'adaptive';\n    isMenuOpen?: boolean;\n    onOpenChange?: (isOpen: boolean) => void;\n    menuWidth?: number | string;\n    placement?: 'above' | 'below' | 'start' | 'end';\n    alignment?: 'start' | 'center' | 'end';\n    hasChevron?: boolean;\n    onClick?: () => void;\n    children?: never;\n}>;"
+    },
+    {
         "name": "EmptyState",
         "category": "Content",
         "declaration": "declare const EmptyState: ViewComponent<{\n    title: string;\n    isCompact?: boolean;\n}>;"
     },
     {
+        "name": "Field",
+        "category": "Form Controls",
+        "declaration": "type FieldProps = {\n    label: string;\n    isLabelHidden?: boolean;\n    description?: string;\n    isOptional?: boolean;\n    isRequired?: boolean;\n    isDisabled?: boolean;\n    labelTooltip?: string;\n    status?: { type: 'warning' | 'error' | 'success'; message?: string; messageID?: string };\n    statusVariant?: 'attached' | 'detached' | 'tooltip';\n    width?: number | string;\n};\n\ndeclare const Field: ViewComponent<\n    FieldProps & {\n        inputID: string;\n        labelID?: string;\n        descriptionID?: string;\n        isGroupLabel?: boolean;\n        labelIcon?: ViewNode;\n    }\n>;"
+    },
+    {
         "name": "FileInput",
-        "category": "Form",
-        "declaration": "declare const FileInput: ViewComponent<{\n    label: string;\n    value?: File | null;\n    accept?: string;\n    onChange?: (value: File | null) => void;\n}>;"
+        "category": "Form Controls",
+        "declaration": "declare const FileInput: ViewComponent<\n    FieldProps & {\n        value: File | File[] | null;\n        accept?: string;\n        onChange: (value: File | File[] | null) => void;\n        changeAction?: (value: File | File[] | null) => Promise<void>;\n        isMultiple?: boolean;\n        maxSize?: number;\n        maxFiles?: number;\n        disabledMessage?: string;\n        isLoading?: boolean;\n        placeholder?: string;\n        mode?: 'input' | 'dropzone';\n    }\n>;"
     },
     {
         "name": "FileViewer",
@@ -86,13 +141,18 @@
     },
     {
         "name": "IconButton",
-        "category": "Actions",
-        "declaration": "declare const IconButton: ViewComponent<{\n    icon: ViewNode;\n    label: string;\n    onClick?: () => void;\n}>;"
+        "category": "Action",
+        "declaration": "declare const IconButton: ViewComponent<\n    Omit<ButtonProps, 'isIconOnly' | 'endContent'> & {\n        icon: ViewNode;\n    }\n>;"
     },
     {
         "name": "Link",
-        "category": "Actions",
+        "category": "Action",
         "declaration": "declare const Link: ViewComponent<{\n    to: string;\n}>;"
+    },
+    {
+        "name": "List",
+        "category": "Table & List",
+        "declaration": "declare const List: ViewComponent<{\n    density?: 'compact' | 'balanced' | 'spacious';\n    hasDividers?: boolean;\n    edgeCompensation?: 'inline';\n    header?: ViewNode;\n    listStyle?: 'none' | 'disc' | 'decimal' | 'circle';\n    start?: number;\n}>;\n\ndeclare const ListItem: ViewComponent<{\n    label: ViewNode;\n    description?: ViewNode;\n    startContent?: ViewNode;\n    endContent?: ViewNode;\n    onClick?: (event: ViewMouseEvent) => void;\n    interactiveRef?: { current: HTMLElement | null };\n    href?: string;\n    target?: string;\n    rel?: string;\n    isDisabled?: boolean;\n    isSelected?: boolean;\n}>;"
     },
     {
         "name": "Menu",
@@ -100,34 +160,44 @@
         "declaration": "declare const Menu: ViewComponent<{\n    sections: {\n        title: string;\n        entries: {\n            kind: 'item';\n            id: string;\n            label: string;\n            content: ViewNode;\n        }[];\n    }[];\n    gap?: Spacing;\n}>;"
     },
     {
-        "name": "MoreMenu",
-        "category": "Actions",
-        "declaration": "declare const MoreMenu: ViewComponent<{\n    items: {\n        label: string;\n        onClick: () => void;\n        variant?: 'destructive';\n    }[];\n}>;"
+        "name": "MetadataList",
+        "category": "Table & List",
+        "declaration": "declare const MetadataList: ViewComponent<{\n    columns?: 'multi' | 'single' | number;\n    label?: { position?: 'start' | 'top'; width?: number | string };\n    maxNumOfItems?: number;\n    orientation?: 'vertical' | 'horizontal';\n    title?: ViewNode;\n}>;\n\ndeclare const MetadataListItem: ViewComponent<{\n    label: string;\n    icon?: ViewNode;\n}>;"
     },
     {
-        "name": "navigate",
-        "category": "Runtime",
-        "declaration": "declare function navigate(path: string): void;"
+        "name": "MoreMenu",
+        "category": "Action",
+        "declaration": "declare const MoreMenu: ViewComponent<{\n    items: DropdownMenuOption[];\n    label?: string;\n    icon?: ViewNode;\n    variant?: ButtonProps['variant'];\n    size?: ButtonProps['size'];\n    isDisabled?: boolean;\n    placement?: 'above' | 'below' | 'start' | 'end';\n    alignment?: 'start' | 'center' | 'end';\n    presentation?: 'popover' | 'bottom-sheet' | 'adaptive';\n    onOpenChange?: (isOpen: boolean) => void;\n}>;"
+    },
+    {
+        "name": "MultiSelector",
+        "category": "Form Controls",
+        "declaration": "declare const MultiSelector: ViewComponent<\n    FieldProps & {\n        options: SelectorOptionType[];\n        value: string[];\n        onChange: (value: string[]) => void;\n        changeAction?: (value: string[]) => void | Promise<void>;\n        placeholder?: string;\n        size?: 'sm' | 'md' | 'lg';\n        variant?: 'input' | 'ghost';\n        triggerDisplay?: 'count' | 'labels' | 'badges';\n        formatValue?: (items: { value: string; label: string }[]) => string;\n        maxBadges?: number;\n        hasSelectAll?: boolean;\n        selectAllLabel?: string;\n        hasSearch?: boolean;\n        searchPlaceholder?: string;\n        emptyText?: ViewNode;\n        emptySearchText?: ViewNode;\n        isReadOnly?: boolean;\n        htmlName?: string;\n        disabledMessage?: string;\n        isLoading?: boolean;\n        renderOption?: (option: SelectorOptionData) => ViewNode;\n        indicatorPosition?: 'start' | 'end';\n        presentation?: 'popover' | 'bottom-sheet' | 'adaptive';\n        startIcon?: ViewNode;\n        hasClear?: boolean;\n        isDefaultOpen?: boolean;\n    }\n>;"
     },
     {
         "name": "NumberInput",
-        "category": "Form",
-        "declaration": "declare const NumberInput: ViewComponent<{\n    label: string;\n    value?: number;\n    min?: number;\n    max?: number;\n    step?: number;\n    onChange?: (value: number | undefined) => void;\n}>;"
+        "category": "Form Controls",
+        "declaration": "declare const NumberInput: ViewComponent<\n    FieldProps & {\n        value: number | null | undefined;\n        min?: number | null;\n        max?: number | null;\n        step?: number | null;\n        placeholder?: string;\n        size?: 'sm' | 'md' | 'lg';\n        isReadOnly?: boolean;\n        disabledMessage?: string;\n        formatValue?: (value: number) => string;\n        isWheelEnabled?: boolean;\n        hasNumberSteppers?: boolean;\n        units?: string | null;\n        isIntegerOnly?: boolean;\n        htmlName?: string;\n        autoComplete?: string;\n        hasAutoFocus?: boolean;\n        onEnter?: () => void;\n    } & (\n            | { hasClear?: false; onChange: (value: number) => void }\n            | { hasClear: true; onChange: (value: number | null) => void }\n        )\n>;"
+    },
+    {
+        "name": "OverflowList",
+        "category": "Table & List",
+        "declaration": "type OverflowItem = { child: React.JSX.Element; index: number };\n\ndeclare const OverflowList: ViewComponent<{\n    overflowRenderer?: (overflowItems: OverflowItem[]) => ViewNode;\n    onOverflowChange?: (overflowItems: OverflowItem[]) => void;\n    gap?: Spacing;\n    minVisibleItems?: number;\n    maxVisibleItems?: number;\n    maxRows?: number;\n    collapseFrom?: 'start' | 'end';\n    behavior?: 'observeSelf' | 'observeParent';\n}>;"
+    },
+    {
+        "name": "PowerSearch",
+        "category": "Form Controls",
+        "declaration": "type SearchableItem<T = unknown> = { id: string; label: string; element?: ViewNode; auxiliaryData?: T };\n\ntype SearchSource<T extends SearchableItem = SearchableItem> = {\n    search: (query: string) => T[] | Promise<T[]>;\n    bootstrap: () => T[] | Promise<T[]>;\n    cancel?: () => void;\n};\n\ntype DateTimeRangePart =\n    | { readonly type: 'NOW' }\n    | { readonly type: 'ABSOLUTE'; readonly unixSeconds: number }\n    | {\n          readonly type: 'RELATIVE';\n          readonly backValue: number;\n          readonly unit: 'second' | 'minute' | 'hour' | 'day' | 'week' | 'month' | 'year';\n          readonly anchorKey?: string;\n      };\n\ntype DateTimeRange = { readonly start: DateTimeRangePart; readonly end: DateTimeRangePart };\n\ntype OperatorValue =\n    | { readonly type: 'empty' | 'nested' }\n    | { readonly type: 'string'; readonly searchSource?: SearchSource; readonly isArbitraryStringAllowed?: boolean }\n    | {\n          readonly type: 'string_list' | 'entity_list';\n          readonly searchSource?: SearchSource;\n          readonly isArbitraryStringAllowed?: boolean;\n          readonly tokenization?: { readonly regex?: string; readonly sort?: boolean };\n          readonly renderItem?: (item: SearchableItem) => ViewNode;\n      }\n    | {\n          readonly type: 'integer' | 'float';\n          readonly minValue?: number;\n          readonly maxValue?: number;\n          readonly units?: string;\n      }\n    | { readonly type: 'time'; readonly minValue?: string; readonly maxValue?: string }\n    | { readonly type: 'date_absolute'; readonly isDateOnly?: boolean }\n    | { readonly type: 'date_relative'; readonly isPastAllowed?: boolean; readonly isFutureAllowed?: boolean }\n    | {\n          readonly type: 'date_range';\n          readonly intervalDatePresets?: readonly { readonly label: string; readonly value: DateTimeRange }[];\n          readonly relativeDatePresets?: readonly { readonly label: string; readonly value: string }[];\n      }\n    | {\n          readonly type: 'enum' | 'enum_list';\n          readonly values: readonly { readonly value: string; readonly label: string; readonly icon?: ViewNode }[];\n      }\n    | {\n          readonly type: 'custom';\n          readonly Editor: ViewComponent<{\n              isDisabled?: boolean;\n              onChange: (value: string | null) => void;\n              placeholder: string;\n              value: string | null;\n          }>;\n          readonly getString: (value: string) => string;\n      };\n\ntype PowerSearchOperator = { readonly key: string; readonly value: OperatorValue } & (\n    | { readonly label: string; readonly i18nKey?: never }\n    | { readonly i18nKey: string; readonly label?: never }\n);\n\ntype PowerSearchConfig = {\n    readonly name: string;\n    readonly contentSearchFieldKey?: string;\n    readonly fields: readonly {\n        readonly key: string;\n        readonly label: string;\n        readonly operators: readonly PowerSearchOperator[];\n        readonly icon?: ViewNode;\n        readonly defaultOperator?: string;\n        readonly group?: string;\n        readonly description?: string;\n        readonly typeaheadAliases?: readonly string[];\n        readonly typeaheadMinQueryLength?: number;\n        readonly isValueMatchAllowed?: boolean;\n    }[];\n};\n\ntype FilterValue =\n    | { readonly type: 'empty' }\n    | { readonly type: 'string' | 'time' | 'date_relative' | 'enum' | 'custom'; readonly value: string }\n    | { readonly type: 'string_list' | 'enum_list'; readonly value: readonly string[] }\n    | { readonly type: 'integer' | 'float'; readonly value: number }\n    | { readonly type: 'date_absolute'; readonly unixSeconds: number }\n    | { readonly type: 'date_range'; readonly value: DateTimeRange }\n    | {\n          readonly type: 'entity_list';\n          readonly value: readonly { readonly id: string; readonly label: string; readonly photo?: string }[];\n      }\n    | { readonly type: 'nested'; readonly value: readonly PowerSearchFilter[] };\n\ntype PowerSearchFilter = {\n    readonly field: string;\n    readonly operator: string;\n    readonly value: FilterValue;\n    readonly isReadOnly?: boolean;\n};\n\ndeclare const PowerSearch: ViewComponent<{\n    config: PowerSearchConfig;\n    filters: readonly PowerSearchFilter[];\n    onChange: (filters: readonly PowerSearchFilter[], changeType: 'add' | 'edit' | 'remove', index: number) => void;\n    label?: string;\n    isLabelHidden?: boolean;\n    placeholder?: string;\n    hasAutoFocus?: boolean;\n    hasClear?: boolean;\n    isReadOnly?: boolean;\n    isDisabled?: boolean;\n    disabledMessage?: string;\n    status?: FieldProps['status'];\n    statusVariant?: 'attached' | 'detached';\n    startIcon?: ViewNode;\n    maxTokenLength?: number;\n    maxOperatorMenuItems?: number;\n    maxSearchResults?: number;\n    menuWidth?: number;\n    popoverSaveButtonLabel?: string;\n    timezoneID?: string;\n    endContent?: ViewNode;\n    resultCount?: number | string;\n    size?: 'sm' | 'md' | 'lg';\n    tokenOverflowBehavior?: 'none' | 'unfocusedInline' | 'unfocusedLayer';\n}>;"
     },
     {
         "name": "ProgressBar",
-        "category": "Display",
-        "declaration": "declare const ProgressBar: ViewComponent<{\n    label?: string;\n    value: number;\n    max?: number;\n    hasValueLabel?: boolean;\n}>;"
+        "category": "Feedback & Status",
+        "declaration": "declare const ProgressBar: ViewComponent<{\n    label: string;\n    value?: number;\n    max?: number;\n    isLabelHidden?: boolean;\n    hasValueLabel?: boolean;\n    formatValueLabel?: (value: number, max: number) => string;\n    variant?: 'accent' | 'success' | 'warning' | 'error' | 'neutral';\n    isIndeterminate?: boolean;\n    marks?: readonly { value: number; label: string }[];\n    isDisabled?: boolean;\n}>;"
     },
     {
         "name": "RadioList",
-        "category": "Form",
-        "declaration": "declare const RadioList: ViewComponent<{\n    label?: string;\n    value?: string;\n    onChange?: (value: string) => void;\n}>;"
-    },
-    {
-        "name": "RadioListItem",
-        "category": "Form",
-        "declaration": "declare const RadioListItem: ViewComponent<{\n    label: string;\n    value: string;\n}>;"
+        "category": "Form Controls",
+        "declaration": "declare const RadioList: ViewComponent<\n    FieldProps & {\n        value: string;\n        onChange: (value: string) => void;\n        orientation?: 'vertical' | 'horizontal';\n        htmlName?: string;\n        disabledMessage?: string;\n        size?: 'sm' | 'md';\n    }\n>;\n\ndeclare const RadioListItem: ViewComponent<{\n    label: string;\n    value: string;\n    description?: string;\n    isDisabled?: boolean;\n}>;"
     },
     {
         "name": "React",
@@ -135,19 +205,29 @@
         "declaration": "declare function createElement(type: unknown, props: unknown, ...children: ViewNode[]): React.JSX.Element;\n\ndeclare const Fragment: ViewComponent<{\n    key?: string | number;\n}>;\n\ndeclare function useState<T = undefined>(initial?: T | (() => T)): [T, (value: T | ((previous: T) => T)) => void];\n\ndeclare function useEffect(effect: () => void | (() => void), dependencies?: readonly unknown[]): void;\n\ndeclare function useMemo<T>(factory: () => T, dependencies: readonly unknown[]): T;\n\ndeclare function useRef<T>(initial: T): { current: T };"
     },
     {
-        "name": "request",
-        "category": "Runtime",
-        "declaration": "declare function request<T = unknown>(\n    path: string,\n    options?: {\n        method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';\n        json?: unknown;\n        form?: [string, string | Blob][];\n        binary?: boolean;\n    }\n): Promise<T>;"
+        "name": "SegmentedControl",
+        "category": "Action",
+        "declaration": "declare const SegmentedControl: ViewComponent<{\n    label: string;\n    value: string;\n    onChange: (value: string) => void;\n    size?: 'sm' | 'md' | 'lg';\n    layout?: 'hug' | 'fill';\n    isDisabled?: boolean;\n    disabledMessage?: string;\n}>;\n\ndeclare const SegmentedControlItem: ViewComponent<{\n    label: string;\n    value: string;\n    icon?: ViewNode;\n    isLabelHidden?: boolean;\n    isDisabled?: boolean;\n}>;"
+    },
+    {
+        "name": "SelectableCard",
+        "category": "Container",
+        "declaration": "declare const SelectableCard: ViewComponent<\n    Omit<CardProps, 'minHeight'> & {\n        label: string;\n        isSelected: boolean;\n        onChange: (isSelected: boolean) => void;\n        isDisabled?: boolean;\n    }\n>;"
     },
     {
         "name": "Selector",
-        "category": "Form",
-        "declaration": "declare const Selector: ViewComponent<{\n    label?: string;\n    value?: string;\n    options: {\n        value: string;\n        label: string;\n    }[];\n    onChange?: (value: string | undefined) => void;\n}>;"
+        "category": "Form Controls",
+        "declaration": "type SelectorOptionData = {\n    value: string;\n    label?: string;\n    description?: ViewNode;\n    icon?: ViewNode;\n    disabled?: boolean;\n};\n\ntype SelectorOptionType =\n    | string\n    | SelectorOptionData\n    | { type: 'divider' }\n    | {\n          type: 'section';\n          title?: string;\n          options: SelectorOptionData[];\n      };\n\ndeclare const Selector: ViewComponent<\n    FieldProps & {\n        value?: string | null;\n        options: SelectorOptionType[];\n        hasSearch?: boolean;\n        searchPlaceholder?: string;\n        emptyText?: ViewNode;\n        emptySearchText?: ViewNode;\n        placeholder?: string;\n        size?: 'sm' | 'md' | 'lg';\n        variant?: 'input' | 'ghost';\n        isReadOnly?: boolean;\n        htmlName?: string;\n        disabledMessage?: string;\n        isLoading?: boolean;\n        renderOption?: (option: SelectorOptionData) => ViewNode;\n        renderValue?: (option: SelectorOptionData) => ViewNode;\n        indicatorPosition?: 'start' | 'end';\n        presentation?: 'popover' | 'bottom-sheet' | 'adaptive';\n        startIcon?: ViewNode;\n    } & (\n            | {\n                  hasClear?: false;\n                  onChange?: (value: string) => void;\n                  changeAction?: (value: string) => void | Promise<void>;\n              }\n            | {\n                  hasClear: true;\n                  onChange?: (value: string | null) => void;\n                  changeAction?: (value: string | null) => void | Promise<void>;\n              }\n        )\n>;"
     },
     {
         "name": "Slider",
-        "category": "Form",
-        "declaration": "declare const Slider: ViewComponent<{\n    label: string;\n    value: number;\n    min?: number;\n    max?: number;\n    step?: number;\n    onChange?: (value: number) => void;\n}>;"
+        "category": "Form Controls",
+        "declaration": "declare const Slider: ViewComponent<\n    FieldProps & {\n        min?: number;\n        max?: number;\n        step?: number;\n        orientation?: 'horizontal' | 'vertical';\n        formatValue?: (value: number) => string;\n        valueDisplay?: 'tooltip' | 'text' | 'none';\n        marks?: { value: number; label?: string }[];\n        htmlName?: string;\n        disabledMessage?: string;\n    } & (\n            | { value: number; onChange?: (value: number) => void; onChangeEnd?: (value: number) => void }\n            | {\n                  value: [number, number];\n                  onChange?: (value: [number, number]) => void;\n                  onChangeEnd?: (value: [number, number]) => void;\n                  minStepsBetweenThumbs?: number;\n              }\n        )\n>;"
+    },
+    {
+        "name": "Solution API",
+        "category": "Runtime",
+        "declaration": "declare function navigate(path: string): void;\n\ndeclare function request<T = unknown>(\n    path: string,\n    options?: {\n        method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';\n        json?: unknown;\n        form?: [string, string | Blob][];\n        binary?: boolean;\n    }\n): Promise<T>;\n\ndeclare function useApi<T = unknown>(path: string): T;"
     },
     {
         "name": "Spinner",
@@ -165,9 +245,9 @@
         "declaration": "declare const StackItem: ViewComponent<{\n    size?: 'static' | 'fill';\n    isScrollable?: boolean;\n    crossAlignSelf?: 'start' | 'center' | 'end' | 'stretch';\n}>;"
     },
     {
-        "name": "StatusBadge",
-        "category": "Display",
-        "declaration": "declare const StatusBadge: ViewComponent<{\n    status: 'running' | 'creating' | 'failed';\n}>;"
+        "name": "StatusDot",
+        "category": "Feedback & Status",
+        "declaration": "declare const StatusDot: ViewComponent<{\n    label: string;\n    variant: 'success' | 'warning' | 'error' | 'accent' | 'neutral';\n    isPulsing?: boolean;\n    tooltip?: string;\n    icon?: ViewNode;\n}>;"
     },
     {
         "name": "Step",
@@ -181,8 +261,8 @@
     },
     {
         "name": "Switch",
-        "category": "Form",
-        "declaration": "declare const Switch: typeof CheckboxInput;"
+        "category": "Form Controls",
+        "declaration": "declare const Switch: ViewComponent<\n    FieldProps & {\n        value: boolean;\n        onChange?: (value: boolean) => void;\n        changeAction?: (value: boolean) => void | Promise<void>;\n        isLoading?: boolean;\n        disabledMessage?: string;\n        htmlName?: string;\n        size?: 'sm' | 'md';\n        labelIcon?: ViewNode;\n        labelPosition?: 'start' | 'end';\n        labelSpacing?: 'hug' | 'spread';\n    }\n>;"
     },
     {
         "name": "Tab",
@@ -191,8 +271,8 @@
     },
     {
         "name": "Table",
-        "category": "Layouts",
-        "declaration": "declare function Table<T>(props: {\n    data: readonly T[];\n    idKey?: string | ((row: T) => string | number);\n    density?: 'compact' | 'comfortable';\n    columns: {\n        key: string;\n        header?: string;\n        align?: 'start' | 'center' | 'end';\n        renderCell: (row: T) => ViewNode;\n    }[];\n}): React.JSX.Element;"
+        "category": "Table & List",
+        "declaration": "type ColumnWidth = { type: 'proportional'; value: number; minWidth?: number } | { type: 'pixel'; value: number };\n\ndeclare function proportional(\n    value?: number,\n    options?: { minWidth?: number }\n): Extract<ColumnWidth, { type: 'proportional' }>;\n\ndeclare function pixel(value: number): Extract<ColumnWidth, { type: 'pixel' }>;\n\ndeclare function Table<T extends Record<string, unknown>>(props: {\n    data?: T[];\n    idKey?: (keyof T & string) | ((row: T) => string | number);\n    density?: 'compact' | 'balanced' | 'spacious';\n    dividers?: 'rows' | 'columns' | 'grid' | 'none';\n    isStriped?: boolean;\n    hasHover?: boolean;\n    verticalAlign?: 'middle' | 'top' | 'bottom';\n    textOverflow?: 'wrap' | 'truncate';\n    rowIndexStart?: number;\n    rowCount?: number;\n    emptyState?: ViewNode;\n    children?: ViewNode;\n    columns?: {\n        key: string;\n        header?: ViewNode;\n        width?: ColumnWidth;\n        align?: 'start' | 'center' | 'end';\n        renderCell?: (row: T) => ViewNode;\n    }[];\n}): React.JSX.Element;"
     },
     {
         "name": "TabList",
@@ -206,13 +286,18 @@
     },
     {
         "name": "TextArea",
-        "category": "Form",
-        "declaration": "declare const TextArea: typeof TextInput;"
+        "category": "Form Controls",
+        "declaration": "declare const TextArea: ViewComponent<\n    FieldProps & {\n        value: string;\n        onChange?: (value: string) => void;\n        changeAction?: (value: string) => void | Promise<void>;\n        placeholder?: string;\n        rows?: number;\n        maxLength?: number;\n        isReadOnly?: boolean;\n        disabledMessage?: string;\n        isLoading?: boolean;\n        hasSpellCheck?: boolean;\n        hasAutoFocus?: boolean;\n        startIcon?: ViewNode;\n        size?: 'sm' | 'md' | 'lg';\n        htmlName?: string;\n        autoComplete?: string;\n    }\n>;"
     },
     {
         "name": "TextInput",
-        "category": "Form",
-        "declaration": "declare const TextInput: ViewComponent<{\n    label: string;\n    value?: string;\n    placeholder?: string;\n    isRequired?: boolean;\n    onChange?: (value: string) => void;\n}>;"
+        "category": "Form Controls",
+        "declaration": "declare const TextInput: ViewComponent<\n    FieldProps & {\n        value: string;\n        placeholder?: string;\n        type?: 'text' | 'password' | 'email';\n        size?: 'sm' | 'md' | 'lg';\n        htmlName?: string;\n        autoComplete?: string;\n        isReadOnly?: boolean;\n        disabledMessage?: string;\n        isLoading?: boolean;\n        hasClear?: boolean;\n        hasAutoFocus?: boolean;\n        startIcon?: ViewNode;\n        onEnter?: () => void;\n        onChange?: (value: string) => void;\n        changeAction?: (value: string) => void | Promise<void>;\n    }\n>;"
+    },
+    {
+        "name": "TimeInput",
+        "category": "Form Controls",
+        "declaration": "type ISOTimeString = string & { readonly __brand: 'ISOTimeString' };\n\ndeclare const TimeInput: ViewComponent<\n    FieldProps & {\n        value?: ISOTimeString;\n        onChange?: (value: ISOTimeString | undefined) => void;\n        changeAction?: (value: ISOTimeString | undefined) => void | Promise<void>;\n        min?: ISOTimeString;\n        max?: ISOTimeString;\n        hasSeconds?: boolean;\n        hasClear?: boolean;\n        hourFormat?: '12h' | '24h';\n        increment?: number;\n        presentation?:\n            | 'text-input'\n            | 'popover'\n            | 'bottom-sheet'\n            | 'native'\n            | 'adaptive-bottom-sheet'\n            | 'adaptive-native';\n        isLoading?: boolean;\n        disabledMessage?: string;\n        placeholder?: string;\n        size?: 'sm' | 'md' | 'lg';\n    }\n>;"
     },
     {
         "name": "Timestamp",
@@ -220,8 +305,18 @@
         "declaration": "declare const Timestamp: ViewComponent<{\n    value: number | string;\n    format?: string;\n}>;"
     },
     {
-        "name": "useApi",
-        "category": "Runtime",
-        "declaration": "declare function useApi<T = unknown>(path: string): T;"
+        "name": "ToggleButton",
+        "category": "Action",
+        "declaration": "declare const ToggleButton: ViewComponent<{\n    label: string;\n    value?: string;\n    isPressed?: boolean;\n    onPressedChange?: (isPressed: boolean, event: ViewMouseEvent) => void;\n    pressedChangeAction?: (isPressed: boolean) => void | Promise<void>;\n    size?: 'sm' | 'md' | 'lg';\n    elevation?: 'none' | 'low' | 'med' | 'high';\n    isDisabled?: boolean;\n    isLoading?: boolean;\n    isIconOnly?: boolean;\n    icon?: ViewNode;\n    pressedIcon?: ViewNode;\n    tooltip?: string;\n}>;"
+    },
+    {
+        "name": "ToggleButtonGroup",
+        "category": "Action",
+        "declaration": "declare const ToggleButtonGroup: ViewComponent<\n    {\n        label: string;\n        orientation?: 'horizontal' | 'vertical';\n        size?: 'sm' | 'md' | 'lg';\n        isDisabled?: boolean;\n    } & (\n        | { type?: 'single'; value: string | null; onChange: (value: string | null) => void }\n        | { type: 'multiple'; value: string[]; onChange: (value: string[]) => void }\n    )\n>;"
+    },
+    {
+        "name": "TreeList",
+        "category": "Table & List",
+        "declaration": "type TreeListItemData = {\n    id: string;\n    label: ViewNode;\n    description?: string;\n    startContent?: ViewNode;\n    endContent?: ViewNode;\n    children?: TreeListItemData[];\n    onClick?: (event: ViewMouseEvent) => void;\n    href?: string;\n    target?: string;\n    isDisabled?: boolean;\n    isSelected?: boolean;\n    isExpanded?: boolean;\n    className?: string;\n};\n\ndeclare const TreeList: ViewComponent<{\n    items: TreeListItemData[];\n    density?: 'compact' | 'balanced' | 'spacious';\n    variant?: 'lineGuides' | 'noGuides';\n    header?: ViewNode;\n}>;"
     }
 ]

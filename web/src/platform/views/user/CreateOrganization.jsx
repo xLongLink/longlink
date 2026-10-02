@@ -1,4 +1,5 @@
 import { api } from '@/lib/api';
+import { useState } from 'react';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
 import { useQueryClient } from '@tanstack/react-query';
@@ -6,10 +7,11 @@ import { TextInput } from '@astryxdesign/core/TextInput';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import { zOrganizationCreate } from '@/lib/generated/platform-api-v1/zod.gen';
 
-/** Shares creation while the parent retains drafts and coordinates page-wide actions.
- * @param {{ isOpen: boolean, onOpenChange: (open: boolean) => void, name: string, onNameChange: (name: string) => void, action: ReturnType<typeof import('@/lib/hooks/use-api').useAction> }} props
+/** Owns the creation draft while the parent coordinates page-wide actions.
+ * @param {{ isOpen: boolean, onOpenChange: (open: boolean) => void, action: ReturnType<typeof import('@/lib/hooks/use-api').useAction> }} props
  */
-export default function CreateOrganization({ isOpen, onOpenChange, name, onNameChange, action }) {
+export default function CreateOrganization({ isOpen, onOpenChange, action }) {
+    const [name, setName] = useState('');
     const client = useQueryClient();
 
     // Preserve the parent's pending guards for all actions, not just creation.
@@ -47,13 +49,7 @@ export default function CreateOrganization({ isOpen, onOpenChange, name, onNameC
                     });
                 }}
             >
-                <TextInput
-                    label="Name"
-                    value={name}
-                    placeholder="Example LongLink"
-                    isRequired
-                    onChange={onNameChange}
-                />
+                <TextInput label="Name" value={name} placeholder="Example LongLink" isRequired onChange={setName} />
                 <Button
                     label="Create organization"
                     variant="primary"

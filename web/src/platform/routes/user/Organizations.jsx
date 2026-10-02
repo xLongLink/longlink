@@ -24,18 +24,18 @@ export default function Organizations() {
     );
 }
 
-/** Owns the organizations list and its creation draft. */
+/** Owns the organizations list and coordinates its creation dialog. */
 function OrganizationsPage() {
-    const [name, setName] = useState('');
     const [creating, setCreating] = useState(false);
     const action = useAction();
     const memberships = useApi('/api/v1/me/organizations', schemas.zGetMyOrganizationsApiV1MeOrganizationsGetResponse);
 
     // Keep loading and failures distinct from an empty result.
-    if (memberships.error) return <Banner status="error" title="Unable to load organizations" />;
-    if (!memberships.data) return <Spinner label="Loading organizations" />;
-
-    return (
+    const content = memberships.error ? (
+        <Banner status="error" title="Unable to load organizations" />
+    ) : !memberships.data ? (
+        <Spinner label="Loading organizations" />
+    ) : (
         <Stack gap={8}>
             <Stack direction="horizontal" justify="between" align="center" wrap="wrap">
                 <Heading level={1}>Organizations</Heading>
@@ -63,13 +63,18 @@ function OrganizationsPage() {
                     },
                 ]}
             />
+        </Stack>
+    );
+
+    // Keep the dialog's draft mounted through list refresh failures, but hide unavailable content.
+    return (
+        <>
+            {content}
             <CreateOrganization
-                isOpen={creating}
+                isOpen={creating && !!memberships.data && !memberships.error}
                 onOpenChange={setCreating}
-                name={name}
-                onNameChange={setName}
                 action={action}
             />
-        </Stack>
+        </>
     );
 }

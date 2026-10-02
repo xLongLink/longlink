@@ -49,7 +49,9 @@ export default function Login() {
         enabled: !user,
         staleTime: Infinity,
     });
-    const hasOAuthProvider = oauthProviders.some((provider) => oauthAvailability?.[provider.availability]);
+
+    // Resolve enabled providers once for both section visibility and button rendering.
+    const availableOAuthProviders = oauthProviders.filter((provider) => oauthAvailability?.[provider.availability]);
     const form = useForm<LoginValues>({
         defaultValues: { email: searchParams.get('email') ?? '', password: '' },
         resolver: zodResolver(loginSchema),
@@ -87,20 +89,18 @@ export default function Login() {
             <NoIndex title="Sign In | LongLink" />
             <Stack gap={4}>
                 <Stack gap={2}>
-                    {hasOAuthProvider ? (
+                    {availableOAuthProviders.length > 0 ? (
                         <Stack gap={2}>
                             <Divider label="Continue with social" />
                             <Stack gap={2}>
-                                {oauthProviders.map((provider) =>
-                                    oauthAvailability?.[provider.availability] ? (
-                                        <Button
-                                            key={provider.availability}
-                                            label={provider.label}
-                                            onClick={() => window.location.assign(provider.path)}
-                                            width="100%"
-                                        />
-                                    ) : null
-                                )}
+                                {availableOAuthProviders.map((provider) => (
+                                    <Button
+                                        key={provider.availability}
+                                        label={provider.label}
+                                        onClick={() => window.location.assign(provider.path)}
+                                        width="100%"
+                                    />
+                                ))}
                             </Stack>
                             <Divider label="or sign in with email" />
                         </Stack>

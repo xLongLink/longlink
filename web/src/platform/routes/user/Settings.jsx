@@ -39,7 +39,6 @@ export default function Settings() {
  */
 function SettingsPage({ user }) {
     const [name, setName] = useState(user.name);
-    const [organizationName, setOrganizationName] = useState('');
     const [creating, setCreating] = useState(false);
     const [deletion, setDeletion] = useState(
         /** @type {import('zod').output<typeof schemas.zUserOrganizationMembership> | null} */ (null)
@@ -49,10 +48,11 @@ function SettingsPage({ user }) {
     const memberships = useApi('/api/v1/me/organizations', schemas.zGetMyOrganizationsApiV1MeOrganizationsGetResponse);
 
     // Keep loading and failures distinct from an empty result.
-    if (memberships.error) return <Banner status="error" title="Unable to load account settings" />;
-    if (!memberships.data) return <Spinner label="Loading account settings" />;
-
-    return (
+    const content = memberships.error ? (
+        <Banner status="error" title="Unable to load account settings" />
+    ) : !memberships.data ? (
+        <Spinner label="Loading account settings" />
+    ) : (
         <Stack gap={8}>
             <Stack direction="horizontal" gap={3} align="start">
                 <Avatar name={name} src={user.avatar} />
@@ -172,13 +172,6 @@ function SettingsPage({ user }) {
                     },
                 ]}
             />
-            <CreateOrganization
-                isOpen={creating}
-                onOpenChange={setCreating}
-                name={organizationName}
-                onNameChange={setOrganizationName}
-                action={action}
-            />
             {deletion && (
                 <Dialog
                     isOpen
@@ -223,5 +216,17 @@ function SettingsPage({ user }) {
                 </Dialog>
             )}
         </Stack>
+    );
+
+    // Keep the dialog's draft mounted through list refresh failures, but hide unavailable content.
+    return (
+        <>
+            {content}
+            <CreateOrganization
+                isOpen={creating && !!memberships.data && !memberships.error}
+                onOpenChange={setCreating}
+                action={action}
+            />
+        </>
     );
 }

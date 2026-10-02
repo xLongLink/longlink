@@ -6,8 +6,8 @@ import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Avatar } from '@/components/ui/Avatar';
 import { Badge } from '@astryxdesign/core/Badge';
+import { Field } from '@astryxdesign/core/Field';
 import { Stack } from '@astryxdesign/core/Stack';
-import { Table } from '@astryxdesign/core/Table';
 import { Ellipsis, Info, X } from 'lucide-react';
 import { Link as RouterLink } from 'react-router';
 import { Button } from '@astryxdesign/core/Button';
@@ -18,22 +18,45 @@ import { Switch } from '@astryxdesign/core/Switch';
 import { Divider } from '@astryxdesign/core/Divider';
 import { Heading } from '@astryxdesign/core/Heading';
 import { Article } from '@/components/layouts/Article';
+import { Calendar } from '@astryxdesign/core/Calendar';
+import { Carousel } from '@astryxdesign/core/Carousel';
 import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { Selector } from '@astryxdesign/core/Selector';
 import { TextArea } from '@astryxdesign/core/TextArea';
+import { TreeList } from '@astryxdesign/core/TreeList';
 import { componentDocumentation } from '@/platform/docs';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
+import { DateInput } from '@astryxdesign/core/DateInput';
 import { FileInput } from '@astryxdesign/core/FileInput';
+import { List, ListItem } from '@astryxdesign/core/List';
+import { StatusDot } from '@astryxdesign/core/StatusDot';
 import { TextInput } from '@astryxdesign/core/TextInput';
+import { TimeInput } from '@astryxdesign/core/TimeInput';
 import { Timestamp } from '@astryxdesign/core/Timestamp';
 import { Tab, TabList } from '@astryxdesign/core/TabList';
+import { IconButton } from '@astryxdesign/core/IconButton';
 import { Step, Stepper } from '@astryxdesign/core/Stepper';
+import { ButtonGroup } from '@astryxdesign/core/ButtonGroup';
+import { Collapsible } from '@astryxdesign/core/Collapsible';
 import { NumberInput } from '@astryxdesign/core/NumberInput';
+import { PowerSearch } from '@astryxdesign/core/PowerSearch';
 import { ProgressBar } from '@astryxdesign/core/ProgressBar';
 import { documentationCategories } from '@/lib/documentation';
+import { DropdownMenu } from '@astryxdesign/core/DropdownMenu';
+import { OverflowList } from '@astryxdesign/core/OverflowList';
+import { Table, proportional } from '@astryxdesign/core/Table';
 import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
+import { ClickableCard } from '@astryxdesign/core/ClickableCard';
+import { DateTimeInput } from '@astryxdesign/core/DateTimeInput';
+import { MultiSelector } from '@astryxdesign/core/MultiSelector';
+import { DateRangeInput } from '@astryxdesign/core/DateRangeInput';
+import { SelectableCard } from '@astryxdesign/core/SelectableCard';
+import { ComplexSelector } from '@astryxdesign/core/ComplexSelector';
 import { RadioList, RadioListItem } from '@astryxdesign/core/RadioList';
+import { MetadataList, MetadataListItem } from '@astryxdesign/core/MetadataList';
 import { SideNav, SideNavItem, SideNavSection } from '@astryxdesign/core/SideNav';
+import { ToggleButton, ToggleButtonGroup } from '@astryxdesign/core/ToggleButton';
+import { SegmentedControl, SegmentedControlItem } from '@astryxdesign/core/SegmentedControl';
 
 /** Leaves inert, controlled previews unchanged. */
 const noop = () => {};
@@ -48,6 +71,36 @@ const previews: Record<string, ReactNode> = {
         </Stack>
     ),
     Link: <Link hasUnderline>Docs</Link>,
+    ButtonGroup: (
+        <ButtonGroup label="Text editing" size="sm">
+            <Button label="Copy" />
+            <Button label="Cut" />
+            <Button label="Paste" />
+        </ButtonGroup>
+    ),
+    DropdownMenu: (
+        <DropdownMenu
+            button={{ label: 'Edit', size: 'sm' }}
+            items={[
+                { label: 'Copy', onClick: noop },
+                { label: 'Paste', onClick: noop },
+            ]}
+        />
+    ),
+    IconButton: <IconButton icon={<X aria-hidden="true" size={20} />} label="Close" size="sm" tooltip="Close" />,
+    SegmentedControl: (
+        <SegmentedControl label="Time range" value="week" onChange={noop} size="sm">
+            <SegmentedControlItem label="Day" value="day" />
+            <SegmentedControlItem label="Week" value="week" />
+        </SegmentedControl>
+    ),
+    ToggleButton: <ToggleButton label="Bold" isPressed onPressedChange={noop} size="sm" />,
+    ToggleButtonGroup: (
+        <ToggleButtonGroup label="Formatting" type="multiple" value={['bold']} onChange={noop} size="sm">
+            <ToggleButton label="Bold" value="bold" />
+            <ToggleButton label="Italic" value="italic" />
+        </ToggleButtonGroup>
+    ),
     MoreMenu: (
         <MoreMenu
             icon={<Ellipsis aria-hidden="true" size={20} />}
@@ -81,10 +134,10 @@ const previews: Record<string, ReactNode> = {
     ),
     Icon: <Info aria-hidden="true" className="text-accent" size={20} />,
     Badge: <Badge label="Open" variant="info" />,
-    StatusBadge: (
-        <Stack direction="horizontal" align="center" gap={2} wrap="wrap">
-            <Badge label="Creating" variant="info" />
-            <Badge label="Failed" variant="error" />
+    StatusDot: (
+        <Stack direction="horizontal" align="center" gap={2}>
+            <StatusDot label="Online" variant="success" />
+            <Text>Online</Text>
         </Stack>
     ),
     Timestamp: <Timestamp value="2026-09-30T12:00:00Z" format="date" color="primary" />,
@@ -99,6 +152,77 @@ const previews: Record<string, ReactNode> = {
         </Stack>
     ),
     CheckboxInput: <CheckboxInput label="Approved" size="sm" value onChange={noop} />,
+    Calendar: <Calendar className="scale-50" value="2026-10-02" focusDate="2026-10-02" onChange={noop} />,
+    ComplexSelector: (
+        <ComplexSelector label="Plan" value="team" triggerLabel="Team" onChange={noop} size="sm" width="100%">
+            {(value, onChange) => (
+                <RadioList label="Choose a plan" value={value} onChange={onChange}>
+                    <RadioListItem label="Solo" value="solo" />
+                    <RadioListItem label="Team" value="team" />
+                </RadioList>
+            )}
+        </ComplexSelector>
+    ),
+    DateInput: <DateInput label="Due date" value="2026-10-02" onChange={noop} size="sm" width="100%" />,
+    DateRangeInput: (
+        <DateRangeInput
+            label="Period"
+            value={{ start: '2026-10-02', end: '2026-10-09' }}
+            onChange={noop}
+            size="sm"
+            width="100%"
+        />
+    ),
+    DateTimeInput: <DateTimeInput label="Appointment" onChange={noop} size="sm" width="100%" />,
+    Field: (
+        <Field label="Confidence" inputID="preview-confidence" description="Choose a confidence level." width="100%">
+            <input id="preview-confidence" type="range" min={0} max={100} defaultValue={60} />
+        </Field>
+    ),
+    MultiSelector: (
+        <MultiSelector
+            label="Teams"
+            options={[
+                { value: 'design', label: 'Design' },
+                { value: 'engineering', label: 'Engineering' },
+            ]}
+            value={['design']}
+            onChange={noop}
+            size="sm"
+            width="100%"
+        />
+    ),
+    PowerSearch: (
+        <PowerSearch
+            config={{
+                name: 'Orders',
+                fields: [
+                    {
+                        key: 'status',
+                        label: 'Status',
+                        operators: [
+                            {
+                                key: 'is',
+                                label: 'is',
+                                value: {
+                                    type: 'enum',
+                                    values: [
+                                        { value: 'open', label: 'Open' },
+                                        { value: 'closed', label: 'Closed' },
+                                    ],
+                                },
+                            },
+                        ],
+                    },
+                ],
+            }}
+            filters={[]}
+            onChange={noop}
+            label="Search orders"
+            size="sm"
+        />
+    ),
+    TimeInput: <TimeInput label="Start time" placeholder="Select a time" onChange={noop} size="sm" width="100%" />,
     FileInput: (
         <FileInput
             accept=".pdf"
@@ -147,6 +271,34 @@ const previews: Record<string, ReactNode> = {
     TextArea: <TextArea isLabelHidden label="Notes" rows={2} size="sm" value="Review complete" onChange={noop} />,
     TextInput: <TextInput isLabelHidden label="Name" size="sm" value="New order" width="100%" onChange={noop} />,
     Card: <Card elevation="low">Lorem ipsum dolor sit amet.</Card>,
+    Carousel: (
+        <Carousel aria-label="Featured items" gap={2} hasSnap className="w-full">
+            <Card className="w-32" padding={3}>
+                <Text>Overview</Text>
+            </Card>
+            <Card className="w-32" padding={3}>
+                <Text>Details</Text>
+            </Card>
+            <Card className="w-32" padding={3}>
+                <Text>Activity</Text>
+            </Card>
+        </Carousel>
+    ),
+    ClickableCard: (
+        <ClickableCard label="View order" onClick={noop} padding={3}>
+            <Text>View order</Text>
+        </ClickableCard>
+    ),
+    Collapsible: (
+        <Collapsible trigger="Details" isOpen onOpenChange={noop}>
+            <Text color="secondary">Additional information.</Text>
+        </Collapsible>
+    ),
+    SelectableCard: (
+        <SelectableCard label="Team plan" isSelected onChange={noop} padding={3}>
+            <Text>Team plan</Text>
+        </SelectableCard>
+    ),
     Grid: (
         <Grid columns={2} gap={2}>
             <Stack aria-hidden="true" className="h-5 w-16 rounded-full bg-neutral" />
@@ -205,13 +357,49 @@ const previews: Record<string, ReactNode> = {
             </Stack>
         </Dialog>
     ),
+    List: (
+        <List header="Tasks" density="compact" hasDividers>
+            <ListItem label="Review order" description="Check the details" />
+            <ListItem label="Send confirmation" />
+        </List>
+    ),
+    MetadataList: (
+        <MetadataList title="Order details" label={{ position: 'start' }}>
+            <MetadataListItem label="Owner">Ada Lovelace</MetadataListItem>
+            <MetadataListItem label="Status">Open</MetadataListItem>
+        </MetadataList>
+    ),
+    OverflowList: (
+        <OverflowList gap={2} maxVisibleItems={2} overflowRenderer={(items) => <Text>+{items.length} more</Text>}>
+            <Text>Design</Text>
+            <Text>Engineering</Text>
+            <Text>Operations</Text>
+        </OverflowList>
+    ),
+    TreeList: (
+        <TreeList
+            header="Files"
+            density="compact"
+            items={[
+                {
+                    id: 'views',
+                    label: 'Views',
+                    isExpanded: true,
+                    children: [
+                        { id: 'orders', label: 'orders.jsx' },
+                        { id: 'users', label: 'users.jsx' },
+                    ],
+                },
+            ]}
+        />
+    ),
     Table: (
         <Table
             data={[{ item: 'Order', status: 'Open' }]}
             density="compact"
             columns={[
-                { key: 'item', header: 'Item' },
-                { key: 'status', header: 'Status' },
+                { key: 'item', header: 'Item', width: proportional(1) },
+                { key: 'status', header: 'Status', width: proportional(1) },
             ]}
         />
     ),
@@ -221,7 +409,11 @@ const article = {
     description: 'Build interfaces with LongLink Views and components.',
     toc: [
         { id: 'views', label: 'Views', level: 1 },
-        ...documentationCategories.map((category) => ({ id: category.toLowerCase(), label: category, level: 2 })),
+        ...documentationCategories.map((category) => ({
+            id: category.toLowerCase().replace(/\W+/g, '-'),
+            label: category,
+            level: 2,
+        })),
     ],
     lastUpdated: '2026-10-02',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/sdk/longlink/.static/jsx/frontend.d.ts',
@@ -241,17 +433,6 @@ export default function DocsArticleRoute() {
                     components, hooks such as useState() and useEffect(), fragments, queries, and scoped requests
                     directly, without imports or a React. prefix. Your Python Solution needs no frontend build.
                 </Text>
-                <Text as="p">
-                    Use {'<>...</>'} to group JSX elements without adding a DOM wrapper. Use
-                    {' <Fragment key={id}>...</Fragment>'} when a group in a list needs a key. Neither form requires an
-                    import.
-                </Text>
-                <Text as="p">
-                    Solution code runs in a sandboxed iframe with an opaque origin, not inside the Platform page. Use
-                    useApi() to read data, request() to submit changes, and navigate() for your own Solution. Direct
-                    network access and Platform credentials are unavailable. Titles come from JSX filenames, and tabs
-                    use the default icon. No metadata files are needed.
-                </Text>
                 <Stack as="aside" className="border-s border-accent ps-4" gap={0}>
                     <Text weight="semibold">Why?</Text>
                     <Text as="p">
@@ -259,20 +440,6 @@ export default function DocsArticleRoute() {
                         and maintain.
                     </Text>
                 </Stack>
-                <CodeBlock
-                    code={
-                        'export default function Welcome() {\n  return <Stack gap={3}><Heading level={1}>Welcome</Heading><Text>Hello world</Text></Stack>;\n}'
-                    }
-                    language="jsx"
-                    title="welcome.jsx"
-                    hasLanguageLabel={false}
-                />
-                <Text as="p">
-                    Route parameters are passed as props to the default View function, not as globals. For
-                    src/views/items/[item].jsx, visiting /items/123 supplies params.item as the string "123". params is
-                    read-only and contains path parameters, not query parameters. Add @param {`{ViewProps}`} props in
-                    JSDoc for editor hints.
-                </Text>
                 <CodeBlock
                     code={`/** @param {ViewProps} props */
 export default function Item({ params }) {
@@ -286,7 +453,7 @@ export default function Item({ params }) {
                 />
                 {documentationCategories.map((category) => (
                     <Stack key={category} gap={3}>
-                        <Heading id={category.toLowerCase()} level={2}>
+                        <Heading id={category.toLowerCase().replace(/\W+/g, '-')} level={2}>
                             {category}
                         </Heading>
                         <Grid columns={{ minWidth: 190, max: 3, repeat: 'fit' }} gap={4}>
@@ -305,7 +472,15 @@ export default function Item({ params }) {
                                                 )}
                                             </Center>
                                         </Card>
-                                        <Text type="supporting">{component.name}</Text>
+                                        <Text type="supporting">
+                                            {component.category === 'Action' ||
+                                            component.category === 'Container' ||
+                                            component.category === 'Feedback & Status' ||
+                                            component.category === 'Form Controls' ||
+                                            component.category === 'Table & List'
+                                                ? component.name.replace(/([a-z])([A-Z])/g, '$1 $2')
+                                                : component.name}
+                                        </Text>
                                         <RouterLink
                                             aria-label={`Open ${component.name} documentation`}
                                             className="absolute inset-0 z-10 rounded-lg focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"

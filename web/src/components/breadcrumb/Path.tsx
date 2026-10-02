@@ -6,7 +6,7 @@ import { BreadcrumbItem, Breadcrumbs } from '@astryxdesign/core/Breadcrumbs';
 /** Renders breadcrumb items derived from the current URL path. */
 export function PathBreadcrumb({
     className,
-    labels = {},
+    labels,
     root,
 }: {
     className?: string;

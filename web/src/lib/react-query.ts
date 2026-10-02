@@ -50,9 +50,12 @@ export function createQueryRuntime(notify: (message: string) => void, platformSe
             }
 
             // Suppress repeated polling notifications, never status handling or changed failures.
-            const incident = error instanceof ApiError ? `${error.status}:${error.message}` : error.name;
-            const repeated = query.meta?.polling === true && failedQueries.get(query) === incident;
-            failedQueries.set(query, incident);
+            let repeated = false;
+            if (query.meta?.polling === true) {
+                const incident = error instanceof ApiError ? `${error.status}:${error.message}` : error.name;
+                repeated = failedQueries.get(query) === incident;
+                failedQueries.set(query, incident);
+            }
             reportError(error, !repeated);
         },
         onSuccess: (_data, query) => {
