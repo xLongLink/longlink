@@ -34,6 +34,14 @@ def _text(node: etree._Element, path: str) -> str:
     return text.strip() if path.endswith(f"{DOCS}example") else " ".join(text.split())
 
 
+def _description(element: etree._Element) -> str:
+    """Read a runtime topic or component description using the same normalization."""
+
+    # Topics store descriptions directly; components use XSD documentation annotations.
+    path = f"{DOCS}description" if element.tag == f"{DOCS}topic" else f"{XSD}annotation/{XSD}documentation"
+    return _text(element, path)
+
+
 def _complex_type(element: etree._Element, complex_types: Mapping[str, etree._Element]) -> etree._Element | None:
     """Resolve an element's inline or named complex type."""
 
@@ -55,9 +63,7 @@ def _element_lines(
 
     # Resolve descriptions and inherited runtime attributes.
     type_node = _complex_type(element, complex_types)
-    description = (
-        _text(element, f"{DOCS}description") if element.tag == f"{DOCS}topic" else _text(element, f"{XSD}annotation/{XSD}documentation")
-    )
+    description = _description(element)
     attributes = type_node.findall(f"{XSD}attribute") if type_node is not None else []
     if type_node is not None and type_node.find(f"{XSD}attributeGroup") is not None:
         attributes.extend(runtime_attributes)
@@ -175,11 +181,7 @@ def docs_command(component: str | None = None, category: str | None = None) -> N
             lines.append("")
             lines.append(category_name)
             for element in entries:
-                description = (
-                    _text(element, f"{DOCS}description")
-                    if element.tag == f"{DOCS}topic"
-                    else _text(element, f"{XSD}annotation/{XSD}documentation")
-                )
+                description = _description(element)
                 lines.append(f"- {element.get('name')} - {description}")
         lines.append("")
         lines.append("Run `longlink docs ui --component <component>` for attributes and examples.")

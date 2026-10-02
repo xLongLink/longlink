@@ -301,7 +301,8 @@ async def test_session_retries_initialization_after_database_connection_failure(
 
     # Arrange
     engine = VerificationEngine(ConnectionError("database unavailable"))
-    database = database_base.Database(Envs(ENV="testing"))
+    database = database_base.Database(Envs.model_validate(PRODUCTION_SETTINGS))
+    create_engine = database_base.create_engine
 
     # Act and assert
     with monkeypatch.context() as failing_engine:
@@ -313,10 +314,12 @@ async def test_session_retries_initialization_after_database_connection_failure(
     # Assert
     assert engine.disposed
 
-    # Retry initialization using the restored SDK engine factory.
+    # Retry the production connection path against a real isolated SQLite engine.
     try:
-        async with database.session() as database_session:
-            assert await database_session.scalar(text("SELECT 1")) == 1
+        with monkeypatch.context() as retry_engine:
+            retry_engine.setattr(database_base, "create_engine", lambda _env: create_engine(Envs(ENV="testing")))
+            async with database.session() as database_session:
+                assert await database_session.scalar(text("SELECT 1")) == 1
     finally:
         await database.dispose()
 
@@ -347,7 +350,7 @@ async def test_session_verifies_non_sqlite_connection_before_yielding_session(
     engine = VerificationEngine()
     monkeypatch.setattr(database_base, "create_engine", lambda _env: engine)
     monkeypatch.setattr(database_base, "AsyncSession", lambda *_args, **_kwargs: nullcontext("session"))
-    database = database_base.Database(Envs(ENV="testing"))
+    database = database_base.Database(Envs.model_validate(PRODUCTION_SETTINGS))
 
     # Act
     async with database.session() as database_session:

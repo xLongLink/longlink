@@ -218,12 +218,11 @@ def test_build_solution_generates_docker_artifacts_from_project_metadata(chdir_p
     chdir_project.joinpath("tests", "test_app.py").write_text("def test_app():\n    pass\n", encoding="utf-8")
     build_context = chdir_project.parent / "context"
 
-    # Prepare validated metadata at the build boundary.
+    # Read project metadata for validation by the build operation.
     pyproject_data = build.read_pyproject(chdir_project)
-    _, _, project_description = build.read_project_metadata(pyproject_data)
 
     # Act
-    build.build_solution(build_context, pyproject_data=pyproject_data, project_description=project_description)
+    build.build_solution(build_context, pyproject_data=pyproject_data)
 
     # Assert
     dockerfile = build_context.joinpath("Dockerfile").read_text(encoding="utf-8")
@@ -291,12 +290,11 @@ def test_build_solution_uses_fallback_sdk_version_when_package_is_not_installed(
 
     monkeypatch.setattr(build, "package_version", missing_package_version)
 
-    # Prepare validated metadata at the build boundary.
+    # Read project metadata for validation by the build operation.
     pyproject_data = build.read_pyproject(chdir_project)
-    _, _, project_description = build.read_project_metadata(pyproject_data)
 
     # Act
-    build.build_solution(build_context, pyproject_data=pyproject_data, project_description=project_description)
+    build.build_solution(build_context, pyproject_data=pyproject_data)
 
     # Assert
     dockerfile = build_context.joinpath("Dockerfile").read_text(encoding="utf-8")
@@ -322,12 +320,11 @@ def test_build_solution_filters_symlinks_by_resolved_target(chdir_project: Path)
     chdir_project.joinpath("linked-database").symlink_to("dev.db")
     build_context = chdir_project.parent / "context"
 
-    # Prepare validated metadata at the build boundary.
+    # Read project metadata for validation by the build operation.
     pyproject_data = build.read_pyproject(chdir_project)
-    _, _, project_description = build.read_project_metadata(pyproject_data)
 
     # Act
-    build.build_solution(build_context, pyproject_data=pyproject_data, project_description=project_description)
+    build.build_solution(build_context, pyproject_data=pyproject_data)
 
     # Assert
     assert build_context.joinpath("linked-envs.py").is_symlink()
@@ -421,12 +418,11 @@ def test_build_solution_filters_expanded_context(chdir_project: Path) -> None:
     chdir_project.joinpath("nested", "source.py").write_text("VALUE = 1\n", encoding="utf-8")
     build_context = chdir_project.parent / "context"
 
-    # Prepare validated metadata at the build boundary.
+    # Read project metadata for validation by the build operation.
     pyproject_data = build.read_pyproject(chdir_project)
-    _, _, project_description = build.read_project_metadata(pyproject_data)
 
     # Act
-    build.build_solution(build_context, pyproject_data=pyproject_data, project_description=project_description)
+    build.build_solution(build_context, pyproject_data=pyproject_data)
 
     # Assert
     assert not build_context.joinpath("solution", ".env").exists()
