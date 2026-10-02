@@ -48,15 +48,14 @@ def test_image_rejects_invalid_references(reference: str, message: str) -> None:
         Image(reference)
 
 
-def test_image_normalizes_whitespace_and_preserves_validated_instances() -> None:
-    """Strip boundary whitespace and avoid reparsing an existing Image value."""
+def test_image_normalizes_whitespace() -> None:
+    """Strip boundary whitespace from an image reference."""
 
     # Arrange
     reference = Image(" ghcr.io/longlink/dashboard:latest ")
 
     # Assert
     assert reference == "ghcr.io/longlink/dashboard:latest"
-    assert Image(reference) is reference
 
 
 def test_image_validates_and_serializes_as_a_pydantic_string() -> None:

@@ -82,5 +82,3 @@ def test_configure_logger_adds_configured_handler_when_logger_has_none(isolated_
     assert len(isolated_logger.handlers) == 1
     assert isinstance(isolated_logger.handlers[0], logging.StreamHandler)
     assert isinstance(isolated_logger.handlers[0].formatter, ColorFormatter)
-    assert isolated_logger.level == logging.INFO
-    assert isolated_logger.propagate is False

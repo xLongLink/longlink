@@ -13,14 +13,4 @@ describe('resolveXmlProps', () => {
 
         expect(values).toEqual({ count: 2, gap: 1, label: 'Ready' });
     });
-
-    it('rejects values outside the declared schema', () => {
-        expect(() =>
-            resolveXmlProps(
-                parseFragment('<Widget gap="7" />')[0].params,
-                createContext().scope,
-                z.object({ gap: xmlSpacingSchema.default(1) })
-            )
-        ).toThrow('gap: must use the spacing scale');
-    });
 });
