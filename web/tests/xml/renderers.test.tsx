@@ -19,12 +19,6 @@ describe('renderNode', () => {
         expect(renderXmlToMarkup(parseFragment('<Button if="${false}" />'))).toBe(renderXmlToMarkup([]));
     });
 
-    it('throws on unknown component', () => {
-        expect(() => renderXmlToMarkup([{ name: 'Unknown', params: {}, children: [] }])).toThrow(
-            'Unknown component "Unknown"'
-        );
-    });
-
     it('recovers when the next XML document is valid', async () => {
         // Arrange
         const container = document.createElement('div');

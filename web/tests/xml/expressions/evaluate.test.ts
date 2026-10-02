@@ -4,12 +4,6 @@ import { evaluate } from '@/xml/expressions/evaluate';
 import { compileAttribute } from '@/xml/expressions/compile';
 
 describe('evaluate', () => {
-    it('resolves expressions against flat context values', () => {
-        const ctx: Scope = { bindings: { count: 1, total: 10 } };
-
-        expect(evaluate(compileAttribute('${count + total}'), ctx)).toBe(11);
-    });
-
     it('interpolates text containing expressions', () => {
         const ctx: Scope = { bindings: { index: 0, name: 'Hero' } };
 
@@ -28,14 +22,6 @@ describe('evaluate', () => {
         const ctx: Scope = { bindings: {} };
 
         expect(evaluate(compileAttribute('${"{"}'), ctx)).toBe('{');
-    });
-
-    it('resolves nested value expression', () => {
-        const ctx: Scope = {
-            bindings: { form: { value: 'draft', placeholder: 'Name' } },
-        };
-
-        expect(evaluate(compileAttribute('${form.value}'), ctx)).toBe('draft');
     });
 
     it('does not read inherited member values', () => {

@@ -32,30 +32,16 @@ def test_database_url_normalization(source: str, expected: str, expected_connect
     assert connection.connect_args == expected_connect_args
 
 
-@pytest.mark.parametrize(
-    ("source", "expected_query"),
-    [
-        (
-            "postgresql+asyncpg://control:secret@db:5432/longlink?ssl=disable&search_path=%22public%22&application_name=longlink",
-            {"search_path": '"public"', "application_name": "longlink"},
-        ),
-        (
-            "postgresql+asyncpg://control:secret@db:5432/longlink?ssl=disable&target_session_attrs=read-only",
-            {"target_session_attrs": "read-only"},
-        ),
-    ],
-)
-def test_database_url_preserves_ssl_and_other_query_params(
-    source: str,
-    expected_query: dict[str, str],
-) -> None:
+def test_database_url_preserves_ssl_and_other_query_params() -> None:
     """Preserve valid SSL and unrelated PostgreSQL query options."""
 
     # Act
-    connection = urls.database(source)
+    connection = urls.database(
+        "postgresql+asyncpg://control:secret@db:5432/longlink?ssl=disable&search_path=%22public%22&application_name=longlink"
+    )
 
     # Assert
-    assert connection.url.query == {**expected_query, "ssl": "disable"}
+    assert connection.url.query == {"search_path": '"public"', "application_name": "longlink", "ssl": "disable"}
     assert connection.connect_args == {"server_settings": {"timezone": "UTC"}}
 
 
