@@ -61,9 +61,13 @@ class SolutionCreate(BaseModel):
     @field_validator("envs")
     @classmethod
     def validate_envs(cls, envs: dict[str, str]) -> dict[str, str]:
-        """Validate solution environment names, ownership, and bounded value sizes."""
+        """Validate creation environments and omit empty values."""
 
-        return validate_environment_variables(envs)
+        # Validate supplied names and values before normalizing creation fields.
+        validate_environment_variables(envs)
+
+        # Omit empty optional values without trimming meaningful whitespace.
+        return {name: value for name, value in envs.items() if value != ""}
 
     @field_validator("idle_seconds")
     @classmethod
