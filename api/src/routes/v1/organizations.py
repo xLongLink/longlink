@@ -2,7 +2,7 @@ import asyncio
 from uuid import UUID
 from fastapi import Depends, APIRouter, HTTPException, BackgroundTasks
 from src.auth import authuser, authadmin, get_session, organization_access
-from src.utils import mail, roles
+from src.utils import s3, mail, roles
 from src.logger import logger
 from src.models.roles import OrganizationRoles
 from src.models.users import UserOrganizationMembership
@@ -121,7 +121,9 @@ async def get_organization_storage_usage(
     try:
         # Bound member-triggered full-bucket scans so slow storage cannot exhaust API request capacity.
         async with asyncio.timeout(STORAGE_USAGE_TIMEOUT_SECONDS):
-            usage = await Storage(compute).usage(membership.organization_id)
+            credentials = s3.Credentials(compute.storage_access_key, compute.storage_secret_key)
+            storage = s3.S3(compute.storage_endpoint, credentials, compute.storage_certificate)
+            usage = await storage.usage(Storage.bucket_name(membership.organization_id))
     except (TimeoutError, BotoCoreError, ClientError) as exc:
         logger.warning(
             "Storage resources unavailable for organization '%s' through registry '%s': %s",

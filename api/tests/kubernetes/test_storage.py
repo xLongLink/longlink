@@ -74,14 +74,12 @@ async def test_storage_administration_uses_cluster_tunnel(
     assert requests[0].headers["Authorization"].startswith("AWS4-HMAC-SHA256 Credential=controller/")
 
 
-async def test_storage_administration_requires_cluster(storage_compute: SimpleNamespace) -> None:
-    """Never fall back to the public endpoint when the tunnel is unavailable."""
+def test_storage_administration_requires_cluster(storage_compute: SimpleNamespace) -> None:
+    """Require the Kubernetes connection when constructing the storage controller."""
 
-    # A standalone Storage instance may still serve S3 usage, but not administrator requests.
-    target = storage.Storage(storage_compute)  # type: ignore[arg-type]
-
-    with pytest.raises(RuntimeError, match="requires a Kubernetes connection"):
-        await target.revoke(uuid4())
+    # Reject a missing cluster before any storage operation can be attempted.
+    with pytest.raises(TypeError, match="missing 1 required positional argument: 'cluster'"):
+        storage.Storage(storage_compute)  # type: ignore[call-arg, arg-type]
 
 
 @pytest.mark.parametrize("status", [200, 503], ids=["ready", "unavailable"])

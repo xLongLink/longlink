@@ -18,7 +18,7 @@ RUSTFS_SECRET_NAME = "longlink-rustfs"  # noqa: S105
 class Storage:
     """Verify RustFS and reconcile Organization buckets with Solution service accounts."""
 
-    def __init__(self, compute: "ComputeRegistry", cluster: "Kubernetes | None" = None) -> None:
+    def __init__(self, compute: "ComputeRegistry", cluster: "Kubernetes") -> None:
         """Bind controller connections without opening a transport."""
 
         # The controller identity owns bucket lifecycle and service-account administration.
@@ -30,9 +30,7 @@ class Storage:
     async def _admin(self) -> rustfs.RustFS:
         """Connect administrator operations only through the authenticated cluster tunnel."""
 
-        # Read-only storage usage does not require Kubernetes; every admin operation does.
-        if self._cluster is None:
-            raise RuntimeError("RustFS administration requires a Kubernetes connection")
+        # Route administrator requests through the bound Kubernetes connection.
         port = await self._cluster.forward_storage()
         return rustfs.RustFS(f"http://127.0.0.1:{port}", self._credentials)
 
@@ -68,8 +66,6 @@ class Storage:
         """Confirm the Kubernetes tunnel reaches a ready RustFS Pod."""
 
         # kr8s starts the remote port-forward only when a request enters its local listener.
-        if self._cluster is None:
-            raise RuntimeError("RustFS administration requires a Kubernetes connection")
         port = await self._cluster.forward_storage()
         async with httpx2.AsyncClient(trust_env=False, timeout=5.0, follow_redirects=False) as client:
             response = await client.get(f"http://127.0.0.1:{port}/health/ready")
@@ -97,11 +93,6 @@ class Storage:
         """Remove one Solution prefix from the Organization bucket."""
 
         await self._storage.delete_prefix(self.bucket_name(organization), prefix)
-
-    async def usage(self, organization: UUID) -> int:
-        """Measure the Organization bucket's live usage."""
-
-        return await self._storage.usage(self.bucket_name(organization))
 
     async def apply(self, organization: UUID, *, quota_bytes: int) -> None:
         """Create an Organization bucket and apply its RustFS hard byte quota."""

@@ -37,6 +37,10 @@ async def deploy(revision_id: UUID) -> None:
         await session.commit()
         runtime_secrets = dict(solution.secrets)
 
+    # Infrastructure owns these settings; discard copies retained by earlier deployments.
+    for name in ("LONGLINK_STORAGE_ENDPOINT_URL", "LONGLINK_DATABASE_CERTIFICATE", "LONGLINK_STORAGE_CERTIFICATE"):
+        runtime_secrets.pop(name, None)
+
     # Organization reconciliation owns bucket provisioning and quota admission.
     cluster = Kubernetes(
         compute.kubeconfig,
@@ -54,7 +58,7 @@ async def deploy(revision_id: UUID) -> None:
             database = await databases.connection(organization, cluster)
             database_username = await database.solution_schema(organization.id, solution.id, database_password)
 
-            # Build and commit the complete runtime contract before creating the workload.
+            # Build the durable runtime credentials before creating the workload.
             runtime_secrets.update(
                 {
                     "LONGLINK_ENV": "production",
@@ -77,16 +81,16 @@ async def deploy(revision_id: UUID) -> None:
             logger.info("Persisting runtime credentials for Solution %s", solution.id)
             runtime_secrets["LONGLINK_IDENTITY_SECRET"] = secrets.token_urlsafe(32)
 
-        # Define every LONGLINK_* variable next to the persisted runtime contract.
-        runtime_secrets.update(
-            {
-                # Workloads always reach object storage through the cluster-local TLS proxy.
-                "LONGLINK_STORAGE_ENDPOINT_URL": "https://longlink-storage.rustfs.svc:443",
-                # Fetch the current CA once for workload rendering on every path.
-                "LONGLINK_DATABASE_CERTIFICATE": await cluster.databases.certificate(organization.id),
-                **({"LONGLINK_STORAGE_CERTIFICATE": compute.storage_certificate} if compute.storage_certificate else {}),
-            }
-        )
+        # Resolve current infrastructure settings without persisting a second configuration owner.
+        runtime_environment = {
+            **revision.envs,
+            **runtime_secrets,
+            # Workloads always reach object storage through the cluster-local TLS proxy.
+            "LONGLINK_STORAGE_ENDPOINT_URL": "https://longlink-storage.rustfs.svc:443",
+            # Fetch the current CA once for workload rendering on every path.
+            "LONGLINK_DATABASE_CERTIFICATE": await cluster.databases.certificate(organization.id),
+            **({"LONGLINK_STORAGE_CERTIFICATE": compute.storage_certificate} if compute.storage_certificate else {}),
+        }
 
         # Persist generated credentials when the runtime contract changed.
         if runtime_secrets != solution.secrets:
@@ -111,10 +115,7 @@ async def deploy(revision_id: UUID) -> None:
             organization.id,
             solution.id,
             revision.image,
-            {
-                **revision.envs,
-                **runtime_secrets,
-            },
+            runtime_environment,
             revision_id=revision.id,
             min_scale=revision.min_scale,
             idle_seconds=revision.idle_seconds,
