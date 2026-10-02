@@ -3394,6 +3394,12 @@
             "type": "string",
             "format": "date-time",
             "title": "Created At"
+          },
+          "image_reference": {
+            "type": "string",
+            "title": "Image Reference",
+            "description": "Present the desired image with an abbreviated digest for table cells.",
+            "readOnly": true
           }
         },
         "type": "object",
@@ -3408,7 +3414,8 @@
           "deployed_revision_id",
           "status",
           "deployment_pending",
-          "created_at"
+          "created_at",
+          "image_reference"
         ],
         "title": "SolutionResponse",
         "description": "Represent one solution in API responses."
@@ -3446,6 +3453,18 @@
           },
           "metadata": {
             "$ref": "#/components/schemas/LongLinkMetadata"
+          },
+          "image_digest": {
+            "type": "string",
+            "title": "Image Digest",
+            "description": "Present the candidate image for release comparison.",
+            "readOnly": true
+          },
+          "current_image_digest": {
+            "type": "string",
+            "title": "Current Image Digest",
+            "description": "Present the current image for release comparison.",
+            "readOnly": true
           }
         },
         "type": "object",
@@ -3455,7 +3474,9 @@
           "revision_id",
           "current_image",
           "configured_envs",
-          "metadata"
+          "metadata",
+          "image_digest",
+          "current_image_digest"
         ],
         "title": "SolutionUpdateCheck",
         "description": "Expose a candidate and configured names, never environment values."
