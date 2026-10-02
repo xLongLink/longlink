@@ -506,7 +506,7 @@
                                 <Request
                                     url="/api/v1/organizations/${membership.organization.id}/solutions"
                                     method="POST"
-                                    json="${{ description: createSolution.description || null, envs: nonEmpty(createSolution.envs), image: createSolution.image, name: createSolution.name }}"
+                                    json="${{ description: createSolution.description || null, envs: createSolution.envs, image: createSolution.image, name: createSolution.name }}"
                                 />
                                 <Patch state="solutions" invalidate="true" />
                                 <Patch
@@ -545,11 +545,11 @@
                         property="$environment.name"
                         isDisabled="${solutionMenu.removed[environment.name] === true}"
                         isOptional="${!environment.required}"
-                        isRequired="${environment.required && (!hasConfiguredEnvironment(updateCandidate.configured_envs, environment.name) || solutionMenu.removed[environment.name] === true)}"
-                        placeholder="${solutionMenu.removed[environment.name] === true ? 'Will be removed' : hasConfiguredEnvironment(updateCandidate.configured_envs, environment.name) ? 'Configured: preserve existing value' : environment.description || 'Enter value'}"
+                        isRequired="${environment.required && (!environment.configured || solutionMenu.removed[environment.name] === true)}"
+                        placeholder="${solutionMenu.removed[environment.name] === true ? 'Will be removed' : environment.configured ? 'Configured: preserve existing value' : environment.description || 'Enter value'}"
                     />
                     <CheckboxInput
-                        if="${hasConfiguredEnvironment(updateCandidate.configured_envs, environment.name) && !environment.required}"
+                        if="${environment.configured && !environment.required}"
                         label="Remove ${environment.name}"
                         value="$solutionMenu.removed"
                         property="$environment.name"

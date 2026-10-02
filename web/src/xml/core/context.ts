@@ -21,6 +21,7 @@ export type CreateContextOptions = {
     navigationBaseUrl: string;
     params: Record<string, string>;
     registry?: XmlComponentRegistry;
+    queryResult?: RuntimeServices['queryResult'];
     requestCompleted?: RuntimeServices['requestCompleted'];
     requestBaseUrl: string;
 };
@@ -35,6 +36,7 @@ export function createContext(options: CreateContextOptions): XmlRuntime {
             invalidate: async () => false,
             navigate: options.navigate,
             navigationBaseUrl: options.navigationBaseUrl,
+            queryResult: options.queryResult,
             requestCompleted: options.requestCompleted,
             requestBaseUrl: options.requestBaseUrl,
             setups: {},
@@ -197,9 +199,12 @@ export async function setupContext(
 
                 const url = resolveRequestUrl(services.requestBaseUrl, String(path));
 
-                scope.bindings[id] = await api(url, {
+                const data = await api(url, {
                     signal: options.signal,
                 }).json();
+
+                // Let the host prepare query data before publishing it to the View.
+                scope.bindings[id] = services.queryResult ? services.queryResult(id, data) : data;
             };
             services.setups[id] = setup;
             await setup();

@@ -13,14 +13,20 @@ const organizationId = '00000000-0000-4000-8000-000000000003';
 const solutionId = '00000000-0000-4000-8000-000000000002';
 const revisionId = '00000000-0000-4000-8000-000000000001';
 const candidate = {
+    min_scale: 0,
+    idle_seconds: 60,
     current_image: `ghcr.io/owner/sample@sha256:${'a'.repeat(64)}`,
     current_image_digest: 'sha256:aaaaaaaaaaaa',
     image_digest: 'sha256:bbbbbbbbbbbb',
     revision_id: revisionId,
-    configured_envs: [],
+    configured_envs: ['API_KEY', 'OPTIONAL'],
     metadata: {
         image: `ghcr.io/owner/sample@sha256:${'b'.repeat(64)}`,
-        environments: [],
+        environments: [
+            { name: 'API_KEY', required: true },
+            { name: 'OPTIONAL', required: false },
+            { name: 'NEW', required: false, description: 'Enter a new value' },
+        ],
     },
 };
 
@@ -93,6 +99,18 @@ describe('Solution source update dialog', () => {
         await act(async () => vi.waitFor(() => expect(button('Update solution').disabled).toBe(false)));
         expect(document.body.textContent).toContain('Current sha256:aaaaaaaaaaaa');
         expect(document.body.textContent).toContain('New sha256:bbbbbbbbbbbb');
+
+        // Configured fields preserve secrets and only configured optional fields permit removal.
+        const inputs = [...document.querySelectorAll<HTMLInputElement>('input[type="password"]')];
+        expect(inputs.map((input) => input.placeholder)).toEqual([
+            'Configured: preserve existing value',
+            'Configured: preserve existing value',
+            'Enter a new value',
+        ]);
+        expect(document.body.textContent).toContain('Remove OPTIONAL');
+        expect(document.body.textContent).not.toContain('Remove API_KEY');
+        expect(document.body.textContent).not.toContain('Remove NEW');
+
         await act(async () => button('Update solution').click());
         await act(async () =>
             vi.waitFor(() =>

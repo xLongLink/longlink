@@ -8,6 +8,7 @@ type RouterXmlRuntimeProps = {
     navigationBaseUrl: string;
     params: Record<string, string>;
     registry?: XmlComponentRegistry;
+    queryResult?: RuntimeServices['queryResult'];
     requestBaseUrl: string;
     requestCompleted?: RuntimeServices['requestCompleted'];
 };
@@ -18,6 +19,7 @@ export function RouterXmlRuntime({
     navigationBaseUrl,
     params,
     registry,
+    queryResult,
     requestBaseUrl,
     requestCompleted,
 }: RouterXmlRuntimeProps) {
@@ -37,6 +39,7 @@ export function RouterXmlRuntime({
             navigationBaseUrl,
             params,
             registry,
+            queryResult,
             requestBaseUrl,
             requestCompleted,
         });
