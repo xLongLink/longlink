@@ -1,14 +1,30 @@
 changelog:
+    exclude:
+        labels:
+            - skip-changelog
+
     categories:
-        - title: API
+        - title: Added
           labels:
-              - api
-        - title: SDK
+              - feature
+              - enhancement
+
+        - title: Improved
           labels:
-              - sdk
-        - title: Web
+              - improvement
+              - performance
+              - refactor
+
+        - title: Fixed
           labels:
-              - web
+              - bug
+              - fix
+
+        - title: Documentation
+          labels:
+              - documentation
+              - docs
+
         - title: Other Changes
           labels:
               - '*'
