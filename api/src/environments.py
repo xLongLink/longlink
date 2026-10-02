@@ -34,6 +34,7 @@ class Env(BaseSettings):
 
     # Encryption for infrastructure credentials persisted by the Platform
     ENCRYPTION_KEY: str = Field(min_length=32)
+    OLD_ENCRYPTION_KEY: str | None = Field(default=None, min_length=32, repr=False)
 
     # Control plane database URL
     DATABASE_URL: str
