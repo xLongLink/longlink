@@ -14,6 +14,8 @@ const solutionId = '00000000-0000-4000-8000-000000000002';
 const revisionId = '00000000-0000-4000-8000-000000000001';
 const candidate = {
     current_image: `ghcr.io/owner/sample@sha256:${'a'.repeat(64)}`,
+    current_image_digest: 'sha256:aaaaaaaaaaaa',
+    image_digest: 'sha256:bbbbbbbbbbbb',
     revision_id: revisionId,
     configured_envs: [],
     metadata: {
