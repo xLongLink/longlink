@@ -247,7 +247,7 @@ function Location({ tabs, title }: { tabs: string; title?: string }) {
 
 /** Creates a minimal manifest view. */
 function view(name: string, route: string, path = `${name}.jsx`) {
-    return { name, path, route };
+    return { path, route };
 }
 
 /** Stubs fetch at the runtime's HTTP boundary. */

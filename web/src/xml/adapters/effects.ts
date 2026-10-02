@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { api } from '@/lib/api';
 import { ACTION_METHODS } from '../constants';
-import { resolveRequestUrl } from '../core/url';
+import { resolveRequestUrl } from '@/lib/url';
 import { evaluate } from '../expressions/evaluate';
 import { useToast } from '@astryxdesign/core/Toast';
 import { applyDeclaredStatePatch, isValtioProxy } from '../core/state';

@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { api } from '@/lib/api';
 import { proxy, ref } from 'valtio';
-import { resolveRequestUrl } from './url';
+import { resolveRequestUrl } from '@/lib/url';
 import { evaluate } from '../expressions/evaluate';
 import { isSafePropertyName } from '../expressions/resolve';
 import type { ASTAttribute, ASTNode, ASTProps, RuntimeServices, XmlComponentRegistry, XmlRuntime } from '../types';

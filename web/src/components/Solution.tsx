@@ -10,7 +10,7 @@ import { Center } from '@astryxdesign/core/Center';
 import { Spinner } from '@astryxdesign/core/Spinner';
 import { matchRoutes, Navigate, useParams } from 'react-router';
 import type { NavigationTab } from '@/platform/layouts/Platform';
-import { resolveNavigationUrl, resolveRequestUrl } from '@/xml/core/url';
+import { resolveNavigationUrl, resolveRequestUrl } from '@/lib/url';
 import { MAX_SOURCE_SIZE, MAX_MESSAGE_SIZE, REQUEST_TIMEOUT } from '@/views/protocol';
 
 type SolutionRuntimeProps = {
@@ -46,7 +46,7 @@ export function SolutionRuntime({ children, navigationBaseUrl = '/', viewsUrl = 
             const lifetime = AbortSignal.any([signal, AbortSignal.timeout(REQUEST_TIMEOUT)]);
             const response = await api(viewsUrl, {
                 signal: lifetime,
-                timeout: REQUEST_TIMEOUT,
+                timeout: false,
                 redirect: 'error',
             });
             const body = await host.read(response, MAX_MESSAGE_SIZE);
@@ -64,7 +64,6 @@ export function SolutionRuntime({ children, navigationBaseUrl = '/', viewsUrl = 
     )?.[0];
 
     const tabViews = views.filter((view) => view.route !== '/' && !view.route.includes('/:'));
-    const firstTabView = tabViews[0];
 
     // Let dynamic detail views share a tab with their matching list view.
     const activeView = routePath ? match?.route.view : undefined;
@@ -82,7 +81,7 @@ export function SolutionRuntime({ children, navigationBaseUrl = '/', viewsUrl = 
                 headers: { Accept: 'text/plain' },
                 signal: lifetime,
                 redirect: 'error',
-                timeout: REQUEST_TIMEOUT,
+                timeout: false,
             });
             const body = await host.read(response, MAX_SOURCE_SIZE);
             return body.text();
@@ -101,7 +100,7 @@ export function SolutionRuntime({ children, navigationBaseUrl = '/', viewsUrl = 
     let content: ReactNode;
 
     // The browser never requests the solution server root, so mirror its redirect client-side.
-    if (!routePath && firstTabView) {
+    if (!routePath && tabs.length > 0) {
         return <Navigate replace to={tabs[0].href} />;
     }
 

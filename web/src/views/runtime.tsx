@@ -9,11 +9,12 @@ import { Theme } from '@astryxdesign/core/theme';
 import { LayerProvider } from '@astryxdesign/core/Layer';
 import { QueryClient, QueryClientProvider, QueryErrorResetBoundary, useSuspenseQuery } from '@tanstack/react-query';
 import {
-    commandSchema,
+    requestSchema,
     parametersSchema,
     messageSize,
     MAX_MESSAGE_SIZE,
     MAX_PENDING_REQUESTS,
+    MAX_VIEW_HEIGHT,
     REQUEST_TIMEOUT,
     type RequestCommand,
     type ViewReply,
@@ -41,9 +42,8 @@ async function request(
     options: Omit<RequestCommand, 'type' | 'id' | 'path' | 'method'> & { method?: RequestCommand['method'] } = {}
 ): Promise<unknown> {
     const id = sequence++;
-    const command = commandSchema.parse({ ...options, type: 'request', id, path, method: options.method ?? 'GET' });
-    if (command.type !== 'request' || messageSize(command) > MAX_MESSAGE_SIZE)
-        throw new Error('Solution request is too large');
+    const command = requestSchema.parse({ ...options, type: 'request', id, path, method: options.method ?? 'GET' });
+    if (messageSize(command) > MAX_MESSAGE_SIZE) throw new Error('Solution request is too large');
     if (pending.size >= MAX_PENDING_REQUESTS) throw new Error('Too many pending requests');
     const data = await new Promise<unknown>((resolve, reject) => {
         const timer = setTimeout(() => {
@@ -51,7 +51,15 @@ async function request(
             reject(new Error('Solution request timed out'));
         }, REQUEST_TIMEOUT);
         pending.set(id, { resolve, reject, timer });
-        port.postMessage(command);
+
+        // A failed transfer must release its slot and timer immediately, not at timeout.
+        try {
+            port.postMessage(command);
+        } catch (error) {
+            pending.delete(id);
+            clearTimeout(timer);
+            reject(error);
+        }
     });
 
     // Refresh active data and mark inactive resources stale only after the write succeeds.
@@ -215,7 +223,7 @@ function initialize(event: MessageEvent<unknown>): void {
     // Measure the content root, not the viewport, so shorter Views can shrink again.
     let height = 0;
     const observer = new ResizeObserver(() => {
-        const nextHeight = Math.min(100_000, Math.max(1, Math.ceil(mount.getBoundingClientRect().height)));
+        const nextHeight = Math.min(MAX_VIEW_HEIGHT, Math.max(1, Math.ceil(mount.getBoundingClientRect().height)));
         if (nextHeight === height) return;
         height = nextHeight;
         port.postMessage({ type: 'resize', height });
@@ -242,10 +250,17 @@ function initialize(event: MessageEvent<unknown>): void {
         const code = transform(parsed.data.source, {
             transforms: ['jsx', 'imports'],
             jsxRuntime: 'classic',
+            jsxPragma: 'createElement',
+            jsxFragmentPragma: 'Fragment',
             production: true,
         }).code;
         const bindings = {
-            React,
+            createElement: React.createElement,
+            Fragment: React.Fragment,
+            useState: React.useState,
+            useEffect: React.useEffect,
+            useMemo: React.useMemo,
+            useRef: React.useRef,
             ...components,
             Link,
             Currency,

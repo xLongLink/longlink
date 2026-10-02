@@ -4,7 +4,7 @@ import { renderNode } from '../core/node';
 import { useApiError } from '@/lib/errors';
 import { BUTTON_VARIANTS } from '../constants';
 import { useXmlRuntime } from '../core/context';
-import { resolveNavigationUrl } from '../core/url';
+import { resolveNavigationUrl } from '@/lib/url';
 import { useToast } from '@astryxdesign/core/Toast';
 import { executeEffects, validateEffects } from './effects';
 import { Button as AstryxButton } from '@astryxdesign/core/Button';

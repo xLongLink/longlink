@@ -1,4 +1,4 @@
-import { documentationCategories } from '../lib/generated/documentation';
+import { documentationCategories } from '../lib/documentation';
 import componentDocumentation from '../../../sdk/longlink/.static/jsx/components.json';
 import {
     Database,

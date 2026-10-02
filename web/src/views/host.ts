@@ -1,5 +1,5 @@
 import { api } from '@/lib/api';
-import { resolveRequestUrl } from '@/xml/core/url';
+import { resolveRequestUrl } from '@/lib/url';
 import { MAX_MESSAGE_SIZE, REQUEST_TIMEOUT, type RequestCommand } from './protocol';
 
 /** Resolves a capability URL without permitting redirects or proxy-prefix traversal. */
@@ -40,12 +40,13 @@ export async function read(response: Response, limit: number): Promise<Blob> {
 /** Executes one validated request using only host-owned credentials and fixed options. */
 export async function request(base: string, command: RequestCommand, signal: AbortSignal): Promise<unknown> {
     const url = requestUrl(base, command.path);
-    if (command.json !== undefined && command.form !== undefined) throw new Error('Choose JSON or form data');
-    if (command.method === 'GET' && (command.json !== undefined || command.form !== undefined)) {
-        throw new Error('GET requests cannot send a body');
+    let form: FormData | undefined;
+
+    // Preserve an explicit empty form while populating only supplied entries.
+    if (command.form !== undefined) {
+        form = new FormData();
+        for (const [name, value] of command.form) form.append(name, value);
     }
-    const form = command.form === undefined ? undefined : new FormData();
-    for (const [name, value] of command.form ?? []) form?.append(name, value);
 
     // Bound the complete response lifetime, including a server that stalls after sending headers.
     const lifetime = AbortSignal.any([signal, AbortSignal.timeout(REQUEST_TIMEOUT)]);
@@ -55,7 +56,7 @@ export async function request(base: string, command: RequestCommand, signal: Abo
         body: form,
         signal: lifetime,
         redirect: 'error',
-        timeout: REQUEST_TIMEOUT,
+        timeout: false,
     });
     const body = await read(response, MAX_MESSAGE_SIZE);
     if (command.binary) {
@@ -63,7 +64,7 @@ export async function request(base: string, command: RequestCommand, signal: Abo
         const type = /^(?:image\/(?:png|jpeg|gif|webp)|audio\/(?:mpeg|ogg)|video\/mp4|application\/pdf)$/.test(media)
             ? media
             : 'application/octet-stream';
-        return new Blob([body], { type });
+        return body.slice(0, body.size, type);
     }
     const text = await body.text();
     const data: unknown = text ? JSON.parse(text) : null;

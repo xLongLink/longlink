@@ -5,7 +5,7 @@ import { Heading } from '@astryxdesign/core/Heading';
 import { Article } from '@/components/layouts/Article';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import NotFoundLayout from '@/components/layouts/NotFound';
-import { documentationLastUpdated } from '@/lib/generated/documentation';
+import { documentationLastUpdated } from '@/lib/documentation';
 import componentDocumentation from '../../../../../../../sdk/longlink/.static/jsx/components.json';
 
 /** Documents native JSX props using the same declarations supplied to Python Solution editors. */

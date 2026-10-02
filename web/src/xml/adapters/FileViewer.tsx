@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { api } from '@/lib/api';
 import type { Props } from '../types';
 import { renderNode } from '../core/node';
-import { resolveAnchorUrl } from '../core/url';
+import { resolveAnchorUrl } from '@/lib/url';
 import { Text } from '@astryxdesign/core/Text';
 import { useXmlRuntime } from '../core/context';
 import { Stack } from '@astryxdesign/core/Stack';

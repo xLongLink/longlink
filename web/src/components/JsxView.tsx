@@ -2,9 +2,9 @@ import { api } from '@/lib/api';
 import * as host from '@/views/host';
 import { useNavigate } from 'react-router';
 import { PageError } from '@/components/Utils';
+import { resolveNavigationUrl } from '@/lib/url';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useRef, useState } from 'react';
-import { resolveNavigationUrl } from '@/xml/core/url';
 import {
     commandSchema,
     parametersSchema,

@@ -7,7 +7,7 @@ import { useToast } from '@astryxdesign/core/Toast';
 import { executeEffects, validateEffects } from './effects';
 import { Link as AstryxLink } from '@astryxdesign/core/Link';
 import { resolveXmlProps, xmlNonblankStringSchema } from '../core/props';
-import { resolveAnchorUrl, resolveControlUrl, resolveNavigationUrl } from '../core/url';
+import { resolveAnchorUrl, resolveControlUrl, resolveNavigationUrl } from '@/lib/url';
 
 const linkPropsSchema = z.object({
     href: z.string().optional(),

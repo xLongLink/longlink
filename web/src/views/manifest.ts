@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { resolveRequestUrl } from '@/xml/core/url';
+import { resolveRequestUrl } from '@/lib/url';
 
 /** Returns whether a manifest route is a normalized supported React Router path. */
 function isRoute(route: string): boolean {

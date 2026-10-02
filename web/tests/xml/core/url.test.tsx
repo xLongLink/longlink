@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { resolveAnchorUrl, resolveNavigationUrl, resolveRequestUrl } from '@/xml/core/url';
+import { resolveAnchorUrl, resolveNavigationUrl, resolveRequestUrl } from '@/lib/url';
 
 describe('resolveNavigationUrl', () => {
     it('omits empty destinations', () => {

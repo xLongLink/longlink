@@ -29,8 +29,8 @@ import { Tab, TabList } from '@astryxdesign/core/TabList';
 import { Step, Stepper } from '@astryxdesign/core/Stepper';
 import { NumberInput } from '@astryxdesign/core/NumberInput';
 import { ProgressBar } from '@astryxdesign/core/ProgressBar';
+import { documentationCategories } from '@/lib/documentation';
 import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
-import { documentationCategories } from '@/lib/generated/documentation';
 import { RadioList, RadioListItem } from '@astryxdesign/core/RadioList';
 import { SideNav, SideNavItem, SideNavSection } from '@astryxdesign/core/SideNav';
 import componentDocumentation from '../../../../../../sdk/longlink/.static/jsx/components.json';
@@ -237,9 +237,9 @@ export default function DocsArticleRoute() {
                     Views
                 </Heading>
                 <Text as="p">
-                    Create each interface as a .jsx file exporting a default React component. LongLink supplies React,
-                    UI components, state hooks, queries, and scoped requests. Your Python Solution needs no frontend
-                    build.
+                    Create each interface as a .jsx file exporting a default React component. LongLink supplies UI
+                    components, hooks such as useState() and useEffect(), fragments, queries, and scoped requests
+                    directly, without imports or a React. prefix. Your Python Solution needs no frontend build.
                 </Text>
                 <Text as="p">
                     Solution code runs in a sandboxed iframe with an opaque origin, not inside the Platform page. Use

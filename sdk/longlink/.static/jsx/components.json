@@ -42,6 +42,12 @@
         "slug": "code-block"
     },
     {
+        "name": "createElement",
+        "category": "Runtime",
+        "declaration": "declare function createElement(type: unknown, props: unknown, ...children: ViewNode[]): React.JSX.Element;",
+        "slug": "create-element"
+    },
+    {
         "name": "Currency",
         "category": "Display",
         "declaration": "declare const Currency: ViewComponent<{ value: number; currency: string; locale?: string }>;",
@@ -76,6 +82,12 @@
         "category": "Content",
         "declaration": "declare const FileViewer: ViewComponent<{ src: string; title: string }>;",
         "slug": "file-viewer"
+    },
+    {
+        "name": "Fragment",
+        "category": "Runtime",
+        "declaration": "declare const Fragment: ViewComponent<{ key?: string | number }>;",
+        "slug": "fragment"
     },
     {
         "name": "Grid",
@@ -164,7 +176,7 @@
     {
         "name": "React",
         "category": "Runtime",
-        "declaration": "declare namespace React {\n    namespace JSX {\n        interface Element {\n            readonly type: unknown;\n            readonly props: unknown;\n        }\n        interface ElementChildrenAttribute {\n            children: unknown;\n        }\n        interface IntrinsicElements {\n            [name: string]: Record<string, unknown>;\n        }\n    }\n    function createElement(type: unknown, props: unknown, ...children: ViewNode[]): JSX.Element;\n    function useState<T = undefined>(initial?: T | (() => T)): [T, (value: T | ((previous: T) => T)) => void];\n    function useEffect(effect: () => void | (() => void), dependencies?: readonly unknown[]): void;\n    function useMemo<T>(factory: () => T, dependencies: readonly unknown[]): T;\n    function useRef<T>(initial: T): { current: T };\n}",
+        "declaration": "declare namespace React {\n    namespace JSX {\n        interface Element {\n            readonly type: unknown;\n            readonly props: unknown;\n        }\n        interface ElementChildrenAttribute {\n            children: unknown;\n        }\n        interface IntrinsicElements {\n            [name: string]: Record<string, unknown>;\n        }\n    }\n}",
         "slug": "react"
     },
     {
@@ -274,5 +286,29 @@
         "category": "Runtime",
         "declaration": "declare function useApi<T = unknown>(path: string): T;",
         "slug": "use-api"
+    },
+    {
+        "name": "useEffect",
+        "category": "Runtime",
+        "declaration": "declare function useEffect(effect: () => void | (() => void), dependencies?: readonly unknown[]): void;",
+        "slug": "use-effect"
+    },
+    {
+        "name": "useMemo",
+        "category": "Runtime",
+        "declaration": "declare function useMemo<T>(factory: () => T, dependencies: readonly unknown[]): T;",
+        "slug": "use-memo"
+    },
+    {
+        "name": "useRef",
+        "category": "Runtime",
+        "declaration": "declare function useRef<T>(initial: T): { current: T };",
+        "slug": "use-ref"
+    },
+    {
+        "name": "useState",
+        "category": "Runtime",
+        "declaration": "declare function useState<T = undefined>(initial?: T | (() => T)): [T, (value: T | ((previous: T) => T)) => void];",
+        "slug": "use-state"
     }
 ]

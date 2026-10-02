@@ -18,12 +18,20 @@ declare namespace React {
             [name: string]: Record<string, unknown>;
         }
     }
-    function createElement(type: unknown, props: unknown, ...children: ViewNode[]): JSX.Element;
-    function useState<T = undefined>(initial?: T | (() => T)): [T, (value: T | ((previous: T) => T)) => void];
-    function useEffect(effect: () => void | (() => void), dependencies?: readonly unknown[]): void;
-    function useMemo<T>(factory: () => T, dependencies: readonly unknown[]): T;
-    function useRef<T>(initial: T): { current: T };
 }
+
+/** @category Runtime */
+declare function createElement(type: unknown, props: unknown, ...children: ViewNode[]): React.JSX.Element;
+/** @category Runtime */
+declare const Fragment: ViewComponent<{ key?: string | number }>;
+/** @category Runtime */
+declare function useState<T = undefined>(initial?: T | (() => T)): [T, (value: T | ((previous: T) => T)) => void];
+/** @category Runtime */
+declare function useEffect(effect: () => void | (() => void), dependencies?: readonly unknown[]): void;
+/** @category Runtime */
+declare function useMemo<T>(factory: () => T, dependencies: readonly unknown[]): T;
+/** @category Runtime */
+declare function useRef<T>(initial: T): { current: T };
 
 /** @category Runtime */
 declare const params: Readonly<Record<string, string>>;

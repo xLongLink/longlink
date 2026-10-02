@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { Props } from '../types';
-import { resolveAnchorUrl } from '../core/url';
+import { resolveAnchorUrl } from '@/lib/url';
 import { useXmlRuntime } from '../core/context';
 import { resolveXmlProps } from '../core/props';
 import { Avatar as UiAvatar } from '@/components/ui/Avatar';

@@ -1,8 +1,8 @@
 /** Displays invoice approvals using the shared, isolated LongLink frontend. */
 export default function Invoices() {
-    const [page, setPage] = React.useState(1);
-    const [open, setOpen] = React.useState(false);
-    const [draft, setDraft] = React.useState({ name: '', price: 0, status: 'draft' });
+    const [page, setPage] = useState(1);
+    const [open, setOpen] = useState(false);
+    const [draft, setDraft] = useState({ name: '', price: 0, status: 'draft' });
     const invoices = useApi(`/api/items?page=${page}&page_size=8`);
 
     return (
@@ -54,7 +54,7 @@ export default function Invoices() {
                         key: 'name',
                         header: 'Invoice',
                         renderCell: (row) => (
-                            <Stack gap={1}>
+                            <Stack gap={0}>
                                 <Stack direction="horizontal" align="center" gap={2} wrap="wrap">
                                     <Link to={`/items/${row.id}`}>{row.name}</Link>
                                     <Badge
@@ -68,7 +68,7 @@ export default function Invoices() {
                                         label={row.status}
                                     />
                                 </Stack>
-                                <Stack direction="horizontal" align="center" gap={1}>
+                                <Stack direction="horizontal" align="center" gap={0}>
                                     {row.created_at && (
                                         <>
                                             <Text color="secondary">

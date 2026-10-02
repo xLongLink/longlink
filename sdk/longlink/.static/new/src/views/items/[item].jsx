@@ -1,8 +1,8 @@
 /** Displays an invoice, its attachments, and its approval controls. */
 export default function Invoice() {
-    const [status, setStatus] = React.useState();
-    const [open, setOpen] = React.useState(false);
-    const [file, setFile] = React.useState(null);
+    const [status, setStatus] = useState();
+    const [open, setOpen] = useState(false);
+    const [file, setFile] = useState(null);
 
     // Read required data; shared boundaries handle initial loading and failures.
     const item = useApi(`/api/items/${params.item}`);
@@ -11,9 +11,9 @@ export default function Invoice() {
     return (
         <Stack gap={6}>
             <Stack direction="horizontal" justify="between" align="start" wrap="wrap" gap={4}>
-                <Stack gap={2}>
+                <Stack gap={0}>
                     <Heading level={1}>{item.name}</Heading>
-                    <Stack direction="horizontal" align="center" gap={1}>
+                    <Stack direction="horizontal" align="center" gap={0}>
                         {item.created_at && (
                             <>
                                 <Text color="secondary">

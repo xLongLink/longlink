@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { viewsSchema } from '@/views/manifest';
 
 /** Creates a valid manifest view with optional overrides. */
-function view(overrides: Partial<{ path: string; route: string; name: string; icon: string }> = {}) {
+function view(overrides: Partial<{ path: string; route: string }> = {}) {
     return { path: 'home.jsx', route: '/home', ...overrides };
 }
 
@@ -34,12 +34,8 @@ describe('viewsSchema', () => {
         ).toBe(true);
     });
 
-    it.each([{ name: '  ' }, { icon: '' }])('ignores former display metadata', (metadata) => {
-        expect(viewsSchema.parse([view(metadata)])).toEqual([{ path: 'home.jsx', route: '/home' }]);
-    });
-
     it('omits custom titles and icons from the parsed catalog', () => {
-        expect(viewsSchema.parse([view({ name: 'Issues', icon: 'list' })])).toEqual([
+        expect(viewsSchema.parse([{ ...view(), name: 'Issues', icon: 'list' }])).toEqual([
             { path: 'home.jsx', route: '/home' },
         ]);
     });
