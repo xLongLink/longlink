@@ -98,19 +98,15 @@ async def test_service_account_reraises_unexpected_error(monkeypatch: pytest.Mon
     # Arrange
     storage = RustFS("https://storage.example.com", s3.Credentials("owner", "secret"))
     error = Error(500, "internal error")
+    requests: list[tuple[str, str]] = []
 
     async def failing_request(method: str, path: str, payload: dict[str, object] | None = None) -> dict[str, object]:
         """Simulate an administrative outage."""
 
+        requests.append((method, path))
         raise error
 
-    async def unexpected_revoke(target: object) -> None:
-        """Fail when cleanup revokes credentials after an unrelated error."""
-
-        raise AssertionError("revoke must not run")
-
     monkeypatch.setattr(storage, "_request", failing_request)
-    monkeypatch.setattr(storage, "revoke", unexpected_revoke)
 
     # Act
     with pytest.raises(Error) as captured:
@@ -118,6 +114,7 @@ async def test_service_account_reraises_unexpected_error(monkeypatch: pytest.Mon
 
     # Assert
     assert captured.value is error
+    assert requests == [("PUT", "/rustfs/admin/v3/add-service-account")]
 
 
 REVOKE_ERROR_CASES = [

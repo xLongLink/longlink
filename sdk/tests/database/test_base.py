@@ -222,7 +222,7 @@ def test_connect_args_uses_ca_certificate(ca_certificate: str) -> None:
                 "pool_pre_ping": True,
                 "pool_recycle": 20,
                 "pool_use_lifo": True,
-                "connect_args": {"ssl": "certificate-context", "server_settings": {"timezone": "UTC", "search_path": '"solution", shared'}},
+                "connect_args": {"server_settings": {"timezone": "UTC", "search_path": '"solution", shared'}},
             },
             id="production",
         ),
@@ -230,11 +230,16 @@ def test_connect_args_uses_ca_certificate(ca_certificate: str) -> None:
 )
 def test_create_engine_selects_database_url_and_options(
     monkeypatch: pytest.MonkeyPatch,
+    ca_certificate: str,
     env: Envs,
     expected_url: URL,
     expected_kwargs: dict[str, object],
 ) -> None:
     """Use environment-specific database URLs and engine options."""
+
+    # Supply the real CA without changing the shared production settings.
+    if env.ENV == "production":
+        env = env.model_copy(update={"DATABASE_CERTIFICATE": ca_certificate})
 
     # Capture engine settings without opening a database connection.
     captured: dict[str, object] = {}
@@ -247,10 +252,21 @@ def test_create_engine_selects_database_url_and_options(
         return object()
 
     monkeypatch.setattr(database_base, "create_async_engine", fake_create_async_engine)
-    monkeypatch.setattr(database_base.urls.ssl, "create_default_context", lambda *, cadata: "certificate-context")
 
     # Create the environment-specific engine.
     database_base.create_engine(env)
+
+    # Verify the production TLS policy and CA separately from the remaining engine options.
+    if env.ENV == "production":
+        engine_kwargs = captured["kwargs"]
+        assert isinstance(engine_kwargs, dict)
+        connect_args = engine_kwargs["connect_args"]
+        assert isinstance(connect_args, dict)
+        certificate_context = connect_args.pop("ssl")
+        assert isinstance(certificate_context, ssl.SSLContext)
+        assert certificate_context.verify_mode == ssl.CERT_REQUIRED
+        assert certificate_context.check_hostname is True
+        assert ssl.PEM_cert_to_DER_cert(ca_certificate) in certificate_context.get_ca_certs(binary_form=True)
 
     # Verify the selected URL and connection options.
     assert captured == {"database_url": expected_url, "kwargs": expected_kwargs}

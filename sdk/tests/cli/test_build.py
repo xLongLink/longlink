@@ -195,7 +195,10 @@ def test_read_env_spec_rejects_invalid_environment_model_configuration(
         build.read_env_spec(tmp_path, build.read_pyproject(tmp_path))
 
 
-def test_build_solution_generates_docker_artifacts_from_project_metadata(chdir_project: Path) -> None:
+def test_build_solution_generates_docker_artifacts_from_project_metadata(
+    chdir_project: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     """Generate Docker instructions and ignore rules from project metadata."""
 
     # Arrange
@@ -218,6 +221,13 @@ def test_build_solution_generates_docker_artifacts_from_project_metadata(chdir_p
     chdir_project.joinpath("tests", "test_app.py").write_text("def test_app():\n    pass\n", encoding="utf-8")
     build_context = chdir_project.parent / "context"
 
+    def missing_package_version(_package: str) -> str:
+        """Emulate an SDK distribution unavailable to package metadata."""
+
+        raise build.PackageNotFoundError
+
+    monkeypatch.setattr(build, "package_version", missing_package_version)
+
     # Prepare validated metadata at the build boundary.
     pyproject_data = build.read_pyproject(chdir_project)
     _, _, project_description = build.read_project_metadata(pyproject_data)
@@ -227,6 +237,7 @@ def test_build_solution_generates_docker_artifacts_from_project_metadata(chdir_p
 
     # Assert
     dockerfile = build_context.joinpath("Dockerfile").read_text(encoding="utf-8")
+    assert 'ENV SETUPTOOLS_SCM_PRETEND_VERSION_FOR_LONGLINK="0.0.0"' in dockerfile
     assert 'LABEL org.opencontainers.image.description="Demo Solution"' in dockerfile
     assert 'LABEL longlink.environments="[{\\"name\\":\\"API_KEY\\",\\"required\\":true}]"' in dockerfile
     dockerignore = build_context.joinpath(".dockerignore").read_text(encoding="utf-8")
@@ -273,34 +284,6 @@ def test_build_rejects_invalid_project_metadata_before_generating_artifacts(
     # Assert
     assert result.exit_code == 1
     assert message in result.output
-
-
-def test_build_solution_uses_fallback_sdk_version_when_package_is_not_installed(
-    chdir_project: Path,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """Use a stable SDK version while building directly from an editable source tree."""
-
-    # Arrange
-    build_context = chdir_project.parent / "context"
-
-    def missing_package_version(_package: str) -> str:
-        """Emulate an SDK distribution unavailable to package metadata."""
-
-        raise build.PackageNotFoundError
-
-    monkeypatch.setattr(build, "package_version", missing_package_version)
-
-    # Prepare validated metadata at the build boundary.
-    pyproject_data = build.read_pyproject(chdir_project)
-    _, _, project_description = build.read_project_metadata(pyproject_data)
-
-    # Act
-    build.build_solution(build_context, pyproject_data=pyproject_data, project_description=project_description)
-
-    # Assert
-    dockerfile = build_context.joinpath("Dockerfile").read_text(encoding="utf-8")
-    assert 'ENV SETUPTOOLS_SCM_PRETEND_VERSION_FOR_LONGLINK="0.0.0"' in dockerfile
 
 
 def test_build_solution_filters_symlinks_by_resolved_target(chdir_project: Path) -> None:
