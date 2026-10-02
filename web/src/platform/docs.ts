@@ -1,4 +1,5 @@
-import { componentDocumentation, documentationCategories } from '../lib/generated/documentation';
+import { documentationCategories } from '../lib/generated/documentation';
+import componentDocumentation from '../../../sdk/longlink/.static/jsx/components.json';
 import {
     Database,
     FileCode2,
@@ -48,7 +49,7 @@ const viewDocumentationPaths = [
     '/docs/sdk/views',
     ...documentationCategories.flatMap((category) =>
         componentDocumentation
-            .filter((component) => component.category === category.name)
+            .filter((component) => component.category === category)
             .map(({ slug }) => `/docs/sdk/views/${slug}`)
     ),
 ];

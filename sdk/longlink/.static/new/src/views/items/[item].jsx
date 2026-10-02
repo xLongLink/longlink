@@ -10,13 +10,22 @@ export default function Invoice() {
 
     return (
         <Stack gap={6}>
-            <Stack direction="horizontal" justify="between" align="start" gap={4}>
+            <Stack direction="horizontal" justify="between" align="start" wrap="wrap" gap={4}>
                 <Stack gap={2}>
                     <Heading level={1}>{item.name}</Heading>
-                    <Text color="secondary">
-                        <Currency value={item.price} currency="CHF" locale="de-CH" />
-                    </Text>
-                    {item.created_at && <Timestamp value={item.created_at} format="date" />}
+                    <Stack direction="horizontal" align="center" gap={1}>
+                        {item.created_at && (
+                            <>
+                                <Text color="secondary">
+                                    <Timestamp value={item.created_at} format="date" />
+                                </Text>
+                                <Text color="secondary">-</Text>
+                            </>
+                        )}
+                        <Text color="secondary">
+                            <Currency value={item.price} currency="CHF" locale="de-CH" />
+                        </Text>
+                    </Stack>
                 </Stack>
                 <Button label="Upload document" clickAction={() => setOpen(true)} />
             </Stack>
@@ -88,7 +97,7 @@ export default function Invoice() {
                     {item.approved_by && (
                         <Stack gap={2}>
                             <Text color="secondary">Approved by</Text>
-                            <Avatar name={item.approved_by.name} />
+                            <Avatar src={item.approved_by.avatar} name={item.approved_by.name} />
                             <Text>{item.approved_by.name}</Text>
                         </Stack>
                     )}

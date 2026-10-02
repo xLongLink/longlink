@@ -29,6 +29,8 @@ You are working on a LongLink Solution project:
 
 ## Views
 
+- `longlink dev` generates SDK-owned `frontend.d.ts` in the project root for editor hints. Do not edit or commit this generated file.
+
 - A View is a `.jsx` file exporting one default React component; no frontend build is needed in the Solution.
 - React, LongLink UI components, `request`, `navigate`, `params`, and `useApi` are supplied by the isolated renderer. Do not import packages.
 - Use ordinary JSX props, React state, controlled input callbacks, and JavaScript expressions.

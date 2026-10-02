@@ -1,11 +1,9 @@
-export { Stack } from '@astryxdesign/core/Stack';
-export { StackItem } from '@astryxdesign/core/Stack';
-export { Grid } from '@astryxdesign/core/Grid';
-export { GridSpan } from '@astryxdesign/core/Grid';
+export { Stack, StackItem } from '@astryxdesign/core/Stack';
+export { Grid, GridSpan } from '@astryxdesign/core/Grid';
 export { Card } from '@astryxdesign/core/Card';
 export { Heading } from '@astryxdesign/core/Heading';
 export { Text } from '@astryxdesign/core/Text';
-export { Avatar } from '@astryxdesign/core/Avatar';
+export { Avatar } from '@/components/ui/Avatar';
 export { Badge } from '@astryxdesign/core/Badge';
 export { Button } from '@astryxdesign/core/Button';
 export { IconButton } from '@astryxdesign/core/IconButton';

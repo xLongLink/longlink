@@ -45,8 +45,11 @@ invalidation is needed. Use separate `useApi` calls for multiple resources (see
 the invoice detail View). For optional resources, mount the component using
 `useApi` only when needed.
 
-VS Code supports `.jsx` natively. `jsconfig.json` and `frontend.d.ts` provide
-local autocomplete without an extension. Run `uv run longlink docs ui` for
+VS Code supports `.jsx` natively. `longlink dev` creates or refreshes the
+SDK-owned `frontend.d.ts` in the project root. Together with `jsconfig.json`,
+it provides local autocomplete without Node or an extension. The generated
+file is ignored by Git; do not edit it, as the next development run replaces it.
+Run `uv run longlink docs ui` for
 authoring APIs and inspect the sample invoice Views for complete examples.
 
 <br />

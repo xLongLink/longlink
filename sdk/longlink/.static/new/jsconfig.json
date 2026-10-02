@@ -5,5 +5,5 @@
         "target": "ES2022",
         "lib": ["ES2022", "DOM"]
     },
-    "include": ["src/views/**/*.jsx", "src/views/frontend.d.ts"]
+    "include": ["src/views/**/*.jsx", "frontend.d.ts"]
 }

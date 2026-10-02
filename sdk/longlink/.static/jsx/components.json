@@ -3,368 +3,276 @@
         "name": "Avatar",
         "category": "Content",
         "declaration": "declare const Avatar: ViewComponent<{ name?: string; src?: string; alt?: string }>;",
-        "description": "Avatar accepts native JSX props in LongLink Views.",
-        "lastUpdated": "2026-10-02",
         "slug": "avatar"
     },
     {
         "name": "Badge",
         "category": "Content",
         "declaration": "declare const Badge: ViewComponent<{ label?: string; variant?: 'neutral' | 'info' | 'success' | 'warning' | 'error' }>;",
-        "description": "Badge accepts native JSX props in LongLink Views.",
-        "lastUpdated": "2026-10-02",
         "slug": "badge"
     },
     {
         "name": "Banner",
         "category": "Content",
         "declaration": "declare const Banner: ViewComponent<{ status?: 'error' | 'warning' | 'success' | 'info'; title: string }>;",
-        "description": "Banner accepts native JSX props in LongLink Views.",
-        "lastUpdated": "2026-10-02",
         "slug": "banner"
     },
     {
         "name": "Button",
         "category": "Actions",
         "declaration": "declare const Button: ViewComponent<{\n    label: string;\n    variant?: 'primary' | 'secondary' | 'ghost' | 'destructive';\n    isDisabled?: boolean;\n    clickAction?: () => void | Promise<void>;\n}>;",
-        "description": "Button accepts native JSX props in LongLink Views.",
-        "lastUpdated": "2026-10-02",
         "slug": "button"
     },
     {
         "name": "Card",
         "category": "Layouts",
         "declaration": "declare const Card: ViewComponent<{ padding?: Spacing; elevation?: 'none' | 'low' | 'medium' | 'high' }>;",
-        "description": "Card accepts native JSX props in LongLink Views.",
-        "lastUpdated": "2026-10-02",
         "slug": "card"
     },
     {
         "name": "CheckboxInput",
         "category": "Form",
         "declaration": "declare const CheckboxInput: ViewComponent<{ label: string; value: boolean; onChange?: (value: boolean) => void }>;",
-        "description": "CheckboxInput accepts native JSX props in LongLink Views.",
-        "lastUpdated": "2026-10-02",
         "slug": "checkbox-input"
     },
     {
         "name": "CodeBlock",
         "category": "Content",
         "declaration": "declare const CodeBlock: ViewComponent<{ code: string; language?: string; title?: string; isWrapped?: boolean }>;",
-        "description": "CodeBlock accepts native JSX props in LongLink Views.",
-        "lastUpdated": "2026-10-02",
         "slug": "code-block"
     },
     {
         "name": "Currency",
         "category": "Display",
         "declaration": "declare const Currency: ViewComponent<{ value: number; currency: string; locale?: string }>;",
-        "description": "Currency accepts native JSX props in LongLink Views.",
-        "lastUpdated": "2026-10-02",
         "slug": "currency"
     },
     {
         "name": "Dialog",
         "category": "Layouts",
         "declaration": "declare const Dialog: ViewComponent<{\n    'aria-label': string;\n    isOpen: boolean;\n    onOpenChange: (open: boolean) => void;\n    purpose?: 'form' | 'info' | 'required';\n}>;",
-        "description": "Dialog accepts native JSX props in LongLink Views.",
-        "lastUpdated": "2026-10-02",
         "slug": "dialog"
     },
     {
         "name": "Divider",
         "category": "Content",
         "declaration": "declare const Divider: ViewComponent<Record<string, never>>;",
-        "description": "Divider accepts native JSX props in LongLink Views.",
-        "lastUpdated": "2026-10-02",
         "slug": "divider"
     },
     {
         "name": "EmptyState",
         "category": "Content",
         "declaration": "declare const EmptyState: ViewComponent<{ title: string; isCompact?: boolean }>;",
-        "description": "EmptyState accepts native JSX props in LongLink Views.",
-        "lastUpdated": "2026-10-02",
         "slug": "empty-state"
     },
     {
         "name": "FileInput",
         "category": "Form",
         "declaration": "declare const FileInput: ViewComponent<{\n    label: string;\n    value?: File | null;\n    accept?: string;\n    onChange?: (value: File | null) => void;\n}>;",
-        "description": "FileInput accepts native JSX props in LongLink Views.",
-        "lastUpdated": "2026-10-02",
         "slug": "file-input"
     },
     {
         "name": "FileViewer",
         "category": "Content",
         "declaration": "declare const FileViewer: ViewComponent<{ src: string; title: string }>;",
-        "description": "FileViewer accepts native JSX props in LongLink Views.",
-        "lastUpdated": "2026-10-02",
         "slug": "file-viewer"
     },
     {
         "name": "Grid",
         "category": "Layouts",
         "declaration": "declare const Grid: ViewComponent<{ columns?: number; gap?: Spacing }>;",
-        "description": "Grid accepts native JSX props in LongLink Views.",
-        "lastUpdated": "2026-10-02",
         "slug": "grid"
     },
     {
         "name": "GridSpan",
         "category": "Layouts",
         "declaration": "declare const GridSpan: ViewComponent<{ columns?: number | 'full' }>;",
-        "description": "GridSpan accepts native JSX props in LongLink Views.",
-        "lastUpdated": "2026-10-02",
         "slug": "grid-span"
     },
     {
         "name": "Heading",
         "category": "Content",
         "declaration": "declare const Heading: ViewComponent<{ level?: 1 | 2 | 3 | 4 | 5 | 6 }>;",
-        "description": "Heading accepts native JSX props in LongLink Views.",
-        "lastUpdated": "2026-10-02",
         "slug": "heading"
     },
     {
         "name": "Icon",
         "category": "Content",
         "declaration": "declare const Icon: ViewComponent<{ icon: string; size: 'sm' | 'md' | 'lg' }>;",
-        "description": "Icon accepts native JSX props in LongLink Views.",
-        "lastUpdated": "2026-10-02",
         "slug": "icon"
     },
     {
         "name": "IconButton",
         "category": "Actions",
         "declaration": "declare const IconButton: ViewComponent<{ icon: ViewNode; label: string; onClick?: () => void }>;",
-        "description": "IconButton accepts native JSX props in LongLink Views.",
-        "lastUpdated": "2026-10-02",
         "slug": "icon-button"
     },
     {
         "name": "Link",
         "category": "Actions",
         "declaration": "declare const Link: ViewComponent<{ to: string }>;",
-        "description": "Link accepts native JSX props in LongLink Views.",
-        "lastUpdated": "2026-10-02",
         "slug": "link"
     },
     {
         "name": "Menu",
         "category": "Layouts",
         "declaration": "declare const Menu: ViewComponent<{\n    sections: { title: string; entries: { kind: 'item'; id: string; label: string; content: ViewNode }[] }[];\n    gap?: Spacing;\n}>;",
-        "description": "Menu accepts native JSX props in LongLink Views.",
-        "lastUpdated": "2026-10-02",
         "slug": "menu"
     },
     {
         "name": "MoreMenu",
         "category": "Actions",
         "declaration": "declare const MoreMenu: ViewComponent<{ items: { label: string; onClick: () => void; variant?: 'destructive' }[] }>;",
-        "description": "MoreMenu accepts native JSX props in LongLink Views.",
-        "lastUpdated": "2026-10-02",
         "slug": "more-menu"
     },
     {
         "name": "navigate",
         "category": "Runtime",
         "declaration": "declare function navigate(path: string): void;",
-        "description": "navigate is supplied by the isolated LongLink renderer.",
-        "lastUpdated": "2026-10-02",
         "slug": "navigate"
     },
     {
         "name": "NumberInput",
         "category": "Form",
         "declaration": "declare const NumberInput: ViewComponent<{\n    label: string;\n    value?: number;\n    min?: number;\n    max?: number;\n    step?: number;\n    onChange?: (value: number | undefined) => void;\n}>;",
-        "description": "NumberInput accepts native JSX props in LongLink Views.",
-        "lastUpdated": "2026-10-02",
         "slug": "number-input"
     },
     {
         "name": "params",
         "category": "Runtime",
         "declaration": "declare const params: Readonly<Record<string, string>>;",
-        "description": "params is supplied by the isolated LongLink renderer.",
-        "lastUpdated": "2026-10-02",
         "slug": "params"
     },
     {
         "name": "ProgressBar",
         "category": "Display",
         "declaration": "declare const ProgressBar: ViewComponent<{ label?: string; value: number; max?: number; hasValueLabel?: boolean }>;",
-        "description": "ProgressBar accepts native JSX props in LongLink Views.",
-        "lastUpdated": "2026-10-02",
         "slug": "progress-bar"
     },
     {
         "name": "RadioList",
         "category": "Form",
         "declaration": "declare const RadioList: ViewComponent<{ label?: string; value?: string; onChange?: (value: string) => void }>;",
-        "description": "RadioList accepts native JSX props in LongLink Views.",
-        "lastUpdated": "2026-10-02",
         "slug": "radio-list"
     },
     {
         "name": "RadioListItem",
         "category": "Form",
         "declaration": "declare const RadioListItem: ViewComponent<{ label: string; value: string }>;",
-        "description": "RadioListItem accepts native JSX props in LongLink Views.",
-        "lastUpdated": "2026-10-02",
         "slug": "radio-list-item"
     },
     {
         "name": "React",
         "category": "Runtime",
         "declaration": "declare namespace React {\n    namespace JSX {\n        interface Element {\n            readonly type: unknown;\n            readonly props: unknown;\n        }\n        interface ElementChildrenAttribute {\n            children: unknown;\n        }\n        interface IntrinsicElements {\n            [name: string]: Record<string, unknown>;\n        }\n    }\n    function createElement(type: unknown, props: unknown, ...children: ViewNode[]): JSX.Element;\n    function useState<T = undefined>(initial?: T | (() => T)): [T, (value: T | ((previous: T) => T)) => void];\n    function useEffect(effect: () => void | (() => void), dependencies?: readonly unknown[]): void;\n    function useMemo<T>(factory: () => T, dependencies: readonly unknown[]): T;\n    function useRef<T>(initial: T): { current: T };\n}",
-        "description": "React is supplied by the isolated LongLink renderer.",
-        "lastUpdated": "2026-10-02",
         "slug": "react"
     },
     {
         "name": "request",
         "category": "Runtime",
         "declaration": "declare function request<T = unknown>(\n    path: string,\n    options?: {\n        method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';\n        json?: unknown;\n        form?: [string, string | Blob][];\n        binary?: boolean;\n    }\n): Promise<T>;",
-        "description": "request is supplied by the isolated LongLink renderer.",
-        "lastUpdated": "2026-10-02",
         "slug": "request"
     },
     {
         "name": "Selector",
         "category": "Form",
         "declaration": "declare const Selector: ViewComponent<{\n    label?: string;\n    value?: string;\n    options: { value: string; label: string }[];\n    onChange?: (value: string | undefined) => void;\n}>;",
-        "description": "Selector accepts native JSX props in LongLink Views.",
-        "lastUpdated": "2026-10-02",
         "slug": "selector"
     },
     {
         "name": "Slider",
         "category": "Form",
         "declaration": "declare const Slider: ViewComponent<{\n    label: string;\n    value: number;\n    min?: number;\n    max?: number;\n    step?: number;\n    onChange?: (value: number) => void;\n}>;",
-        "description": "Slider accepts native JSX props in LongLink Views.",
-        "lastUpdated": "2026-10-02",
         "slug": "slider"
     },
     {
         "name": "Spinner",
         "category": "Content",
         "declaration": "declare const Spinner: ViewComponent<{ label?: string }>;",
-        "description": "Spinner accepts native JSX props in LongLink Views.",
-        "lastUpdated": "2026-10-02",
         "slug": "spinner"
     },
     {
         "name": "Stack",
         "category": "Layouts",
         "declaration": "declare const Stack: ViewComponent<{\n    gap?: Spacing;\n    direction?: 'horizontal' | 'vertical';\n    justify?: 'start' | 'center' | 'end' | 'between' | 'around' | 'evenly';\n    align?: 'start' | 'center' | 'end' | 'stretch';\n    wrap?: 'nowrap' | 'wrap' | 'wrap-reverse';\n    padding?: Spacing;\n}>;",
-        "description": "Stack accepts native JSX props in LongLink Views.",
-        "lastUpdated": "2026-10-02",
         "slug": "stack"
     },
     {
         "name": "StackItem",
         "category": "Layouts",
         "declaration": "declare const StackItem: ViewComponent<{\n    size?: 'static' | 'fill';\n    isScrollable?: boolean;\n    crossAlignSelf?: 'start' | 'center' | 'end' | 'stretch';\n}>;",
-        "description": "StackItem accepts native JSX props in LongLink Views.",
-        "lastUpdated": "2026-10-02",
         "slug": "stack-item"
     },
     {
         "name": "StatusBadge",
         "category": "Display",
         "declaration": "declare const StatusBadge: ViewComponent<{ status: 'running' | 'creating' | 'failed' }>;",
-        "description": "StatusBadge accepts native JSX props in LongLink Views.",
-        "lastUpdated": "2026-10-02",
         "slug": "status-badge"
     },
     {
         "name": "Step",
         "category": "Layouts",
         "declaration": "declare const Step: ViewComponent<{ step: number; label: string }>;",
-        "description": "Step accepts native JSX props in LongLink Views.",
-        "lastUpdated": "2026-10-02",
         "slug": "step"
     },
     {
         "name": "Stepper",
         "category": "Layouts",
         "declaration": "declare const Stepper: ViewComponent<{ activeStep?: number; orientation?: 'horizontal' | 'vertical' }>;",
-        "description": "Stepper accepts native JSX props in LongLink Views.",
-        "lastUpdated": "2026-10-02",
         "slug": "stepper"
     },
     {
         "name": "Switch",
         "category": "Form",
         "declaration": "declare const Switch: typeof CheckboxInput;",
-        "description": "Switch accepts native JSX props in LongLink Views.",
-        "lastUpdated": "2026-10-02",
         "slug": "switch"
     },
     {
         "name": "Tab",
         "category": "Layouts",
         "declaration": "declare const Tab: ViewComponent<{ value: string; label: string }>;",
-        "description": "Tab accepts native JSX props in LongLink Views.",
-        "lastUpdated": "2026-10-02",
         "slug": "tab"
     },
     {
         "name": "Table",
         "category": "Layouts",
         "declaration": "declare function Table<T>(props: {\n    data: readonly T[];\n    idKey?: string | ((row: T) => string | number);\n    density?: 'compact' | 'comfortable';\n    columns: { key: string; header?: string; align?: 'start' | 'center' | 'end'; renderCell: (row: T) => ViewNode }[];\n}): React.JSX.Element;",
-        "description": "Table accepts native JSX props in LongLink Views.",
-        "lastUpdated": "2026-10-02",
         "slug": "table"
     },
     {
         "name": "TabList",
         "category": "Layouts",
         "declaration": "declare const TabList: ViewComponent<{ value?: string; onChange?: (value: string) => void }>;",
-        "description": "TabList accepts native JSX props in LongLink Views.",
-        "lastUpdated": "2026-10-02",
         "slug": "tab-list"
     },
     {
         "name": "Text",
         "category": "Content",
         "declaration": "declare const Text: ViewComponent<{\n    color?: 'primary' | 'secondary';\n    type?: 'body' | 'large' | 'label' | 'supporting' | 'code';\n}>;",
-        "description": "Text accepts native JSX props in LongLink Views.",
-        "lastUpdated": "2026-10-02",
         "slug": "text"
     },
     {
         "name": "TextArea",
         "category": "Form",
         "declaration": "declare const TextArea: typeof TextInput;",
-        "description": "TextArea accepts native JSX props in LongLink Views.",
-        "lastUpdated": "2026-10-02",
         "slug": "text-area"
     },
     {
         "name": "TextInput",
         "category": "Form",
         "declaration": "declare const TextInput: ViewComponent<{\n    label: string;\n    value?: string;\n    placeholder?: string;\n    isRequired?: boolean;\n    onChange?: (value: string) => void;\n}>;",
-        "description": "TextInput accepts native JSX props in LongLink Views.",
-        "lastUpdated": "2026-10-02",
         "slug": "text-input"
     },
     {
         "name": "Timestamp",
         "category": "Display",
         "declaration": "declare const Timestamp: ViewComponent<{ value: number | string; format?: string }>;",
-        "description": "Timestamp accepts native JSX props in LongLink Views.",
-        "lastUpdated": "2026-10-02",
         "slug": "timestamp"
     },
     {
         "name": "useApi",
         "category": "Runtime",
         "declaration": "declare function useApi<T = unknown>(path: string): T;",
-        "description": "useApi is supplied by the isolated LongLink renderer.",
-        "lastUpdated": "2026-10-02",
         "slug": "use-api"
     }
 ]

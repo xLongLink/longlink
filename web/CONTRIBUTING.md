@@ -82,5 +82,5 @@ successful writes through `request()`.
 
 1. Export native components from `src/views/components.ts`; add wrappers only for meaningful LongLink behavior.
 2. Keep privileged operations in the host bridge, never inside a UI component.
-3. Update `sdk/longlink/.static/new/src/views/frontend.d.ts` for editor/CLI documentation.
+3. Update `sdk/longlink/.static/jsx/frontend.d.ts` for editor/CLI documentation. `longlink dev` generates a local copy in the Solution root.
 4. Update the sample JSX Views and relevant existing tests.

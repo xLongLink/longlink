@@ -55,7 +55,7 @@ export default function Invoices() {
                         header: 'Invoice',
                         renderCell: (row) => (
                             <Stack gap={1}>
-                                <Stack direction="horizontal" align="center" gap={2}>
+                                <Stack direction="horizontal" align="center" gap={2} wrap="wrap">
                                     <Link to={`/items/${row.id}`}>{row.name}</Link>
                                     <Badge
                                         variant={
@@ -68,10 +68,19 @@ export default function Invoices() {
                                         label={row.status}
                                     />
                                 </Stack>
-                                <Text color="secondary">
-                                    <Currency value={row.price} currency="CHF" locale="de-CH" />
-                                </Text>
-                                {row.created_at && <Timestamp value={row.created_at} format="date" />}
+                                <Stack direction="horizontal" align="center" gap={1}>
+                                    {row.created_at && (
+                                        <>
+                                            <Text color="secondary">
+                                                <Timestamp value={row.created_at} format="date" />
+                                            </Text>
+                                            <Text color="secondary">-</Text>
+                                        </>
+                                    )}
+                                    <Text color="secondary">
+                                        <Currency value={row.price} currency="CHF" locale="de-CH" />
+                                    </Text>
+                                </Stack>
                             </Stack>
                         ),
                     },
@@ -81,7 +90,7 @@ export default function Invoices() {
                         renderCell: (row) =>
                             row.created_by ? (
                                 <Stack direction="horizontal" align="center" gap={3}>
-                                    <Avatar name={row.created_by.name} />
+                                    <Avatar src={row.created_by.avatar} name={row.created_by.name} />
                                     <Stack gap={0}>
                                         <Text>{row.created_by.name}</Text>
                                         <Text color="secondary">{row.created_by.email}</Text>
@@ -91,16 +100,27 @@ export default function Invoices() {
                                 'Unknown'
                             ),
                     },
-                    { key: 'approved_by', header: 'Approved by', renderCell: (row) => row.approved_by?.name ?? '—' },
+                    {
+                        key: 'approved_by',
+                        header: 'Approved by',
+                        renderCell: (row) =>
+                            row.approved_by ? (
+                                <Stack direction="horizontal" align="center" gap={3}>
+                                    <Avatar src={row.approved_by.avatar} name={row.approved_by.name} />
+                                    <Stack gap={0}>
+                                        <Text>{row.approved_by.name}</Text>
+                                        <Text color="secondary">{row.approved_by.email}</Text>
+                                    </Stack>
+                                </Stack>
+                            ) : (
+                                '—'
+                            ),
+                    },
                 ]}
             />
             <Stack direction="horizontal" gap={2} justify="between">
                 <Button label="Previous" isDisabled={page === 1} clickAction={() => setPage(page - 1)} />
-                <Button
-                    label="Next"
-                    isDisabled={invoices.total <= page * 8}
-                    clickAction={() => setPage(page + 1)}
-                />
+                <Button label="Next" isDisabled={invoices.total <= page * 8} clickAction={() => setPage(page + 1)} />
             </Stack>
         </Stack>
     );

@@ -3,6 +3,7 @@ import { z } from 'zod';
 export const MAX_SOURCE_SIZE = 1_000_000;
 export const MAX_MESSAGE_SIZE = 2_000_000;
 export const MAX_PENDING_REQUESTS = 8;
+// Allow the Platform's 120-second Solution proxy timeout to finish, including cold starts.
 export const REQUEST_TIMEOUT = 130_000;
 export const parametersSchema = z.record(z.string(), z.string());
 

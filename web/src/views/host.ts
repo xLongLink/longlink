@@ -27,12 +27,12 @@ export async function read(response: Response, limit: number): Promise<Blob> {
             if (size > limit) throw new Error('Solution response is too large');
             chunks.push(chunk.value);
         }
+    } catch (error) {
+        // Cancel incomplete reads before releasing the lock, preserving cancellation-error precedence.
+        await reader.cancel();
+        throw error;
     } finally {
-        try {
-            await reader.cancel();
-        } finally {
-            reader.releaseLock();
-        }
+        reader.releaseLock();
     }
     return new Blob(chunks);
 }

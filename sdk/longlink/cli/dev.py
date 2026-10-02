@@ -3,6 +3,7 @@ import uvicorn
 from typing import Annotated
 from pathlib import Path
 from longlink.logger import logger, log_config
+from longlink.constants import ROOT
 from longlink.database.migrations import apply_migrations
 
 
@@ -14,6 +15,12 @@ def dev_command(
     # Make network exposure visible when the caller opts out of the loopback default.
     if host not in {"127.0.0.1", "::1", "localhost"}:
         logger.warning("Development server is exposed on host %s", host)
+
+    # Refresh SDK-owned editor declarations without requiring a JavaScript toolchain.
+    declarations = (ROOT / ".static" / "jsx" / "frontend.d.ts").read_bytes()
+    destination = Path.cwd() / "frontend.d.ts"
+    if not destination.is_file() or destination.read_bytes() != declarations:
+        destination.write_bytes(declarations)
 
     # Apply committed Solution migrations before serving requests locally.
     apply_migrations()

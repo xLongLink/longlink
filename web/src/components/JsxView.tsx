@@ -29,7 +29,7 @@ export function JsxView({
     const frame = useRef<HTMLIFrameElement>(null);
     const navigate = useNavigate();
     const [document, setDocument] = useState<string>();
-    const [error, setError] = useState<string>();
+    const [bootstrapFailed, setBootstrapFailed] = useState(false);
     const [height, setHeight] = useState(1);
     const parameters = JSON.stringify(params);
     const { data: kernel, error: kernelError } = useQuery({
@@ -50,13 +50,12 @@ export function JsxView({
         const channel = new MessageChannel();
         const session = crypto.randomUUID();
         const pending = new Set<number>();
-        let initialized = false;
 
         /** Connects one trusted bootstrap instance; subsequent window messages have no capabilities. */
         function ready(event: MessageEvent<unknown>): void {
-            if (initialized || event.source !== frame.current?.contentWindow || event.origin !== 'null') return;
+            if (event.source !== frame.current?.contentWindow || event.origin !== 'null') return;
             if (event.data !== session) return;
-            initialized = true;
+            window.removeEventListener('message', ready);
             frame.current?.contentWindow?.postMessage(
                 { session, source, params: parametersSchema.parse(JSON.parse(parameters)) },
                 '*',
@@ -122,7 +121,7 @@ export function JsxView({
             }
         }
         void bootstrap().catch(() => {
-            if (!controller.signal.aborted) setError('The isolated View runtime could not be loaded.');
+            if (!controller.signal.aborted) setBootstrapFailed(true);
         });
 
         // Replacing or unmounting a View revokes its channel and cancels every outstanding operation.
@@ -134,11 +133,10 @@ export function JsxView({
         };
     }, [source, parameters, requestBaseUrl, navigationBaseUrl, navigate, kernel]);
 
-    if (kernelError)
+    if (kernelError || bootstrapFailed)
         return (
             <PageError title="Unable to load this View" description="The isolated View runtime could not be loaded." />
         );
-    if (error) return <PageError title="Unable to load this View" description={error} />;
     return (
         <iframe
             ref={frame}

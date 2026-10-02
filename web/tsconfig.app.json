@@ -9,6 +9,7 @@
 
         /* Bundler mode */
         "moduleResolution": "bundler",
+        "resolveJsonModule": true,
         "verbatimModuleSyntax": true,
         "moduleDetection": "force",
         "rootDirs": [".", "./.react-router/types"],

@@ -4,11 +4,13 @@ import { transform } from 'sucrase';
 import { stoneTheme } from '@/theme';
 import * as components from './components';
 import { createRoot } from 'react-dom/client';
+import * as links from '@astryxdesign/core/Link';
 import { Theme } from '@astryxdesign/core/theme';
 import { LayerProvider } from '@astryxdesign/core/Layer';
 import { QueryClient, QueryClientProvider, QueryErrorResetBoundary, useSuspenseQuery } from '@tanstack/react-query';
 import {
     commandSchema,
+    parametersSchema,
     messageSize,
     MAX_MESSAGE_SIZE,
     MAX_PENDING_REQUESTS,
@@ -76,9 +78,16 @@ function useApi(path: string): unknown {
 /** Limits navigation to a host capability rather than granting top-level browser access. */
 function Link({ to, children }: { to: string; children: React.ReactNode }) {
     return (
-        <components.Button label="" variant="ghost" clickAction={() => navigate(to)}>
+        <links.Link
+            href={to}
+            onClick={(event) => {
+                // Keep navigation inside the host bridge instead of loading a page in the sandbox.
+                event.preventDefault();
+                navigate(to);
+            }}
+        >
             {children}
-        </components.Button>
+        </links.Link>
     );
 }
 
@@ -100,45 +109,52 @@ function StatusBadge({ status }: { status: 'running' | 'creating' | 'failed' }) 
 /** Loads image attachments through the scoped bridge only after a user requests their preview. */
 function FileViewer({ src, title }: { src: string; title: string }) {
     const [open, setOpen] = React.useState(false);
-    const [url, setUrl] = React.useState<string>();
-    const [failed, setFailed] = React.useState(false);
+
+    // Each opened attachment owns a fresh preview and its blob URL.
+    return (
+        <components.Stack gap={2}>
+            <components.Button variant="ghost" label={title} clickAction={() => setOpen(!open)} />
+            {open && <FilePreview key={src} src={src} title={title} />}
+        </components.Stack>
+    );
+}
+
+/** Owns one attachment attempt and releases its blob URL when the preview closes or changes. */
+function FilePreview({ src, title }: { src: string; title: string }) {
+    const [preview, setPreview] = React.useState<
+        { status: 'loading' } | { status: 'error' } | { status: 'ready'; url: string }
+    >({ status: 'loading' });
 
     // Own every blob URL and reject unsupported media rather than loading a privileged document frame.
     React.useEffect(() => {
-        if (!open) return;
         let active = true;
         let objectUrl: string | undefined;
         void request(src, { binary: true })
             .then((value) => {
                 if (!active) return;
                 if (!(value instanceof Blob) || !value.type.startsWith('image/')) {
-                    setFailed(true);
+                    setPreview({ status: 'error' });
                     return;
                 }
                 objectUrl = URL.createObjectURL(value);
-                setUrl(objectUrl);
+                setPreview({ status: 'ready', url: objectUrl });
             })
             .catch(() => {
-                if (active) setFailed(true);
+                if (active) setPreview({ status: 'error' });
             });
         return () => {
             active = false;
             if (objectUrl) URL.revokeObjectURL(objectUrl);
         };
-    }, [open, src]);
+    }, [src]);
 
-    return (
-        <components.Stack gap={2}>
-            <components.Button variant="ghost" label={title} clickAction={() => setOpen(!open)} />
-            {open &&
-                (failed ? (
-                    <components.Text>Preview unavailable for this file type.</components.Text>
-                ) : url ? (
-                    <img src={url} alt={title} className="max-h-full max-w-full rounded-lg object-contain" />
-                ) : (
-                    <components.Spinner label="Loading attachment" />
-                ))}
-        </components.Stack>
+    // Render only states belonging to the current mounted preview.
+    return preview.status === 'error' ? (
+        <components.Text>Preview unavailable for this file type.</components.Text>
+    ) : preview.status === 'ready' ? (
+        <img src={preview.url} alt={title} className="max-h-full max-w-full rounded-lg object-contain" />
+    ) : (
+        <components.Spinner label="Loading attachment" />
     );
 }
 
@@ -172,9 +188,7 @@ class ViewBoundary extends React.Component<{ children: React.ReactNode; onReset:
     }
 }
 
-const initialization = z
-    .object({ session: z.string(), source: z.string(), params: z.record(z.string(), z.string()) })
-    .strict();
+const initialization = z.object({ session: z.string(), source: z.string(), params: parametersSchema }).strict();
 
 /** Receives source once from the parent, then accepts capabilities only over the transferred port. */
 function initialize(event: MessageEvent<unknown>): void {
@@ -192,7 +206,10 @@ function initialize(event: MessageEvent<unknown>): void {
         else waiter.reject(new Error(reply.data.error));
     };
     const mount = document.getElementById('view');
-    if (!mount) return;
+    if (!mount) {
+        port.close();
+        return;
+    }
     const root = createRoot(mount);
 
     // Measure the content root, not the viewport, so shorter Views can shrink again.
@@ -204,7 +221,21 @@ function initialize(event: MessageEvent<unknown>): void {
         port.postMessage({ type: 'resize', height });
     });
     observer.observe(mount);
-    window.addEventListener('pagehide', () => observer.disconnect(), { once: true });
+
+    // Release all resources acquired by this initialized sandbox in one teardown.
+    window.addEventListener(
+        'pagehide',
+        () => {
+            observer.disconnect();
+            for (const waiter of pending.values()) {
+                clearTimeout(waiter.timer);
+                waiter.reject(new Error('View closed'));
+            }
+            pending.clear();
+            port.close();
+        },
+        { once: true }
+    );
 
     // Compilation and evaluation happen only in the sandbox, never in the Platform module graph.
     try {
@@ -261,15 +292,3 @@ function initialize(event: MessageEvent<unknown>): void {
 // A fresh opaque-origin frame cannot read parent state, storage, or cookies.
 window.addEventListener('message', initialize);
 window.parent.postMessage(session, '*');
-window.addEventListener(
-    'pagehide',
-    () => {
-        for (const waiter of pending.values()) {
-            clearTimeout(waiter.timer);
-            waiter.reject(new Error('View closed'));
-        }
-        pending.clear();
-        port?.close();
-    },
-    { once: true }
-);

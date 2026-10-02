@@ -5,7 +5,8 @@ import { Heading } from '@astryxdesign/core/Heading';
 import { Article } from '@/components/layouts/Article';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import NotFoundLayout from '@/components/layouts/NotFound';
-import { componentDocumentation } from '@/lib/generated/documentation';
+import { documentationLastUpdated } from '@/lib/generated/documentation';
+import componentDocumentation from '../../../../../../../sdk/longlink/.static/jsx/components.json';
 
 /** Documents native JSX props using the same declarations supplied to Python Solution editors. */
 export default function DocsArticleRoute() {
@@ -18,13 +19,13 @@ export default function DocsArticleRoute() {
 
     const article = {
         description: `Native JSX props for ${component.name}.`,
-        lastUpdated: component.lastUpdated,
+        lastUpdated: documentationLastUpdated,
         toc: [
             { id: 'introduction', label: 'Introduction', level: 1 },
             { id: 'props', label: 'Props', level: 2 },
             { id: 'cli', label: 'Cli', level: 2 },
         ],
-        editUrl: 'https://github.com/xLongLink/longlink/edit/main/sdk/longlink/.static/new/src/views/frontend.d.ts',
+        editUrl: 'https://github.com/xLongLink/longlink/edit/main/sdk/longlink/.static/jsx/frontend.d.ts',
         title: `${component.name} | LongLink Documentation`,
     };
 
@@ -35,8 +36,11 @@ export default function DocsArticleRoute() {
                     {component.name}
                 </Heading>
                 <Text as="p">
-                    {component.description} Values are JavaScript expressions, and writable controls use explicit
-                    callbacks. Package imports are not required.
+                    {component.category === 'Runtime'
+                        ? `${component.name} is supplied by the isolated LongLink renderer.`
+                        : `${component.name} accepts native JSX props in LongLink Views.`}{' '}
+                    Values are JavaScript expressions, and writable controls use explicit callbacks. Package imports are
+                    not required.
                 </Text>
                 <Heading id="props" level={2}>
                     Props

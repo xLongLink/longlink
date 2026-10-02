@@ -30,9 +30,10 @@ import { Step, Stepper } from '@astryxdesign/core/Stepper';
 import { NumberInput } from '@astryxdesign/core/NumberInput';
 import { ProgressBar } from '@astryxdesign/core/ProgressBar';
 import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
+import { documentationCategories } from '@/lib/generated/documentation';
 import { RadioList, RadioListItem } from '@astryxdesign/core/RadioList';
 import { SideNav, SideNavItem, SideNavSection } from '@astryxdesign/core/SideNav';
-import { componentDocumentation, documentationCategories } from '@/lib/generated/documentation';
+import componentDocumentation from '../../../../../../sdk/longlink/.static/jsx/components.json';
 
 /** Leaves inert, controlled previews unchanged. */
 const noop = () => {};
@@ -220,10 +221,10 @@ const article = {
     description: 'Build interfaces with LongLink Views and components.',
     toc: [
         { id: 'views', label: 'Views', level: 1 },
-        ...documentationCategories.map(({ name }) => ({ id: name.toLowerCase(), label: name, level: 2 })),
+        ...documentationCategories.map((category) => ({ id: category.toLowerCase(), label: category, level: 2 })),
     ],
     lastUpdated: '2026-10-01',
-    editUrl: 'https://github.com/xLongLink/longlink/edit/main/sdk/longlink/.static/new/src/views/frontend.d.ts',
+    editUrl: 'https://github.com/xLongLink/longlink/edit/main/sdk/longlink/.static/jsx/frontend.d.ts',
     title: 'Views | LongLink Documentation',
 };
 
@@ -262,13 +263,13 @@ export default function DocsArticleRoute() {
                     hasLanguageLabel={false}
                 />
                 {documentationCategories.map((category) => (
-                    <Stack key={category.name} gap={3}>
-                        <Heading id={category.name.toLowerCase()} level={2}>
-                            {category.name}
+                    <Stack key={category} gap={3}>
+                        <Heading id={category.toLowerCase()} level={2}>
+                            {category}
                         </Heading>
                         <Grid columns={{ minWidth: 190, max: 3, repeat: 'fit' }} gap={4}>
                             {componentDocumentation
-                                .filter((component) => component.category === category.name)
+                                .filter((component) => component.category === category)
                                 .map((component) => (
                                     <Stack key={component.slug} className="relative" gap={2}>
                                         <Card aria-hidden="true" inert padding={3} variant="muted">
