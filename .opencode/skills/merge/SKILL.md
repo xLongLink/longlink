@@ -17,8 +17,9 @@ Publish only the agent's changes, following `AGENTS.md` commit and merge request
 6. Stage only owned files or hunks, review the staged diff, and commit using the structure in `AGENTS.md`. Do not include pre-existing staged changes. Reuse intended commits if already committed.
 7. Push the topic branch with an upstream, without force. Use `gh pr create` with explicit repository, base, head, title, and body; reuse an existing matching request instead of creating a duplicate.
 8. Apply change-type labels from `.github/release.yml` and applicable area labels (`api`, `sdk`, `web`). Check available labels first; report missing labels rather than silently creating repository labels. Use `skip-changelog` only for intentionally excluded changes.
-9. Return the local checkout to the original branch or detached commit, including after a failure. Never discard changes to switch branches; report a blocker if restoration cannot be done safely.
-10. Return the pull request URL, a short summary, validation results, and confirmation of the restored checkout.
+9. After confirming the intended commit is pushed and the pull request exists, remove any duplicate published changes left in the original checkout when using an isolated worktree. Compare the original checkout's current diff with the published patch, then reverse only the exact agent-owned files or hunks. Preserve unrelated edits and staged work; never use blanket restoration, reset, or stashing. If overlapping edits make cleanup unsafe, ask before proceeding. On publication failure, retain unpublished work.
+10. Return the local checkout to the original branch or detached commit, including after a failure. Never discard unpublished or unrelated changes to switch branches; report a blocker if restoration cannot be done safely. Verify the original checkout no longer contains duplicate published changes and that unrelated work remains intact.
+11. Return the pull request URL, a short summary, validation results, and confirmation of the restored checkout and published-change cleanup. Report any cleanup blocker explicitly.
 
 ## Body
 
