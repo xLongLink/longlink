@@ -4,6 +4,7 @@ from httpx2 import AsyncClient
 from datetime import UTC, datetime
 from sqlmodel import select
 from factories import create_compute, create_solution, fetch_operations, create_organization, assert_no_new_operations
+from src.utils import s3
 from sqlalchemy import func
 from urllib.parse import urlencode
 from src.models.roles import OrganizationRoles
@@ -446,19 +447,16 @@ async def test_organization_storage_usage_returns_usage_or_unavailable(
     client = clients[0]
     organization = await create_organization(owner)
 
-    async def storage_usage(_self: object, organization_id: UUID) -> int:
+    async def storage_usage(_self: s3.S3, bucket: str) -> int:
         """Return usage or raise the configured storage backend failure."""
 
         # Keep the tenant selection and configured outcome observable at the storage boundary.
-        assert organization_id == organization.id
+        assert bucket == f"longlink-{organization.id.hex}"
         if isinstance(usage, Exception):
             raise usage
         return usage
 
-    from conftest import StorageKubernetes
-
-    monkeypatch.setattr("src.routes.v1.organizations.Storage", StorageKubernetes)
-    monkeypatch.setattr(StorageKubernetes, "usage", storage_usage)
+    monkeypatch.setattr(s3.S3, "usage", storage_usage)
 
     # Act
     response = await client.get(f"/api/v1/organizations/{organization.id}/storage")
@@ -493,17 +491,14 @@ async def test_organization_storage_endpoint_allows_members(
         )
         await session.commit()
 
-    async def storage_usage(_self: object, organization_id: UUID) -> int:
+    async def storage_usage(_self: s3.S3, bucket: str) -> int:
         """Return the bucket's live usage."""
 
         # Verify member access still selects the requested Organization's bucket.
-        assert organization_id == organization.id
+        assert bucket == f"longlink-{organization.id.hex}"
         return 0
 
-    from conftest import StorageKubernetes
-
-    monkeypatch.setattr("src.routes.v1.organizations.Storage", StorageKubernetes)
-    monkeypatch.setattr(StorageKubernetes, "usage", storage_usage)
+    monkeypatch.setattr(s3.S3, "usage", storage_usage)
     client = clients[1]
 
     # Act
@@ -529,7 +524,7 @@ async def test_organization_storage_endpoint_rejects_non_members(
 
         raise AssertionError("cross-tenant resource access reached a provider")
 
-    monkeypatch.setattr("src.routes.v1.organizations.Storage", unexpected_provider)
+    monkeypatch.setattr(s3, "S3", unexpected_provider)
 
     # Act
     response = await clients[1].get(f"/api/v1/organizations/{organization.id}/storage")

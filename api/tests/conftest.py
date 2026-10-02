@@ -71,7 +71,7 @@ class AsyncKubernetes:
 class StorageKubernetes:
     """Supply the external storage boundary for Platform lifecycle tests."""
 
-    def __init__(self, compute: object | None = None, cluster: object | None = None) -> None:
+    def __init__(self, compute: object, cluster: object) -> None:
         """Accept the bound Compute registry without opening connections."""
 
     @staticmethod
@@ -108,11 +108,6 @@ class StorageKubernetes:
 
     async def delete(self, organization: UUID, solutions: Sequence[UUID]) -> None:
         """Accept organization storage deletion."""
-
-    async def usage(self, organization: UUID) -> int:
-        """Return deterministic logical usage."""
-
-        return 128
 
 
 class DatabaseKubernetes(AsyncKubernetes):

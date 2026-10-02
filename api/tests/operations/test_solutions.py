@@ -156,7 +156,7 @@ async def test_solution_creation_applies_user_and_managed_environment_values(
     users: tuple[User, User, User],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Apply the complete persisted runtime environment on initial deployment."""
+    """Apply credentials and current infrastructure settings on initial deployment."""
 
     # Persist a Solution with a user-owned runtime value.
     owner = users[0]
@@ -238,6 +238,11 @@ async def test_solution_creation_applies_user_and_managed_environment_values(
         persisted = await session.get(Solution, solution.id)
     assert persisted is not None
     assert persisted.status == Status.running
+    assert not {
+        "LONGLINK_DATABASE_CERTIFICATE",
+        "LONGLINK_STORAGE_CERTIFICATE",
+        "LONGLINK_STORAGE_ENDPOINT_URL",
+    }.intersection(persisted.secrets)
 
     # A subsequent revision reuses all generated credentials and stable data identities.
     async with session_scope() as session:
@@ -328,7 +333,7 @@ async def test_solution_creation_retry_reuses_persisted_runtime_secrets(
         organization,
         secrets={"API_KEY": "runtime-secret"},
     )
-    initial_secrets = {
+    credentials = {
         "LONGLINK_ENV": "production",
         "LONGLINK_DATABASE_HOST": f"database-rw.longlink-database-{organization.id.hex}.svc.cluster.local",
         "LONGLINK_DATABASE_NAME": organization.id.hex,
@@ -337,14 +342,19 @@ async def test_solution_creation_retry_reuses_persisted_runtime_secrets(
         "LONGLINK_DATABASE_SCHEMA": solution.id.hex,
         "LONGLINK_DATABASE_USERNAME": "persisted-database-user",
         "LONGLINK_STORAGE_BUCKET": organization.id.hex,
-        "LONGLINK_STORAGE_ENDPOINT_URL": "https://longlink-storage.rustfs.svc:443",
         "LONGLINK_STORAGE_PASSWORD": "persisted-storage-password",
         "LONGLINK_STORAGE_PREFIX": f"solutions/{solution.id.hex}/",
         "LONGLINK_STORAGE_REGION": "us-east-1",
         "LONGLINK_STORAGE_USERNAME": "persisted-storage-user",
     }
     if identity is not None:
-        initial_secrets["LONGLINK_IDENTITY_SECRET"] = identity
+        credentials["LONGLINK_IDENTITY_SECRET"] = identity
+    initial_secrets = {
+        **credentials,
+        "LONGLINK_DATABASE_CERTIFICATE": "old-database-ca",
+        "LONGLINK_STORAGE_ENDPOINT_URL": "https://old-storage.example",
+        "LONGLINK_STORAGE_CERTIFICATE": "old-storage-ca",
+    }
     async with session_scope() as session:
         persisted = await session.get(Solution, solution.id)
         assert persisted is not None
@@ -398,18 +408,17 @@ async def test_solution_creation_retry_reuses_persisted_runtime_secrets(
         if identity is not None:
             assert identity_secret == identity
         assert persisted.secrets == {
-            **initial_secrets,
+            **credentials,
             "LONGLINK_IDENTITY_SECRET": identity_secret,
-            "LONGLINK_DATABASE_CERTIFICATE": "test-database-ca",
         }
         assert persisted.status == Status.running
         assert persisted.deployed_revision_id == solution.desired_revision_id
     assert captured == [
         {
             "API_KEY": "runtime-secret",
-            **initial_secrets,
-            "LONGLINK_IDENTITY_SECRET": identity_secret,
+            **persisted.secrets,
             "LONGLINK_DATABASE_CERTIFICATE": "test-database-ca",
+            "LONGLINK_STORAGE_ENDPOINT_URL": "https://longlink-storage.rustfs.svc:443",
         }
     ]
 
@@ -435,7 +444,9 @@ async def test_solution_creation_skips_removed_solution_provider_construction(
     assert result is None
 
 
-@pytest.mark.parametrize("operation", [pytest.param(solution_operations.deploy, id="deployment"), pytest.param(solution_operations.delete, id="deletion")])
+@pytest.mark.parametrize(
+    "operation", [pytest.param(solution_operations.deploy, id="deployment"), pytest.param(solution_operations.delete, id="deletion")]
+)
 async def test_solution_lifecycle_skips_missing_target_without_constructing_providers(
     monkeypatch: pytest.MonkeyPatch,
     operation: Callable[[UUID], Awaitable[None]],
