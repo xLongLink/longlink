@@ -10,8 +10,8 @@ import { useMutation } from '@tanstack/react-query';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
 import { TextInput } from '@astryxdesign/core/TextInput';
-import { useEffect, useEffectEvent, useRef } from 'react';
 import { useFragmentToken } from '@/lib/hooks/use-fragment-token';
+import { useVerification, type VerificationRequest } from '@/lib/hooks/use-verification';
 
 const PASSWORD_RESET_TOKEN_KEY = 'longlink.password-reset.token';
 const resetPasswordSchema = z.object({
@@ -19,11 +19,6 @@ const resetPasswordSchema = z.object({
 });
 
 type ResetPasswordValues = z.infer<typeof resetPasswordSchema>;
-
-type VerificationRequest = {
-    signal: AbortSignal;
-    token: string;
-};
 
 /** Returns whether an API error reports an invalid or expired reset token. */
 function isBadTokenError(error: unknown): boolean {
@@ -33,7 +28,6 @@ function isBadTokenError(error: unknown): boolean {
 /** Accepts a password reset token and saves a new password. */
 export default function ResetPassword() {
     const token = useFragmentToken(PASSWORD_RESET_TOKEN_KEY);
-    const verificationController = useRef<AbortController | null>(null);
     const form = useForm<ResetPasswordValues>({
         defaultValues: { password: '' },
         resolver: zodResolver(resetPasswordSchema),
@@ -69,25 +63,7 @@ export default function ResetPassword() {
     });
     const hasTokenError = isBadTokenError(verification.error) || isBadTokenError(resetPassword.error);
 
-    /** Replaces the active credential exchange with a cancellable request. */
-    function startVerification(verificationToken: string) {
-        verificationController.current?.abort();
-        const controller = new AbortController();
-        verificationController.current = controller;
-        verification.mutate({ signal: controller.signal, token: verificationToken });
-    }
-
-    const startInitialVerification = useEffectEvent(startVerification);
-
-    useEffect(() => {
-        startInitialVerification(token);
-
-        return () => {
-            const controller = verificationController.current;
-            verificationController.current = null;
-            controller?.abort();
-        };
-    }, [token]);
+    const { controller: verificationController, startVerification } = useVerification(token, verification.mutate);
 
     const pageMetadata = <NoIndex title="Set a New Password | LongLink" />;
 

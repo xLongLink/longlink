@@ -70,6 +70,8 @@ TEMP
 /web/src/lib/generated/*.d.ts
 /web/src/lib/generated/*.js
 /web/node_modules/
+/web/public/views/runtime.js
+/web/public/views/runtime.css
 /web/*.local
 /web/.vscode/*
 !/web/.vscode/extensions.json

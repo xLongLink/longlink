@@ -1,6 +1,6 @@
 import { siteName, siteUrl } from '@/site';
 import { useLocation } from 'react-router';
-import { formatPathSegment } from '@/components/breadcrumb/text';
+import { buildBreadcrumbs } from '@/components/breadcrumb/text';
 
 /** Labels for documentation route segments shared with article breadcrumbs. */
 export const documentationRouteLabels: Record<string, string> = {
@@ -24,16 +24,15 @@ function canonicalPath(pathname: string): string {
 
 /** Builds breadcrumb structured data for an article's current route. */
 function breadcrumbs(pathname: string): object {
-    const segments = pathname.split('/').filter(Boolean);
+    const segments = buildBreadcrumbs(pathname, documentationRouteLabels);
     const items = [{ '@type': 'ListItem', position: 1, name: 'Home', item: `${siteUrl}/` }];
 
     for (const [index, segment] of segments.entries()) {
-        const path = `/${segments.slice(0, index + 1).join('/')}`;
         items.push({
             '@type': 'ListItem',
             position: index + 2,
-            name: formatPathSegment(segment, documentationRouteLabels),
-            item: `${siteUrl}${path === '/docs' ? '/docs/introduction/' : canonicalPath(path)}`,
+            name: segment.label,
+            item: `${siteUrl}${segment.href}`,
         });
     }
 

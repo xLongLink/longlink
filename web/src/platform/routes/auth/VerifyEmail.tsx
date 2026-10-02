@@ -14,10 +14,10 @@ import { Controller, useForm } from 'react-hook-form';
 import { clearSessionQueries } from '@/lib/react-query';
 import { WelcomeTitle } from '@/components/WelcomeTitle';
 import { TextInput } from '@astryxdesign/core/TextInput';
-import { useEffect, useEffectEvent, useRef } from 'react';
 import { useFragmentToken } from '@/lib/hooks/use-fragment-token';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { zEmailPayload, zUserSummary } from '@/lib/generated/platform-api-v1/zod.gen';
+import { useVerification, type VerificationRequest } from '@/lib/hooks/use-verification';
 
 const REGISTRATION_TOKEN_KEY = 'longlink.registration.token';
 const registrationCompleteSchema = z.object({
@@ -27,17 +27,11 @@ const registrationCompleteSchema = z.object({
 
 type RegistrationCompleteValues = z.infer<typeof registrationCompleteSchema>;
 
-type VerificationRequest = {
-    signal: AbortSignal;
-    token: string;
-};
-
 /** Verifies an emailed registration link before collecting account credentials. */
 export default function VerifyEmail() {
     const navigate = useNavigate();
     const queryClient = useQueryClient();
     const token = useFragmentToken(REGISTRATION_TOKEN_KEY);
-    const verificationController = useRef<AbortController | null>(null);
     const form = useForm<RegistrationCompleteValues>({
         defaultValues: { name: '', password: '' },
         resolver: zodResolver(registrationCompleteSchema),
@@ -77,15 +71,7 @@ export default function VerifyEmail() {
             );
         },
     });
-    /** Replaces the active credential exchange with a cancellable request. */
-    function startVerification(verificationToken: string) {
-        verificationController.current?.abort();
-        const controller = new AbortController();
-        verificationController.current = controller;
-        verification.mutate({ signal: controller.signal, token: verificationToken });
-    }
-
-    const startInitialVerification = useEffectEvent(startVerification);
+    const { controller: verificationController, startVerification } = useVerification(token, verification.mutate);
 
     /** Creates the account and publishes only the new authenticated query state. */
     async function handleComplete(payload: RegistrationCompleteValues) {
@@ -103,16 +89,6 @@ export default function VerifyEmail() {
             }
         }
     }
-
-    useEffect(() => {
-        startInitialVerification(token);
-
-        return () => {
-            const controller = verificationController.current;
-            verificationController.current = null;
-            controller?.abort();
-        };
-    }, [token]);
 
     const recoveryRegisterHref = verification.data?.email
         ? `/auth/register?${new URLSearchParams({ email: verification.data.email })}`

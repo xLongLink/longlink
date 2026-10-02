@@ -11,10 +11,7 @@ const FALLBACK_MESSAGE = 'The server could not complete the request. Please try 
 
 /** Stub the fetch transport with a JSON response. */
 function stubJsonFetch(payload: unknown, status: number): void {
-    vi.stubGlobal(
-        'fetch',
-        vi.fn(async () => Response.json(payload, { status }))
-    );
+    vi.stubGlobal('fetch', async () => Response.json(payload, { status }));
 }
 
 describe('api error mapping', () => {
@@ -53,12 +50,9 @@ describe('api error mapping', () => {
     it('passes network failures through without mapping', async () => {
         // Arrange
         const networkError = new TypeError('Network error');
-        vi.stubGlobal(
-            'fetch',
-            vi.fn(async () => {
-                throw networkError;
-            })
-        );
+        vi.stubGlobal('fetch', async () => {
+            throw networkError;
+        });
 
         // Act
         const request = api.get('https://api.example/organizations');
@@ -71,7 +65,7 @@ describe('api error mapping', () => {
         // Arrange
         vi.stubGlobal(
             'fetch',
-            vi.fn(async () => new Response('boom', { headers: { 'Content-Type': 'text/plain' }, status: 500 }))
+            async () => new Response('boom', { headers: { 'Content-Type': 'text/plain' }, status: 500 })
         );
 
         // Act

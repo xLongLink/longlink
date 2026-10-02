@@ -47,41 +47,40 @@ Theme preferences are defined in `src/theme.ts` and applied through the root pro
 
 ## Primitives
 
-```view
-<Avatar>, <Badge>, <Banner>, <Button>, <ButtonGroup>, <Card>, <CheckboxInput>, <Dialog>, <Divider>, <FileInput>, <FileViewer>, <Grid>, <GridSpan>, <Heading>, <Icon>, <Link>, <NumberInput>, <Option>, <RadioList>, <Selector>, <Slider>, <Stack>, <StackItem>, <Switch>, <Tab>, <Tabs>, <Table>, <TableColumn>, <Text>, <TextArea>, <TextInput>
-```
-
-Runtime tags are `<view>`, `<State>`, `<Query>`, and `<For>`. Buttons and Links with a `label` can contain ordered `Validate`, `Request`, and `Patch` effects.
+Solution Views use native JSX components from `src/views/components.ts`. React,
+`request`, `navigate`, `params`, and `useApi` are provided by
+the sandbox runtime. State uses React hooks; inputs use controlled callbacks;
+queries and ordered actions use ordinary JavaScript.
+The runtime owns loading/error boundaries and refreshes cached View data after
+successful writes through `request()`.
 
 ## Views
 
-- A View is a `.view` file using case-sensitive LongLink markup, not standard XML or browser HTML. Documentation examples use `.view` filenames and hide the syntax highlighter's XML label.
-- Case-sensitive `.view` files are parsed by `htmlparser2` in `src/xml/core/parser.ts` into an AST. XML-mode tokenization preserves component names and self-closing tags without requiring XML entity escaping in quoted attributes.
-- Raw `&&`, `<`, and `>` work inside quoted attributes. XML declarations, schema hints, DOCTYPE, ENTITY, and CDATA are not supported.
-- Parsing rejects duplicate or unquoted attributes, unmatched tags, and implicit tag repair. SDK validation applies shared component constraints to the parsed tree rather than parsing the source as XML.
-- Preserve View formatting manually for now: standard XML formatters reject raw operators, and standard HTML formatters can misinterpret case-sensitive components such as `Link`.
-- VS Code workspace settings associate `.view` files with built-in HTML highlighting and disable automatic HTML formatting. Newly generated Solutions include the same settings; this is syntax coloring, not View-specific validation.
-- The renderer in `src/xml/renderers.tsx` seeds runtime state and renders the AST through `src/xml/core/node.tsx`.
-- Component names must exist in `src/xml/core/registry.tsx`; unknown tags fail at render time.
-- Child content is rendered recursively, so nested View components stay under the same runtime context.
-- Text-bearing components use Astryx `label`, `title`, or `value` attributes. Use expressions in `value` for dynamic copy.
-- Views reject `className`, `style`, `xstyle`, and event-handler attributes. Adapters own all visual styling and callbacks.
+- A Solution View is a `.jsx` file exporting one default React component, without package imports. Python discovers and serves source without compiling or executing JavaScript.
+- Titles and routes derive from JSX filenames, including `[parameter]` segments. Tabs use the default icon; no metadata files or exports are needed.
+- Sucrase compiles source only inside `src/views/runtime.tsx`. The host must never import, compile, or evaluate Solution source.
+- `JsxView` uses an opaque-origin iframe with only `allow-scripts`; never add `allow-same-origin`, top navigation, popups, forms, or downloads.
+- CSP permits only the hashed bootstrap, isolated evaluation, native inline styles, and data/blob images. Direct fetch, workers, external assets, and nested document frames are blocked.
+- A fresh WindowProxy/session handshake transfers a private MessagePort. Only validated Solution-relative API and navigation operations cross it. Requests cannot choose credentials, headers, redirects, or arbitrary URLs.
+- Host requests retain backend authorization, have byte/concurrency/time limits, and are aborted when the View unmounts. Every value returned to the frame is visible to the untrusted Solution author; never send Platform secrets.
+- Isolation is not a CPU/memory sandbox or a guarantee against exfiltration of data intentionally shared with the View. Browser sandbox/CSP behavior needs manual verification before a production rollout.
+- If deployment CSP inherited by `srcdoc` blocks the bootstrap or evaluation, use a separate-origin renderer document rather than weakening the Platform policy.
+- VS Code supports JSX natively. Generated Solutions include JavaScript project configuration and editor declarations, not a custom extension.
+- Run `vp run build:views` to generate `public/views/runtime.js` and `runtime.css`; application builds include these static files. Solutions do not run this build themselves.
+- Bundled Platform pages are native, type-checked `.tsx` modules under `src/platform/`, using trusted Platform API access. Solution-provided `.jsx` source must only run in the isolated shared View runtime.
 
 ## Keep changes aligned
 
 - Keep platform concerns in the API mode path.
 - Use direct Astryx imports for reusable UI.
-- Keep View runtime and compiler changes inside `src/xml/`.
+- Keep Solution runtime and compiler changes inside `src/views/` and the host bridge.
 - Prefer `src/lib/api.ts` helpers over raw `fetch`.
 - Remove obsolete flows when replacing them end to end.
 - Favor the current MVP model over backward compatibility.
 
 ## Adding or Changing a Component
 
-1. Add or edit the adapter in `src/xml/adapters/`.
-2. Keep the adapter entry point small and documented.
-3. Use `useXmlRuntime` for runtime scope and `renderNode` for child rendering.
-4. Register the tag in `src/xml/core/registry.tsx`.
-5. Update parser, context, or helper code only when the component needs new runtime behavior.
-6. Add focused tests under `web/tests/xml/`.
-7. Update docs/examples so the new View shape is discoverable.
+1. Export native components from `src/views/components.ts`; add wrappers only for meaningful LongLink behavior.
+2. Keep privileged operations in the host bridge, never inside a UI component.
+3. Update `sdk/longlink/.static/jsx/frontend.d.ts` for editor/CLI documentation. `longlink dev` generates a local copy in the Solution root.
+4. Update the sample JSX Views and relevant existing tests.

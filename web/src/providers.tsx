@@ -1,24 +1,31 @@
 import { stoneTheme } from '@/theme';
 import { ApiErrorContext } from '@/lib/errors';
 import { Theme } from '@astryxdesign/core/theme';
-import { useState, type ReactNode } from 'react';
 import { Link as RouterLink } from 'react-router';
 import { useToast } from '@astryxdesign/core/Toast';
 import { createQueryRuntime } from '@/lib/react-query';
 import { LinkProvider } from '@astryxdesign/core/Link';
 import { LayerProvider } from '@astryxdesign/core/Layer';
 import { QueryClientProvider } from '@tanstack/react-query';
+import { createContext, useState, type ReactNode } from 'react';
+
+// Keep development-notice dismissal scoped to one application root.
+export const DevelopmentNoticeContext = createContext<{ isDismissed: boolean; dismiss: () => void } | null>(null);
 
 /** Provides isolated query state with the shared application provider tree. */
 export function RootProvider({ children }: { children: ReactNode }) {
+    const [isDismissed, setIsDismissed] = useState(false);
+
     return (
-        <Theme theme={stoneTheme} mode="dark">
-            <LinkProvider component={RouterLink}>
-                <LayerProvider toast={{ position: 'bottomEnd' }}>
-                    <ApiProvider>{children}</ApiProvider>
-                </LayerProvider>
-            </LinkProvider>
-        </Theme>
+        <DevelopmentNoticeContext value={{ isDismissed, dismiss: () => setIsDismissed(true) }}>
+            <Theme theme={stoneTheme} mode="dark">
+                <LinkProvider component={RouterLink}>
+                    <LayerProvider toast={{ position: 'bottomEnd' }}>
+                        <ApiProvider>{children}</ApiProvider>
+                    </LayerProvider>
+                </LinkProvider>
+            </Theme>
+        </DevelopmentNoticeContext>
     );
 }
 

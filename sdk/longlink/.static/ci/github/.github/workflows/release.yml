@@ -43,9 +43,6 @@ jobs:
               with:
                   python-version: '3.12.13'
 
-            - name: Install dependencies
-              run: uv sync --locked
-
             - name: Log in to GHCR
               uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
               with:

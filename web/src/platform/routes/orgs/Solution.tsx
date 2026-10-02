@@ -1,6 +1,7 @@
 import { api } from '@/lib/api';
 import { useParams } from 'react-router';
 import { NoIndex } from '@/components/Seo';
+import { useApi } from '@/lib/hooks/use-api';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { ProfileMenu } from '@/components/Profile';
@@ -30,10 +31,9 @@ export default function OrganizationSolution() {
 
     // Fetch accessible solutions after membership resolves and poll pending deployments.
     const organizationId = membershipQuery.data?.organization.id;
-    const solutionsKey = ['api', organizationId ? `/api/v1/organizations/${organizationId}/solutions` : null] as const;
-    const solutionsPath = solutionsKey[1];
+    const solutionsPath = organizationId ? `/api/v1/organizations/${organizationId}/solutions` : null;
     const solutionsQuery = useQuery({
-        queryKey: solutionsKey,
+        queryKey: ['api', solutionsPath],
         queryFn: solutionsPath
             ? async ({ signal }) =>
                   zGetOrganizationSolutionsApiV1OrganizationsOrganizationIdSolutionsGetResponse.parse(
@@ -57,14 +57,7 @@ export default function OrganizationSolution() {
 
     // Fetch pod logs only for a failed deployment, including failed migration output.
     const logsPath = solutionAccess?.status === 'failed' ? `/api/v1/solutions/${solutionAccess.id}/logs` : null;
-    const logsQuery = useQuery({
-        queryKey: ['api', logsPath],
-        queryFn: logsPath
-            ? async ({ signal }) =>
-                  zGetSolutionLogsApiV1SolutionsSolutionIdLogsGetResponse.parse(await api(logsPath, { signal }).json())
-            : skipToken,
-        retry: false,
-    });
+    const logsQuery = useApi(logsPath, zGetSolutionLogsApiV1SolutionsSolutionIdLogsGetResponse);
 
     if (isLoading) {
         return (

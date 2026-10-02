@@ -4,7 +4,7 @@ The LongLink Platform owns authentication, authorization, orchestration, storage
 
 The web package owns the shared frontend runtime and the View rendering path used by both platform and SDK bundles.
 
-The SDK owns shared-schema models, migrations, and synchronization helpers alongside Python helpers for Solution projects, project migrations, CLI commands, database helpers, and packaged XML schema assets. The API executes shared migrations and writes with control-plane credentials; Solution runtimes receive read-only shared access.
+The SDK owns shared-schema models, migrations, and synchronization helpers alongside Python helpers for Solution projects, project migrations, CLI commands, database helpers, and packaged JSX authoring declarations. The API executes shared migrations and writes with control-plane credentials; Solution runtimes receive read-only shared access.
 
 <br />
 

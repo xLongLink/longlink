@@ -41,7 +41,7 @@ import {
     type LucideIcon,
 } from 'lucide-react';
 
-export const stoneIconComponents = {
+const stoneIconComponents = {
     close: X,
     chevronDown: ChevronDown,
     chevronLeft: ChevronLeft,

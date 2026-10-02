@@ -173,18 +173,18 @@ def test_production_startup_installs_one_access_filter(monkeypatch: pytest.Monke
 
 
 @pytest.mark.parametrize(
-    ("relative_path", "content", "expected_metadata"),
+    ("relative_path", "content", "expected_route"),
     [
         pytest.param(
-            "dashboard.view",
-            '<view name="Dashboard" icon="layout-dashboard">Dashboard</view>',
-            {"route": "/dashboard", "name": "Dashboard", "icon": "layout-dashboard"},
+            "dashboard.jsx",
+            "export default function Dashboard() { return <Text>Dashboard</Text>; }",
+            "/dashboard",
             id="root",
         ),
         pytest.param(
-            "issues/[issue].view",
-            '<view name="Issue">Issue</view>',
-            {"route": "/issues/:issue", "name": "Issue"},
+            "issues/[issue].jsx",
+            "export default function Issue() { return <Text>Issue</Text>; }",
+            "/issues/:issue",
             id="dynamic",
         ),
     ],
@@ -193,9 +193,9 @@ def test_views_are_registered_from_default_views_directory(
     solution_source: Path,
     relative_path: str,
     content: str,
-    expected_metadata: dict[str, str],
+    expected_route: str,
 ) -> None:
-    """Expose root, nested, and dynamic Views with derived metadata."""
+    """Expose root, nested, and dynamic Views with filename-derived routes."""
 
     # Build the default view tree.
     view_path = solution_source / "views" / relative_path
@@ -204,24 +204,25 @@ def test_views_are_registered_from_default_views_directory(
 
     # Start LongLink and request the registered view and view catalog.
     client = create_runtime_client()
-    response = client.get(f"/views/{relative_path.removesuffix('.view')}")
+    response = client.get(f"/views/{relative_path.removesuffix('.jsx')}")
     views_response = client.get("/views.json")
 
     # Verify content and metadata came from the default view tree.
     assert response.status_code == 200
     assert "text/plain" in response.headers["content-type"]
     assert response.text == content
-    assert views_response.json() == [{"path": f"views/{relative_path.removesuffix('.view')}", **expected_metadata}]
+    assert views_response.json() == [{"path": f"views/{relative_path.removesuffix('.jsx')}", "route": expected_route}]
 
 
-def test_view_catalog_omits_blank_display_metadata(solution_source: Path) -> None:
-    """Normalize whitespace-only View metadata out of the public catalog."""
+def test_view_catalog_ignores_json_sidecars(solution_source: Path) -> None:
+    """Derive the catalog only from JSX filenames, ignoring former metadata sidecars."""
 
     # Arrange
-    (solution_source / "views" / "dashboard.view").write_text(
-        '<view name="  " icon="\t">Dashboard</view>',
+    (solution_source / "views" / "dashboard.jsx").write_text(
+        "export default function Dashboard() { return <Text>Dashboard</Text>; }",
         encoding="utf-8",
     )
+    (solution_source / "views" / "dashboard.json").write_text('{"name": "Custom title", "icon": "banknote"}', encoding="utf-8")
     client = create_runtime_client()
 
     # Act
@@ -238,8 +239,8 @@ def test_view_catalog_uses_deterministic_path_order(solution_source: Path) -> No
     # Arrange
     nested_directory = solution_source / "views" / "admin"
     nested_directory.mkdir()
-    (nested_directory / "alpha.view").write_text("<view>Alpha</view>", encoding="utf-8")
-    (solution_source / "views" / "zebra.view").write_text("<view>Zebra</view>", encoding="utf-8")
+    (nested_directory / "alpha.jsx").write_text("export default function Alpha() { return <Text>Alpha</Text>; }", encoding="utf-8")
+    (solution_source / "views" / "zebra.jsx").write_text("export default function Zebra() { return <Text>Zebra</Text>; }", encoding="utf-8")
     client = create_runtime_client()
 
     # Act
@@ -262,8 +263,10 @@ def test_root_redirect_skips_dynamic_views(solution_source: Path) -> None:
     # Arrange
     issues_directory = solution_source / "views" / "issues"
     issues_directory.mkdir()
-    (issues_directory / "[issue].view").write_text("<view>Issue</view>", encoding="utf-8")
-    (solution_source / "views" / "overview.view").write_text("<view>Overview</view>", encoding="utf-8")
+    (issues_directory / "[issue].jsx").write_text("export default function Issue() { return <Text>Issue</Text>; }", encoding="utf-8")
+    (solution_source / "views" / "overview.jsx").write_text(
+        "export default function Overview() { return <Text>Overview</Text>; }", encoding="utf-8"
+    )
     client = create_runtime_client()
 
     # Act
@@ -275,14 +278,14 @@ def test_root_redirect_skips_dynamic_views(solution_source: Path) -> None:
 
 
 def test_invalid_view_fails_during_registration(solution_source: Path) -> None:
-    """Validate SDK Views against component constraints before registering routes."""
+    """Reject empty JSX source before registering any View routes."""
 
     # Arrange: Discover the valid view before the invalid catalog entry.
-    (solution_source / "views" / "valid.view").write_text("<view>Valid</view>", encoding="utf-8")
-    (solution_source / "views" / "z-broken.view").write_text("<unknown />", encoding="utf-8")
+    (solution_source / "views" / "valid.jsx").write_text("export default function Valid() { return <Text>Valid</Text>; }", encoding="utf-8")
+    (solution_source / "views" / "z-broken.jsx").write_text(" ", encoding="utf-8")
 
     # Act and assert
-    with pytest.raises(ValueError, match="View is invalid"):
+    with pytest.raises(ValueError, match="View source must contain"):
         LongLink()
 
 
@@ -290,12 +293,12 @@ def test_invalid_view_fails_during_registration(solution_source: Path) -> None:
     ("first_view", "second_view", "message"),
     [
         pytest.param(
-            "issues/[id].view",
-            "issues/[issue_id].view",
+            "issues/[id].jsx",
+            "issues/[issue_id].jsx",
             "Browser route '/issues/:issue_id' is already registered",
             id="dynamic",
         ),
-        pytest.param("index.view", "index/index.view", "Browser route '/' is already registered", id="static"),
+        pytest.param("index.jsx", "index/index.jsx", "Browser route '/' is already registered", id="static"),
     ],
 )
 def test_duplicate_browser_routes_are_rejected(
@@ -311,8 +314,8 @@ def test_duplicate_browser_routes_are_rejected(
     second_path = solution_source / "views" / second_view
     first_path.parent.mkdir(parents=True, exist_ok=True)
     second_path.parent.mkdir(parents=True, exist_ok=True)
-    first_path.write_text("<view>First</view>", encoding="utf-8")
-    second_path.write_text("<view>Second</view>", encoding="utf-8")
+    first_path.write_text("export default function First() { return <Text>First</Text>; }", encoding="utf-8")
+    second_path.write_text("export default function Second() { return <Text>Second</Text>; }", encoding="utf-8")
 
     # Act and assert
     with pytest.raises(ValueError, match=message):
