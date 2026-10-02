@@ -529,10 +529,10 @@
         <Stack gap="3">
             <Stack direction="horizontal" gap="2" align="center" wrap="wrap">
                 <Text type="supporting" color="secondary">
-                    Current ${imageDigest(updateCandidate.current_image)}
+                    Current ${updateCandidate.current_image_digest}
                 </Text>
                 <Text type="supporting" color="primary">
-                    New ${imageDigest(updateCandidate.metadata.image)}
+                    New ${updateCandidate.image_digest}
                 </Text>
             </Stack>
             <For each="$updateCandidate.metadata.environments" as="environment">

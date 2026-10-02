@@ -44,7 +44,7 @@
                 <TableColumn field="image_desired" header="Image" width="${2}">
                     <Stack align="start">
                         <Text>
-                            ${imageReference(row.image_desired)}
+                            $row.image_reference
                         </Text>
                         <Text type="supporting">
                             Revision: ${row.desired_revision_id ?? 'Not selected'}

@@ -310,7 +310,9 @@ export const zSolutionUpdateCheck = z.object({
     revision_id: z.uuid(),
     current_image: z.string(),
     configured_envs: z.array(z.string()),
-    metadata: zLongLinkMetadata
+    metadata: zLongLinkMetadata,
+    image_digest: z.string().readonly(),
+    current_image_digest: z.string().readonly()
 });
 
 /**
@@ -375,7 +377,8 @@ export const zSolutionResponse = z.object({
     deployed_revision_id: z.uuid().nullable(),
     status: zStatus,
     deployment_pending: z.boolean(),
-    created_at: z.iso.datetime()
+    created_at: z.iso.datetime(),
+    image_reference: z.string().readonly()
 });
 
 /**
@@ -459,6 +462,47 @@ export const zUserSummary = z.object({
 export const zUserUpdate = z.object({
     name: z.string().min(1).max(255).nullish(),
     avatar: z.string().max(2048).nullish()
+});
+
+/**
+ * SolutionResponse
+ *
+ * Represent one solution in API responses.
+ */
+export const zSolutionResponseWritable = z.object({
+    id: z.uuid(),
+    organization: zOrganizationIdentity,
+    name: z.string(),
+    slug: z.string(),
+    description: z.string().nullable(),
+    image_desired: z.string(),
+    desired_revision_id: z.uuid().nullable(),
+    deployed_revision_id: z.uuid().nullable(),
+    status: zStatus,
+    deployment_pending: z.boolean(),
+    created_at: z.iso.datetime()
+});
+
+/**
+ * Page[SolutionResponse]
+ */
+export const zPageSolutionResponseWritable = z.object({
+    items: z.array(zSolutionResponseWritable),
+    total: z.int().gte(0)
+});
+
+/**
+ * SolutionUpdateCheck
+ *
+ * Expose a candidate and configured names, never environment values.
+ */
+export const zSolutionUpdateCheckWritable = z.object({
+    min_scale: z.union([z.literal(0), z.literal(1)]),
+    idle_seconds: z.int(),
+    revision_id: z.uuid(),
+    current_image: z.string(),
+    configured_envs: z.array(z.string()),
+    metadata: zLongLinkMetadata
 });
 
 /**
