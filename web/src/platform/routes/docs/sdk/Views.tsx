@@ -37,10 +37,8 @@ import { componentDocumentation, documentationCategories } from '@/lib/generated
 /** Leaves inert, controlled previews unchanged. */
 const noop = () => {};
 
-// Preview artwork is presentation-only; XML determines catalog membership and categories.
+// Preview artwork is presentation-only; JSX declarations determine catalog membership and categories.
 const previews: Record<string, ReactNode> = {
-    Expressions: <Code>{'${order.total > 0}'}</Code>,
-    Bindings: <Code>{'value="$form.name"'}</Code>,
     Button: (
         <Stack direction="horizontal" gap={2} align="center" wrap="wrap">
             <Button label="Save" size="sm" variant="primary" />
@@ -71,8 +69,8 @@ const previews: Record<string, ReactNode> = {
     ),
     CodeBlock: (
         <CodeBlock
-            code={'<view>\n  <Text>Hello world</Text>\n</view>'}
-            language="xml"
+            code={'export default function Welcome() {\n  return <Text>Hello world</Text>;\n}'}
+            language="jsx"
             size="sm"
             width="100%"
             hasCopyButton={false}
@@ -171,7 +169,7 @@ const previews: Record<string, ReactNode> = {
             <Stack aria-hidden="true" className="h-5 w-16 rounded-full bg-neutral" />
         </Stack>
     ),
-    Tabs: (
+    TabList: (
         <TabList onChange={noop} value="overview">
             <Tab label="Overview" value="overview" />
             <Tab label="Activity" value="activity" />
@@ -225,11 +223,11 @@ const article = {
         ...documentationCategories.map(({ name }) => ({ id: name.toLowerCase(), label: name, level: 2 })),
     ],
     lastUpdated: '2026-10-01',
-    editUrl: 'https://github.com/xLongLink/longlink/edit/main/sdk/longlink/.static/xsd/schema.xsd',
+    editUrl: 'https://github.com/xLongLink/longlink/edit/main/sdk/longlink/.static/new/src/views/frontend.d.ts',
     title: 'Views | LongLink Documentation',
 };
 
-/** Renders the UI catalog using categories from the XML schema. */
+/** Renders the native JSX catalog generated from the shared editor declarations. */
 export default function DocsArticleRoute() {
     return (
         <Article page={article}>
@@ -238,12 +236,14 @@ export default function DocsArticleRoute() {
                     Views
                 </Heading>
                 <Text as="p">
-                    Create each interface as a single .view file. Use components, state, queries, and actions to define
-                    what the user sees, how data is displayed, and what happens when they interact with it.
+                    Create each interface as a .jsx file exporting a default React component. LongLink supplies React,
+                    UI components, state hooks, queries, and scoped requests. Your Python Solution needs no frontend
+                    build.
                 </Text>
                 <Text as="p">
-                    They are intentionally simple and consistent, closer to writing HTML than building a traditional
-                    frontend.
+                    Solution code runs in a sandboxed iframe with an opaque origin, not inside the Platform page. Use
+                    request() and navigate() for your own Solution. Direct network access and Platform credentials are
+                    unavailable. Optional adjacent .json files supply name and icon metadata.
                 </Text>
                 <Stack as="aside" className="border-s border-accent ps-4" gap={0}>
                     <Text weight="semibold">Why?</Text>
@@ -253,9 +253,11 @@ export default function DocsArticleRoute() {
                     </Text>
                 </Stack>
                 <CodeBlock
-                    code={'<view name="Welcome" icon="layout-dashboard">\n  <Text>Welcome</Text>\n</view>'}
-                    language="xml"
-                    title="welcome.view"
+                    code={
+                        'export default function Welcome() {\n  return <Stack gap={3}><Heading level={1}>Welcome</Heading><Text>Hello world</Text></Stack>;\n}'
+                    }
+                    language="jsx"
+                    title="welcome.jsx"
                     hasLanguageLabel={false}
                 />
                 {documentationCategories.map((category) => (
@@ -270,7 +272,13 @@ export default function DocsArticleRoute() {
                                     <Stack key={component.slug} className="relative" gap={2}>
                                         <Card aria-hidden="true" inert padding={3} variant="muted">
                                             <Center className="h-40 scale-90" width="100%">
-                                                {previews[component.name] ?? <Code>{`<${component.name} />`}</Code>}
+                                                {previews[component.name] ?? (
+                                                    <Code>
+                                                        {component.category === 'Runtime'
+                                                            ? component.name
+                                                            : `<${component.name} />`}
+                                                    </Code>
+                                                )}
                                             </Center>
                                         </Card>
                                         <Text type="supporting">{component.name}</Text>

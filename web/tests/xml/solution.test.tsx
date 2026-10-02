@@ -1,5 +1,7 @@
 // @vitest-environment happy-dom
 import { act } from 'react';
+import { webcrypto } from 'node:crypto';
+import { requestUrl } from '@/views/host';
 import { createRoot } from 'react-dom/client';
 import { cleanupMountedRoot } from './helpers';
 import { ApiErrorContext } from '@/lib/errors';
@@ -11,10 +13,13 @@ import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
 
 describe('SolutionRuntime', () => {
     let root: ReturnType<typeof createRoot> | undefined;
+    let mountedContainer: HTMLDivElement | undefined;
 
     afterEach(async () => {
         await cleanupMountedRoot(root);
         root = undefined;
+        mountedContainer?.remove();
+        mountedContainer = undefined;
         vi.unstubAllGlobals();
     });
 
@@ -35,7 +40,7 @@ describe('SolutionRuntime', () => {
         stubFetch((url) =>
             url.endsWith('/views.json')
                 ? Response.json([view('index', '/'), view('home', '/home')])
-                : xmlResponse('<view><Text>Home</Text></view>')
+                : sourceResponse('export default function Home() { return <Text>Home</Text>; }')
         );
 
         // Act
@@ -45,7 +50,7 @@ describe('SolutionRuntime', () => {
         // Router navigation does not settle inside act, so observe it directly.
         await vi.waitFor(() => expect(output.querySelector('[data-path]')?.getAttribute('data-path')).toBe('/home'));
         expect(output.querySelector('[data-path]')?.getAttribute('data-tabs')).toBe('/home');
-        await act(async () => vi.waitFor(() => expect(output.textContent).toContain('Home')));
+        await vi.waitFor(() => expect(output.querySelector('iframe')?.srcdoc).toContain('Content-Security-Policy'));
     });
 
     it('renders an empty manifest response', async () => {
@@ -81,7 +86,7 @@ describe('SolutionRuntime', () => {
             const url = input instanceof Request ? input.url : String(input);
 
             if (url.endsWith('/views.json'))
-                return Response.json([view('home', '/home', 'https://example.com/view.view')]);
+                return Response.json([view('home', '/home', 'https://example.com/view.jsx')]);
             throw new Error('View fetch must not occur');
         });
         vi.stubGlobal('fetch', fetchRequest);
@@ -98,44 +103,58 @@ describe('SolutionRuntime', () => {
         // Arrange
         stubFetch((url) => {
             if (url.endsWith('/views.json')) return Response.json([view('issue', '/issues/:issueId')]);
-            return xmlResponse('<view><Text>${params.issueId}</Text></view>');
+            return sourceResponse('export default function Issue() { return <Text>{params.issueId}</Text>; }');
         });
 
         // Act
         const output = await renderRuntime('/issues/42');
 
         // Assert
-        await act(async () => vi.waitFor(() => expect(output.textContent).toContain('42')));
+        await vi.waitFor(() => expect(output.querySelector('iframe')?.srcdoc).toContain('Content-Security-Policy'));
+        const frame = output.querySelector('iframe');
+        if (!frame?.contentWindow) throw new Error('Missing isolated frame');
+        const initialization = new Promise<MessageEvent>((resolve) =>
+            frame.contentWindow?.addEventListener('message', resolve, { once: true })
+        );
+        const session = frame.srcdoc.match(/__VIEW_SESSION__="([^"]+)"/)?.[1];
+        window.dispatchEvent(
+            new MessageEvent('message', { source: frame.contentWindow, origin: 'null', data: session })
+        );
+        expect((await initialization).data.params).toEqual({ issueId: '42' });
     });
 
-    it('keeps a custom manifest URL and fetches View markup beside it', async () => {
+    it('keeps a custom manifest URL and fetches JSX beside it without executing it in the host', async () => {
         // Arrange
         const requests: Request[] = [];
         vi.stubGlobal('fetch', async (input: RequestInfo | URL) => {
             if (!(input instanceof Request)) throw new Error('Expected a Request at the HTTP boundary');
             requests.push(input);
+            if (input.url.endsWith('/views/runtime.js') || input.url.endsWith('/views/runtime.css'))
+                return sourceResponse('');
 
             if (input.url.endsWith('/proxy/views.json?version=1#manifest')) {
                 return Response.json([view('home', '/home')]);
             }
 
-            return xmlResponse('<view><Text>Welcome</Text></view>');
+            return sourceResponse('export default function Welcome() { return <Text>Welcome</Text>; }');
         });
 
         // Act
         const output = await renderRuntime('/home', '/proxy/views.json?version=1#manifest');
 
         // Assert
-        await act(async () => vi.waitFor(() => expect(output.textContent).toContain('Welcome')));
-        expect(requests).toHaveLength(2);
+        await vi.waitFor(() => expect(output.querySelector('iframe')?.srcdoc).toContain('Content-Security-Policy'));
+        expect(requests).toHaveLength(4);
         const [manifestRequest, viewRequest] = requests;
         const manifestUrl = new URL(manifestRequest.url);
         const viewUrl = new URL(viewRequest.url);
         expect(`${manifestUrl.pathname}${manifestUrl.search}${manifestUrl.hash}`).toBe(
             '/proxy/views.json?version=1#manifest'
         );
-        expect(viewUrl.pathname).toBe('/proxy/home.view');
+        expect(viewUrl.pathname).toBe('/proxy/home.jsx');
         expect(viewRequest.headers.get('accept')).toBe('text/plain');
+        expect(output.querySelector('iframe')?.getAttribute('sandbox')).toBe('allow-scripts');
+        expect(output.textContent).not.toContain('Welcome');
     });
 
     it('rejects unmatched routes', async () => {
@@ -154,44 +173,27 @@ describe('SolutionRuntime', () => {
         expect(response).toHaveBeenCalledOnce();
     });
 
-    it('navigates same-origin XML destinations through the client router', async () => {
-        // Arrange
-        stubFetch((url) => {
-            if (url.endsWith('/views.json')) return Response.json([view('home', '/home')]);
-            return xmlResponse('<view><Button to="/next">Continue</Button></view>');
-        });
-        const output = await renderRuntime('/home');
-
-        await act(async () => vi.waitFor(() => expect(output.querySelector('button')).not.toBeNull()));
-
-        // Act
-        await act(async () => output.querySelector('button')?.click());
-
-        // Assert
-        await act(async () =>
-            vi.waitFor(() => expect(output.querySelector('[data-path]')?.getAttribute('data-path')).toBe('/next'))
+    it('resolves bridge requests only inside the selected Solution proxy', () => {
+        expect(requestUrl('/api/v1/solutions/selected/proxy/', '/api/items?page=1')).toBe(
+            '/api/v1/solutions/selected/proxy/api/items?page=1'
         );
+        expect(() => requestUrl('/api/v1/solutions/selected/proxy/', '/../users')).toThrow();
+        expect(() => requestUrl('/api/v1/solutions/selected/proxy/', '/%252e%252e/users')).toThrow();
     });
 
-    it('renders external XML destinations as anchors', async () => {
-        // Arrange
-        stubFetch((url) => {
-            if (url.endsWith('/views.json')) return Response.json([view('home', '/home')]);
-            return xmlResponse('<view><Link href="https://example.com/next">Continue</Link></view>');
-        });
-        const output = await renderRuntime('/home');
-
-        await act(async () => vi.waitFor(() => expect(output.querySelector('a')).not.toBeNull()));
-
-        // Assert
-        expect(output.querySelector('a')?.getAttribute('href')).toBe('https://example.com/next');
+    it('rejects external destinations rather than granting browser navigation capabilities', () => {
+        expect(() => requestUrl('/api/v1/solutions/selected/proxy/', 'https://example.com/next')).toThrow();
+        expect(() => requestUrl('/api/v1/solutions/selected/proxy/', '//example.com/next')).toThrow();
     });
 
     async function renderRuntime(initialPath = '/', viewsUrl = '/views.json'): Promise<HTMLDivElement> {
         const container = document.createElement('div');
+        mountedContainer = container;
+        document.body.append(container);
         const mountedRoot = createRoot(container);
         root = mountedRoot;
         vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
+        vi.stubGlobal('crypto', webcrypto);
         const { client, reportError } = createQueryRuntime(() => {}, false);
         client.setDefaultOptions({ queries: { retry: false } });
 
@@ -233,7 +235,7 @@ function Location({ tabs }: { tabs: string }) {
 }
 
 /** Creates a minimal manifest view. */
-function view(name: string, route: string, path = `${name}.view`) {
+function view(name: string, route: string, path = `${name}.jsx`) {
     return { name, path, route };
 }
 
@@ -241,12 +243,13 @@ function view(name: string, route: string, path = `${name}.view`) {
 function stubFetch(response: (url: string) => Response): void {
     vi.stubGlobal('fetch', async (input: RequestInfo | URL) => {
         const url = input instanceof Request ? input.url : String(input);
+        if (url.endsWith('/views/runtime.js') || url.endsWith('/views/runtime.css')) return sourceResponse('');
 
         return response(url);
     });
 }
 
-/** Creates an XML fetch response. */
-function xmlResponse(body: string): Response {
+/** Creates a source fetch response. */
+function sourceResponse(body: string): Response {
     return new Response(body, { headers: { 'Content-Type': 'text/plain' } });
 }

@@ -4,7 +4,7 @@ from fastapi import FastAPI, APIRouter
 from pathlib import Path
 from dataclasses import dataclass
 from fsspec.spec import AbstractFileSystem
-from longlink.views import ViewDefinition, view_stem_route
+from longlink.views import ViewMetadata, ViewDefinition, view_stem_route
 from collections.abc import Callable
 from longlink.errors import install_error_handlers
 from longlink.logger import ApiAccessFilter
@@ -14,7 +14,6 @@ from fastapi.responses import Response, RedirectResponse
 from starlette.routing import Match, BaseRoute
 from longlink.constants import ROOT
 from longlink.middleware import FrontendMiddleware
-from longlink.utils.view import validate_view
 from longlink.storage.base import create_fs
 from longlink.database.base import LOCAL_USER_ID, Database
 from longlink.utils.settings import Envs
@@ -29,11 +28,11 @@ class RuntimeState:
 
 
 def _view_handler(content: str) -> Callable[[], Response]:
-    """Capture static View markup without exposing it as a request parameter."""
+    """Capture JSX source without exposing it as a request parameter."""
 
     # Bind each document in its own closure before FastAPI inspects the endpoint signature.
     def view() -> Response:
-        """Return the validated View captured during application startup."""
+        """Return JSX source captured during application startup without executing it."""
 
         return Response(content, media_type="text/plain")
 
@@ -57,7 +56,7 @@ class LongLink(FastAPI):
         if not frontend_index.is_file():
             raise RuntimeError(f"LongLink embedded frontend is required: {frontend_index}")
 
-        # Solutions provide .view files in the generated source layout.
+        # Solutions provide .jsx files in the generated source layout.
         views_directory = Path.cwd() / "src" / "views"
         if not views_directory.is_dir():
             raise ValueError(f"Solution source directory is required: {views_directory}")
@@ -177,16 +176,19 @@ class LongLink(FastAPI):
         registered_route_keys: set[str] = set()
         discovered_views: list[tuple[ViewDefinition, str]] = []
 
-        # Discover .view files in deterministic order.
-        for view_file in sorted(views_directory.rglob("*.view")):
-            path_without_suffix = view_file.relative_to(views_directory).as_posix().removesuffix(".view")
+        # Discover JSX source in deterministic order without compiling JavaScript in Python.
+        for view_file in sorted(views_directory.rglob("*.jsx")):
+            path_without_suffix = view_file.relative_to(views_directory).as_posix().removesuffix(".jsx")
 
             view_path = f"views/{path_without_suffix}"
-            # Validate component markup and extract optional display metadata.
+            # Read source and validate optional sidecar metadata, never JavaScript exports.
             content = view_file.read_text(encoding="utf-8")
-            view_root = validate_view(content)
-            view_name = view_root.get("name", "").strip() or None
-            view_icon = view_root.get("icon", "").strip() or None
+            if not content.strip() or len(content.encode("utf-8")) > 1_000_000:
+                raise ValueError(f"View source must contain between 1 and 1000000 bytes: {view_file}")
+            metadata_file = view_file.with_suffix(".json")
+            metadata = ViewMetadata()
+            if metadata_file.is_file():
+                metadata = ViewMetadata.model_validate_json(metadata_file.read_text(encoding="utf-8"))
 
             view_route = view_stem_route(path_without_suffix)
             relative_route = view_route.removeprefix("/")
@@ -201,8 +203,8 @@ class LongLink(FastAPI):
                     ViewDefinition(
                         path=view_path,
                         route=view_route,
-                        name=view_name,
-                        icon=view_icon,
+                        name=metadata.name,
+                        icon=metadata.icon,
                     ),
                     content,
                 )

@@ -1,15 +1,16 @@
 import { api } from '@/lib/api';
-import { parseView } from '@/xml';
+import * as host from '@/views/host';
 import type { ReactNode } from 'react';
-import { viewsSchema } from '@/xml/views';
 import { startCase } from 'es-toolkit/compat';
+import { JsxView } from '@/components/JsxView';
 import { PageError } from '@/components/Utils';
+import { viewsSchema } from '@/views/manifest';
 import { useQuery } from '@tanstack/react-query';
 import { Center } from '@astryxdesign/core/Center';
 import { Spinner } from '@astryxdesign/core/Spinner';
 import { matchRoutes, Navigate, useParams } from 'react-router';
-import { RouterXmlRuntime } from '@/components/RouterXmlRuntime';
 import type { NavigationTab } from '@/platform/layouts/Platform';
+import { MAX_SOURCE_SIZE, MAX_MESSAGE_SIZE } from '@/views/protocol';
 import { resolveNavigationUrl, resolveRequestUrl } from '@/xml/core/url';
 import {
     Activity,
@@ -105,8 +106,17 @@ export function SolutionRuntime({ children, navigationBaseUrl = '/', viewsUrl = 
     const requestBaseUrl = viewsUrl.startsWith('/') ? requestBaseLocation.pathname : requestBaseLocation.toString();
     const { data: registeredViews, error: viewsError } = useQuery({
         queryKey: ['api', viewsUrl],
-        queryFn: async ({ signal }) =>
-            viewsSchema.parse(await api(viewsUrl, { signal, timeout: SOLUTION_REQUEST_TIMEOUT_MS }).json()),
+        queryFn: async ({ signal }) => {
+            const lifetime = AbortSignal.any([signal, AbortSignal.timeout(SOLUTION_REQUEST_TIMEOUT_MS)]);
+            const response = await api(viewsUrl, {
+                signal: lifetime,
+                timeout: SOLUTION_REQUEST_TIMEOUT_MS,
+                redirect: 'error',
+            });
+            const body = await host.read(response, MAX_MESSAGE_SIZE);
+            const data: unknown = JSON.parse(await body.text());
+            return viewsSchema.parse(data);
+        },
     });
     const views = registeredViews ?? EMPTY_VIEWS;
     const match = matchRoutes(
@@ -124,20 +134,24 @@ export function SolutionRuntime({ children, navigationBaseUrl = '/', viewsUrl = 
     const activeView = routePath ? match?.route.view : undefined;
     const activeViewTitle = activeView ? (activeView.name ?? routeLabel(activeView.route)) : undefined;
     const isNotFound = registeredViews !== undefined && routePath.length > 0 && match == null;
-    const { data: activeViewAst, error: activeViewError } = useQuery({
+    const { data: activeViewSource, error: activeViewError } = useQuery({
         enabled: routePath.length > 0 && activeView !== undefined,
         queryKey: ['api', 'solution-view', viewsUrl, activeView?.path],
         queryFn: async ({ signal }) => {
             if (!activeView) throw new Error('No active View');
 
             const viewUrl = resolveRequestUrl(requestBaseUrl, activeView.path);
-            const content = await api(viewUrl, {
+            const lifetime = AbortSignal.any([signal, AbortSignal.timeout(SOLUTION_REQUEST_TIMEOUT_MS)]);
+            const response = await api(viewUrl, {
                 headers: { Accept: 'text/plain' },
-                signal,
+                signal: lifetime,
+                redirect: 'error',
                 timeout: SOLUTION_REQUEST_TIMEOUT_MS,
-            }).text();
+            });
+            const body = await host.read(response, MAX_SOURCE_SIZE);
+            const content = await body.text();
 
-            return parseView(content);
+            return content;
         },
         retry: false,
     });
@@ -170,10 +184,10 @@ export function SolutionRuntime({ children, navigationBaseUrl = '/', viewsUrl = 
                 title="Unable to load this solution"
             />
         );
-    } else if (activeViewAst && activeView && match) {
+    } else if (activeViewSource && activeView && match) {
         content = (
-            <RouterXmlRuntime
-                ast={activeViewAst}
+            <JsxView
+                source={activeViewSource}
                 key={JSON.stringify([viewsUrl, navigationBaseUrl, activeView.route, activeView.path, routePath])}
                 navigationBaseUrl={navigationBaseUrl}
                 params={Object.fromEntries(

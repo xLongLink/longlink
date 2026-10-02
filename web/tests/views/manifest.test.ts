@@ -1,9 +1,9 @@
-import { viewsSchema } from '@/xml/views';
 import { describe, expect, it } from 'vitest';
+import { viewsSchema } from '@/views/manifest';
 
 /** Creates a valid manifest view with optional overrides. */
 function view(overrides: Partial<{ path: string; route: string; name: string; icon: string }> = {}) {
-    return { path: 'home.view', route: '/home', ...overrides };
+    return { path: 'home.jsx', route: '/home', ...overrides };
 }
 
 describe('viewsSchema', () => {
@@ -14,12 +14,12 @@ describe('viewsSchema', () => {
         }
     );
 
-    it.each(['https://example.com/home.view', '/%2e%2e/admin.view'])('rejects unsafe view paths: %s', (path) => {
+    it.each(['https://example.com/home.jsx', '/%2e%2e/admin.jsx'])('rejects unsafe view paths: %s', (path) => {
         expect(viewsSchema.safeParse([view({ path })]).success).toBe(false);
     });
 
     it('rejects duplicate routes', () => {
-        expect(viewsSchema.safeParse([view(), view({ path: 'other.view' })])).toMatchObject({
+        expect(viewsSchema.safeParse([view(), view({ path: 'other.jsx' })])).toMatchObject({
             success: false,
             error: { issues: [{ path: [1, 'route'], message: 'Routes must be unique' }] },
         });
@@ -28,8 +28,8 @@ describe('viewsSchema', () => {
     it('allows a dynamic detail view to share its static list tab', () => {
         expect(
             viewsSchema.safeParse([
-                view({ path: 'issues.view', route: '/issues' }),
-                view({ path: 'issue.view', route: '/issues/:issueId' }),
+                view({ path: 'issues.jsx', route: '/issues' }),
+                view({ path: 'issue.jsx', route: '/issues/:issueId' }),
             ]).success
         ).toBe(true);
     });

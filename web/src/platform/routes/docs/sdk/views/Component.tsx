@@ -5,23 +5,9 @@ import { Heading } from '@astryxdesign/core/Heading';
 import { Article } from '@/components/layouts/Article';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import NotFoundLayout from '@/components/layouts/NotFound';
-import { proportional, Table } from '@astryxdesign/core/Table';
-import { componentDocumentation, type ComponentDocumentation } from '@/lib/generated/documentation';
+import { componentDocumentation } from '@/lib/generated/documentation';
 
-function AttributeTable({ attributes }: { attributes: ComponentDocumentation['attributes'] }) {
-    return (
-        <Table
-            data={attributes}
-            columns={[
-                { key: 'name', header: 'Parameter', width: proportional(1) },
-                { key: 'description', header: 'Description', width: proportional(3) },
-            ]}
-            density="compact"
-        />
-    );
-}
-
-/** Renders component documentation generated from the SDK XSD schema. */
+/** Documents native JSX props using the same declarations supplied to Python Solution editors. */
 export default function DocsArticleRoute() {
     const { component: slug } = useParams();
     const component = componentDocumentation.find((candidate) => candidate.slug === slug);
@@ -31,15 +17,14 @@ export default function DocsArticleRoute() {
     }
 
     const article = {
-        description: component.description,
+        description: `Native JSX props for ${component.name}.`,
         lastUpdated: component.lastUpdated,
         toc: [
             { id: 'introduction', label: 'Introduction', level: 1 },
-            { id: 'example', label: 'Example', level: 2 },
-            ...component.nested.map((nested) => ({ id: nested.name.toLowerCase(), label: nested.name, level: 2 })),
+            { id: 'props', label: 'Props', level: 2 },
             { id: 'cli', label: 'Cli', level: 2 },
         ],
-        editUrl: `https://github.com/xLongLink/longlink/edit/main/sdk/longlink/.static/xsd/${component.source}`,
+        editUrl: 'https://github.com/xLongLink/longlink/edit/main/sdk/longlink/.static/new/src/views/frontend.d.ts',
         title: `${component.name} | LongLink Documentation`,
     };
 
@@ -49,29 +34,23 @@ export default function DocsArticleRoute() {
                 <Heading id="introduction" level={1}>
                     {component.name}
                 </Heading>
-                <Text as="p">{component.description}</Text>
-                {component.attributes.length > 0 ? <AttributeTable attributes={component.attributes} /> : null}
-                <Heading id="example" level={2}>
-                    Example
+                <Text as="p">
+                    {component.description} Values are JavaScript expressions, and writable controls use explicit
+                    callbacks. Package imports are not required.
+                </Text>
+                <Heading id="props" level={2}>
+                    Props
                 </Heading>
-                <CodeBlock code={component.example} language="xml" title="example.view" hasLanguageLabel={false} />
-                {component.nested.map((nested) => (
-                    <Stack key={nested.name} gap={3}>
-                        <Heading id={nested.name.toLowerCase()} level={2}>
-                            {nested.name}
-                        </Heading>
-                        <Text as="p">{nested.description}</Text>
-                        {nested.attributes.length > 0 ? <AttributeTable attributes={nested.attributes} /> : null}
-                        {nested.example ? (
-                            <CodeBlock
-                                code={nested.example}
-                                language="xml"
-                                title="example.view"
-                                hasLanguageLabel={false}
-                            />
-                        ) : null}
-                    </Stack>
-                ))}
+                <CodeBlock
+                    code={component.declaration}
+                    language="typescript"
+                    title="frontend.d.ts"
+                    hasLanguageLabel={false}
+                />
+                <Text as="p">
+                    These declarations provide editor hints; you do not need to write TypeScript. See the generated
+                    invoice Views for complete JSX examples.
+                </Text>
                 <Heading id="cli" level={2}>
                     Cli
                 </Heading>

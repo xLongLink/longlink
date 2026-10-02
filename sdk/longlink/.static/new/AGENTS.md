@@ -29,12 +29,12 @@ You are working on a LongLink Solution project:
 
 ## Views
 
-- A View uses case-sensitive LongLink markup in a `.view` file, not standard XML or browser HTML.
-- Keep attribute values quoted. Raw `&&`, `<`, and `>` are supported inside quoted expressions.
-- Use one `<view>` root and explicit closing or self-closing component tags; do not add XML declarations or schema hints.
-- Run `longlink docs ui` to discover the supported components and runtime concepts by category.
-- Run `longlink docs ui --component <component>` before using a component to inspect its attributes, children, and examples.
-- Do not invent elements or attributes that are absent from the component documentation.
+- A View is a `.jsx` file exporting one default React component; no frontend build is needed in the Solution.
+- React, LongLink UI components, `request`, `navigate`, `params`, `useQuery`, and `useQueryClient` are supplied by the isolated renderer. Do not import packages.
+- Use ordinary JSX props, React state, controlled input callbacks, and JavaScript expressions.
+- An optional adjacent `.json` file defines `name` and `icon`; Python validates metadata without executing JavaScript.
+- Requests are Solution-relative and pass through a restricted host bridge. Never use direct fetch, Platform credentials, external resources, or parent-window access.
+- Keep loading and error states explicit. Use the sample Views as the current JSX API reference.
 
 ## Python Guidelines
 

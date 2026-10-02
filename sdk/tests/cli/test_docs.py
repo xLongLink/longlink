@@ -3,18 +3,18 @@ from longlink.cli.main import main
 
 
 def test_docs_command_lists_documented_component_categories() -> None:
-    """Expose the XML component catalog through the public CLI."""
+    """Expose JSX components and scoped runtime capabilities through the public CLI."""
 
     # Act
     result = CliRunner().invoke(main, ["docs", "ui"])
 
     # Assert
     assert result.exit_code == 0
-    assert "LongLink View components" in result.output
+    assert "LongLink JSX View components" in result.output
     assert all(category in result.output for category in ("Runtime", "Actions", "Content", "Form", "Layouts"))
-    assert "- Bindings - Connects writable control values" in result.output
-    assert "- Expressions - Evaluates a safe JavaScript expression subset" in result.output
-    assert "- Button - Button runs child effects in order when clicked" in result.output
+    assert "React state and controlled callbacks" in result.output
+    assert "- request" in result.output
+    assert "- Button" in result.output
 
 
 def test_docs_command_resolves_a_component_name_case_insensitively() -> None:
@@ -26,8 +26,8 @@ def test_docs_command_resolves_a_component_name_case_insensitively() -> None:
     # Assert
     assert result.exit_code == 0
     assert "Button [Actions]" in result.output
-    assert "Attributes" in result.output
-    assert "- variant: ButtonVariantType" in result.output
+    assert "Props and types" in result.output
+    assert "clickAction" in result.output
     assert "Example" in result.output
 
 

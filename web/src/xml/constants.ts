@@ -1,4 +1,4 @@
-/** Enumerated XML values mirrored from sdk/longlink/.static/xsd/types.xsd. */
+/** Native UI values supported by the trusted internal Platform markup adapters. */
 export const ACTION_METHODS = ['DELETE', 'GET', 'PATCH', 'POST', 'PUT'] as const;
 export const TEXT_COLORS = ['primary', 'secondary'] as const;
 export const TEXT_TYPES = ['body', 'large', 'label', 'supporting', 'code'] as const;
