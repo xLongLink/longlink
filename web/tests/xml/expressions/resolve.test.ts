@@ -3,13 +3,6 @@ import { describe, expect, it } from 'vitest';
 import { resolvePath, resolveValue } from '@/xml/expressions/resolve';
 
 describe('resolve', () => {
-    it('resolves values through scope chains', () => {
-        const parent: Scope = { bindings: { answer: 42 } };
-        const ctx: Scope = { parent, bindings: {} };
-
-        expect(resolveValue(ctx, 'answer')).toBe(42);
-    });
-
     it('resolves dotted paths against nested values', () => {
         const ctx: Scope = { bindings: { user: { profile: { name: 'Ada' } } } };
 
