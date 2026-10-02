@@ -1,3 +1,4 @@
+import type { z } from 'zod';
 import { api } from '@/lib/api';
 import { useState } from 'react';
 import { NoIndex } from '@/components/Seo';
@@ -34,15 +35,11 @@ export default function Settings() {
     );
 }
 
-/** Edits the authenticated profile and manages owned organizations.
- * @param {{ user: import('zod').output<typeof schemas.zUserSummary> }} props
- */
-function SettingsPage({ user }) {
+/** Edits the authenticated profile and manages owned organizations. */
+function SettingsPage({ user }: { user: z.output<typeof schemas.zUserSummary> }) {
     const [name, setName] = useState(user.name);
     const [creating, setCreating] = useState(false);
-    const [deletion, setDeletion] = useState(
-        /** @type {import('zod').output<typeof schemas.zUserOrganizationMembership> | null} */ (null)
-    );
+    const [deletion, setDeletion] = useState<{ id: string; name: string } | null>(null);
     const client = useQueryClient();
     const action = useAction();
     const memberships = useApi('/api/v1/me/organizations', schemas.zGetMyOrganizationsApiV1MeOrganizationsGetResponse);
@@ -159,7 +156,12 @@ function SettingsPage({ user }) {
                                                             <Button
                                                                 label="Delete"
                                                                 variant="destructive"
-                                                                onClick={() => setDeletion(row)}
+                                                                onClick={() =>
+                                                                    setDeletion({
+                                                                        id: row.organization.id,
+                                                                        name: row.organization.name,
+                                                                    })
+                                                                }
                                                             />
                                                         ),
                                                 },
@@ -187,7 +189,7 @@ function SettingsPage({ user }) {
                         }}
                     />
                     <Stack gap={3}>
-                        <Text color="secondary">Delete {deletion.organization.name} from your account?</Text>
+                        <Text color="secondary">Delete {deletion.name} from your account?</Text>
                         <Stack direction="horizontal" gap={2} justify="end">
                             <Button
                                 label="Cancel"
@@ -202,7 +204,7 @@ function SettingsPage({ user }) {
                                 onClick={() =>
                                     action.mutate(async () => {
                                         // Leave the confirmation open on failure and refresh memberships on success.
-                                        await api.delete(`/api/v1/organizations/${deletion.organization.id}`);
+                                        await api.delete(`/api/v1/organizations/${deletion.id}`);
                                         await client.invalidateQueries({
                                             queryKey: ['api', '/api/v1/me/organizations'],
                                             exact: true,

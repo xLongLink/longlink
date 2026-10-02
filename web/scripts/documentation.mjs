@@ -119,35 +119,25 @@ for (const entry of components) {
 }
 
 // Keep website-only reference content out of the SDK's declaration catalog.
-const referenceFilename = path.resolve(root, 'src/lib/generated/components.json');
-const referenceOutput = `${JSON.stringify(references, null, 4)}\n`;
-const currentReferences = await readFile(referenceFilename, 'utf8').catch((error) => {
-    if (error.code === 'ENOENT') return undefined;
-    throw error;
-});
-if (currentReferences !== referenceOutput) {
-    if (process.argv.includes('--check')) {
-        console.error(`Generated documentation is stale: ${referenceFilename}`);
-        process.exitCode = 1;
-    } else {
-        await writeFile(referenceFilename, referenceOutput, 'utf8');
-    }
-}
-
-const filename = path.resolve(root, '../sdk/longlink/.static/jsx/components.json');
-const output = `${JSON.stringify(components, null, 4)}\n`;
+const outputs = [
+    { filename: path.resolve(root, 'src/lib/generated/components.json'), data: references },
+    { filename: path.resolve(root, '../sdk/longlink/.static/jsx/components.json'), data: components },
+];
 
 // CLI and website documentation share one generated catalog; checking must not modify files.
-const current = await readFile(filename, 'utf8').catch((error) => {
-    // Only a missing output is regenerable; surface permission and other I/O failures.
-    if (error.code === 'ENOENT') return undefined;
-    throw error;
-});
-if (current !== output) {
-    if (process.argv.includes('--check')) {
-        console.error(`Generated documentation is stale: ${filename}`);
-        process.exitCode = 1;
-    } else {
-        await writeFile(filename, output, 'utf8');
+for (const { filename, data } of outputs) {
+    const output = `${JSON.stringify(data, null, 4)}\n`;
+    const current = await readFile(filename, 'utf8').catch((error) => {
+        // Only a missing output is regenerable; surface permission and other I/O failures.
+        if (error.code === 'ENOENT') return undefined;
+        throw error;
+    });
+    if (current !== output) {
+        if (process.argv.includes('--check')) {
+            console.error(`Generated documentation is stale: ${filename}`);
+            process.exitCode = 1;
+        } else {
+            await writeFile(filename, output, 'utf8');
+        }
     }
 }

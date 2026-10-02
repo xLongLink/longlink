@@ -3,8 +3,8 @@ import { act } from 'react';
 import { ApiProvider } from '@/providers';
 import { createRoot } from 'react-dom/client';
 import { cleanupMountedRoot } from './helpers';
+import Settings from '@/platform/routes/orgs/Settings';
 import { LayerProvider } from '@astryxdesign/core/Layer';
-import Settings from '@/platform/routes/orgs/Settings.jsx';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -35,7 +35,7 @@ describe('Solution source update dialog', () => {
         vi.unstubAllGlobals();
     });
 
-    it('uses the native JSX dialog to review and submit a source update', async () => {
+    it('uses the native TSX dialog to review and submit a source update', async () => {
         const submissions: { path: string; body: unknown }[] = [];
         vi.stubGlobal('fetch', async (input: RequestInfo | URL, init?: RequestInit) => {
             const request = input instanceof Request ? input : new Request(input, init);

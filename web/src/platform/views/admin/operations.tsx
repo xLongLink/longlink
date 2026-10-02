@@ -1,3 +1,4 @@
+import type { z } from 'zod';
 import { useState } from 'react';
 import { Info } from 'lucide-react';
 import { useApi } from '@/lib/hooks/use-api';
@@ -23,9 +24,7 @@ const statuses = { scheduled: 'Scheduled', active: 'Active', completed: 'Complet
 /** Lists operation history and exposes its metadata. */
 export default function Operations() {
     const [page, setPage] = useState(1);
-    const [metadata, setMetadata] = useState(
-        /** @type {import('zod').output<typeof zPageOperationResponse>['items'][number] | null} */ (null)
-    );
+    const [metadata, setMetadata] = useState<z.output<typeof zPageOperationResponse>['items'][number] | null>(null);
     const operations = useApi(`/api/v1/operations?page=${page}&page_size=25`, zPageOperationResponse);
 
     // Keep loading and failures distinct from an empty result.

@@ -13,16 +13,6 @@ import NotFoundLayout from '@/components/layouts/NotFound';
 import { documentationLastUpdated } from '@/lib/documentation';
 import { Table, proportional } from '@astryxdesign/core/Table';
 
-type ComponentReference = {
-    name: string;
-    url: string;
-    introduction: string;
-    anatomy: { name: string; required: boolean; description: string }[];
-    properties: { name: string; type: string; required?: boolean; default?: string; description: string }[];
-    practices: { guidance: boolean; description: string }[];
-    examples: { title: string; description: string; code: string }[];
-};
-
 const tabs = [
     { value: 'examples', label: 'Examples' },
     { value: 'anatomy', label: 'Anatomy' },
@@ -64,7 +54,7 @@ export default function DocsArticleRoute() {
     // Resolve the catalog entry before accessing its generated reference.
     const component = componentDocumentation.find((candidate) => candidate.slug === slug);
     if (!component) return <NotFoundLayout />;
-    const reference: ComponentReference | undefined = references.find((candidate) => candidate.name === component.name);
+    const reference = references.find((candidate) => candidate.name === component.name);
     const solution = solutionReferences[component.name];
     const practices = reference?.practices ?? (solution ? [{ guidance: true, description: solution.practice }] : []);
     const requestedTab = searchParams.get('tab');

@@ -1,3 +1,4 @@
+import type { z } from 'zod';
 import { api } from '@/lib/api';
 import { useState } from 'react';
 import { Info } from 'lucide-react';
@@ -20,11 +21,11 @@ import { zPageOrganizationIdentity } from '@/lib/generated/platform-api-v1/zod.g
 /** Lists organizations and confirms administrator deletion. */
 export default function Organizations() {
     const [page, setPage] = useState(1);
-    const [dialog, setDialog] = useState(
-        /** @type {{ kind: 'metadata' | 'deletion', item: import('zod').output<typeof zPageOrganizationIdentity>['items'][number] } | null} */ (
-            null
-        )
-    );
+    const [dialog, setDialog] = useState<
+        | { kind: 'metadata'; item: z.output<typeof zPageOrganizationIdentity>['items'][number] }
+        | { kind: 'deletion'; item: { id: string; name: string } }
+        | null
+    >(null);
     const client = useQueryClient();
     const action = useAction();
     const path = `/api/v1/organizations?page=${page}&page_size=25`;
@@ -118,7 +119,12 @@ export default function Organizations() {
                             <Button
                                 label="Delete"
                                 variant="destructive"
-                                onClick={() => setDialog({ kind: 'deletion', item: dialog.item })}
+                                onClick={() =>
+                                    setDialog({
+                                        kind: 'deletion',
+                                        item: { id: dialog.item.id, name: dialog.item.name },
+                                    })
+                                }
                             />
                         </Stack>
                     </Stack>

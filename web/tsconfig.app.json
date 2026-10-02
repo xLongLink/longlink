@@ -15,8 +15,6 @@
         "rootDirs": [".", "./.react-router/types"],
         "noEmit": true,
         "jsx": "react-jsx",
-        "allowJs": true,
-        "checkJs": true,
 
         /* Linting */
         "strict": true,
@@ -27,5 +25,5 @@
             "@/*": ["./src/*"]
         }
     },
-    "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.jsx", ".react-router/types/**/*"]
+    "include": ["src/**/*.ts", "src/**/*.tsx", ".react-router/types/**/*"]
 }

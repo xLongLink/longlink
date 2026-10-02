@@ -1,12 +1,12 @@
 import { useMatches } from 'react-router';
 import { NoIndex } from '@/components/Seo';
 import type { ComponentType } from 'react';
-import Users from '@/platform/views/admin/users.jsx';
-import Compute from '@/platform/views/admin/compute.jsx';
-import Solutions from '@/platform/views/admin/solutions.jsx';
-import Operations from '@/platform/views/admin/operations.jsx';
+import Users from '@/platform/views/admin/users';
+import Compute from '@/platform/views/admin/compute';
+import Solutions from '@/platform/views/admin/solutions';
+import Operations from '@/platform/views/admin/operations';
+import Organizations from '@/platform/views/admin/organizations';
 import { adminPages, type AdminPageId } from '@/platform/navigation';
-import Organizations from '@/platform/views/admin/organizations.jsx';
 
 const pageComponents: Record<AdminPageId, ComponentType> = {
     'admin-users': Users,
@@ -16,7 +16,7 @@ const pageComponents: Record<AdminPageId, ComponentType> = {
     'admin-operations': Operations,
 };
 
-/** Renders one native JSX administrator page. */
+/** Renders one native TSX administrator page. */
 export default function AdminPage() {
     const route = useMatches().at(-1);
 

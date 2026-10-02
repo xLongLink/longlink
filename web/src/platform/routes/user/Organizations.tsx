@@ -16,16 +16,6 @@ import CreateOrganization from '@/platform/views/user/CreateOrganization';
 
 /** Lists the current user's organizations and creates new organizations. */
 export default function Organizations() {
-    return (
-        <PageContainer padding={2}>
-            <NoIndex title="Organizations | LongLink" />
-            <OrganizationsPage />
-        </PageContainer>
-    );
-}
-
-/** Owns the organizations list and coordinates its creation dialog. */
-function OrganizationsPage() {
     const [creating, setCreating] = useState(false);
     const action = useAction();
     const memberships = useApi('/api/v1/me/organizations', schemas.zGetMyOrganizationsApiV1MeOrganizationsGetResponse);
@@ -68,13 +58,14 @@ function OrganizationsPage() {
 
     // Keep the dialog's draft mounted through list refresh failures, but hide unavailable content.
     return (
-        <>
+        <PageContainer padding={2}>
+            <NoIndex title="Organizations | LongLink" />
             {content}
             <CreateOrganization
                 isOpen={creating && !!memberships.data && !memberships.error}
                 onOpenChange={setCreating}
                 action={action}
             />
-        </>
+        </PageContainer>
     );
 }

@@ -2,15 +2,22 @@ import { api } from '@/lib/api';
 import { useState } from 'react';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
+import type { useAction } from '@/lib/hooks/use-api';
 import { useQueryClient } from '@tanstack/react-query';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import { zOrganizationCreate } from '@/lib/generated/platform-api-v1/zod.gen';
 
-/** Owns the creation draft while the parent coordinates page-wide actions.
- * @param {{ isOpen: boolean, onOpenChange: (open: boolean) => void, action: ReturnType<typeof import('@/lib/hooks/use-api').useAction> }} props
- */
-export default function CreateOrganization({ isOpen, onOpenChange, action }) {
+/** Owns the creation draft while the parent coordinates page-wide actions. */
+export default function CreateOrganization({
+    isOpen,
+    onOpenChange,
+    action,
+}: {
+    isOpen: boolean;
+    onOpenChange: (open: boolean) => void;
+    action: ReturnType<typeof useAction>;
+}) {
     const [name, setName] = useState('');
     const client = useQueryClient();
 

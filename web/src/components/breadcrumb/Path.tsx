@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { useLocation } from 'react-router';
-import { formatPathSegment } from '@/components/breadcrumb/text';
+import { buildBreadcrumbs } from '@/components/breadcrumb/text';
 import { BreadcrumbItem, Breadcrumbs } from '@astryxdesign/core/Breadcrumbs';
 
 /** Renders breadcrumb items derived from the current URL path. */
@@ -14,19 +14,17 @@ export function PathBreadcrumb({
     root?: ReactNode;
 }) {
     const { pathname } = useLocation();
-    const segments = pathname.split('/').filter(Boolean);
+    const items = buildBreadcrumbs(pathname, labels);
 
     return (
         <Breadcrumbs className={className} separator=">" variant="supporting">
             {root}
-            {segments.map((segment, index) => {
-                const isLast = index === segments.length - 1;
-                const path = `/${segments.slice(0, index + 1).join('/')}/`;
-                const href = path === '/docs/' ? '/docs/introduction/' : path;
+            {items.map(({ label, href }, index) => {
+                const isLast = index === items.length - 1;
 
                 return (
                     <BreadcrumbItem key={href} href={isLast ? undefined : href} isCurrent={isLast}>
-                        {formatPathSegment(segment, labels)}
+                        {label}
                     </BreadcrumbItem>
                 );
             })}

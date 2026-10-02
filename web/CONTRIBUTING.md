@@ -67,7 +67,7 @@ successful writes through `request()`.
 - If deployment CSP inherited by `srcdoc` blocks the bootstrap or evaluation, use a separate-origin renderer document rather than weakening the Platform policy.
 - VS Code supports JSX natively. Generated Solutions include JavaScript project configuration and editor declarations, not a custom extension.
 - Run `vp run build:views` to generate `public/views/runtime.js` and `runtime.css`; application builds include these static files. Solutions do not run this build themselves.
-- Bundled Platform pages are native, type-checked `.jsx` modules under `src/platform/views/`, using trusted Platform API access. Solution-provided source must only run in the isolated shared View runtime.
+- Bundled Platform pages are native, type-checked `.tsx` modules under `src/platform/`, using trusted Platform API access. Solution-provided `.jsx` source must only run in the isolated shared View runtime.
 
 ## Keep changes aligned
 

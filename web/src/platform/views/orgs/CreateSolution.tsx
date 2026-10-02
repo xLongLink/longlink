@@ -1,3 +1,4 @@
+import type { z } from 'zod';
 import { api } from '@/lib/api';
 import { useState } from 'react';
 import { useAction } from '@/lib/hooks/use-api';
@@ -9,18 +10,14 @@ import { Step, Stepper } from '@astryxdesign/core/Stepper';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 
-/** Owns one creation attempt, shared by the organization list and settings pages.
- * @param {{ organizationId: string, onClose: () => void }} props
- */
-export default function CreateSolution({ organizationId, onClose }) {
+/** Owns one creation attempt, shared by the organization list and settings pages. */
+export default function CreateSolution({ organizationId, onClose }: { organizationId: string; onClose: () => void }) {
     const [step, setStep] = useState(0);
     const [image, setImage] = useState('');
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
-    const [envs, setEnvs] = useState(/** @type {Record<string, string>} */ ({}));
-    const [metadata, setMetadata] = useState(
-        /** @type {import('zod').output<typeof schemas.zLongLinkMetadata> | null} */ (null)
-    );
+    const [envs, setEnvs] = useState<Record<string, string>>({});
+    const [metadata, setMetadata] = useState<z.output<typeof schemas.zLongLinkMetadata> | null>(null);
     const client = useQueryClient();
     const action = useAction();
 

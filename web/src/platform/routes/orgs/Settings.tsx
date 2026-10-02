@@ -1,5 +1,5 @@
+import type { z } from 'zod';
 import { api } from '@/lib/api';
-import { useState } from 'react';
 import { useParams } from 'react-router';
 import { NoIndex } from '@/components/Seo';
 import { Menu } from '@/components/ui/Menu';
@@ -20,6 +20,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useApi, useAction } from '@/lib/hooks/use-api';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { TextInput } from '@astryxdesign/core/TextInput';
+import { useState, type SubmitEventHandler } from 'react';
 import { ProgressBar } from '@astryxdesign/core/ProgressBar';
 import { Table, proportional } from '@astryxdesign/core/Table';
 import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
@@ -28,13 +29,33 @@ import CreateSolution from '@/platform/views/orgs/CreateSolution';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { useOrganizationMembership } from '@/lib/hooks/use-organization';
 
-/** @typedef {import('zod').output<typeof schemas.zOrganizationSolutionSummary>} Solution */
-/** @typedef {{ item: Solution, candidate: import('zod').output<typeof schemas.zSolutionUpdateCheck>, envs: Record<string, string>, removed: Record<string, boolean> }} Update */
+type Solution = z.output<typeof schemas.zOrganizationSolutionSummary>;
+type Update = {
+    item: { id: string; name: string };
+    candidate: z.output<typeof schemas.zSolutionUpdateCheck>;
+    envs: Record<string, string>;
+    removed: Record<string, boolean>;
+};
+type DeploymentReviewProps = {
+    update: Update;
+    isPending: boolean;
+    isDisabled: boolean;
+    onClose: () => void;
+    onSubmit: SubmitEventHandler<HTMLElement>;
+    onEnvironmentChange: (name: string, value: string) => void;
+    onRemovalChange: (name: string, value: boolean) => void;
+};
 
-/** Presents a deployment review while the parent owns the draft and submission.
- * @param {{ update: Update, isPending: boolean, isDisabled: boolean, onClose: () => void, onSubmit: import('react').SubmitEventHandler<HTMLElement>, onEnvironmentChange: (name: string, value: string) => void, onRemovalChange: (name: string, value: boolean) => void }} props
- */
-function DeploymentReview({ update, isPending, isDisabled, onClose, onSubmit, onEnvironmentChange, onRemovalChange }) {
+/** Presents a deployment review while the parent owns the draft and submission. */
+function DeploymentReview({
+    update,
+    isPending,
+    isDisabled,
+    onClose,
+    onSubmit,
+    onEnvironmentChange,
+    onRemovalChange,
+}: DeploymentReviewProps) {
     return (
         <Dialog
             isOpen
@@ -109,15 +130,11 @@ export default function OrganizationSettings() {
     const { organization = '' } = useParams();
     const [invitation, setInvitation] = useState({ email: '', role: 'write' });
     const [inviting, setInviting] = useState(false);
-    const [member, setMember] = useState(
-        /** @type {{ item: import('zod').output<typeof schemas.zOrganizationMemberAccessResponse>, role: string } | null} */ (
-            null
-        )
-    );
+    const [member, setMember] = useState<{ id: string; name: string; role: string } | null>(null);
     const [creating, setCreating] = useState(false);
-    const [update, setUpdate] = useState(/** @type {Update | null} */ (null));
-    const [deletion, setDeletion] = useState(/** @type {Solution | null} */ (null));
-    const [logs, setLogs] = useState(/** @type {Solution | null} */ (null));
+    const [update, setUpdate] = useState<Update | null>(null);
+    const [deletion, setDeletion] = useState<{ id: string; name: string } | null>(null);
+    const [logs, setLogs] = useState<string | null>(null);
     const client = useQueryClient();
     const action = useAction();
     const membership = useOrganizationMembership(organization);
@@ -130,7 +147,7 @@ export default function OrganizationSettings() {
         schemas.zGetOrganizationSolutionsApiV1OrganizationsOrganizationIdSolutionsGetResponse
     );
     const solutionLogs = useApi(
-        logs ? `/api/v1/solutions/${logs.id}/logs` : null,
+        logs ? `/api/v1/solutions/${logs}/logs` : null,
         schemas.zGetSolutionLogsApiV1SolutionsSolutionIdLogsGetResponse
     );
 
@@ -262,10 +279,12 @@ export default function OrganizationSettings() {
                                                                   {
                                                                       key: 'role',
                                                                       header: 'Actions',
-                                                                      align: /** @type {const} */ ('end'),
+                                                                      align: 'end' as const,
                                                                       width: proportional(0.5),
                                                                       renderCell: (
-                                                                          /** @type {import('zod').output<typeof schemas.zOrganizationMemberAccessResponse>} */ row
+                                                                          row: z.output<
+                                                                              typeof schemas.zOrganizationMemberAccessResponse
+                                                                          >
                                                                       ) => (
                                                                           <MoreMenu
                                                                               alignment="end"
@@ -281,7 +300,8 @@ export default function OrganizationSettings() {
                                                                                       label: `Set as ${role[0].toUpperCase() + role.slice(1)}`,
                                                                                       onClick: () =>
                                                                                           setMember({
-                                                                                              item: row,
+                                                                                              id: row.user.id,
+                                                                                              name: row.user.name,
                                                                                               role,
                                                                                           }),
                                                                                   }))}
@@ -336,10 +356,12 @@ export default function OrganizationSettings() {
                                                                   {
                                                                       key: 'id',
                                                                       header: 'Actions',
-                                                                      align: /** @type {const} */ ('end'),
+                                                                      align: 'end' as const,
                                                                       width: proportional(0.5),
                                                                       renderCell: (
-                                                                          /** @type {import('zod').output<typeof schemas.zOrganizationInvitationResponse>} */ row
+                                                                          row: z.output<
+                                                                              typeof schemas.zOrganizationInvitationResponse
+                                                                          >
                                                                       ) => (
                                                                           <Button
                                                                               label="Revoke"
@@ -409,9 +431,9 @@ export default function OrganizationSettings() {
                                                           {
                                                               key: 'id',
                                                               header: 'Actions',
-                                                              align: /** @type {const} */ ('end'),
+                                                              align: 'end' as const,
                                                               width: proportional(0.5),
-                                                              renderCell: (/** @type {Solution} */ row) => (
+                                                              renderCell: (row: Solution) => (
                                                                   <MoreMenu
                                                                       alignment="end"
                                                                       isDisabled={action.isPending}
@@ -434,7 +456,10 @@ export default function OrganizationSettings() {
                                                                                                         ).json()
                                                                                                     );
                                                                                                 setUpdate({
-                                                                                                    item: row,
+                                                                                                    item: {
+                                                                                                        id: row.id,
+                                                                                                        name: row.name,
+                                                                                                    },
                                                                                                     candidate: checked,
                                                                                                     envs: {},
                                                                                                     removed: {},
@@ -447,13 +472,17 @@ export default function OrganizationSettings() {
                                                                               id: 'logs',
                                                                               label: 'Logs',
                                                                               icon: <Logs />,
-                                                                              onClick: () => setLogs(row),
+                                                                              onClick: () => setLogs(row.id),
                                                                           },
                                                                           {
                                                                               id: 'delete',
                                                                               label: 'Delete',
                                                                               icon: <Trash />,
-                                                                              onClick: () => setDeletion(row),
+                                                                              onClick: () =>
+                                                                                  setDeletion({
+                                                                                      id: row.id,
+                                                                                      name: row.name,
+                                                                                  }),
                                                                           },
                                                                       ]}
                                                                   />
@@ -537,7 +566,7 @@ export default function OrganizationSettings() {
                     />
                     <Stack gap={3}>
                         <Text color="secondary">
-                            Change {member.item.user.name} to {member.role}?
+                            Change {member.name} to {member.role}?
                         </Text>
                         <Stack direction="horizontal" gap={2} justify="end">
                             <Button
@@ -553,7 +582,7 @@ export default function OrganizationSettings() {
                                 onClick={() =>
                                     action.mutate(async () => {
                                         // Update access on the server before refreshing the member list.
-                                        await api.patch(`${base}/members/${member.item.user.id}`, {
+                                        await api.patch(`${base}/members/${member.id}`, {
                                             json: schemas.zOrganizationMemberUpdate.parse({ role: member.role }),
                                         });
                                         await client.invalidateQueries({ queryKey: ['api', base], exact: true });

@@ -23,14 +23,12 @@ const registrationSchema = schemas.zComputeRegistryCreate.extend({ kubeconfig: z
 /** Lists registered Compute infrastructure and manages registration and removal. */
 export default function Compute() {
     const [page, setPage] = useState(1);
-    const [dialog, setDialog] = useState(
-        /** @type {{ kind: 'metadata' | 'deletion', item: import('zod').output<typeof schemas.zComputeRegistryResponse> } | null} */ (
-            null
-        )
-    );
-    const [registration, setRegistration] = useState(
-        /** @type {import('zod').input<typeof registrationSchema> | null} */ (null)
-    );
+    const [dialog, setDialog] = useState<
+        | { kind: 'metadata'; item: z.output<typeof schemas.zComputeRegistryResponse> }
+        | { kind: 'deletion'; item: { id: string; name: string } }
+        | null
+    >(null);
+    const [registration, setRegistration] = useState<z.input<typeof registrationSchema> | null>(null);
     const client = useQueryClient();
     const action = useAction();
     const path = `/api/v1/computes?page=${page}&page_size=25`;
@@ -190,7 +188,12 @@ export default function Compute() {
                             <Button
                                 label="Delete"
                                 variant="destructive"
-                                onClick={() => setDialog({ kind: 'deletion', item: dialog.item })}
+                                onClick={() =>
+                                    setDialog({
+                                        kind: 'deletion',
+                                        item: { id: dialog.item.id, name: dialog.item.name },
+                                    })
+                                }
                             />
                         </Stack>
                     </Stack>
