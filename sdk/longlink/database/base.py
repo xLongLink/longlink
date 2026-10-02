@@ -101,7 +101,7 @@ class Database:
 
                     # Initialize the database without publishing partially initialized resources.
                     try:
-                        if self._env.ENV == "testing" and engine.url.get_backend_name() == "sqlite":
+                        if self._env.ENV == "testing":
                             async with engine.begin() as conn:
                                 await conn.run_sync(SQLModel.metadata.create_all)
                         elif self._env.ENV == "development":
@@ -112,7 +112,7 @@ class Database:
                                 pass
 
                         # Keep a local shared user available for development and test requests.
-                        if self._env.ENV != "production" and engine.url.get_backend_name() == "sqlite":
+                        if self._env.ENV != "production":
                             async with AsyncSession(engine) as session:
                                 if await session.get(User, LOCAL_USER_ID) is None:
                                     name = "Development user" if self._env.ENV == "development" else "Testing user"

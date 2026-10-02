@@ -13,23 +13,6 @@ const SAFE_IDENTIFIER_CALLS: Record<string, SafeExpressionCall> = {
     Boolean,
     Number,
     String,
-    hasMissingRequiredValues: (definitions, values) => {
-        // Ignore malformed metadata rather than blocking the workflow indefinitely.
-        if (!Array.isArray(definitions) || !isRecord(values)) {
-            return false;
-        }
-
-        // Require every definition explicitly marked as required to contain non-blank text.
-        return definitions.some((definition) => {
-            if (!isRecord(definition)) return false;
-
-            const name = definition.name;
-            const required = definition.required;
-            const value = typeof name === 'string' ? values[name] : undefined;
-
-            return required === true && (typeof value !== 'string' || value.trim().length === 0);
-        });
-    },
     nonEmpty: (value) => {
         // Ignore values that cannot contain named text fields.
         if (!isRecord(value)) return {};

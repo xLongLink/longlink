@@ -154,11 +154,8 @@ class _ViewParser(HTMLParser):
     def handle_charref(self, name: str) -> None:
         """Decode explicit numeric character references."""
 
-        # Preserve the source's optional semicolon instead of applying HTML recovery rules.
-        value = f"&#{name}"
-        if self._source().startswith(f"{value};"):
-            value += ";"
-        self._append_text(_decode(value))
+        # Use the same source-preserving decoding for numeric and named references.
+        self.handle_entityref(f"#{name}")
 
     @override
     def handle_decl(self, decl: str) -> None:

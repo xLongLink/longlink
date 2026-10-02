@@ -501,7 +501,6 @@
                             <Button
                                 label="Create"
                                 variant="primary"
-                                disabled="${hasMissingRequiredValues(createSolutionMetadata.environments, createSolution.envs)}"
                             >
                                 <Request
                                     url="/api/v1/organizations/${membership.organization.id}/solutions"
