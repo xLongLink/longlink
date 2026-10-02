@@ -30,7 +30,7 @@ export function Tabs({ props, nodes }: Props) {
     const { gap } = resolveXmlProps(props, ctx, tabsPropsSchema);
 
     // Prepare every visible panel so errors in unselected content still surface.
-    const panels = tabs.map((tab) => ({ ...tab, content: renderNode(tab.nodes, ctx) }));
+    const panels = tabs.map((tab) => ({ value: tab.value, content: renderNode(tab.nodes, ctx) }));
     const activeTab = panels.find((tab) => tab.value === binding.value) ?? panels[0];
 
     return (

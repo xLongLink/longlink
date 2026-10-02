@@ -129,10 +129,7 @@ export default function ResetPassword() {
                     as="form"
                     gap={4}
                     onSubmit={(event) => {
-                        void form.handleSubmit(async (payload) => {
-                            // Await completion while the mutation cache reports failures.
-                            await resetPassword.mutateAsync(payload).catch(() => {});
-                        })(event);
+                        void form.handleSubmit((payload) => resetPassword.mutate(payload))(event);
                     }}
                 >
                     <Controller

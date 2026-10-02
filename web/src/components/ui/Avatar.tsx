@@ -7,7 +7,7 @@ import { Avatar as AstryxAvatar, type AvatarShape } from '@astryxdesign/core/Ava
 const glyphsStyle = new dicebear.Style(glyphs);
 const wavesStyle = new dicebear.Style(waves);
 
-type AstryxAvatarProps = Omit<ComponentProps<typeof AstryxAvatar>, 'shape' | 'src'>;
+type AstryxAvatarProps = Omit<ComponentProps<typeof AstryxAvatar>, 'fallbackSrc' | 'shape' | 'src'>;
 
 interface AvatarProps extends AstryxAvatarProps {
     name?: string;
@@ -16,7 +16,7 @@ interface AvatarProps extends AstryxAvatarProps {
 }
 
 /** Uses local Waves fallbacks for rounded organization avatars and Glyphs for users. */
-export function Avatar({ shape = 'circle', src, name, fallbackSrc, ...props }: AvatarProps) {
+export function Avatar({ shape = 'circle', src, name, ...props }: AvatarProps) {
     // Generate a stable fallback without sending names to an external avatar service.
     const avatar = new dicebear.Avatar(shape === 'rounded' ? wavesStyle : glyphsStyle, {
         seed: name?.trim() || 'avatar',
@@ -28,7 +28,7 @@ export function Avatar({ shape = 'circle', src, name, fallbackSrc, ...props }: A
             name={name}
             shape={shape}
             src={src?.trim() || undefined}
-            fallbackSrc={fallbackSrc ?? avatar.toDataUri()}
+            fallbackSrc={avatar.toDataUri()}
         />
     );
 }
