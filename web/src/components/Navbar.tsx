@@ -26,7 +26,7 @@ export function Navbar() {
                             <>
                                 <Link
                                     className="sm:hidden"
-                                    href="/docs/"
+                                    href="/docs/introduction/"
                                     color="secondary"
                                     isStandalone
                                     weight="medium"
@@ -34,7 +34,7 @@ export function Navbar() {
                                     Docs
                                 </Link>
                                 <Stack className="hidden sm:flex" direction="horizontal" gap={4} vAlign="center">
-                                    <Link href="/docs/" color="secondary" isStandalone weight="medium">
+                                    <Link href="/docs/introduction/" color="secondary" isStandalone weight="medium">
                                         Documentation
                                     </Link>
                                     <Link href="/pricing/" color="secondary" isStandalone weight="medium">

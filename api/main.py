@@ -130,4 +130,13 @@ if static_dir.exists():
         query = f"?{request.url.query}" if request.url.query else ""
         return RedirectResponse(f"/{query}", status_code=308)
 
+    @app.api_route("/docs", methods=["GET", "HEAD"], include_in_schema=False)
+    @app.api_route("/docs/", methods=["GET", "HEAD"], include_in_schema=False)
+    def redirect_documentation_index(request: Request) -> RedirectResponse:
+        """Redirect the legacy documentation entry point to its public article."""
+
+        # Preserve query parameters while sending crawlers directly to the final page.
+        query = f"?{request.url.query}" if request.url.query else ""
+        return RedirectResponse(f"/docs/introduction/{query}", status_code=308)
+
     app.frontend("/", directory=static_dir)
