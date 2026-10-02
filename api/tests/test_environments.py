@@ -21,43 +21,33 @@ ENVIRONMENT_SETTINGS = {
 }
 
 
-@pytest.mark.parametrize(
-    ("settings", "message"),
-    [
-        pytest.param({"SMTP_USERNAME": "mailer"}, "SMTP_USERNAME and SMTP_PASSWORD must be configured together", id="username-only"),
-        pytest.param({"SMTP_HOST": None}, "SMTP_HOST is required", id="without-host"),
-    ],
-)
-def test_env_rejects_invalid_smtp_authentication_settings(settings: dict[str, object], message: str) -> None:
-    """Reject incomplete SMTP authentication settings."""
+INVALID_AUTHENTICATION_SETTINGS = [
+    pytest.param({"SMTP_USERNAME": "mailer"}, "SMTP_USERNAME and SMTP_PASSWORD must be configured together", id="username-only"),
+    pytest.param({"SMTP_HOST": None}, "SMTP_HOST is required", id="without-host"),
+    pytest.param({"PUBLIC_URL": "http://platform.example"}, "PUBLIC_URL must use HTTPS except on loopback", id="insecure-origin"),
+    pytest.param(
+        {"GOOGLE_OAUTH_CLIENT_ID": "google-client"},
+        "GOOGLE_OAUTH_CLIENT_ID and GOOGLE_OAUTH_CLIENT_SECRET must be configured together",
+        id="google-client-only",
+    ),
+    pytest.param(
+        {"GITHUB_OAUTH_CLIENT_SECRET": "github-secret"},
+        "GITHUB_OAUTH_CLIENT_ID and GITHUB_OAUTH_CLIENT_SECRET must be configured together",
+        id="github-secret-only",
+    ),
+]
 
-    # Act and assert
-    with pytest.raises(ValidationError, match=message):
-        Env.model_validate(ENVIRONMENT_SETTINGS | settings)
 
-
-@pytest.mark.parametrize(
-    ("settings", "message"),
-    [
-        pytest.param({"PUBLIC_URL": "http://platform.example"}, "PUBLIC_URL must use HTTPS except on loopback", id="insecure-origin"),
-        pytest.param(
-            {"GOOGLE_OAUTH_CLIENT_ID": "google-client"},
-            "GOOGLE_OAUTH_CLIENT_ID and GOOGLE_OAUTH_CLIENT_SECRET must be configured together",
-            id="google-client-only",
-        ),
-        pytest.param(
-            {"GITHUB_OAUTH_CLIENT_SECRET": "github-secret"},
-            "GITHUB_OAUTH_CLIENT_ID and GITHUB_OAUTH_CLIENT_SECRET must be configured together",
-            id="github-secret-only",
-        ),
-    ],
-)
+@pytest.mark.parametrize(("settings", "message"), INVALID_AUTHENTICATION_SETTINGS)
 def test_env_rejects_invalid_authentication_settings(settings: dict[str, object], message: str) -> None:
-    """Reject insecure production origins and incomplete OAuth clients."""
+    """Reject insecure origins and incomplete SMTP or OAuth settings."""
+
+    # Arrange
+    configuration = ENVIRONMENT_SETTINGS | settings
 
     # Act and assert
     with pytest.raises(ValidationError, match=message):
-        Env.model_validate(ENVIRONMENT_SETTINGS | settings)
+        Env.model_validate(configuration)
 
 
 def test_env_accepts_complete_smtp_authentication_settings() -> None:

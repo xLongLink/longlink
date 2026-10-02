@@ -1,8 +1,8 @@
 import sys
+import runpy
 import pytest
 import alembic
 import sqlite3
-import importlib.util
 from types import SimpleNamespace
 from pathlib import Path
 from sqlmodel import SQLModel
@@ -198,18 +198,12 @@ def test_migration_environment_configures_offline_execution(monkeypatch: pytest.
         begin_transaction=nullcontext,
         run_migrations=lambda: calls.append(("run_migrations", None)),
     )
-    module_name = "tests.database.offline_migration_environment"
     environment_path = database_migrations.CURRENT_FILE.parent / "env.py"
-    specification = importlib.util.spec_from_file_location(module_name, environment_path)
-    assert specification is not None
-    assert specification.loader is not None
-    module = importlib.util.module_from_spec(specification)
     monkeypatch.chdir(tmp_path)
     monkeypatch.setattr(alembic, "context", context)
-    monkeypatch.setitem(sys.modules, module_name, module)
 
     # Act
-    specification.loader.exec_module(module)
+    environment = runpy.run_path(str(environment_path))
 
     # Assert
     assert calls == [
@@ -217,7 +211,7 @@ def test_migration_environment_configures_offline_execution(monkeypatch: pytest.
             "configure",
             {
                 "connection": None,
-                "url": str(module.engine.url),
+                "url": str(environment["engine"].url),
                 "literal_binds": True,
                 "target_metadata": SQLModel.metadata,
                 "include_object": database_migrations.include_object,

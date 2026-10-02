@@ -1,15 +1,10 @@
-import sys
 import pytest
-import alembic
 import importlib
-import importlib.util
 import pytest_asyncio
 from io import StringIO
 from uuid import UUID
-from types import SimpleNamespace
 from typing import cast
 from alembic import command
-from pathlib import Path
 from sqlalchemy import text
 from sqlalchemy.exc import DBAPIError
 from collections.abc import AsyncIterator
@@ -19,21 +14,6 @@ from sqlalchemy.engine import URL
 from longlink.shared.models import User
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncConnection, create_async_engine
 from longlink.shared.migrations import migrate_database, migration_config
-
-
-def load_shared_migration_environment(monkeypatch: pytest.MonkeyPatch, context: object) -> None:
-    """Execute the shared Alembic environment with an isolated context module."""
-
-    # Replace Alembic's runtime proxy before the environment selects its execution mode.
-    module_name = "tests.shared.alembic_environment"
-    environment_path = Path(shared_migrations.__file__).parent / "alembic" / "env.py"
-    specification = importlib.util.spec_from_file_location(module_name, environment_path)
-    assert specification is not None
-    assert specification.loader is not None
-    module = importlib.util.module_from_spec(specification)
-    monkeypatch.setattr(alembic, "context", context)
-    monkeypatch.setitem(sys.modules, module_name, module)
-    specification.loader.exec_module(module)
 
 
 @pytest.fixture
@@ -232,18 +212,16 @@ def test_shared_migration_environment_emits_offline_schema_bootstrap() -> None:
     )
 
 
-def test_shared_migration_environment_rejects_missing_online_url(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_shared_migration_environment_rejects_missing_online_url() -> None:
     """Require the control plane to provide an organization database URL."""
 
     # Arrange
-    context = SimpleNamespace(
-        config=SimpleNamespace(get_main_option=lambda _option: None),
-        is_offline_mode=lambda: False,
-    )
+    config = migration_config("postgresql+asyncpg://db/organization")
+    config.remove_main_option("sqlalchemy.url")
 
     # Act and assert
     with pytest.raises(RuntimeError, match="Alembic sqlalchemy.url is not configured"):
-        load_shared_migration_environment(monkeypatch, context)
+        command.upgrade(config, "head")
 
 
 def test_initial_shared_migration_downgrade_drops_only_audit_table(monkeypatch: pytest.MonkeyPatch) -> None:
