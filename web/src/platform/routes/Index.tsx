@@ -2,10 +2,12 @@ import { Seo } from '@/components/Seo';
 import type { ReactNode } from 'react';
 import { Globe } from '@/components/Globe';
 import { siteName, siteUrl } from '@/site';
+import { OpenAI } from '@/components/OpenAI';
 import { Card } from '@astryxdesign/core/Card';
 import { Grid } from '@astryxdesign/core/Grid';
 import { Icon } from '@astryxdesign/core/Icon';
 import { Text } from '@astryxdesign/core/Text';
+import { ClaudeAI } from '@/components/ClaudeAI';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
 import { Heading } from '@astryxdesign/core/Heading';
@@ -67,39 +69,59 @@ export default function Home() {
                         <Globe />
                     </Stack>
                     <section className="relative z-10 mx-auto flex w-full max-w-5xl -translate-y-16 flex-col items-center text-center sm:-translate-y-24">
-                        <Stack gap={5}>
+                        <Stack gap={2} hAlign="center">
                             <Heading
-                                className="mx-auto max-w-4xl text-5xl uppercase lg:text-6xl"
+                                className="text-3xl sm:text-5xl"
                                 justify="center"
                                 level={1}
                                 textWrap="balance"
-                                type="display-1"
-                                weight="semibold"
+                                type="display-2"
                             >
-                                Build what you need
+                                Design
+                                <ArrowRight
+                                    aria-hidden="true"
+                                    className="mx-2 inline-block size-6 align-middle sm:size-8"
+                                />
+                                Build
+                                <ArrowRight
+                                    aria-hidden="true"
+                                    className="mx-2 inline-block size-6 align-middle sm:size-8"
+                                />
+                                Operate
+                                <ArrowRight
+                                    aria-hidden="true"
+                                    className="mx-2 inline-block size-6 align-middle sm:size-8"
+                                />
+                                Improve
                             </Heading>
-                            <Text
-                                as="p"
-                                className="mx-auto text-base leading-normal sm:text-xl"
-                                color="secondary"
-                                display="block"
-                            >
-                                <Text className="max-sm:hidden" display="block" type="inherit">
-                                    The narrative has changed, but you are still buying the old story
-                                </Text>
-                                <Text className="tracking-[-0.012em]" display="block" type="inherit">
-                                    The economics have shifted; flexibility now lives in code
-                                </Text>
-                                <Text className="tracking-[0.026em]" display="block" type="inherit">
-                                    Build your solution, not the workaround
-                                </Text>
-                                <Text className="tracking-[0.026em]" display="block" type="inherit">
-                                    Use the right technologies
+                            <Text as="p" className="pt-1 text-lg sm:text-2xl" color="secondary" textWrap="pretty">
+                                <Text display="block" type="inherit">
+                                    The complete business process lifecycle, defined as code
                                 </Text>
                                 <Text display="block" type="inherit">
-                                    This is LongLink
+                                    One source of truth for how work gets done
                                 </Text>
                             </Text>
+                            <Stack direction="horizontal" gap={3} hAlign="center" paddingBlockStart={1} wrap="wrap">
+                                <Button
+                                    className="w-44"
+                                    href="https://chatgpt.com/?q=Explain%20what%20is%20longlink.dev%20and%20what%20can%20I%20build%20with%20it"
+                                    icon={<OpenAI aria-hidden="true" className="size-5 scale-125" focusable="false" />}
+                                    label="What is LongLink"
+                                    rel="noopener noreferrer"
+                                    target="_blank"
+                                    variant="secondary"
+                                />
+                                <Button
+                                    className="w-44"
+                                    href="https://claude.ai/new?q=Explain%20what%20is%20longlink.dev%20and%20what%20can%20I%20build%20with%20it"
+                                    icon={<ClaudeAI aria-hidden="true" className="size-5" focusable="false" />}
+                                    label="What can I build"
+                                    rel="noopener noreferrer"
+                                    target="_blank"
+                                    variant="secondary"
+                                />
+                            </Stack>
                         </Stack>
                     </section>
                 </main>
@@ -111,49 +133,6 @@ export default function Home() {
                     variant="transparent"
                 />
             </Stack>
-            <Section className="relative z-20 bg-body" padding={6} paddingBlock={6} variant="transparent">
-                <Stack className="mx-auto text-center" gap={6} hAlign="center" maxWidth={1000} width="100%">
-                    <Stack gap={2} hAlign="center">
-                        <Heading
-                            className="max-sm:hidden"
-                            justify="center"
-                            level={2}
-                            textWrap="balance"
-                            type="display-2"
-                        >
-                            Design
-                            <ArrowRight
-                                aria-hidden="true"
-                                className="mx-2 inline-block size-6 align-middle sm:size-8"
-                            />
-                            Build
-                            <ArrowRight
-                                aria-hidden="true"
-                                className="mx-2 inline-block size-6 align-middle sm:size-8"
-                            />
-                            Operate
-                            <ArrowRight
-                                aria-hidden="true"
-                                className="mx-2 inline-block size-6 align-middle sm:size-8"
-                            />
-                            Improve
-                        </Heading>
-                        <Text
-                            as="p"
-                            className="pt-1 text-2xl max-sm:text-left max-sm:text-primary sm:text-xl"
-                            color="secondary"
-                            textWrap="pretty"
-                        >
-                            <Text display="block" type="inherit">
-                                The complete business process lifecycle, defined as code
-                            </Text>
-                            <Text display="block" type="inherit">
-                                One source of truth for how work gets done
-                            </Text>
-                        </Text>
-                    </Stack>
-                </Stack>
-            </Section>
             <Section className="relative z-20 bg-body" variant="transparent" padding={6} paddingBlock={6}>
                 <Grid className="mx-auto" columns={{ minWidth: 320, max: 2 }} gap={0} maxWidth={1000}>
                     <CapabilityCard
