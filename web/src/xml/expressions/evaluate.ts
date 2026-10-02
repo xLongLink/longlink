@@ -13,15 +13,6 @@ const SAFE_IDENTIFIER_CALLS: Record<string, SafeExpressionCall> = {
     Boolean,
     Number,
     String,
-    nonEmpty: (value) => {
-        // Ignore values that cannot contain named text fields.
-        if (!isRecord(value)) return {};
-
-        // Preserve only configured fields while omitting blank optional values.
-        return Object.fromEntries(
-            Object.entries(value).filter(([, entry]) => typeof entry === 'string' && entry.length > 0)
-        );
-    },
     hasConfiguredEnvironment: (configured, name) =>
         Array.isArray(configured) && typeof name === 'string' && configured.includes(name),
     hasMissingRequiredUpdateValues: (definitions, configured, values, removed) => {
