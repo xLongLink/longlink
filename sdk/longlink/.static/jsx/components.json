@@ -1,314 +1,267 @@
 [
     {
+        "name": "ApiForm",
+        "category": "Form",
+        "declaration": "declare const ApiForm: ViewComponent<{\n    action: string;\n    method?: 'POST' | 'PUT' | 'PATCH' | 'DELETE';\n    submitLabel?: string;\n}>;"
+    },
+    {
         "name": "Avatar",
         "category": "Content",
-        "declaration": "declare const Avatar: ViewComponent<{ name?: string; src?: string; alt?: string }>;",
-        "slug": "avatar"
+        "declaration": "declare const Avatar: ViewComponent<{\n    name?: string;\n    src?: string;\n    alt?: string;\n}>;"
     },
     {
         "name": "Badge",
         "category": "Content",
-        "declaration": "declare const Badge: ViewComponent<{ label?: string; variant?: 'neutral' | 'info' | 'success' | 'warning' | 'error' }>;",
-        "slug": "badge"
+        "declaration": "declare const Badge: ViewComponent<{\n    label?: string;\n    variant?: 'neutral' | 'info' | 'success' | 'warning' | 'error';\n}>;"
     },
     {
         "name": "Banner",
         "category": "Content",
-        "declaration": "declare const Banner: ViewComponent<{ status?: 'error' | 'warning' | 'success' | 'info'; title: string }>;",
-        "slug": "banner"
+        "declaration": "declare const Banner: ViewComponent<{\n    status?: 'error' | 'warning' | 'success' | 'info';\n    title: string;\n}>;"
     },
     {
         "name": "Button",
         "category": "Actions",
-        "declaration": "declare const Button: ViewComponent<{\n    label: string;\n    variant?: 'primary' | 'secondary' | 'ghost' | 'destructive';\n    isDisabled?: boolean;\n    clickAction?: () => void | Promise<void>;\n}>;",
-        "slug": "button"
+        "declaration": "declare const Button: ViewComponent<{\n    label: string;\n    variant?: 'primary' | 'secondary' | 'ghost' | 'destructive';\n    isDisabled?: boolean;\n    clickAction?: () => void | Promise<void>;\n}>;"
     },
     {
         "name": "Card",
         "category": "Layouts",
-        "declaration": "declare const Card: ViewComponent<{ padding?: Spacing; elevation?: 'none' | 'low' | 'medium' | 'high' }>;",
-        "slug": "card"
+        "declaration": "declare const Card: ViewComponent<{\n    padding?: Spacing;\n    elevation?: 'none' | 'low' | 'medium' | 'high';\n}>;"
+    },
+    {
+        "name": "CheckboxField",
+        "category": "Form",
+        "declaration": "declare const CheckboxField: ViewComponent<{\n    name: string;\n    label: string;\n    required?: boolean;\n    defaultValue?: boolean;\n}>;"
     },
     {
         "name": "CheckboxInput",
         "category": "Form",
-        "declaration": "declare const CheckboxInput: ViewComponent<{ label: string; value: boolean; onChange?: (value: boolean) => void }>;",
-        "slug": "checkbox-input"
+        "declaration": "declare const CheckboxInput: ViewComponent<{\n    label: string;\n    value: boolean;\n    onChange?: (value: boolean) => void;\n}>;"
     },
     {
         "name": "CodeBlock",
         "category": "Content",
-        "declaration": "declare const CodeBlock: ViewComponent<{ code: string; language?: string; title?: string; isWrapped?: boolean }>;",
-        "slug": "code-block"
+        "declaration": "declare const CodeBlock: ViewComponent<{\n    code: string;\n    language?: string;\n    title?: string;\n    isWrapped?: boolean;\n}>;"
     },
     {
         "name": "createElement",
         "category": "Runtime",
-        "declaration": "declare function createElement(type: unknown, props: unknown, ...children: ViewNode[]): React.JSX.Element;",
-        "slug": "create-element"
+        "declaration": "declare function createElement(type: unknown, props: unknown, ...children: ViewNode[]): React.JSX.Element;"
     },
     {
         "name": "Currency",
         "category": "Display",
-        "declaration": "declare const Currency: ViewComponent<{ value: number; currency: string; locale?: string }>;",
-        "slug": "currency"
+        "declaration": "declare const Currency: ViewComponent<{\n    value: number;\n    currency: string;\n    locale?: string;\n}>;"
     },
     {
         "name": "Dialog",
         "category": "Layouts",
-        "declaration": "declare const Dialog: ViewComponent<{\n    'aria-label': string;\n    isOpen: boolean;\n    onOpenChange: (open: boolean) => void;\n    purpose?: 'form' | 'info' | 'required';\n}>;",
-        "slug": "dialog"
+        "declaration": "declare const Dialog: ViewComponent<{\n    'aria-label': string;\n    isOpen: boolean;\n    onOpenChange: (open: boolean) => void;\n    purpose?: 'form' | 'info' | 'required';\n}>;"
     },
     {
         "name": "Divider",
         "category": "Content",
-        "declaration": "declare const Divider: ViewComponent<Record<string, never>>;",
-        "slug": "divider"
+        "declaration": "declare const Divider: ViewComponent<Record<string, never>>;"
     },
     {
         "name": "EmptyState",
         "category": "Content",
-        "declaration": "declare const EmptyState: ViewComponent<{ title: string; isCompact?: boolean }>;",
-        "slug": "empty-state"
+        "declaration": "declare const EmptyState: ViewComponent<{\n    title: string;\n    isCompact?: boolean;\n}>;"
     },
     {
         "name": "FileInput",
         "category": "Form",
-        "declaration": "declare const FileInput: ViewComponent<{\n    label: string;\n    value?: File | null;\n    accept?: string;\n    onChange?: (value: File | null) => void;\n}>;",
-        "slug": "file-input"
+        "declaration": "declare const FileInput: ViewComponent<{\n    label: string;\n    value?: File | null;\n    accept?: string;\n    onChange?: (value: File | null) => void;\n}>;"
     },
     {
         "name": "FileViewer",
         "category": "Content",
-        "declaration": "declare const FileViewer: ViewComponent<{ src: string; title: string }>;",
-        "slug": "file-viewer"
-    },
-    {
-        "name": "Fragment",
-        "category": "Runtime",
-        "declaration": "declare const Fragment: ViewComponent<{ key?: string | number }>;",
-        "slug": "fragment"
+        "declaration": "declare const FileViewer: ViewComponent<{\n    src: string;\n    title: string;\n}>;"
     },
     {
         "name": "Grid",
         "category": "Layouts",
-        "declaration": "declare const Grid: ViewComponent<{ columns?: number; gap?: Spacing }>;",
-        "slug": "grid"
+        "declaration": "declare const Grid: ViewComponent<{\n    columns?: number;\n    gap?: Spacing;\n}>;"
     },
     {
         "name": "GridSpan",
         "category": "Layouts",
-        "declaration": "declare const GridSpan: ViewComponent<{ columns?: number | 'full' }>;",
-        "slug": "grid-span"
+        "declaration": "declare const GridSpan: ViewComponent<{\n    columns?: number | 'full';\n}>;"
     },
     {
         "name": "Heading",
         "category": "Content",
-        "declaration": "declare const Heading: ViewComponent<{ level?: 1 | 2 | 3 | 4 | 5 | 6 }>;",
-        "slug": "heading"
+        "declaration": "declare const Heading: ViewComponent<{\n    level?: 1 | 2 | 3 | 4 | 5 | 6;\n}>;"
     },
     {
         "name": "Icon",
         "category": "Content",
-        "declaration": "declare const Icon: ViewComponent<{ icon: string; size: 'sm' | 'md' | 'lg' }>;",
-        "slug": "icon"
+        "declaration": "declare const Icon: ViewComponent<{\n    icon: string;\n    size: 'sm' | 'md' | 'lg';\n}>;"
     },
     {
         "name": "IconButton",
         "category": "Actions",
-        "declaration": "declare const IconButton: ViewComponent<{ icon: ViewNode; label: string; onClick?: () => void }>;",
-        "slug": "icon-button"
+        "declaration": "declare const IconButton: ViewComponent<{\n    icon: ViewNode;\n    label: string;\n    onClick?: () => void;\n}>;"
     },
     {
         "name": "Link",
         "category": "Actions",
-        "declaration": "declare const Link: ViewComponent<{ to: string }>;",
-        "slug": "link"
+        "declaration": "declare const Link: ViewComponent<{\n    to: string;\n}>;"
     },
     {
         "name": "Menu",
         "category": "Layouts",
-        "declaration": "declare const Menu: ViewComponent<{\n    sections: { title: string; entries: { kind: 'item'; id: string; label: string; content: ViewNode }[] }[];\n    gap?: Spacing;\n}>;",
-        "slug": "menu"
+        "declaration": "declare const Menu: ViewComponent<{\n    sections: {\n        title: string;\n        entries: {\n            kind: 'item';\n            id: string;\n            label: string;\n            content: ViewNode;\n        }[];\n    }[];\n    gap?: Spacing;\n}>;"
     },
     {
         "name": "MoreMenu",
         "category": "Actions",
-        "declaration": "declare const MoreMenu: ViewComponent<{ items: { label: string; onClick: () => void; variant?: 'destructive' }[] }>;",
-        "slug": "more-menu"
+        "declaration": "declare const MoreMenu: ViewComponent<{\n    items: {\n        label: string;\n        onClick: () => void;\n        variant?: 'destructive';\n    }[];\n}>;"
     },
     {
         "name": "navigate",
         "category": "Runtime",
-        "declaration": "declare function navigate(path: string): void;",
-        "slug": "navigate"
+        "declaration": "declare function navigate(path: string): void;"
+    },
+    {
+        "name": "NumberField",
+        "category": "Form",
+        "declaration": "declare const NumberField: ViewComponent<{\n    name: string;\n    label: string;\n    required?: boolean;\n    min?: string | number;\n    max?: string | number;\n    step?: string | number;\n    defaultValue?: number | null;\n}>;"
     },
     {
         "name": "NumberInput",
         "category": "Form",
-        "declaration": "declare const NumberInput: ViewComponent<{\n    label: string;\n    value?: number;\n    min?: number;\n    max?: number;\n    step?: number;\n    onChange?: (value: number | undefined) => void;\n}>;",
-        "slug": "number-input"
-    },
-    {
-        "name": "params",
-        "category": "Runtime",
-        "declaration": "declare const params: Readonly<Record<string, string>>;",
-        "slug": "params"
+        "declaration": "declare const NumberInput: ViewComponent<{\n    label: string;\n    value?: number;\n    min?: number;\n    max?: number;\n    step?: number;\n    onChange?: (value: number | undefined) => void;\n}>;"
     },
     {
         "name": "ProgressBar",
         "category": "Display",
-        "declaration": "declare const ProgressBar: ViewComponent<{ label?: string; value: number; max?: number; hasValueLabel?: boolean }>;",
-        "slug": "progress-bar"
+        "declaration": "declare const ProgressBar: ViewComponent<{\n    label?: string;\n    value: number;\n    max?: number;\n    hasValueLabel?: boolean;\n}>;"
     },
     {
         "name": "RadioList",
         "category": "Form",
-        "declaration": "declare const RadioList: ViewComponent<{ label?: string; value?: string; onChange?: (value: string) => void }>;",
-        "slug": "radio-list"
+        "declaration": "declare const RadioList: ViewComponent<{\n    label?: string;\n    value?: string;\n    onChange?: (value: string) => void;\n}>;"
     },
     {
         "name": "RadioListItem",
         "category": "Form",
-        "declaration": "declare const RadioListItem: ViewComponent<{ label: string; value: string }>;",
-        "slug": "radio-list-item"
-    },
-    {
-        "name": "React",
-        "category": "Runtime",
-        "declaration": "declare namespace React {\n    namespace JSX {\n        interface Element {\n            readonly type: unknown;\n            readonly props: unknown;\n        }\n        interface ElementChildrenAttribute {\n            children: unknown;\n        }\n        interface IntrinsicElements {\n            [name: string]: Record<string, unknown>;\n        }\n    }\n}",
-        "slug": "react"
+        "declaration": "declare const RadioListItem: ViewComponent<{\n    label: string;\n    value: string;\n}>;"
     },
     {
         "name": "request",
         "category": "Runtime",
-        "declaration": "declare function request<T = unknown>(\n    path: string,\n    options?: {\n        method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';\n        json?: unknown;\n        form?: [string, string | Blob][];\n        binary?: boolean;\n    }\n): Promise<T>;",
-        "slug": "request"
+        "declaration": "declare function request<T = unknown>(\n    path: string,\n    options?: {\n        method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';\n        json?: unknown;\n        form?: [string, string | Blob][];\n        binary?: boolean;\n    }\n): Promise<T>;"
     },
     {
         "name": "Selector",
         "category": "Form",
-        "declaration": "declare const Selector: ViewComponent<{\n    label?: string;\n    value?: string;\n    options: { value: string; label: string }[];\n    onChange?: (value: string | undefined) => void;\n}>;",
-        "slug": "selector"
+        "declaration": "declare const Selector: ViewComponent<{\n    label?: string;\n    value?: string;\n    options: {\n        value: string;\n        label: string;\n    }[];\n    onChange?: (value: string | undefined) => void;\n}>;"
     },
     {
         "name": "Slider",
         "category": "Form",
-        "declaration": "declare const Slider: ViewComponent<{\n    label: string;\n    value: number;\n    min?: number;\n    max?: number;\n    step?: number;\n    onChange?: (value: number) => void;\n}>;",
-        "slug": "slider"
+        "declaration": "declare const Slider: ViewComponent<{\n    label: string;\n    value: number;\n    min?: number;\n    max?: number;\n    step?: number;\n    onChange?: (value: number) => void;\n}>;"
     },
     {
         "name": "Spinner",
         "category": "Content",
-        "declaration": "declare const Spinner: ViewComponent<{ label?: string }>;",
-        "slug": "spinner"
+        "declaration": "declare const Spinner: ViewComponent<{\n    label?: string;\n}>;"
     },
     {
         "name": "Stack",
         "category": "Layouts",
-        "declaration": "declare const Stack: ViewComponent<{\n    gap?: Spacing;\n    direction?: 'horizontal' | 'vertical';\n    justify?: 'start' | 'center' | 'end' | 'between' | 'around' | 'evenly';\n    align?: 'start' | 'center' | 'end' | 'stretch';\n    wrap?: 'nowrap' | 'wrap' | 'wrap-reverse';\n    padding?: Spacing;\n}>;",
-        "slug": "stack"
+        "declaration": "declare const Stack: ViewComponent<{\n    gap?: Spacing;\n    direction?: 'horizontal' | 'vertical';\n    justify?: 'start' | 'center' | 'end' | 'between' | 'around' | 'evenly';\n    align?: 'start' | 'center' | 'end' | 'stretch';\n    wrap?: 'nowrap' | 'wrap' | 'wrap-reverse';\n    padding?: Spacing;\n}>;"
     },
     {
         "name": "StackItem",
         "category": "Layouts",
-        "declaration": "declare const StackItem: ViewComponent<{\n    size?: 'static' | 'fill';\n    isScrollable?: boolean;\n    crossAlignSelf?: 'start' | 'center' | 'end' | 'stretch';\n}>;",
-        "slug": "stack-item"
+        "declaration": "declare const StackItem: ViewComponent<{\n    size?: 'static' | 'fill';\n    isScrollable?: boolean;\n    crossAlignSelf?: 'start' | 'center' | 'end' | 'stretch';\n}>;"
     },
     {
         "name": "StatusBadge",
         "category": "Display",
-        "declaration": "declare const StatusBadge: ViewComponent<{ status: 'running' | 'creating' | 'failed' }>;",
-        "slug": "status-badge"
+        "declaration": "declare const StatusBadge: ViewComponent<{\n    status: 'running' | 'creating' | 'failed';\n}>;"
     },
     {
         "name": "Step",
         "category": "Layouts",
-        "declaration": "declare const Step: ViewComponent<{ step: number; label: string }>;",
-        "slug": "step"
+        "declaration": "declare const Step: ViewComponent<{\n    step: number;\n    label: string;\n}>;"
     },
     {
         "name": "Stepper",
         "category": "Layouts",
-        "declaration": "declare const Stepper: ViewComponent<{ activeStep?: number; orientation?: 'horizontal' | 'vertical' }>;",
-        "slug": "stepper"
+        "declaration": "declare const Stepper: ViewComponent<{\n    activeStep?: number;\n    orientation?: 'horizontal' | 'vertical';\n}>;"
     },
     {
         "name": "Switch",
         "category": "Form",
-        "declaration": "declare const Switch: typeof CheckboxInput;",
-        "slug": "switch"
+        "declaration": "declare const Switch: typeof CheckboxInput;"
     },
     {
         "name": "Tab",
         "category": "Layouts",
-        "declaration": "declare const Tab: ViewComponent<{ value: string; label: string }>;",
-        "slug": "tab"
+        "declaration": "declare const Tab: ViewComponent<{\n    value: string;\n    label: string;\n}>;"
     },
     {
         "name": "Table",
         "category": "Layouts",
-        "declaration": "declare function Table<T>(props: {\n    data: readonly T[];\n    idKey?: string | ((row: T) => string | number);\n    density?: 'compact' | 'comfortable';\n    columns: { key: string; header?: string; align?: 'start' | 'center' | 'end'; renderCell: (row: T) => ViewNode }[];\n}): React.JSX.Element;",
-        "slug": "table"
+        "declaration": "declare function Table<T>(props: {\n    data: readonly T[];\n    idKey?: string | ((row: T) => string | number);\n    density?: 'compact' | 'comfortable';\n    columns: {\n        key: string;\n        header?: string;\n        align?: 'start' | 'center' | 'end';\n        renderCell: (row: T) => ViewNode;\n    }[];\n}): React.JSX.Element;"
     },
     {
         "name": "TabList",
         "category": "Layouts",
-        "declaration": "declare const TabList: ViewComponent<{ value?: string; onChange?: (value: string) => void }>;",
-        "slug": "tab-list"
+        "declaration": "declare const TabList: ViewComponent<{\n    value?: string;\n    onChange?: (value: string) => void;\n}>;"
     },
     {
         "name": "Text",
         "category": "Content",
-        "declaration": "declare const Text: ViewComponent<{\n    color?: 'primary' | 'secondary';\n    type?: 'body' | 'large' | 'label' | 'supporting' | 'code';\n}>;",
-        "slug": "text"
+        "declaration": "declare const Text: ViewComponent<{\n    color?: 'primary' | 'secondary';\n    type?: 'body' | 'large' | 'label' | 'supporting' | 'code';\n}>;"
     },
     {
         "name": "TextArea",
         "category": "Form",
-        "declaration": "declare const TextArea: typeof TextInput;",
-        "slug": "text-area"
+        "declaration": "declare const TextArea: typeof TextInput;"
+    },
+    {
+        "name": "TextField",
+        "category": "Form",
+        "declaration": "declare const TextField: ViewComponent<{\n    name: string;\n    label: string;\n    type?: 'text' | 'email' | 'password';\n    required?: boolean;\n    placeholder?: string;\n    defaultValue?: string;\n}>;"
     },
     {
         "name": "TextInput",
         "category": "Form",
-        "declaration": "declare const TextInput: ViewComponent<{\n    label: string;\n    value?: string;\n    placeholder?: string;\n    isRequired?: boolean;\n    onChange?: (value: string) => void;\n}>;",
-        "slug": "text-input"
+        "declaration": "declare const TextInput: ViewComponent<{\n    label: string;\n    value?: string;\n    placeholder?: string;\n    isRequired?: boolean;\n    onChange?: (value: string) => void;\n}>;"
     },
     {
         "name": "Timestamp",
         "category": "Display",
-        "declaration": "declare const Timestamp: ViewComponent<{ value: number | string; format?: string }>;",
-        "slug": "timestamp"
+        "declaration": "declare const Timestamp: ViewComponent<{\n    value: number | string;\n    format?: string;\n}>;"
     },
     {
         "name": "useApi",
         "category": "Runtime",
-        "declaration": "declare function useApi<T = unknown>(path: string): T;",
-        "slug": "use-api"
+        "declaration": "declare function useApi<T = unknown>(path: string): T;"
     },
     {
         "name": "useEffect",
         "category": "Runtime",
-        "declaration": "declare function useEffect(effect: () => void | (() => void), dependencies?: readonly unknown[]): void;",
-        "slug": "use-effect"
+        "declaration": "declare function useEffect(effect: () => void | (() => void), dependencies?: readonly unknown[]): void;"
     },
     {
         "name": "useMemo",
         "category": "Runtime",
-        "declaration": "declare function useMemo<T>(factory: () => T, dependencies: readonly unknown[]): T;",
-        "slug": "use-memo"
+        "declaration": "declare function useMemo<T>(factory: () => T, dependencies: readonly unknown[]): T;"
     },
     {
         "name": "useRef",
         "category": "Runtime",
-        "declaration": "declare function useRef<T>(initial: T): { current: T };",
-        "slug": "use-ref"
+        "declaration": "declare function useRef<T>(initial: T): { current: T };"
     },
     {
         "name": "useState",
         "category": "Runtime",
-        "declaration": "declare function useState<T = undefined>(initial?: T | (() => T)): [T, (value: T | ((previous: T) => T)) => void];",
-        "slug": "use-state"
+        "declaration": "declare function useState<T = undefined>(initial?: T | (() => T)): [T, (value: T | ((previous: T) => T)) => void];"
     }
 ]

@@ -1,20 +1,16 @@
 import { NoIndex } from '@/components/Seo';
-import { PlatformView } from '@/components/PlatformView';
 import { PageContainer } from '@/components/PageContainer';
 import { useAuthenticatedUser } from '@/lib/hooks/use-user';
-import source from '@/platform/views/user/settings.view?raw';
+import SettingsPage from '@/platform/views/user/settings.jsx';
 
-/** Renders the View-backed account settings page. */
+/** Renders the native account settings page. */
 export default function Settings() {
     const user = useAuthenticatedUser();
 
     return (
         <PageContainer padding={2}>
             <NoIndex title="Account Settings | LongLink" />
-            <PlatformView
-                source={source}
-                params={{ userAvatar: user.avatar, userEmail: user.email, userName: user.name }}
-            />
+            <SettingsPage key={user.id} user={user} />
         </PageContainer>
     );
 }

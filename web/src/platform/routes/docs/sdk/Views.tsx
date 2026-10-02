@@ -21,6 +21,7 @@ import { Article } from '@/components/layouts/Article';
 import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { Selector } from '@astryxdesign/core/Selector';
 import { TextArea } from '@astryxdesign/core/TextArea';
+import { componentDocumentation } from '@/platform/docs';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { FileInput } from '@astryxdesign/core/FileInput';
 import { TextInput } from '@astryxdesign/core/TextInput';
@@ -33,7 +34,6 @@ import { documentationCategories } from '@/lib/documentation';
 import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
 import { RadioList, RadioListItem } from '@astryxdesign/core/RadioList';
 import { SideNav, SideNavItem, SideNavSection } from '@astryxdesign/core/SideNav';
-import componentDocumentation from '../../../../../../sdk/longlink/.static/jsx/components.json';
 
 /** Leaves inert, controlled previews unchanged. */
 const noop = () => {};
@@ -223,7 +223,7 @@ const article = {
         { id: 'views', label: 'Views', level: 1 },
         ...documentationCategories.map((category) => ({ id: category.toLowerCase(), label: category, level: 2 })),
     ],
-    lastUpdated: '2026-10-01',
+    lastUpdated: '2026-10-02',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/sdk/longlink/.static/jsx/frontend.d.ts',
     title: 'Views | LongLink Documentation',
 };
@@ -242,10 +242,15 @@ export default function DocsArticleRoute() {
                     directly, without imports or a React. prefix. Your Python Solution needs no frontend build.
                 </Text>
                 <Text as="p">
+                    Use {'<>...</>'} to group JSX elements without adding a DOM wrapper. Use
+                    {' <Fragment key={id}>...</Fragment>'} when a group in a list needs a key. Neither form requires an
+                    import.
+                </Text>
+                <Text as="p">
                     Solution code runs in a sandboxed iframe with an opaque origin, not inside the Platform page. Use
-                    request() and navigate() for your own Solution. Direct network access and Platform credentials are
-                    unavailable. Titles come from JSX filenames, and tabs use the default icon. No metadata files are
-                    needed.
+                    useApi() to read data, ApiForm to submit named fields, and navigate() for your own Solution. Direct
+                    network access and Platform credentials are unavailable. Titles come from JSX filenames, and tabs
+                    use the default icon. No metadata files are needed.
                 </Text>
                 <Stack as="aside" className="border-s border-accent ps-4" gap={0}>
                     <Text weight="semibold">Why?</Text>
@@ -260,6 +265,46 @@ export default function DocsArticleRoute() {
                     }
                     language="jsx"
                     title="welcome.jsx"
+                    hasLanguageLabel={false}
+                />
+                <Text as="p">
+                    Route parameters are passed as props to the default View function, not as globals. For
+                    src/views/items/[item].jsx, visiting /items/123 supplies params.item as the string "123". params is
+                    read-only and contains path parameters, not query parameters. Add @param {`{ViewProps}`} props in
+                    JSDoc for editor hints.
+                </Text>
+                <CodeBlock
+                    code={`/** @param {ViewProps} props */
+export default function Item({ params }) {
+  const item = useApi(\`/api/items/\${params.item}\`);
+
+  return <Heading>{item.name}</Heading>;
+}`}
+                    language="jsx"
+                    title="items/[item].jsx"
+                    hasLanguageLabel={false}
+                />
+                <Text as="p">
+                    ApiForm submits named fields as JSON to its action with POST by default, adds a Save button, handles
+                    validation and submission feedback, and refreshes cached data after a successful write. No state or
+                    request() handler is needed. Use method="PUT" or method="PATCH" to update records and submitLabel to
+                    customize the button. Numbers are sent as numbers (or null when empty), and checkboxes as booleans.
+                    Set defaultValue on a field to populate an existing value. request() remains available for custom
+                    operations.
+                </Text>
+                <CodeBlock
+                    code={`export default function UserForm() {
+  return (
+    <ApiForm action="/users">
+      <TextField name="name" label="Name" required />
+      <TextField name="email" label="Email" type="email" required />
+      <NumberField name="age" label="Age" min="18" />
+      <CheckboxField name="active" label="Active" />
+    </ApiForm>
+  );
+}`}
+                    language="jsx"
+                    title="users.jsx"
                     hasLanguageLabel={false}
                 />
                 {documentationCategories.map((category) => (

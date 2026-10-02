@@ -6,7 +6,7 @@ def test_docs_command_lists_documented_component_categories() -> None:
     """Expose JSX components and scoped runtime capabilities through the public CLI."""
 
     # Act
-    result = CliRunner().invoke(main, ["docs", "ui"])
+    result = CliRunner().invoke(main, ["docs"])
 
     # Assert
     assert result.exit_code == 0
@@ -21,7 +21,7 @@ def test_docs_command_resolves_a_component_name_case_insensitively() -> None:
     """Show component documentation from a lower-case component name."""
 
     # Act
-    result = CliRunner().invoke(main, ["docs", "ui", "--component", "button"])
+    result = CliRunner().invoke(main, ["docs", "--component", "button"])
 
     # Assert
     assert result.exit_code == 0

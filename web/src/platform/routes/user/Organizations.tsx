@@ -1,14 +1,13 @@
 import { NoIndex } from '@/components/Seo';
-import { PlatformView } from '@/components/PlatformView';
 import { PageContainer } from '@/components/PageContainer';
-import source from '@/platform/views/user/organizations.view?raw';
+import OrganizationsPage from '@/platform/views/user/organizations.jsx';
 
 /** Renders the organizations landing page for the authenticated user. */
 export default function Organizations() {
     return (
         <PageContainer padding={2}>
             <NoIndex title="Organizations | LongLink" />
-            <PlatformView source={source} />
+            <OrganizationsPage />
         </PageContainer>
     );
 }

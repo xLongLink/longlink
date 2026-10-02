@@ -3,11 +3,10 @@ import { act } from 'react';
 import { ApiProvider } from '@/providers';
 import { MemoryRouter } from 'react-router';
 import { createRoot } from 'react-dom/client';
-import { cleanupMountedRoot } from './xml/helpers';
-import { PlatformView } from '@/components/PlatformView';
+import { cleanupMountedRoot } from './helpers';
 import { LayerProvider } from '@astryxdesign/core/Layer';
+import Settings from '@/platform/views/orgs/settings.jsx';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import settingsSource from '@/platform/views/orgs/settings.view?raw';
 
 const organizationId = '00000000-0000-4000-8000-000000000003';
 const solutionId = '00000000-0000-4000-8000-000000000002';
@@ -18,6 +17,8 @@ const candidate = {
     image_digest: 'sha256:bbbbbbbbbbbb',
     revision_id: revisionId,
     configured_envs: [],
+    min_scale: 0,
+    idle_seconds: 60,
     metadata: {
         image: `ghcr.io/owner/sample@sha256:${'b'.repeat(64)}`,
         environments: [],
@@ -34,7 +35,7 @@ describe('Solution source update dialog', () => {
         vi.unstubAllGlobals();
     });
 
-    it('uses the native XML dialog to review and submit a source update', async () => {
+    it('uses the native JSX dialog to review and submit a source update', async () => {
         const submissions: { path: string; body: unknown }[] = [];
         vi.stubGlobal('fetch', async (input: RequestInfo | URL, init?: RequestInit) => {
             const request = input instanceof Request ? input : new Request(input, init);
@@ -46,10 +47,17 @@ describe('Solution source update dialog', () => {
             }
 
             if (path === '/api/v1/organizations/slug/development') {
-                return Response.json({ organization: { id: organizationId }, role: 'maintain' });
+                return Response.json({
+                    organization: { id: organizationId, name: 'Development', slug: 'development', status: 'running' },
+                    role: 'maintain',
+                });
             }
             if (path === `/api/v1/organizations/${organizationId}`) {
-                return Response.json({ organization: { name: 'Development' }, members: [], invitations: [] });
+                return Response.json({
+                    organization: { id: organizationId, name: 'Development', slug: 'development', status: 'running' },
+                    members: [],
+                    invitations: [],
+                });
             }
             if (path === `/api/v1/organizations/${organizationId}/storage`)
                 return Response.json({ space_used: 0, quota_bytes: 1 });
@@ -79,7 +87,7 @@ describe('Solution source update dialog', () => {
                 <LayerProvider>
                     <ApiProvider>
                         <MemoryRouter initialEntries={['/#solutions']}>
-                            <PlatformView source={settingsSource} params={{ organization: 'development' }} />
+                            <Settings organization="development" />
                         </MemoryRouter>
                     </ApiProvider>
                 </LayerProvider>
@@ -106,7 +114,7 @@ describe('Solution source update dialog', () => {
         );
     });
 
-    /** Find the named native XML action without replacing UI components. */
+    /** Find the named native action without replacing UI components. */
     function button(label: string) {
         const found = [...document.querySelectorAll('button')].find((item) => item.textContent === label);
         if (!found) throw new Error(`Button not found: ${label}`);

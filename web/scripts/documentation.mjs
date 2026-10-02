@@ -12,23 +12,33 @@ const document = ts.createSourceFile(input, source, ts.ScriptTarget.Latest, true
 if (document.parseDiagnostics.length) {
     throw new Error(ts.flattenDiagnosticMessageText(document.parseDiagnostics[0].messageText, '\n'));
 }
-const components = document.statements.flatMap((statement) => {
-    const declaration = ts.isVariableStatement(statement) ? statement.declarationList.declarations[0] : statement;
-    if (!ts.isVariableDeclaration(declaration) && !ts.isFunctionDeclaration(declaration) && !ts.isModuleDeclaration(declaration)) return [];
-    const name = declaration.name?.getText(document);
-    if (!name) return [];
+const components = document.statements
+    .flatMap((statement) => {
+        const declaration = ts.isVariableStatement(statement) ? statement.declarationList.declarations[0] : statement;
 
-    // Read category identity from the editor declaration and retain the published category order.
-    const category = ts.getJSDocTags(statement).find((tag) => tag.tagName.text === 'category')?.comment;
-    if (!category) throw new Error(`Missing documentation category: ${name}`);
-    if (typeof category !== 'string' || !documentationCategories.includes(category)) throw new Error(`Unknown documentation category: ${name}: ${category}`);
-    return [{
-        name,
-        category,
-        declaration: statement.getText(document),
-        slug: name.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase(),
-    }];
-}).sort((left, right) => left.name.localeCompare(right.name));
+        // Publish runtime bindings, not namespaces that exist only for editor types.
+        if (!ts.isVariableDeclaration(declaration) && !ts.isFunctionDeclaration(declaration)) return [];
+        const name = declaration.name?.getText(document);
+        if (!name) return [];
+
+        // Keep guide-only bindings available to editors without publishing standalone catalog entries.
+        const tags = ts.getJSDocTags(statement);
+        if (tags.some((tag) => tag.tagName.text === 'ignore')) return [];
+
+        // Read category identity from the editor declaration and retain the published category order.
+        const category = tags.find((tag) => tag.tagName.text === 'category')?.comment;
+        if (!category) throw new Error(`Missing documentation category: ${name}`);
+        if (typeof category !== 'string' || !documentationCategories.includes(category))
+            throw new Error(`Unknown documentation category: ${name}: ${category}`);
+        return [
+            {
+                name,
+                category,
+                declaration: statement.getText(document),
+            },
+        ];
+    })
+    .sort((left, right) => left.name.localeCompare(right.name));
 
 const filename = path.resolve(root, '../sdk/longlink/.static/jsx/components.json');
 const output = `${JSON.stringify(components, null, 4)}\n`;

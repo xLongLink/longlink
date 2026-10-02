@@ -5,7 +5,7 @@ from pathlib import Path
 from dataclasses import dataclass
 from fsspec.spec import AbstractFileSystem
 from longlink.views import ViewDefinition, view_stem_route
-from collections.abc import Callable
+from collections.abc import Callable, Awaitable
 from longlink.errors import install_error_handlers
 from longlink.logger import ApiAccessFilter
 from longlink.routes import router
@@ -27,11 +27,11 @@ class RuntimeState:
     database: Database
 
 
-def _view_handler(content: str) -> Callable[[], Response]:
+def _view_handler(content: str) -> Callable[[], Awaitable[Response]]:
     """Capture JSX source without exposing it as a request parameter."""
 
     # Bind each document in its own closure before FastAPI inspects the endpoint signature.
-    def view() -> Response:
+    async def view() -> Response:
         """Return JSX source captured during application startup without executing it."""
 
         return Response(content, media_type="text/plain")

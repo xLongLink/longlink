@@ -23,10 +23,24 @@ uv run longlink dev
 
 Write interfaces in `src/views/*.jsx`, exporting a default React component.
 The shared frontend compiles JSX in an opaque-origin sandbox and supplies React,
-LongLink components, `params`, `request`, `navigate`, and `useApi`.
+LongLink components, `request`, `navigate`, and `useApi`.
 No Node, package imports, or frontend build is needed in this
 Python project. Titles come from filenames (`items.jsx` → Items,
 `[item].jsx` → Item), and tabs use the default icon. No metadata files are needed.
+
+Route parameters are passed as props to the default View function, not as globals.
+For `src/views/items/[item].jsx`, visiting `/items/123` supplies `params.item` as `"123"`:
+
+```jsx
+/** @param {ViewProps} props */
+export default function Item({ params }) {
+    const item = useApi(`/api/items/${params.item}`);
+
+    return <Heading>{item.name}</Heading>;
+}
+```
+
+`params` is read-only and contains string-valued path parameters, not query parameters.
 
 Use ordinary JSX expressions, React state, and controlled input callbacks.
 `request('/api/items')` accesses only this Solution through a validated host
@@ -49,7 +63,7 @@ VS Code supports `.jsx` natively. `longlink dev` creates or refreshes the
 SDK-owned `frontend.d.ts` in the project root. Together with `jsconfig.json`,
 it provides local autocomplete without Node or an extension. The generated
 file is ignored by Git; do not edit it, as the next development run replaces it.
-Run `uv run longlink docs ui` for
+Run `uv run longlink docs` for
 authoring APIs and inspect the sample invoice Views for complete examples.
 
 <br />

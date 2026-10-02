@@ -1,16 +1,15 @@
 import { useParams } from 'react-router';
 import { NoIndex } from '@/components/Seo';
-import { PlatformView } from '@/components/PlatformView';
-import source from '@/platform/views/orgs/organization.view?raw';
+import OrganizationPage from '@/platform/views/orgs/organization.jsx';
 
-/** Renders the View-backed organization solutions page. */
+/** Renders the native organization Solutions page. */
 export default function Organization() {
     const { organization = '' } = useParams();
 
     return (
         <>
             <NoIndex title="Organization Solutions | LongLink" />
-            <PlatformView source={source} params={{ organization }} />
+            <OrganizationPage key={organization} organization={organization} />
         </>
     );
 }

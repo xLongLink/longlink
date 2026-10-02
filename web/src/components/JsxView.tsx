@@ -11,8 +11,11 @@ import {
     MAX_SOURCE_SIZE,
     MAX_PENDING_REQUESTS,
     MAX_MESSAGE_SIZE,
+    REQUEST_TIMEOUT,
     messageSize,
 } from '@/views/protocol';
+
+const BOOTSTRAP_TIMEOUT_MS = 10_000;
 
 /** Renders Solution code only in a credential-free, opaque-origin sandbox. */
 export function JsxView({
@@ -36,11 +39,14 @@ export function JsxView({
         queryKey: ['view-runtime'],
         staleTime: Infinity,
         retry: false,
-        queryFn: async ({ signal }) =>
-            Promise.all([
-                api('/views/runtime.js', { signal, credentials: 'omit' }).text(),
-                api('/views/runtime.css', { signal, credentials: 'omit' }).text(),
-            ]),
+        queryFn: async ({ signal }) => {
+            // Bound asset loading through body completion, not just response headers.
+            const lifetime = AbortSignal.any([signal, AbortSignal.timeout(REQUEST_TIMEOUT)]);
+            return Promise.all([
+                api('/views/runtime.js', { signal: lifetime, credentials: 'omit', timeout: false }).text(),
+                api('/views/runtime.css', { signal: lifetime, credentials: 'omit', timeout: false }).text(),
+            ]);
+        },
     });
 
     useEffect(() => {
@@ -50,17 +56,42 @@ export function JsxView({
         const channel = new MessageChannel();
         const session = crypto.randomUUID();
         const pending = new Set<number>();
+        let handshakeTimer: ReturnType<typeof setTimeout> | undefined;
+
+        /** Revokes the attempt's capabilities and startup deadline on failure or unmount. */
+        function dispose(): void {
+            controller.abort();
+            clearTimeout(handshakeTimer);
+            window.removeEventListener('message', ready);
+            channel.port1.close();
+            channel.port2.close();
+        }
+
+        /** Reports startup failure only while this attempt still owns the mounted frame. */
+        function fail(): void {
+            if (controller.signal.aborted) return;
+            dispose();
+            setBootstrapFailed(true);
+        }
 
         /** Connects one trusted bootstrap instance; subsequent window messages have no capabilities. */
         function ready(event: MessageEvent<unknown>): void {
+            if (controller.signal.aborted) return;
             if (event.source !== frame.current?.contentWindow || event.origin !== 'null') return;
             if (event.data !== session) return;
             window.removeEventListener('message', ready);
-            frame.current?.contentWindow?.postMessage(
-                { session, source, params: parametersSchema.parse(JSON.parse(parameters)) },
-                '*',
-                [channel.port2]
-            );
+
+            // A failed capability transfer is a startup failure, not a connected runtime.
+            try {
+                frame.current?.contentWindow?.postMessage(
+                    { session, source, params: parametersSchema.parse(JSON.parse(parameters)) },
+                    '*',
+                    [channel.port2]
+                );
+                clearTimeout(handshakeTimer);
+            } catch {
+                fail();
+            }
         }
 
         // Authenticate the bootstrap by its WindowProxy and fresh session before transferring a private port.
@@ -115,22 +146,17 @@ export function JsxView({
             const hash = btoa(String.fromCharCode(...new Uint8Array(digest)));
             const policy = `default-src 'none'; script-src 'sha256-${hash}' 'unsafe-eval'; style-src 'unsafe-inline'; img-src data: blob:; font-src data:; connect-src 'none'; frame-src 'none'; worker-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'`;
             if (!controller.signal.aborted) {
+                // A blocked bootstrap script must surface an error instead of leaving a blank frame.
+                handshakeTimer = setTimeout(fail, BOOTSTRAP_TIMEOUT_MS);
                 setDocument(
                     `<!doctype html><html><head><meta http-equiv="Content-Security-Policy" content="${policy}"><meta name="referrer" content="no-referrer"><style>${styles.replace(/<\/style/gi, '<\\/style')}</style></head><body class="bg-transparent text-primary"><main id="view" class="flow-root"></main><script>${code}</script></body></html>`
                 );
             }
         }
-        void bootstrap().catch(() => {
-            if (!controller.signal.aborted) setBootstrapFailed(true);
-        });
+        void bootstrap().catch(fail);
 
         // Replacing or unmounting a View revokes its channel and cancels every outstanding operation.
-        return () => {
-            controller.abort();
-            window.removeEventListener('message', ready);
-            channel.port1.close();
-            channel.port2.close();
-        };
+        return dispose;
     }, [source, parameters, requestBaseUrl, navigationBaseUrl, navigate, kernel]);
 
     if (kernelError || bootstrapFailed)

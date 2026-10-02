@@ -3,10 +3,10 @@ import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Heading } from '@astryxdesign/core/Heading';
 import { Article } from '@/components/layouts/Article';
+import { componentDocumentation } from '@/platform/docs';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import NotFoundLayout from '@/components/layouts/NotFound';
 import { documentationLastUpdated } from '@/lib/documentation';
-import componentDocumentation from '../../../../../../../sdk/longlink/.static/jsx/components.json';
 
 /** Documents native JSX props using the same declarations supplied to Python Solution editors. */
 export default function DocsArticleRoute() {
@@ -59,7 +59,7 @@ export default function DocsArticleRoute() {
                     Cli
                 </Heading>
                 <CodeBlock
-                    code={`longlink docs ui --component ${component.name}`}
+                    code={`longlink docs --component ${component.name}`}
                     language="bash"
                     hasLanguageLabel={false}
                     isWrapped

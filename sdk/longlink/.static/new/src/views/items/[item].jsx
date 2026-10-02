@@ -1,5 +1,8 @@
-/** Displays an invoice, its attachments, and its approval controls. */
-export default function Invoice() {
+/**
+ * Displays an invoice, its attachments, and its approval controls.
+ * @param {ViewProps} props
+ */
+export default function Invoice({ params }) {
     const [status, setStatus] = useState();
     const [open, setOpen] = useState(false);
     const [file, setFile] = useState(null);

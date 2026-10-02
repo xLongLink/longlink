@@ -1,4 +1,5 @@
 import { api } from '@/lib/api';
+import type { Options } from 'ky';
 import { resolveRequestUrl } from '@/lib/url';
 import { MAX_MESSAGE_SIZE, REQUEST_TIMEOUT, type RequestCommand } from './protocol';
 
@@ -11,10 +12,27 @@ export function requestUrl(base: string, path: string): string {
     return resolveRequestUrl(base, path);
 }
 
-/** Reads untrusted response bodies with a decoded-byte limit and releases their streams. */
-export async function read(response: Response, limit: number): Promise<Blob> {
+/** Loads a bounded response without redirects and releases its stream within the request lifetime. */
+export async function load(
+    url: string,
+    options: Pick<Options, 'headers' | 'method' | 'json' | 'body'> & { signal: AbortSignal },
+    limit: number = MAX_MESSAGE_SIZE
+): Promise<Blob> {
+    // Bound the complete response lifetime, including a server that stalls after sending headers.
+    const response = await api(url, {
+        ...options,
+        signal: AbortSignal.any([options.signal, AbortSignal.timeout(REQUEST_TIMEOUT)]),
+        redirect: 'error',
+        timeout: false,
+    });
+
+    // Preserve only supported media types before granting a binary response to the sandbox.
+    const media = response.headers.get('content-type')?.split(';', 1)[0] ?? '';
+    const type = /^(?:image\/(?:png|jpeg|gif|webp)|audio\/(?:mpeg|ogg)|video\/mp4|application\/pdf)$/.test(media)
+        ? media
+        : 'application/octet-stream';
     const reader = response.body?.getReader();
-    if (!reader) return new Blob();
+    if (!reader) return new Blob([], { type });
     const chunks: Uint8Array<ArrayBuffer>[] = [];
     let size = 0;
 
@@ -34,7 +52,7 @@ export async function read(response: Response, limit: number): Promise<Blob> {
     } finally {
         reader.releaseLock();
     }
-    return new Blob(chunks);
+    return new Blob(chunks, { type });
 }
 
 /** Executes one validated request using only host-owned credentials and fixed options. */
@@ -48,24 +66,14 @@ export async function request(base: string, command: RequestCommand, signal: Abo
         for (const [name, value] of command.form) form.append(name, value);
     }
 
-    // Bound the complete response lifetime, including a server that stalls after sending headers.
-    const lifetime = AbortSignal.any([signal, AbortSignal.timeout(REQUEST_TIMEOUT)]);
-    const response = await api(url, {
+    // Apply the same bounded response policy used to load the manifest and JSX source.
+    const body = await load(url, {
         method: command.method,
         json: command.json,
         body: form,
-        signal: lifetime,
-        redirect: 'error',
-        timeout: false,
+        signal,
     });
-    const body = await read(response, MAX_MESSAGE_SIZE);
-    if (command.binary) {
-        const media = response.headers.get('content-type')?.split(';', 1)[0] ?? '';
-        const type = /^(?:image\/(?:png|jpeg|gif|webp)|audio\/(?:mpeg|ogg)|video\/mp4|application\/pdf)$/.test(media)
-            ? media
-            : 'application/octet-stream';
-        return body.slice(0, body.size, type);
-    }
+    if (command.binary) return body;
     const text = await body.text();
     const data: unknown = text ? JSON.parse(text) : null;
     return data;

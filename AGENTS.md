@@ -9,7 +9,7 @@
 
 - Platform: Platform for building and operating process-specific business applications, managing organizations, access, infrastructure, and deployment.
 - Solution: Simplest possible representation of a business process expressed as code.
-- Views: `.jsx` Solution interface definitions rendered by the isolated shared Web runtime; bundled Platform pages currently retain the trusted internal XML runtime.
+- Views: `.jsx` Solution interface definitions rendered by the isolated shared Web runtime; bundled Platform pages are trusted native `.jsx` modules.
 
 ## Python Guidelines
 

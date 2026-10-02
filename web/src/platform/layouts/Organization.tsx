@@ -16,7 +16,7 @@ export default function OrganizationLayout() {
     const user = useAuthenticatedUser();
     const membership = useOrganizationMembership(organization);
 
-    // Resolve the organization before mounting XML views that depend on its membership.
+    // Resolve the organization before mounting pages that depend on its membership.
     if (membership.isLoading) return <PageLoading label="Loading organization" />;
     if (membership.error instanceof ApiError && membership.error.status === 404) {
         return (

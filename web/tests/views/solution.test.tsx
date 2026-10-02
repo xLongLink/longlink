@@ -4,7 +4,7 @@ import { webcrypto } from 'node:crypto';
 import { requestUrl } from '@/views/host';
 import { createRoot } from 'react-dom/client';
 import { ApiErrorContext } from '@/lib/errors';
-import { cleanupMountedRoot } from '../xml/helpers';
+import { cleanupMountedRoot } from '../helpers';
 import { createQueryRuntime } from '@/lib/react-query';
 import { SolutionRuntime } from '@/components/Solution';
 import { QueryClientProvider } from '@tanstack/react-query';
@@ -21,6 +21,7 @@ describe('SolutionRuntime', () => {
         mountedContainer?.remove();
         mountedContainer = undefined;
         vi.unstubAllGlobals();
+        vi.useRealTimers();
     });
 
     it('renders a manifest failure', async () => {
@@ -101,10 +102,13 @@ describe('SolutionRuntime', () => {
 
     it('renders dynamic route parameters', async () => {
         // Arrange
+        vi.useFakeTimers();
         stubFetch((url) => {
             if (url.endsWith('/views.json'))
                 return Response.json([view('issue', '/issues/:issueId', 'views/issues/[item]')]);
-            return sourceResponse('export default function Issue() { return <Text>{params.issueId}</Text>; }');
+            return sourceResponse(
+                'export default function Issue({ params }) { return <Text>{params.issueId}</Text>; }'
+            );
         });
 
         // Act
@@ -121,12 +125,19 @@ describe('SolutionRuntime', () => {
         window.dispatchEvent(
             new MessageEvent('message', { source: frame.contentWindow, origin: 'null', data: session })
         );
+        await vi.advanceTimersByTimeAsync(0);
         expect((await initialization).data.params).toEqual({ issueId: '42' });
         expect(output.querySelector('[data-title]')?.getAttribute('data-title')).toBe('Item');
+
+        // A successful handshake cancels the startup deadline without removing the frame.
+        await act(async () => vi.advanceTimersByTimeAsync(10_000));
+        expect(output.querySelector('iframe')).not.toBeNull();
+        expect(output.textContent).not.toContain('Unable to load this View');
     });
 
     it('keeps a custom manifest URL and fetches JSX beside it without executing it in the host', async () => {
         // Arrange
+        vi.useFakeTimers();
         const requests: Request[] = [];
         vi.stubGlobal('fetch', async (input: RequestInfo | URL) => {
             if (!(input instanceof Request)) throw new Error('Expected a Request at the HTTP boundary');
@@ -157,6 +168,11 @@ describe('SolutionRuntime', () => {
         expect(viewRequest.headers.get('accept')).toBe('text/plain');
         expect(output.querySelector('iframe')?.getAttribute('sandbox')).toBe('allow-scripts');
         expect(output.textContent).not.toContain('Welcome');
+
+        // Missing bootstrap readiness fails visibly instead of leaving a blank sandbox indefinitely.
+        await act(async () => vi.advanceTimersByTimeAsync(10_000));
+        expect(output.textContent).toContain('Unable to load this View');
+        expect(output.querySelector('iframe')).toBeNull();
     });
 
     it('rejects unmatched routes', async () => {

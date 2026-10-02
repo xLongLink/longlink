@@ -1,4 +1,3 @@
-const SAFE_ANCHOR_PROTOCOLS = new Set(['http:', 'https:', 'mailto:', 'tel:']);
 const RELATIVE_URL_ORIGIN = 'http://longlink.local';
 
 /** Resolves a solution-relative URL against a base URL string. */
@@ -45,7 +44,7 @@ function isSolutionRelativeUrl(path: string): boolean {
     }
 }
 
-/** Resolves an XML request URL while blocking cross-origin and protocol URLs. */
+/** Resolves a Solution request URL while blocking cross-origin and protocol URLs. */
 export function resolveRequestUrl(baseUrl: string, path: string): string {
     const value = path.trim();
 
@@ -77,27 +76,4 @@ export function resolveNavigationUrl(baseUrl: string, path: string): string {
     const value = path.trim();
 
     return value && isSolutionRelativeUrl(value) ? resolveUrl(baseUrl, path) : '';
-}
-
-/** Resolves a solution destination with an optional browser-link fallback. */
-export function resolveControlUrl(navigationBaseUrl: string, requestBaseUrl: string, to: string, href: string): string {
-    return resolveNavigationUrl(navigationBaseUrl, to) || resolveAnchorUrl(requestBaseUrl, href);
-}
-
-/** Resolves an XML anchor URL while blocking unsafe browser protocols. */
-export function resolveAnchorUrl(baseUrl: string, path: string): string {
-    const value = path.trim();
-
-    // Drop empty and backslash-containing anchors.
-    if (!value || value.includes('\\')) return '';
-
-    // Preserve allowed absolute browser links.
-    try {
-        const url = new URL(value);
-
-        return SAFE_ANCHOR_PROTOCOLS.has(url.protocol) ? value : '';
-    } catch {
-        // Resolve only safe solution-relative links.
-        return isSolutionRelativeUrl(value) ? resolveUrl(baseUrl, value) : '';
-    }
 }
