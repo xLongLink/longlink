@@ -7,7 +7,7 @@ export default function Brand() {
     return (
         <Platform
             action={
-                <Link href="/docs/" color="secondary" isStandalone target="_blank">
+                <Link href="/docs/introduction/" color="secondary" isStandalone target="_blank">
                     Documentation
                 </Link>
             }

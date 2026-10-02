@@ -33,7 +33,7 @@ function breadcrumbs(pathname: string): object {
             '@type': 'ListItem',
             position: index + 2,
             name: formatPathSegment(segment, documentationRouteLabels),
-            item: `${siteUrl}${canonicalPath(path)}`,
+            item: `${siteUrl}${path === '/docs' ? '/docs/introduction/' : canonicalPath(path)}`,
         });
     }
 

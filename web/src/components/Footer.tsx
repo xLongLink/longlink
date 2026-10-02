@@ -102,7 +102,7 @@ export function Footer() {
                                 <Link href="/" color="secondary" type="supporting" weight="medium">
                                     Home
                                 </Link>
-                                <Link href="/docs/" color="secondary" type="supporting" weight="medium">
+                                <Link href="/docs/introduction/" color="secondary" type="supporting" weight="medium">
                                     Documentation
                                 </Link>
                                 <Link href="/pricing/" color="secondary" type="supporting" weight="medium">

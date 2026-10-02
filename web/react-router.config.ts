@@ -19,7 +19,6 @@ const publicPagePaths = prerenderPaths.filter((pagePath) => pagePath !== '/login
 const publicPagePriorities: Record<string, number> = {
     '/': 1.0,
     '/docs/introduction': 0.9,
-    '/docs': 0.8,
     '/pricing': 0.6,
 };
 
