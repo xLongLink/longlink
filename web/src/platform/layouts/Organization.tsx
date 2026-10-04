@@ -8,7 +8,7 @@ import { PageContainer } from '@/components/PageContainer';
 import { PageError, PageLoading } from '@/components/Utils';
 import { useAuthenticatedUser } from '@/lib/hooks/use-user';
 import { PageBreadcrumb } from '@/components/breadcrumb/Page';
-import { useOrganizationMembership } from '@/lib/hooks/use-organization';
+import { OrganizationMembershipContext, useOrganizationMembership } from '@/lib/hooks/use-organization';
 
 /** Renders the fixed navigation around organization pages. */
 export default function OrganizationLayout() {
@@ -32,6 +32,7 @@ export default function OrganizationLayout() {
     if (membership.error) {
         return <PageError description="We couldn't load this organization." title="Unable to load organization" />;
     }
+    if (!membership.data) return <PageLoading label="Loading organization" />;
 
     return (
         <Platform
@@ -43,7 +44,9 @@ export default function OrganizationLayout() {
             ]}
         >
             <PageContainer gap={8} padding={2}>
-                <Outlet key={organization} />
+                <OrganizationMembershipContext value={membership.data}>
+                    <Outlet key={organization} />
+                </OrganizationMembershipContext>
             </PageContainer>
         </Platform>
     );

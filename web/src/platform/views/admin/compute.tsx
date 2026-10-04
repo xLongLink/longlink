@@ -4,10 +4,8 @@ import { useState } from 'react';
 import { Info } from 'lucide-react';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
-import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
 import { Heading } from '@astryxdesign/core/Heading';
-import { Spinner } from '@astryxdesign/core/Spinner';
 import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { TextArea } from '@astryxdesign/core/TextArea';
 import { useQueryClient } from '@tanstack/react-query';
@@ -34,10 +32,6 @@ export default function Compute() {
     const path = `/api/v1/computes?page=${page}&page_size=25`;
     const computes = useApi(path, schemas.zPageComputeRegistryResponse);
 
-    // Keep loading and failures distinct from an empty result.
-    if (computes.error) return <Banner status="error" title="Unable to load Compute" />;
-    if (!computes.data) return <Spinner label="Loading Compute" />;
-
     return (
         <Stack gap={8}>
             <Stack direction="horizontal" justify="between" align="center" wrap="wrap">
@@ -49,7 +43,7 @@ export default function Compute() {
             </Stack>
             <Stack gap={1}>
                 <Table
-                    data={computes.data.items}
+                    data={computes.items}
                     idKey="id"
                     hasHover
                     density="compact"
@@ -88,11 +82,7 @@ export default function Compute() {
                 />
                 <Stack direction="horizontal" gap={2} justify="between">
                     <Button label="Previous" isDisabled={page === 1} onClick={() => setPage(page - 1)} />
-                    <Button
-                        label="Next"
-                        isDisabled={computes.data.total <= page * 25}
-                        onClick={() => setPage(page + 1)}
-                    />
+                    <Button label="Next" isDisabled={computes.total <= page * 25} onClick={() => setPage(page + 1)} />
                 </Stack>
             </Stack>
             {registration && (

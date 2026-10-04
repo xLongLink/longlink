@@ -1,9 +1,9 @@
 import { api } from '@/lib/api';
 import { useParams } from 'react-router';
 import { NoIndex } from '@/components/Seo';
-import { useApi } from '@/lib/hooks/use-api';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
+import { useApiQuery } from '@/lib/hooks/use-api';
 import { ProfileMenu } from '@/components/Profile';
 import Platform from '@/platform/layouts/Platform';
 import { Center } from '@astryxdesign/core/Center';
@@ -57,7 +57,7 @@ export default function OrganizationSolution() {
 
     // Fetch pod logs only for a failed deployment, including failed migration output.
     const logsPath = solutionAccess?.status === 'failed' ? `/api/v1/solutions/${solutionAccess.id}/logs` : null;
-    const logsQuery = useApi(logsPath, zGetSolutionLogsApiV1SolutionsSolutionIdLogsGetResponse);
+    const logsQuery = useApiQuery(logsPath, zGetSolutionLogsApiV1SolutionsSolutionIdLogsGetResponse);
 
     if (isLoading) {
         return (

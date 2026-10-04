@@ -1,6 +1,5 @@
 import type { z } from 'zod';
 import { api } from '@/lib/api';
-import { useParams } from 'react-router';
 import { NoIndex } from '@/components/Seo';
 import { Menu } from '@/components/ui/Menu';
 import { Link } from '@astryxdesign/core/Link';
@@ -16,8 +15,6 @@ import { Spinner } from '@astryxdesign/core/Spinner';
 import { RefreshCw, Logs, Trash } from 'lucide-react';
 import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { Selector } from '@astryxdesign/core/Selector';
-import { useQueryClient } from '@tanstack/react-query';
-import { useApi, useAction } from '@/lib/hooks/use-api';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { useState, type SubmitEventHandler } from 'react';
@@ -27,7 +24,9 @@ import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import CreateSolution from '@/platform/views/orgs/CreateSolution';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
-import { useOrganizationMembership } from '@/lib/hooks/use-organization';
+import { useQueryClient, useSuspenseQueries } from '@tanstack/react-query';
+import { apiQueryOptions, useApiQuery, useAction } from '@/lib/hooks/use-api';
+import { useResolvedOrganizationMembership } from '@/lib/hooks/use-organization';
 
 type Solution = z.output<typeof schemas.zOrganizationSolutionSummary>;
 type Update = {
@@ -127,7 +126,6 @@ function DeploymentReview({
 
 /** Manages organization access, storage, and deployments; the layout owns route-scoped resets. */
 export default function OrganizationSettings() {
-    const { organization = '' } = useParams();
     const [invitation, setInvitation] = useState({ email: '', role: 'write' });
     const [inviting, setInviting] = useState(false);
     const [member, setMember] = useState<{ id: string; name: string; role: string } | null>(null);
@@ -137,40 +135,27 @@ export default function OrganizationSettings() {
     const [logs, setLogs] = useState<string | null>(null);
     const client = useQueryClient();
     const action = useAction();
-    const membership = useOrganizationMembership(organization);
-    const organizationId = membership.data?.organization.id;
-    const base = organizationId ? `/api/v1/organizations/${organizationId}` : null;
-    const details = useApi(base, schemas.zOrganizationDetails);
-    const storage = useApi(base ? `${base}/storage` : null, schemas.zOrganizationStorageUsageResponse);
-    const solutions = useApi(
-        base ? `${base}/solutions` : null,
-        schemas.zGetOrganizationSolutionsApiV1OrganizationsOrganizationIdSolutionsGetResponse
-    );
-    const solutionLogs = useApi(
+    const membership = useResolvedOrganizationMembership();
+    const base = `/api/v1/organizations/${membership.organization.id}`;
+
+    // Start the independent required reads together rather than suspending serially.
+    const [{ data: details }, { data: storage }, { data: solutions }] = useSuspenseQueries({
+        queries: [
+            apiQueryOptions(base, schemas.zOrganizationDetails),
+            apiQueryOptions(`${base}/storage`, schemas.zOrganizationStorageUsageResponse),
+            apiQueryOptions(
+                `${base}/solutions`,
+                schemas.zGetOrganizationSolutionsApiV1OrganizationsOrganizationIdSolutionsGetResponse
+            ),
+        ],
+    });
+    const solutionLogs = useApiQuery(
         logs ? `/api/v1/solutions/${logs}/logs` : null,
         schemas.zGetSolutionLogsApiV1SolutionsSolutionIdLogsGetResponse
     );
 
-    // Resolve membership first; the remaining organization reads can run independently.
-    if (membership.error || details.error || storage.error || solutions.error) {
-        return (
-            <>
-                <NoIndex title="Organization Settings | LongLink" />
-                <Banner status="error" title="Unable to load organization settings" />
-            </>
-        );
-    }
-    if (!membership.data || !details.data || !storage.data || !solutions.data) {
-        return (
-            <>
-                <NoIndex title="Organization Settings | LongLink" />
-                <Spinner label="Loading organization settings" />
-            </>
-        );
-    }
-
-    const canMaintain = ['maintain', 'admin', 'owner'].includes(membership.data.role);
-    const canAdminister = ['admin', 'owner'].includes(membership.data.role);
+    const canMaintain = ['maintain', 'admin', 'owner'].includes(membership.role);
+    const canAdminister = ['admin', 'owner'].includes(membership.role);
 
     // Preserve configured required secrets, and require values for new required environments.
     const missingRequired =
@@ -192,10 +177,10 @@ export default function OrganizationSettings() {
         <Stack gap={8}>
             <NoIndex title="Organization Settings | LongLink" />
             <Stack direction="horizontal" gap={3} align="center">
-                <Avatar shape="rounded" name={details.data.organization.name} />
+                <Avatar shape="rounded" name={details.organization.name} />
                 <Stack gap={0}>
                     <Heading level={4} accessibilityLevel={1}>
-                        {details.data.organization.name}
+                        {details.organization.name}
                     </Heading>
                     <Text type="supporting">Organization</Text>
                 </Stack>
@@ -220,8 +205,8 @@ export default function OrganizationSettings() {
                                         <Divider />
                                         <ProgressBar
                                             label="Storage"
-                                            value={storage.data.space_used}
-                                            max={storage.data.quota_bytes}
+                                            value={storage.space_used}
+                                            max={storage.quota_bytes}
                                         />
                                     </Stack>
                                 ),
@@ -245,7 +230,7 @@ export default function OrganizationSettings() {
                                                 </Stack>
                                                 <Divider />
                                                 <Table
-                                                    data={details.data.members}
+                                                    data={details.members}
                                                     idKey={(row) => row.user.id}
                                                     hasHover
                                                     density="compact"
@@ -339,7 +324,7 @@ export default function OrganizationSettings() {
                                                 </Stack>
                                                 <Divider />
                                                 <Table
-                                                    data={details.data.invitations}
+                                                    data={details.invitations}
                                                     idKey="id"
                                                     hasHover
                                                     density="compact"
@@ -406,7 +391,7 @@ export default function OrganizationSettings() {
                                         </Stack>
                                         <Divider />
                                         <Table
-                                            data={solutions.data}
+                                            data={solutions}
                                             idKey="id"
                                             hasHover
                                             density="compact"
@@ -417,7 +402,9 @@ export default function OrganizationSettings() {
                                                     width: proportional(1),
                                                     renderCell: (row) => (
                                                         <Stack>
-                                                            <Link href={`/orgs/${organization}/solutions/${row.slug}`}>
+                                                            <Link
+                                                                href={`/orgs/${membership.organization.slug}/solutions/${row.slug}`}
+                                                            >
                                                                 {row.name}
                                                             </Link>
                                                             {row.description && (
@@ -595,7 +582,7 @@ export default function OrganizationSettings() {
                 </Dialog>
             )}
             {creating && (
-                <CreateSolution organizationId={membership.data.organization.id} onClose={() => setCreating(false)} />
+                <CreateSolution organizationId={membership.organization.id} onClose={() => setCreating(false)} />
             )}
             {update && (
                 <DeploymentReview

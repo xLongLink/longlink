@@ -7,10 +7,8 @@ import { Text } from '@astryxdesign/core/Text';
 import { Avatar } from '@/components/ui/Avatar';
 import { Badge } from '@astryxdesign/core/Badge';
 import { Stack } from '@astryxdesign/core/Stack';
-import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
 import { Heading } from '@astryxdesign/core/Heading';
-import { Spinner } from '@astryxdesign/core/Spinner';
 import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { useQueryClient } from '@tanstack/react-query';
 import { useApi, useAction } from '@/lib/hooks/use-api';
@@ -31,16 +29,12 @@ export default function Solutions() {
     const path = `/api/v1/solutions?page=${page}&page_size=25`;
     const solutions = useApi(path, zPageSolutionResponse);
 
-    // Keep loading and failures distinct from an empty result.
-    if (solutions.error) return <Banner status="error" title="Unable to load solutions" />;
-    if (!solutions.data) return <Spinner label="Loading solutions" />;
-
     return (
         <Stack gap={8}>
             <Heading level={1}>Solutions</Heading>
             <Stack gap={1}>
                 <Table
-                    data={solutions.data.items}
+                    data={solutions.items}
                     idKey="id"
                     hasHover
                     density="compact"
@@ -114,11 +108,7 @@ export default function Solutions() {
                 />
                 <Stack direction="horizontal" gap={2} justify="between">
                     <Button label="Previous" isDisabled={page === 1} onClick={() => setPage(page - 1)} />
-                    <Button
-                        label="Next"
-                        isDisabled={solutions.data.total <= page * 25}
-                        onClick={() => setPage(page + 1)}
-                    />
+                    <Button label="Next" isDisabled={solutions.total <= page * 25} onClick={() => setPage(page + 1)} />
                 </Stack>
             </Stack>
             {dialog?.kind === 'metadata' && (

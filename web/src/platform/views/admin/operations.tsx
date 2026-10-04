@@ -4,10 +4,8 @@ import { Info } from 'lucide-react';
 import { useApi } from '@/lib/hooks/use-api';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
-import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
 import { Heading } from '@astryxdesign/core/Heading';
-import { Spinner } from '@astryxdesign/core/Spinner';
 import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { Table, proportional } from '@astryxdesign/core/Table';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
@@ -27,16 +25,12 @@ export default function Operations() {
     const [metadata, setMetadata] = useState<z.output<typeof zPageOperationResponse>['items'][number] | null>(null);
     const operations = useApi(`/api/v1/operations?page=${page}&page_size=25`, zPageOperationResponse);
 
-    // Keep loading and failures distinct from an empty result.
-    if (operations.error) return <Banner status="error" title="Unable to load operations" />;
-    if (!operations.data) return <Spinner label="Loading operations" />;
-
     return (
         <Stack gap={8}>
             <Heading level={1}>Operations</Heading>
             <Stack gap={1}>
                 <Table
-                    data={operations.data.items}
+                    data={operations.items}
                     idKey="id"
                     hasHover
                     density="compact"
@@ -92,11 +86,7 @@ export default function Operations() {
                 />
                 <Stack direction="horizontal" gap={2} justify="between">
                     <Button label="Previous" isDisabled={page === 1} onClick={() => setPage(page - 1)} />
-                    <Button
-                        label="Next"
-                        isDisabled={operations.data.total <= page * 25}
-                        onClick={() => setPage(page + 1)}
-                    />
+                    <Button label="Next" isDisabled={operations.total <= page * 25} onClick={() => setPage(page + 1)} />
                 </Stack>
             </Stack>
             {metadata && (

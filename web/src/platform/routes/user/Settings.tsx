@@ -14,10 +14,10 @@ import { Divider } from '@astryxdesign/core/Divider';
 import { Heading } from '@astryxdesign/core/Heading';
 import { Spinner } from '@astryxdesign/core/Spinner';
 import { useQueryClient } from '@tanstack/react-query';
-import { useApi, useAction } from '@/lib/hooks/use-api';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { PageContainer } from '@/components/PageContainer';
 import { useAuthenticatedUser } from '@/lib/hooks/use-user';
+import { useApiQuery, useAction } from '@/lib/hooks/use-api';
 import { Table, proportional } from '@astryxdesign/core/Table';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
@@ -42,7 +42,10 @@ function SettingsPage({ user }: { user: z.output<typeof schemas.zUserSummary> })
     const [deletion, setDeletion] = useState<{ id: string; name: string } | null>(null);
     const client = useQueryClient();
     const action = useAction();
-    const memberships = useApi('/api/v1/me/organizations', schemas.zGetMyOrganizationsApiV1MeOrganizationsGetResponse);
+    const memberships = useApiQuery(
+        '/api/v1/me/organizations',
+        schemas.zGetMyOrganizationsApiV1MeOrganizationsGetResponse
+    );
 
     // Keep loading and failures distinct from an empty result.
     const content = memberships.error ? (

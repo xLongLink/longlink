@@ -6,43 +6,36 @@ import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Badge } from '@astryxdesign/core/Badge';
 import { Stack } from '@astryxdesign/core/Stack';
-import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
 import { Heading } from '@astryxdesign/core/Heading';
-import { Spinner } from '@astryxdesign/core/Spinner';
 import { Table, proportional } from '@astryxdesign/core/Table';
 import CreateSolution from '@/platform/views/orgs/CreateSolution';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
-import { useOrganizationMembership } from '@/lib/hooks/use-organization';
+import { useResolvedOrganizationMembership } from '@/lib/hooks/use-organization';
 
 /** Lists an organization's Solutions; the layout owns organization-scoped state resets. */
 export default function Organization() {
     const { organization = '' } = useParams();
     const [creating, setCreating] = useState(false);
-    const membership = useOrganizationMembership(organization);
-    const organizationId = membership.data?.organization.id;
+    const membership = useResolvedOrganizationMembership();
+    const organizationId = membership.organization.id;
     const solutions = useApi(
-        organizationId ? `/api/v1/organizations/${organizationId}/solutions` : null,
+        `/api/v1/organizations/${organizationId}/solutions`,
         schemas.zGetOrganizationSolutionsApiV1OrganizationsOrganizationIdSolutionsGetResponse
     );
 
-    // Wait for membership before loading its dependent Solutions.
-    let content;
-    if (membership.error || solutions.error) {
-        content = <Banner status="error" title="Unable to load solutions" />;
-    } else if (!membership.data || !solutions.data) {
-        content = <Spinner label="Loading solutions" />;
-    } else {
-        content = (
+    return (
+        <>
+            <NoIndex title="Organization Solutions | LongLink" />
             <Stack gap={8}>
                 <Stack direction="horizontal" justify="between" align="center" wrap="wrap">
                     <Heading level={1}>Solutions</Heading>
-                    {['maintain', 'admin', 'owner'].includes(membership.data.role) && (
+                    {['maintain', 'admin', 'owner'].includes(membership.role) && (
                         <Button label="New Solution" onClick={() => setCreating(true)} />
                     )}
                 </Stack>
                 <Table
-                    data={solutions.data}
+                    data={solutions}
                     idKey="id"
                     hasHover
                     density="compact"
@@ -68,21 +61,8 @@ export default function Organization() {
                         },
                     ]}
                 />
-                {creating && (
-                    <CreateSolution
-                        organizationId={membership.data.organization.id}
-                        onClose={() => setCreating(false)}
-                    />
-                )}
+                {creating && <CreateSolution organizationId={organizationId} onClose={() => setCreating(false)} />}
             </Stack>
-        );
-    }
-
-    // Keep the page title present while the dependent reads are loading or unavailable.
-    return (
-        <>
-            <NoIndex title="Organization Solutions | LongLink" />
-            {content}
         </>
     );
 }

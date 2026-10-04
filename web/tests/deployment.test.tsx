@@ -1,12 +1,14 @@
 // @vitest-environment happy-dom
 import { act } from 'react';
-import { ApiProvider } from '@/providers';
+import { RootProvider } from '@/providers';
 import { createRoot } from 'react-dom/client';
 import { cleanupMountedRoot } from './helpers';
+import { ApiBoundary } from '@/components/ApiBoundary';
 import Settings from '@/platform/routes/orgs/Settings';
-import { LayerProvider } from '@astryxdesign/core/Layer';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import OrganizationLayout from '@/platform/layouts/Organization';
+import AuthenticatedLayout from '@/platform/layouts/Authenticated';
 
 const organizationId = '00000000-0000-4000-8000-000000000003';
 const solutionId = '00000000-0000-4000-8000-000000000002';
@@ -46,6 +48,15 @@ describe('Solution source update dialog', () => {
                 return new Response(null, { status: 204 });
             }
 
+            if (path === '/api/v1/me') {
+                return Response.json({
+                    id: '00000000-0000-4000-8000-000000000004',
+                    name: 'Maintainer',
+                    email: 'maintainer@example.com',
+                    avatar: '',
+                    administrator: false,
+                });
+            }
             if (path === '/api/v1/organizations/slug/development') {
                 return Response.json({
                     organization: { id: organizationId, name: 'Development', slug: 'development', status: 'running' },
@@ -84,19 +95,26 @@ describe('Solution source update dialog', () => {
         vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
         await act(async () =>
             mountedRoot.render(
-                <LayerProvider>
-                    <ApiProvider>
-                        <MemoryRouter initialEntries={['/orgs/development/settings#solutions']}>
+                <MemoryRouter initialEntries={['/orgs/development/settings#solutions']}>
+                    <RootProvider>
+                        <ApiBoundary>
                             <Routes>
-                                <Route path="/orgs/:organization/settings" element={<Settings />} />
+                                <Route element={<AuthenticatedLayout />}>
+                                    <Route path="/orgs/:organization" element={<OrganizationLayout />}>
+                                        <Route path="settings" element={<Settings />} />
+                                    </Route>
+                                </Route>
                             </Routes>
-                        </MemoryRouter>
-                    </ApiProvider>
-                </LayerProvider>
+                        </ApiBoundary>
+                    </RootProvider>
+                </MemoryRouter>
             )
         );
 
-        await act(async () => vi.waitFor(() => expect(moreMenu()).not.toBeNull()));
+        await vi.waitFor(async () => {
+            await act(async () => {});
+            expect(moreMenu()).not.toBeNull();
+        });
         await act(async () => moreMenu()?.click());
         await act(async () => vi.waitFor(() => expect(menuItem('Update')).toBeDefined()));
         await act(async () => menuItem('Update')?.click());
