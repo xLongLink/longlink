@@ -11,7 +11,7 @@ import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
 import { Divider } from '@astryxdesign/core/Divider';
 import { Heading } from '@astryxdesign/core/Heading';
-import { useQueryClient } from '@tanstack/react-query';
+import { ApiBoundary } from '@/components/ApiBoundary';
 import { useApi, useAction } from '@/lib/hooks/use-api';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { PageContainer } from '@/components/PageContainer';
@@ -36,12 +36,10 @@ export default function Settings() {
 /** Edits the authenticated profile and manages owned organizations. */
 function SettingsPage({ user }: { user: z.output<typeof schemas.zUserSummary> }) {
     const [name, setName] = useState(user.name);
-    const [creating, setCreating] = useState(false);
-    const [deletion, setDeletion] = useState<{ id: string; name: string } | null>(null);
-    const client = useQueryClient();
     const action = useAction();
-    const memberships = useApi('/api/v1/me/organizations', schemas.zGetMyOrganizationsApiV1MeOrganizationsGetResponse);
+    const [, invalidateUser] = useApi('/api/v1/me', schemas.zUserSummary);
 
+    // Keep account editing independent of organization loading and failures.
     return (
         <>
             <Stack gap={8}>
@@ -78,10 +76,7 @@ function SettingsPage({ user }: { user: z.output<typeof schemas.zUserSummary> })
                                                     await api.patch('/api/v1/me', {
                                                         json: schemas.zUserUpdate.parse({ name: name.trim() }),
                                                     });
-                                                    await client.invalidateQueries({
-                                                        queryKey: ['api', '/api/v1/me'],
-                                                        exact: true,
-                                                    });
+                                                    await invalidateUser();
                                                 });
                                             }}
                                         >
@@ -109,66 +104,75 @@ function SettingsPage({ user }: { user: z.output<typeof schemas.zUserSummary> })
                                     label: 'Organizations',
                                     icon: 'building2',
                                     content: (
-                                        <Stack gap={4}>
-                                            <Stack direction="horizontal" justify="between" align="center" wrap="wrap">
-                                                <Heading level={2}>Organizations</Heading>
-                                                <Button label="Create Organization" onClick={() => setCreating(true)} />
-                                            </Stack>
-                                            <Divider />
-                                            <Table
-                                                data={memberships}
-                                                idKey={(row) => row.organization.id}
-                                                hasHover
-                                                density="compact"
-                                                columns={[
-                                                    {
-                                                        key: 'organization',
-                                                        header: 'Name',
-                                                        width: proportional(1),
-                                                        renderCell: (row) => (
-                                                            <Stack direction="horizontal" gap={3} align="center">
-                                                                <Avatar shape="rounded" name={row.organization.name} />
-                                                                <Stack align="start">
-                                                                    <Stack
-                                                                        direction="horizontal"
-                                                                        gap={1}
-                                                                        align="center"
-                                                                    >
-                                                                        <Link href={`/orgs/${row.organization.slug}`}>
-                                                                            {row.organization.name}
-                                                                        </Link>
-                                                                        <Badge label={row.role} />
-                                                                    </Stack>
-                                                                    <Text type="supporting">Organization</Text>
-                                                                </Stack>
-                                                            </Stack>
-                                                        ),
-                                                    },
-                                                    {
-                                                        key: 'role',
-                                                        header: 'Actions',
-                                                        align: 'end',
-                                                        width: proportional(0.5),
-                                                        renderCell: (row) =>
-                                                            row.role === 'owner' && (
-                                                                <Button
-                                                                    label="Delete"
-                                                                    variant="destructive"
-                                                                    onClick={() =>
-                                                                        setDeletion({
-                                                                            id: row.organization.id,
-                                                                            name: row.organization.name,
-                                                                        })
-                                                                    }
-                                                                />
-                                                            ),
-                                                    },
-                                                ]}
-                                            />
-                                        </Stack>
+                                        <ApiBoundary>
+                                            <OrganizationSettings action={action} />
+                                        </ApiBoundary>
                                     ),
                                 },
                             ],
+                        },
+                    ]}
+                />
+            </Stack>
+        </>
+    );
+}
+
+/** Owns organization management independently of account editing. */
+function OrganizationSettings({ action }: { action: ReturnType<typeof useAction> }) {
+    const [creating, setCreating] = useState(false);
+    const [deletion, setDeletion] = useState<{ id: string; name: string } | null>(null);
+    const [memberships, invalidate] = useApi(
+        '/api/v1/me/organizations',
+        schemas.zGetMyOrganizationsApiV1MeOrganizationsGetResponse
+    );
+
+    return (
+        <>
+            <Stack gap={4}>
+                <Stack direction="horizontal" justify="between" align="center" wrap="wrap">
+                    <Heading level={2}>Organizations</Heading>
+                    <Button label="Create Organization" onClick={() => setCreating(true)} />
+                </Stack>
+                <Divider />
+                <Table
+                    data={memberships}
+                    idKey={(row) => row.organization.id}
+                    hasHover
+                    density="compact"
+                    columns={[
+                        {
+                            key: 'organization',
+                            header: 'Name',
+                            width: proportional(1),
+                            renderCell: (row) => (
+                                <Stack direction="horizontal" gap={3} align="center">
+                                    <Avatar shape="rounded" name={row.organization.name} />
+                                    <Stack align="start">
+                                        <Stack direction="horizontal" gap={1} align="center">
+                                            <Link href={`/orgs/${row.organization.slug}`}>{row.organization.name}</Link>
+                                            <Badge label={row.role} />
+                                        </Stack>
+                                        <Text type="supporting">Organization</Text>
+                                    </Stack>
+                                </Stack>
+                            ),
+                        },
+                        {
+                            key: 'role',
+                            header: 'Actions',
+                            align: 'end',
+                            width: proportional(0.5),
+                            renderCell: (row) =>
+                                row.role === 'owner' && (
+                                    <Button
+                                        label="Delete"
+                                        variant="destructive"
+                                        onClick={() =>
+                                            setDeletion({ id: row.organization.id, name: row.organization.name })
+                                        }
+                                    />
+                                ),
                         },
                     ]}
                 />
@@ -203,10 +207,7 @@ function SettingsPage({ user }: { user: z.output<typeof schemas.zUserSummary> })
                                         action.mutate(async () => {
                                             // Leave the confirmation open on failure and refresh memberships on success.
                                             await api.delete(`/api/v1/organizations/${deletion.id}`);
-                                            await client.invalidateQueries({
-                                                queryKey: ['api', '/api/v1/me/organizations'],
-                                                exact: true,
-                                            });
+                                            await invalidate();
                                             setDeletion(null);
                                         })
                                     }
@@ -216,7 +217,7 @@ function SettingsPage({ user }: { user: z.output<typeof schemas.zUserSummary> })
                     </Dialog>
                 )}
             </Stack>
-            <CreateOrganization isOpen={creating} onOpenChange={setCreating} action={action} />
+            <CreateOrganization isOpen={creating} onOpenChange={setCreating} action={action} invalidate={invalidate} />
         </>
     );
 }

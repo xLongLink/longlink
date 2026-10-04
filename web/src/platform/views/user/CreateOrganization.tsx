@@ -3,7 +3,6 @@ import { useState } from 'react';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
 import type { useAction } from '@/lib/hooks/use-api';
-import { useQueryClient } from '@tanstack/react-query';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import { zOrganizationCreate } from '@/lib/generated/platform-api-v1/zod.gen';
@@ -13,13 +12,14 @@ export default function CreateOrganization({
     isOpen,
     onOpenChange,
     action,
+    invalidate,
 }: {
     isOpen: boolean;
     onOpenChange: (open: boolean) => void;
     action: ReturnType<typeof useAction>;
+    invalidate: () => Promise<void>;
 }) {
     const [name, setName] = useState('');
-    const client = useQueryClient();
 
     // Preserve the parent's pending guards for all actions, not just creation.
     return (
@@ -48,10 +48,7 @@ export default function CreateOrganization({
                         await api.post('/api/v1/organizations', {
                             json: zOrganizationCreate.parse({ name: name.trim() }),
                         });
-                        await client.invalidateQueries({
-                            queryKey: ['api', '/api/v1/me/organizations'],
-                            exact: true,
-                        });
+                        await invalidate();
                         onOpenChange(false);
                     });
                 }}

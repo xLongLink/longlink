@@ -74,14 +74,18 @@ function navigate(path: string): void {
     port.postMessage({ type: 'navigate', path });
 }
 
-/** Reads Solution data through the bridge; the shared boundaries own initial loading and failures. */
-function useApi(path: string): unknown {
+/** Returns Solution data and an awaitable invalidator scoped to the full request path. */
+function useApi(path: string): readonly [unknown, () => Promise<void>] {
     // Use the full request path as cache identity, including pagination parameters.
     const { data } = useSuspenseQuery({
         queryKey: ['api', path],
         queryFn: () => request(path),
     });
-    return data;
+    const invalidate = React.useCallback(
+        () => client.invalidateQueries({ queryKey: ['api', path], exact: true }),
+        [path]
+    );
+    return [data, invalidate];
 }
 
 /** Limits navigation to a host capability rather than granting top-level browser access. */

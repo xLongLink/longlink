@@ -49,7 +49,7 @@ export default [
         ...prefix('admin', [
             layout(
                 './layouts/Admin.tsx',
-                adminPages.map(({ id, path }) => route(path, './routes/admin/Page.tsx', { id }))
+                adminPages.map(({ id, path, module }) => route(path, module, { id }))
             ),
         ]),
         ...prefix('orgs/:organization', [

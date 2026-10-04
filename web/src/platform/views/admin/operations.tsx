@@ -1,12 +1,12 @@
 import type { z } from 'zod';
 import { useState } from 'react';
 import { Info } from 'lucide-react';
+import { NoIndex } from '@/components/Seo';
 import { useApi } from '@/lib/hooks/use-api';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
 import { Heading } from '@astryxdesign/core/Heading';
-import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { Table, proportional } from '@astryxdesign/core/Table';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import { zPageOperationResponse } from '@/lib/generated/platform-api-v1/zod.gen';
@@ -23,10 +23,11 @@ const statuses = { scheduled: 'Scheduled', active: 'Active', completed: 'Complet
 export default function Operations() {
     const [page, setPage] = useState(1);
     const [metadata, setMetadata] = useState<z.output<typeof zPageOperationResponse>['items'][number] | null>(null);
-    const operations = useApi(`/api/v1/operations?page=${page}&page_size=25`, zPageOperationResponse);
+    const [operations] = useApi(`/api/v1/operations?page=${page}&page_size=25`, zPageOperationResponse);
 
     return (
         <Stack gap={8}>
+            <NoIndex title="Operations | LongLink" />
             <Heading level={1}>Operations</Heading>
             <Stack gap={1}>
                 <Table
@@ -69,16 +70,12 @@ export default function Operations() {
                             align: 'end',
                             width: proportional(0.5),
                             renderCell: (row) => (
-                                <MoreMenu
-                                    alignment="end"
-                                    items={[
-                                        {
-                                            id: 'metadata',
-                                            label: 'Metadata',
-                                            icon: <Info />,
-                                            onClick: () => setMetadata(row),
-                                        },
-                                    ]}
+                                <Button
+                                    label="Metadata"
+                                    icon={<Info />}
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => setMetadata(row)}
                                 />
                             ),
                         },

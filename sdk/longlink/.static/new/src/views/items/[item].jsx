@@ -8,8 +8,8 @@ export default function Invoice({ params }) {
     const [file, setFile] = useState(null);
 
     // Read required data; shared boundaries handle initial loading and failures.
-    const item = useApi(`/api/items/${params.item}`);
-    const attachments = useApi(`/api/items/${params.item}/attachments`);
+    const [item] = useApi(`/api/items/${params.item}`);
+    const [attachments] = useApi(`/api/items/${params.item}/attachments`);
 
     return (
         <Stack gap={6}>

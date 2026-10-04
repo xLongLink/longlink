@@ -116,11 +116,11 @@ declare function request<T = unknown>(
 ): Promise<T>;
 
 /**
- * Returns defined data cached by path; the renderer handles initial loading, errors, and retry.
+ * Returns data and an awaitable path-scoped invalidator; the renderer handles initial loading, errors, and retry.
  * @category Runtime
  * @group Solution API
  */
-declare function useApi<T = unknown>(path: string): T;
+declare function useApi<T = unknown>(path: string): readonly [T, () => Promise<void>];
 
 /** @category Layouts */
 declare const Stack: ViewComponent<{

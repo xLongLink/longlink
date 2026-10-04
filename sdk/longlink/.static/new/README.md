@@ -34,7 +34,7 @@ For `src/views/items/[item].jsx`, visiting `/items/123` supplies `params.item` a
 ```jsx
 /** @param {ViewProps} props */
 export default function Item({ params }) {
-    const item = useApi(`/api/items/${params.item}`);
+    const [item] = useApi(`/api/items/${params.item}`);
 
     return <Heading>{item.name}</Heading>;
 }
@@ -49,7 +49,9 @@ are not available. External resources are blocked. Image attachment previews
 use the bridge; PDFs and other active document previews are intentionally not
 supported in the sandbox.
 
-Read required data with `const items = useApi('/api/items')`. The shared renderer
+Read required data with `const [items, invalidate] = useApi('/api/items')`. Call
+`await invalidate()` to mark that exact path stale and refresh its active reads.
+The shared renderer
 shows a loading spinner until data exists and an error banner with Retry if the
 initial request fails. Views do not need loading/error branches. Background
 refresh failures retain cached data. Cache keys are derived internally from the

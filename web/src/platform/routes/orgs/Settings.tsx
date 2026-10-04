@@ -8,14 +8,14 @@ import { Text } from '@astryxdesign/core/Text';
 import { Avatar } from '@/components/ui/Avatar';
 import { Badge } from '@astryxdesign/core/Badge';
 import { Stack } from '@astryxdesign/core/Stack';
-import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
 import { Divider } from '@astryxdesign/core/Divider';
 import { Heading } from '@astryxdesign/core/Heading';
-import { Spinner } from '@astryxdesign/core/Spinner';
 import { RefreshCw, Logs, Trash } from 'lucide-react';
+import { ApiBoundary } from '@/components/ApiBoundary';
 import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { Selector } from '@astryxdesign/core/Selector';
+import { useApi, useAction } from '@/lib/hooks/use-api';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { ProgressBar } from '@astryxdesign/core/ProgressBar';
@@ -24,8 +24,6 @@ import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import CreateSolution from '@/platform/views/orgs/CreateSolution';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
-import { useQueryClient, useSuspenseQueries } from '@tanstack/react-query';
-import { apiQueryOptions, useApiQuery, useAction } from '@/lib/hooks/use-api';
 import { useResolvedOrganizationMembership } from '@/lib/hooks/use-organization';
 
 type Solution = z.output<typeof schemas.zOrganizationSolutionSummary>;
@@ -38,15 +36,14 @@ type Update = {
 type DeploymentReviewProps = {
     update: Update;
     action: ReturnType<typeof useAction>;
-    solutionsPath: string;
+    invalidate: () => Promise<void>;
     onClose: () => void;
 };
 
 /** Owns the deployment draft and submission for a freshly checked candidate. */
-function DeploymentReview({ update, action, solutionsPath, onClose }: DeploymentReviewProps) {
+function DeploymentReview({ update, action, invalidate, onClose }: DeploymentReviewProps) {
     const [envs, setEnvs] = useState<Record<string, string>>({});
     const [removed, setRemoved] = useState<Record<string, boolean>>({});
-    const client = useQueryClient();
 
     // Preserve configured required secrets, and require values for new required environments.
     const missingRequired = (update.candidate.metadata.environments ?? []).some(
@@ -98,7 +95,7 @@ function DeploymentReview({ update, action, solutionsPath, onClose }: Deployment
                                 expected_revision_id: update.candidate.revision_id,
                             }),
                         });
-                        await client.invalidateQueries({ queryKey: ['api', solutionsPath], exact: true });
+                        await invalidate();
                         onClose();
                     });
                 }}
@@ -176,25 +173,16 @@ export default function OrganizationSettings() {
     const [update, setUpdate] = useState<Update | null>(null);
     const [deletion, setDeletion] = useState<{ id: string; name: string } | null>(null);
     const [logs, setLogs] = useState<string | null>(null);
-    const client = useQueryClient();
     const action = useAction();
     const membership = useResolvedOrganizationMembership();
     const base = `/api/v1/organizations/${membership.organization.id}`;
 
-    // Start the independent required reads together rather than suspending serially.
-    const [{ data: details }, { data: storage }, { data: solutions }] = useSuspenseQueries({
-        queries: [
-            apiQueryOptions(base, schemas.zOrganizationDetails),
-            apiQueryOptions(`${base}/storage`, schemas.zOrganizationStorageUsageResponse),
-            apiQueryOptions(
-                `${base}/solutions`,
-                schemas.zGetOrganizationSolutionsApiV1OrganizationsOrganizationIdSolutionsGetResponse
-            ),
-        ],
-    });
-    const solutionLogs = useApiQuery(
-        logs ? `/api/v1/solutions/${logs}/logs` : null,
-        schemas.zGetSolutionLogsApiV1SolutionsSolutionIdLogsGetResponse
+    // Keep each required resource paired with its own scoped invalidator.
+    const [details, invalidateDetails] = useApi(base, schemas.zOrganizationDetails);
+    const [storage] = useApi(`${base}/storage`, schemas.zOrganizationStorageUsageResponse);
+    const [solutions, invalidateSolutions] = useApi(
+        `${base}/solutions`,
+        schemas.zGetOrganizationSolutionsApiV1OrganizationsOrganizationIdSolutionsGetResponse
     );
 
     const canMaintain = ['maintain', 'admin', 'owner'].includes(membership.role);
@@ -385,10 +373,7 @@ export default function OrganizationSettings() {
                                                                                       await api.delete(
                                                                                           `${base}/invitations/${row.id}`
                                                                                       );
-                                                                                      await client.invalidateQueries({
-                                                                                          queryKey: ['api', base],
-                                                                                          exact: true,
-                                                                                      });
+                                                                                      await invalidateDetails();
                                                                                   })
                                                                               }
                                                                           />
@@ -541,7 +526,7 @@ export default function OrganizationSettings() {
                                     email: invitation.email.trim(),
                                 }),
                             });
-                            await client.invalidateQueries({ queryKey: ['api', base], exact: true });
+                            await invalidateDetails();
                             setInviting(false);
                         });
                     }}
@@ -598,7 +583,7 @@ export default function OrganizationSettings() {
                                         await api.patch(`${base}/members/${member.id}`, {
                                             json: schemas.zOrganizationMemberUpdate.parse({ role: member.role }),
                                         });
-                                        await client.invalidateQueries({ queryKey: ['api', base], exact: true });
+                                        await invalidateDetails();
                                         setMember(null);
                                     })
                                 }
@@ -608,14 +593,18 @@ export default function OrganizationSettings() {
                 </Dialog>
             )}
             {creating && (
-                <CreateSolution organizationId={membership.organization.id} onClose={() => setCreating(false)} />
+                <CreateSolution
+                    organizationId={membership.organization.id}
+                    invalidate={invalidateSolutions}
+                    onClose={() => setCreating(false)}
+                />
             )}
             {update && (
                 <DeploymentReview
                     key={update.key}
                     update={update}
                     action={action}
-                    solutionsPath={`${base}/solutions`}
+                    invalidate={invalidateSolutions}
                     onClose={() => setUpdate(null)}
                 />
             )}
@@ -627,20 +616,9 @@ export default function OrganizationSettings() {
                     }}
                 >
                     <DialogHeader title="Pod logs" onOpenChange={() => setLogs(null)} />
-                    <Stack gap={3}>
-                        <Button
-                            label="Refresh logs"
-                            isLoading={solutionLogs.isFetching}
-                            onClick={() => void solutionLogs.refetch()}
-                        />
-                        {solutionLogs.error ? (
-                            <Banner status="error" title="Unable to load logs" />
-                        ) : !solutionLogs.data ? (
-                            <Spinner label="Loading logs" />
-                        ) : (
-                            <CodeBlock code={solutionLogs.data.join('\n')} hasLineNumbers isWrapped size="sm" />
-                        )}
-                    </Stack>
+                    <ApiBoundary key={logs}>
+                        <SolutionLogs solutionId={logs} />
+                    </ApiBoundary>
                 </Dialog>
             )}
             {deletion && (
@@ -674,10 +652,7 @@ export default function OrganizationSettings() {
                                     action.mutate(async () => {
                                         // Refresh Solutions only after the delete request succeeds.
                                         await api.delete(`/api/v1/solutions/${deletion.id}`);
-                                        await client.invalidateQueries({
-                                            queryKey: ['api', `${base}/solutions`],
-                                            exact: true,
-                                        });
+                                        await invalidateSolutions();
                                         setDeletion(null);
                                     })
                                 }
@@ -686,6 +661,20 @@ export default function OrganizationSettings() {
                     </Stack>
                 </Dialog>
             )}
+        </Stack>
+    );
+}
+
+/** Loads pod logs only while their dialog is open. */
+function SolutionLogs({ solutionId }: { solutionId: string }) {
+    const [logs, invalidate] = useApi(
+        `/api/v1/solutions/${solutionId}/logs`,
+        schemas.zGetSolutionLogsApiV1SolutionsSolutionIdLogsGetResponse
+    );
+    return (
+        <Stack gap={3}>
+            <Button label="Refresh logs" clickAction={invalidate} />
+            <CodeBlock code={logs.join('\n')} hasLineNumbers isWrapped size="sm" />
         </Stack>
     );
 }

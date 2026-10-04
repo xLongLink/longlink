@@ -227,7 +227,7 @@
     {
         "name": "Solution API",
         "category": "Runtime",
-        "declaration": "declare function navigate(path: string): void;\n\ndeclare function request<T = unknown>(\n    path: string,\n    options?: {\n        method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';\n        json?: unknown;\n        form?: [string, string | Blob][];\n        binary?: boolean;\n    }\n): Promise<T>;\n\ndeclare function useApi<T = unknown>(path: string): T;"
+        "declaration": "declare function navigate(path: string): void;\n\ndeclare function request<T = unknown>(\n    path: string,\n    options?: {\n        method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';\n        json?: unknown;\n        form?: [string, string | Blob][];\n        binary?: boolean;\n    }\n): Promise<T>;\n\ndeclare function useApi<T = unknown>(path: string): readonly [T, () => Promise<void>];"
     },
     {
         "name": "Spinner",

@@ -19,7 +19,7 @@ export default function Organization() {
     const [creating, setCreating] = useState(false);
     const membership = useResolvedOrganizationMembership();
     const organizationId = membership.organization.id;
-    const solutions = useApi(
+    const [solutions, invalidateSolutions] = useApi(
         `/api/v1/organizations/${organizationId}/solutions`,
         schemas.zGetOrganizationSolutionsApiV1OrganizationsOrganizationIdSolutionsGetResponse
     );
@@ -61,7 +61,13 @@ export default function Organization() {
                         },
                     ]}
                 />
-                {creating && <CreateSolution organizationId={organizationId} onClose={() => setCreating(false)} />}
+                {creating && (
+                    <CreateSolution
+                        organizationId={organizationId}
+                        invalidate={invalidateSolutions}
+                        onClose={() => setCreating(false)}
+                    />
+                )}
             </Stack>
         </>
     );

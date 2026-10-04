@@ -443,7 +443,7 @@ export default function DocsArticleRoute() {
                 <CodeBlock
                     code={`/** @param {ViewProps} props */
 export default function Item({ params }) {
-  const item = useApi(\`/api/items/\${params.item}\`);
+  const [item] = useApi(\`/api/items/\${params.item}\`);
 
   return <Heading>{item.name}</Heading>;
 }`}

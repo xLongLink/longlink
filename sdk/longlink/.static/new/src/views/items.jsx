@@ -3,7 +3,7 @@ export default function Invoices() {
     const [page, setPage] = useState(1);
     const [open, setOpen] = useState(false);
     const [draft, setDraft] = useState({ name: '', price: 0, status: 'draft' });
-    const invoices = useApi(`/api/items?page=${page}&page_size=8`);
+    const [invoices] = useApi(`/api/items?page=${page}&page_size=8`);
 
     return (
         <Stack gap={8}>

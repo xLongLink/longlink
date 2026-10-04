@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { useAction } from '@/lib/hooks/use-api';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
-import { useQueryClient } from '@tanstack/react-query';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { Step, Stepper } from '@astryxdesign/core/Stepper';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
@@ -16,13 +15,20 @@ type Stage =
     | { step: 2; metadata: z.output<typeof schemas.zLongLinkMetadata> };
 
 /** Owns one creation attempt, shared by the organization list and settings pages. */
-export default function CreateSolution({ organizationId, onClose }: { organizationId: string; onClose: () => void }) {
+export default function CreateSolution({
+    organizationId,
+    invalidate,
+    onClose,
+}: {
+    organizationId: string;
+    invalidate: () => Promise<void>;
+    onClose: () => void;
+}) {
     const [stage, setStage] = useState<Stage>({ step: 0 });
     const [image, setImage] = useState('');
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
     const [envs, setEnvs] = useState<Record<string, string>>({});
-    const client = useQueryClient();
     const action = useAction();
 
     return (
@@ -146,10 +152,7 @@ export default function CreateSolution({ organizationId, onClose }: { organizati
                                         name: name.trim(),
                                     });
                                     await api.post(`/api/v1/organizations/${organizationId}/solutions`, { json });
-                                    await client.invalidateQueries({
-                                        queryKey: ['api', `/api/v1/organizations/${organizationId}/solutions`],
-                                        exact: true,
-                                    });
+                                    await invalidate();
                                     onClose();
                                 });
                             }}

@@ -66,28 +66,80 @@ const reactExample = `export default function Counter() {
 }`;
 
 // LongLink-only components have no equivalent Astryx reference or upstream examples.
-const solutionReferences: Record<string, { introduction: string; code: string; anatomy: string; practice: string }> = {
+const solutionReferences: Record<
+    string,
+    Pick<(typeof references)[number], 'introduction' | 'examples' | 'anatomy' | 'properties' | 'practices'>
+> = {
     Currency: {
         introduction: 'Currency formats a numeric value with the browser’s locale-aware currency formatter.',
-        code: '<Currency value={1234.5} currency="USD" />',
-        anatomy: 'The formatted amount is rendered as text, without an additional wrapper.',
-        practice:
-            'Pass a numeric value and a valid currency code. Set locale when a specific regional format is required.',
+        examples: [{ title: 'Currency', description: '', code: '<Currency value={1234.5} currency="USD" />' }],
+        anatomy: [
+            {
+                name: 'Currency',
+                required: false,
+                description: 'The formatted amount is rendered as text, without an additional wrapper.',
+            },
+        ],
+        properties: [],
+        practices: [
+            {
+                guidance: true,
+                description:
+                    'Pass a numeric value and a valid currency code. Set locale when a specific regional format is required.',
+            },
+        ],
     },
     FileViewer: {
         introduction: 'FileViewer opens an image attachment preview through the scoped Solution API.',
-        code: '<FileViewer src="/api/items/123/image" title="View image" />',
-        anatomy: 'A button toggles the preview. The preview displays a loading, ready, or unavailable state.',
-        practice:
-            'Use a descriptive title and an image endpoint in your Solution. Other file types cannot be previewed.',
+        examples: [
+            {
+                title: 'FileViewer',
+                description: '',
+                code: '<FileViewer src="/api/items/123/image" title="View image" />',
+            },
+        ],
+        anatomy: [
+            {
+                name: 'FileViewer',
+                required: false,
+                description:
+                    'A button toggles the preview. The preview displays a loading, ready, or unavailable state.',
+            },
+        ],
+        properties: [],
+        practices: [
+            {
+                guidance: true,
+                description:
+                    'Use a descriptive title and an image endpoint in your Solution. Other file types cannot be previewed.',
+            },
+        ],
     },
     Menu: {
         introduction: 'Menu combines Astryx SideNav with the selected section’s content.',
-        code: '<Menu sections={[{ title: "Settings", entries: [{ kind: "item", id: "profile", label: "Profile", content: <Text>Profile settings</Text> }] }]} />',
-        anatomy:
-            'Sections contain navigation items or nested subsections. The selected item’s content appears beside the navigation.',
-        practice:
-            'Give each item a stable, unique id and a descriptive label. The URL hash identifies the selected item.',
+        examples: [
+            {
+                title: 'Menu',
+                description: '',
+                code: '<Menu sections={[{ title: "Settings", entries: [{ kind: "item", id: "profile", label: "Profile", content: <Text>Profile settings</Text> }] }]} />',
+            },
+        ],
+        anatomy: [
+            {
+                name: 'Menu',
+                required: false,
+                description:
+                    'Sections contain navigation items or nested subsections. The selected item’s content appears beside the navigation.',
+            },
+        ],
+        properties: [],
+        practices: [
+            {
+                guidance: true,
+                description:
+                    'Give each item a stable, unique id and a descriptive label. The URL hash identifies the selected item.',
+            },
+        ],
     },
 };
 
@@ -99,9 +151,9 @@ export default function DocsArticleRoute() {
     // Resolve the catalog entry before accessing its generated reference.
     const component = componentDocumentation.find((candidate) => candidate.slug === slug);
     if (!component) return <NotFoundLayout />;
-    const reference = references.find((candidate) => candidate.name === component.name);
+    const upstream = references.find((candidate) => candidate.name === component.name);
     const solution = solutionReferences[component.name];
-    const practices = reference?.practices ?? (solution ? [{ guidance: true, description: solution.practice }] : []);
+    const reference = upstream ?? solution;
     const requestedTab = searchParams.get('tab');
     const activeTab = tabs.find((candidate) => candidate.value === requestedTab) ?? tabs[0];
     const tab = activeTab.value;
@@ -125,9 +177,7 @@ export default function DocsArticleRoute() {
               ]),
     ];
     const article = {
-        description: react
-            ? reactIntroduction
-            : (reference?.introduction ?? solution?.introduction ?? `${component.name} in LongLink Views.`),
+        description: react ? reactIntroduction : (reference?.introduction ?? `${component.name} in LongLink Views.`),
         lastUpdated: documentationLastUpdated,
         editUrl: 'https://github.com/xLongLink/longlink/edit/main/sdk/longlink/.static/jsx/frontend.d.ts',
         title: `${component.name} | LongLink Documentation`,
@@ -141,8 +191,8 @@ export default function DocsArticleRoute() {
                     <Heading id="introduction" level={1}>
                         {component.name}
                     </Heading>
-                    {reference && (
-                        <Link href={reference.url} hasUnderline>
+                    {upstream && (
+                        <Link href={upstream.url} hasUnderline>
                             Astryx documentation
                         </Link>
                     )}
@@ -156,7 +206,6 @@ export default function DocsArticleRoute() {
                     {react
                         ? reactIntroduction
                         : (reference?.introduction ??
-                          solution?.introduction ??
                           `${component.name} is supplied by the isolated LongLink renderer.`)}
                 </Text>
                 {solution && <Text as="p">This is a LongLink-specific component.</Text>}
@@ -238,69 +287,68 @@ export default function DocsArticleRoute() {
                                         <CodeBlock
                                             key={example.title}
                                             code={example.code}
-                                            language="tsx"
+                                            language={upstream ? 'tsx' : 'jsx'}
                                             hasLanguageLabel={false}
                                         />
                                     ))}
-                                    {reference && !reference.examples.length && (
+                                    {upstream && !reference?.examples.length && (
                                         <Text as="p">
                                             Astryx does not publish standalone examples for this component. See its
                                             documentation link above.
                                         </Text>
                                     )}
-                                    {solution && (
-                                        <CodeBlock code={solution.code} language="jsx" hasLanguageLabel={false} />
-                                    )}
                                 </>
                             )}
-                            {tab === 'anatomy' && (
-                                <>
-                                    {reference &&
-                                        (reference.anatomy.length ? (
-                                            <Table
-                                                data={reference.anatomy}
-                                                idKey="name"
-                                                density="compact"
-                                                columns={[
-                                                    {
-                                                        key: 'name',
-                                                        header: 'Element',
-                                                        width: proportional(1),
-                                                        renderCell: (item) => (
-                                                            <Stack gap={1}>
-                                                                <Text>{item.name}</Text>
-                                                                {item.required && (
-                                                                    <Badge
-                                                                        className="h-4 self-start px-1"
-                                                                        label={
-                                                                            <Text size="xsm" color="inherit">
-                                                                                Required
-                                                                            </Text>
-                                                                        }
-                                                                    />
-                                                                )}
-                                                            </Stack>
-                                                        ),
-                                                    },
-                                                    {
-                                                        key: 'description',
-                                                        header: 'Description',
-                                                        width: proportional(4),
-                                                        renderCell: (item) => (
-                                                            <Text type="supporting">{item.description}</Text>
-                                                        ),
-                                                    },
-                                                ]}
-                                            />
-                                        ) : (
-                                            <Text as="p">
-                                                Astryx does not publish anatomy guidance for this component.
-                                            </Text>
-                                        ))}
-                                    {solution && <Text as="p">{solution.anatomy}</Text>}
-                                </>
-                            )}
-                            {tab === 'properties' && reference && (
+                            {tab === 'anatomy' &&
+                                reference &&
+                                (upstream ? (
+                                    reference.anatomy.length ? (
+                                        <Table
+                                            data={reference.anatomy}
+                                            idKey="name"
+                                            density="compact"
+                                            columns={[
+                                                {
+                                                    key: 'name',
+                                                    header: 'Element',
+                                                    width: proportional(1),
+                                                    renderCell: (item) => (
+                                                        <Stack gap={1}>
+                                                            <Text>{item.name}</Text>
+                                                            {item.required && (
+                                                                <Badge
+                                                                    className="h-4 self-start px-1"
+                                                                    label={
+                                                                        <Text size="xsm" color="inherit">
+                                                                            Required
+                                                                        </Text>
+                                                                    }
+                                                                />
+                                                            )}
+                                                        </Stack>
+                                                    ),
+                                                },
+                                                {
+                                                    key: 'description',
+                                                    header: 'Description',
+                                                    width: proportional(4),
+                                                    renderCell: (item) => (
+                                                        <Text type="supporting">{item.description}</Text>
+                                                    ),
+                                                },
+                                            ]}
+                                        />
+                                    ) : (
+                                        <Text as="p">Astryx does not publish anatomy guidance for this component.</Text>
+                                    )
+                                ) : (
+                                    reference.anatomy.map((item) => (
+                                        <Text key={item.name} as="p">
+                                            {item.description}
+                                        </Text>
+                                    ))
+                                ))}
+                            {tab === 'properties' && upstream && reference && (
                                 <Table
                                     data={reference.properties}
                                     idKey="name"
@@ -341,9 +389,9 @@ export default function DocsArticleRoute() {
                             )}
                             {tab === 'best-practices' && (
                                 <>
-                                    {practices.length > 0 && (
+                                    {reference && reference.practices.length > 0 && (
                                         <Table
-                                            data={practices}
+                                            data={reference.practices}
                                             idKey="description"
                                             density="compact"
                                             columns={[
@@ -369,7 +417,7 @@ export default function DocsArticleRoute() {
                                             ]}
                                         />
                                     )}
-                                    {reference && !reference.practices.length && (
+                                    {upstream && !reference?.practices.length && (
                                         <Text as="p">Astryx does not publish best practices for this component.</Text>
                                     )}
                                 </>

@@ -2,7 +2,6 @@
 import { act } from 'react';
 import { RootProvider } from '@/providers';
 import { createRoot } from 'react-dom/client';
-import { cleanupMountedRoot } from './helpers';
 import { ApiBoundary } from '@/components/ApiBoundary';
 import Settings from '@/platform/routes/orgs/Settings';
 import { MemoryRouter, Route, Routes } from 'react-router';
@@ -32,7 +31,10 @@ describe('Solution source update dialog', () => {
     let container: HTMLElement | undefined;
 
     afterEach(async () => {
-        await cleanupMountedRoot(root);
+        // Unmount before removing the container and restoring globals.
+        const mountedRoot = root;
+        if (mountedRoot) await act(async () => mountedRoot.unmount());
+
         container?.remove();
         vi.unstubAllGlobals();
     });

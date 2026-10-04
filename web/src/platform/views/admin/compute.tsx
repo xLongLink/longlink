@@ -2,13 +2,12 @@ import { z } from 'zod';
 import { api } from '@/lib/api';
 import { useState } from 'react';
 import { Info } from 'lucide-react';
+import { NoIndex } from '@/components/Seo';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
 import { Heading } from '@astryxdesign/core/Heading';
-import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { TextArea } from '@astryxdesign/core/TextArea';
-import { useQueryClient } from '@tanstack/react-query';
 import { useApi, useAction } from '@/lib/hooks/use-api';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { Table, proportional } from '@astryxdesign/core/Table';
@@ -27,13 +26,13 @@ export default function Compute() {
         | null
     >(null);
     const [registration, setRegistration] = useState<z.input<typeof registrationSchema> | null>(null);
-    const client = useQueryClient();
     const action = useAction();
     const path = `/api/v1/computes?page=${page}&page_size=25`;
-    const computes = useApi(path, schemas.zPageComputeRegistryResponse);
+    const [computes, invalidate] = useApi(path, schemas.zPageComputeRegistryResponse);
 
     return (
         <Stack gap={8}>
+            <NoIndex title="Compute | LongLink" />
             <Stack direction="horizontal" justify="between" align="center" wrap="wrap">
                 <Heading level={1}>Compute</Heading>
                 <Button
@@ -65,16 +64,12 @@ export default function Compute() {
                             align: 'end',
                             width: proportional(0.5),
                             renderCell: (row) => (
-                                <MoreMenu
-                                    alignment="end"
-                                    items={[
-                                        {
-                                            id: 'metadata',
-                                            label: 'Metadata',
-                                            icon: <Info />,
-                                            onClick: () => setDialog({ kind: 'metadata', item: row }),
-                                        },
-                                    ]}
+                                <Button
+                                    label="Metadata"
+                                    icon={<Info />}
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => setDialog({ kind: 'metadata', item: row })}
                                 />
                             ),
                         },
@@ -109,7 +104,7 @@ export default function Compute() {
                             // Validate the registration and leave the draft open on failure.
                             action.mutate(async () => {
                                 await api.post('/api/v1/computes', { json: registrationSchema.parse(registration) });
-                                await client.invalidateQueries({ queryKey: ['api', path], exact: true });
+                                await invalidate();
                                 setRegistration(null);
                             });
                         }}
@@ -223,7 +218,7 @@ export default function Compute() {
                                     action.mutate(async () => {
                                         // Remove the registry entry without deleting its Kubernetes resources.
                                         await api.delete(`/api/v1/computes/${dialog.item.id}`);
-                                        await client.invalidateQueries({ queryKey: ['api', path], exact: true });
+                                        await invalidate();
                                         setDialog(null);
                                     })
                                 }

@@ -4,7 +4,6 @@ import { webcrypto } from 'node:crypto';
 import { requestUrl } from '@/views/host';
 import { createRoot } from 'react-dom/client';
 import { ApiErrorContext } from '@/lib/errors';
-import { cleanupMountedRoot } from '../helpers';
 import { ApiBoundary } from '@/components/ApiBoundary';
 import { createQueryRuntime } from '@/lib/react-query';
 import { SolutionRuntime } from '@/components/Solution';
@@ -17,7 +16,10 @@ describe('SolutionRuntime', () => {
     let mountedContainer: HTMLDivElement | undefined;
 
     afterEach(async () => {
-        await cleanupMountedRoot(root);
+        // Unmount before removing the container and restoring globals.
+        const mountedRoot = root;
+        if (mountedRoot) await act(async () => mountedRoot.unmount());
+
         root = undefined;
         mountedContainer?.remove();
         mountedContainer = undefined;

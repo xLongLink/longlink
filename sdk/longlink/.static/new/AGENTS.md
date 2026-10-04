@@ -38,7 +38,7 @@ You are working on a LongLink Solution project:
 - Use `useState()`, `useEffect()`, `useMemo()`, and `useRef()` directly; no import or `React.` prefix is needed. Use fragments as `<>...</>` or `<Fragment>...</Fragment>`.
 - Display titles come from JSX filenames (`items.jsx` → Items, `[item].jsx` → Item); tabs use the default icon. Do not add metadata sidecars or exports.
 - Requests are Solution-relative and pass through a restricted host bridge. Never use direct fetch, Platform credentials, external resources, or parent-window access.
-- Prefer `useApi(path)` for required data: it returns data directly, while the renderer handles initial loading, errors, and retry. Cache keys are derived internally from the full path, including query parameters.
+- Prefer `const [data, invalidate] = useApi(path)` for required data. Call `await invalidate()` to revalidate that exact path when needed; the renderer handles initial loading, errors, and retry. Cache keys are derived internally from the full path, including query parameters.
 - Successful writes through `request()` automatically refresh cached data within this isolated View. No explicit invalidation is needed.
 - Use separate `useApi` calls for multiple resources. Mount a component using `useApi` only when its resource is needed. Cached data remains visible if a background refresh fails.
 - Use the sample Views as the current JSX API reference.
