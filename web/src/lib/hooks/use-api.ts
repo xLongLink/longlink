@@ -4,7 +4,7 @@ import { queryOptions, skipToken, useMutation, useQuery, useSuspenseQuery } from
 
 /** Builds validated Platform reads with a shared cache identity and request policy. */
 export function apiQueryOptions<T>(path: string, schema: z.ZodType<T>) {
-    return queryOptions({
+    return queryOptions<T, Error, T, readonly ['api', string | null]>({
         queryKey: ['api', path],
         queryFn: async ({ signal }) => schema.parse(await api(path, { signal }).json()),
         retry: false,
@@ -20,12 +20,11 @@ export function useApi<T>(path: string, schema: z.ZodType<T>): T {
 
 /** Reads and validates Platform data, disabling dependent queries until their path is known. */
 export function useApiQuery<T>(path: string | null, schema: z.ZodType<T>) {
-    return useQuery({
-        queryKey: ['api', path],
-        queryFn: path === null ? skipToken : async ({ signal }) => schema.parse(await api(path, { signal }).json()),
-        retry: false,
-        staleTime: 0,
-    });
+    return useQuery(
+        path === null
+            ? { queryKey: ['api', path] as const, queryFn: skipToken, retry: false, staleTime: 0 }
+            : apiQueryOptions(path, schema)
+    );
 }
 
 /** Runs a page action with pending state and root-owned mutation error reporting. */

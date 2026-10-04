@@ -10,14 +10,18 @@ import { Step, Stepper } from '@astryxdesign/core/Stepper';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 
+type Stage =
+    | { step: 0 }
+    | { step: 1; metadata: z.output<typeof schemas.zLongLinkMetadata> }
+    | { step: 2; metadata: z.output<typeof schemas.zLongLinkMetadata> };
+
 /** Owns one creation attempt, shared by the organization list and settings pages. */
 export default function CreateSolution({ organizationId, onClose }: { organizationId: string; onClose: () => void }) {
-    const [step, setStep] = useState(0);
+    const [stage, setStage] = useState<Stage>({ step: 0 });
     const [image, setImage] = useState('');
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
     const [envs, setEnvs] = useState<Record<string, string>>({});
-    const [metadata, setMetadata] = useState<z.output<typeof schemas.zLongLinkMetadata> | null>(null);
     const client = useQueryClient();
     const action = useAction();
 
@@ -35,9 +39,14 @@ export default function CreateSolution({ organizationId, onClose }: { organizati
                     if (!action.isPending) onClose();
                 }}
             />
-            <Stepper activeStep={step} indicatorPosition="on-track" label="Solution creation" orientation="vertical">
+            <Stepper
+                activeStep={stage.step}
+                indicatorPosition="on-track"
+                label="Solution creation"
+                orientation="vertical"
+            >
                 <Step step={0} label="Image" description="Inspect the solution image.">
-                    {step === 0 && (
+                    {stage.step === 0 && (
                         <Stack
                             gap={3}
                             as="form"
@@ -51,10 +60,9 @@ export default function CreateSolution({ organizationId, onClose }: { organizati
                                         await api('/api/v1/image', { searchParams: { image: image.trim() } }).json()
                                     );
                                     setImage(image.trim());
-                                    setMetadata(inspected);
                                     setDescription(inspected.description || '');
                                     setEnvs({});
-                                    setStep(1);
+                                    setStage({ step: 1, metadata: inspected });
                                 });
                             }}
                         >
@@ -92,13 +100,13 @@ export default function CreateSolution({ organizationId, onClose }: { organizati
                     )}
                 </Step>
                 <Step step={1} label="Metadata" description="Name and describe the solution.">
-                    {step === 1 && (
+                    {stage.step === 1 && (
                         <Stack
                             gap={3}
                             as="form"
                             onSubmit={(event) => {
                                 event.preventDefault();
-                                if (name.trim()) setStep(2);
+                                if (name.trim()) setStage({ step: 2, metadata: stage.metadata });
                             }}
                         >
                             <TextInput label="Name" value={name} isRequired onChange={setName} />
@@ -109,7 +117,7 @@ export default function CreateSolution({ organizationId, onClose }: { organizati
                                 onChange={setDescription}
                             />
                             <Stack direction="horizontal" gap={2} justify="between" wrap="wrap">
-                                <Button label="Back" variant="ghost" onClick={() => setStep(0)} />
+                                <Button label="Back" variant="ghost" onClick={() => setStage({ step: 0 })} />
                                 <Stack direction="horizontal" gap={2}>
                                     <Button label="Cancel" variant="ghost" onClick={onClose} />
                                     <Button label="Next" variant="primary" type="submit" isDisabled={!name.trim()} />
@@ -119,7 +127,7 @@ export default function CreateSolution({ organizationId, onClose }: { organizati
                     )}
                 </Step>
                 <Step step={2} label="Environment" description="Configure environment values.">
-                    {step === 2 && metadata && (
+                    {stage.step === 2 && (
                         <Stack
                             gap={3}
                             as="form"
@@ -146,7 +154,7 @@ export default function CreateSolution({ organizationId, onClose }: { organizati
                                 });
                             }}
                         >
-                            {(metadata.environments ?? []).map((environment) => (
+                            {(stage.metadata.environments ?? []).map((environment) => (
                                 <TextInput
                                     key={environment.name}
                                     label={environment.name}
@@ -161,7 +169,7 @@ export default function CreateSolution({ organizationId, onClose }: { organizati
                                     label="Back"
                                     variant="ghost"
                                     isDisabled={action.isPending}
-                                    onClick={() => setStep(1)}
+                                    onClick={() => setStage({ step: 1, metadata: stage.metadata })}
                                 />
                                 <Stack direction="horizontal" gap={2}>
                                     <Button

@@ -6,6 +6,7 @@ import * as components from './components';
 import { createRoot } from 'react-dom/client';
 import * as links from '@astryxdesign/core/Link';
 import { Theme } from '@astryxdesign/core/theme';
+import { ErrorBoundary } from 'react-error-boundary';
 import { LayerProvider } from '@astryxdesign/core/Layer';
 import { QueryClient, QueryClientProvider, QueryErrorResetBoundary, useSuspenseQuery } from '@tanstack/react-query';
 import {
@@ -156,36 +157,6 @@ function FilePreview({ src, title }: { src: string; title: string }) {
     );
 }
 
-/** Contains render failures without exposing host data or internals. */
-class ViewBoundary extends React.Component<{ children: React.ReactNode; onReset: () => void }, { failed: boolean }> {
-    state = { failed: false };
-
-    static getDerivedStateFromError() {
-        return { failed: true };
-    }
-
-    render() {
-        return this.state.failed ? (
-            <components.Banner
-                status="error"
-                title="View could not be loaded"
-                endContent={
-                    <components.Button
-                        label="Retry"
-                        clickAction={() => {
-                            // Allow failed queries to fetch again before remounting the View.
-                            this.props.onReset();
-                            this.setState({ failed: false });
-                        }}
-                    />
-                }
-            />
-        ) : (
-            this.props.children
-        );
-    }
-}
-
 const initialization = z.object({ session: z.string(), source: z.string(), params: parametersSchema }).strict();
 
 /** Receives source once from the parent, then accepts capabilities only over the transferred port. */
@@ -277,11 +248,22 @@ function initialize(event: MessageEvent<unknown>): void {
                     <QueryClientProvider client={client}>
                         <QueryErrorResetBoundary>
                             {({ reset }) => (
-                                <ViewBoundary onReset={reset}>
+                                <ErrorBoundary
+                                    onReset={reset}
+                                    fallbackRender={({ resetErrorBoundary }) => (
+                                        <components.Banner
+                                            status="error"
+                                            title="View could not be loaded"
+                                            endContent={
+                                                <components.Button label="Retry" clickAction={resetErrorBoundary} />
+                                            }
+                                        />
+                                    )}
+                                >
                                     <React.Suspense fallback={<components.Spinner label="Loading View" />}>
                                         <View params={params} />
                                     </React.Suspense>
-                                </ViewBoundary>
+                                </ErrorBoundary>
                             )}
                         </QueryErrorResetBoundary>
                     </QueryClientProvider>

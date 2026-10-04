@@ -1,5 +1,6 @@
 import type { z } from 'zod';
 import { api } from '@/lib/api';
+import { useState } from 'react';
 import { NoIndex } from '@/components/Seo';
 import { Menu } from '@/components/ui/Menu';
 import { Link } from '@astryxdesign/core/Link';
@@ -17,7 +18,6 @@ import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { Selector } from '@astryxdesign/core/Selector';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { TextInput } from '@astryxdesign/core/TextInput';
-import { useState, type SubmitEventHandler } from 'react';
 import { ProgressBar } from '@astryxdesign/core/ProgressBar';
 import { Table, proportional } from '@astryxdesign/core/Table';
 import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
@@ -30,41 +30,79 @@ import { useResolvedOrganizationMembership } from '@/lib/hooks/use-organization'
 
 type Solution = z.output<typeof schemas.zOrganizationSolutionSummary>;
 type Update = {
+    // Remount drafts for every fresh check, including checks of the same revision.
+    key: string;
     item: { id: string; name: string };
     candidate: z.output<typeof schemas.zSolutionUpdateCheck>;
-    envs: Record<string, string>;
-    removed: Record<string, boolean>;
 };
 type DeploymentReviewProps = {
     update: Update;
-    isPending: boolean;
-    isDisabled: boolean;
+    action: ReturnType<typeof useAction>;
+    solutionsPath: string;
     onClose: () => void;
-    onSubmit: SubmitEventHandler<HTMLElement>;
-    onEnvironmentChange: (name: string, value: string) => void;
-    onRemovalChange: (name: string, value: boolean) => void;
 };
 
-/** Presents a deployment review while the parent owns the draft and submission. */
-function DeploymentReview({
-    update,
-    isPending,
-    isDisabled,
-    onClose,
-    onSubmit,
-    onEnvironmentChange,
-    onRemovalChange,
-}: DeploymentReviewProps) {
+/** Owns the deployment draft and submission for a freshly checked candidate. */
+function DeploymentReview({ update, action, solutionsPath, onClose }: DeploymentReviewProps) {
+    const [envs, setEnvs] = useState<Record<string, string>>({});
+    const [removed, setRemoved] = useState<Record<string, boolean>>({});
+    const client = useQueryClient();
+
+    // Preserve configured required secrets, and require values for new required environments.
+    const missingRequired = (update.candidate.metadata.environments ?? []).some(
+        (environment) =>
+            environment.required &&
+            (removed[environment.name] === true ||
+                (!update.candidate.configured_envs.includes(environment.name) &&
+                    (!Object.hasOwn(envs, environment.name) || !envs[environment.name].trim())))
+    );
+    const hasChanges =
+        update.candidate.metadata.image !== update.candidate.current_image ||
+        Object.keys(envs).length > 0 ||
+        Object.values(removed).some(Boolean);
+
     return (
         <Dialog
             isOpen
             purpose="form"
             onOpenChange={(open) => {
-                if (!open) onClose();
+                if (!open && !action.isPending) onClose();
             }}
         >
-            <DialogHeader title={`Update ${update.item.name}`} onOpenChange={onClose} />
-            <Stack gap={3} as="form" onSubmit={onSubmit}>
+            <DialogHeader
+                title={`Update ${update.item.name}`}
+                onOpenChange={() => {
+                    if (!action.isPending) onClose();
+                }}
+            />
+            <Stack
+                gap={3}
+                as="form"
+                onSubmit={(event) => {
+                    event.preventDefault();
+                    if (action.isPending || missingRequired || !hasChanges) return;
+
+                    // Send edited secrets and explicit removals, preserving all omitted values.
+                    action.mutate(async () => {
+                        const patchEnvs = {
+                            ...envs,
+                            ...Object.fromEntries(
+                                Object.entries(removed)
+                                    .filter(([, removed]) => removed)
+                                    .map(([name]) => [name, null])
+                            ),
+                        };
+                        await api.post(`/api/v1/solutions/${update.item.id}/update`, {
+                            json: schemas.zSolutionPatch.parse({
+                                envs: patchEnvs,
+                                expected_revision_id: update.candidate.revision_id,
+                            }),
+                        });
+                        await client.invalidateQueries({ queryKey: ['api', solutionsPath], exact: true });
+                        onClose();
+                    });
+                }}
+            >
                 <Stack direction="horizontal" gap={2} align="center" wrap="wrap">
                     <Text type="supporting" color="secondary">
                         Current {update.candidate.current_image_digest}
@@ -75,7 +113,7 @@ function DeploymentReview({
                 </Stack>
                 {(update.candidate.metadata.environments ?? []).map((environment) => {
                     const configured = update.candidate.configured_envs.includes(environment.name);
-                    const removed = update.removed[environment.name] === true;
+                    const isRemoved = removed[environment.name] === true;
 
                     // Configured secrets remain hidden; blank untouched inputs preserve them.
                     return (
@@ -84,39 +122,44 @@ function DeploymentReview({
                                 label={environment.name}
                                 labelTooltip={environment.description ?? undefined}
                                 type="password"
-                                value={
-                                    Object.hasOwn(update.envs, environment.name) ? update.envs[environment.name] : ''
-                                }
-                                isDisabled={removed}
+                                value={Object.hasOwn(envs, environment.name) ? envs[environment.name] : ''}
+                                isDisabled={isRemoved}
                                 isOptional={!environment.required}
-                                isRequired={environment.required && (!configured || removed)}
+                                isRequired={environment.required && (!configured || isRemoved)}
                                 placeholder={
-                                    removed
+                                    isRemoved
                                         ? 'Will be removed'
                                         : configured
                                           ? 'Configured: preserve existing value'
                                           : environment.description || 'Enter value'
                                 }
-                                onChange={(value) => onEnvironmentChange(environment.name, value)}
+                                onChange={(value) => setEnvs({ ...envs, [environment.name]: value })}
                             />
                             {configured && !environment.required && (
                                 <CheckboxInput
                                     label={`Remove ${environment.name}`}
-                                    value={removed}
-                                    onChange={(value) => onRemovalChange(environment.name, value)}
+                                    value={isRemoved}
+                                    onChange={(value) => setRemoved({ ...removed, [environment.name]: value })}
                                 />
                             )}
                         </Stack>
                     );
                 })}
                 <Stack direction="horizontal" gap={2} justify="end" wrap="wrap">
-                    <Button label="Cancel" variant="ghost" isDisabled={isPending} onClick={onClose} />
+                    <Button
+                        label="Cancel"
+                        variant="ghost"
+                        isDisabled={action.isPending}
+                        onClick={() => {
+                            if (!action.isPending) onClose();
+                        }}
+                    />
                     <Button
                         label="Update solution"
                         variant="primary"
                         type="submit"
-                        isDisabled={isDisabled}
-                        isLoading={isPending}
+                        isDisabled={missingRequired || !hasChanges}
+                        isLoading={action.isPending}
                     />
                 </Stack>
             </Stack>
@@ -156,22 +199,6 @@ export default function OrganizationSettings() {
 
     const canMaintain = ['maintain', 'admin', 'owner'].includes(membership.role);
     const canAdminister = ['admin', 'owner'].includes(membership.role);
-
-    // Preserve configured required secrets, and require values for new required environments.
-    const missingRequired =
-        update &&
-        (update.candidate.metadata.environments ?? []).some(
-            (environment) =>
-                environment.required &&
-                (update.removed[environment.name] === true ||
-                    (!update.candidate.configured_envs.includes(environment.name) &&
-                        (!Object.hasOwn(update.envs, environment.name) || !update.envs[environment.name].trim())))
-        );
-    const hasChanges =
-        update &&
-        (update.candidate.metadata.image !== update.candidate.current_image ||
-            Object.keys(update.envs).length > 0 ||
-            Object.values(update.removed).some(Boolean));
 
     return (
         <Stack gap={8}>
@@ -443,13 +470,12 @@ export default function OrganizationSettings() {
                                                                                                         ).json()
                                                                                                     );
                                                                                                 setUpdate({
+                                                                                                    key: crypto.randomUUID(),
                                                                                                     item: {
                                                                                                         id: row.id,
                                                                                                         name: row.name,
                                                                                                     },
                                                                                                     candidate: checked,
-                                                                                                    envs: {},
-                                                                                                    removed: {},
                                                                                                 });
                                                                                             }),
                                                                                     },
@@ -586,42 +612,11 @@ export default function OrganizationSettings() {
             )}
             {update && (
                 <DeploymentReview
+                    key={update.key}
                     update={update}
-                    isPending={action.isPending}
-                    isDisabled={Boolean(missingRequired || !hasChanges)}
-                    onClose={() => {
-                        if (!action.isPending) setUpdate(null);
-                    }}
-                    onEnvironmentChange={(name, value) =>
-                        setUpdate({ ...update, envs: { ...update.envs, [name]: value } })
-                    }
-                    onRemovalChange={(name, value) =>
-                        setUpdate({ ...update, removed: { ...update.removed, [name]: value } })
-                    }
-                    onSubmit={(event) => {
-                        event.preventDefault();
-                        if (action.isPending || missingRequired || !hasChanges) return;
-
-                        // Send edited secrets and explicit removals, preserving all omitted values.
-                        action.mutate(async () => {
-                            const envs = {
-                                ...update.envs,
-                                ...Object.fromEntries(
-                                    Object.entries(update.removed)
-                                        .filter(([, removed]) => removed)
-                                        .map(([name]) => [name, null])
-                                ),
-                            };
-                            await api.post(`/api/v1/solutions/${update.item.id}/update`, {
-                                json: schemas.zSolutionPatch.parse({
-                                    envs,
-                                    expected_revision_id: update.candidate.revision_id,
-                                }),
-                            });
-                            await client.invalidateQueries({ queryKey: ['api', `${base}/solutions`], exact: true });
-                            setUpdate(null);
-                        });
-                    }}
+                    action={action}
+                    solutionsPath={`${base}/solutions`}
+                    onClose={() => setUpdate(null)}
                 />
             )}
             {logs && (

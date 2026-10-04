@@ -63,6 +63,8 @@ const components = [...groups.values()].sort((left, right) => left.name.localeCo
 
 // Read the same authored component content used by the Astryx website, pinned to the installed library.
 const references = [];
+const parentBlocks = new Map();
+const exampleCodes = new Map();
 for (const entry of components) {
     if (entry.category === 'Runtime' || ['Currency', 'FileViewer', 'Menu'].includes(entry.name)) continue;
     const result = await astryx.component(entry.name);
@@ -70,33 +72,46 @@ for (const entry of components) {
     const parentName = detail.subComponentOf ?? detail.parentDoc;
     const parent = parentName ? (await astryx.component(parentName)).data : detail;
     const usage = detail.usage ?? parent.usage;
-    const blocks = await astryx.component(parentName ?? entry.name, { blocks: true });
+
+    // Parent and subcomponent entries share one block discovery result per generation.
+    const referenceName = parentName ?? entry.name;
+    let blocks = parentBlocks.get(referenceName);
+    if (!blocks) {
+        blocks = await astryx.component(referenceName, { blocks: true });
+        parentBlocks.set(referenceName, blocks);
+    }
     const examples = [];
 
     // Publish one representative upstream example per component, preferring its showcase.
     const block = blocks.data.showcase ?? blocks.data.examples[0];
     if (block) {
-        const example = await astryx.template(block.name);
 
-        // Omit upstream file headers from the displayed example snippet.
-        let code = example.data.source
-            .replace(/^\/\/ Copyright \(c\) Meta Platforms, Inc\. and affiliates\.\r?\n/, '')
-            .replace(/^\s*(['"])use client\1;\s*/, '')
-            .trimStart();
+        // Reuse the transformed example when multiple components share the same template.
+        let code = exampleCodes.get(block.name);
+        if (code === undefined) {
+            const example = await astryx.template(block.name);
 
-        // Show standalone functions without package imports or export modifiers.
-        const snippet = ts.createSourceFile('example.tsx', code, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
-        const omissions = snippet.statements.flatMap((statement) => {
-            if (ts.isImportDeclaration(statement)) return [{ start: statement.getStart(snippet), end: statement.end }];
-            if (!ts.isFunctionDeclaration(statement)) return [];
-            return (statement.modifiers ?? [])
-                .filter((modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword || modifier.kind === ts.SyntaxKind.DefaultKeyword)
-                .map((modifier) => ({ start: modifier.getStart(snippet), end: modifier.end }));
-        });
-        for (const omission of omissions.reverse()) {
-            code = code.slice(0, omission.start) + code.slice(omission.end).trimStart();
+            // Omit upstream file headers from the displayed example snippet.
+            code = example.data.source
+                .replace(/^\/\/ Copyright \(c\) Meta Platforms, Inc\. and affiliates\.\r?\n/, '')
+                .replace(/^\s*(['"])use client\1;\s*/, '')
+                .trimStart();
+
+            // Show standalone functions without package imports or export modifiers.
+            const snippet = ts.createSourceFile('example.tsx', code, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+            const omissions = snippet.statements.flatMap((statement) => {
+                if (ts.isImportDeclaration(statement)) return [{ start: statement.getStart(snippet), end: statement.end }];
+                if (!ts.isFunctionDeclaration(statement)) return [];
+                return (statement.modifiers ?? [])
+                    .filter((modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword || modifier.kind === ts.SyntaxKind.DefaultKeyword)
+                    .map((modifier) => ({ start: modifier.getStart(snippet), end: modifier.end }));
+            });
+            for (const omission of omissions.reverse()) {
+                code = code.slice(0, omission.start) + code.slice(omission.end).trimStart();
+            }
+            code = code.trimStart();
+            exampleCodes.set(block.name, code);
         }
-        code = code.trimStart();
         examples.push({ title: block.displayName, description: block.description, code });
     }
     references.push({

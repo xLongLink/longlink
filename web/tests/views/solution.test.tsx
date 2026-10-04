@@ -5,6 +5,7 @@ import { requestUrl } from '@/views/host';
 import { createRoot } from 'react-dom/client';
 import { ApiErrorContext } from '@/lib/errors';
 import { cleanupMountedRoot } from '../helpers';
+import { ApiBoundary } from '@/components/ApiBoundary';
 import { createQueryRuntime } from '@/lib/react-query';
 import { SolutionRuntime } from '@/components/Solution';
 import { QueryClientProvider } from '@tanstack/react-query';
@@ -220,24 +221,26 @@ describe('SolutionRuntime', () => {
                 <ApiErrorContext value={reportError}>
                     <QueryClientProvider client={client}>
                         <MemoryRouter initialEntries={[initialPath]}>
-                            <Routes>
-                                <Route
-                                    element={
-                                        <SolutionRuntime viewsUrl={viewsUrl}>
-                                            {({ content, tabs, title }) => (
-                                                <>
-                                                    <Location
-                                                        tabs={tabs.map((tab) => tab.href).join(',')}
-                                                        title={title}
-                                                    />
-                                                    {content}
-                                                </>
-                                            )}
-                                        </SolutionRuntime>
-                                    }
-                                    path="*"
-                                />
-                            </Routes>
+                            <ApiBoundary>
+                                <Routes>
+                                    <Route
+                                        element={
+                                            <SolutionRuntime viewsUrl={viewsUrl}>
+                                                {({ content, tabs, title }) => (
+                                                    <>
+                                                        <Location
+                                                            tabs={tabs.map((tab) => tab.href).join(',')}
+                                                            title={title}
+                                                        />
+                                                        {content}
+                                                    </>
+                                                )}
+                                            </SolutionRuntime>
+                                        }
+                                        path="*"
+                                    />
+                                </Routes>
+                            </ApiBoundary>
                         </MemoryRouter>
                     </QueryClientProvider>
                 </ApiErrorContext>

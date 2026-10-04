@@ -3,8 +3,8 @@ import * as host from '@/views/host';
 import { useNavigate } from 'react-router';
 import { PageError } from '@/components/Utils';
 import { resolveNavigationUrl } from '@/lib/url';
-import { useQuery } from '@tanstack/react-query';
 import { useEffect, useRef, useState } from 'react';
+import { useSuspenseQuery } from '@tanstack/react-query';
 import {
     commandSchema,
     parametersSchema,
@@ -35,7 +35,7 @@ export function JsxView({
     const [bootstrapFailed, setBootstrapFailed] = useState(false);
     const [height, setHeight] = useState(1);
     const parameters = JSON.stringify(params);
-    const { data: kernel, error: kernelError } = useQuery({
+    const { data: kernel } = useSuspenseQuery({
         queryKey: ['view-runtime'],
         staleTime: Infinity,
         retry: false,
@@ -50,7 +50,6 @@ export function JsxView({
     });
 
     useEffect(() => {
-        if (!kernel) return;
         const [script, styles] = kernel;
         const controller = new AbortController();
         const channel = new MessageChannel();
@@ -159,7 +158,7 @@ export function JsxView({
         return dispose;
     }, [source, parameters, requestBaseUrl, navigationBaseUrl, navigate, kernel]);
 
-    if (kernelError || bootstrapFailed)
+    if (bootstrapFailed)
         return (
             <PageError title="Unable to load this View" description="The isolated View runtime could not be loaded." />
         );

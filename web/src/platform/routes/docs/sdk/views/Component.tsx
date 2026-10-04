@@ -20,6 +20,51 @@ const tabs = [
     { value: 'best-practices', label: 'Best practices' },
 ];
 
+// Document only the React bindings exposed by the isolated View runtime.
+const reactFunctions = [
+    {
+        name: 'createElement(type, props, ...children)',
+        description: 'Creates a React element. Prefer JSX, which calls this function automatically.',
+    },
+    {
+        name: 'useState(initial)',
+        description:
+            'Returns the current state and a setter. Pass a value or an initializer function; updates can use the previous state.',
+    },
+    {
+        name: 'useEffect(effect, dependencies)',
+        description:
+            'Synchronizes with external systems after rendering. Return a cleanup function to release timers or subscriptions. Include every reactive value used by the effect in its dependencies.',
+    },
+    {
+        name: 'useMemo(factory, dependencies)',
+        description:
+            'Caches a calculated value until its dependencies change. Use it for expensive calculations, not required application state.',
+    },
+    {
+        name: 'useRef(initial)',
+        description:
+            'Returns a stable object with a mutable current property. Changing current does not trigger a render.',
+    },
+];
+
+const reactIntroduction =
+    'LongLink supplies these React functions directly in Views, without imports or a React. prefix. Call hooks at the top level of a component, never inside conditions or loops.';
+
+const reactExample = `export default function Counter() {
+  const [count, setCount] = useState(0);
+
+  return (
+    <Stack gap={3}>
+      <Text>Count: {count}</Text>
+      <Button
+        label="Increment"
+        onClick={() => setCount((previous) => previous + 1)}
+      />
+    </Stack>
+  );
+}`;
+
 // LongLink-only components have no equivalent Astryx reference or upstream examples.
 const solutionReferences: Record<string, { introduction: string; code: string; anatomy: string; practice: string }> = {
     Currency: {
@@ -61,14 +106,28 @@ export default function DocsArticleRoute() {
     const activeTab = tabs.find((candidate) => candidate.value === requestedTab) ?? tabs[0];
     const tab = activeTab.value;
     const runtime = component.category === 'Runtime';
+    const react = component.name === 'React';
 
     // Link only to content rendered in the active tab.
     const toc = [
         { id: 'introduction', label: 'Introduction', level: 1 },
-        { id: runtime ? 'reference' : `component-${tab}`, label: runtime ? 'Reference' : activeTab.label, level: 2 },
+        ...(react
+            ? [
+                  { id: 'functions', label: 'Functions', level: 2 },
+                  { id: 'example', label: 'Example usage', level: 2 },
+              ]
+            : [
+                  {
+                      id: runtime ? 'reference' : `component-${tab}`,
+                      label: runtime ? 'Reference' : activeTab.label,
+                      level: 2,
+                  },
+              ]),
     ];
     const article = {
-        description: reference?.introduction ?? solution?.introduction ?? `${component.name} in LongLink Views.`,
+        description: react
+            ? reactIntroduction
+            : (reference?.introduction ?? solution?.introduction ?? `${component.name} in LongLink Views.`),
         lastUpdated: documentationLastUpdated,
         editUrl: 'https://github.com/xLongLink/longlink/edit/main/sdk/longlink/.static/jsx/frontend.d.ts',
         title: `${component.name} | LongLink Documentation`,
@@ -94,9 +153,11 @@ export default function DocsArticleRoute() {
                     )}
                 </Stack>
                 <Text as="p">
-                    {reference?.introduction ??
-                        solution?.introduction ??
-                        `${component.name} is supplied by the isolated LongLink renderer.`}
+                    {react
+                        ? reactIntroduction
+                        : (reference?.introduction ??
+                          solution?.introduction ??
+                          `${component.name} is supplied by the isolated LongLink renderer.`)}
                 </Text>
                 {solution && <Text as="p">This is a LongLink-specific component.</Text>}
                 <CodeBlock
@@ -105,7 +166,35 @@ export default function DocsArticleRoute() {
                     hasLanguageLabel={false}
                     isWrapped
                 />
-                {runtime ? (
+                {react ? (
+                    <>
+                        <Heading id="functions" level={2}>
+                            Functions
+                        </Heading>
+                        <Table
+                            data={reactFunctions}
+                            idKey="name"
+                            density="compact"
+                            columns={[
+                                { key: 'name', header: 'Function', width: proportional(2) },
+                                { key: 'description', header: 'Usage', width: proportional(3) },
+                            ]}
+                        />
+                        <Text as="p">
+                            Fragment groups children without adding a DOM wrapper. Use the JSX shorthand
+                            &lt;&gt;…&lt;/&gt; or &lt;Fragment key=&#123;id&#125;&gt;…&lt;/Fragment&gt; when a key is
+                            needed.
+                        </Text>
+                        <Heading id="example" level={2}>
+                            Example usage
+                        </Heading>
+                        <Text as="p">
+                            This View stores a counter in local state. The setter receives the previous value so each
+                            click increments it safely.
+                        </Text>
+                        <CodeBlock code={reactExample} language="jsx" title="counter.jsx" hasLanguageLabel={false} />
+                    </>
+                ) : runtime ? (
                     <Stack id="reference">
                         <CodeBlock
                             code={component.declaration}

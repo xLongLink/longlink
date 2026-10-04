@@ -97,7 +97,7 @@ export function SolutionRuntime({ children, navigationBaseUrl = '/', viewsUrl = 
                 title="Unable to load this solution"
             />
         );
-    } else if (activeViewSource && activeView && match) {
+    } else if (activeViewSource !== undefined && activeView && match) {
         content = (
             <JsxView
                 source={activeViewSource}

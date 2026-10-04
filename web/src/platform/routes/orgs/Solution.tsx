@@ -46,6 +46,7 @@ export default function OrganizationSolution() {
                 : false,
         meta: { polling: true },
         retry: false,
+        staleTime: 0,
     });
 
     // Retain cached access during refresh failures and prefer solution-query errors.
@@ -55,8 +56,10 @@ export default function OrganizationSolution() {
 
     const solutionAccess = solutions.find((item) => item.slug === solution);
 
-    // Fetch pod logs only for a failed deployment, including failed migration output.
-    const logsPath = solutionAccess?.status === 'failed' ? `/api/v1/solutions/${solutionAccess.id}/logs` : null;
+    // Request deployment logs only for members authorized to maintain this organization.
+    const canMaintain = ['maintain', 'admin', 'owner'].includes(membershipQuery.data?.role ?? '');
+    const logsPath =
+        canMaintain && solutionAccess?.status === 'failed' ? `/api/v1/solutions/${solutionAccess.id}/logs` : null;
     const logsQuery = useApiQuery(logsPath, zGetSolutionLogsApiV1SolutionsSolutionIdLogsGetResponse);
 
     if (isLoading) {
@@ -113,7 +116,7 @@ export default function OrganizationSolution() {
                     width="100%"
                 >
                     <Stack gap={6} maxWidth={1200} width="100%">
-                        {(solutionAccess.status !== 'failed' || logsQuery.isError) && (
+                        {(solutionAccess.status !== 'failed' || !canMaintain || logsQuery.isError) && (
                             <EmptyState
                                 description={deploymentNotice.description}
                                 headingLevel={1}
@@ -121,7 +124,7 @@ export default function OrganizationSolution() {
                                 title={deploymentNotice.title}
                             />
                         )}
-                        {solutionAccess.status === 'failed' && !logsQuery.isError && (
+                        {solutionAccess.status === 'failed' && canMaintain && !logsQuery.isError && (
                             <Stack gap={2}>
                                 <Heading level={1}>Solution deployment has failed</Heading>
                                 {logsQuery.data?.length ? (
