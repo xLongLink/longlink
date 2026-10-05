@@ -11,14 +11,11 @@ def test_docs_command_lists_documented_component_categories() -> None:
     # Assert
     assert result.exit_code == 0
     assert "LongLink JSX View components" in result.output
-    assert "Runtime" in result.output
-    assert "Action" in result.output
-    assert "Container" in result.output
-    assert "Feedback & Status" in result.output
-    assert "Content" in result.output
-    assert "Form Controls" in result.output
-    assert "Layouts" in result.output
-    assert "Table & List" in result.output
+    assert "\nRuntime\n" in result.output
+    assert "\nAction\n" in result.output
+    assert "\nDisplay\n" in result.output
+    assert "\nForm\n" in result.output
+    assert "\nLayouts\n" in result.output
     assert "React state and controlled callbacks" in result.output
     assert "- React" in result.output
     assert "- useState" not in result.output
