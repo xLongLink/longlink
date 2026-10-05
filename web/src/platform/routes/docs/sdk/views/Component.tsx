@@ -12,12 +12,12 @@ import { componentDocumentation } from '@/platform/docs';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { useParams, useSearchParams } from 'react-router';
 import NotFoundLayout from '@/components/layouts/NotFound';
+import { Collapsible } from '@astryxdesign/core/Collapsible';
 import { documentationLastUpdated } from '@/lib/documentation';
 import { Table, proportional } from '@astryxdesign/core/Table';
 
 const tabs = [
     { value: 'examples', label: 'Examples' },
-    { value: 'anatomy', label: 'Anatomy' },
     { value: 'properties', label: 'Properties' },
     { value: 'best-practices', label: 'Best practices' },
 ];
@@ -119,7 +119,7 @@ if (!buttonReference) throw new Error('Missing Button documentation reference');
 // LongLink components document their own contracts instead of an upstream component's props.
 const solutionReferences: Record<
     string,
-    Pick<(typeof references)[number], 'introduction' | 'examples' | 'anatomy' | 'properties' | 'practices'>
+    Pick<(typeof references)[number], 'introduction' | 'examples' | 'properties' | 'practices'>
 > = {
     Button: {
         ...buttonReference,
@@ -227,15 +227,6 @@ const solutionReferences: Record<
 }`,
             },
         ],
-        anatomy: [
-            {
-                name: 'Container',
-                required: true,
-                description:
-                    'A bordered surface whose accessibility and interaction behavior follow the supplied props.',
-            },
-            { name: 'Content', required: true, description: 'Children rendered inside the card.' },
-        ],
         properties: [
             { name: 'children', type: 'ViewNode', description: 'Content rendered inside the card.' },
             {
@@ -310,13 +301,6 @@ const solutionReferences: Record<
 }`,
             },
         ],
-        anatomy: [
-            {
-                name: 'Currency',
-                required: false,
-                description: 'The formatted amount is rendered as text, without an additional wrapper.',
-            },
-        ],
         properties: [],
         practices: [
             {
@@ -335,14 +319,6 @@ const solutionReferences: Record<
                 code: `function Example() {
   return <FileViewer src="/api/items/123/image" title="View image" />;
 }`,
-            },
-        ],
-        anatomy: [
-            {
-                name: 'FileViewer',
-                required: false,
-                description:
-                    'A button toggles the preview. The preview displays a loading, ready, or unavailable state.',
             },
         ],
         properties: [],
@@ -377,14 +353,6 @@ const solutionReferences: Record<
 }`,
             },
         ],
-        anatomy: [
-            {
-                name: 'Menu',
-                required: false,
-                description:
-                    'Sections contain navigation items or nested subsections. The selected item’s content appears beside the navigation.',
-            },
-        ],
         properties: [],
         practices: [
             {
@@ -412,13 +380,6 @@ const solutionReferences: Record<
     </Tabs>
   );
 }`,
-            },
-        ],
-        anatomy: [
-            {
-                name: 'Tabs',
-                required: false,
-                description: 'Tab children define the labels, values, and content. Only the selected panel is mounted.',
             },
         ],
         properties: [],
@@ -507,6 +468,19 @@ export default function DocsArticleRoute() {
                     hasLanguageLabel={false}
                     isWrapped
                 />
+                <Collapsible
+                    key={component.name}
+                    trigger="Command output"
+                    defaultIsOpen={false}
+                    chevronPosition="start"
+                >
+                    <CodeBlock
+                        code={`${component.name} [${component.category}]\nProps and types\n${component.declaration}\n\nExamples: src/views/items.jsx and src/views/items/[item].jsx`}
+                        language="plaintext"
+                        hasLanguageLabel={false}
+                        isWrapped
+                    />
+                </Collapsible>
                 {react ? (
                     <>
                         <Heading id="functions" level={2}>
@@ -596,57 +570,6 @@ export default function DocsArticleRoute() {
                                             )}
                                         </>
                                     )}
-                                    {item.value === 'anatomy' &&
-                                        reference &&
-                                        (upstream || component.name === 'Card' ? (
-                                            reference.anatomy.length ? (
-                                                <Table
-                                                    data={reference.anatomy}
-                                                    idKey="name"
-                                                    density="compact"
-                                                    columns={[
-                                                        {
-                                                            key: 'name',
-                                                            header: 'Element',
-                                                            width: proportional(1),
-                                                            renderCell: (item) => (
-                                                                <Stack gap={0}>
-                                                                    <Stack
-                                                                        direction="horizontal"
-                                                                        align="center"
-                                                                        gap={2}
-                                                                    >
-                                                                        <Text>{item.name}</Text>
-                                                                        {item.required && (
-                                                                            <Badge
-                                                                                variant="blue"
-                                                                                className="h-4 shrink-0 px-1"
-                                                                                label={
-                                                                                    <Text size="xsm" color="inherit">
-                                                                                        Required
-                                                                                    </Text>
-                                                                                }
-                                                                            />
-                                                                        )}
-                                                                    </Stack>
-                                                                    <Text type="supporting">{item.description}</Text>
-                                                                </Stack>
-                                                            ),
-                                                        },
-                                                    ]}
-                                                />
-                                            ) : (
-                                                <Text as="p">
-                                                    Astryx does not publish anatomy guidance for this component.
-                                                </Text>
-                                            )
-                                        ) : (
-                                            reference.anatomy.map((item) => (
-                                                <Text key={item.name} as="p">
-                                                    {item.description}
-                                                </Text>
-                                            ))
-                                        ))}
                                     {item.value === 'properties' &&
                                         propertyGroups.map((group) => (
                                             <Stack key={group.name} gap={3}>
