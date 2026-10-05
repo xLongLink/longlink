@@ -1,5 +1,6 @@
 import pytest
 import logging
+from pathlib import Path
 from longlink.cli import dev
 from typer.testing import CliRunner
 from longlink.cli.main import main
@@ -15,13 +16,20 @@ from longlink.cli.main import main
     ],
 )
 def test_dev_command_warns_only_for_public_hosts(
-    monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture, host: str, expected_warnings: list[tuple[str, tuple[str]]]
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    caplog: pytest.LogCaptureFixture,
+    host: str,
+    expected_warnings: list[tuple[str, tuple[str]]],
 ) -> None:
     """Warn only when the development server is exposed beyond loopback interfaces."""
 
     # Arrange
     calls: list[tuple[str, dict[str, object]]] = []
     migrations: list[str] = []
+    monkeypatch.chdir(tmp_path)
+    if host == "0.0.0.0":
+        (tmp_path / "frontend.d.ts").write_text("// Outdated SDK declarations", encoding="utf-8")
 
     def run(application: str, **kwargs: object) -> None:
         """Capture the Uvicorn launch configuration."""
@@ -41,6 +49,7 @@ def test_dev_command_warns_only_for_public_hosts(
 
     # Assert
     assert result.exit_code == 0
+    assert (tmp_path / "frontend.d.ts").read_bytes() == (dev.ROOT / ".static" / "jsx" / "frontend.d.ts").read_bytes()
     assert [(record.msg, record.args) for record in caplog.records if record.levelno == logging.WARNING] == expected_warnings
     assert migrations == ["applied"]
     assert len(calls) == 1
@@ -54,7 +63,7 @@ def test_dev_command_warns_only_for_public_hosts(
             "host": host,
             "port": 1707,
             "reload": True,
-            "reload_includes": ["*.view"],
+            "reload_includes": ["*.jsx"],
             "app_dir": str(dev.Path.cwd()),
             "log_config": dev.log_config,
         }

@@ -9,33 +9,19 @@ import {
     SideNavSection as AstryxSideNavSection,
 } from '@astryxdesign/core/SideNav';
 
-export type MenuSection = {
+type MenuSection = {
     entries: MenuEntry[];
     isHeaderHidden?: boolean;
     title: string;
 };
-export type MenuItem = {
+type MenuItem = {
     content?: ReactNode;
     id: string;
     icon?: StoneIconName;
     kind: 'item';
     label: string;
 };
-export type MenuEntry = MenuItem | { icon?: StoneIconName; items: MenuItem[]; kind: 'subsection'; label: string };
-
-/** Converts a menu label into its default stable identifier. */
-export function menuItemId(label: string): string {
-    return label
-        .toLowerCase()
-        .trim()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-|-$/g, '');
-}
-
-/** Renders a menu icon when one is configured. */
-function renderMenuIcon(icon: StoneIconName | undefined) {
-    return icon ? <Icon icon={icon} size="sm" /> : undefined;
-}
+type MenuEntry = MenuItem | { icon?: StoneIconName; items: MenuItem[]; kind: 'subsection'; label: string };
 
 /** Renders section navigation beside the selected item's content. */
 export function Menu({ sections, gap = 3 }: { sections: MenuSection[]; gap?: ComponentProps<typeof Stack>['gap'] }) {
@@ -52,7 +38,7 @@ export function Menu({ sections, gap = 3 }: { sections: MenuSection[]; gap?: Com
         return (
             <AstryxSideNavItem
                 href={`#${item.id}`}
-                icon={renderMenuIcon(item.icon)}
+                icon={item.icon ? <Icon icon={item.icon} size="sm" /> : undefined}
                 isSelected={item === activeItem}
                 key={item.id}
                 label={item.label}
@@ -76,7 +62,7 @@ export function Menu({ sections, gap = 3 }: { sections: MenuSection[]; gap?: Com
                                             return (
                                                 <AstryxSideNavItem
                                                     collapsible={{ defaultIsCollapsed: true }}
-                                                    icon={renderMenuIcon(icon)}
+                                                    icon={icon ? <Icon icon={icon} size="sm" /> : undefined}
                                                     key={label}
                                                     label={label}
                                                 >

@@ -9,6 +9,7 @@
 
         /* Bundler mode */
         "moduleResolution": "bundler",
+        "resolveJsonModule": true,
         "verbatimModuleSyntax": true,
         "moduleDetection": "force",
         "rootDirs": [".", "./.react-router/types"],
@@ -24,5 +25,5 @@
             "@/*": ["./src/*"]
         }
     },
-    "include": ["src", ".react-router/types/**/*"]
+    "include": ["src/**/*.ts", "src/**/*.tsx", ".react-router/types/**/*"]
 }

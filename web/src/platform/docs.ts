@@ -1,4 +1,5 @@
-import { componentDocumentation, documentationCategories } from '../lib/generated/documentation';
+import { documentationCategories } from '../lib/documentation';
+import componentCatalog from '../../../sdk/longlink/.static/jsx/components.json';
 import {
     Database,
     FileCode2,
@@ -18,6 +19,15 @@ type DocumentationPage = {
     label: string;
     icon: LucideIcon;
 };
+
+// Derive website route identity from names without storing it in the SDK documentation catalog.
+export const componentDocumentation = componentCatalog.map((component) => ({
+    ...component,
+    slug: component.name
+        .replace(/([a-z])([A-Z])/g, '$1-$2')
+        .replace(/\s+/g, '-')
+        .toLowerCase(),
+}));
 
 export const documentationSections: Array<{ title: string; pages: Array<DocumentationPage> }> = [
     {
@@ -48,7 +58,7 @@ const viewDocumentationPaths = [
     '/docs/sdk/views',
     ...documentationCategories.flatMap((category) =>
         componentDocumentation
-            .filter((component) => component.category === category.name)
+            .filter((component) => component.category === category)
             .map(({ slug }) => `/docs/sdk/views/${slug}`)
     ),
 ];

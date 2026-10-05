@@ -24,7 +24,7 @@ def router(views: list[ViewDefinition]) -> APIRouter:
 
         return {"ok": True}
 
-    @routes.get("/views.json", response_model=list[ViewDefinition], response_model_exclude_none=True)
+    @routes.get("/views.json", response_model=list[ViewDefinition])
     async def get_views() -> list[ViewDefinition]:
         """Return the registered SDK runtime views."""
 

@@ -1,5 +1,6 @@
 import { Outlet } from 'react-router';
 import { RootProvider } from '@/providers';
+import { ApiBoundary } from '@/components/ApiBoundary';
 import '@/index.css';
 
 export { Document } from '@/components/layouts/Document';
@@ -8,7 +9,9 @@ export { Document } from '@/components/layouts/Document';
 export function Root() {
     return (
         <RootProvider>
-            <Outlet />
+            <ApiBoundary>
+                <Outlet />
+            </ApiBoundary>
         </RootProvider>
     );
 }

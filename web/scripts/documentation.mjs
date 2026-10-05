@@ -1,305 +1,158 @@
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import ts from 'typescript';
+import * as astryx from '@astryxdesign/cli/api';
 import { readFile, writeFile } from 'node:fs/promises';
-import { XMLParser, XMLValidator } from 'fast-xml-parser';
+import { documentationCategories } from '../src/lib/documentation.ts';
 
-const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const outputPath = path.resolve(root, 'src/lib/generated/documentation.ts');
-const schemaPath = path.resolve(root, '../sdk/longlink/.static/xsd/schema.xsd');
-const typesPath = path.resolve(root, '../sdk/longlink/.static/xsd/types.xsd');
-const parser = new XMLParser({
-    attributeNamePrefix: '',
-    ignoreAttributes: false,
-    parseTagValue: false,
-    trimValues: false,
-});
+const root = path.resolve(import.meta.dirname, '..');
+const input = path.resolve(root, '../sdk/longlink/.static/jsx/frontend.d.ts');
+const source = await readFile(input, 'utf8');
+const document = ts.createSourceFile(input, source, ts.ScriptTarget.Latest, true);
 
-// Read category order from the shared XML source.
-const schemaSource = await readFile(schemaPath, 'utf8');
-const schemaDocument = parseDocument(schemaSource, 'sdk/longlink/.static/xsd/schema.xsd');
-const categories = nodes(appInfo(schemaDocument), 'longlink:category').map((category) => ({
-    name: attribute(category, 'name'),
-}));
-
-/** Returns an object-shaped XML node. */
-function record(value) {
-    return value != null && typeof value === 'object' && !Array.isArray(value) ? value : undefined;
+// Use TypeScript's parser rather than maintaining another markup or declaration parser.
+if (document.parseDiagnostics.length) {
+    throw new Error(ts.flattenDiagnosticMessageText(document.parseDiagnostics[0].messageText, '\n'));
 }
+const declarations = document.statements
+    .flatMap((statement) => {
+        const declaration = ts.isVariableStatement(statement) ? statement.declarationList.declarations[0] : statement;
 
-/** Returns object-shaped child nodes with a given XML name. */
-function nodes(value, name) {
-    const child = value?.[name];
-    const entries = Array.isArray(child) ? child : [child];
+        // Publish runtime bindings and their documented prop types, not editor-only namespaces.
+        if (!ts.isVariableDeclaration(declaration) && !ts.isFunctionDeclaration(declaration) && !ts.isTypeAliasDeclaration(declaration)) return [];
+        const name = declaration.name?.getText(document);
+        if (!name) return [];
 
-    return entries.flatMap((entry) => {
-        const childRecord = record(entry);
-        return childRecord !== undefined ? [childRecord] : [];
-    });
-}
+        // Keep guide-only bindings available to editors without publishing standalone catalog entries.
+        const tags = ts.getJSDocTags(statement);
+        if (tags.some((tag) => tag.tagName.text === 'ignore')) return [];
 
-/** Returns a string-valued XML attribute or an empty string. */
-function attribute(value, name) {
-    const entry = value?.[name];
-    return typeof entry === 'string' ? entry : '';
-}
+        // Include shared prop types only when explicitly assigned to a documentation entry.
+        if (ts.isTypeAliasDeclaration(declaration) && !tags.some((tag) => tag.tagName.text === 'category')) return [];
 
-/** Returns the first object-shaped child node with a given XML name. */
-function firstNode(value, name) {
-    const child = value?.[name];
-    if (!Array.isArray(child)) {
-        return record(child);
-    }
+        // Read category identity from the editor declaration and retain the published category order.
+        const category = tags.find((tag) => tag.tagName.text === 'category')?.comment;
+        if (!category) throw new Error(`Missing documentation category: ${name}`);
+        if (typeof category !== 'string' || !documentationCategories.includes(category))
+            throw new Error(`Unknown documentation category: ${name}: ${category}`);
 
-    for (const entry of child) {
-        const childRecord = record(entry);
-        if (childRecord !== undefined) {
-            return childRecord;
-        }
-    }
-
-    return undefined;
-}
-
-/** Returns trimmed XML element text. */
-function text(value) {
-    const entry = typeof value === 'string' ? value : record(value)?.['#text'];
-    return typeof entry === 'string' ? entry.trim() : '';
-}
-
-/** Returns an element's XSD annotation. */
-function annotation(value) {
-    return firstNode(value, 'xsd:annotation');
-}
-
-/** Returns an element's documentation text. */
-function documentation(value) {
-    return text(annotation(value)?.['xsd:documentation']);
-}
-
-/** Returns an element's application metadata. */
-function appInfo(value) {
-    return firstNode(annotation(value), 'xsd:appinfo');
-}
-
-/** Parses and validates one XSD source document. */
-function parseDocument(source, sourcePath) {
-    const validation = XMLValidator.validate(source);
-    if (validation !== true) {
-        throw new Error(`Cannot parse ${sourcePath}: ${validation.err.msg}`);
-    }
-
-    const schema = record(record(parser.parse(source))?.['xsd:schema']);
-    if (schema === undefined) {
-        throw new Error(`Cannot parse ${sourcePath}: Missing xsd:schema root.`);
-    }
-
-    return schema;
-}
-
-/** Returns documented attributes, including shared runtime attributes where declared. */
-function attributes(type, runtimeAttributes) {
-    if (type === undefined) {
-        return [];
-    }
-
-    const declared = nodes(type, 'xsd:attribute').map((entry) => ({
-        description: documentation(entry),
-        name: attribute(entry, 'name'),
-    }));
-    const usesRuntimeAttributes = nodes(type, 'xsd:attributeGroup').some(
-        (group) => attribute(group, 'ref') === 'XmlRuntimeAttributes'
-    );
-
-    return usesRuntimeAttributes ? [...declared, ...runtimeAttributes] : declared;
-}
-
-/** Returns documentation for one XSD element. */
-function parseElement(element, types, runtimeAttributes) {
-    const inlineType = firstNode(element, 'xsd:complexType');
-    const typeName = attribute(element, 'type');
-    const info = appInfo(element);
-
-    return {
-        attributes: attributes(inlineType ?? types.get(typeName), runtimeAttributes),
-        description: documentation(element),
-        example: text(info?.['longlink:example']),
-        name: attribute(element, 'name') || attribute(element, 'ref'),
-    };
-}
-
-/** Yields nested element declarations, expanding shared XSD groups in document order. */
-function* collectNestedElements(value, groups) {
-    const entry = record(value);
-    if (entry === undefined) {
-        return;
-    }
-
-    for (const [name, child] of Object.entries(entry)) {
-        if (name === 'xsd:element') {
-            yield* nodes(entry, name);
-        }
-
-        // Group references contribute the same local declarations as inline particles.
-        if (name === 'xsd:group') {
-            for (const group of nodes(entry, name)) {
-                const reference = attribute(group, 'ref');
-                if (reference) {
-                    const definition = groups.get(reference);
-                    if (definition === undefined) {
-                        throw new Error(`Unknown XSD group: ${reference}`);
-                    }
-                    yield* collectNestedElements(definition, groups);
-                }
-            }
-        }
-
-        if (Array.isArray(child)) {
-            for (const item of child) {
-                yield* collectNestedElements(item, groups);
-            }
-        } else {
-            yield* collectNestedElements(child, groups);
-        }
-    }
-}
-
-/** Returns undocumented elements referenced by a component's documentation. */
-function companionNames(component, elements) {
-    const names = new Set();
-    const content = `${component.description}\n${component.example}`;
-
-    for (const [name, { element }] of elements) {
-        const isDocumentedComponent = record(appInfo(element)?.['longlink:docs']) !== undefined;
-
-        if (name !== component.name && !isDocumentedComponent && new RegExp(`\\b${name}\\b`).test(content)) {
-            names.add(name);
-        }
-    }
-
-    return names;
-}
-
-/** Generates component documentation from the SDK XSD source contracts. */
-async function componentDocumentation() {
-    const typesSource = await readFile(typesPath, 'utf8');
-    const typesDocument = parseDocument(typesSource, 'sdk/longlink/.static/xsd/types.xsd');
-    const runtimeGroup = nodes(typesDocument, 'xsd:attributeGroup').find(
-        (group) => attribute(group, 'name') === 'XmlRuntimeAttributes'
-    );
-    const runtimeAttributes = attributes(runtimeGroup, []);
-    const filenames = nodes(schemaDocument, 'xsd:include')
-        .map((include) => attribute(include, 'schemaLocation'))
-        .filter((location) => location.startsWith('adapters/') && location.endsWith('.xsd'))
-        .sort();
-    const documents = [{ schema: typesDocument, source: path.basename(typesPath) }];
-
-    for (const filename of filenames) {
-        const source = await readFile(path.join(path.dirname(schemaPath), filename), 'utf8');
-        documents.push({ schema: parseDocument(source, filename), source: filename });
-    }
-
-    const elements = new Map();
-    const types = new Map();
-    const groups = new Map();
-
-    for (const { schema, source } of documents) {
-        for (const element of nodes(schema, 'xsd:element')) {
-            const name = attribute(element, 'name');
-            if (name) {
-                elements.set(name, { element, source });
-            }
-        }
-
-        for (const type of nodes(schema, 'xsd:complexType')) {
-            const name = attribute(type, 'name');
-            if (name) {
-                types.set(name, type);
-            }
-        }
-
-        for (const group of nodes(schema, 'xsd:group')) {
-            const name = attribute(group, 'name');
-            if (name) {
-                groups.set(name, group);
-            }
-        }
-    }
-
-    return Array.from(elements.values()).flatMap(({ element, source }) => {
-        const metadata = record(appInfo(element)?.['longlink:docs']);
-        if (metadata === undefined) {
-            return [];
-        }
-
-        const component = parseElement(element, types, runtimeAttributes);
-        const type = firstNode(element, 'xsd:complexType') ?? types.get(attribute(element, 'type'));
-        const pending = Array.from(collectNestedElements(type, groups));
-
-        // Resolve related declarations within this component, never mutating the global catalog.
-        for (const name of companionNames(component, elements)) {
-            pending.push(elements.get(name).element);
-        }
-        const nested = new Map();
-        for (const declaration of pending) {
-            const reference = attribute(declaration, 'ref');
-            const name = reference || attribute(declaration, 'name');
-            if (!name || name === component.name || nested.has(name)) {
-                continue;
-            }
-            const child = reference ? elements.get(reference)?.element : declaration;
-            if (child === undefined) {
-                throw new Error(`Unknown XSD element: ${reference}`);
-            }
-            nested.set(name, child);
-            const childType = firstNode(child, 'xsd:complexType') ?? types.get(attribute(child, 'type'));
-            pending.push(...collectNestedElements(childType, groups));
-        }
-
+        // Let related runtime declarations publish one shared documentation entry.
+        const group = tags.find((tag) => tag.tagName.text === 'group')?.comment;
+        if (group !== undefined && (typeof group !== 'string' || !group.trim()))
+            throw new Error(`Invalid documentation group: ${name}`);
         return [
             {
-                ...component,
-                category: attribute(metadata, 'category'),
-                lastUpdated: attribute(metadata, 'lastUpdated'),
-                nested: Array.from(nested.values()).map((child) => parseElement(child, types, runtimeAttributes)),
-                slug: attribute(metadata, 'slug'),
-                source,
+                name: group?.trim() ?? name,
+                category,
+                declaration: statement.getText(document),
             },
         ];
     });
+
+// Preserve declaration order within a group, and expose only the shared catalog contract.
+const groups = new Map();
+for (const entry of declarations) {
+    const existing = groups.get(entry.name);
+    if (existing) {
+        if (existing.category !== entry.category) throw new Error(`Conflicting documentation categories: ${entry.name}`);
+        existing.declaration += `\n\n${entry.declaration}`;
+    } else {
+        groups.set(entry.name, entry);
+    }
+}
+const components = [...groups.values()].sort((left, right) => left.name.localeCompare(right.name));
+
+// Read the same authored component content used by the Astryx website, pinned to the installed library.
+const references = [];
+const parentBlocks = new Map();
+const exampleCodes = new Map();
+for (const entry of components) {
+    if (entry.category === 'Runtime' || ['Currency', 'FileViewer', 'Menu'].includes(entry.name)) continue;
+    const result = await astryx.component(entry.name);
+    const detail = result.data;
+    const parentName = detail.subComponentOf ?? detail.parentDoc;
+    const parent = parentName ? (await astryx.component(parentName)).data : detail;
+    const usage = detail.usage ?? parent.usage;
+
+    // Parent and subcomponent entries share one block discovery result per generation.
+    const referenceName = parentName ?? entry.name;
+    let blocks = parentBlocks.get(referenceName);
+    if (!blocks) {
+        blocks = await astryx.component(referenceName, { blocks: true });
+        parentBlocks.set(referenceName, blocks);
+    }
+    const examples = [];
+
+    // Publish one representative upstream example per component, preferring its showcase.
+    const block = blocks.data.showcase ?? blocks.data.examples[0];
+    if (block) {
+
+        // Reuse the transformed example when multiple components share the same template.
+        let code = exampleCodes.get(block.name);
+        if (code === undefined) {
+            const example = await astryx.template(block.name);
+
+            // Omit upstream file headers from the displayed example snippet.
+            code = example.data.source
+                .replace(/^\/\/ Copyright \(c\) Meta Platforms, Inc\. and affiliates\.\r?\n/, '')
+                .replace(/^\s*(['"])use client\1;\s*/, '')
+                .trimStart();
+
+            // Show standalone functions without package imports or export modifiers.
+            const snippet = ts.createSourceFile('example.tsx', code, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+            const omissions = snippet.statements.flatMap((statement) => {
+                if (ts.isImportDeclaration(statement)) return [{ start: statement.getStart(snippet), end: statement.end }];
+                if (!ts.isFunctionDeclaration(statement)) return [];
+                return (statement.modifiers ?? [])
+                    .filter((modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword || modifier.kind === ts.SyntaxKind.DefaultKeyword)
+                    .map((modifier) => ({ start: modifier.getStart(snippet), end: modifier.end }));
+            });
+            for (const omission of omissions.reverse()) {
+                code = code.slice(0, omission.start) + code.slice(omission.end).trimStart();
+            }
+            code = code.trimStart();
+            exampleCodes.set(block.name, code);
+        }
+        examples.push({ title: block.displayName, description: block.description, code });
+    }
+    references.push({
+        name: entry.name,
+        url: `https://astryx.atmeta.com/components/${parentName ?? entry.name}`,
+        introduction: detail.usage?.description ?? detail.description ?? usage?.description ?? '',
+        anatomy: usage?.anatomy ?? [],
+        properties: (detail.props ?? detail.components?.find((component) => component.name === entry.name)?.props ?? []).map(
+            ({ name, type, required, default: defaultValue, description }) => ({
+                name,
+                type,
+                required,
+                default: defaultValue,
+                description,
+            })
+        ),
+        practices: usage?.bestPractices ?? [],
+        examples,
+    });
 }
 
-const components = await componentDocumentation();
+// Keep website-only reference content out of the SDK's declaration catalog.
+const outputs = [
+    { filename: path.resolve(root, 'src/lib/generated/components.json'), data: references },
+    { filename: path.resolve(root, '../sdk/longlink/.static/jsx/components.json'), data: components },
+];
 
-// Runtime concepts share the same source and publishing contract as components.
-components.push(
-    ...nodes(appInfo(schemaDocument), 'longlink:topic').map((topic) => ({
-        attributes: [],
-        category: attribute(topic, 'category'),
-        description: text(topic['longlink:description']),
-        example: text(topic['longlink:example']),
-        lastUpdated: attribute(topic, 'lastUpdated'),
-        name: attribute(topic, 'name'),
-        nested: [],
-        slug: attribute(topic, 'slug'),
-        source: path.basename(schemaPath),
-    }))
-);
-
-// Reject invalid categories and ambiguous routes instead of silently omitting docs.
-const slugs = new Set();
-for (const component of components) {
-    if (!categories.some(({ name }) => name === component.category)) {
-        throw new Error(`Unknown documentation category for ${component.name}: ${component.category}`);
+// CLI and website documentation share one generated catalog; checking must not modify files.
+for (const { filename, data } of outputs) {
+    const output = `${JSON.stringify(data, null, 4)}\n`;
+    const current = await readFile(filename, 'utf8').catch((error) => {
+        // Only a missing output is regenerable; surface permission and other I/O failures.
+        if (error.code === 'ENOENT') return undefined;
+        throw error;
+    });
+    if (current !== output) {
+        if (process.argv.includes('--check')) {
+            console.error(`Generated documentation is stale: ${filename}`);
+            process.exitCode = 1;
+        } else {
+            await writeFile(filename, output, 'utf8');
+        }
     }
-    if (!component.slug || slugs.has(component.slug)) {
-        throw new Error(`Missing or duplicate documentation slug for ${component.name}`);
-    }
-    slugs.add(component.slug);
-}
-components.sort((left, right) => left.name.localeCompare(right.name));
-const output = `// Generated by scripts/documentation.mjs from SDK XSD documentation metadata.\nexport type ComponentDocumentation = {\n    attributes: { description: string; name: string }[];\n    category: string;\n    description: string;\n    example: string;\n    lastUpdated: string;\n    name: string;\n    nested: { attributes: { description: string; name: string }[]; description: string; example: string; name: string }[];\n    slug: string;\n    source: string;\n};\n\nexport const documentationCategories: { name: string }[] = ${JSON.stringify(categories, null, 4)};\n\nexport const componentDocumentation: ComponentDocumentation[] = ${JSON.stringify(components, null, 4)};\n`;
-const current = await readFile(outputPath, 'utf8').catch(() => undefined);
-
-if (current !== output) {
-    await writeFile(outputPath, output, 'utf8');
 }

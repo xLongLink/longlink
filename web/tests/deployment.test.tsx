@@ -1,13 +1,13 @@
 // @vitest-environment happy-dom
 import { act } from 'react';
-import { ApiProvider } from '@/providers';
-import { MemoryRouter } from 'react-router';
+import { RootProvider } from '@/providers';
 import { createRoot } from 'react-dom/client';
-import { cleanupMountedRoot } from './xml/helpers';
-import { PlatformView } from '@/components/PlatformView';
-import { LayerProvider } from '@astryxdesign/core/Layer';
+import { ApiBoundary } from '@/components/ApiBoundary';
+import Settings from '@/platform/routes/orgs/Settings';
+import { MemoryRouter, Route, Routes } from 'react-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import settingsSource from '@/platform/views/orgs/settings.view?raw';
+import OrganizationLayout from '@/platform/layouts/Organization';
+import AuthenticatedLayout from '@/platform/layouts/Authenticated';
 
 const organizationId = '00000000-0000-4000-8000-000000000003';
 const solutionId = '00000000-0000-4000-8000-000000000002';
@@ -18,6 +18,8 @@ const candidate = {
     image_digest: 'sha256:bbbbbbbbbbbb',
     revision_id: revisionId,
     configured_envs: [],
+    min_scale: 0,
+    idle_seconds: 60,
     metadata: {
         image: `ghcr.io/owner/sample@sha256:${'b'.repeat(64)}`,
         environments: [],
@@ -29,12 +31,15 @@ describe('Solution source update dialog', () => {
     let container: HTMLElement | undefined;
 
     afterEach(async () => {
-        await cleanupMountedRoot(root);
+        // Unmount before removing the container and restoring globals.
+        const mountedRoot = root;
+        if (mountedRoot) await act(async () => mountedRoot.unmount());
+
         container?.remove();
         vi.unstubAllGlobals();
     });
 
-    it('uses the native XML dialog to review and submit a source update', async () => {
+    it('uses the native TSX dialog to review and submit a source update', async () => {
         const submissions: { path: string; body: unknown }[] = [];
         vi.stubGlobal('fetch', async (input: RequestInfo | URL, init?: RequestInit) => {
             const request = input instanceof Request ? input : new Request(input, init);
@@ -45,11 +50,27 @@ describe('Solution source update dialog', () => {
                 return new Response(null, { status: 204 });
             }
 
+            if (path === '/api/v1/me') {
+                return Response.json({
+                    id: '00000000-0000-4000-8000-000000000004',
+                    name: 'Maintainer',
+                    email: 'maintainer@example.com',
+                    avatar: '',
+                    administrator: false,
+                });
+            }
             if (path === '/api/v1/organizations/slug/development') {
-                return Response.json({ organization: { id: organizationId }, role: 'maintain' });
+                return Response.json({
+                    organization: { id: organizationId, name: 'Development', slug: 'development', status: 'running' },
+                    role: 'maintain',
+                });
             }
             if (path === `/api/v1/organizations/${organizationId}`) {
-                return Response.json({ organization: { name: 'Development' }, members: [], invitations: [] });
+                return Response.json({
+                    organization: { id: organizationId, name: 'Development', slug: 'development', status: 'running' },
+                    members: [],
+                    invitations: [],
+                });
             }
             if (path === `/api/v1/organizations/${organizationId}/storage`)
                 return Response.json({ space_used: 0, quota_bytes: 1 });
@@ -76,17 +97,26 @@ describe('Solution source update dialog', () => {
         vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
         await act(async () =>
             mountedRoot.render(
-                <LayerProvider>
-                    <ApiProvider>
-                        <MemoryRouter initialEntries={['/#solutions']}>
-                            <PlatformView source={settingsSource} params={{ organization: 'development' }} />
-                        </MemoryRouter>
-                    </ApiProvider>
-                </LayerProvider>
+                <MemoryRouter initialEntries={['/orgs/development/settings#solutions']}>
+                    <RootProvider>
+                        <ApiBoundary>
+                            <Routes>
+                                <Route element={<AuthenticatedLayout />}>
+                                    <Route path="/orgs/:organization" element={<OrganizationLayout />}>
+                                        <Route path="settings" element={<Settings />} />
+                                    </Route>
+                                </Route>
+                            </Routes>
+                        </ApiBoundary>
+                    </RootProvider>
+                </MemoryRouter>
             )
         );
 
-        await act(async () => vi.waitFor(() => expect(moreMenu()).not.toBeNull()));
+        await vi.waitFor(async () => {
+            await act(async () => {});
+            expect(moreMenu()).not.toBeNull();
+        });
         await act(async () => moreMenu()?.click());
         await act(async () => vi.waitFor(() => expect(menuItem('Update')).toBeDefined()));
         await act(async () => menuItem('Update')?.click());
@@ -106,7 +136,7 @@ describe('Solution source update dialog', () => {
         );
     });
 
-    /** Find the named native XML action without replacing UI components. */
+    /** Find the named native action without replacing UI components. */
     function button(label: string) {
         const found = [...document.querySelectorAll('button')].find((item) => item.textContent === label);
         if (!found) throw new Error(`Button not found: ${label}`);

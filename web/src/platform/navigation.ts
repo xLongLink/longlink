@@ -7,14 +7,30 @@ export const userNavigation = [
 ] as const satisfies readonly NavigationTab[];
 
 export const adminPages = [
-    { id: 'admin-users', path: 'users', icon: Users, label: 'Users' },
-    { id: 'admin-solutions', path: 'solutions', icon: AppWindow, label: 'Solutions' },
-    { id: 'admin-organizations', path: 'organizations', icon: Building2, label: 'Organizations' },
-    { id: 'admin-compute', path: 'compute', icon: Wrench, label: 'Compute' },
-    { id: 'admin-operations', path: 'operations', icon: ArrowUpDown, label: 'Operations' },
+    { id: 'admin-users', path: 'users', module: './routes/admin/Users.tsx', icon: Users, label: 'Users' },
+    {
+        id: 'admin-solutions',
+        path: 'solutions',
+        module: './routes/admin/Solutions.tsx',
+        icon: AppWindow,
+        label: 'Solutions',
+    },
+    {
+        id: 'admin-organizations',
+        path: 'organizations',
+        module: './routes/admin/Organizations.tsx',
+        icon: Building2,
+        label: 'Organizations',
+    },
+    { id: 'admin-compute', path: 'compute', module: './routes/admin/Compute.tsx', icon: Wrench, label: 'Compute' },
+    {
+        id: 'admin-operations',
+        path: 'operations',
+        module: './routes/admin/Operations.tsx',
+        icon: ArrowUpDown,
+        label: 'Operations',
+    },
 ] as const;
-
-export type AdminPageId = (typeof adminPages)[number]['id'];
 
 export const adminNavigation = adminPages.map(({ icon, label, path }) => ({
     href: `/admin/${path}`,

@@ -29,12 +29,19 @@ You are working on a LongLink Solution project:
 
 ## Views
 
-- A View uses case-sensitive LongLink markup in a `.view` file, not standard XML or browser HTML.
-- Keep attribute values quoted. Raw `&&`, `<`, and `>` are supported inside quoted expressions.
-- Use one `<view>` root and explicit closing or self-closing component tags; do not add XML declarations or schema hints.
-- Run `longlink docs ui` to discover the supported components and runtime concepts by category.
-- Run `longlink docs ui --component <component>` before using a component to inspect its attributes, children, and examples.
-- Do not invent elements or attributes that are absent from the component documentation.
+- `longlink dev` generates SDK-owned `frontend.d.ts` in the project root for editor hints. Do not edit or commit this generated file.
+
+- A View is a `.jsx` file exporting one default React component; no frontend build is needed in the Solution.
+- React hooks, `Fragment`, `createElement`, LongLink UI components, `request`, `navigate`, and `useApi` are supplied by the isolated renderer. Do not import packages.
+- Route parameters are passed to the default View function as props: `export default function Item({ params })`. For `[item].jsx`, read the URL segment with `params.item`. Use `@param {ViewProps} props` in JSDoc for editor hints.
+- Use ordinary JSX props, React state, controlled input callbacks, and JavaScript expressions.
+- Use `useState()`, `useEffect()`, `useMemo()`, and `useRef()` directly; no import or `React.` prefix is needed. Use fragments as `<>...</>` or `<Fragment>...</Fragment>`.
+- Display titles come from JSX filenames (`items.jsx` → Items, `[item].jsx` → Item); tabs use the default icon. Do not add metadata sidecars or exports.
+- Requests are Solution-relative and pass through a restricted host bridge. Never use direct fetch, Platform credentials, external resources, or parent-window access.
+- Prefer `const [data, invalidate] = useApi(path)` for required data. Call `await invalidate()` to revalidate that exact path when needed; the renderer handles initial loading, errors, and retry. Cache keys are derived internally from the full path, including query parameters.
+- Successful writes through `request()` automatically refresh cached data within this isolated View. No explicit invalidation is needed.
+- Use separate `useApi` calls for multiple resources. Mount a component using `useApi` only when its resource is needed. Cached data remains visible if a background refresh fails.
+- Use the sample Views as the current JSX API reference.
 
 ## Python Guidelines
 

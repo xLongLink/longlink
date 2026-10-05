@@ -1,16 +1,19 @@
-import { api } from '@/lib/api';
-import { skipToken, useQuery } from '@tanstack/react-query';
+import type { z } from 'zod';
+import { createContext, useContext } from 'react';
 import { zUserOrganizationMembership } from '@/lib/generated/platform-api-v1/zod.gen';
 
-/** Fetches membership for one organization route. */
-export function useOrganizationMembership(organizationSlug: string) {
-    const membershipPath = `/api/v1/organizations/slug/${organizationSlug}`;
-    return useQuery({
-        queryKey: ['api', '/api/v1/organizations/slug', organizationSlug],
-        queryFn:
-            organizationSlug === ''
-                ? skipToken
-                : async ({ signal }) => zUserOrganizationMembership.parse(await api(membershipPath, { signal }).json()),
-        retry: false,
-    });
+// The organization layout owns membership loading for its nested pages.
+export const OrganizationMembershipContext = createContext<z.output<typeof zUserOrganizationMembership> | undefined>(
+    undefined
+);
+
+/** Reads the membership already resolved by the organization layout. */
+export function useResolvedOrganizationMembership() {
+    const membership = useContext(OrganizationMembershipContext);
+
+    // Catch callers mounted outside the membership-owning layout.
+    if (membership === undefined) {
+        throw new Error('useResolvedOrganizationMembership must be used within an organization route');
+    }
+    return membership;
 }

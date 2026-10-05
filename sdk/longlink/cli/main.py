@@ -26,21 +26,10 @@ def handle_errors[**Parameters](command: Callable[Parameters, None]) -> Callable
     return wrapped
 
 
-def docs_callback(context: typer.Context, component: str | None = None, category: str | None = None) -> None:
-    """Keep the original docs command available alongside the UI subcommand."""
-
-    # Render the catalog only when a subcommand is not handling the request.
-    if context.invoked_subcommand is None:
-        docs_command(component=component, category=category)
-
-
 # Register each typed command on the public CLI application.
 main = typer.Typer(help="LongLink command line interface.")
 main.command(name="build")(handle_errors(build_command))
 main.command(name="dev")(handle_errors(dev_command))
-docs = typer.Typer(help="LongLink documentation.", invoke_without_command=True)
-docs.callback()(handle_errors(docs_callback))
-docs.command(name="ui")(handle_errors(docs_command))
-main.add_typer(docs, name="docs")
+main.command(name="docs")(handle_errors(docs_command))
 main.command(name="init")(handle_errors(init_command))
 main.command(name="migrate")(handle_errors(migrate_command))

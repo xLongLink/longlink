@@ -10,8 +10,6 @@ class ViewDefinition:
 
     path: str
     route: str
-    name: str | None = None
-    icon: str | None = None
 
 
 def view_stem_route(view_stem: str) -> str:

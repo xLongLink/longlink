@@ -1,15 +1,16 @@
-import { useState } from 'react';
+import { useContext } from 'react';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Banner } from '@astryxdesign/core/Banner';
-
-let isDevelopmentNoticeDismissed = false;
+import { DevelopmentNoticeContext } from '@/providers';
 
 /** Warns visitors that the hosted LongLink environment is still under development. */
 export function DevelopmentNotice() {
-    const [isDismissed, setIsDismissed] = useState(isDevelopmentNoticeDismissed);
+    // Read dismissal from the root shared by both banner placements.
+    const notice = useContext(DevelopmentNoticeContext);
+    if (notice === null) throw new Error('DevelopmentNotice requires RootProvider');
 
-    if (isDismissed) {
+    if (notice.isDismissed) {
         return null;
     }
 
@@ -17,10 +18,7 @@ export function DevelopmentNotice() {
         <Banner
             container="section"
             isDismissable
-            onDismiss={() => {
-                isDevelopmentNoticeDismissed = true;
-                setIsDismissed(true);
-            }}
+            onDismiss={notice.dismiss}
             status="warning"
             title={
                 <Text type="supporting">

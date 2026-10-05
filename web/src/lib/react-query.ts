@@ -1,6 +1,6 @@
 import { ApiError } from '@/lib/api';
+import { QueryCache, QueryClient } from '@tanstack/react-query';
 import { createErrorReporter, isCanceledRequest } from '@/lib/errors';
-import { MutationCache, QueryCache, QueryClient } from '@tanstack/react-query';
 
 /** Creates an isolated query cache for one browser or prerendered document. */
 export function createQueryRuntime(notify: (message: string) => void, platformSession: boolean) {
@@ -50,9 +50,12 @@ export function createQueryRuntime(notify: (message: string) => void, platformSe
             }
 
             // Suppress repeated polling notifications, never status handling or changed failures.
-            const incident = error instanceof ApiError ? `${error.status}:${error.message}` : error.name;
-            const repeated = query.meta?.polling === true && failedQueries.get(query) === incident;
-            failedQueries.set(query, incident);
+            let repeated = false;
+            if (query.meta?.polling === true) {
+                const incident = error instanceof ApiError ? `${error.status}:${error.message}` : error.name;
+                repeated = failedQueries.get(query) === incident;
+                failedQueries.set(query, incident);
+            }
             reportError(error, !repeated);
         },
         onSuccess: (_data, query) => {
@@ -62,7 +65,6 @@ export function createQueryRuntime(notify: (message: string) => void, platformSe
 
     client = new QueryClient({
         queryCache,
-        mutationCache: new MutationCache({ onError: (error) => reportError(error) }),
         defaultOptions: {
             queries: {
                 staleTime: 60_000,

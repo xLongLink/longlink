@@ -27,6 +27,7 @@ ENV/
 Thumbs.db
 
 # Project
+/frontend.d.ts
 *.egg-info/
 dist/
 build/

@@ -3,31 +3,37 @@ from longlink.cli.main import main
 
 
 def test_docs_command_lists_documented_component_categories() -> None:
-    """Expose the XML component catalog through the public CLI."""
+    """Expose JSX components and scoped runtime capabilities through the public CLI."""
 
     # Act
-    result = CliRunner().invoke(main, ["docs", "ui"])
+    result = CliRunner().invoke(main, ["docs"])
 
     # Assert
     assert result.exit_code == 0
-    assert "LongLink View components" in result.output
-    assert all(category in result.output for category in ("Runtime", "Actions", "Content", "Form", "Layouts"))
-    assert "- Bindings - Connects writable control values" in result.output
-    assert "- Expressions - Evaluates a safe JavaScript expression subset" in result.output
-    assert "- Button - Button runs child effects in order when clicked" in result.output
+    assert "LongLink JSX View components" in result.output
+    assert all(
+        category in result.output
+        for category in ("Runtime", "Action", "Container", "Feedback & Status", "Content", "Form Controls", "Layouts", "Table & List")
+    )
+    assert "React state and controlled callbacks" in result.output
+    assert "- React" in result.output
+    assert "- useState" not in result.output
+    assert "- Solution API" in result.output
+    assert all(f"- {name}" not in result.output for name in ("navigate", "request", "useApi"))
+    assert "- Button" in result.output
 
 
 def test_docs_command_resolves_a_component_name_case_insensitively() -> None:
     """Show component documentation from a lower-case component name."""
 
     # Act
-    result = CliRunner().invoke(main, ["docs", "ui", "--component", "button"])
+    result = CliRunner().invoke(main, ["docs", "--component", "button"])
 
     # Assert
     assert result.exit_code == 0
-    assert "Button [Actions]" in result.output
-    assert "Attributes" in result.output
-    assert "- variant: ButtonVariantType" in result.output
+    assert "Button [Action]" in result.output
+    assert "Props and types" in result.output
+    assert "clickAction" in result.output
     assert "Example" in result.output
 
 

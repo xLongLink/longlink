@@ -40,11 +40,8 @@ jobs:
             - name: Verify lockfile
               run: test -f uv.lock || { printf 'Run uv sync and commit uv.lock before enabling CI.\n' >&2; exit 1; }
 
-            - name: Install dependencies
-              run: uv sync --locked --group dev
-
             - name: Lint project
-              run: uv run --locked ruff check .
+              run: uv run --locked --group dev ruff check .
 
             - name: Run tests
-              run: uv run --locked pytest
+              run: uv run --locked --group dev pytest
