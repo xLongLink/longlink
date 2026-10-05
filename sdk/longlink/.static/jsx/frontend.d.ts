@@ -991,7 +991,7 @@ declare const Stepper: ViewComponent<{
     orientation?: 'horizontal' | 'vertical';
 }>;
 
-/** @category Layouts */
+/** @category Layouts @group Stepper */
 declare const Step: ViewComponent<{
     step: number;
     label: string;
@@ -1003,7 +1003,7 @@ declare const TabList: ViewComponent<{
     onChange?: (value: string) => void;
 }>;
 
-/** @category Layouts */
+/** @category Layouts @group TabList */
 declare const Tab: ViewComponent<{
     value: string;
     label: string;
@@ -1082,21 +1082,6 @@ declare const MetadataListItem: ViewComponent<{
     icon?: ViewNode;
 }>;
 
-/** @category Table & List @group OverflowList */
-type OverflowItem = { child: React.JSX.Element; index: number };
-
-/** @category Table & List */
-declare const OverflowList: ViewComponent<{
-    overflowRenderer?: (overflowItems: OverflowItem[]) => ViewNode;
-    onOverflowChange?: (overflowItems: OverflowItem[]) => void;
-    gap?: Spacing;
-    minVisibleItems?: number;
-    maxVisibleItems?: number;
-    maxRows?: number;
-    collapseFrom?: 'start' | 'end';
-    behavior?: 'observeSelf' | 'observeParent';
-}>;
-
 /** @category Table & List @group Table */
 type ColumnWidth = { type: 'proportional'; value: number; minWidth?: number } | { type: 'pixel'; value: number };
 
@@ -1131,28 +1116,3 @@ declare function Table<T extends Record<string, unknown>>(props: {
         renderCell?: (row: T) => ViewNode;
     }[];
 }): React.JSX.Element;
-
-/** @category Table & List @group TreeList */
-type TreeListItemData = {
-    id: string;
-    label: ViewNode;
-    description?: string;
-    startContent?: ViewNode;
-    endContent?: ViewNode;
-    children?: TreeListItemData[];
-    onClick?: (event: ViewMouseEvent) => void;
-    href?: string;
-    target?: string;
-    isDisabled?: boolean;
-    isSelected?: boolean;
-    isExpanded?: boolean;
-    className?: string;
-};
-
-/** @category Table & List */
-declare const TreeList: ViewComponent<{
-    items: TreeListItemData[];
-    density?: 'compact' | 'balanced' | 'spacious';
-    variant?: 'lineGuides' | 'noGuides';
-    header?: ViewNode;
-}>;
