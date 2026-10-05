@@ -96,7 +96,7 @@ async def item_status_patch_endpoint(
 @router.get("/items/{item_id}/attachments", response_model=list[ItemAttachmentRead])
 async def item_attachments_get_endpoint(
     item_id: int, ctx: Context
-) -> list[ItemAttachmentRead]:
+) -> list[dict[str, str | int]]:
     """Return files attached to one catalog item."""
 
     # Retrieve the item and translate a missing record into an API error.
@@ -112,11 +112,11 @@ async def item_attachments_get_endpoint(
 
     # Derive display names and sizes from stored file metadata.
     return [
-        ItemAttachmentRead(
-            id=(attachment_id := PurePosixPath(entry["name"]).name),
-            name=attachment_id.split("-", 1)[-1],
-            size=entry["size"],
-        )
+        {
+            "id": (attachment_id := PurePosixPath(entry["name"]).name),
+            "name": attachment_id.split("-", 1)[-1],
+            "size": entry["size"],
+        }
         for entry in entries
         if entry["type"] == "file"
     ]
@@ -173,7 +173,7 @@ async def item_attachment_download_endpoint(
 @router.post("/items/{item_id}/attachments", response_model=ItemAttachmentRead)
 async def item_attachments_post_endpoint(
     item_id: int, file: UploadFile, ctx: Context
-) -> ItemAttachmentRead:
+) -> dict[str, str | int]:
     """Upload one file attachment for a catalog item."""
 
     # Retrieve the item and translate a missing record into an API error.
@@ -199,6 +199,8 @@ async def item_attachments_post_endpoint(
     finally:
         await file.close()
 
-    return ItemAttachmentRead(
-        id=file_id, name=file_name, size=ctx.storage.size(f"{item_id}/{file_id}")
-    )
+    return {
+        "id": file_id,
+        "name": file_name,
+        "size": ctx.storage.size(f"{item_id}/{file_id}"),
+    }
