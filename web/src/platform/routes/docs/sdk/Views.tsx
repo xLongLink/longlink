@@ -23,7 +23,6 @@ import { Carousel } from '@astryxdesign/core/Carousel';
 import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { Selector } from '@astryxdesign/core/Selector';
 import { TextArea } from '@astryxdesign/core/TextArea';
-import { TreeList } from '@astryxdesign/core/TreeList';
 import { componentDocumentation } from '@/platform/docs';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { DateInput } from '@astryxdesign/core/DateInput';
@@ -43,7 +42,6 @@ import { PowerSearch } from '@astryxdesign/core/PowerSearch';
 import { ProgressBar } from '@astryxdesign/core/ProgressBar';
 import { documentationCategories } from '@/lib/documentation';
 import { DropdownMenu } from '@astryxdesign/core/DropdownMenu';
-import { OverflowList } from '@astryxdesign/core/OverflowList';
 import { Table, proportional } from '@astryxdesign/core/Table';
 import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
 import { ClickableCard } from '@astryxdesign/core/ClickableCard';
@@ -368,30 +366,6 @@ const previews: Record<string, ReactNode> = {
             <MetadataListItem label="Owner">Ada Lovelace</MetadataListItem>
             <MetadataListItem label="Status">Open</MetadataListItem>
         </MetadataList>
-    ),
-    OverflowList: (
-        <OverflowList gap={2} maxVisibleItems={2} overflowRenderer={(items) => <Text>+{items.length} more</Text>}>
-            <Text>Design</Text>
-            <Text>Engineering</Text>
-            <Text>Operations</Text>
-        </OverflowList>
-    ),
-    TreeList: (
-        <TreeList
-            header="Files"
-            density="compact"
-            items={[
-                {
-                    id: 'views',
-                    label: 'Views',
-                    isExpanded: true,
-                    children: [
-                        { id: 'orders', label: 'orders.jsx' },
-                        { id: 'users', label: 'users.jsx' },
-                    ],
-                },
-            ]}
-        />
     ),
     Table: (
         <Table

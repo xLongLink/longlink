@@ -1,3 +1,4 @@
+import { Code } from '@astryxdesign/core/Code';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Badge } from '@astryxdesign/core/Badge';
@@ -313,27 +314,23 @@ export default function DocsArticleRoute() {
                                                     header: 'Element',
                                                     width: proportional(1),
                                                     renderCell: (item) => (
-                                                        <Stack gap={1}>
-                                                            <Text>{item.name}</Text>
-                                                            {item.required && (
-                                                                <Badge
-                                                                    className="h-4 self-start px-1"
-                                                                    label={
-                                                                        <Text size="xsm" color="inherit">
-                                                                            Required
-                                                                        </Text>
-                                                                    }
-                                                                />
-                                                            )}
+                                                        <Stack gap={0}>
+                                                            <Stack direction="horizontal" align="center" gap={2}>
+                                                                <Text>{item.name}</Text>
+                                                                {item.required && (
+                                                                    <Badge
+                                                                        variant="blue"
+                                                                        className="h-4 shrink-0 px-1"
+                                                                        label={
+                                                                            <Text size="xsm" color="inherit">
+                                                                                Required
+                                                                            </Text>
+                                                                        }
+                                                                    />
+                                                                )}
+                                                            </Stack>
+                                                            <Text type="supporting">{item.description}</Text>
                                                         </Stack>
-                                                    ),
-                                                },
-                                                {
-                                                    key: 'description',
-                                                    header: 'Description',
-                                                    width: proportional(4),
-                                                    renderCell: (item) => (
-                                                        <Text type="supporting">{item.description}</Text>
                                                     ),
                                                 },
                                             ]}
@@ -359,30 +356,25 @@ export default function DocsArticleRoute() {
                                             header: 'Property',
                                             width: proportional(1),
                                             renderCell: (item) => (
-                                                <Stack gap={1}>
-                                                    <Text>
-                                                        {item.name}
-                                                        {item.default !== undefined ? ` (${item.default})` : ''}
-                                                    </Text>
-                                                    <Text type="supporting">{item.type}</Text>
-                                                    {item.required && (
-                                                        <Badge
-                                                            className="h-4 self-start px-1"
-                                                            label={
-                                                                <Text size="xsm" color="inherit">
-                                                                    Required
-                                                                </Text>
-                                                            }
-                                                        />
-                                                    )}
+                                                <Stack gap={0}>
+                                                    <Stack direction="horizontal" align="center" gap={2}>
+                                                        <Text>{item.name}</Text>
+                                                        <Code className="text-sm">{item.type}</Code>
+                                                        {item.required && (
+                                                            <Badge
+                                                                variant="blue"
+                                                                className="h-4 shrink-0 px-1"
+                                                                label={
+                                                                    <Text size="xsm" color="inherit">
+                                                                        Required
+                                                                    </Text>
+                                                                }
+                                                            />
+                                                        )}
+                                                    </Stack>
+                                                    <Text type="supporting">{item.description}</Text>
                                                 </Stack>
                                             ),
-                                        },
-                                        {
-                                            key: 'description',
-                                            header: 'Description',
-                                            width: proportional(4),
-                                            renderCell: (item) => <Text type="supporting">{item.description}</Text>,
                                         },
                                     ]}
                                 />
