@@ -121,63 +121,46 @@ async def test_send_mail_requires_smtp(monkeypatch: pytest.MonkeyPatch) -> None:
         await mail.send_mail("user@example.com", "Welcome", "Plain message", "<p>HTML message</p>")
 
 
-@pytest.fixture
-def rendered_mail(monkeypatch: pytest.MonkeyPatch) -> list[tuple[str, dict[str, object]]]:
-    """Capture email template inputs without invoking the external MJML compiler."""
-
-    # Share the public address and renderer boundary used by both link tests.
-    rendered: list[tuple[str, dict[str, object]]] = []
-
-    def render(template_name: str, **context: object) -> str:
-        """Capture the selected template and its link context."""
-
-        rendered.append((template_name, context))
-        return "<p>Rendered</p>"
-
-    monkeypatch.setattr(env, "PUBLIC_URL", "https://longlink.dev")
-    monkeypatch.setattr(mail, "render_mjml_template", render)
-    return rendered
-
-
 async def test_password_reset_email_keeps_credential_in_url_fragment(
-    rendered_mail: list[tuple[str, dict[str, object]]], captured_mail: list[tuple[str, str, str, str | None]]
+    monkeypatch: pytest.MonkeyPatch, captured_mail: list[tuple[str, str, str, str | None]]
 ) -> None:
     """Build reset links with an encoded credential outside the HTTP request path."""
+
+    # Arrange
+    monkeypatch.setattr(env, "PUBLIC_URL", "https://longlink.dev")
 
     # Act
     await mail.send_password_reset_email("user@example.com", "token with spaces")
 
     # Assert
     reset_url = "https://longlink.dev/auth/reset-password#token=token+with+spaces"
-    assert rendered_mail == [("password_reset.mjml", {"reset_url": reset_url})]
-    assert captured_mail == [
-        ("user@example.com", "Reset your LongLink password", f"Reset your password:\n\n{reset_url}\n", "<p>Rendered</p>")
-    ]
+    assert len(captured_mail) == 1
+    recipient, subject, text, html = captured_mail[0]
+    assert recipient == "user@example.com"
+    assert subject == "Reset your LongLink password"
+    assert text == f"Reset your password:\n\n{reset_url}\n"
+    assert html is not None
+    assert f'href="{reset_url}"' in html
 
 
 async def test_organization_invitation_email_prefills_the_recipient(
-    rendered_mail: list[tuple[str, dict[str, object]]], captured_mail: list[tuple[str, str, str, str | None]]
+    monkeypatch: pytest.MonkeyPatch, captured_mail: list[tuple[str, str, str, str | None]]
 ) -> None:
     """Build invitation links from the recipient address and membership role."""
+
+    # Arrange
+    monkeypatch.setattr(env, "PUBLIC_URL", "https://longlink.dev")
 
     # Act
     await mail.send_organization_invitation_email("user+team@example.com", "Engineering", OrganizationRoles.maintain)
 
     # Assert
-    assert rendered_mail == [
-        (
-            "organization_invitation.mjml",
-            {
-                "invitation_url": "https://longlink.dev/auth/register?email=user%2Bteam%40example.com",
-                "organization_name": "Engineering",
-                "role_label": "maintain",
-            },
-        )
-    ]
     assert len(captured_mail) == 1
     recipient, subject, text, html = captured_mail[0]
     assert recipient == "user+team@example.com"
     assert subject == "Invitation to join Engineering on LongLink"
-    assert html == "<p>Rendered</p>"
+    assert html is not None
+    assert 'href="https://longlink.dev/auth/register?email=user%2Bteam%40example.com"' in html
+    assert "Join Engineering with maintain access." in html
     assert "https://longlink.dev/auth/register?email=user%2Bteam%40example.com" in text
     assert "Role: maintain\n" in text
