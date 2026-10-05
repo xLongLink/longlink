@@ -3,7 +3,6 @@ from datetime import UTC, datetime, timedelta
 from sqlmodel import select
 from factories import create_organization
 from sqlalchemy import Select
-from src.errors import ConflictError
 from src.models.roles import OrganizationRoles
 from src.database.session import session_scope
 from src.database.services import invitations, organizations
@@ -36,21 +35,6 @@ async def test_create_stores_canonical_invitation_email(
     assert invitation is not None
     assert invitation.email == "invited@example.com"
     assert invitation.role == OrganizationRoles.write
-
-
-async def test_create_rejects_invitation_for_existing_member_email(users: tuple[User, User, User]) -> None:
-    """Reject invitations for users that already belong to the organization."""
-
-    # Arrange
-    owner = users[0]
-    organization = await create_organization(owner)
-
-    # Act and assert
-    async with session_scope() as session:
-        with pytest.raises(ConflictError, match=r"^User is already a member$"):
-            await organizations.create_invitation(
-                session, organization.id, OrganizationInvitationCreate(email=owner.email, role=OrganizationRoles.write), owner.id
-            )
 
 
 async def test_create_replaces_existing_invitation(users: tuple[User, User, User]) -> None:

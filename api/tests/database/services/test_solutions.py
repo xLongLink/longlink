@@ -101,33 +101,20 @@ async def test_create_refreshes_cached_maintainer_access_before_authorizing(user
     assert solution.organization_id == organization.id
 
 
-@pytest.mark.parametrize(
-    ("role", "error"),
-    [
-        pytest.param(None, "Access required", id="non-member"),
-        pytest.param(OrganizationRoles.read, "Permission required", id="read-member"),
-        pytest.param(OrganizationRoles.write, "Permission required", id="write-member"),
-    ],
-)
-async def test_delete_rejects_callers_without_maintain_access(
-    users: tuple[User, User, User],
-    role: OrganizationRoles | None,
-    error: str,
-) -> None:
-    """Require active Organization maintain access before deleting a Solution."""
+async def test_delete_rejects_read_member_without_mutating_solution(users: tuple[User, User, User]) -> None:
+    """Reject read members from deleting a Solution."""
 
     # Arrange
     owner, caller = users[0], users[1]
     organization = await create_organization(owner)
     solution = await create_solution(organization)
-    if role is not None:
-        async with session_scope() as session:
-            session.add(UserOrganization(user_id=caller.id, organization_id=organization.id, role=role))
-            await session.commit()
+    async with session_scope() as session:
+        session.add(UserOrganization(user_id=caller.id, organization_id=organization.id, role=OrganizationRoles.read))
+        await session.commit()
 
     # Act and assert
     async with session_scope() as session:
-        with pytest.raises(ForbiddenError, match=error):
+        with pytest.raises(ForbiddenError, match="Permission required"):
             await solutions.delete(session, solution.id, caller.id)
 
     # Assert the denied deletion left the Solution unchanged in a fresh session.

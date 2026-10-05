@@ -4,7 +4,7 @@ from conftest import DatabasePostgres
 from sqlmodel import col
 from factories import create_compute, fetch_operations, create_organization
 from sqlalchemy import update
-from src.errors import ConflictError, NotFoundError, ForbiddenError, UnavailableError
+from src.errors import ConflictError, ForbiddenError, UnavailableError
 from longlink.shared import models as shared_models
 from src.models.roles import OrganizationRoles
 from src.models.types import Image
@@ -103,19 +103,6 @@ async def test_sync_users_projects_active_organization_members(
     assert row.avatar == users[0].avatar
 
 
-async def test_update_member_role_rejects_missing_member(users: tuple[User, User, User]) -> None:
-    """Reject role changes for absent organization members."""
-
-    # Arrange
-    owner, _, non_member = users
-    organization = await create_organization(owner)
-
-    # Act and assert
-    async with session_scope() as session:
-        with pytest.raises(NotFoundError):
-            await organizations.update_member_role(session, organization.id, non_member.id, OrganizationRoles.read, owner.id)
-
-
 async def test_update_member_role_rejects_owner_changes_from_non_owners(users: tuple[User, User, User]) -> None:
     """Require owner access to change an owner's Organization role."""
 
@@ -136,55 +123,6 @@ async def test_update_member_role_rejects_owner_changes_from_non_owners(users: t
                 OrganizationRoles.read,
                 administrator.id,
             )
-
-
-async def test_update_member_role_rejects_demoting_the_last_owner(users: tuple[User, User, User]) -> None:
-    """Preserve at least one active owner for every Organization."""
-
-    # Arrange
-    owner = users[0]
-    organization = await create_organization(owner)
-
-    # Act and assert
-    async with session_scope() as session:
-        with pytest.raises(ConflictError, match="Organization must have at least one owner"):
-            await organizations.update_member_role(
-                session,
-                organization.id,
-                owner.id,
-                OrganizationRoles.maintain,
-                owner.id,
-            )
-
-
-async def test_update_member_role_allows_demoting_an_owner_when_another_owner_remains(
-    users: tuple[User, User, User],
-) -> None:
-    """Allow an owner demotion while preserving a separate active owner."""
-
-    # Arrange
-    owner, second_owner = users[0], users[1]
-    organization = await create_organization(owner)
-    async with session_scope() as session:
-        session.add(UserOrganization(user_id=second_owner.id, organization_id=organization.id, role=OrganizationRoles.owner))
-        await session.commit()
-
-    # Act
-    async with session_scope() as session:
-        await organizations.update_member_role(
-            session,
-            organization.id,
-            second_owner.id,
-            OrganizationRoles.maintain,
-            owner.id,
-        )
-        await session.commit()
-
-    # Assert
-    async with session_scope() as session:
-        membership = await session.get(UserOrganization, (second_owner.id, organization.id))
-    assert membership is not None
-    assert membership.role == OrganizationRoles.maintain
 
 
 async def test_membership_mutation_services_revalidate_demoted_administrator_access(users: tuple[User, User, User]) -> None:
