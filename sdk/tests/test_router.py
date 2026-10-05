@@ -7,38 +7,11 @@ from fastapi.testclient import TestClient
 pytestmark = pytest.mark.usefixtures("solution_source")
 
 
-def test_solution_router_preserves_explicit_api_prefix() -> None:
-    """Expose Solution routes under their explicit API prefix."""
+def test_solution_router_serves_prefixed_route_before_frontend_fallback() -> None:
+    """Serve an included Solution route at its explicit prefix before frontend fallback."""
 
     # Arrange
-    router = APIRouter(prefix="/api")
-
-    @router.get("/sample")
-    async def sample_get_endpoint() -> dict[str, str]:
-        """Return a sample payload."""
-
-        return {"message": "ok"}
-
-    app = LongLink()
-    app.include_router(router)
-
-    client = TestClient(app)
-
-    # Act
-    response = client.get("/api/sample")
-    root_response = client.get("/sample", headers={"accept": "application/json"})
-
-    # Assert
-    assert response.status_code == 200
-    assert response.json() == {"message": "ok"}
-    assert root_response.status_code == 404
-
-
-def test_solution_route_overrides_frontend_fallback() -> None:
-    """Serve a Solution route before the frontend fallback."""
-
-    # Arrange
-    solution_router = APIRouter()
+    solution_router = APIRouter(prefix="/api")
 
     @solution_router.get("/settings")
     async def settings_get_endpoint() -> dict[str, str]:
@@ -51,12 +24,14 @@ def test_solution_route_overrides_frontend_fallback() -> None:
     client = TestClient(app)
 
     # Act
-    response = client.get("/settings", headers={"accept": "text/html"})
+    response = client.get("/api/settings", headers={"accept": "text/html"})
+    root_response = client.get("/settings", headers={"accept": "application/json"})
 
     # Assert
     assert response.status_code == 200
     assert response.json() == {"source": "solution"}
     assert "application/json" in response.headers["content-type"]
+    assert root_response.status_code == 404
 
 
 def test_solution_add_api_route_rejects_view_endpoint_overlap(solution_source: Path) -> None:
