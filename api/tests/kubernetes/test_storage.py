@@ -112,7 +112,7 @@ async def test_storage_registration_checks_remote_tunnel(
 
 
 def test_storage_proxy_denies_admin_routes_but_keeps_s3() -> None:
-    """Render the deployed proxy with an admin deny before its S3 fallback."""
+    """Render the hardened TLS proxy with an admin deny before its S3 fallback."""
 
     # Check the chart's fixed storage proxy configuration.
     root = Path(__file__).resolve().parents[3]
@@ -134,7 +134,7 @@ def test_storage_proxy_denies_admin_routes_but_keeps_s3() -> None:
         capture_output=True,
         text=True,
     )
-    resources = yaml.safe_load_all(rendered.stdout)
+    resources = list(yaml.safe_load_all(rendered.stdout))
     config = next(
         item["data"]["default.conf"]
         for item in resources
@@ -143,3 +143,25 @@ def test_storage_proxy_denies_admin_routes_but_keeps_s3() -> None:
 
     assert "location ^~ /rustfs/admin {\n        return 404;" in config
     assert "location / {\n        proxy_pass http://rustfs-svc.rustfs.svc.cluster.local:9000;" in config
+
+    # Keep the pinned TLS endpoint unprivileged without changing the public Service port.
+    deployment = next(
+        item for item in resources if item and item.get("kind") == "Deployment" and item["metadata"]["name"] == "longlink-storage"
+    )
+    pod = deployment["spec"]["template"]["spec"]
+    container = pod["containers"][0]
+    assert "@sha256:" in container["image"]
+    assert pod["automountServiceAccountToken"] is False
+    assert pod["securityContext"]["runAsNonRoot"] is True
+    assert pod["securityContext"]["runAsUser"] == 101
+    assert pod["securityContext"]["seccompProfile"]["type"] == "RuntimeDefault"
+    assert container["securityContext"]["allowPrivilegeEscalation"] is False
+    assert container["securityContext"]["readOnlyRootFilesystem"] is True
+    assert container["securityContext"]["capabilities"]["drop"] == ["ALL"]
+    assert container["resources"]["requests"]
+    assert container["resources"]["limits"]
+    assert container["ports"] == [{"containerPort": 8443, "name": "https"}]
+    assert "listen 8443 ssl;" in config
+    service = next(item for item in resources if item and item.get("kind") == "Service" and item["metadata"]["name"] == "longlink-storage")
+    assert service["spec"]["ports"][0]["port"] == 443
+    assert service["spec"]["ports"][0]["targetPort"] == "https"
