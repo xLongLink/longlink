@@ -37,14 +37,6 @@ export function FileInputExample() {
 
     // Allow selecting and clearing a PDF attachment in the demo.
     return (
-        <FileInput
-            accept=".pdf"
-            isLabelHidden
-            label="Attachment"
-            placeholder="File"
-            value={value}
-            width="100%"
-            onChange={setValue}
-        />
+        <FileInput accept=".pdf" label="Attachment" placeholder="File" value={value} width="100%" onChange={setValue} />
     );
 }

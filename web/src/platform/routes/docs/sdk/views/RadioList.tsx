@@ -34,7 +34,7 @@ export function RadioListExample() {
 
     // Allow exactly one plan to remain selected.
     return (
-        <RadioList label="Plan" orientation="horizontal" size="sm" value={value} onChange={setValue} isLabelHidden>
+        <RadioList label="Plan" orientation="horizontal" size="sm" value={value} onChange={setValue}>
             <RadioListItem label="Solo" value="solo" />
             <RadioListItem label="Team" value="team" />
         </RadioList>

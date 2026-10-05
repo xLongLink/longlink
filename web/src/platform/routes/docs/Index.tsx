@@ -1,13 +1,20 @@
+import { Grid } from '@astryxdesign/core/Grid';
+import { Icon } from '@astryxdesign/core/Icon';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Heading } from '@astryxdesign/core/Heading';
 import { Article } from '@/components/layouts/Article';
-import { List, ListItem } from '@astryxdesign/core/List';
+import { Code2, Lightbulb, ServerCog } from 'lucide-react';
+import { ClickableCard } from '@astryxdesign/core/ClickableCard';
 
 const article = {
     title: 'Documentation | LongLink',
     description:
         'Learn how to build Python Solutions with the LongLink SDK and use the Platform to manage organizations, access, infrastructure, and deployment.',
+    toc: [
+        { id: 'documentation', label: 'Documentation', level: 1 },
+        { id: 'start-here', label: 'Start here', level: 2 },
+    ],
     lastUpdated: '2026-10-05',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/docs/Index.tsx',
 };
@@ -17,52 +24,67 @@ export default function DocsIndex() {
     return (
         <Article page={article}>
             <Stack gap={6}>
-                <Heading level={1}>LongLink Documentation</Heading>
+                <Heading id="documentation" level={1}>
+                    Documentation
+                </Heading>
                 <Text as="p">
-                    LongLink separates business process logic from the infrastructure needed to run it. A Solution
-                    expresses a business process as code. The Platform manages organizations, access, infrastructure,
-                    and deployment. These guides explain how to build Solutions in Python and operate them with
-                    LongLink.
+                    Learn how to build, run, and manage solutions with LongLink. Start with the basics, create your
+                    first Solution, or explore the platform in more detail.
                 </Text>
-                <List header={<Heading level={2}>Start here</Heading>} hasDividers>
-                    <ListItem
-                        href="/docs/introduction/"
-                        label="Why LongLink"
-                        description={
-                            <Text as="p">Understand the shared foundation behind process-specific applications.</Text>
-                        }
-                    />
-                    <ListItem
-                        href="/docs/sdk/"
-                        label="Build a Solution"
-                        description={
-                            <Text as="p">Create a Python and FastAPI service with the LongLink Solution SDK.</Text>
-                        }
-                    />
-                    <ListItem
-                        href="/docs/api/"
-                        label="Platform documentation"
-                        description={
-                            <Text as="p">Manage organizations, permissions, and the deployment of your Solutions.</Text>
-                        }
-                    />
-                </List>
                 <Stack as="section" gap={3}>
-                    <Heading level={2}>Develop and deploy</Heading>
-                    <Text as="p">
-                        Configure environments, define routes, store data, and build a View: a JSX interface rendered by
-                        the isolated shared Web runtime. Use the testing and building guides to prepare your Solution
-                        for deployment.
-                    </Text>
-                    <List aria-label="Solution development guides" hasDividers>
-                        <ListItem href="/docs/sdk/environments/" label="Environments" />
-                        <ListItem href="/docs/sdk/routes/" label="Routes" />
-                        <ListItem href="/docs/sdk/storage/" label="Storage" />
-                        <ListItem href="/docs/sdk/database/" label="Database" />
-                        <ListItem href="/docs/sdk/views/" label="Views and component reference" />
-                        <ListItem href="/docs/sdk/testing/" label="Testing" />
-                        <ListItem href="/docs/sdk/building/" label="Building and deployment" />
-                    </List>
+                    <Heading id="start-here" level={2}>
+                        Start here
+                    </Heading>
+                    <Grid columns={{ minWidth: 200, max: 3, repeat: 'fit' }} gap={0}>
+                        <ClickableCard
+                            className="-mb-px -mr-px min-h-60 rounded-none bg-transparent"
+                            href="/use-cases/"
+                            label="Explore LongLink"
+                            padding={6}
+                        >
+                            <Stack gap={6} height="100%" justify="between">
+                                <Icon color="tertiary" icon={Lightbulb} size="lg" />
+                                <Stack gap={3}>
+                                    <Text weight="bold">Explore LongLink</Text>
+                                    <Text as="p" color="secondary" textWrap="pretty">
+                                        Learn the core concepts and discover what you can build.
+                                    </Text>
+                                </Stack>
+                            </Stack>
+                        </ClickableCard>
+                        <ClickableCard
+                            className="-mb-px -mr-px min-h-60 rounded-none bg-transparent"
+                            href="/docs/sdk/"
+                            label="Build a Solution"
+                            padding={6}
+                        >
+                            <Stack gap={6} height="100%" justify="between">
+                                <Icon color="tertiary" icon={Code2} size="lg" />
+                                <Stack gap={3}>
+                                    <Text weight="bold">Build a Solution</Text>
+                                    <Text as="p" color="secondary" textWrap="pretty">
+                                        Create a Solution and see how the pieces fit together.
+                                    </Text>
+                                </Stack>
+                            </Stack>
+                        </ClickableCard>
+                        <ClickableCard
+                            className="-mb-px -mr-px min-h-60 rounded-none bg-transparent"
+                            href="/docs/api/"
+                            label="Explore the Platform"
+                            padding={6}
+                        >
+                            <Stack gap={6} height="100%" justify="between">
+                                <Icon color="tertiary" icon={ServerCog} size="lg" />
+                                <Stack gap={3}>
+                                    <Text weight="bold">Explore the Platform</Text>
+                                    <Text as="p" color="secondary" textWrap="pretty">
+                                        Learn how LongLink runs and manages your Solutions.
+                                    </Text>
+                                </Stack>
+                            </Stack>
+                        </ClickableCard>
+                    </Grid>
                 </Stack>
             </Stack>
         </Article>

@@ -3,6 +3,16 @@ import { index, layout, prefix, route, type RouteConfig } from '@react-router/de
 
 export default [
     layout('./layouts/Page.tsx', [index('./routes/Index.tsx'), route('pricing', './routes/Pricing.tsx')]),
+    ...prefix('use-cases', [
+        layout('./layouts/UseCases.tsx', [
+            index('./routes/usecases/Introduction.tsx'),
+            route('approvals-and-decisions', './routes/usecases/Approvals.tsx'),
+            route('operations', './routes/usecases/Operations.tsx'),
+            route('compliance-and-quality', './routes/usecases/Compliance.tsx'),
+            route('cases-and-projects', './routes/usecases/Cases.tsx'),
+            route('*', '../components/layouts/NotFound.tsx', { id: 'use-cases-not-found' }),
+        ]),
+    ]),
     ...prefix('docs', [
         layout('./layouts/Documentation.tsx', [
             index('./routes/docs/Index.tsx'),
@@ -20,12 +30,10 @@ export default [
                     route('avatar', './routes/docs/sdk/views/Avatar.tsx'),
                     route('badge', './routes/docs/sdk/views/Badge.tsx'),
                     route('buttons', './routes/docs/sdk/views/Buttons.tsx'),
-                    route('calendar', './routes/docs/sdk/views/Calendar.tsx'),
                     route('card', './routes/docs/sdk/views/Card.tsx'),
                     route('checkbox-input', './routes/docs/sdk/views/CheckboxInput.tsx'),
                     route('code-block', './routes/docs/sdk/views/CodeBlock.tsx'),
                     route('collapsible', './routes/docs/sdk/views/Collapsible.tsx'),
-                    route('complex-selector', './routes/docs/sdk/views/ComplexSelector.tsx'),
                     route('currency', './routes/docs/sdk/views/Currency.tsx'),
                     route('date-input', './routes/docs/sdk/views/DateInput.tsx'),
                     route('date-range-input', './routes/docs/sdk/views/DateRangeInput.tsx'),
@@ -46,7 +54,6 @@ export default [
                     route('more-menu', './routes/docs/sdk/views/MoreMenu.tsx'),
                     route('multi-selector', './routes/docs/sdk/views/MultiSelector.tsx'),
                     route('number-input', './routes/docs/sdk/views/NumberInput.tsx'),
-                    route('power-search', './routes/docs/sdk/views/PowerSearch.tsx'),
                     route('progress-bar', './routes/docs/sdk/views/ProgressBar.tsx'),
                     route('radio-list', './routes/docs/sdk/views/RadioList.tsx'),
                     route('react', './routes/docs/sdk/views/React.tsx'),

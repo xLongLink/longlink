@@ -20,7 +20,13 @@ export default function Pricing() {
                 <Section variant="transparent" padding={6}>
                     <Stack className="mx-auto" width="100%" maxWidth={1120} gap={10} align="center">
                         <Stack className="text-center" gap={3} hAlign="center" width="100%">
-                            <Heading justify="center" level={1} textWrap="balance" type="display-2">
+                            <Heading
+                                className="font-(family-name:--font-family-handwritten) tracking-wide uppercase"
+                                justify="center"
+                                level={1}
+                                textWrap="balance"
+                                type="display-2"
+                            >
                                 Pricing
                             </Heading>
                             <Text as="p" className="text-lg sm:text-xl" color="secondary" textWrap="pretty">

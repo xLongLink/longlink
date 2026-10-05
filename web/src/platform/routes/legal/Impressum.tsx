@@ -28,7 +28,10 @@ export default function Impressum() {
 /** Renders the legal notice and company information. */
 function ImpressumContent() {
     return (
-        <Stack gap={5}>
+        <Stack
+            className="[--font-family-heading:var(--font-family-handwritten)] [&_.astryx-heading]:tracking-wide [&_.astryx-heading]:uppercase"
+            gap={5}
+        >
             <Heading id="impressum" level={1}>
                 Impressum
             </Heading>
@@ -48,8 +51,8 @@ function ImpressumContent() {
                 </Heading>
                 <Text as="p">
                     Email:{' '}
-                    <Link href="mailto:info@longlink.ch" hasUnderline type="inherit">
-                        info@longlink.ch
+                    <Link href="mailto:info@longlink.dev" hasUnderline type="inherit">
+                        info@longlink.dev
                     </Link>
                 </Text>
             </Stack>

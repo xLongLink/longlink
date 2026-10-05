@@ -76,8 +76,8 @@
     }
 
     .handwritten-diagram {
-        --font-family-body: Kalam, 'Segoe Print', 'Bradley Hand', cursive;
-        --font-family-heading: Kalam, 'Segoe Print', 'Bradley Hand', cursive;
+        --font-family-body: var(--font-family-handwritten);
+        --font-family-heading: var(--font-family-handwritten);
     }
 }
 

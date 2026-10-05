@@ -91,7 +91,10 @@ export default function Terms() {
 /** Renders the terms of service content. */
 function TermsContent() {
     return (
-        <Stack gap={5}>
+        <Stack
+            className="[--font-family-heading:var(--font-family-handwritten)] [&_.astryx-heading]:tracking-wide [&_.astryx-heading]:uppercase"
+            gap={5}
+        >
             <Heading id="terms-of-service" level={1}>
                 Terms of Service
             </Heading>
@@ -103,8 +106,8 @@ function TermsContent() {
                 <Text as="p">
                     LongLink is operated by LongLink SAGL ("LongLink", "we", "us" or "our"), UID CHE-150.642.313.
                     Contact:{' '}
-                    <Link href="mailto:info@longlink.ch" hasUnderline type="inherit">
-                        info@longlink.ch
+                    <Link href="mailto:info@longlink.dev" hasUnderline type="inherit">
+                        info@longlink.dev
                     </Link>
                     .
                 </Text>
@@ -458,8 +461,8 @@ function TermsContent() {
                 </Heading>
                 <Text as="p">
                     Legal enquiries:{' '}
-                    <Link href="mailto:info@longlink.ch" hasUnderline type="inherit">
-                        info@longlink.ch
+                    <Link href="mailto:info@longlink.dev" hasUnderline type="inherit">
+                        info@longlink.dev
                     </Link>
                     . General, technical, account, and billing enquiries:{' '}
                     <Link href="mailto:info@longlink.dev" hasUnderline type="inherit">

@@ -36,5 +36,5 @@ export function SliderExample() {
     const [value, setValue] = useState(60);
 
     // Retain pointer and keyboard changes to the progress value.
-    return <Slider label="Progress" value={value} width="100%" onChange={setValue} isLabelHidden />;
+    return <Slider label="Progress" value={value} width="100%" onChange={setValue} />;
 }

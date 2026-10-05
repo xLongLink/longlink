@@ -32,8 +32,8 @@ export function Navbar() {
                                     Docs
                                 </Link>
                                 <Stack className="hidden sm:flex" direction="horizontal" gap={4} vAlign="center">
-                                    <Link href="/docs/introduction/" color="secondary" isStandalone weight="medium">
-                                        Why LongLink
+                                    <Link href="/use-cases/" color="secondary" isStandalone weight="medium">
+                                        Use cases
                                     </Link>
                                     <Link href="/docs/" color="secondary" isStandalone weight="medium">
                                         Documentation

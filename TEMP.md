@@ -25,7 +25,7 @@ Sources: installed Astryx component catalog and native exports (including Headin
 | Breadcrumbs | x | |
 | Button | x | x |
 | ButtonGroup | x | x |
-| Calendar | x | x |
+| Calendar | x | |
 | Card | x | x |
 | Carousel | x | x |
 | Center | x | |
@@ -58,7 +58,7 @@ Sources: installed Astryx component catalog and native exports (including Headin
 | CommandPaletteInput | x | |
 | CommandPaletteItem | x | |
 | CommandPaletteList | x | |
-| ComplexSelector | x | x |
+| ComplexSelector | x | |
 | ContextMenu | x | |
 | Currency | | x |
 | DateInput | x | x |
@@ -117,7 +117,7 @@ Sources: installed Astryx component catalog and native exports (including Headin
 | Overlay | x | |
 | Pagination | x | |
 | Popover | x | |
-| PowerSearch | x | x |
+| PowerSearch | x | |
 | ProgressBar | x | x |
 | RadioList | x | x |
 | RadioListItem | x | x |
