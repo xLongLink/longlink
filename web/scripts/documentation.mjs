@@ -1,61 +1,187 @@
 import path from 'node:path';
 import ts from 'typescript';
-import { transform } from 'sucrase';
 import * as prettier from 'prettier';
 import * as astryx from '@astryxdesign/cli/api';
 import { readFile, writeFile } from 'node:fs/promises';
 import { documentationCategories } from '../src/lib/documentation.ts';
+import { examples as viewExamples } from './examples.mjs';
 
 const root = path.resolve(import.meta.dirname, '..');
 const input = path.resolve(root, '../sdk/longlink/.static/jsx/frontend.d.ts');
-const source = await readFile(input, 'utf8');
+let source = await readFile(input, 'utf8');
+
+// Derive editor component signatures from explicit LongLink wrappers, not upstream props.
+const bindings = ts.createSourceFile(
+    'components.ts',
+    await readFile(path.join(root, 'src/views/components.ts'), 'utf8'),
+    ts.ScriptTarget.Latest,
+    true,
+);
+const editor = ts.createSourceFile(input, source, ts.ScriptTarget.Latest, true);
+const replacements = [];
+const introductions = new Map();
+for (const binding of bindings.statements) {
+    if (!ts.isExportDeclaration(binding) || !binding.moduleSpecifier || !ts.isNamedExports(binding.exportClause))
+        continue;
+    const modulePath = binding.moduleSpecifier.text;
+    if (!modulePath.startsWith('@/components/ui/') || ['Card', 'Icon', 'Calendar'].includes(path.basename(modulePath)))
+        continue;
+    const filename = path.join(root, 'src', modulePath.slice(2) + '.tsx');
+    const wrapper = ts.createSourceFile(
+        filename,
+        await readFile(filename, 'utf8'),
+        ts.ScriptTarget.Latest,
+        true,
+        ts.ScriptKind.TSX,
+    );
+    const aliases = new Map(
+        wrapper.statements.filter(ts.isTypeAliasDeclaration).map((alias) => [alias.name.text, alias.type]),
+    );
+    for (const exported of binding.exportClause.elements) {
+        const name = exported.name.text;
+        const implementation = wrapper.statements.find(
+            (statement) => ts.isFunctionDeclaration(statement) && statement.name?.text === name,
+        );
+        if (!implementation) continue;
+        const description = implementation.jsDoc
+            ?.map((comment) => comment.comment)
+            .filter((comment) => typeof comment === 'string')
+            .join(' ');
+        if (description) introductions.set(name, description);
+        const parameter = implementation.parameters[0];
+        let props = parameter?.type;
+        if (props && ts.isTypeReferenceNode(props) && aliases.has(props.typeName.getText(wrapper)))
+            props = aliases.get(props.typeName.getText(wrapper));
+        const propText = (props?.getText(wrapper) ?? '{}')
+            .replaceAll('ReactNode', 'ViewNode')
+            .replaceAll('StoneIconName', 'string')
+            .replace(/MouseEvent<HTMLButtonElement>/g, 'ViewMouseEvent');
+        const generics = implementation.typeParameters?.length
+            ? `<${implementation.typeParameters.map((type) => type.getText(wrapper)).join(', ')}>`
+            : '';
+        const statement = editor.statements.find((statement) =>
+            ts.isFunctionDeclaration(statement)
+                ? statement.name?.text === name
+                : ts.isVariableStatement(statement) &&
+                  statement.declarationList.declarations[0].name.getText(editor) === name,
+        );
+        const publicType = name === 'Button' || name === 'DateInput' ? `${name}Props` : propText;
+        if (statement)
+            replacements.push({
+                start: statement.getStart(editor),
+                end: statement.end,
+                text: `declare function ${name}${generics}(props: ${publicType}): React.JSX.Element;`,
+            });
+        if (name === 'Button' || name === 'DateInput') {
+            const alias = editor.statements.find(
+                (statement) => ts.isTypeAliasDeclaration(statement) && statement.name.text === `${name}Props`,
+            );
+            if (alias) replacements.push({ start: alias.type.getStart(editor), end: alias.type.end, text: propText });
+        }
+    }
+}
+
+// Keep the common field contract synchronized with the wrappers that consume it.
+const fields = ts.createSourceFile(
+    'types.ts',
+    await readFile(path.join(root, 'src/components/ui/types.ts'), 'utf8'),
+    ts.ScriptTarget.Latest,
+    true,
+);
+const fieldType = fields.statements.find(
+    (statement) => ts.isTypeAliasDeclaration(statement) && statement.name.text === 'FieldProps',
+);
+const editorField = editor.statements.find(
+    (statement) => ts.isTypeAliasDeclaration(statement) && statement.name.text === 'FieldProps',
+);
+replacements.push({
+    start: editorField.type.getStart(editor),
+    end: editorField.type.end,
+    text: fieldType.type.getText(fields),
+});
+for (const replacement of replacements.sort((left, right) => right.start - left.start)) {
+    source = source.slice(0, replacement.start) + replacement.text + source.slice(replacement.end);
+}
+source = await prettier.format(source, { parser: 'typescript', tabWidth: 4, printWidth: 120, singleQuote: true });
 const document = ts.createSourceFile(input, source, ts.ScriptTarget.Latest, true);
+
+// Read effective public props from the editor declarations, including shared field intersections.
+const compilerHost = ts.createCompilerHost({});
+const getSourceFile = compilerHost.getSourceFile;
+compilerHost.getSourceFile = (filename, ...args) =>
+    path.resolve(filename) === input ? document : getSourceFile(filename, ...args);
+const program = ts.createProgram([input], { skipLibCheck: true, strictNullChecks: true }, compilerHost);
+const checker = program.getTypeChecker();
+const publicProps = new Map();
+for (const statement of document.statements) {
+    if (!ts.isFunctionDeclaration(statement) || !statement.name || !statement.parameters[0]) continue;
+    publicProps.set(
+        statement.name.text,
+        checker
+            .getTypeAtLocation(statement.parameters[0])
+            .getProperties()
+            .map((property) => ({
+                name: property.name,
+                type: checker.typeToString(
+                    checker.getTypeOfSymbolAtLocation(property, statement.parameters[0]),
+                    undefined,
+                    ts.TypeFormatFlags.NoTruncation,
+                ),
+                required: !(property.flags & ts.SymbolFlags.Optional),
+            })),
+    );
+}
 
 // Use TypeScript's parser rather than maintaining another markup or declaration parser.
 if (document.parseDiagnostics.length) {
     throw new Error(ts.flattenDiagnosticMessageText(document.parseDiagnostics[0].messageText, '\n'));
 }
-const declarations = document.statements
-    .flatMap((statement) => {
-        const declaration = ts.isVariableStatement(statement) ? statement.declarationList.declarations[0] : statement;
+const declarations = document.statements.flatMap((statement) => {
+    const declaration = ts.isVariableStatement(statement) ? statement.declarationList.declarations[0] : statement;
 
-        // Publish runtime bindings and their documented prop types, not editor-only namespaces.
-        if (!ts.isVariableDeclaration(declaration) && !ts.isFunctionDeclaration(declaration) && !ts.isTypeAliasDeclaration(declaration)) return [];
-        const name = declaration.name?.getText(document);
-        if (!name) return [];
+    // Publish runtime bindings and their documented prop types, not editor-only namespaces.
+    if (
+        !ts.isVariableDeclaration(declaration) &&
+        !ts.isFunctionDeclaration(declaration) &&
+        !ts.isTypeAliasDeclaration(declaration)
+    )
+        return [];
+    const name = declaration.name?.getText(document);
+    if (!name) return [];
 
-        // Keep guide-only bindings available to editors without publishing standalone catalog entries.
-        const tags = ts.getJSDocTags(statement);
-        if (tags.some((tag) => tag.tagName.text === 'ignore')) return [];
+    // Keep guide-only bindings available to editors without publishing standalone catalog entries.
+    const tags = ts.getJSDocTags(statement);
+    if (tags.some((tag) => tag.tagName.text === 'ignore')) return [];
 
-        // Include shared prop types only when explicitly assigned to a documentation entry.
-        if (ts.isTypeAliasDeclaration(declaration) && !tags.some((tag) => tag.tagName.text === 'category')) return [];
+    // Include shared prop types only when explicitly assigned to a documentation entry.
+    if (ts.isTypeAliasDeclaration(declaration) && !tags.some((tag) => tag.tagName.text === 'category')) return [];
 
-        // Read category identity from the editor declaration and retain the published category order.
-        const category = tags.find((tag) => tag.tagName.text === 'category')?.comment;
-        if (!category) throw new Error(`Missing documentation category: ${name}`);
-        if (typeof category !== 'string' || !documentationCategories.includes(category))
-            throw new Error(`Unknown documentation category: ${name}: ${category}`);
+    // Read category identity from the editor declaration and retain the published category order.
+    const category = tags.find((tag) => tag.tagName.text === 'category')?.comment;
+    if (!category) throw new Error(`Missing documentation category: ${name}`);
+    if (typeof category !== 'string' || !documentationCategories.includes(category))
+        throw new Error(`Unknown documentation category: ${name}: ${category}`);
 
-        // Let related runtime declarations publish one shared documentation entry.
-        const group = tags.find((tag) => tag.tagName.text === 'group')?.comment;
-        if (group !== undefined && (typeof group !== 'string' || !group.trim()))
-            throw new Error(`Invalid documentation group: ${name}`);
-        return [
-            {
-                name: group?.trim() ?? name,
-                category,
-                declaration: statement.getText(document),
-            },
-        ];
-    });
+    // Let related runtime declarations publish one shared documentation entry.
+    const group = tags.find((tag) => tag.tagName.text === 'group')?.comment;
+    if (group !== undefined && (typeof group !== 'string' || !group.trim()))
+        throw new Error(`Invalid documentation group: ${name}`);
+    return [
+        {
+            name: group?.trim() ?? name,
+            category,
+            declaration: statement.getText(document),
+        },
+    ];
+});
 
 // Preserve declaration order within a group, and expose only the shared catalog contract.
 const groups = new Map();
 for (const entry of declarations) {
     const existing = groups.get(entry.name);
     if (existing) {
-        if (existing.category !== entry.category) throw new Error(`Conflicting documentation categories: ${entry.name}`);
+        if (existing.category !== entry.category)
+            throw new Error(`Conflicting documentation categories: ${entry.name}`);
         existing.declaration += `\n\n${entry.declaration}`;
     } else {
         groups.set(entry.name, entry);
@@ -65,121 +191,39 @@ const components = [...groups.values()].sort((left, right) => left.name.localeCo
 
 // Read the same authored component content used by the Astryx website, pinned to the installed library.
 const references = [];
-const parentBlocks = new Map();
-const exampleCodes = new Map();
 for (const entry of components) {
-    if (entry.category === 'Runtime' || ['Card', 'Currency', 'FileViewer', 'Menu', 'Tabs'].includes(entry.name)) continue;
+    if (entry.category === 'Runtime' || ['Card', 'Currency', 'FileViewer', 'Menu', 'Tabs'].includes(entry.name))
+        continue;
     const result = await astryx.component(entry.name);
     const detail = result.data;
     const parentName = detail.subComponentOf ?? detail.parentDoc;
     const parent = parentName ? (await astryx.component(parentName)).data : detail;
     const usage = detail.usage ?? parent.usage;
+    const supportedProps = publicProps.get(entry.name);
+    const upstreamProps =
+        detail.props ?? detail.components?.find((component) => component.name === entry.name)?.props ?? [];
 
-    // Parent and subcomponent entries share one block discovery result per generation.
-    const referenceName = parentName ?? entry.name;
-    let blocks = parentBlocks.get(referenceName);
-    if (!blocks) {
-        blocks = await astryx.component(referenceName, { blocks: true });
-        parentBlocks.set(referenceName, blocks);
-    }
     const examples = [];
-
-    // Publish one representative upstream example per component, preferring its showcase.
-    const block = blocks.data.showcase ?? blocks.data.examples[0];
-    if (block) {
-
-        // Reuse the transformed example when multiple components share the same template.
-        let code = exampleCodes.get(block.name);
-        if (code === undefined) {
-            const example = await astryx.template(block.name);
-
-            // Omit upstream file headers from the displayed example snippet.
-            code = example.data.source
-                .replace(/^\/\/ Copyright \(c\) Meta Platforms, Inc\. and affiliates\.\r?\n/, '')
-                .replace(/^\s*(['"])use client\1;\s*/, '')
-                .trimStart();
-
-            // Show standalone functions without package imports or export modifiers.
-            const snippet = ts.createSourceFile('example.tsx', code, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
-            const omissions = snippet.statements.flatMap((statement) => {
-                if (ts.isImportDeclaration(statement)) return [{ start: statement.getStart(snippet), end: statement.end }];
-                if (!ts.isFunctionDeclaration(statement)) return [];
-                return (statement.modifiers ?? [])
-                    .filter((modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword || modifier.kind === ts.SyntaxKind.DefaultKeyword)
-                    .map((modifier) => ({ start: modifier.getStart(snippet), end: modifier.end }));
-            });
-            for (const omission of omissions.reverse()) {
-                code = code.slice(0, omission.start) + code.slice(omission.end).trimStart();
-            }
-
-            // The CodeBlock showcase must display JSX too, not an embedded TypeScript example.
-            if (entry.name === 'CodeBlock') {
-                code = `const code = \`function Example() {
-  const [count, setCount] = useState(0);
-
-  return <Button label="Increment" onClick={() => setCount(count + 1)} />;
-}\`;
-
-function CodeBlockShowcase() {
-  return (
-    <CodeBlock
-      code={code}
-      language="jsx"
-      title="counter.jsx"
-      hasLineNumbers
-      hasCopyButton
-    />
-  );
-}`;
-            }
-
-            // Keep the Stepper example focused on three steps without an inline-styled wrapper.
-            if (entry.name === 'Stepper') {
-                code = `function Example() {
-  return (
-    <Stepper activeStep={1}>
-      <Step step={0} label="Details" />
-      <Step step={1} label="Review" />
-      <Step step={2} label="Complete" />
-    </Stepper>
-  );
-}`;
-            }
-
-            // Strip TypeScript syntax while preserving JSX, then remove leftover type-only whitespace.
-            code = transform(code, {
-                transforms: ['typescript', 'jsx'],
-                jsxRuntime: 'preserve',
-                filePath: 'example.tsx',
-            }).code.trimStart();
-
-            // Give the showcase one conventional name while preserving its helper functions.
-            const showcase = ts.createSourceFile('example.jsx', code, ts.ScriptTarget.Latest, true, ts.ScriptKind.JSX);
-            const exampleFunction = showcase.statements.find(
-                (statement) => ts.isFunctionDeclaration(statement) && statement.name?.text.endsWith('Showcase')
-            );
-            if (exampleFunction) {
-                const name = exampleFunction.name;
-                code = code.slice(0, name.getStart(showcase)) + 'Example' + code.slice(name.end);
-            }
-            code = await prettier.format(code, { parser: 'babel', singleQuote: true, tabWidth: 2 });
-            exampleCodes.set(block.name, code);
-        }
-        examples.push({
-            title: block.displayName,
-            description:
-                entry.name === 'CodeBlock'
-                    ? 'A syntax-highlighted JSX code block with line numbers, a title bar, and a copy button.'
-                    : block.description,
-            code,
-        });
+    // Publish runnable examples written for the narrower LongLink API.
+    const viewExample = viewExamples[entry.name];
+    if (viewExample) {
+        const code = await prettier.format(
+            `function Example() {\n${viewExample.state ?? ''}\nreturn (${viewExample.content});\n}`,
+            { parser: 'babel', singleQuote: true, tabWidth: 2 },
+        );
+        examples.push({ title: entry.name, description: `Use ${entry.name} in a LongLink View.`, code });
     }
     references.push({
         name: entry.name,
         url: `https://astryx.atmeta.com/components/${parentName ?? entry.name}`,
-        introduction: detail.usage?.description ?? detail.description ?? usage?.description ?? '',
+        introduction:
+            introductions.get(entry.name) ??
+            detail.usage?.description ??
+            detail.description ??
+            usage?.description ??
+            '',
         anatomy: usage?.anatomy ?? [],
-        properties: (detail.props ?? detail.components?.find((component) => component.name === entry.name)?.props ?? [])
+        properties: (supportedProps ?? upstreamProps)
             // View components use their preset styling rather than caller-provided classes.
             .filter((property) => property.name !== 'className')
             .map(({ name, type, required, default: defaultValue, description }) => ({
@@ -187,22 +231,34 @@ function CodeBlockShowcase() {
                 type,
                 required,
                 default: defaultValue,
-                description,
+                description:
+                    description ??
+                    upstreamProps.find((property) => property.name === name)?.description ??
+                    `The ${name} prop.`,
             })),
-        practices: usage?.bestPractices ?? [],
+        practices: (usage?.bestPractices ?? []).filter(
+            (practice) =>
+                !supportedProps ||
+                !upstreamProps.some(
+                    (property) =>
+                        !supportedProps.some((supported) => supported.name === property.name) &&
+                        practice.description.includes(property.name),
+                ),
+        ),
         examples,
     });
 }
 
 // Keep website-only reference content out of the SDK's declaration catalog.
 const outputs = [
+    { filename: input, text: source },
     { filename: path.resolve(root, 'src/lib/generated/components.json'), data: references },
     { filename: path.resolve(root, '../sdk/longlink/.static/jsx/components.json'), data: components },
 ];
 
 // CLI and website documentation share one generated catalog; checking must not modify files.
-for (const { filename, data } of outputs) {
-    const output = `${JSON.stringify(data, null, 4)}\n`;
+for (const { filename, data, text } of outputs) {
+    const output = text ?? `${JSON.stringify(data, null, 4)}\n`;
     const current = await readFile(filename, 'utf8').catch((error) => {
         // Only a missing output is regenerable; surface permission and other I/O failures.
         if (error.code === 'ENOENT') return undefined;

@@ -112,11 +112,48 @@ const menuProperties: { name: string; properties: (typeof references)[number]['p
 const calendarReference = references.find((reference) => reference.name === 'Calendar');
 if (!calendarReference) throw new Error('Missing Calendar documentation reference');
 
+// Retain Astryx examples for the behavior exposed by LongLink's simpler Button.
+const buttonReference = references.find((reference) => reference.name === 'Button');
+if (!buttonReference) throw new Error('Missing Button documentation reference');
+
 // LongLink components document their own contracts instead of an upstream component's props.
 const solutionReferences: Record<
     string,
     Pick<(typeof references)[number], 'introduction' | 'examples' | 'anatomy' | 'properties' | 'practices'>
 > = {
+    Button: {
+        ...buttonReference,
+        introduction:
+            'Button triggers an action, submits a form, or opens a link. Buttons are flat. Use onClick for actions: loading feedback and duplicate-click prevention are automatic while an asynchronous handler is pending.',
+        properties: buttonReference.properties
+            .filter(
+                (property) =>
+                    ![
+                        'elevation',
+                        'isLoading',
+                        'isInterruptible',
+                        'clickAction',
+                        'as',
+                        'children',
+                        'isIconOnly',
+                        'target',
+                        'rel',
+                    ].includes(property.name)
+            )
+            .map((property) =>
+                property.name === 'onClick'
+                    ? {
+                          ...property,
+                          type: '(event: ViewMouseEvent) => void | Promise<void>',
+                          description:
+                              'Runs when clicked. For asynchronous handlers, automatically shows loading feedback and prevents duplicate clicks until the returned promise settles.',
+                      }
+                    : property.name === 'label'
+                      ? { ...property, description: 'Visible button text and accessible label.' }
+                      : property
+            ),
+        practices: buttonReference.practices.filter((practice) => !practice.description.includes('icon-only')),
+    },
     Calendar: {
         ...calendarReference,
         introduction:

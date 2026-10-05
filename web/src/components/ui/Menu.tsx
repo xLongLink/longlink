@@ -1,20 +1,12 @@
 import { Stack } from '@astryxdesign/core/Stack';
 import { Icon, type StoneIconName } from '@/components/ui/Icon';
 import { Layout, LayoutPanel } from '@astryxdesign/core/Layout';
+import { Children, createContext, isValidElement, useContext, type ReactElement, type ReactNode } from 'react';
 import {
     SideNav as AstryxSideNav,
     SideNavItem as AstryxSideNavItem,
     SideNavSection as AstryxSideNavSection,
 } from '@astryxdesign/core/SideNav';
-import {
-    Children,
-    createContext,
-    isValidElement,
-    useContext,
-    type ComponentProps,
-    type ReactElement,
-    type ReactNode,
-} from 'react';
 
 type MenuSectionProps = {
     children?: ReactNode;
@@ -52,7 +44,13 @@ function isMenuItem(child: ReactNode): child is ReactElement<MenuItemProps> {
 }
 
 /** Renders section navigation beside the selected item's content. */
-export function Menu({ children, gap = 3 }: { children?: ReactNode; gap?: ComponentProps<typeof Stack>['gap'] }) {
+export function Menu({
+    children,
+    gap = 3,
+}: {
+    children?: ReactNode;
+    gap?: 0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10;
+}) {
     const navigation = useContext(MenuNavigationContext);
 
     // Require the runtime-owned navigation API, not a React Router provider.
@@ -167,6 +165,6 @@ export function MenuItem(_props: MenuItemProps) {
 }
 
 /** Defines a collapsible group of MenuItems. */
-export function MenuSubSection(_props: Omit<MenuItemProps, 'id'>) {
+export function MenuSubSection(_props: { children?: ReactNode; icon?: StoneIconName; label: string }) {
     return null;
 }

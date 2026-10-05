@@ -1,49 +1,47 @@
+import { Ellipsis, X } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
+import * as views from '@/views/components';
+import { Badge } from '@/components/ui/Badge';
+import { Table } from '@/components/ui/Table';
 import { Code } from '@astryxdesign/core/Code';
-import { Grid } from '@astryxdesign/core/Grid';
-import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Avatar } from '@/components/ui/Avatar';
+import { Button } from '@/components/ui/Button';
+import { Dialog } from '@/components/ui/Dialog';
+import { Slider } from '@/components/ui/Slider';
+import { Switch } from '@/components/ui/Switch';
 import { Tabs, Tab } from '@/components/ui/Tabs';
-import { Badge } from '@astryxdesign/core/Badge';
 import { Stack } from '@astryxdesign/core/Stack';
-import { Table } from '@astryxdesign/core/Table';
-import { Ellipsis, Info, X } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
-import { Button } from '@astryxdesign/core/Button';
-import { Dialog } from '@astryxdesign/core/Dialog';
-import { Slider } from '@astryxdesign/core/Slider';
-import { Switch } from '@astryxdesign/core/Switch';
+import { Divider } from '@/components/ui/Divider';
 import { Calendar } from '@/components/ui/Calendar';
-import { Divider } from '@astryxdesign/core/Divider';
-import { Heading } from '@astryxdesign/core/Heading';
-import { MoreMenu } from '@astryxdesign/core/MoreMenu';
-import { Selector } from '@astryxdesign/core/Selector';
-import { TextArea } from '@astryxdesign/core/TextArea';
-import { CodeBlock } from '@astryxdesign/core/CodeBlock';
-import { DateInput } from '@astryxdesign/core/DateInput';
-import { FileInput } from '@astryxdesign/core/FileInput';
-import { StatusDot } from '@astryxdesign/core/StatusDot';
-import { TextInput } from '@astryxdesign/core/TextInput';
-import { TimeInput } from '@astryxdesign/core/TimeInput';
-import { Timestamp } from '@astryxdesign/core/Timestamp';
-import { EmptyState } from '@astryxdesign/core/EmptyState';
-import { IconButton } from '@astryxdesign/core/IconButton';
-import { Step, Stepper } from '@astryxdesign/core/Stepper';
-import { ButtonGroup } from '@astryxdesign/core/ButtonGroup';
-import { Collapsible } from '@astryxdesign/core/Collapsible';
-import { NumberInput } from '@astryxdesign/core/NumberInput';
-import { PowerSearch } from '@astryxdesign/core/PowerSearch';
-import { ProgressBar } from '@astryxdesign/core/ProgressBar';
-import { DropdownMenu } from '@astryxdesign/core/DropdownMenu';
-import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
-import { DateTimeInput } from '@astryxdesign/core/DateTimeInput';
-import { MultiSelector } from '@astryxdesign/core/MultiSelector';
+import { MoreMenu } from '@/components/ui/MoreMenu';
+import { Selector } from '@/components/ui/Selector';
+import { TextArea } from '@/components/ui/TextArea';
+import { CodeBlock } from '@/components/ui/CodeBlock';
+import { DateInput } from '@/components/ui/DateInput';
+import { FileInput } from '@/components/ui/FileInput';
+import { StatusDot } from '@/components/ui/StatusDot';
+import { TextInput } from '@/components/ui/TextInput';
+import { TimeInput } from '@/components/ui/TimeInput';
+import { Timestamp } from '@/components/ui/Timestamp';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { IconButton } from '@/components/ui/IconButton';
+import { Step, Stepper } from '@/components/ui/Stepper';
+import { ButtonGroup } from '@/components/ui/ButtonGroup';
+import { Collapsible } from '@/components/ui/Collapsible';
+import { NumberInput } from '@/components/ui/NumberInput';
+import { PowerSearch } from '@/components/ui/PowerSearch';
+import { ProgressBar } from '@/components/ui/ProgressBar';
+import { DropdownMenu } from '@/components/ui/DropdownMenu';
+import { CheckboxInput } from '@/components/ui/CheckboxInput';
+import { DateTimeInput } from '@/components/ui/DateTimeInput';
+import { MultiSelector } from '@/components/ui/MultiSelector';
+import { DateRangeInput } from '@/components/ui/DateRangeInput';
+import { ComplexSelector } from '@/components/ui/ComplexSelector';
 import { Menu, MenuSection, MenuItem } from '@/components/ui/Menu';
-import { DateRangeInput } from '@astryxdesign/core/DateRangeInput';
-import { ComplexSelector } from '@astryxdesign/core/ComplexSelector';
-import { RadioList, RadioListItem } from '@astryxdesign/core/RadioList';
-import { MetadataList, MetadataListItem } from '@astryxdesign/core/MetadataList';
+import { RadioList, RadioListItem } from '@/components/ui/RadioList';
+import { MetadataList, MetadataListItem } from '@/components/ui/MetadataList';
 
 /** Leaves inert, controlled previews unchanged. */
 const noop = () => {};
@@ -57,7 +55,7 @@ const previews: Record<string, ReactNode> = {
             <Button label="View" size="sm" variant="ghost" />
         </Stack>
     ),
-    Link: <Link hasUnderline>Docs</Link>,
+    Link: <views.Link to="#">Docs</views.Link>,
     ButtonGroup: (
         <ButtonGroup label="Text editing" size="sm">
             <Button label="Copy" />
@@ -85,29 +83,17 @@ const previews: Record<string, ReactNode> = {
         />
     ),
     Avatar: <Avatar name="Ada Lovelace" size="lg" />,
-    Heading: (
-        <Heading className="mt-0" level={3}>
-            Orders
-        </Heading>
-    ),
+    Heading: <views.Heading level={3}>Orders</views.Heading>,
     Text: (
-        <Text>
+        <views.Text>
             Normal <b>bold</b> and <i>italic</i> text.
-        </Text>
+        </views.Text>
     ),
     CodeBlock: (
-        <CodeBlock
-            code={'export default function Welcome() {\n  return <Text>Hello world</Text>;\n}'}
-            language="jsx"
-            size="sm"
-            width="100%"
-            hasCopyButton={false}
-            hasLanguageLabel={false}
-            isWrapped
-        />
+        <CodeBlock code={'function Example() {\n  return <Text>Hello world</Text>;\n}'} language="jsx" isWrapped />
     ),
-    Icon: <Info aria-hidden="true" className="text-accent" size={20} />,
-    EmptyState: <EmptyState title="No results found" description="Try adjusting your search or filters." />,
+    Icon: <views.Icon icon="info" size="md" />,
+    EmptyState: <EmptyState title="No results found" />,
     Badge: <Badge label="Open" variant="info" />,
     StatusDot: (
         <Stack direction="horizontal" align="center" gap={2}>
@@ -115,21 +101,15 @@ const previews: Record<string, ReactNode> = {
             <Text>Online</Text>
         </Stack>
     ),
-    Timestamp: <Timestamp value="2026-09-30T12:00:00Z" format="date" color="primary" />,
-    Currency: <Text>CHF 1’275.50</Text>,
-    ProgressBar: <ProgressBar className="w-full" label="Progress" value={60} hasValueLabel />,
-    Divider: <Divider label="Or" />,
-    FileViewer: (
-        <Stack gap={2} align="center" width="100%">
-            <Stack aria-hidden="true" className="h-20 w-full rounded-lg bg-neutral" />
-            <Stack aria-hidden="true" className="h-3 w-3/4 rounded-full bg-neutral" />
-            <Stack aria-hidden="true" className="h-3 w-1/2 rounded-full bg-neutral" />
-        </Stack>
-    ),
+    Timestamp: <Timestamp value="2026-09-30T12:00:00Z" format="date" />,
+    Currency: <views.Currency value={1275.5} currency="CHF" />,
+    ProgressBar: <ProgressBar label="Progress" value={60} hasValueLabel />,
+    Divider: <Divider />,
+    FileViewer: <views.FileViewer src="/api/items/123/image" title="View image" />,
     CheckboxInput: <CheckboxInput label="Approved" size="sm" value onChange={noop} />,
     Calendar: <Calendar className="scale-50" value="2026-10-02" onChange={noop} />,
     ComplexSelector: (
-        <ComplexSelector label="Plan" value="team" triggerLabel="Team" onChange={noop} size="sm" width="100%">
+        <ComplexSelector label="Plan" value="team" triggerLabel="Team" onChange={noop} width="100%">
             {(value, onChange) => (
                 <RadioList label="Choose a plan" value={value} onChange={onChange}>
                     <RadioListItem label="Solo" value="solo" />
@@ -189,7 +169,6 @@ const previews: Record<string, ReactNode> = {
             filters={[]}
             onChange={noop}
             label="Search orders"
-            size="sm"
         />
     ),
     TimeInput: <TimeInput label="Start time" placeholder="Select a time" onChange={noop} size="sm" width="100%" />,
@@ -236,9 +215,9 @@ const previews: Record<string, ReactNode> = {
             isLabelHidden
         />
     ),
-    Slider: <Slider label="Progress" value={60} valueDisplay="none" width="100%" onChange={noop} isLabelHidden />,
+    Slider: <Slider label="Progress" value={60} width="100%" onChange={noop} isLabelHidden />,
     Switch: <Switch label="Enabled" size="sm" value onChange={noop} />,
-    TextArea: <TextArea isLabelHidden label="Notes" rows={2} size="sm" value="Review complete" onChange={noop} />,
+    TextArea: <TextArea isLabelHidden label="Notes" rows={2} value="Review complete" onChange={noop} />,
     TextInput: <TextInput isLabelHidden label="Name" size="sm" value="New order" width="100%" onChange={noop} />,
     Card: <Card>Lorem ipsum dolor sit amet.</Card>,
     Collapsible: (
@@ -247,12 +226,12 @@ const previews: Record<string, ReactNode> = {
         </Collapsible>
     ),
     Grid: (
-        <Grid columns={2} gap={2}>
+        <views.Grid columns={2} gap={2}>
             <Stack aria-hidden="true" className="h-5 w-16 rounded-full bg-neutral" />
             <Stack aria-hidden="true" className="h-5 w-16 rounded-full bg-neutral" />
             <Stack aria-hidden="true" className="h-5 w-16 rounded-full bg-neutral" />
             <Stack aria-hidden="true" className="h-5 w-16 rounded-full bg-neutral" />
-        </Grid>
+        </views.Grid>
     ),
     Menu: (
         <Menu>
@@ -267,11 +246,11 @@ const previews: Record<string, ReactNode> = {
         </Menu>
     ),
     Stack: (
-        <Stack align="center" gap={2}>
+        <views.Stack align="center" gap={2}>
             <Stack aria-hidden="true" className="h-5 w-16 rounded-full bg-neutral" />
             <Stack aria-hidden="true" className="h-5 w-16 rounded-full bg-neutral" />
             <Stack aria-hidden="true" className="h-5 w-16 rounded-full bg-neutral" />
-        </Stack>
+        </views.Stack>
     ),
     Tabs: (
         <Tabs>
@@ -290,30 +269,9 @@ const previews: Record<string, ReactNode> = {
             <Step step={2} label="Complete" />
         </Stepper>
     ),
-    Dialog: (
-        <Dialog
-            aria-label="Dialog preview"
-            isInline
-            isOpen
-            maxHeight="100%"
-            padding={2}
-            width="100%"
-            onOpenChange={noop}
-        >
-            <Stack gap={2}>
-                <Stack direction="horizontal" align="center" justify="between" gap={2}>
-                    <Heading className="mt-0" level={4}>
-                        Edit order
-                    </Heading>
-                    <X aria-hidden="true" className="shrink-0 text-secondary" size={16} />
-                </Stack>
-                <Text>Content</Text>
-                <Button label="Close" size="sm" variant="ghost" onClick={noop} />
-            </Stack>
-        </Dialog>
-    ),
+    Dialog: <DialogPreview />,
     MetadataList: (
-        <MetadataList title="Order details" label={{ position: 'start' }}>
+        <MetadataList title="Order details">
             <MetadataListItem label="Owner">Ada Lovelace</MetadataListItem>
             <MetadataListItem label="Status">Open</MetadataListItem>
         </MetadataList>
@@ -329,6 +287,22 @@ const previews: Record<string, ReactNode> = {
         />
     ),
 };
+
+/** Opens a real modal only when the user requests the Dialog example. */
+function DialogPreview() {
+    const [isOpen, setIsOpen] = useState(false);
+
+    // Keep catalog previews closed and let the actual wrapper own modal behavior.
+    return (
+        <>
+            <Button label="Open dialog" onClick={() => setIsOpen(true)} />
+            <Dialog aria-label="Edit order" isOpen={isOpen} onOpenChange={setIsOpen}>
+                <Text>Order details</Text>
+                <Button label="Close" onClick={() => setIsOpen(false)} />
+            </Dialog>
+        </>
+    );
+}
 
 /** Renders trusted native previews without evaluating documentation source in the Platform. */
 export function ComponentPreview({ name, example }: { name: string; example?: string }) {

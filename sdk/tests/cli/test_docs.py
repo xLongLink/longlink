@@ -36,7 +36,7 @@ def test_docs_command_resolves_a_component_name_case_insensitively() -> None:
     assert result.exit_code == 0
     assert "Button [Action]" in result.output
     assert "Props and types" in result.output
-    assert "clickAction" in result.output
+    assert "onClick" in result.output
     assert "Example" in result.output
 
 
