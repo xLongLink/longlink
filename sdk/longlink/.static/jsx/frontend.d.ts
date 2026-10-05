@@ -247,32 +247,24 @@ type ISODateString = `${number}${number}${number}${number}-${number}${number}-${
 /** @category Form @group Calendar */
 type DateRange = { start: ISODateString; end: ISODateString };
 
-/** @category Form @group Calendar */
+/** @category Form @group DateInput */
 type WeekStartsOn = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 'sun' | 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat';
 
 /** @category Form */
 declare const Calendar: ViewComponent<
     {
-        numberOfMonths?: 1 | 2;
         min?: ISODateString;
         max?: ISODateString;
         dateConstraints?: readonly ((date: Date) => boolean)[];
         minRangeSpan?: number;
         maxRangeSpan?: number;
-        focusDate?: ISODateString;
-        onFocusDateChange?: (focusDate: ISODateString) => void;
-        hasOutsideDays?: boolean;
-        hasWeekNumbers?: boolean;
-        hasVariableRowCount?: boolean;
-        weekStartsOn?: WeekStartsOn;
     } & (
         | {
               mode?: 'single';
               value?: ISODateString;
-              defaultValue?: ISODateString;
-              onChange?: (value: ISODateString, valueAsDate: Date) => void;
+              onChange?: (value: ISODateString) => void;
           }
-        | { mode: 'range'; value?: DateRange; defaultValue?: DateRange; onChange?: (value: DateRange) => void }
+        | { mode: 'range'; value?: DateRange; onChange?: (value: DateRange) => void }
     )
 >;
 
@@ -856,16 +848,26 @@ declare const MoreMenu: ViewComponent<{
 
 /** @category Layouts */
 declare const Menu: ViewComponent<{
-    sections: {
-        title: string;
-        entries: {
-            kind: 'item';
-            id: string;
-            label: string;
-            content: ViewNode;
-        }[];
-    }[];
     gap?: Spacing;
+}>;
+
+/** @category Layouts @group Menu */
+declare const MenuSection: ViewComponent<{
+    title: string;
+    isHeaderHidden?: boolean;
+}>;
+
+/** @category Layouts @group Menu */
+declare const MenuItem: ViewComponent<{
+    label: string;
+    id?: string;
+    icon?: string;
+}>;
+
+/** @category Layouts @group Menu */
+declare const MenuSubSection: ViewComponent<{
+    label: string;
+    icon?: string;
 }>;
 
 /** @category Display */
@@ -909,15 +911,19 @@ declare const Step: ViewComponent<{
 }>;
 
 /** @category Layouts */
-declare const TabList: ViewComponent<{
+declare const Tabs: ViewComponent<{
     value?: string;
     onChange?: (value: string) => void;
+    gap?: Spacing;
+    hasDivider?: boolean;
 }>;
 
-/** @category Layouts @group TabList */
+/** @category Layouts @group Tabs */
 declare const Tab: ViewComponent<{
     value: string;
     label: string;
+    isDisabled?: boolean;
+    panelId?: string;
 }>;
 
 /** @category Display */

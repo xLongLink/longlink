@@ -2,6 +2,7 @@ import { ComponentPreview } from './Preview';
 import { Code } from '@astryxdesign/core/Code';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
+import { Tabs, Tab } from '@/components/ui/Tabs';
 import { Badge } from '@astryxdesign/core/Badge';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Heading } from '@astryxdesign/core/Heading';
@@ -9,7 +10,6 @@ import { Article } from '@/components/layouts/Article';
 import references from '@/lib/generated/components.json';
 import { componentDocumentation } from '@/platform/docs';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
-import { Tab, TabList } from '@astryxdesign/core/TabList';
 import { useParams, useSearchParams } from 'react-router';
 import NotFoundLayout from '@/components/layouts/NotFound';
 import { documentationLastUpdated } from '@/lib/documentation';
@@ -24,10 +24,6 @@ const tabs = [
 
 // Document only the React bindings exposed by the isolated View runtime.
 const reactFunctions = [
-    {
-        name: 'createElement(type, props, ...children)',
-        description: 'Creates a React element. Prefer JSX, which calls this function automatically.',
-    },
     {
         name: 'useState(initial)',
         description:
@@ -53,7 +49,7 @@ const reactFunctions = [
 const reactIntroduction =
     'LongLink supplies these React functions directly in Views, without imports or a React. prefix. Call hooks at the top level of a component, never inside conditions or loops.';
 
-const reactExample = `export default function Counter() {
+const reactExample = `function Example() {
   const [count, setCount] = useState(0);
 
   return (
@@ -67,11 +63,93 @@ const reactExample = `export default function Counter() {
   );
 }`;
 
+// Document the JSX contracts separately for each Menu component.
+const menuProperties: { name: string; properties: (typeof references)[number]['properties'] }[] = [
+    {
+        name: 'Menu',
+        properties: [
+            {
+                name: 'children',
+                type: 'ViewNode',
+                description: 'MenuSection elements defining navigation and content.',
+            },
+            {
+                name: 'gap',
+                type: 'Spacing',
+                description: 'Spacing between elements in the selected item’s content. Defaults to 3.',
+            },
+        ],
+    },
+    {
+        name: 'MenuSection',
+        properties: [
+            { name: 'title', type: 'string', required: true, description: 'Section heading in the navigation.' },
+            { name: 'isHeaderHidden', type: 'boolean', description: 'Hides the section heading. Defaults to false.' },
+            { name: 'children', type: 'ViewNode', description: 'MenuItem elements or nested MenuSubSection groups.' },
+        ],
+    },
+    {
+        name: 'MenuItem',
+        properties: [
+            { name: 'label', type: 'string', required: true, description: 'Item label displayed in the navigation.' },
+            {
+                name: 'id',
+                type: 'string',
+                description:
+                    'Unique URL fragment for selection. Defaults to the lowercase label with spaces and punctuation replaced by hyphens.',
+            },
+            { name: 'icon', type: 'string', description: 'Optional LongLink icon name displayed beside the label.' },
+            {
+                name: 'children',
+                type: 'ViewNode',
+                description: 'Content mounted beside the navigation when this item is selected.',
+            },
+        ],
+    },
+];
+
+// Use the generated Calendar reference for behavior still delegated to Astryx.
+const calendarReference = references.find((reference) => reference.name === 'Calendar');
+if (!calendarReference) throw new Error('Missing Calendar documentation reference');
+
 // LongLink components document their own contracts instead of an upstream component's props.
 const solutionReferences: Record<
     string,
     Pick<(typeof references)[number], 'introduction' | 'examples' | 'anatomy' | 'properties' | 'practices'>
 > = {
+    Calendar: {
+        ...calendarReference,
+        introduction:
+            'Calendar selects a date or date range with standardized LongLink presentation: one month for single dates, two for ranges, Sunday-first weeks, adjacent-month days, and a fixed six-row grid without week numbers. Keep selection in View state with value and onChange. Calendar manages month navigation internally.',
+        properties: calendarReference.properties
+            .filter(
+                (property) =>
+                    ![
+                        'numberOfMonths',
+                        'hasOutsideDays',
+                        'hasWeekNumbers',
+                        'hasVariableRowCount',
+                        'weekStartsOn',
+                        'handleRef',
+                        'defaultValue',
+                        'focusDate',
+                        'onFocusDateChange',
+                    ].includes(property.name)
+            )
+            .map((property) =>
+                property.name === 'onChange'
+                    ? {
+                          ...property,
+                          type: '((value: ISODateString) => void) | ((value: DateRange) => void)',
+                          description:
+                              'Receives only the selected ISO date string in single mode, or the start/end ISO date range in range mode. Update value with the result.',
+                      }
+                    : property
+            ),
+        practices: calendarReference.practices.filter(
+            (practice) => !practice.description.startsWith('Show two months side by side')
+        ),
+    },
     Card: {
         introduction:
             'Card has one shared set of props. onChange makes it selectable, onClick or href makes it clickable, and otherwise it is a plain content card. Selection takes priority when both kinds of interaction props are supplied.',
@@ -79,17 +157,29 @@ const solutionReferences: Record<
             {
                 title: 'Plain card',
                 description: '',
-                code: '<Card padding={3}><Text>Order details</Text></Card>',
+                code: `function Example() {
+  return (
+    <Card padding={3}>
+      <Text>Order details</Text>
+    </Card>
+  );
+}`,
             },
             {
                 title: 'Clickable card',
                 description: '',
-                code: '<Card label="View order" href="/orders/123"><Text>View order</Text></Card>',
+                code: `function Example() {
+  return (
+    <Card label="View order" href="/orders/123">
+      <Text>View order</Text>
+    </Card>
+  );
+}`,
             },
             {
                 title: 'Selectable card',
                 description: '',
-                code: `export default function Plan() {
+                code: `function Example() {
   const [selected, setSelected] = useState(false);
 
   return (
@@ -174,7 +264,15 @@ const solutionReferences: Record<
     },
     Currency: {
         introduction: 'Currency formats a numeric value with the browser’s locale-aware currency formatter.',
-        examples: [{ title: 'Currency', description: '', code: '<Currency value={1234.5} currency="USD" />' }],
+        examples: [
+            {
+                title: 'Currency',
+                description: '',
+                code: `function Example() {
+  return <Currency value={1234.5} currency="USD" />;
+}`,
+            },
+        ],
         anatomy: [
             {
                 name: 'Currency',
@@ -197,7 +295,9 @@ const solutionReferences: Record<
             {
                 title: 'FileViewer',
                 description: '',
-                code: '<FileViewer src="/api/items/123/image" title="View image" />',
+                code: `function Example() {
+  return <FileViewer src="/api/items/123/image" title="View image" />;
+}`,
             },
         ],
         anatomy: [
@@ -218,12 +318,26 @@ const solutionReferences: Record<
         ],
     },
     Menu: {
-        introduction: 'Menu combines Astryx SideNav with the selected section’s content.',
+        introduction:
+            'Menu is a LongLink component that combines section navigation with the selected section’s content. It uses Astryx SideNav internally.',
         examples: [
             {
                 title: 'Menu',
-                description: '',
-                code: '<Menu sections={[{ title: "Settings", entries: [{ kind: "item", id: "profile", label: "Profile", content: <Text>Profile settings</Text> }] }]} />',
+                description: 'Select Profile or Workflow to display its settings beside the navigation.',
+                code: `function Example() {
+  return (
+    <Menu>
+      <MenuSection title="Settings">
+        <MenuItem label="Profile">
+          <Text>Profile settings</Text>
+        </MenuItem>
+        <MenuItem label="Workflow">
+          <Text>Workflow settings</Text>
+        </MenuItem>
+      </MenuSection>
+    </Menu>
+  );
+}`,
             },
         ],
         anatomy: [
@@ -239,7 +353,43 @@ const solutionReferences: Record<
             {
                 guidance: true,
                 description:
-                    'Give each item a stable, unique id and a descriptive label. The URL hash identifies the selected item.',
+                    'Use unique labels or explicit ids for items. Labels become URL fragments by default. Put nested items inside MenuSubSection.',
+            },
+        ],
+    },
+    Tabs: {
+        introduction: 'Tabs is a LongLink component that displays a tab strip and the selected Tab’s content.',
+        examples: [
+            {
+                title: 'Tabs',
+                description: 'Select a tab to display its children below the tab strip.',
+                code: `function Example() {
+  return (
+    <Tabs hasDivider>
+      <Tab value="overview" label="Overview">
+        <Text>Overview content</Text>
+      </Tab>
+      <Tab value="activity" label="Activity">
+        <Text>Activity content</Text>
+      </Tab>
+    </Tabs>
+  );
+}`,
+            },
+        ],
+        anatomy: [
+            {
+                name: 'Tabs',
+                required: false,
+                description: 'Tab children define the labels, values, and content. Only the selected panel is mounted.',
+            },
+        ],
+        properties: [],
+        practices: [
+            {
+                guidance: true,
+                description:
+                    'Give each Tab a unique value. Use value and onChange together when selection must be controlled.',
             },
         ],
     },
@@ -255,12 +405,20 @@ export default function DocsArticleRoute() {
     if (!component) return <NotFoundLayout />;
     const upstream = references.find((candidate) => candidate.name === component.name);
     const solution = solutionReferences[component.name];
-    const reference = upstream ?? solution;
+    const reference = solution ?? upstream;
     const requestedTab = searchParams.get('tab');
     const activeTab = tabs.find((candidate) => candidate.value === requestedTab) ?? tabs[0];
     const tab = activeTab.value;
     const runtime = component.category === 'Runtime';
     const react = component.name === 'React';
+
+    // Keep Menu’s component contracts distinct while retaining other property references.
+    const propertyGroups =
+        component.name === 'Menu'
+            ? menuProperties
+            : reference?.properties.length
+              ? [{ name: '', properties: reference.properties }]
+              : [];
 
     // Link only to content rendered in the active tab.
     const toc = [
@@ -296,11 +454,6 @@ export default function DocsArticleRoute() {
                     {upstream && (
                         <Link href={upstream.url} hasUnderline>
                             Astryx documentation
-                        </Link>
-                    )}
-                    {component.name === 'Menu' && (
-                        <Link href="https://astryx.atmeta.com/components/SideNav" hasUnderline>
-                            Astryx SideNav documentation
                         </Link>
                     )}
                 </Stack>
@@ -359,7 +512,7 @@ export default function DocsArticleRoute() {
                     </Stack>
                 ) : (
                     <>
-                        <TabList
+                        <Tabs
                             value={tab}
                             onChange={(value) => {
                                 // Preserve other query parameters while making each tab linkable.
@@ -367,7 +520,7 @@ export default function DocsArticleRoute() {
                                 params.set('tab', value);
                                 setSearchParams(params, { preventScrollReset: true });
                             }}
-                            role="tablist"
+                            gap={5}
                             hasDivider
                         >
                             {tabs.map((item) => (
@@ -376,153 +529,169 @@ export default function DocsArticleRoute() {
                                     value={item.value}
                                     label={item.label}
                                     panelId={`component-${item.value}`}
-                                />
-                            ))}
-                        </TabList>
-                        <Stack
-                            id={`component-${tab}`}
-                            role="tabpanel"
-                            tabIndex={0}
-                            aria-label={activeTab.label}
-                            gap={5}
-                        >
-                            {tab === 'examples' && (
-                                <>
-                                    {reference?.examples.map((example) => (
-                                        <Stack key={example.title} gap={3}>
-                                            <Stack
-                                                padding={4}
-                                                className="overflow-auto rounded-lg border border-border"
-                                                aria-label={`${example.title} preview`}
-                                            >
-                                                <ComponentPreview name={component.name} example={example.title} />
-                                            </Stack>
-                                            <CodeBlock code={example.code} language="jsx" hasLanguageLabel={false} />
-                                        </Stack>
-                                    ))}
-                                    {upstream && !reference?.examples.length && (
-                                        <Text as="p">
-                                            Astryx does not publish standalone examples for this component. See its
-                                            documentation link above.
-                                        </Text>
-                                    )}
-                                </>
-                            )}
-                            {tab === 'anatomy' &&
-                                reference &&
-                                (upstream || component.name === 'Card' ? (
-                                    reference.anatomy.length ? (
-                                        <Table
-                                            data={reference.anatomy}
-                                            idKey="name"
-                                            density="compact"
-                                            columns={[
-                                                {
-                                                    key: 'name',
-                                                    header: 'Element',
-                                                    width: proportional(1),
-                                                    renderCell: (item) => (
-                                                        <Stack gap={0}>
-                                                            <Stack direction="horizontal" align="center" gap={2}>
-                                                                <Text>{item.name}</Text>
-                                                                {item.required && (
-                                                                    <Badge
-                                                                        variant="blue"
-                                                                        className="h-4 shrink-0 px-1"
-                                                                        label={
-                                                                            <Text size="xsm" color="inherit">
-                                                                                Required
-                                                                            </Text>
-                                                                        }
-                                                                    />
-                                                                )}
-                                                            </Stack>
-                                                            <Text type="supporting">{item.description}</Text>
-                                                        </Stack>
-                                                    ),
-                                                },
-                                            ]}
-                                        />
-                                    ) : (
-                                        <Text as="p">Astryx does not publish anatomy guidance for this component.</Text>
-                                    )
-                                ) : (
-                                    reference.anatomy.map((item) => (
-                                        <Text key={item.name} as="p">
-                                            {item.description}
-                                        </Text>
-                                    ))
-                                ))}
-                            {tab === 'properties' && reference && reference.properties.length > 0 && (
-                                <Table
-                                    data={reference.properties}
-                                    idKey="name"
-                                    density="compact"
-                                    columns={[
-                                        {
-                                            key: 'name',
-                                            header: 'Property',
-                                            width: proportional(1),
-                                            renderCell: (item) => (
-                                                <Stack gap={0}>
-                                                    <Stack direction="horizontal" align="center" gap={2}>
-                                                        <Text>{item.name}</Text>
-                                                        <Code className="text-sm">{item.type}</Code>
-                                                        {item.required && (
-                                                            <Badge
-                                                                variant="blue"
-                                                                className="h-4 shrink-0 px-1"
-                                                                label={
-                                                                    <Text size="xsm" color="inherit">
-                                                                        Required
-                                                                    </Text>
-                                                                }
-                                                            />
-                                                        )}
-                                                    </Stack>
-                                                    <Text type="supporting">{item.description}</Text>
-                                                </Stack>
-                                            ),
-                                        },
-                                    ]}
-                                />
-                            )}
-                            {tab === 'best-practices' && (
-                                <>
-                                    {reference && reference.practices.length > 0 && (
-                                        <Table
-                                            data={reference.practices}
-                                            idKey="description"
-                                            density="compact"
-                                            columns={[
-                                                {
-                                                    key: 'guidance',
-                                                    header: 'Guidance',
-                                                    width: proportional(1),
-                                                    renderCell: (item) => (
-                                                        <Badge
-                                                            label={item.guidance ? 'Do' : 'Don’t'}
-                                                            variant={item.guidance ? 'green' : 'red'}
+                                >
+                                    {item.value === 'examples' && (
+                                        <>
+                                            {reference?.examples.map((example) => (
+                                                <Stack key={example.title} gap={3}>
+                                                    <Stack
+                                                        padding={4}
+                                                        className="overflow-auto rounded-lg border border-border"
+                                                        aria-label={`${example.title} preview`}
+                                                    >
+                                                        <ComponentPreview
+                                                            name={component.name}
+                                                            example={example.title}
                                                         />
-                                                    ),
-                                                },
-                                                {
-                                                    key: 'description',
-                                                    header: 'Description',
-                                                    width: proportional(4),
-                                                    renderCell: (item) => (
-                                                        <Text type="supporting">{item.description}</Text>
-                                                    ),
-                                                },
-                                            ]}
-                                        />
+                                                    </Stack>
+                                                    <CodeBlock
+                                                        code={example.code}
+                                                        language="jsx"
+                                                        hasLanguageLabel={false}
+                                                    />
+                                                </Stack>
+                                            ))}
+                                            {upstream && !reference?.examples.length && (
+                                                <Text as="p">
+                                                    Astryx does not publish standalone examples for this component. See
+                                                    its documentation link above.
+                                                </Text>
+                                            )}
+                                        </>
                                     )}
-                                    {upstream && !reference?.practices.length && (
-                                        <Text as="p">Astryx does not publish best practices for this component.</Text>
+                                    {item.value === 'anatomy' &&
+                                        reference &&
+                                        (upstream || component.name === 'Card' ? (
+                                            reference.anatomy.length ? (
+                                                <Table
+                                                    data={reference.anatomy}
+                                                    idKey="name"
+                                                    density="compact"
+                                                    columns={[
+                                                        {
+                                                            key: 'name',
+                                                            header: 'Element',
+                                                            width: proportional(1),
+                                                            renderCell: (item) => (
+                                                                <Stack gap={0}>
+                                                                    <Stack
+                                                                        direction="horizontal"
+                                                                        align="center"
+                                                                        gap={2}
+                                                                    >
+                                                                        <Text>{item.name}</Text>
+                                                                        {item.required && (
+                                                                            <Badge
+                                                                                variant="blue"
+                                                                                className="h-4 shrink-0 px-1"
+                                                                                label={
+                                                                                    <Text size="xsm" color="inherit">
+                                                                                        Required
+                                                                                    </Text>
+                                                                                }
+                                                                            />
+                                                                        )}
+                                                                    </Stack>
+                                                                    <Text type="supporting">{item.description}</Text>
+                                                                </Stack>
+                                                            ),
+                                                        },
+                                                    ]}
+                                                />
+                                            ) : (
+                                                <Text as="p">
+                                                    Astryx does not publish anatomy guidance for this component.
+                                                </Text>
+                                            )
+                                        ) : (
+                                            reference.anatomy.map((item) => (
+                                                <Text key={item.name} as="p">
+                                                    {item.description}
+                                                </Text>
+                                            ))
+                                        ))}
+                                    {item.value === 'properties' &&
+                                        propertyGroups.map((group) => (
+                                            <Stack key={group.name} gap={3}>
+                                                {group.name && <Heading level={2}>{group.name}</Heading>}
+                                                <Table
+                                                    data={group.properties}
+                                                    idKey="name"
+                                                    density="compact"
+                                                    columns={[
+                                                        {
+                                                            key: 'name',
+                                                            header: 'Property',
+                                                            width: proportional(1),
+                                                            renderCell: (item) => (
+                                                                <Stack gap={0}>
+                                                                    <Stack
+                                                                        direction="horizontal"
+                                                                        align="center"
+                                                                        gap={2}
+                                                                    >
+                                                                        <Text>{item.name}</Text>
+                                                                        <Code className="text-sm">{item.type}</Code>
+                                                                        {item.required && (
+                                                                            <Badge
+                                                                                variant="blue"
+                                                                                className="h-4 shrink-0 px-1"
+                                                                                label={
+                                                                                    <Text size="xsm" color="inherit">
+                                                                                        Required
+                                                                                    </Text>
+                                                                                }
+                                                                            />
+                                                                        )}
+                                                                    </Stack>
+                                                                    <Text type="supporting">{item.description}</Text>
+                                                                </Stack>
+                                                            ),
+                                                        },
+                                                    ]}
+                                                />
+                                            </Stack>
+                                        ))}
+                                    {item.value === 'best-practices' && (
+                                        <>
+                                            {reference && reference.practices.length > 0 && (
+                                                <Table
+                                                    data={reference.practices}
+                                                    idKey="description"
+                                                    density="compact"
+                                                    columns={[
+                                                        {
+                                                            key: 'guidance',
+                                                            header: 'Guidance',
+                                                            width: proportional(1),
+                                                            renderCell: (item) => (
+                                                                <Badge
+                                                                    label={item.guidance ? 'Do' : 'Don’t'}
+                                                                    variant={item.guidance ? 'green' : 'red'}
+                                                                />
+                                                            ),
+                                                        },
+                                                        {
+                                                            key: 'description',
+                                                            header: 'Description',
+                                                            width: proportional(4),
+                                                            renderCell: (item) => (
+                                                                <Text type="supporting">{item.description}</Text>
+                                                            ),
+                                                        },
+                                                    ]}
+                                                />
+                                            )}
+                                            {upstream && !reference?.practices.length && (
+                                                <Text as="p">
+                                                    Astryx does not publish best practices for this component.
+                                                </Text>
+                                            )}
+                                        </>
                                     )}
-                                </>
-                            )}
-                        </Stack>
+                                </Tab>
+                            ))}
+                        </Tabs>
                     </>
                 )}
             </Stack>

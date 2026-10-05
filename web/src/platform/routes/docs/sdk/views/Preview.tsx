@@ -1,10 +1,10 @@
 import { Card } from '@/components/ui/Card';
-import { Menu } from '@/components/ui/Menu';
 import { Code } from '@astryxdesign/core/Code';
 import { Grid } from '@astryxdesign/core/Grid';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Avatar } from '@/components/ui/Avatar';
+import { Tabs, Tab } from '@/components/ui/Tabs';
 import { Badge } from '@astryxdesign/core/Badge';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Table } from '@astryxdesign/core/Table';
@@ -14,9 +14,9 @@ import { Button } from '@astryxdesign/core/Button';
 import { Dialog } from '@astryxdesign/core/Dialog';
 import { Slider } from '@astryxdesign/core/Slider';
 import { Switch } from '@astryxdesign/core/Switch';
+import { Calendar } from '@/components/ui/Calendar';
 import { Divider } from '@astryxdesign/core/Divider';
 import { Heading } from '@astryxdesign/core/Heading';
-import { Calendar } from '@astryxdesign/core/Calendar';
 import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { Selector } from '@astryxdesign/core/Selector';
 import { TextArea } from '@astryxdesign/core/TextArea';
@@ -27,7 +27,6 @@ import { StatusDot } from '@astryxdesign/core/StatusDot';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { TimeInput } from '@astryxdesign/core/TimeInput';
 import { Timestamp } from '@astryxdesign/core/Timestamp';
-import { Tab, TabList } from '@astryxdesign/core/TabList';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { IconButton } from '@astryxdesign/core/IconButton';
 import { Step, Stepper } from '@astryxdesign/core/Stepper';
@@ -40,11 +39,11 @@ import { DropdownMenu } from '@astryxdesign/core/DropdownMenu';
 import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
 import { DateTimeInput } from '@astryxdesign/core/DateTimeInput';
 import { MultiSelector } from '@astryxdesign/core/MultiSelector';
+import { Menu, MenuSection, MenuItem } from '@/components/ui/Menu';
 import { DateRangeInput } from '@astryxdesign/core/DateRangeInput';
 import { ComplexSelector } from '@astryxdesign/core/ComplexSelector';
 import { RadioList, RadioListItem } from '@astryxdesign/core/RadioList';
 import { MetadataList, MetadataListItem } from '@astryxdesign/core/MetadataList';
-import { SideNav, SideNavItem, SideNavSection } from '@astryxdesign/core/SideNav';
 
 /** Leaves inert, controlled previews unchanged. */
 const noop = () => {};
@@ -128,7 +127,7 @@ const previews: Record<string, ReactNode> = {
         </Stack>
     ),
     CheckboxInput: <CheckboxInput label="Approved" size="sm" value onChange={noop} />,
-    Calendar: <Calendar className="scale-50" value="2026-10-02" focusDate="2026-10-02" onChange={noop} />,
+    Calendar: <Calendar className="scale-50" value="2026-10-02" onChange={noop} />,
     ComplexSelector: (
         <ComplexSelector label="Plan" value="team" triggerLabel="Team" onChange={noop} size="sm" width="100%">
             {(value, onChange) => (
@@ -256,12 +255,16 @@ const previews: Record<string, ReactNode> = {
         </Grid>
     ),
     Menu: (
-        <SideNav className="w-full">
-            <SideNavSection title="Settings">
-                <SideNavItem label="General" isSelected />
-                <SideNavItem label="Workflow" />
-            </SideNavSection>
-        </SideNav>
+        <Menu>
+            <MenuSection title="Settings">
+                <MenuItem label="Profile">
+                    <Text>Profile settings</Text>
+                </MenuItem>
+                <MenuItem label="Workflow">
+                    <Text>Workflow settings</Text>
+                </MenuItem>
+            </MenuSection>
+        </Menu>
     ),
     Stack: (
         <Stack align="center" gap={2}>
@@ -270,11 +273,15 @@ const previews: Record<string, ReactNode> = {
             <Stack aria-hidden="true" className="h-5 w-16 rounded-full bg-neutral" />
         </Stack>
     ),
-    TabList: (
-        <TabList onChange={noop} value="overview">
-            <Tab label="Overview" value="overview" />
-            <Tab label="Activity" value="activity" />
-        </TabList>
+    Tabs: (
+        <Tabs>
+            <Tab label="Overview" value="overview">
+                <Text>Overview content</Text>
+            </Tab>
+            <Tab label="Activity" value="activity">
+                <Text>Activity content</Text>
+            </Tab>
+        </Tabs>
     ),
     Stepper: (
         <Stepper activeStep={1}>
@@ -354,20 +361,6 @@ export function ComponentPreview({ name, example }: { name: string; example?: st
     }
     if (name === 'Currency' && example) {
         return <Text>{new Intl.NumberFormat(undefined, { style: 'currency', currency: 'USD' }).format(1234.5)}</Text>;
-    }
-    if (name === 'Menu' && example) {
-        return (
-            <Menu
-                sections={[
-                    {
-                        title: 'Settings',
-                        entries: [
-                            { kind: 'item', id: 'profile', label: 'Profile', content: <Text>Profile settings</Text> },
-                        ],
-                    },
-                ]}
-            />
-        );
     }
     if (name === 'FileViewer' && example) {
         return <Button variant="ghost" label="View image" />;

@@ -1,7 +1,6 @@
 import type { z } from 'zod';
 import { api } from '@/lib/api';
 import { NoIndex } from '@/components/Seo';
-import { Menu } from '@/components/ui/Menu';
 import { useApi } from '@/lib/hooks/use-api';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
@@ -20,6 +19,7 @@ import { PageContainer } from '@/components/PageContainer';
 import { useAuthenticatedUser } from '@/lib/hooks/use-user';
 import { AlertDialog } from '@astryxdesign/core/AlertDialog';
 import { Table, proportional } from '@astryxdesign/core/Table';
+import { Menu, MenuSection, MenuItem } from '@/components/ui/Menu';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 
 /** Renders account metadata and resets drafts when the authenticated identity changes. */
@@ -60,53 +60,35 @@ function SettingsPage({ user }: { user: z.output<typeof schemas.zUserSummary> })
                     <Text type="supporting">Your Account</Text>
                 </Stack>
             </Stack>
-            <Menu
-                sections={[
-                    {
-                        title: 'Settings',
-                        isHeaderHidden: true,
-                        entries: [
-                            {
-                                kind: 'item',
-                                id: 'account',
-                                label: 'Account',
-                                icon: 'userRound',
-                                content: (
-                                    <form action={saveAccount}>
-                                        <Stack gap={4}>
-                                            <Heading level={2}>Account</Heading>
-                                            <Divider />
-                                            <TextInput label="Username" value={name} isRequired onChange={setName} />
-                                            <Text>
-                                                <b>Email</b> {user.email}
-                                            </Text>
-                                            <Stack direction="horizontal" justify="end">
-                                                <Button
-                                                    label="Save account"
-                                                    variant="primary"
-                                                    type="submit"
-                                                    isDisabled={!name.trim()}
-                                                />
-                                            </Stack>
-                                        </Stack>
-                                    </form>
-                                ),
-                            },
-                            {
-                                kind: 'item',
-                                id: 'organizations',
-                                label: 'Organizations',
-                                icon: 'building2',
-                                content: (
-                                    <ApiBoundary>
-                                        <OrganizationSettings />
-                                    </ApiBoundary>
-                                ),
-                            },
-                        ],
-                    },
-                ]}
-            />
+            <Menu>
+                <MenuSection title="Settings" isHeaderHidden>
+                    <MenuItem id="account" label="Account" icon="userRound">
+                        <form action={saveAccount}>
+                            <Stack gap={4}>
+                                <Heading level={2}>Account</Heading>
+                                <Divider />
+                                <TextInput label="Username" value={name} isRequired onChange={setName} />
+                                <Text>
+                                    <b>Email</b> {user.email}
+                                </Text>
+                                <Stack direction="horizontal" justify="end">
+                                    <Button
+                                        label="Save account"
+                                        variant="primary"
+                                        type="submit"
+                                        isDisabled={!name.trim()}
+                                    />
+                                </Stack>
+                            </Stack>
+                        </form>
+                    </MenuItem>
+                    <MenuItem id="organizations" label="Organizations" icon="building2">
+                        <ApiBoundary>
+                            <OrganizationSettings />
+                        </ApiBoundary>
+                    </MenuItem>
+                </MenuSection>
+            </Menu>
         </Stack>
     );
 }
