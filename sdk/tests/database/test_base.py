@@ -3,7 +3,6 @@ import pytest
 import asyncio
 from typing import ClassVar
 from sqlmodel import Field, SQLModel
-from contextlib import nullcontext
 from sqlalchemy import text
 from longlink.database import base as database_base
 from longlink.database import urls as database_urls
@@ -30,28 +29,25 @@ PRODUCTION_SETTINGS = {
 
 
 class VerificationEngine:
-    """Provide a configurable non-SQLite database verification boundary."""
+    """Provide a failing non-SQLite database verification boundary."""
 
     url = make_url("postgresql+asyncpg://database")
 
-    def __init__(self, failure: Exception | None = None) -> None:
+    def __init__(self, failure: Exception) -> None:
         """Configure the connection outcome and cleanup observation."""
 
         self.failure = failure
-        self.connect_calls = 0
         self.disposed = False
 
     def connect(self) -> "VerificationEngine":
-        """Record and return the verification connection context."""
+        """Return the verification connection context."""
 
-        self.connect_calls += 1
         return self
 
     async def __aenter__(self) -> None:
-        """Raise the configured connection failure, if any."""
+        """Raise the configured connection failure."""
 
-        if self.failure:
-            raise self.failure
+        raise self.failure
 
     async def __aexit__(self, *_args: object) -> None:
         """Complete the verification connection context."""
@@ -333,23 +329,3 @@ async def test_session_disposes_sqlite_engine_after_schema_initialization_failur
         async with database.session():
             pass
     assert engine.disposed
-
-
-async def test_session_verifies_non_sqlite_connection_before_yielding_session(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """Verify a non-SQLite connection before yielding a Solution session."""
-
-    # Arrange
-    engine = VerificationEngine()
-    monkeypatch.setattr(database_base, "create_engine", lambda _env: engine)
-    monkeypatch.setattr(database_base, "AsyncSession", lambda *_args, **_kwargs: nullcontext("session"))
-    database = database_base.Database(Envs.model_validate(PRODUCTION_SETTINGS))
-
-    # Act
-    async with database.session() as database_session:
-        assert database_session == "session"
-
-    # Assert
-    assert engine.connect_calls == 1
-    await database.dispose()

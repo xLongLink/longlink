@@ -169,14 +169,9 @@ def test_production_context_requires_signed_identity_except_for_probes() -> None
         return {"authenticated": audit.current_actor.get() is not None}
 
     @app.get("/health")
-    async def health() -> dict[str, bool]:
-        """Provide an anonymous liveness probe."""
-
-        return {"ok": True}
-
     @app.get("/ready")
-    async def ready() -> dict[str, bool]:
-        """Provide an anonymous readiness probe."""
+    async def probe() -> dict[str, bool]:
+        """Provide anonymous liveness and readiness probes."""
 
         return {"ok": True}
 

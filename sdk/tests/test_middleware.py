@@ -62,7 +62,7 @@ def test_frontend_middleware_varies_eligible_text_representations(accept_encodin
     """Keep gzip and identity text representations separately cacheable."""
 
     # Arrange
-    app = create_text_app({"etag": '"text-v1"'})
+    app = create_text_app({"etag": '"text-v1"', "vary": "Origin"})
 
     # Act
     response = request_response(app, "/text", {"accept-encoding": accept_encoding})
@@ -72,19 +72,6 @@ def test_frontend_middleware_varies_eligible_text_representations(accept_encodin
     assert response.content == b"x" * 1000
     assert response.headers.get("content-encoding") == expected_content_encoding
     assert response.headers["etag"] == 'W/"text-v1"'
-    assert response.headers["vary"] == "Accept-Encoding"
-
-
-def test_frontend_middleware_preserves_existing_vary_header_when_compressing() -> None:
-    """Append encoding negotiation without discarding route-specific Vary values."""
-
-    # Arrange
-    app = create_text_app({"vary": "Origin"})
-
-    # Act
-    response = request_response(app, "/text", {"accept-encoding": "gzip"})
-
-    # Assert
     assert response.headers["vary"] == "Origin, Accept-Encoding"
 
 

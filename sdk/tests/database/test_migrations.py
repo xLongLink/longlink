@@ -1,14 +1,14 @@
 import sys
-import runpy
 import pytest
-import alembic
+from io import StringIO
 from types import SimpleNamespace
+from alembic import command
 from pathlib import Path
 from sqlmodel import SQLModel
-from contextlib import nullcontext
 from alembic.config import Config
 from collections.abc import Callable, Generator
 from longlink.database import migrations as database_migrations
+from longlink.constants import ROOT
 from alembic.operations.ops import UpgradeOps, DowngradeOps, CreateTableOp, MigrationScript
 
 
@@ -170,38 +170,21 @@ def test_production_migrations_upgrade_head_with_committed_revision(tmp_path: Pa
     assert config.get_main_option("version_locations") == str(migrations_path)
 
 
-def test_migration_environment_configures_offline_execution(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-    """Configure Alembic offline execution without opening a database connection."""
+def test_migration_environment_emits_offline_sql_without_creating_database(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    """Emit Solution migration SQL without opening a database connection."""
 
     # Arrange
-    calls: list[tuple[str, object]] = []
-    context = SimpleNamespace(
-        is_offline_mode=lambda: True,
-        configure=lambda **kwargs: calls.append(("configure", kwargs)),
-        begin_transaction=nullcontext,
-        run_migrations=lambda: calls.append(("run_migrations", None)),
-    )
-    environment_path = database_migrations.CURRENT_FILE.parent / "env.py"
+    output = StringIO()
+    config = database_migrations.migration_config(ROOT / ".static" / "new" / "migrations")
+    config.output_buffer = output
     monkeypatch.chdir(tmp_path)
-    monkeypatch.setattr(alembic, "context", context)
+    monkeypatch.setenv("LONGLINK_ENV", "development")
 
     # Act
-    environment = runpy.run_path(str(environment_path))
+    command.upgrade(config, "head", sql=True)
 
     # Assert
-    assert calls == [
-        (
-            "configure",
-            {
-                "connection": None,
-                "url": str(environment["engine"].url),
-                "literal_binds": True,
-                "target_metadata": SQLModel.metadata,
-                "include_object": database_migrations.include_object,
-                "compare_type": True,
-                "render_as_batch": True,
-                "version_table_schema": None,
-            },
-        ),
-        ("run_migrations", None),
-    ]
+    sql = output.getvalue()
+    assert "CREATE TABLE item (" in sql
+    assert "INSERT INTO alembic_version" in sql
+    assert not (tmp_path / "dev.db").exists()

@@ -48,18 +48,8 @@ def test_image_rejects_invalid_references(reference: str, message: str) -> None:
         Image(reference)
 
 
-def test_image_normalizes_whitespace() -> None:
-    """Strip boundary whitespace from an image reference."""
-
-    # Arrange
-    reference = Image(" ghcr.io/longlink/dashboard:latest ")
-
-    # Assert
-    assert reference == "ghcr.io/longlink/dashboard:latest"
-
-
 def test_image_validates_and_serializes_as_a_pydantic_string() -> None:
-    """Expose Image fields as validated strings in Pydantic models."""
+    """Expose Image fields as normalized, validated strings in Pydantic models."""
 
     # Arrange
     class ImageModel(BaseModel):
@@ -68,7 +58,7 @@ def test_image_validates_and_serializes_as_a_pydantic_string() -> None:
         image: Image
 
     # Act
-    model = ImageModel.model_validate({"image": "ghcr.io/longlink/dashboard:latest"})
+    model = ImageModel.model_validate({"image": " ghcr.io/longlink/dashboard:latest "})
 
     # Assert
     assert isinstance(model.image, Image)

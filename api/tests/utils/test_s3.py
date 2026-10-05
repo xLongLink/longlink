@@ -98,16 +98,18 @@ def make_s3() -> S3:
     return S3("https://s3.example.com", Credentials("access", "secret"))
 
 
-async def test_create_bucket_protects_new_and_existing_buckets(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Protect new and existing buckets without swallowing public-access-block failures."""
+@pytest.mark.parametrize("creation_error_code", [None, "BucketAlreadyOwnedByYou"], ids=["new-bucket", "owned-bucket"])
+async def test_create_bucket_protects_new_and_existing_buckets(monkeypatch: pytest.MonkeyPatch, creation_error_code: str | None) -> None:
+    """Protect new and existing buckets with the same public-access configuration."""
 
     # Arrange
     client = FakeClient()
-    client.create_error = client_error("BucketAlreadyOwnedByYou")
+    client.create_error = client_error(creation_error_code) if creation_error_code is not None else None
     serve(client, monkeypatch)
+    storage = make_s3()
 
     # Act
-    await make_s3().create_bucket("org-bucket")
+    await storage.create_bucket("org-bucket")
 
     # Assert
     assert client.buckets_created == ["org-bucket"]
@@ -119,16 +121,27 @@ async def test_create_bucket_protects_new_and_existing_buckets(monkeypatch: pyte
     }
     assert client.public_access_blocks == [("org-bucket", configuration)]
 
-    # Protect newly created buckets too, and never swallow block failures as creation retries.
-    client.create_error = None
-    await make_s3().create_bucket("org-bucket")
-    assert client.public_access_blocks == [("org-bucket", configuration)] * 2
+
+async def test_create_bucket_propagates_public_access_block_errors(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Never swallow protection failures as tolerated bucket-creation errors."""
+
+    # Arrange
+    client = FakeClient()
     client.create_error = client_error("BucketAlreadyExists")
     client.block_error = client_error("BucketAlreadyOwnedByYou")
+    serve(client, monkeypatch)
+    storage = make_s3()
+
+    # Act
     with pytest.raises(ClientError) as error:
-        await make_s3().create_bucket("org-bucket")
+        await storage.create_bucket("org-bucket")
+
+    # Assert
     assert error.value is client.block_error
-    assert client.public_access_blocks == [("org-bucket", configuration)] * 3
+    assert client.buckets_created == ["org-bucket"]
+    assert client.public_access_blocks == [
+        ("org-bucket", {"BlockPublicAcls": True, "IgnorePublicAcls": True, "BlockPublicPolicy": True, "RestrictPublicBuckets": True})
+    ]
 
 
 async def test_create_bucket_propagates_unexpected_creation_errors(monkeypatch: pytest.MonkeyPatch) -> None:
