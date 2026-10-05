@@ -1,199 +1,214 @@
 ---
 name: cleanup
-description: Review or implement structural cleanup in LongLink, prioritizing unnecessary layers, duplicated workflows, unused state, and overcomplex logic. Use when the user asks to simplify, refactor, or remove unnecessary code while preserving intended behavior.
+description: Review or implement structural cleanup in LongLink. Prioritize unnecessary layers, duplicated workflows, unused state, and overly complex logic. Use when the user asks to simplify, refactor, or remove unnecessary code while preserving intended behavior.
 ---
 
-## Task
+# Cleanup
 
-Inspect the repository for high-confidence simplifications that remove unnecessary concepts and maintenance obligations, not merely lines of code. Preserve intended behavior unless the user explicitly approves a contract or behavior change.
+## Task and scope
 
-Honor the requested mode:
+DO inspect for high-confidence simplifications that remove unnecessary concepts and maintenance work, not only lines of code. Unless the user explicitly approves a contract or behavior change, DO preserve intended behavior.
 
-- **Review, find, or report:** inspect and present candidates without editing files.
-- **Implement or refactor:** complete the requested or selected changes across affected callers and contracts, then verify them.
-- Treat selection of numbered findings as approval for those findings, not permission for unrelated refactoring. Present newly discovered opportunities separately.
+- For a review, search for findings, or report, DO inspect and present candidates without editing files.
+- For implementation or refactoring, DO complete the requested or selected changes across affected callers and contracts, then verify them.
+- Selection of numbered findings authorizes only those findings. DO present newly discovered opportunities separately instead of extending the refactoring scope.
 
 ## Structural review first
 
-Prioritize these opportunities, in order:
+DO prioritize opportunities in this order:
 
 1. Remove unused capabilities, persisted state, and production contracts.
 2. Remove unnecessary layers and representation conversions.
-3. Consolidate duplicated workflow and resource ownership.
+3. Consolidate duplicated workflows and resource ownership.
 4. Simplify state, business modes, admission rules, and control flow.
 5. Reduce repeated external work and unnecessary data loading.
 6. Address local syntax, collections, formatting, and naming.
 
-Prefer a change that eliminates a concept, state owner, contract, workflow step, or abstraction over one that merely shortens its implementation. Do not fill a review with collection or syntax rewrites when the user asks for meaningful simplification. Rank candidates by conceptual reduction, maintenance benefit, and evidence of safety rather than line count. Report fewer candidates when evidence is insufficient; do not manufacture findings to meet a quota.
+PREFER changes that remove a concept, state owner, contract, workflow step, or abstraction to changes that only shorten code. For meaningful simplification requests, DON'T fill reviews with collection or syntax rewrites. DO rank candidates by conceptual reduction, maintenance benefit, and evidence of safety, not line count. When evidence is insufficient, DO report fewer candidates instead of inventing findings to meet a quota.
 
 ### Patterns to investigate
 
-These are investigation prompts, not automatic reasons to remove code:
+These patterns are investigation prompts. They do not, by themselves, justify code removal.
 
-| Pattern                                   | Structural opportunity                                                                                                                                                                                 |
-| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Adapters that only translate APIs         | Remove JSX marker parsing or forwarding classes when callers can use the established library's typed API directly. Retain meaningful validation and domain behavior.                                   |
-| Paired APIs without independent consumers | Consolidate a hook/controller and companion component when every caller immediately reconnects the same pair. Give the workflow one owner.                                                             |
-| Duplicated resource ownership             | Let one scope own HTTP clients, SQL connections, transactions, tunnels, and cleanup; let collaborators operate on those resources.                                                                     |
-| Manually coordinated resets               | Give attempt-local state a clear component or operation lifetime instead of resetting multiple owners on every completion path. Preserve retry drafts and closing effects.                             |
-| Duplicated creation contracts             | Pass an existing validated model through a service instead of unpacking it into a mirrored parameter list and reconstructing it without transformation. Keep server-owned fields excluded.             |
-| Write-only persisted state                | Trace fields that are stored, serialized, protected, and tested but never read for an application decision. Remove supporting schema and fixture code only with the retention implications understood. |
-| Derivable contract fields                 | Investigate values always computed from another authoritative field. Check independent external producers before removing the transmitted field or its validation.                                     |
-| Repeated mandatory follow-up work         | Move a transactional obligation into the operation that requires it when all callers perform the same follow-up. Preserve lock order and commit ownership.                                             |
-| Overlapping query ownership               | Resolve route or tenant identity once, then give dependent queries explicit inputs. Preserve parallel fetching, cancellation, polling, and loading/error semantics.                                    |
-| Interacting flags                         | Replace boolean combinations with explicit business modes when the caller set proves that the flags encode mutually exclusive policies.                                                                |
-| Single-caller workflow bodies             | Inline forwarding boundaries when doing so exposes the lifetime and ordering of the operation more clearly. Do not trade useful separation for excessive nesting.                                      |
-| Competing production entry points         | Consolidate parsers or facades with different contracts when only one is needed in production; keep fixture conveniences in test helpers.                                                              |
+| Pattern                                   | Investigation                                                                                                                                                                          |
+| ----------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Adapters that only translate APIs         | Check whether callers can use the established library's typed API instead of JSX marker parsing or forwarding classes. Preserve meaningful validation and domain behavior.             |
+| Paired APIs without independent consumers | Check whether a hook/controller and companion component always reconnect. Consider one workflow owner.                                                                                 |
+| Duplicated resource ownership             | Check whether one scope can own HTTP clients, SQL connections, transactions, tunnels, and cleanup while collaborators use those resources.                                             |
+| Manually coordinated resets               | Check whether attempt-local state can use a component or operation lifetime instead of resets across multiple owners. Preserve retry drafts and closing effects.                       |
+| Duplicated creation contracts             | Check whether a validated model can pass through a service without unpacking and reconstructing an equivalent model. Keep server-owned fields excluded.                                |
+| Write-only persisted state                | Trace fields stored, serialized, protected, and tested but never used for application decisions. Understand retention effects before removing schema or fixture code.                  |
+| Derivable contract fields                 | Check whether a value always comes from another authoritative field. Check external producers before removing the transmitted field or validation.                                     |
+| Repeated mandatory follow-up work         | Check whether a transactional obligation belongs in the operation that requires it. Preserve lock order and commit ownership.                                                          |
+| Overlapping query ownership               | Check whether route or tenant identity can be resolved once and passed explicitly to dependent queries. Preserve parallel fetching, cancellation, polling, and loading/error behavior. |
+| Interacting flags                         | Check whether callers prove that boolean combinations encode mutually exclusive business policies. Consider explicit business modes.                                                   |
+| Single-caller workflow bodies             | Check whether removing a forwarding boundary clarifies operation lifetime and order. Preserve useful separation and avoid excessive nesting.                                           |
+| Competing production entry points         | Check whether production needs parsers or facades with different contracts. Keep fixture conveniences in test helpers.                                                                 |
 
 ### Evidence required
 
-For each candidate:
+For each candidate, DO complete these checks:
 
-1. Trace producers, consumers, direct and indirect callers, tests, and relevant documentation. Account for framework discovery, generated contracts, scripts, migrations, and external consumers. A text search alone does not prove an API is unused.
-2. Identify the distinct responsibility the existing layer, field, state, or check provides. Explain why current consumers do not need it, and what concept or maintenance obligation disappears.
-3. Define the smallest **complete** change, including affected callers, source contracts, generated outputs, fixtures, and obsolete code. Do not leave parallel implementations or introduce another forwarding layer to preserve the old shape unnecessarily.
-4. Compare success, failure, cancellation, retry, and concurrent behavior. Trace resource acquisition and cleanup order, transaction boundaries, state freshness, UI mounting/focus, and error precedence where relevant.
-5. Identify existing verification and coverage gaps. Distinguish equivalence established by source/caller tracing from behavior exercised by tests.
+1. Trace producers, consumers, direct and indirect callers, tests, and relevant documentation. Account for framework discovery, generated contracts, scripts, migrations, and external consumers. A text search alone does not prove that an API is unused.
+2. Identify the distinct responsibility of the layer, field, state, or check. Explain why current consumers do not need it and which concept or maintenance obligation disappears.
+3. Define the smallest complete change, including callers, source contracts, generated outputs, fixtures, and obsolete code. DON'T leave parallel implementations or add unnecessary forwarding layers to retain the old structure.
+4. Compare success, failure, cancellation, retry, and concurrent behavior. Where relevant, trace resource acquisition and cleanup, transactions, state freshness, UI mounting/focus, and error precedence.
+5. Identify existing verification and coverage gaps. Distinguish equivalence established by source and caller tracing from behavior exercised by tests.
 
-A single caller does not automatically make a helper unnecessary. An abstraction may earn its place through readability, ownership, or a real boundary even with one implementation. Prefer explicit duplication over an extraction that only makes code look uniform.
+A helper with one caller can still improve readability, ownership, or separation. DON'T treat a single caller as sufficient evidence for removal. PREFER explicit duplication to extraction that only makes code look uniform.
 
-Repeated checks are not redundant when a wait, external operation, transaction boundary, or trust boundary occurs between them. Preserve authorization rechecks, post-admission snapshots, lease fencing, controller acknowledgement, quota enforcement, and failure cleanup unless equivalence is demonstrated. Do not simplify a state machine by deleting transitions that appear unused only in happy-path tests.
+Checks separated by a wait, external operation, transaction, or trust boundary can protect different states. Unless equivalence is demonstrated, DO preserve authorization rechecks, post-admission snapshots, lease fencing, controller acknowledgement, quotas, and failure cleanup. DON'T delete state-machine transitions only because successful-operation tests do not use them.
 
 ### Compatibility and approval
 
-Separate **behavior-preserving internal simplifications** from changes to public signatures, manifest shapes, schemas, data retention, externally observable behavior, or supported integrations. Obtain explicit approval for the latter when not already included in the request.
+DO separate behavior-preserving internal changes from changes to public signatures, manifests, schemas, retention, observable behavior, or supported integrations. Unless the user's request already authorizes those changes, DO obtain explicit approval.
 
-For example, removing a write-only Revision metadata column still changes historical retention and existing-database deployment. Removing a route-derived View field still changes the manifest contract for external producers. Neither is entirely behavior-neutral merely because current repository consumers can be migrated.
+Removing a write-only Revision metadata column changes historical retention and existing-database deployment. Removing a route-derived View field changes the manifest contract for external producers. Migrating repository consumers does not make either change behavior-neutral.
 
-Follow the project's MVP and collapsed-migration conventions, but explain what existing installations need. Changing an initial migration does not upgrade an already-stamped database. Do not perform live destructive schema operations or silently choose retention or compatibility policy as cleanup.
+DO follow project MVP and collapsed-migration conventions. DO explain requirements for existing installations. Changing an initial migration does not upgrade an already-stamped database. DON'T perform live destructive schema operations or silently choose retention or compatibility policy as cleanup.
 
 ## Secondary checklist
 
-Use this checklist after tracing structural opportunities, or for a specifically requested local cleanup.
+PREFER using this checklist after structural review or for specifically requested local cleanup. Each item is a candidate for investigation, not an automatic instruction to remove code.
 
 ### 0. Project conventions
 
-Read and follow `AGENTS.md`, including the `Python Guidelines`, and any more specific instructions governing the files. Apply the relevant JavaScript/TypeScript and UI conventions as well. Follow repository rules for tests and delegation rather than introducing blanket requirements.
+DO read and follow `AGENTS.md`, including its Python Guidelines and more specific instructions for affected files. DO apply relevant JavaScript/TypeScript and UI conventions. DO follow repository testing and delegation rules instead of adding blanket requirements.
 
-Find violations or unnecessary deviations involving:
-
-- naming, typing, imports, logging, exceptions;
-- async/sync patterns;
-- database/ORM usage;
-- testing conventions;
-- module organization;
-- formatting, linting, and dependency management.
+PREFER checking naming, typing, imports, logging, exceptions, async/sync patterns, database/ORM usage, testing, module organization, formatting, linting, and dependency management.
 
 ### 1. Redundant work
 
-Find unnecessary or repeated:
+PREFER investigating unnecessary or repeated:
 
-- database queries, N+1 queries, eager/lazy loads and prefetches;
-- refreshes, reloads, saves, flushes, commits, retries;
-- API, network, filesystem, cache, or lookup operations;
-- parsing, serialization, transformations, filtering, sorting, copying, or conversions;
-- computation, object construction, collection materialization, and allocations;
-- validation, authorization, existence checks, defensive checks, synchronization, or transaction boundaries.
-- early returns, short-circuiting, and guard clauses that can be simplified or removed.
+- database queries, N+1 queries, eager/lazy loads, and prefetches;
+- refreshes, reloads, saves, flushes, commits, and retries;
+- API, network, filesystem, cache, and lookup operations;
+- parsing, serialization, transformations, filtering, sorting, copying, and conversions;
+- computation, construction, collection materialization, and allocations;
+- validation, authorization, existence checks, defensive checks, synchronization, and transaction boundaries;
+- early returns, short-circuiting, and guard clauses.
 
 ### 2. Dead and unused code
 
+PREFER investigating:
+
 - dead or unreachable branches;
 - unused imports, variables, constants, parameters, return values, functions, classes, modules, fixtures, helpers, factories, attributes, and exports;
-- obsolete feature flags, compatibility shims, configuration, CLI options, environment variables, and deprecation paths;
+- obsolete flags, compatibility layers, configuration, CLI options, environment variables, and deprecation paths;
 - commented-out code, stale suppressions, and write-only state.
 
-### 3. Complexity and code smells
+### 3. Complexity
+
+PREFER investigating:
 
 - excessive nesting and branching;
 - redundant conditionals or `else` blocks;
 - complex boolean logic and flag arguments;
-- long functions/classes and god objects;
-- duplicate logic and business rules;
-- needless wrappers, forwarding methods, adapters, service layers, repositories, factories, or indirection;
+- long functions/classes or objects with too many responsibilities;
+- duplicated logic and business rules;
+- unnecessary wrappers, forwarding methods, adapters, services, repositories, factories, or indirection;
 - speculative generality and premature abstraction;
-- primitive obsession, data clumps, long parameter lists, and magic values;
-- feature envy, inappropriate intimacy, message chains, and leaky abstractions;
-- shotgun surgery, divergent change, temporal coupling, hidden coupling, and shared mutable state;
-- surprising side effects or unclear ownership/state transitions.
+- primitive values used instead of domain types, recurring groups of data, long parameter lists, and unexplained values;
+- methods that depend mainly on another object's data, excessive access to another object's internals, method-call chains, and abstractions that expose implementation details;
+- changes spread across unrelated modules, modules with unrelated reasons to change, order-dependent operations, hidden coupling, and shared mutable state;
+- surprising side effects or unclear ownership and state transitions.
 
-Prefer explicit control flow, clear ownership, high cohesion, and low coupling.
+PREFER explicit control flow, clear ownership, high cohesion, and low coupling.
 
 ### 4. APIs and contracts
 
+PREFER investigating:
+
 - unused, redundant, derivable, optional, variadic, or always-identical parameters;
 - boolean flags and overly broad configuration objects;
-- unused or unnecessarily rich return values;
+- unused or unnecessarily detailed return values;
 - obsolete signatures, overloads, callbacks, hooks, or extension points;
 - unnecessarily public helpers or duplicated entry points.
 
 ### 5. Error handling and validation
 
+PREFER investigating:
+
 - overly broad, duplicated, swallowed, or immediately re-raised exceptions;
-- unnecessary `try` blocks or fallback paths;
+- unnecessary `try` blocks or fallbacks;
 - exceptions used unnecessarily for control flow;
 - redundant assertions, `None` checks, validation, or defensive checks;
-- error translation or wrappers with no semantic value.
+- error translations or wrappers without distinct meaning.
 
 ### 6. Dependencies
 
+PREFER investigating:
+
 - unused or duplicate dependencies;
-- direct dependencies that are only transitive;
+- direct dependencies needed only transitively;
 - deprecated, obsolete, or unmaintained libraries;
 - libraries replaceable by the standard library;
-- unnecessary dependencies used for trivial functionality;
+- unnecessary dependencies for trivial functionality;
 - stale or overly restrictive version constraints;
-- outdated versions where upgrading has a concrete maintenance, compatibility, security, or simplification benefit.
+- outdated versions where an upgrade provides a concrete maintenance, compatibility, security, or simplification benefit.
 
 ### 7. Tests
 
-- duplicated test cases and setup;
+PREFER investigating:
+
+- duplicated cases and setup;
 - unnecessary mocks, patches, fixtures, factories, helpers, and snapshots;
 - brittle implementation-detail, ordering, or call-count assertions;
 - stale skipped/xfailed tests;
-- excessive parametrization or missed opportunities for useful parametrization;
+- excessive parametrization or useful missing parametrization;
 - tests that reproduce production logic;
-- overlapping unit/integration coverage with no distinct purpose.
+- overlapping unit/integration coverage without a distinct purpose.
 
 ### 8. Architecture
 
+PREFER investigating:
+
 - service, manager, repository, factory, builder, adapter, decorator, or dependency-injection layers;
 - single-implementation interfaces or abstractions;
-- hypothetical extension points with no consumers;
+- hypothetical extension points without consumers;
 - modules split too finely or grouped without cohesion;
 - circular dependencies and generic `utils`, `helpers`, or `common` modules that obscure ownership.
 
 ## Principles
 
-Apply these pragmatically:
+Where they improve the current design, PREFER applying these principles:
 
-- **KISS** - prefer the simplest implementation that correctly solves the problem.
-- **DRY** - avoid duplicated knowledge or business rules, but do not create abstractions solely to eliminate superficial code similarity.
-- **YAGNI** - remove or avoid functionality, abstractions, configurability, and extension points that exist only for hypothetical future needs.
-- **SRP / Separation of concerns** - keep responsibilities focused and ownership clear.
-- **High cohesion / Low coupling** - keep related behavior together and minimize unnecessary dependencies.
-- **Locality of behavior** - keep logic close to the data and concepts it operates on.
-- **Information hiding** - avoid exposing implementation details unnecessarily.
+- **KISS:** Choose the simplest correct implementation.
+- **DRY:** Avoid duplicated knowledge or business rules. AVOID abstractions that only remove superficial code similarity.
+- **YAGNI:** Avoid features, abstractions, configuration, and extension points needed only for hypothetical future use.
+- **SRP / Separation of concerns:** Keep responsibilities focused and ownership clear.
+- **High cohesion / Low coupling:** Keep related behavior together and reduce unnecessary dependencies.
+- **Locality of behavior:** Keep logic close to its data and domain concepts.
+- **Information hiding:** Avoid unnecessary exposure of implementation details.
 
 ## Implementation and verification
 
-- Inspect the current working tree before editing and preserve unrelated or concurrent changes. Confirm that a previously reported candidate still matches the current implementation.
-- Implement complete selected changes with clear ownership and conventional APIs. Edit source contracts and regenerate their outputs using repository commands when necessary.
-- Follow repository testing rules. Adapt relevant existing tests to the new owner or API while retaining observable behavior assertions; do not weaken tests merely to accommodate a refactor or preserve dead implementation details through mocks.
-- Run the narrowest relevant existing tests first, then applicable formatting, linting, type checks, builds, and broader suites. Use code-level checks for UI changes; follow the prohibition on browser verification.
-- Review the final diff for missing callers, duplicated old/new paths, accidental contract changes, altered resource lifetimes, and unrelated edits. Recheck whether the result actually reduces concepts or maintenance effort.
-- Report exact verification results, skips, failures, and coverage limits. A passing general suite does not establish direct coverage of dialog interactions or coordinator races. State required migration or coordinated deployment steps separately.
+- Before editing, DO inspect the working tree and preserve unrelated or concurrent changes.
+- DO confirm that previously reported candidates still match the current implementation.
+- DO complete selected changes with clear ownership and conventional APIs.
+- When necessary, DO edit source contracts and regenerate outputs with repository commands.
+- DO follow repository testing rules.
+- DO adapt relevant existing tests to the new owner or API while retaining observable behavior assertions.
+- DON'T weaken tests only to accommodate a refactor or preserve dead implementation details through mocks.
+- DO run the narrowest relevant existing tests first, then applicable formatting, linting, type checks, builds, and broader suites.
+- For UI changes, DO use code-level checks. DON'T use browser verification.
+- DO review the final diff for missing callers, duplicated old/new paths, accidental contract changes, altered resource lifetimes, and unrelated edits.
+- DO recheck that the result reduces concepts or maintenance effort.
+- DO report exact verification results, skips, failures, and coverage limits.
+- DON'T treat a passing general suite as direct coverage of dialog interactions or coordinator races.
+- DO state required migration or coordinated deployment steps separately.
 
 ## Reporting candidates
 
-For each recommendation, provide:
+For each recommendation, DO include:
 
-- **Location:** exact current file paths and line ranges.
-- **Current design:** the workflow, state, contract, or abstraction under review.
-- **Evidence of redundancy:** caller/consumer evidence and the responsibility that is unnecessary.
-- **Smallest complete change:** what to remove or consolidate and which callers must change.
-- **Benefit:** the concept, duplicate policy, or maintenance obligation eliminated.
-- **Behavior and compatibility:** invariants to preserve, potential observable differences, and any approval or deployment requirement.
-- **Confidence and verification:** why the recommendation is safe, relevant existing tests, and remaining uncertainty.
+- **Location:** Exact current file paths and line ranges.
+- **Current design:** The workflow, state, contract, or abstraction under review.
+- **Evidence of redundancy:** Consumer evidence and the unnecessary responsibility.
+- **Smallest complete change:** What to remove or consolidate and which callers must change.
+- **Benefit:** The concept, duplicate policy, or maintenance obligation removed.
+- **Behavior and compatibility:** Preserved invariants, potential observable differences, and approval or deployment requirements.
+- **Confidence and verification:** Evidence of safety, relevant existing tests, and remaining uncertainty.
 
-Lead with the strongest structural candidates. Keep smaller local cleanups and speculative opportunities separate. After implementation, summarize completed changes and checks; present any further findings as unimplemented options rather than extending the scope automatically.
+DO present the strongest structural candidates first. DO separate smaller local changes and speculative opportunities. After implementation, DO summarize completed changes and checks. DO present further findings as unimplemented options instead of extending scope automatically.

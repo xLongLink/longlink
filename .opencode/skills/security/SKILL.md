@@ -1,92 +1,95 @@
 ---
 name: security
-description: Inspect LongLink for high-confidence security vulnerabilities and implement focused fixes without disrupting legitimate behavior. Use when the user asks for a security review, vulnerability audit, secure-code hardening, or remediation; do not use for a general cleanup or style review.
+description: Inspect LongLink for high-confidence security vulnerabilities and implement focused fixes without disrupting legitimate behavior. Use when the user asks for a security review, vulnerability audit, secure-code hardening, or remediation. Do not use for general cleanup or style review.
 ---
 
-# Task
+# Security
 
-Inspect the repository for concrete security vulnerabilities and, when the user has asked for changes, implement the smallest complete fixes. Preserve legitimate behavior and public contracts unless changing them is necessary to close a vulnerability. It is acceptable—and usually required—for a fix to reject malicious, unauthorized, malformed, or unsafe input that was previously accepted.
+## Task and scope
 
-Honor the requested mode:
+- DO inspect for concrete security vulnerabilities.
+- For a review, audit, explanation, or report, DO inspect and report without editing files.
+- For a fix, remediation, or hardening request, DO implement and verify the smallest complete fixes.
+- Unless a change is necessary to close a vulnerability, DO preserve legitimate behavior and public contracts.
+- You CAN reject malicious, unauthorized, malformed, or unsafe input that was previously accepted. If closing the vulnerability requires rejection, DO reject that input.
+- DO prioritize exploitable weaknesses over generic hardening.
 
-- For a review, audit, explanation, or report, inspect and report without modifying files.
-- For a fix, remediation, or hardening request, implement and verify the changes.
+DO confirm a finding only when repository evidence establishes:
 
-Prioritize exploitable weaknesses over generic hardening. Treat a finding as confirmed only when the repository provides evidence of:
+1. An attacker-controlled or insufficiently trusted source.
+2. A reachable security-sensitive operation or violated security invariant.
+3. A realistic path between them under stated preconditions.
+4. Meaningful impact on confidentiality, integrity, authentication, authorization, or availability.
 
-1. an attacker-controlled or insufficiently trusted source;
-2. a reachable security-sensitive sink or violated security invariant;
-3. a realistic path between them under stated preconditions; and
-4. meaningful confidentiality, integrity, authentication, authorization, or availability impact.
-
-Keep speculative concerns and defense-in-depth suggestions separate from confirmed vulnerabilities. Do not inflate severity from a scanner result, dangerous-looking function, or dependency version alone.
+DO separate speculative concerns and defense-in-depth suggestions from confirmed vulnerabilities. DON'T increase severity based only on a scanner result, function name, or dependency version.
 
 ## 0. Project conventions
 
-Read and follow the `Python Guidelines` section in `AGENTS.md`, plus any more specific `AGENTS.md` files that govern files under review. Also inspect the relevant project configuration, lockfiles, framework settings, migrations, tests, CI workflows, and security documentation before changing code.
-
-Use the repository's existing formatting, linting, typing, testing, logging, exception, async, ORM, and dependency-management conventions. Do not add a new security library, scanner, middleware layer, or abstraction when an existing project or standard-library mechanism safely solves the problem.
+- DO read and follow `AGENTS.md`, including its Python Guidelines and any more specific instructions for the reviewed files.
+- Before changing code, DO inspect relevant configuration, lockfiles, framework settings, migrations, tests, CI workflows, and security documentation.
+- DO use existing formatting, linting, typing, testing, logging, exception, async, ORM, and dependency-management conventions.
+- When an existing project or standard-library mechanism safely solves the problem, DON'T add a security library, scanner, middleware layer, or abstraction.
 
 ## 1. Attack surface and trust boundaries
 
-Map only enough of the system to review the relevant paths accurately:
+DO map enough of the system to review relevant paths accurately. PREFER including relevant:
 
-- HTTP/API routes, WebSockets, webhooks, RPC handlers, CLI commands, workers, scheduled jobs, uploads, import/export flows, and admin operations;
-- users, roles, tenants, service identities, anonymous callers, and internal callers that may still be untrusted;
+- HTTP/API routes, WebSockets, webhooks, RPC handlers, CLI commands, workers, scheduled jobs, uploads, import/export flows, and administrative operations;
+- users, roles, tenants, service identities, anonymous callers, and potentially untrusted internal callers;
 - request data, headers, cookies, tokens, files, database records, queues, caches, environment variables, and third-party responses;
 - database queries, filesystem operations, subprocesses, template rendering, deserialization, redirects, outbound requests, credential use, and privileged state changes.
 
-Trace data and identity across actual call paths. Account for middleware, decorators, dependency injection, model hooks, background jobs, proxy behavior, and framework defaults before deciding that a control is present or missing.
+DO trace data and identity through actual call paths. Before deciding that a control exists or is missing, DO account for middleware, decorators, dependency injection, model hooks, background jobs, proxies, and framework defaults.
 
 ## 2. Authentication and sessions
 
-Check for:
+DO check relevant paths for:
 
 - routes or alternate methods that bypass authentication;
 - fail-open authentication, insecure defaults, or optional credentials on protected paths;
-- incorrect password hashing, password-reset, invitation, email-verification, or account-recovery flows;
-- token verification that omits signature, algorithm restrictions, issuer, audience, expiration, not-before, or intended token type;
-- session fixation, weak session rotation or revocation, insecure cookie attributes, and incomplete logout;
+- incorrect password hashing, password reset, invitations, email verification, or account recovery;
+- token verification that omits signatures, algorithm restrictions, issuer, audience, expiration, not-before, or intended token type;
+- session fixation, weak rotation or revocation, insecure cookie attributes, and incomplete logout;
 - CSRF exposure for cookie-authenticated state changes;
 - user enumeration, replayable authentication artifacts, and weak or predictable secrets;
 - unsafe trust in proxy, host, origin, forwarding, or identity headers.
 
-Do not confuse decoding a token with verifying it. Ensure every accepted credential is bound to the expected context and purpose.
+Decoding a token does not verify it. DO verify that each accepted credential is bound to the expected context and purpose.
 
 ## 3. Authorization and tenant isolation
 
-Check authorization at every operation that reads, creates, changes, deletes, exports, or acts on protected data:
+DO check authorization for each operation that reads, creates, changes, deletes, exports, or acts on protected data. DO check relevant:
 
-- object-level authorization and ownership checks (IDOR/BOLA);
+- object-level authorization and ownership (IDOR/BOLA);
 - role, permission, and administrative boundaries;
-- tenant scoping in queries, caches, jobs, files, channels, and bulk operations;
+- tenant scope in queries, caches, jobs, files, channels, and bulk operations;
 - mass assignment and over-posting of privileged fields;
 - authorization performed only in the UI, serializer, router, or an earlier request;
-- confused-deputy behavior involving service accounts or privileged helpers;
+- confused-deputy behavior in service accounts or privileged helpers;
 - identifiers, cursors, signed URLs, or job IDs that grant unintended access;
-- state changes whose authorization becomes stale before use.
+- state changes with authorization that becomes stale before use.
 
-Prefer default-deny decisions and scope data access at the query or operation boundary. An existence check is not an authorization check, and possession of an identifier is not proof of access.
+PREFER default-deny decisions and data access scoped at the query or operation boundary. An existence check is not an authorization check. An identifier is not proof of access.
 
 ## 4. Injection and unsafe interpretation
 
-Trace untrusted values into interpreters and structured operations, including:
+DO trace relevant untrusted values into interpreters and structured operations, including:
 
-- SQL, ORM escape hatches, NoSQL filters, search expressions, and dynamic query fragments;
+- SQL, ORM escape mechanisms, NoSQL filters, search expressions, and dynamic query fragments;
 - shell commands, subprocess arguments, environment variables, and executable paths;
 - server-side templates, expression languages, dynamic imports, `eval`, and `exec`;
 - unsafe `pickle`, YAML, object, XML, archive, or other deserialization;
 - HTTP headers, email headers, logs, redirects, and response splitting;
-- regular expressions or parsers vulnerable to disproportionate work;
+- regular expressions or parsers that permit disproportionate work;
 - LDAP, XPath, GraphQL, or other query languages used by the project.
 
-Use parameterized or structured APIs. Validate according to the destination grammar rather than relying on ad hoc escaping or deny lists.
+DO use parameterized or structured APIs. DO validate against the destination grammar instead of relying on ad hoc escaping or deny lists.
 
 ## 5. Files, paths, uploads, and outbound requests
 
-Check for:
+DO check relevant paths for:
 
-- path traversal, absolute-path escape, unsafe joins, alternate encodings, and canonicalization mistakes;
+- path traversal, absolute-path escape, unsafe joins, alternate encodings, and canonicalization errors;
 - symlink and time-of-check/time-of-use races;
 - archive extraction outside the destination, decompression bombs, and unsafe temporary files;
 - upload type confusion, executable content, unsafe filenames, public exposure, overwrite, and missing size limits;
@@ -94,130 +97,132 @@ Check for:
 - unintended access to loopback, link-local, private networks, cloud metadata, Unix sockets, or local files;
 - open redirects and attacker-controlled callback destinations.
 
-Canonicalize once at the correct boundary, then enforce containment or an allowlist on the canonical value. For outbound requests, apply the policy to every redirect and resolved destination, not just the original string.
+DO canonicalize once at the correct boundary and enforce containment or an allowlist on that value. For outbound requests, DO apply policy to every redirect and resolved destination, not only the original string.
 
 ## 6. Sensitive data, secrets, and cryptography
 
-Check for:
+DO check relevant paths for:
 
 - credentials, signing keys, tokens, private URLs, or personal data committed to source or exposed through logs, traces, metrics, errors, caches, or API responses;
 - serializers and schemas that expose internal or privileged fields by default;
-- secrets passed in URLs, command lines, client-visible configuration, or long-lived artifacts;
-- weak randomness, predictable identifiers used as authorization, insecure comparisons, or home-grown cryptography;
-- incorrect key, nonce, salt, mode, signature, certificate, or TLS verification handling;
+- secrets in URLs, command lines, client-visible configuration, or long-lived artifacts;
+- weak randomness, predictable authorization identifiers, insecure comparisons, or custom cryptography;
+- incorrect handling of keys, nonces, salts, modes, signatures, certificates, or TLS verification;
 - encryption without authenticity, insecure fallback algorithms, or reused cryptographic material;
-- retention and cache behavior that outlives the intended access.
+- retention and caching that outlast intended access.
 
-Use established cryptographic APIs and project-approved secret storage. If a real secret is discovered, never reproduce its value in output. Removing it from code or history does not rotate it; clearly identify rotation or revocation as a separate required action.
+DO use established cryptographic APIs and project-approved secret storage. If a real secret is found, DON'T reproduce its value in output. Removing a secret from code or history does not rotate it. DO identify rotation or revocation as a separate required action.
 
 ## 7. Web, API, and protocol security
 
-Check behavior relevant to the frameworks and protocols actually used:
+For the frameworks and protocols in use, DO check relevant:
 
 - CORS, CSRF, origin checks, cookie scope, clickjacking, MIME handling, and content security controls;
-- reflected, stored, and DOM-oriented cross-site scripting where server output or generated client code is involved;
+- reflected, stored, and DOM-oriented cross-site scripting in server output or generated client code;
 - request body, header, upload, batch, pagination, and decompressed-size limits;
-- webhook signature verification, timestamp/freshness checks, replay protection, and canonical byte handling;
-- cache keys and cache-control that may mix users, tenants, authorization states, or sensitive responses;
-- ambiguous parsing between proxies and applications, duplicate parameters, and inconsistent content-type handling;
-- GraphQL introspection, field authorization, query depth, complexity, and batching where applicable.
+- webhook signatures, timestamp/freshness checks, replay protection, and canonical bytes;
+- cache keys and cache-control that mix users, tenants, authorization states, or sensitive responses;
+- ambiguous proxy/application parsing, duplicate parameters, and inconsistent content-type handling;
+- GraphQL introspection, field authorization, query depth, complexity, and batching.
 
-Do not add headers or middleware mechanically. Verify where TLS terminates, which proxy is authoritative, and whether the control is already applied by infrastructure.
+DON'T add headers or middleware without examining their purpose and deployment context. DO verify TLS termination, the authoritative proxy, and controls already supplied by infrastructure.
 
 ## 8. Data integrity, concurrency, and state transitions
 
-Check for:
+DO check relevant paths for:
 
 - non-atomic authorization, balance, quota, inventory, or one-time-token checks;
-- replay, duplicate submission, missing idempotency, and stale-state updates;
-- race conditions that bypass limits or produce privileged state;
-- missing database constraints where correctness or tenant isolation depends on uniqueness or referential integrity;
-- partial writes, unsafe transaction boundaries, and side effects performed before durable authorization or validation;
+- replay, duplicate submissions, missing idempotency, and stale-state updates;
+- races that bypass limits or produce privileged state;
+- missing database constraints needed for correctness or tenant isolation;
+- partial writes, unsafe transaction boundaries, and side effects before durable authorization or validation;
 - jobs or events that can be forged, reordered, duplicated, or applied to the wrong principal;
-- locks held across network I/O or synchronization that creates a denial-of-service path.
+- locks across network I/O or synchronization that creates denial-of-service paths.
 
-Enforce critical invariants atomically at the narrowest authoritative layer. Tests alone do not make a multi-step check atomic.
+DO enforce critical invariants atomically at the narrowest authoritative layer. Tests alone do not make a multi-step check atomic.
 
 ## 9. Availability and resource control
 
-Look for attacker-triggerable resource exhaustion, including:
+DO investigate relevant attacker-triggerable resource exhaustion, including:
 
-- unbounded reads, uploads, decompression, recursion, collection materialization, fan-out, pagination, or query results;
-- expensive regexes, parsing, sorting, rendering, hashing, or database queries on untrusted input;
-- N+1 operations or repeated external calls that amplify a single request;
+- unbounded reads, uploads, decompression, recursion, collection materialization, parallel requests, pagination, or query results;
+- expensive regular expressions, parsing, sorting, rendering, hashing, or queries on untrusted input;
+- N+1 operations or repeated external calls that amplify one request;
 - missing timeouts, cancellation, concurrency limits, backpressure, or retry bounds;
 - blocking filesystem, network, CPU, or database work on an async event loop;
-- unbounded task creation, queue growth, cache growth, connection use, or error logging;
-- rate limits keyed to attacker-controlled or incorrectly trusted identity data.
+- unbounded tasks, queues, caches, connections, or error logging;
+- rate limits based on attacker-controlled or incorrectly trusted identity data.
 
-Bound work at entry points and propagate deadlines or cancellation where the project supports them. Avoid retries that multiply load during partial failure.
+DO bound work at entry points. Where the project supports them, DO propagate deadlines or cancellation. AVOID retries that multiply load during partial failure.
 
 ## 10. Dependencies, supply chain, and configuration
 
-Review relevant manifests, lockfiles, build scripts, CI workflows, containers, and deployment configuration for:
+DO review relevant manifests, lockfiles, build scripts, CI workflows, containers, and deployment configuration for:
 
-- known vulnerable dependencies whose affected functionality and version range are actually reachable;
+- known vulnerable dependencies with reachable affected functionality and versions;
 - unpinned, mutable, abandoned, duplicated, typosquatted, or unnecessary packages;
 - package confusion, unsafe install/build hooks, and untrusted artifact or code execution;
 - CI tokens exposed to untrusted pull requests, scripts, artifacts, caches, or logs;
-- debug mode, permissive origins, default credentials, disabled verification, public storage, or overly broad privileges;
-- containers running as root or with unnecessary capabilities, writable sensitive paths, or secrets baked into images;
-- production behavior that silently falls back to an insecure development configuration.
+- debug mode, permissive origins, default credentials, disabled verification, public storage, or excessive privileges;
+- containers with root access, unnecessary capabilities, writable sensitive paths, or embedded secrets;
+- production behavior that silently uses insecure development configuration as a fallback.
 
-Verify vulnerability claims against current authoritative advisories when current external data is available or requested. Prefer the smallest compatible upgrade that fixes a confirmed issue, preserve the lockfile, and run compatibility tests. Do not perform broad dependency modernization as part of a focused security fix.
+When current external data is available or requested, DO verify vulnerability claims against current authoritative advisories. PREFER the smallest compatible upgrade that fixes a confirmed issue. DO preserve the lockfile and run compatibility tests. DON'T perform broad dependency modernization as part of a focused security fix.
 
 ## 11. Error handling and security controls
 
-Check for:
+DO check relevant paths for:
 
 - broad exceptions that convert authentication, authorization, validation, or verification failures into success;
 - swallowed errors that leave partial privileged state;
-- fallback paths that disable verification or use unsafe defaults;
+- fallbacks that disable verification or use unsafe defaults;
 - detailed errors, stack traces, query text, credentials, tokens, or personal data returned to callers;
-- distinguishable errors that enable sensitive enumeration when that matters;
-- logging of untrusted data without safe structure or of sensitive data without redaction;
-- security checks implemented only as assertions that may be disabled.
+- distinguishable errors that enable sensitive enumeration;
+- unstructured logging of untrusted data or unredacted sensitive data;
+- security checks implemented only as assertions that can be disabled.
 
-Fail closed for security decisions while retaining actionable server-side diagnostics. Preserve exception context without exposing internal details to untrusted callers.
+DO fail closed for security decisions and retain actionable server-side diagnostics. DO preserve exception context without exposing internal details to untrusted callers.
 
-## 12. Tests
+## 12. Tests and proof cases
 
-For each implemented fix, add or update a focused regression test that demonstrates both sides of the boundary:
-
-- the malicious, unauthorized, cross-tenant, replayed, or oversized case is blocked; and
-- the corresponding legitimate use still succeeds.
-
-Prefer observable security behavior over implementation-detail, call-count, exact-error-text, or middleware-order assertions. Avoid reproducing the vulnerable production logic in tests. Use realistic identities and trust boundaries, and include concurrency or transaction tests when the flaw depends on timing.
-
-Do not send exploit traffic to production or third-party systems. Keep proof cases local and minimally harmful.
+- DO follow repository rules for test authorization.
+- When relevant regression tests exist, DO update them for each implemented fix to show that unsafe input is blocked and corresponding legitimate use succeeds.
+- Only when the user explicitly requests new tests, you CAN add focused regression cases for those behaviors.
+- If existing tests cannot demonstrate the boundary without new cases, DO report the coverage gap.
+- PREFER assertions on observable security behavior to implementation details, call counts, exact error text, or middleware order.
+- DON'T reproduce vulnerable production logic in tests.
+- DO use realistic identities and trust boundaries.
+- When a flaw depends on timing, DO include concurrency or transaction verification within the authorized test scope.
+- DON'T send exploit traffic to production or third-party systems.
+- DO keep proof cases local and minimally harmful.
 
 ## Remediation principles
 
-Apply these pragmatically:
+PREFER applying these principles to the relevant vulnerability:
 
-- **Secure by default** — require an explicit decision to weaken a protection.
-- **Least privilege** — grant only the data and operations required for the current principal and task.
-- **Complete mediation** — enforce security checks on every relevant path and operation.
-- **Fail closed** — errors in a security decision must not grant access or disable verification.
-- **Minimize attack surface** — remove unnecessary exposure, dangerous interpretation, and privileged reachability.
-- **Defense in depth** — add a second control when it addresses a realistic bypass or failure mode, not as decorative hardening.
-- **Single source of truth** — centralize security invariants without hiding them behind needless indirection.
-- **Minimal complete fix** — close the full attack path without unrelated refactoring or broad behavior changes.
+- **Secure by default:** Require an explicit decision to weaken protection.
+- **Least privilege:** Grant only the data and operations needed by the principal and task.
+- **Complete mediation:** Enforce security checks on each relevant path and operation.
+- **Fail closed:** DON'T grant access or disable verification after a security-decision error.
+- **Minimize attack surface:** Remove unnecessary exposure, dangerous interpretation, and privileged reachability.
+- **Defense in depth:** Add a second control only for a realistic bypass or failure mode.
+- **Single source of truth:** Centralize security invariants without unnecessary indirection.
+- **Minimal complete fix:** Close the full attack path without unrelated refactoring or broad behavior changes.
 
-Do not silently choose product policy. Ask before making a material decision such as changing role semantics, token lifetime, account-recovery behavior, external access, key rotation, data retention, schema compatibility, or a public API contract when the repository does not establish the intended rule.
+DON'T silently choose product policy. If repository rules do not establish the intended policy, DO ask before materially changing roles, token lifetimes, account recovery, external access, key rotation, retention, schema compatibility, or public API contracts.
 
 ## Verification and reporting
 
-Run the narrowest relevant tests first, then the applicable broader suite, formatter, linter, type checker, and repository-configured security checks. Inspect the final diff for bypasses, duplicated controls, accidental secret exposure, unsafe migrations, dependency drift, and unrelated edits.
+DO run the narrowest relevant tests first, then applicable broader suites, formatting, linting, type checking, and repository-configured security checks. DO inspect the final diff for bypasses, duplicated controls, secret exposure, unsafe migrations, dependency drift, and unrelated edits.
 
-For every confirmed finding or fix, record concisely:
+For each confirmed finding or fix, DO report:
 
 - severity and confidence;
-- attacker capability and required preconditions;
-- the source-to-sink path or violated invariant;
+- attacker capability and preconditions;
+- the source-to-operation path or violated invariant;
 - practical impact;
 - affected files or components;
-- remediation and verification performed; and
-- any deployment, migration, revocation, or rotation step still required.
+- remediation and verification performed;
+- outstanding deployment, migration, revocation, or rotation steps.
 
-Lead with fixed or confirmed vulnerabilities. Separate unresolved findings, defense-in-depth suggestions, and unverifiable assumptions. If no high-confidence vulnerability is found, say so directly and summarize the security-sensitive paths and checks reviewed; do not manufacture findings to fill a report.
+DO present fixed or confirmed vulnerabilities first. DO separate unresolved findings, defense-in-depth suggestions, and unverifiable assumptions. If no high-confidence vulnerability is found, DO state that directly and summarize the reviewed paths and checks. DON'T invent findings to fill a report.

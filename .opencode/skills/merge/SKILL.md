@@ -1,34 +1,44 @@
 ---
 name: merge
-description: Create a GitHub pull request (merge request) for the agent's changes. Use when the user asks to publish the current work as a merge request or pull request; do not merge it.
+description: Create a GitHub pull request (merge request) for your changes. Use when the user asks to publish the current work as a merge request or pull request. Do not merge it.
 ---
 
 # Merge Request
 
-Publish only the agent's changes, following `AGENTS.md` commit and merge request structures.
+## Scope
+
+DO publish only your own changes. DO follow the commit and merge request structures in `AGENTS.md`.
 
 ## Workflow
 
-1. Read `AGENTS.md` and `.github/release.yml`. Inspect Git status, staged and unstaged diffs, recent commits, and remotes. Record the original branch (or commit if detached).
-2. Identify the agent's changes from the current conversation. Preserve unrelated edits and staged work; never use blanket staging, reset, automatic stashing, or force-push. Ask if ownership or scope is unclear.
-3. Check `gh` authentication and determine the target repository and base branch from the user's request or repository default. Check for an existing pull request for the intended branch to avoid duplicates.
-4. Use a dedicated topic branch containing only the intended changes. Inspect its commits and diff against the base; do not include unrelated commits. If safe isolation is not possible, ask before proceeding.
-5. Run relevant existing formatting, lint, type, and test checks, plus `git diff --check`. For documentation-only changes, use applicable checks. Report failures or skipped checks honestly; do not claim checks passed when they did not run.
-6. Stage only owned files or hunks, review the staged diff, and commit using the structure in `AGENTS.md`. Do not include pre-existing staged changes. Reuse intended commits if already committed.
-7. Push the topic branch with an upstream, without force. Use `gh pr create` with explicit repository, base, head, title, and body; reuse an existing matching request instead of creating a duplicate.
-8. Apply change-type labels from `.github/release.yml` and applicable area labels (`api`, `sdk`, `web`). Check available labels first; report missing labels rather than silently creating repository labels. Use `skip-changelog` only for intentionally excluded changes.
-9. After confirming the intended commit is pushed and the pull request exists, remove any duplicate published changes left in the original checkout when using an isolated worktree. Compare the original checkout's current diff with the published patch, then reverse only the exact agent-owned files or hunks. Preserve unrelated edits and staged work; never use blanket restoration, reset, or stashing. If overlapping edits make cleanup unsafe, ask before proceeding. On publication failure, retain unpublished work.
-10. Return the local checkout to the original branch or detached commit, including after a failure. Never discard unpublished or unrelated changes to switch branches; report a blocker if restoration cannot be done safely. Verify the original checkout no longer contains duplicate published changes and that unrelated work remains intact.
-11. Return the pull request URL, a short summary, validation results, and confirmation of the restored checkout and published-change cleanup. Report any cleanup blocker explicitly.
+DO complete these steps in order:
+
+1. Read `AGENTS.md` and `.github/release.yml`. Inspect Git status, staged and unstaged diffs, recent commits, and remotes. Record the original branch or, for a detached checkout, the original commit.
+2. Identify your changes from the current conversation. Preserve unrelated edits and staged work. DON'T use blanket staging, reset, automatic stashing, or force-push. If ownership or scope is unclear, ask the user.
+3. Check `gh` authentication. Determine the target repository and base branch from the user's request or the repository default. Check for an existing pull request for the intended branch.
+4. Use a dedicated topic branch with only the intended changes. Inspect its commits and diff against the base branch. DON'T include unrelated commits. If safe isolation is not possible, ask the user before proceeding.
+5. Run relevant existing formatting, lint, type, and test checks, plus `git diff --check`. For documentation-only changes, run applicable checks. Report failures and skipped checks. DON'T claim that checks passed if they did not run.
+6. Stage only owned files or hunks. Review the staged diff and commit with the structure in `AGENTS.md`. DON'T include pre-existing staged changes. If intended commits already exist, reuse them.
+7. Push the topic branch with an upstream, without force. Use `gh pr create` with an explicit repository, base, head, title, and body. If a matching request exists, reuse it instead of creating a duplicate.
+8. Check available labels. Apply change-type labels from `.github/release.yml` and applicable area labels (`api`, `sdk`, `web`). DO report missing labels instead of creating them without approval. DO use `skip-changelog` only for intentionally excluded changes.
+9. If an isolated worktree was used, confirm that the intended commit is pushed and the pull request exists before removing duplicate published changes from the original checkout. Compare the original checkout's current diff with the published patch. Reverse only exact files or hunks you own. Preserve unrelated edits and staged work. DON'T use blanket restoration, reset, or stashing. If overlapping edits prevent safe cleanup, ask the user. If publication fails, retain unpublished work.
+10. Return the local checkout to the original branch or detached commit, including after a failure. DON'T discard unpublished or unrelated changes to switch branches. If safe restoration is blocked, report the blocker. Verify that duplicate published changes are removed and unrelated work remains intact.
+11. Return the pull request URL, a short summary, and validation results. Confirm checkout restoration and published-change cleanup. Report any cleanup blocker.
 
 ## Body
 
+DO use this body structure:
+
 ```markdown
 ## Summary
+
 - What changed and why.
 
 ## Validation
+
 - Checks run and results, or why not run.
 ```
 
-Mention breaking changes and migration steps when applicable. Creating the request does not authorize merging it, enabling auto-merge, creating a release, or changing repository settings.
+When applicable, DO describe breaking changes and migration steps.
+
+Creating a request does not authorize further publication actions. Without separate authorization, DON'T merge the request, enable auto-merge, create a release, or change repository settings.
