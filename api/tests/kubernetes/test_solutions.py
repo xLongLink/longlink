@@ -225,7 +225,6 @@ async def test_solution_apply_waits_for_deployment_and_route_readiness(monkeypat
             assert isinstance(spec, dict)
             self.raw = raw
             self.metadata = metadata
-            self.spec = spec
 
         async def refresh(self) -> None:
             """Supply ready controller status for the committed manifest."""
@@ -389,7 +388,6 @@ async def test_solution_apply_waits_for_route_after_deployment_readiness(monkeyp
             assert isinstance(spec, dict)
             self.raw = raw
             self.metadata = metadata
-            self.spec = spec
             kind = raw.get("kind")
             assert isinstance(kind, str)
             resources[kind] = self

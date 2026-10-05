@@ -201,7 +201,6 @@ async def test_delete_prefix_raises_on_partial_failures(monkeypatch: pytest.Monk
     async def partial(self: FakeClient, Bucket: str, Delete: dict[str, object]) -> dict[str, object]:
         """Simulate one partially failed batch deletion."""
 
-        self.deleted.append(list(cast("list[dict[str, str]]", Delete["Objects"])))
         return {"Errors": [{"Key": "solutions/abc/file", "Code": "AccessDenied"}]}
 
     monkeypatch.setattr(FakeClient, "delete_objects", partial)

@@ -14,12 +14,10 @@ from src.models.roles import OrganizationRoles
 from src.models.statuses import Status
 from src.database.session import session_scope
 from sqlalchemy.ext.asyncio import AsyncSession
-from src.models.organizations import DatabaseState
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
 from src.database.models.solutions import Solution
 from src.database.models.association import UserOrganization
-from src.database.models.organizations import Organization
 
 
 class FakeGatewayResponse(httpx2.Response):
@@ -112,10 +110,6 @@ async def create_running_solution(user: User) -> tuple[Solution, ComputeRegistry
 
     # Set lifecycle state directly because proxy tests do not exercise reconciliation.
     async with session_scope() as session:
-        persisted_organization = await session.get(Organization, organization.id)
-        assert persisted_organization is not None
-        persisted_organization.status = Status.running
-        persisted_organization.database_state = DatabaseState.available
         persisted_solution = await session.get(Solution, solution.id)
         assert persisted_solution is not None
         persisted_solution.secrets = {

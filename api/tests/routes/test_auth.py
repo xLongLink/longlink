@@ -129,6 +129,7 @@ def password_reset_token(captured_mail: list[tuple[str, str, str, str | None]]) 
 
 
 @pytest.mark.parametrize("provider", OAUTH_PROVIDERS)
+@pytest.mark.no_db
 async def test_oauth_login_redirects_with_browser_bound_state_and_pkce(
     client: AsyncClient,
     monkeypatch: pytest.MonkeyPatch,
@@ -165,6 +166,7 @@ async def test_oauth_login_redirects_with_browser_bound_state_and_pkce(
     assert verifier not in response.headers["location"]
 
 
+@pytest.mark.no_db
 async def test_oauth_availability_reports_configured_providers(
     client: AsyncClient,
     monkeypatch: pytest.MonkeyPatch,
@@ -185,6 +187,7 @@ async def test_oauth_availability_reports_configured_providers(
     assert "google-secret" not in response.text
 
 
+@pytest.mark.no_db
 async def test_oauth_login_rejects_unconfigured_provider_without_state_cookie(client: AsyncClient) -> None:
     """Return not-found for an OAuth provider without complete server configuration."""
 
@@ -561,6 +564,7 @@ async def test_malformed_browser_session_is_rejected_before_database_lookup(
     assert response.json() == {"detail": "Not authenticated"}
 
 
+@pytest.mark.no_db
 async def test_registration_setup_rejects_missing_verification_cookie(client: AsyncClient) -> None:
     """Require verified browser registration state before exposing setup details."""
 

@@ -106,17 +106,16 @@ async def test_ensure_administrator_replaces_stale_configured_password() -> None
     assert password_hash.verify(env.ADMIN_PASSWORD, persisted_administrator.password)
 
 
-async def test_ensure_administrator_reconciles_preexisting_configured_email() -> None:
+async def test_ensure_administrator_reconciles_preexisting_configured_email(password_hash: str) -> None:
     """Reconcile the configured account when another replica creates it first."""
 
     # Arrange
-    password_hash = PasswordHash.recommended()
     async with session_scope() as session:
         session.add(
             User(
                 name="Concurrent Administrator",
                 email=env.ADMIN_EMAIL,
-                password=password_hash.hash(env.ADMIN_PASSWORD),
+                password=password_hash,
             )
         )
         await session.commit()

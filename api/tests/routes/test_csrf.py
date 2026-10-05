@@ -2,7 +2,7 @@ import pytest
 from httpx2 import AsyncClient
 from conftest import UNTRUSTED_ORIGINS, assert_origin_rejected, untrusted_origin_headers
 from sqlmodel import select
-from factories import create_compute, create_solution, fetch_operations, create_organization, assert_no_new_operations
+from factories import add_member, create_compute, create_solution, fetch_operations, create_organization, assert_no_new_operations
 from sqlalchemy import func
 from src.models.roles import OrganizationRoles
 from src.database.session import session_scope
@@ -112,15 +112,8 @@ async def test_authenticated_member_role_update_rejects_untrusted_origin_without
 
     # Arrange
     organization = await create_organization(users[0])
+    await add_member(user=users[1], organization=organization, role=OrganizationRoles.write)
     async with session_scope() as session:
-        session.add(
-            UserOrganization(
-                user_id=users[1].id,
-                organization_id=organization.id,
-                role=OrganizationRoles.write,
-            )
-        )
-        await session.commit()
         original = await session.get(UserOrganization, (users[1].id, organization.id))
         assert original is not None
         original_updated_at = original.updated_at

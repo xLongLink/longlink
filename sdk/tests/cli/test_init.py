@@ -69,19 +69,18 @@ def test_init_refuses_conflicting_folder(tmp_path: Path) -> None:
     # Arrange
     runner = CliRunner()
 
-    with chdir(tmp_path):
-        target = Path.cwd() / "sample-solution"
-        target.mkdir()
-        (target / "pyproject.toml").write_text("existing project", encoding="utf-8")
+    target = tmp_path / "sample-solution"
+    target.mkdir()
+    (target / "pyproject.toml").write_text("existing project", encoding="utf-8")
 
-        # Act
-        result = runner.invoke(main, ["init", "--folder", "sample-solution"])
+    # Act
+    result = runner.invoke(main, ["init", "--folder", str(target)])
 
-        # Assert
-        assert result.exit_code == 1
-        assert "Target already exists" in result.output
-        assert (target / "pyproject.toml").read_text(encoding="utf-8") == "existing project"
-        assert not (target / "main.py").exists()
+    # Assert
+    assert result.exit_code == 1
+    assert "Target already exists" in result.output
+    assert (target / "pyproject.toml").read_text(encoding="utf-8") == "existing project"
+    assert not (target / "main.py").exists()
 
 
 def test_init_rejects_invalid_project_name_without_creating_folder(tmp_path: Path) -> None:
@@ -90,14 +89,15 @@ def test_init_rejects_invalid_project_name_without_creating_folder(tmp_path: Pat
     # Arrange
     runner = CliRunner()
 
-    with chdir(tmp_path):
-        # Act
-        result = runner.invoke(main, ["init", "--folder", "sample-solution", "--name", "../invalid"])
+    target = tmp_path / "sample-solution"
 
-        # Assert
-        assert result.exit_code == 1
-        assert "Invalid project name: ../invalid" in result.output
-        assert not (Path.cwd() / "sample-solution").exists()
+    # Act
+    result = runner.invoke(main, ["init", "--folder", str(target), "--name", "../invalid"])
+
+    # Assert
+    assert result.exit_code == 1
+    assert "Invalid project name: ../invalid" in result.output
+    assert not target.exists()
 
 
 def test_initialized_project_applies_bundled_migration_through_deployment_entrypoint(
