@@ -37,5 +37,5 @@ export function useVerification(token: string, verify: (request: VerificationReq
         };
     }, [token]);
 
-    return { controller, startVerification };
+    return { startVerification };
 }

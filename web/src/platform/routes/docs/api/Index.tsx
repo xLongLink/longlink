@@ -56,6 +56,36 @@ const article = {
     title: 'Platform Documentation | LongLink',
 };
 
+/** Renders the same permission table for organization and Solution roles. */
+function RoleTable({ roles }: { roles: Readonly<typeof organizationRoles> }) {
+    return (
+        <Table density="compact">
+            <TableHeader>
+                <TableRow>
+                    <TableHeaderCell>Roles</TableHeaderCell>
+                </TableRow>
+            </TableHeader>
+            <TableBody>
+                {roles.map(({ access, icon: RoleIcon, name }) => (
+                    <TableRow key={name}>
+                        <TableCell>
+                            <Stack gap={0}>
+                                <Stack direction="horizontal" gap={2} align="center">
+                                    <RoleIcon aria-hidden="true" className="text-accent" size={16} />
+                                    <Text className="capitalize" weight="semibold">
+                                        {name}
+                                    </Text>
+                                </Stack>
+                                <Text type="supporting">{access}</Text>
+                            </Stack>
+                        </TableCell>
+                    </TableRow>
+                ))}
+            </TableBody>
+        </Table>
+    );
+}
+
 export default function DocsArticleRoute() {
     return (
         <Article page={article}>
@@ -79,30 +109,7 @@ export default function DocsArticleRoute() {
                 </Text>
                 <Stack as="aside" className="border-s border-accent ps-4" gap={0}>
                     <Text weight="semibold">User permissions</Text>
-                    <Table density="compact">
-                        <TableHeader>
-                            <TableRow>
-                                <TableHeaderCell>Roles</TableHeaderCell>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {organizationRoles.map(({ access, icon: RoleIcon, name }) => (
-                                <TableRow key={name}>
-                                    <TableCell>
-                                        <Stack gap={0}>
-                                            <Stack direction="horizontal" gap={2} align="center">
-                                                <RoleIcon aria-hidden="true" className="text-accent" size={16} />
-                                                <Text className="capitalize" weight="semibold">
-                                                    {name}
-                                                </Text>
-                                            </Stack>
-                                            <Text type="supporting">{access}</Text>
-                                        </Stack>
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
+                    <RoleTable roles={organizationRoles} />
                 </Stack>
                 <Heading id="solutions" level={2}>
                     Solutions
@@ -115,30 +122,7 @@ export default function DocsArticleRoute() {
                 </Text>
                 <Stack as="aside" className="border-s border-accent ps-4" gap={0}>
                     <Text weight="semibold">User permissions</Text>
-                    <Table density="compact">
-                        <TableHeader>
-                            <TableRow>
-                                <TableHeaderCell>Roles</TableHeaderCell>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {solutionRoles.map(({ access, icon: RoleIcon, name }) => (
-                                <TableRow key={name}>
-                                    <TableCell>
-                                        <Stack gap={0}>
-                                            <Stack direction="horizontal" gap={2} align="center">
-                                                <RoleIcon aria-hidden="true" className="text-accent" size={16} />
-                                                <Text className="capitalize" weight="semibold">
-                                                    {name}
-                                                </Text>
-                                            </Stack>
-                                            <Text type="supporting">{access}</Text>
-                                        </Stack>
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
+                    <RoleTable roles={solutionRoles} />
                 </Stack>
             </Stack>
         </Article>

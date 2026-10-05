@@ -30,7 +30,9 @@ export default function Compute() {
     const [computes, invalidate] = useApi(path, schemas.zPageComputeRegistryResponse);
 
     /** Registers the validated Compute draft and refreshes the list. */
-    async function registerCompute(registration: z.input<typeof registrationSchema>) {
+    async function registerCompute() {
+        if (!registration) return;
+
         // Validate the draft and refresh the list only after registration succeeds.
         await api.post('/api/v1/computes', { json: registrationSchema.parse(registration) });
         await invalidate();
@@ -95,13 +97,8 @@ export default function Compute() {
                         if (!open) setRegistration(null);
                     }}
                 >
-                    <DialogHeader
-                        title="Register Compute"
-                        onOpenChange={() => {
-                            setRegistration(null);
-                        }}
-                    />
-                    <form action={() => registerCompute(registration)}>
+                    <DialogHeader title="Register Compute" onOpenChange={() => setRegistration(null)} />
+                    <form action={registerCompute}>
                         <Stack gap={3}>
                             <TextInput
                                 label="Name"

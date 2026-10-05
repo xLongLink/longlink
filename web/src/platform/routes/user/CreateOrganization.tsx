@@ -30,12 +30,7 @@ export default function CreateOrganization({
 
     return (
         <Dialog isOpen={isOpen} purpose="form" onOpenChange={onOpenChange}>
-            <DialogHeader
-                title="New organization"
-                onOpenChange={() => {
-                    onOpenChange(false);
-                }}
-            />
+            <DialogHeader title="New organization" onOpenChange={() => onOpenChange(false)} />
             <form action={createOrganization}>
                 <Stack gap={3}>
                     <TextInput label="Name" value={name} placeholder="Example LongLink" isRequired onChange={setName} />

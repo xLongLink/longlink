@@ -49,71 +49,64 @@ function SettingsPage({ user }: { user: z.output<typeof schemas.zUserSummary> })
 
     // Keep account editing independent of organization loading and failures.
     return (
-        <>
-            <Stack gap={8}>
-                <Stack direction="horizontal" gap={3} align="start">
-                    <Avatar name={name} src={user.avatar} />
-                    <Stack gap={1}>
-                        <Heading level={4} accessibilityLevel={1}>
-                            {name}
-                        </Heading>
-                        <Text type="supporting">Your Account</Text>
-                    </Stack>
+        <Stack gap={8}>
+            <Stack direction="horizontal" gap={3} align="start">
+                <Avatar name={name} src={user.avatar} />
+                <Stack gap={1}>
+                    <Heading level={4} accessibilityLevel={1}>
+                        {name}
+                    </Heading>
+                    <Text type="supporting">Your Account</Text>
                 </Stack>
-                <Menu
-                    sections={[
-                        {
-                            title: 'Settings',
-                            isHeaderHidden: true,
-                            entries: [
-                                {
-                                    kind: 'item',
-                                    id: 'account',
-                                    label: 'Account',
-                                    icon: 'userRound',
-                                    content: (
-                                        <form action={saveAccount}>
-                                            <Stack gap={4}>
-                                                <Heading level={2}>Account</Heading>
-                                                <Divider />
-                                                <TextInput
-                                                    label="Username"
-                                                    value={name}
-                                                    isRequired
-                                                    onChange={setName}
-                                                />
-                                                <Text>
-                                                    <b>Email</b> {user.email}
-                                                </Text>
-                                                <Stack direction="horizontal" justify="end">
-                                                    <Button
-                                                        label="Save account"
-                                                        variant="primary"
-                                                        type="submit"
-                                                        isDisabled={!name.trim()}
-                                                    />
-                                                </Stack>
-                                            </Stack>
-                                        </form>
-                                    ),
-                                },
-                                {
-                                    kind: 'item',
-                                    id: 'organizations',
-                                    label: 'Organizations',
-                                    icon: 'building2',
-                                    content: (
-                                        <ApiBoundary>
-                                            <OrganizationSettings />
-                                        </ApiBoundary>
-                                    ),
-                                },
-                            ],
-                        },
-                    ]}
-                />
             </Stack>
-        </>
+            <Menu
+                sections={[
+                    {
+                        title: 'Settings',
+                        isHeaderHidden: true,
+                        entries: [
+                            {
+                                kind: 'item',
+                                id: 'account',
+                                label: 'Account',
+                                icon: 'userRound',
+                                content: (
+                                    <form action={saveAccount}>
+                                        <Stack gap={4}>
+                                            <Heading level={2}>Account</Heading>
+                                            <Divider />
+                                            <TextInput label="Username" value={name} isRequired onChange={setName} />
+                                            <Text>
+                                                <b>Email</b> {user.email}
+                                            </Text>
+                                            <Stack direction="horizontal" justify="end">
+                                                <Button
+                                                    label="Save account"
+                                                    variant="primary"
+                                                    type="submit"
+                                                    isDisabled={!name.trim()}
+                                                />
+                                            </Stack>
+                                        </Stack>
+                                    </form>
+                                ),
+                            },
+                            {
+                                kind: 'item',
+                                id: 'organizations',
+                                label: 'Organizations',
+                                icon: 'building2',
+                                content: (
+                                    <ApiBoundary>
+                                        <OrganizationSettings />
+                                    </ApiBoundary>
+                                ),
+                            },
+                        ],
+                    },
+                ]}
+            />
+        </Stack>
     );
 }
 
