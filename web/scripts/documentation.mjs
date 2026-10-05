@@ -68,7 +68,7 @@ const references = [];
 const parentBlocks = new Map();
 const exampleCodes = new Map();
 for (const entry of components) {
-    if (entry.category === 'Runtime' || ['Card', 'Currency', 'FileViewer', 'Menu'].includes(entry.name)) continue;
+    if (entry.category === 'Runtime' || ['Card', 'Currency', 'FileViewer', 'Menu', 'Tabs'].includes(entry.name)) continue;
     const result = await astryx.component(entry.name);
     const detail = result.data;
     const parentName = detail.subComponentOf ?? detail.parentDoc;
@@ -114,7 +114,7 @@ for (const entry of components) {
 
             // The CodeBlock showcase must display JSX too, not an embedded TypeScript example.
             if (entry.name === 'CodeBlock') {
-                code = `const code = \`export default function Counter() {
+                code = `const code = \`function Example() {
   const [count, setCount] = useState(0);
 
   return <Button label="Increment" onClick={() => setCount(count + 1)} />;
@@ -135,11 +135,15 @@ function CodeBlockShowcase() {
 
             // Keep the Stepper example focused on three steps without an inline-styled wrapper.
             if (entry.name === 'Stepper') {
-                code = `<Stepper activeStep={1}>
-  <Step step={0} label="Details" />
-  <Step step={1} label="Review" />
-  <Step step={2} label="Complete" />
-</Stepper>`;
+                code = `function Example() {
+  return (
+    <Stepper activeStep={1}>
+      <Step step={0} label="Details" />
+      <Step step={1} label="Review" />
+      <Step step={2} label="Complete" />
+    </Stepper>
+  );
+}`;
             }
 
             // Strip TypeScript syntax while preserving JSX, then remove leftover type-only whitespace.
@@ -148,6 +152,16 @@ function CodeBlockShowcase() {
                 jsxRuntime: 'preserve',
                 filePath: 'example.tsx',
             }).code.trimStart();
+
+            // Give the showcase one conventional name while preserving its helper functions.
+            const showcase = ts.createSourceFile('example.jsx', code, ts.ScriptTarget.Latest, true, ts.ScriptKind.JSX);
+            const exampleFunction = showcase.statements.find(
+                (statement) => ts.isFunctionDeclaration(statement) && statement.name?.text.endsWith('Showcase')
+            );
+            if (exampleFunction) {
+                const name = exampleFunction.name;
+                code = code.slice(0, name.getStart(showcase)) + 'Example' + code.slice(name.end);
+            }
             code = await prettier.format(code, { parser: 'babel', singleQuote: true, tabWidth: 2 });
             exampleCodes.set(block.name, code);
         }

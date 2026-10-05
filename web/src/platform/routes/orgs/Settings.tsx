@@ -1,7 +1,6 @@
 import type { z } from 'zod';
 import { api } from '@/lib/api';
 import { NoIndex } from '@/components/Seo';
-import { Menu } from '@/components/ui/Menu';
 import { useApi } from '@/lib/hooks/use-api';
 import CreateSolution from './CreateSolution';
 import { Link } from '@astryxdesign/core/Link';
@@ -26,6 +25,7 @@ import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { useResolvedOrganizationMembership } from '@/lib/hooks/use-organization';
+import { Menu, MenuSection, MenuItem, MenuSubSection } from '@/components/ui/Menu';
 
 type Solution = z.output<typeof schemas.zOrganizationSolutionSummary>;
 type Update = {
@@ -198,301 +198,233 @@ export default function OrganizationSettings() {
                     <Text type="supporting">Organization</Text>
                 </Stack>
             </Stack>
-            <Menu
-                sections={[
-                    {
-                        title: 'Settings',
-                        isHeaderHidden: true,
-                        entries: [
-                            {
-                                kind: 'item',
-                                id: 'organization',
-                                label: 'Organization',
-                                icon: 'building2',
-                                content: (
-                                    <Stack gap={4}>
-                                        <Stack gap={1}>
-                                            <Heading level={2}>Organization</Heading>
-                                            <Text color="secondary">Review storage usage.</Text>
-                                        </Stack>
-                                        <Divider />
-                                        <ProgressBar
-                                            label="Storage"
-                                            value={storage.space_used}
-                                            max={storage.quota_bytes}
-                                        />
-                                    </Stack>
-                                ),
-                            },
-                            {
-                                kind: 'subsection',
-                                label: 'People',
-                                icon: 'users',
-                                items: [
-                                    {
-                                        kind: 'item',
-                                        id: 'members',
-                                        label: 'Members',
-                                        content: (
-                                            <Stack gap={4}>
-                                                <Stack gap={1}>
-                                                    <Heading level={2}>Members</Heading>
-                                                    <Text color="secondary">
-                                                        Manage the people in this organization.
-                                                    </Text>
-                                                </Stack>
-                                                <Divider />
-                                                <Table
-                                                    data={details.members}
-                                                    idKey={(row) => row.user.id}
-                                                    hasHover
-                                                    density="compact"
-                                                    columns={[
-                                                        {
-                                                            key: 'user',
-                                                            header: 'User',
-                                                            width: proportional(1),
-                                                            renderCell: (row) => (
-                                                                <Stack direction="horizontal" gap={3} align="center">
-                                                                    <Avatar
-                                                                        name={row.user.name}
-                                                                        src={row.user.avatar}
-                                                                    />
-                                                                    <Stack align="start">
-                                                                        <Stack
-                                                                            direction="horizontal"
-                                                                            gap={1}
-                                                                            align="center"
-                                                                        >
-                                                                            <Text>{row.user.name}</Text>
-                                                                            <Badge label={row.role} />
-                                                                        </Stack>
-                                                                        <Text type="supporting">{row.user.email}</Text>
-                                                                    </Stack>
-                                                                </Stack>
-                                                            ),
-                                                        },
-                                                        ...(canAdminister
-                                                            ? [
-                                                                  {
-                                                                      key: 'role',
-                                                                      header: 'Actions',
-                                                                      align: 'end' as const,
-                                                                      width: proportional(0.5),
-                                                                      renderCell: (
-                                                                          row: z.output<
-                                                                              typeof schemas.zOrganizationMemberAccessResponse
-                                                                          >
-                                                                      ) => (
-                                                                          <MoreMenu
-                                                                              alignment="end"
-                                                                              items={[
-                                                                                  'read',
-                                                                                  'write',
-                                                                                  'maintain',
-                                                                                  'admin',
-                                                                              ]
-                                                                                  .filter((role) => role !== row.role)
-                                                                                  .map((role) => ({
-                                                                                      id: role,
-                                                                                      label: `Set as ${role[0].toUpperCase() + role.slice(1)}`,
-                                                                                      onClick: () =>
-                                                                                          setMember({
-                                                                                              id: row.user.id,
-                                                                                              name: row.user.name,
-                                                                                              role,
-                                                                                          }),
-                                                                                  }))}
-                                                                          />
-                                                                      ),
-                                                                  },
-                                                              ]
-                                                            : []),
-                                                    ]}
-                                                />
-                                            </Stack>
-                                        ),
-                                    },
-                                    {
-                                        kind: 'item',
-                                        id: 'invitations',
-                                        label: 'Invitations',
-                                        content: (
-                                            <Stack gap={4}>
-                                                <Stack
-                                                    direction="horizontal"
-                                                    justify="between"
-                                                    align="center"
-                                                    wrap="wrap"
-                                                >
-                                                    <Stack gap={1}>
-                                                        <Heading level={2}>Invitations</Heading>
-                                                        <Text color="secondary">
-                                                            Send an invitation to join this organization.
-                                                        </Text>
-                                                    </Stack>
-                                                    {canMaintain && (
-                                                        <Button label="Invite" onClick={() => setInviting(true)} />
-                                                    )}
-                                                </Stack>
-                                                <Divider />
-                                                <Table
-                                                    data={details.invitations}
-                                                    idKey="id"
-                                                    hasHover
-                                                    density="compact"
-                                                    columns={[
-                                                        { key: 'email', header: 'Email', width: proportional(1) },
-                                                        {
-                                                            key: 'role',
-                                                            header: 'Role',
-                                                            width: proportional(1),
-                                                            renderCell: (row) => <Badge label={row.role} />,
-                                                        },
-                                                        ...(canMaintain
-                                                            ? [
-                                                                  {
-                                                                      key: 'id',
-                                                                      header: 'Actions',
-                                                                      align: 'end' as const,
-                                                                      width: proportional(0.5),
-                                                                      renderCell: (
-                                                                          row: z.output<
-                                                                              typeof schemas.zOrganizationInvitationResponse
-                                                                          >
-                                                                      ) => (
-                                                                          <Button
-                                                                              label="Revoke"
-                                                                              variant="destructive"
-                                                                              clickAction={async () => {
-                                                                                  // Refresh organization access only after revocation succeeds.
-                                                                                  await api.delete(
-                                                                                      `${base}/invitations/${row.id}`
-                                                                                  );
-                                                                                  await invalidateDetails();
-                                                                              }}
-                                                                          />
-                                                                      ),
-                                                                  },
-                                                              ]
-                                                            : []),
-                                                    ]}
-                                                />
-                                            </Stack>
-                                        ),
-                                    },
-                                ],
-                            },
-                            {
-                                kind: 'item',
-                                id: 'solutions',
-                                label: 'Solutions',
-                                icon: 'boxes',
-                                content: (
-                                    <Stack gap={4}>
-                                        <Stack direction="horizontal" justify="between" align="center" wrap="wrap">
-                                            <Heading level={1}>Solutions</Heading>
-                                            {canMaintain && (
-                                                <Button label="New Solution" onClick={() => setCreating(true)} />
-                                            )}
-                                        </Stack>
-                                        <Divider />
-                                        <Table
-                                            data={solutions}
-                                            idKey="id"
-                                            hasHover
-                                            density="compact"
-                                            columns={[
-                                                {
-                                                    key: 'name',
-                                                    header: 'Solution',
-                                                    width: proportional(1),
-                                                    renderCell: (row) => (
-                                                        <Stack>
-                                                            <Link
-                                                                href={`/orgs/${membership.organization.slug}/solutions/${row.slug}`}
-                                                            >
-                                                                {row.name}
-                                                            </Link>
-                                                            {row.description && (
-                                                                <Text type="supporting">{row.description}</Text>
-                                                            )}
+            <Menu>
+                <MenuSection title="Settings" isHeaderHidden>
+                    <MenuItem id="organization" label="Organization" icon="building2">
+                        <Stack gap={4}>
+                            <Stack gap={1}>
+                                <Heading level={2}>Organization</Heading>
+                                <Text color="secondary">Review storage usage.</Text>
+                            </Stack>
+                            <Divider />
+                            <ProgressBar label="Storage" value={storage.space_used} max={storage.quota_bytes} />
+                        </Stack>
+                    </MenuItem>
+                    <MenuSubSection label="People" icon="users">
+                        <MenuItem id="members" label="Members">
+                            <Stack gap={4}>
+                                <Stack gap={1}>
+                                    <Heading level={2}>Members</Heading>
+                                    <Text color="secondary">Manage the people in this organization.</Text>
+                                </Stack>
+                                <Divider />
+                                <Table
+                                    data={details.members}
+                                    idKey={(row) => row.user.id}
+                                    hasHover
+                                    density="compact"
+                                    columns={[
+                                        {
+                                            key: 'user',
+                                            header: 'User',
+                                            width: proportional(1),
+                                            renderCell: (row) => (
+                                                <Stack direction="horizontal" gap={3} align="center">
+                                                    <Avatar name={row.user.name} src={row.user.avatar} />
+                                                    <Stack align="start">
+                                                        <Stack direction="horizontal" gap={1} align="center">
+                                                            <Text>{row.user.name}</Text>
+                                                            <Badge label={row.role} />
                                                         </Stack>
-                                                    ),
-                                                },
-                                                ...(canMaintain
-                                                    ? [
-                                                          {
-                                                              key: 'id',
-                                                              header: 'Actions',
-                                                              align: 'end' as const,
-                                                              width: proportional(0.5),
-                                                              renderCell: (row: Solution) => (
-                                                                  <MoreMenu
-                                                                      alignment="end"
-                                                                      items={[
-                                                                          ...(row.desired_revision_id &&
-                                                                          !row.deployment_pending &&
-                                                                          row.status !== 'creating'
-                                                                              ? [
-                                                                                    {
-                                                                                        id: 'update',
-                                                                                        label: 'Update',
-                                                                                        icon: <RefreshCw />,
-                                                                                        onClick: () => {
-                                                                                            // Forward async menu failures to the surrounding boundary without tracking pending state.
-                                                                                            startAction(async () => {
-                                                                                                // Fetch a fresh candidate for each review; never reuse a stale revision fence.
-                                                                                                const checked =
-                                                                                                    schemas.zSolutionUpdateCheck.parse(
-                                                                                                        await api(
-                                                                                                            `/api/v1/solutions/${row.id}/update`
-                                                                                                        ).json()
-                                                                                                    );
-                                                                                                setUpdate({
-                                                                                                    key: crypto.randomUUID(),
-                                                                                                    item: {
-                                                                                                        id: row.id,
-                                                                                                        name: row.name,
-                                                                                                    },
-                                                                                                    candidate: checked,
-                                                                                                });
-                                                                                            });
-                                                                                        },
-                                                                                    },
-                                                                                ]
-                                                                              : []),
-                                                                          {
-                                                                              id: 'logs',
-                                                                              label: 'Logs',
-                                                                              icon: <Logs />,
-                                                                              onClick: () => setLogs(row.id),
-                                                                          },
-                                                                          {
-                                                                              id: 'delete',
-                                                                              label: 'Delete',
-                                                                              icon: <Trash />,
-                                                                              onClick: () =>
-                                                                                  setDeletion({
-                                                                                      id: row.id,
-                                                                                      name: row.name,
-                                                                                  }),
-                                                                          },
-                                                                      ]}
-                                                                  />
-                                                              ),
-                                                          },
-                                                      ]
-                                                    : []),
-                                            ]}
-                                        />
+                                                        <Text type="supporting">{row.user.email}</Text>
+                                                    </Stack>
+                                                </Stack>
+                                            ),
+                                        },
+                                        ...(canAdminister
+                                            ? [
+                                                  {
+                                                      key: 'role',
+                                                      header: 'Actions',
+                                                      align: 'end' as const,
+                                                      width: proportional(0.5),
+                                                      renderCell: (
+                                                          row: z.output<
+                                                              typeof schemas.zOrganizationMemberAccessResponse
+                                                          >
+                                                      ) => (
+                                                          <MoreMenu
+                                                              alignment="end"
+                                                              items={['read', 'write', 'maintain', 'admin']
+                                                                  .filter((role) => role !== row.role)
+                                                                  .map((role) => ({
+                                                                      id: role,
+                                                                      label: `Set as ${role[0].toUpperCase() + role.slice(1)}`,
+                                                                      onClick: () =>
+                                                                          setMember({
+                                                                              id: row.user.id,
+                                                                              name: row.user.name,
+                                                                              role,
+                                                                          }),
+                                                                  }))}
+                                                          />
+                                                      ),
+                                                  },
+                                              ]
+                                            : []),
+                                    ]}
+                                />
+                            </Stack>
+                        </MenuItem>
+                        <MenuItem id="invitations" label="Invitations">
+                            <Stack gap={4}>
+                                <Stack direction="horizontal" justify="between" align="center" wrap="wrap">
+                                    <Stack gap={1}>
+                                        <Heading level={2}>Invitations</Heading>
+                                        <Text color="secondary">Send an invitation to join this organization.</Text>
                                     </Stack>
-                                ),
-                            },
-                        ],
-                    },
-                ]}
-            />
+                                    {canMaintain && <Button label="Invite" onClick={() => setInviting(true)} />}
+                                </Stack>
+                                <Divider />
+                                <Table
+                                    data={details.invitations}
+                                    idKey="id"
+                                    hasHover
+                                    density="compact"
+                                    columns={[
+                                        { key: 'email', header: 'Email', width: proportional(1) },
+                                        {
+                                            key: 'role',
+                                            header: 'Role',
+                                            width: proportional(1),
+                                            renderCell: (row) => <Badge label={row.role} />,
+                                        },
+                                        ...(canMaintain
+                                            ? [
+                                                  {
+                                                      key: 'id',
+                                                      header: 'Actions',
+                                                      align: 'end' as const,
+                                                      width: proportional(0.5),
+                                                      renderCell: (
+                                                          row: z.output<typeof schemas.zOrganizationInvitationResponse>
+                                                      ) => (
+                                                          <Button
+                                                              label="Revoke"
+                                                              variant="destructive"
+                                                              clickAction={async () => {
+                                                                  // Refresh organization access only after revocation succeeds.
+                                                                  await api.delete(`${base}/invitations/${row.id}`);
+                                                                  await invalidateDetails();
+                                                              }}
+                                                          />
+                                                      ),
+                                                  },
+                                              ]
+                                            : []),
+                                    ]}
+                                />
+                            </Stack>
+                        </MenuItem>
+                    </MenuSubSection>
+                    <MenuItem id="solutions" label="Solutions" icon="boxes">
+                        <Stack gap={4}>
+                            <Stack direction="horizontal" justify="between" align="center" wrap="wrap">
+                                <Heading level={1}>Solutions</Heading>
+                                {canMaintain && <Button label="New Solution" onClick={() => setCreating(true)} />}
+                            </Stack>
+                            <Divider />
+                            <Table
+                                data={solutions}
+                                idKey="id"
+                                hasHover
+                                density="compact"
+                                columns={[
+                                    {
+                                        key: 'name',
+                                        header: 'Solution',
+                                        width: proportional(1),
+                                        renderCell: (row) => (
+                                            <Stack>
+                                                <Link
+                                                    href={`/orgs/${membership.organization.slug}/solutions/${row.slug}`}
+                                                >
+                                                    {row.name}
+                                                </Link>
+                                                {row.description && <Text type="supporting">{row.description}</Text>}
+                                            </Stack>
+                                        ),
+                                    },
+                                    ...(canMaintain
+                                        ? [
+                                              {
+                                                  key: 'id',
+                                                  header: 'Actions',
+                                                  align: 'end' as const,
+                                                  width: proportional(0.5),
+                                                  renderCell: (row: Solution) => (
+                                                      <MoreMenu
+                                                          alignment="end"
+                                                          items={[
+                                                              ...(row.desired_revision_id &&
+                                                              !row.deployment_pending &&
+                                                              row.status !== 'creating'
+                                                                  ? [
+                                                                        {
+                                                                            id: 'update',
+                                                                            label: 'Update',
+                                                                            icon: <RefreshCw />,
+                                                                            onClick: () => {
+                                                                                // Forward async menu failures to the surrounding boundary without tracking pending state.
+                                                                                startAction(async () => {
+                                                                                    // Fetch a fresh candidate for each review; never reuse a stale revision fence.
+                                                                                    const checked =
+                                                                                        schemas.zSolutionUpdateCheck.parse(
+                                                                                            await api(
+                                                                                                `/api/v1/solutions/${row.id}/update`
+                                                                                            ).json()
+                                                                                        );
+                                                                                    setUpdate({
+                                                                                        key: crypto.randomUUID(),
+                                                                                        item: {
+                                                                                            id: row.id,
+                                                                                            name: row.name,
+                                                                                        },
+                                                                                        candidate: checked,
+                                                                                    });
+                                                                                });
+                                                                            },
+                                                                        },
+                                                                    ]
+                                                                  : []),
+                                                              {
+                                                                  id: 'logs',
+                                                                  label: 'Logs',
+                                                                  icon: <Logs />,
+                                                                  onClick: () => setLogs(row.id),
+                                                              },
+                                                              {
+                                                                  id: 'delete',
+                                                                  label: 'Delete',
+                                                                  icon: <Trash />,
+                                                                  onClick: () =>
+                                                                      setDeletion({
+                                                                          id: row.id,
+                                                                          name: row.name,
+                                                                      }),
+                                                              },
+                                                          ]}
+                                                      />
+                                                  ),
+                                              },
+                                          ]
+                                        : []),
+                                ]}
+                            />
+                        </Stack>
+                    </MenuItem>
+                </MenuSection>
+            </Menu>
             <Dialog isOpen={inviting} purpose="form" onOpenChange={setInviting}>
                 <DialogHeader
                     title="Invite user"

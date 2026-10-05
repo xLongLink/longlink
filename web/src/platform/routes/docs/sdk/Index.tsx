@@ -1,12 +1,11 @@
-import { useState } from 'react';
 import { MoveRight } from 'lucide-react';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
+import { Tabs, Tab } from '@/components/ui/Tabs';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Heading } from '@astryxdesign/core/Heading';
 import { Article } from '@/components/layouts/Article';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
-import { Tab, TabList } from '@astryxdesign/core/TabList';
 
 const article = {
     description: 'Build LongLink Solutions as standard Python and FastAPI services with the Solution SDK.',
@@ -21,8 +20,6 @@ const article = {
 };
 
 export default function DocsArticleRoute() {
-    const [selectedProvider, setSelectedProvider] = useState('standalone');
-
     return (
         <Article page={article}>
             <Stack gap={5}>
@@ -70,20 +67,14 @@ export default function DocsArticleRoute() {
                 <Heading id="create-a-solution" level={2}>
                     Create a Solution
                 </Heading>
-                <TabList hasDivider onChange={setSelectedProvider} role="tablist" value={selectedProvider}>
-                    <Tab label="Standalone" panelId="standalone-setup" value="standalone" />
-                    <Tab label="GitHub" panelId="github-setup" value="github" />
-                </TabList>
-                {selectedProvider === 'standalone' && (
-                    <Stack id="standalone-setup" role="tabpanel">
+                <Tabs hasDivider>
+                    <Tab label="Standalone" panelId="standalone-setup" value="standalone">
                         <CodeBlock code="uvx --from longlink longlink init --folder ." language="bash" />
-                    </Stack>
-                )}
-                {selectedProvider === 'github' && (
-                    <Stack id="github-setup" role="tabpanel">
+                    </Tab>
+                    <Tab label="GitHub" panelId="github-setup" value="github">
                         <CodeBlock code="uvx --from longlink longlink init --folder . --ci github" language="bash" />
-                    </Stack>
-                )}
+                    </Tab>
+                </Tabs>
                 <Stack as="aside" className="border-s border-accent ps-4" gap={0}>
                     <Text weight="semibold">Example</Text>
                     <Link href="https://github.com/xLongLink/sample" hasUnderline isExternalLink>

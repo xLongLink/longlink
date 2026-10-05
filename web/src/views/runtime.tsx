@@ -10,6 +10,7 @@ import { Banner } from '@astryxdesign/core/Banner';
 import { Spinner } from '@astryxdesign/core/Spinner';
 import { ErrorBoundary } from 'react-error-boundary';
 import { LayerProvider } from '@astryxdesign/core/Layer';
+import { MenuNavigationContext } from '@/components/ui/Menu';
 import { QueryClient, QueryClientProvider, QueryErrorResetBoundary, useSuspenseQuery } from '@tanstack/react-query';
 import {
     requestSchema,
@@ -31,6 +32,35 @@ declare global {
 }
 
 const session = window.__VIEW_SESSION__;
+
+/** Subscribes only to fragment changes inside this sandbox. */
+function subscribeToHash(notify: () => void): () => void {
+    window.addEventListener('hashchange', notify);
+    return () => window.removeEventListener('hashchange', notify);
+}
+
+/** Supplies the shared Menu with sandbox-owned fragment navigation. */
+function MenuNavigationProvider({ children }: { children: React.ReactNode }) {
+    const hash = React.useSyncExternalStore(
+        subscribeToHash,
+        () => window.location.hash,
+        () => ''
+    );
+
+    // Fragment selection never acquires a host navigation capability.
+    return (
+        <MenuNavigationContext
+            value={{
+                hash,
+                select: (id) => {
+                    window.location.hash = id;
+                },
+            }}
+        >
+            {children}
+        </MenuNavigationContext>
+    );
+}
 const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
 const pending = new Map<
     number,
@@ -267,7 +297,9 @@ function initialize(event: MessageEvent<unknown>): void {
                                     )}
                                 >
                                     <React.Suspense fallback={<Spinner label="Loading View" />}>
-                                        <View params={params} />
+                                        <MenuNavigationProvider>
+                                            <View params={params} />
+                                        </MenuNavigationProvider>
                                     </React.Suspense>
                                 </ErrorBoundary>
                             )}

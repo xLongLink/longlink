@@ -94,6 +94,15 @@ function SolutionPage() {
 
     // Show pod logs for accessible failed deployments and the notice otherwise.
     if (deploymentNotice) {
+        const notice = (
+            <EmptyState
+                description={deploymentNotice.description}
+                headingLevel={1}
+                role="alert"
+                title={deploymentNotice.title}
+            />
+        );
+
         return (
             <Platform action={action} breadcrumb={breadcrumb} tabs={[]}>
                 <NoIndex title={`${solutionAccess.name} | LongLink`} />
@@ -104,28 +113,15 @@ function SolutionPage() {
                     width="100%"
                 >
                     <Stack gap={6} maxWidth={1200} width="100%">
-                        {(solutionAccess.status !== 'failed' || !canMaintain) && (
-                            <EmptyState
-                                description={deploymentNotice.description}
-                                headingLevel={1}
-                                role="alert"
-                                title={deploymentNotice.title}
-                            />
-                        )}
-                        {solutionAccess.status === 'failed' && canMaintain && (
+                        {solutionAccess.status === 'failed' && canMaintain ? (
                             <ApiBoundary
                                 fallback={<Text color="secondary">Loading pod logs…</Text>}
-                                fallbackRender={() => (
-                                    <EmptyState
-                                        description={deploymentNotice.description}
-                                        headingLevel={1}
-                                        role="alert"
-                                        title={deploymentNotice.title}
-                                    />
-                                )}
+                                fallbackRender={() => notice}
                             >
                                 <DeploymentLogs key={solutionAccess.id} solutionId={solutionAccess.id} />
                             </ApiBoundary>
+                        ) : (
+                            notice
                         )}
                     </Stack>
                 </Center>

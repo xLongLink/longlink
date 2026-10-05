@@ -133,7 +133,7 @@
             {
                 "title": "Avatar",
                 "description": "Avatars at every size with an image, initials fallback, and a status dot. A quick visual reference for choosing the right size.",
-                "code": "function AvatarShowcase() {\n  return (\n    <Stack direction=\"horizontal\" gap={4} vAlign=\"center\">\n      <Avatar\n        src=\"/template-assets/DATA-Ana-Thomas.png\"\n        name=\"Ana Thomas\"\n        size=\"xl\"\n        status={<AvatarStatusDot variant=\"success\" label=\"Online\" />}\n      />\n      <Avatar\n        src=\"/template-assets/DATA-Drew-Young.png\"\n        name=\"Drew Young\"\n        size=\"xl\"\n      />\n      <Avatar\n        src=\"/template-assets/DATA-Jihoo-Song.png\"\n        name=\"Jihoo Song\"\n        size=\"xl\"\n      />\n      <Avatar\n        src=\"/template-assets/DATA-Nam-Tran.png\"\n        name=\"Nam Tran\"\n        size=\"xl\"\n        status={<AvatarStatusDot variant=\"error\" label=\"Busy\" />}\n      />\n    </Stack>\n  );\n}\n"
+                "code": "function Example() {\n  return (\n    <Stack direction=\"horizontal\" gap={4} vAlign=\"center\">\n      <Avatar\n        src=\"/template-assets/DATA-Ana-Thomas.png\"\n        name=\"Ana Thomas\"\n        size=\"xl\"\n        status={<AvatarStatusDot variant=\"success\" label=\"Online\" />}\n      />\n      <Avatar\n        src=\"/template-assets/DATA-Drew-Young.png\"\n        name=\"Drew Young\"\n        size=\"xl\"\n      />\n      <Avatar\n        src=\"/template-assets/DATA-Jihoo-Song.png\"\n        name=\"Jihoo Song\"\n        size=\"xl\"\n      />\n      <Avatar\n        src=\"/template-assets/DATA-Nam-Tran.png\"\n        name=\"Nam Tran\"\n        size=\"xl\"\n        status={<AvatarStatusDot variant=\"error\" label=\"Busy\" />}\n      />\n    </Stack>\n  );\n}\n"
             }
         ]
     },
@@ -217,7 +217,7 @@
             {
                 "title": "Badge — Variants",
                 "description": "All semantic and color badge variants in a single view. Use semantic variants for status and color variants for categories.",
-                "code": "function BadgeShowcase() {\n  return (\n    <Stack direction=\"vertical\" gap={4} hAlign=\"center\">\n      <Stack direction=\"horizontal\" gap={2}>\n        <Badge label=\"Neutral\" variant=\"neutral\" />\n        <Badge label=\"Info\" variant=\"info\" />\n        <Badge label=\"Success\" variant=\"success\" />\n        <Badge label=\"Warning\" variant=\"warning\" />\n        <Badge label=\"Error\" variant=\"error\" />\n      </Stack>\n      <Stack direction=\"horizontal\" gap={2}>\n        <Badge label=\"Blue\" variant=\"blue\" />\n        <Badge label=\"Purple\" variant=\"purple\" />\n        <Badge label=\"Pink\" variant=\"pink\" />\n        <Badge label=\"Teal\" variant=\"teal\" />\n        <Badge label=\"Orange\" variant=\"orange\" />\n      </Stack>\n    </Stack>\n  );\n}\n"
+                "code": "function Example() {\n  return (\n    <Stack direction=\"vertical\" gap={4} hAlign=\"center\">\n      <Stack direction=\"horizontal\" gap={2}>\n        <Badge label=\"Neutral\" variant=\"neutral\" />\n        <Badge label=\"Info\" variant=\"info\" />\n        <Badge label=\"Success\" variant=\"success\" />\n        <Badge label=\"Warning\" variant=\"warning\" />\n        <Badge label=\"Error\" variant=\"error\" />\n      </Stack>\n      <Stack direction=\"horizontal\" gap={2}>\n        <Badge label=\"Blue\" variant=\"blue\" />\n        <Badge label=\"Purple\" variant=\"purple\" />\n        <Badge label=\"Pink\" variant=\"pink\" />\n        <Badge label=\"Teal\" variant=\"teal\" />\n        <Badge label=\"Orange\" variant=\"orange\" />\n      </Stack>\n    </Stack>\n  );\n}\n"
             }
         ]
     },
@@ -411,7 +411,7 @@
             {
                 "title": "Button — Variants",
                 "description": "All four button variants side by side: primary, secondary, ghost, and destructive. A quick visual reference for choosing the right variant.",
-                "code": "function ButtonShowcase() {\n  return (\n    <Stack direction=\"horizontal\" gap={3} vAlign=\"center\">\n      <Button label=\"Primary\" variant=\"primary\" />\n      <Button label=\"Secondary\" variant=\"secondary\" />\n      <Button label=\"Ghost\" variant=\"ghost\" />\n      <Button label=\"Destructive\" variant=\"destructive\" />\n    </Stack>\n  );\n}\n"
+                "code": "function Example() {\n  return (\n    <Stack direction=\"horizontal\" gap={3} vAlign=\"center\">\n      <Button label=\"Primary\" variant=\"primary\" />\n      <Button label=\"Secondary\" variant=\"secondary\" />\n      <Button label=\"Ghost\" variant=\"ghost\" />\n      <Button label=\"Destructive\" variant=\"destructive\" />\n    </Stack>\n  );\n}\n"
             }
         ]
     },
@@ -526,7 +526,7 @@
             {
                 "title": "ButtonGroup",
                 "description": "",
-                "code": "function ButtonGroupShowcase() {\n  return (\n    <Stack direction=\"horizontal\" gap={6} vAlign=\"center\">\n      <ButtonGroup label=\"Clipboard actions\">\n        <Button label=\"Copy\" icon={<Icon icon={ClipboardDocumentIcon} />} />\n        <Button label=\"Cut\" icon={<Icon icon={ScissorsIcon} />} />\n        <Button label=\"Paste\" icon={<Icon icon={ClipboardIcon} />} />\n      </ButtonGroup>\n      <ButtonGroup label=\"Save options\">\n        <Button label=\"Save\" variant=\"primary\" />\n        <IconButton\n          label=\"Save options\"\n          variant=\"primary\"\n          icon={<Icon icon={ChevronDownIcon} />}\n        />\n      </ButtonGroup>\n    </Stack>\n  );\n}\n"
+                "code": "function Example() {\n  return (\n    <Stack direction=\"horizontal\" gap={6} vAlign=\"center\">\n      <ButtonGroup label=\"Clipboard actions\">\n        <Button label=\"Copy\" icon={<Icon icon={ClipboardDocumentIcon} />} />\n        <Button label=\"Cut\" icon={<Icon icon={ScissorsIcon} />} />\n        <Button label=\"Paste\" icon={<Icon icon={ClipboardIcon} />} />\n      </ButtonGroup>\n      <ButtonGroup label=\"Save options\">\n        <Button label=\"Save\" variant=\"primary\" />\n        <IconButton\n          label=\"Save options\"\n          variant=\"primary\"\n          icon={<Icon icon={ChevronDownIcon} />}\n        />\n      </ButtonGroup>\n    </Stack>\n  );\n}\n"
             }
         ]
     },
@@ -679,7 +679,7 @@
             {
                 "title": "Calendar",
                 "description": "An interactive single-date calendar with a selected date. Click any day to change the selection.",
-                "code": "function CalendarShowcase() {\n  const [value, setValue] = useState('2026-04-15');\n\n  return <Calendar mode=\"single\" value={value} onChange={setValue} />;\n}\n"
+                "code": "function Example() {\n  const [value, setValue] = useState('2026-04-15');\n\n  return <Calendar mode=\"single\" value={value} onChange={setValue} />;\n}\n"
             }
         ]
     },
@@ -850,7 +850,7 @@
             {
                 "title": "CheckboxInput",
                 "description": "Interactive checkboxes showing checked, unchecked, and indeterminate states with descriptions.",
-                "code": "function CheckboxInputShowcase() {\n  const [notifications, setNotifications] = useState(true);\n  const [marketing, setMarketing] = useState(false);\n\n  return (\n    <Stack direction=\"vertical\" gap={2}>\n      <CheckboxInput\n        label=\"Checked\"\n        value={notifications}\n        onChange={setNotifications}\n      />\n      <CheckboxInput\n        label=\"Unchecked\"\n        value={marketing}\n        onChange={setMarketing}\n      />\n    </Stack>\n  );\n}\n"
+                "code": "function Example() {\n  const [notifications, setNotifications] = useState(true);\n  const [marketing, setMarketing] = useState(false);\n\n  return (\n    <Stack direction=\"vertical\" gap={2}>\n      <CheckboxInput\n        label=\"Checked\"\n        value={notifications}\n        onChange={setNotifications}\n      />\n      <CheckboxInput\n        label=\"Unchecked\"\n        value={marketing}\n        onChange={setMarketing}\n      />\n    </Stack>\n  );\n}\n"
             }
         ]
     },
@@ -1030,7 +1030,7 @@
             {
                 "title": "CodeBlock",
                 "description": "A syntax-highlighted JSX code block with line numbers, a title bar, and a copy button.",
-                "code": "const code = `export default function Counter() {\n  const [count, setCount] = useState(0);\n\n  return <Button label=\"Increment\" onClick={() => setCount(count + 1)} />;\n}`;\n\nfunction CodeBlockShowcase() {\n  return (\n    <CodeBlock\n      code={code}\n      language=\"jsx\"\n      title=\"counter.jsx\"\n      hasLineNumbers\n      hasCopyButton\n    />\n  );\n}\n"
+                "code": "const code = `function Example() {\n  const [count, setCount] = useState(0);\n\n  return <Button label=\"Increment\" onClick={() => setCount(count + 1)} />;\n}`;\n\nfunction Example() {\n  return (\n    <CodeBlock\n      code={code}\n      language=\"jsx\"\n      title=\"counter.jsx\"\n      hasLineNumbers\n      hasCopyButton\n    />\n  );\n}\n"
             }
         ]
     },
@@ -1139,7 +1139,7 @@
             {
                 "title": "Collapsible",
                 "description": "An accordion group with three collapsible sections in single mode: opening one closes the others.",
-                "code": "/**\n * Rows inside one card, coordinated so only one is open at a time.\n *\n * Triggers take body-semibold rather than the trigger's default `large`: three\n * rows sharing a single surface are peers, and at 17px semibold each would\n * read as its own section heading. Keep `large` for the case it is for — one\n * Collapsible per card or per Section, where the trigger really is the\n * heading of that surface (see the Multiple Mode and Controlled examples).\n */\nfunction CollapsibleShowcase() {\n  return (\n    <Card width={420}>\n      <CollapsibleGroup type=\"single\" defaultValue=\"notifications\">\n        <Stack gap={4}>\n          <Collapsible\n            trigger={\n              <Text type=\"body\" weight=\"semibold\">\n                General\n              </Text>\n            }\n            value=\"general\"\n          >\n            <Text type=\"body\" color=\"secondary\">\n              Display name, language, and time zone. Time zone drives every date\n              shown in the product, including scheduled reports.\n            </Text>\n          </Collapsible>\n\n          <Collapsible\n            trigger={\n              <Text type=\"body\" weight=\"semibold\">\n                Notifications\n              </Text>\n            }\n            value=\"notifications\"\n          >\n            <Stack gap={2}>\n              <Text type=\"body\" color=\"secondary\">\n                Choose which email and push notifications you receive. Mentions\n                and direct messages are always delivered — everything else can\n                be turned off or batched into a daily digest.\n              </Text>\n              <Text type=\"body\" color=\"secondary\">\n                Quiet hours pause push notifications overnight in your local\n                time zone without affecting email.\n              </Text>\n            </Stack>\n          </Collapsible>\n\n          <Collapsible\n            trigger={\n              <Text type=\"body\" weight=\"semibold\">\n                Privacy\n              </Text>\n            }\n            value=\"privacy\"\n          >\n            <Text type=\"body\" color=\"secondary\">\n              Control who can see your profile and activity, and whether your\n              workspace appears in search for people outside your organization.\n            </Text>\n          </Collapsible>\n        </Stack>\n      </CollapsibleGroup>\n    </Card>\n  );\n}\n"
+                "code": "/**\n * Rows inside one card, coordinated so only one is open at a time.\n *\n * Triggers take body-semibold rather than the trigger's default `large`: three\n * rows sharing a single surface are peers, and at 17px semibold each would\n * read as its own section heading. Keep `large` for the case it is for — one\n * Collapsible per card or per Section, where the trigger really is the\n * heading of that surface (see the Multiple Mode and Controlled examples).\n */\nfunction Example() {\n  return (\n    <Card width={420}>\n      <CollapsibleGroup type=\"single\" defaultValue=\"notifications\">\n        <Stack gap={4}>\n          <Collapsible\n            trigger={\n              <Text type=\"body\" weight=\"semibold\">\n                General\n              </Text>\n            }\n            value=\"general\"\n          >\n            <Text type=\"body\" color=\"secondary\">\n              Display name, language, and time zone. Time zone drives every date\n              shown in the product, including scheduled reports.\n            </Text>\n          </Collapsible>\n\n          <Collapsible\n            trigger={\n              <Text type=\"body\" weight=\"semibold\">\n                Notifications\n              </Text>\n            }\n            value=\"notifications\"\n          >\n            <Stack gap={2}>\n              <Text type=\"body\" color=\"secondary\">\n                Choose which email and push notifications you receive. Mentions\n                and direct messages are always delivered — everything else can\n                be turned off or batched into a daily digest.\n              </Text>\n              <Text type=\"body\" color=\"secondary\">\n                Quiet hours pause push notifications overnight in your local\n                time zone without affecting email.\n              </Text>\n            </Stack>\n          </Collapsible>\n\n          <Collapsible\n            trigger={\n              <Text type=\"body\" weight=\"semibold\">\n                Privacy\n              </Text>\n            }\n            value=\"privacy\"\n          >\n            <Text type=\"body\" color=\"secondary\">\n              Control who can see your profile and activity, and whether your\n              workspace appears in search for people outside your organization.\n            </Text>\n          </Collapsible>\n        </Stack>\n      </CollapsibleGroup>\n    </Card>\n  );\n}\n"
             }
         ]
     },
@@ -1326,7 +1326,7 @@
             {
                 "title": "ComplexSelector",
                 "description": "A two-axis picker: choose a fruit and a ripeness level from one control. ComplexSelector owns the trigger, popover, and focus restore while the custom grid owns its keyboard semantics.",
-                "code": "const fruits = [\n  { id: 'Apple', emoji: '🍎', description: 'Bright and balanced' },\n  { id: 'Pear', emoji: '🍐', description: 'Soft floral sweetness' },\n  { id: 'Peach', emoji: '🍑', description: 'Round summer flavor' },\n  { id: 'Plum', emoji: '🟣', description: 'Jammy and tart' },\n];\n\nconst ripenessLevels = [\n  { id: 'Crisp', shortLabel: 'C', description: 'Snappy bite' },\n  { id: 'Tender', shortLabel: 'T', description: 'Easy bite' },\n  { id: 'Juicy', shortLabel: 'J', description: 'Full juice' },\n  { id: 'Peak', shortLabel: 'P', description: 'Most intense' },\n];\n\nconst GRID_CELL_SELECTOR = '[role=\"gridcell\"]';\n\nconst styles = stylex.create({\n  grid: {\n    display: 'flex',\n    flexDirection: 'column',\n    gap: spacingVars['--spacing-1'],\n    minWidth: 280,\n  },\n  row: {\n    display: 'grid',\n    gridTemplateColumns: 'minmax(150px, 1fr) repeat(4, 44px)',\n    alignItems: 'center',\n    columnGap: spacingVars['--spacing-1'],\n  },\n  rowHeader: {\n    display: 'flex',\n    alignItems: 'center',\n    gap: spacingVars['--spacing-2'],\n    textAlign: 'start',\n    minWidth: 0,\n  },\n  emoji: {\n    fontSize: 18,\n    flexShrink: 0,\n  },\n  fruitText: {\n    display: 'flex',\n    flexDirection: 'column',\n    minWidth: 0,\n  },\n  cell: {\n    display: 'flex',\n    alignItems: 'center',\n    justifyContent: 'center',\n    height: 36,\n    borderWidth: borderVars['--border-width'],\n    borderStyle: 'solid',\n    borderColor: colorVars['--color-border'],\n    borderRadius: radiusVars['--radius-container'],\n    backgroundColor: colorVars['--color-background-card'],\n    color: colorVars['--color-text-secondary'],\n    fontFamily: 'inherit',\n    cursor: 'pointer',\n    ':hover': {\n      '@media (hover: hover)': {\n        borderColor: colorVars['--color-border-emphasized'],\n        color: colorVars['--color-text-primary'],\n      },\n    },\n  },\n  cellSelected: {\n    borderColor: colorVars['--color-accent'],\n    backgroundColor: colorVars['--color-accent'],\n    color: colorVars['--color-on-accent'],\n  },\n});\n\nfunction FruitRipenessGrid({ value, onChange }) {\n  const { gridRef, handleKeyDown, handleFocus, focusCell } = useGridFocus({\n    columns: ripenessLevels.length,\n    cellSelector: GRID_CELL_SELECTOR,\n    hasRovingTabIndex: true,\n  });\n\n  useEffect(() => {\n    const rowIndex = fruits.findIndex((f) => f.id === value.fruit);\n    const columnIndex = ripenessLevels.findIndex(\n      (l) => l.id === value.ripeness,\n    );\n    requestAnimationFrame(() => {\n      focusCell(\n        rowIndex >= 0 && columnIndex >= 0\n          ? rowIndex * ripenessLevels.length + columnIndex\n          : 0,\n      );\n    });\n  }, [focusCell, value]);\n\n  return (\n    <div\n      ref={gridRef}\n      role=\"grid\"\n      aria-label=\"Fruit ripeness choices\"\n      onKeyDown={handleKeyDown}\n      onFocus={handleFocus}\n      {...stylex.props(styles.grid)}\n    >\n      {fruits.map((fruit) => (\n        <div key={fruit.id} role=\"row\" {...stylex.props(styles.row)}>\n          <div role=\"rowheader\" {...stylex.props(styles.rowHeader)}>\n            <span aria-hidden=\"true\" {...stylex.props(styles.emoji)}>\n              {fruit.emoji}\n            </span>\n            <span {...stylex.props(styles.fruitText)}>\n              <Text type=\"body\">{fruit.id}</Text>\n              <Text type=\"supporting\" color=\"secondary\">\n                {fruit.description}\n              </Text>\n            </span>\n          </div>\n          {ripenessLevels.map((level) => {\n            const isSelected =\n              value.fruit === fruit.id && value.ripeness === level.id;\n            return (\n              <button\n                key={`${fruit.id}-${level.id}`}\n                type=\"button\"\n                role=\"gridcell\"\n                aria-label={`${fruit.id}, ${level.id}: ${level.description}`}\n                aria-selected={isSelected || undefined}\n                tabIndex={isSelected ? 0 : -1}\n                onClick={() =>\n                  onChange({ fruit: fruit.id, ripeness: level.id })\n                }\n                {...stylex.props(\n                  styles.cell,\n                  isSelected && styles.cellSelected,\n                )}\n              >\n                {level.shortLabel}\n              </button>\n            );\n          })}\n        </div>\n      ))}\n    </div>\n  );\n}\n\nfunction ComplexSelectorShowcase() {\n  const [value, setValue] = useState({\n    fruit: 'Apple',\n    ripeness: 'Juicy',\n  });\n\n  return (\n    <ComplexSelector\n      label=\"Fruit blend\"\n      description=\"Choose a fruit and ripeness in one control. Arrow keys move across the grid.\"\n      value={value}\n      onChange={setValue}\n      triggerLabel={`${value.fruit} · ${value.ripeness}`}\n      style={{ width: 280 }}\n    >\n      {(selectedValue, onChange, close) => (\n        <FruitRipenessGrid\n          value={selectedValue}\n          onChange={(nextValue) => {\n            onChange(nextValue);\n            close();\n          }}\n        />\n      )}\n    </ComplexSelector>\n  );\n}\n"
+                "code": "const fruits = [\n  { id: 'Apple', emoji: '🍎', description: 'Bright and balanced' },\n  { id: 'Pear', emoji: '🍐', description: 'Soft floral sweetness' },\n  { id: 'Peach', emoji: '🍑', description: 'Round summer flavor' },\n  { id: 'Plum', emoji: '🟣', description: 'Jammy and tart' },\n];\n\nconst ripenessLevels = [\n  { id: 'Crisp', shortLabel: 'C', description: 'Snappy bite' },\n  { id: 'Tender', shortLabel: 'T', description: 'Easy bite' },\n  { id: 'Juicy', shortLabel: 'J', description: 'Full juice' },\n  { id: 'Peak', shortLabel: 'P', description: 'Most intense' },\n];\n\nconst GRID_CELL_SELECTOR = '[role=\"gridcell\"]';\n\nconst styles = stylex.create({\n  grid: {\n    display: 'flex',\n    flexDirection: 'column',\n    gap: spacingVars['--spacing-1'],\n    minWidth: 280,\n  },\n  row: {\n    display: 'grid',\n    gridTemplateColumns: 'minmax(150px, 1fr) repeat(4, 44px)',\n    alignItems: 'center',\n    columnGap: spacingVars['--spacing-1'],\n  },\n  rowHeader: {\n    display: 'flex',\n    alignItems: 'center',\n    gap: spacingVars['--spacing-2'],\n    textAlign: 'start',\n    minWidth: 0,\n  },\n  emoji: {\n    fontSize: 18,\n    flexShrink: 0,\n  },\n  fruitText: {\n    display: 'flex',\n    flexDirection: 'column',\n    minWidth: 0,\n  },\n  cell: {\n    display: 'flex',\n    alignItems: 'center',\n    justifyContent: 'center',\n    height: 36,\n    borderWidth: borderVars['--border-width'],\n    borderStyle: 'solid',\n    borderColor: colorVars['--color-border'],\n    borderRadius: radiusVars['--radius-container'],\n    backgroundColor: colorVars['--color-background-card'],\n    color: colorVars['--color-text-secondary'],\n    fontFamily: 'inherit',\n    cursor: 'pointer',\n    ':hover': {\n      '@media (hover: hover)': {\n        borderColor: colorVars['--color-border-emphasized'],\n        color: colorVars['--color-text-primary'],\n      },\n    },\n  },\n  cellSelected: {\n    borderColor: colorVars['--color-accent'],\n    backgroundColor: colorVars['--color-accent'],\n    color: colorVars['--color-on-accent'],\n  },\n});\n\nfunction FruitRipenessGrid({ value, onChange }) {\n  const { gridRef, handleKeyDown, handleFocus, focusCell } = useGridFocus({\n    columns: ripenessLevels.length,\n    cellSelector: GRID_CELL_SELECTOR,\n    hasRovingTabIndex: true,\n  });\n\n  useEffect(() => {\n    const rowIndex = fruits.findIndex((f) => f.id === value.fruit);\n    const columnIndex = ripenessLevels.findIndex(\n      (l) => l.id === value.ripeness,\n    );\n    requestAnimationFrame(() => {\n      focusCell(\n        rowIndex >= 0 && columnIndex >= 0\n          ? rowIndex * ripenessLevels.length + columnIndex\n          : 0,\n      );\n    });\n  }, [focusCell, value]);\n\n  return (\n    <div\n      ref={gridRef}\n      role=\"grid\"\n      aria-label=\"Fruit ripeness choices\"\n      onKeyDown={handleKeyDown}\n      onFocus={handleFocus}\n      {...stylex.props(styles.grid)}\n    >\n      {fruits.map((fruit) => (\n        <div key={fruit.id} role=\"row\" {...stylex.props(styles.row)}>\n          <div role=\"rowheader\" {...stylex.props(styles.rowHeader)}>\n            <span aria-hidden=\"true\" {...stylex.props(styles.emoji)}>\n              {fruit.emoji}\n            </span>\n            <span {...stylex.props(styles.fruitText)}>\n              <Text type=\"body\">{fruit.id}</Text>\n              <Text type=\"supporting\" color=\"secondary\">\n                {fruit.description}\n              </Text>\n            </span>\n          </div>\n          {ripenessLevels.map((level) => {\n            const isSelected =\n              value.fruit === fruit.id && value.ripeness === level.id;\n            return (\n              <button\n                key={`${fruit.id}-${level.id}`}\n                type=\"button\"\n                role=\"gridcell\"\n                aria-label={`${fruit.id}, ${level.id}: ${level.description}`}\n                aria-selected={isSelected || undefined}\n                tabIndex={isSelected ? 0 : -1}\n                onClick={() =>\n                  onChange({ fruit: fruit.id, ripeness: level.id })\n                }\n                {...stylex.props(\n                  styles.cell,\n                  isSelected && styles.cellSelected,\n                )}\n              >\n                {level.shortLabel}\n              </button>\n            );\n          })}\n        </div>\n      ))}\n    </div>\n  );\n}\n\nfunction Example() {\n  const [value, setValue] = useState({\n    fruit: 'Apple',\n    ripeness: 'Juicy',\n  });\n\n  return (\n    <ComplexSelector\n      label=\"Fruit blend\"\n      description=\"Choose a fruit and ripeness in one control. Arrow keys move across the grid.\"\n      value={value}\n      onChange={setValue}\n      triggerLabel={`${value.fruit} · ${value.ripeness}`}\n      style={{ width: 280 }}\n    >\n      {(selectedValue, onChange, close) => (\n        <FruitRipenessGrid\n          value={selectedValue}\n          onChange={(nextValue) => {\n            onChange(nextValue);\n            close();\n          }}\n        />\n      )}\n    </ComplexSelector>\n  );\n}\n"
             }
         ]
     },
@@ -1560,7 +1560,7 @@
             {
                 "title": "DateInput",
                 "description": "A date input field with a calendar popover. Type a date or click the calendar icon to pick one.",
-                "code": "function DateInputShowcase() {\n  const [date, setDate] = useState(undefined);\n\n  return (\n    <Stack\n      direction=\"vertical\"\n      width=\"100%\"\n      style={{ minWidth: 240, maxWidth: 400 }}\n    >\n      <DateInput\n        label=\"Start date\"\n        placeholder=\"Select a date\"\n        value={date}\n        onChange={setDate}\n        hasClear\n      />\n    </Stack>\n  );\n}\n"
+                "code": "function Example() {\n  const [date, setDate] = useState(undefined);\n\n  return (\n    <Stack\n      direction=\"vertical\"\n      width=\"100%\"\n      style={{ minWidth: 240, maxWidth: 400 }}\n    >\n      <DateInput\n        label=\"Start date\"\n        placeholder=\"Select a date\"\n        value={date}\n        onChange={setDate}\n        hasClear\n      />\n    </Stack>\n  );\n}\n"
             }
         ]
     },
@@ -1800,7 +1800,7 @@
             {
                 "title": "DateRangeInput",
                 "description": "A date range picker with a button trigger and dual-month calendar popover with preset ranges.",
-                "code": "function daysAgo(n) {\n  const d = new Date();\n  d.setDate(d.getDate() - n);\n  return d.toISOString().slice(0, 10);\n}\n\nfunction today() {\n  return new Date().toISOString().slice(0, 10);\n}\n\nconst presets = [\n  {\n    label: 'Last 7 days',\n    getRange: () => ({ start: daysAgo(7), end: today() }),\n  },\n  {\n    label: 'Last 30 days',\n    getRange: () => ({ start: daysAgo(30), end: today() }),\n  },\n];\n\nfunction DateRangeInputShowcase() {\n  const [range, setRange] = useState(null);\n\n  return (\n    <Stack direction=\"vertical\" width=\"100%\" style={{ maxWidth: 400 }}>\n      <DateRangeInput\n        label=\"Date range\"\n        value={range}\n        onChange={setRange}\n        presets={presets}\n      />\n    </Stack>\n  );\n}\n"
+                "code": "function daysAgo(n) {\n  const d = new Date();\n  d.setDate(d.getDate() - n);\n  return d.toISOString().slice(0, 10);\n}\n\nfunction today() {\n  return new Date().toISOString().slice(0, 10);\n}\n\nconst presets = [\n  {\n    label: 'Last 7 days',\n    getRange: () => ({ start: daysAgo(7), end: today() }),\n  },\n  {\n    label: 'Last 30 days',\n    getRange: () => ({ start: daysAgo(30), end: today() }),\n  },\n];\n\nfunction Example() {\n  const [range, setRange] = useState(null);\n\n  return (\n    <Stack direction=\"vertical\" width=\"100%\" style={{ maxWidth: 400 }}>\n      <DateRangeInput\n        label=\"Date range\"\n        value={range}\n        onChange={setRange}\n        presets={presets}\n      />\n    </Stack>\n  );\n}\n"
             }
         ]
     },
@@ -2063,7 +2063,7 @@
             {
                 "title": "DateTimeInput",
                 "description": "A combined date and time picker. Desktop opens a calendar popover with a time input; touch devices open a Date/Time bottom sheet.",
-                "code": "function DateTimeInputShowcase() {\n  const [dateTime, setDateTime] = useState(undefined);\n\n  return (\n    <Stack\n      direction=\"vertical\"\n      width=\"100%\"\n      style={{ minWidth: 240, maxWidth: 400 }}\n    >\n      <DateTimeInput\n        label=\"Meeting time\"\n        placeholder=\"Select a date\"\n        value={dateTime}\n        onChange={setDateTime}\n        hasClear\n      />\n    </Stack>\n  );\n}\n"
+                "code": "function Example() {\n  const [dateTime, setDateTime] = useState(undefined);\n\n  return (\n    <Stack\n      direction=\"vertical\"\n      width=\"100%\"\n      style={{ minWidth: 240, maxWidth: 400 }}\n    >\n      <DateTimeInput\n        label=\"Meeting time\"\n        placeholder=\"Select a date\"\n        value={dateTime}\n        onChange={setDateTime}\n        hasClear\n      />\n    </Stack>\n  );\n}\n"
             }
         ]
     },
@@ -2187,7 +2187,7 @@
             {
                 "title": "Dialog",
                 "description": "Modal dialog with a header, body content, and close button.",
-                "code": "// Remove isInline for production — dialogs should be modal.\nfunction DialogShowcase() {\n  return (\n    <Dialog isOpen isInline onOpenChange={() => {}}>\n      <Layout\n        header={<DialogHeader title=\"Modal Title\" onOpenChange={() => {}} />}\n        content={\n          <LayoutContent>\n            <Text type=\"body\">Dialog content goes here.</Text>\n          </LayoutContent>\n        }\n      />\n    </Dialog>\n  );\n}\n"
+                "code": "// Remove isInline for production — dialogs should be modal.\nfunction Example() {\n  return (\n    <Dialog isOpen isInline onOpenChange={() => {}}>\n      <Layout\n        header={<DialogHeader title=\"Modal Title\" onOpenChange={() => {}} />}\n        content={\n          <LayoutContent>\n            <Text type=\"body\">Dialog content goes here.</Text>\n          </LayoutContent>\n        }\n      />\n    </Dialog>\n  );\n}\n"
             }
         ]
     },
@@ -2260,7 +2260,7 @@
             {
                 "title": "Divider — Variants",
                 "description": "Horizontal dividers in subtle and strong variants, plus a labeled divider. A quick visual reference for separator styles.",
-                "code": "function DividerShowcase() {\n  return (\n    <Stack direction=\"vertical\" gap={4} style={{ width: 500 }}>\n      <Divider variant=\"subtle\" />\n      <Divider variant=\"strong\" />\n      <Divider label=\"or\" />\n    </Stack>\n  );\n}\n"
+                "code": "function Example() {\n  return (\n    <Stack direction=\"vertical\" gap={4} style={{ width: 500 }}>\n      <Divider variant=\"subtle\" />\n      <Divider variant=\"strong\" />\n      <Divider label=\"or\" />\n    </Stack>\n  );\n}\n"
             }
         ]
     },
@@ -2460,7 +2460,7 @@
             {
                 "title": "DropdownMenu",
                 "description": "A button that opens a dropdown menu with action items. The menu starts open for preview.",
-                "code": "function DropdownMenuShowcase() {\n  return (\n    <DropdownMenu\n      button={{ label: 'Actions' }}\n      items={[\n        { label: 'Edit', onClick: () => {} },\n        { label: 'Duplicate', onClick: () => {} },\n        { label: 'Delete', onClick: () => {} },\n      ]}\n    />\n  );\n}\n"
+                "code": "function Example() {\n  return (\n    <DropdownMenu\n      button={{ label: 'Actions' }}\n      items={[\n        { label: 'Edit', onClick: () => {} },\n        { label: 'Duplicate', onClick: () => {} },\n        { label: 'Delete', onClick: () => {} },\n      ]}\n    />\n  );\n}\n"
             }
         ]
     },
@@ -2560,7 +2560,7 @@
             {
                 "title": "EmptyState",
                 "description": "A no-results empty state with an icon, descriptive message, and a call-to-action button.",
-                "code": "function EmptyStateShowcase() {\n  return (\n    <EmptyState\n      icon={<Icon icon={MagnifyingGlassIcon} size=\"lg\" />}\n      title=\"No results found\"\n      description=\"Try adjusting your search or filters to find what you need.\"\n      actions={<Button label=\"Clear filters\" variant=\"secondary\" />}\n    />\n  );\n}\n"
+                "code": "function Example() {\n  return (\n    <EmptyState\n      icon={<Icon icon={MagnifyingGlassIcon} size=\"lg\" />}\n      title=\"No results found\"\n      description=\"Try adjusting your search or filters to find what you need.\"\n      actions={<Button label=\"Clear filters\" variant=\"secondary\" />}\n    />\n  );\n}\n"
             }
         ]
     },
@@ -2768,7 +2768,7 @@
             {
                 "title": "FileInput",
                 "description": "",
-                "code": "function FileInputShowcase() {\n  const [value, setValue] = useState(null);\n  return (\n    <div style={{ width: 350 }}>\n      <FileInput\n        label=\"Upload file\"\n        value={value}\n        onChange={setValue}\n        placeholder=\"Drag files here or click to browse\"\n      />\n    </div>\n  );\n}\n"
+                "code": "function Example() {\n  const [value, setValue] = useState(null);\n  return (\n    <div style={{ width: 350 }}>\n      <FileInput\n        label=\"Upload file\"\n        value={value}\n        onChange={setValue}\n        placeholder=\"Drag files here or click to browse\"\n      />\n    </div>\n  );\n}\n"
             }
         ]
     },
@@ -2882,7 +2882,7 @@
             {
                 "title": "Grid",
                 "description": "",
-                "code": "function GridShowcase() {\n  return (\n    <Grid columns={3} gap={2} width={400}>\n      {Array.from({ length: 12 }, (_, i) => (\n        <Card key={i}>Item {i + 1}</Card>\n      ))}\n    </Grid>\n  );\n}\n"
+                "code": "function Example() {\n  return (\n    <Grid columns={3} gap={2} width={400}>\n      {Array.from({ length: 12 }, (_, i) => (\n        <Card key={i}>Item {i + 1}</Card>\n      ))}\n    </Grid>\n  );\n}\n"
             }
         ]
     },
@@ -3035,7 +3035,7 @@
             {
                 "title": "Text",
                 "description": "",
-                "code": "function TextShowcase() {\n  return (\n    <Stack direction=\"vertical\" gap={2}>\n      <Text type=\"body\">Body: The bulk of content</Text>\n      <Text type=\"large\">Large: Emphasized content</Text>\n      <Text type=\"label\">Label: Form and chart labels</Text>\n      <Text type=\"supporting\">Supporting: Helper text</Text>\n      <Text type=\"code\">Code: const x = 42;</Text>\n    </Stack>\n  );\n}\n"
+                "code": "function Example() {\n  return (\n    <Stack direction=\"vertical\" gap={2}>\n      <Text type=\"body\">Body: The bulk of content</Text>\n      <Text type=\"large\">Large: Emphasized content</Text>\n      <Text type=\"label\">Label: Form and chart labels</Text>\n      <Text type=\"supporting\">Supporting: Helper text</Text>\n      <Text type=\"code\">Code: const x = 42;</Text>\n    </Stack>\n  );\n}\n"
             }
         ]
     },
@@ -3130,7 +3130,7 @@
             {
                 "title": "Icon",
                 "description": "",
-                "code": "function IconShowcase() {\n  return <Icon icon=\"search\" color=\"primary\" size=\"md\" />;\n}\n"
+                "code": "function Example() {\n  return <Icon icon=\"search\" color=\"primary\" size=\"md\" />;\n}\n"
             }
         ]
     },
@@ -3224,7 +3224,7 @@
             {
                 "title": "IconButton",
                 "description": "An icon button with a wrench icon.",
-                "code": "function IconButtonShowcase() {\n  return (\n    <IconButton\n      label=\"Settings\"\n      icon={<Icon icon=\"wrench\" color=\"inherit\" />}\n    />\n  );\n}\n"
+                "code": "function Example() {\n  return (\n    <IconButton\n      label=\"Settings\"\n      icon={<Icon icon=\"wrench\" color=\"inherit\" />}\n    />\n  );\n}\n"
             }
         ]
     },
@@ -3390,7 +3390,7 @@
             {
                 "title": "Link",
                 "description": "A standalone link.",
-                "code": "function LinkShowcase() {\n  return (\n    <Link href=\"#\" isStandalone>\n      Documentation\n    </Link>\n  );\n}\n"
+                "code": "function Example() {\n  return (\n    <Link href=\"#\" isStandalone>\n      Documentation\n    </Link>\n  );\n}\n"
             }
         ]
     },
@@ -3483,7 +3483,7 @@
             {
                 "title": "MetadataList",
                 "description": "",
-                "code": "function MetadataListShowcase() {\n  return (\n    <MetadataList>\n      <MetadataListItem label=\"Name\">MetadataList</MetadataListItem>\n      <MetadataListItem label=\"Status\">Active</MetadataListItem>\n      <MetadataListItem label=\"Owner\">Joey</MetadataListItem>\n    </MetadataList>\n  );\n}\n"
+                "code": "function Example() {\n  return (\n    <MetadataList>\n      <MetadataListItem label=\"Name\">MetadataList</MetadataListItem>\n      <MetadataListItem label=\"Status\">Active</MetadataListItem>\n      <MetadataListItem label=\"Owner\">Joey</MetadataListItem>\n    </MetadataList>\n  );\n}\n"
             }
         ]
     },
@@ -3610,7 +3610,7 @@
             {
                 "title": "MoreMenu",
                 "description": "A basic three-dot menu with simple action items.",
-                "code": "function MoreMenuShowcase() {\n  return (\n    <MoreMenu\n      items={[\n        { label: 'Edit', onClick: () => {} },\n        { label: 'Duplicate', onClick: () => {} },\n        { label: 'Delete', onClick: () => {} },\n      ]}\n    />\n  );\n}\n"
+                "code": "function Example() {\n  return (\n    <MoreMenu\n      items={[\n        { label: 'Edit', onClick: () => {} },\n        { label: 'Duplicate', onClick: () => {} },\n        { label: 'Delete', onClick: () => {} },\n      ]}\n    />\n  );\n}\n"
             }
         ]
     },
@@ -3957,7 +3957,7 @@
             {
                 "title": "MultiSelector",
                 "description": "",
-                "code": "function MultiSelectorShowcase() {\n  const [value, setValue] = useState([]);\n  return (\n    <div style={{ width: 300 }}>\n      <MultiSelector\n        label=\"Columns\"\n        options={['Name', 'Email', 'Role', 'Status', 'Created']}\n        value={value}\n        onChange={setValue}\n        placeholder=\"Select columns...\"\n      />\n    </div>\n  );\n}\n"
+                "code": "function Example() {\n  const [value, setValue] = useState([]);\n  return (\n    <div style={{ width: 300 }}>\n      <MultiSelector\n        label=\"Columns\"\n        options={['Name', 'Email', 'Role', 'Status', 'Created']}\n        value={value}\n        onChange={setValue}\n        placeholder=\"Select columns...\"\n      />\n    </div>\n  );\n}\n"
             }
         ]
     },
@@ -4208,7 +4208,7 @@
             {
                 "title": "NumberInput",
                 "description": "A number input for quantity entry.",
-                "code": "function NumberInputShowcase() {\n  const [value, setValue] = useState(0);\n  return (\n    <div style={{ width: 300 }}>\n      <NumberInput\n        label=\"Quantity\"\n        placeholder=\"Enter quantity\"\n        value={value}\n        onChange={setValue}\n        formatValue={(number) => `${number} items`}\n        hasNumberSteppers\n      />\n    </div>\n  );\n}\n"
+                "code": "function Example() {\n  const [value, setValue] = useState(0);\n  return (\n    <div style={{ width: 300 }}>\n      <NumberInput\n        label=\"Quantity\"\n        placeholder=\"Enter quantity\"\n        value={value}\n        onChange={setValue}\n        formatValue={(number) => `${number} items`}\n        hasNumberSteppers\n      />\n    </div>\n  );\n}\n"
             }
         ]
     },
@@ -4408,7 +4408,7 @@
             {
                 "title": "PowerSearch",
                 "description": "Token-based filter bar with enum and text fields, pre-populated with sample filters.",
-                "code": "const config = {\n  name: 'BasicSearch',\n  fields: [\n    {\n      key: 'status',\n      label: 'Status',\n      defaultOperator: 'is',\n      operators: [\n        {\n          key: 'is',\n          label: 'is',\n          value: {\n            type: 'enum',\n            values: [\n              { value: 'open', label: 'Open' },\n              { value: 'in_progress', label: 'In Progress' },\n              { value: 'closed', label: 'Closed' },\n            ],\n          },\n        },\n      ],\n    },\n    {\n      key: 'title',\n      label: 'Title',\n      defaultOperator: 'contains',\n      operators: [\n        { key: 'contains', label: 'contains', value: { type: 'string' } },\n      ],\n    },\n  ],\n};\n\nconst initialFilters = [\n  { field: 'status', operator: 'is', value: { type: 'enum', value: 'open' } },\n  {\n    field: 'title',\n    operator: 'contains',\n    value: { type: 'string', value: 'dashboard' },\n  },\n];\n\nfunction PowerSearchShowcase() {\n  const [filters, setFilters] = useState(initialFilters);\n\n  return (\n    <PowerSearch\n      style={{ width: 400 }}\n      config={config}\n      filters={filters}\n      onChange={(newFilters) => setFilters([...newFilters])}\n      placeholder=\"Search by status, title...\"\n    />\n  );\n}\n"
+                "code": "const config = {\n  name: 'BasicSearch',\n  fields: [\n    {\n      key: 'status',\n      label: 'Status',\n      defaultOperator: 'is',\n      operators: [\n        {\n          key: 'is',\n          label: 'is',\n          value: {\n            type: 'enum',\n            values: [\n              { value: 'open', label: 'Open' },\n              { value: 'in_progress', label: 'In Progress' },\n              { value: 'closed', label: 'Closed' },\n            ],\n          },\n        },\n      ],\n    },\n    {\n      key: 'title',\n      label: 'Title',\n      defaultOperator: 'contains',\n      operators: [\n        { key: 'contains', label: 'contains', value: { type: 'string' } },\n      ],\n    },\n  ],\n};\n\nconst initialFilters = [\n  { field: 'status', operator: 'is', value: { type: 'enum', value: 'open' } },\n  {\n    field: 'title',\n    operator: 'contains',\n    value: { type: 'string', value: 'dashboard' },\n  },\n];\n\nfunction Example() {\n  const [filters, setFilters] = useState(initialFilters);\n\n  return (\n    <PowerSearch\n      style={{ width: 400 }}\n      config={config}\n      filters={filters}\n      onChange={(newFilters) => setFilters([...newFilters])}\n      placeholder=\"Search by status, title...\"\n    />\n  );\n}\n"
             }
         ]
     },
@@ -4543,7 +4543,7 @@
             {
                 "title": "ProgressBar",
                 "description": "A progress bar filled to 60%.",
-                "code": "function ProgressBarShowcase() {\n  return <ProgressBar value={60} label=\"Progress\" style={{ width: 300 }} />;\n}\n"
+                "code": "function Example() {\n  return <ProgressBar value={60} label=\"Progress\" style={{ width: 300 }} />;\n}\n"
             }
         ]
     },
@@ -4699,7 +4699,7 @@
             {
                 "title": "RadioList",
                 "description": "",
-                "code": "function RadioListShowcase() {\n  const [value, setValue] = useState('');\n  return (\n    <RadioList\n      label=\"Notification preference\"\n      value={value}\n      onChange={setValue}\n    >\n      <RadioListItem label=\"Email\" value=\"email\" />\n      <RadioListItem label=\"SMS\" value=\"sms\" />\n      <RadioListItem label=\"Push notification\" value=\"push\" />\n    </RadioList>\n  );\n}\n"
+                "code": "function Example() {\n  const [value, setValue] = useState('');\n  return (\n    <RadioList\n      label=\"Notification preference\"\n      value={value}\n      onChange={setValue}\n    >\n      <RadioListItem label=\"Email\" value=\"email\" />\n      <RadioListItem label=\"SMS\" value=\"sms\" />\n      <RadioListItem label=\"Push notification\" value=\"push\" />\n    </RadioList>\n  );\n}\n"
             }
         ]
     },
@@ -5038,7 +5038,7 @@
             {
                 "title": "Selector",
                 "description": "",
-                "code": "function SelectorShowcase() {\n  const [value, setValue] = useState();\n  return (\n    <Selector\n      style={{ width: 300 }}\n      label=\"Fruit\"\n      options={['Apple', 'Banana', 'Orange', 'Mango', 'Pineapple']}\n      placeholder=\"Select a fruit...\"\n      value={value}\n      onChange={setValue}\n    />\n  );\n}\n"
+                "code": "function Example() {\n  const [value, setValue] = useState();\n  return (\n    <Selector\n      style={{ width: 300 }}\n      label=\"Fruit\"\n      options={['Apple', 'Banana', 'Orange', 'Mango', 'Pineapple']}\n      placeholder=\"Select a fruit...\"\n      value={value}\n      onChange={setValue}\n    />\n  );\n}\n"
             }
         ]
     },
@@ -5263,7 +5263,7 @@
             {
                 "title": "Slider",
                 "description": "A slider control set to 50%.",
-                "code": "function SliderShowcase() {\n  const [value, setValue] = useState(50);\n  return (\n    <Slider\n      label=\"Volume\"\n      value={value}\n      onChange={setValue}\n      style={{ width: 300 }}\n    />\n  );\n}\n"
+                "code": "function Example() {\n  const [value, setValue] = useState(50);\n  return (\n    <Slider\n      label=\"Volume\"\n      value={value}\n      onChange={setValue}\n      style={{ width: 300 }}\n    />\n  );\n}\n"
             }
         ]
     },
@@ -5422,7 +5422,7 @@
             {
                 "title": "Bottom Sheet",
                 "description": "A mobile filter surface that rises from the bottom edge.",
-                "code": "function BottomSheetShowcase() {\n  const [isOpen, setIsOpen] = useState(false);\n  const [inStock, setInStock] = useState(false);\n  const [onSale, setOnSale] = useState(false);\n  const [freeShipping, setFreeShipping] = useState(false);\n\n  return (\n    <>\n      <Button label=\"Open sheet\" onClick={() => setIsOpen(true)} />\n      <BottomSheet isOpen={isOpen} onOpenChange={setIsOpen} label=\"Filters\">\n        <Section padding={4}>\n          <VStack gap={4}>\n            <Heading level={3}>Filters</Heading>\n            <Divider />\n            <VStack gap={2}>\n              <CheckboxInput\n                label=\"In stock\"\n                value={inStock}\n                onChange={setInStock}\n              />\n              <CheckboxInput\n                label=\"On sale\"\n                value={onSale}\n                onChange={setOnSale}\n              />\n              <CheckboxInput\n                label=\"Free shipping\"\n                value={freeShipping}\n                onChange={setFreeShipping}\n              />\n            </VStack>\n            <Button label=\"Apply\" onClick={() => setIsOpen(false)} />\n          </VStack>\n        </Section>\n      </BottomSheet>\n    </>\n  );\n}\n"
+                "code": "function Example() {\n  const [isOpen, setIsOpen] = useState(false);\n  const [inStock, setInStock] = useState(false);\n  const [onSale, setOnSale] = useState(false);\n  const [freeShipping, setFreeShipping] = useState(false);\n\n  return (\n    <>\n      <Button label=\"Open sheet\" onClick={() => setIsOpen(true)} />\n      <BottomSheet isOpen={isOpen} onOpenChange={setIsOpen} label=\"Filters\">\n        <Section padding={4}>\n          <VStack gap={4}>\n            <Heading level={3}>Filters</Heading>\n            <Divider />\n            <VStack gap={2}>\n              <CheckboxInput\n                label=\"In stock\"\n                value={inStock}\n                onChange={setInStock}\n              />\n              <CheckboxInput\n                label=\"On sale\"\n                value={onSale}\n                onChange={setOnSale}\n              />\n              <CheckboxInput\n                label=\"Free shipping\"\n                value={freeShipping}\n                onChange={setFreeShipping}\n              />\n            </VStack>\n            <Button label=\"Apply\" onClick={() => setIsOpen(false)} />\n          </VStack>\n        </Section>\n      </BottomSheet>\n    </>\n  );\n}\n"
             }
         ]
     },
@@ -5511,7 +5511,7 @@
             {
                 "title": "StatusDot",
                 "description": "A positive status dot indicator.",
-                "code": "function StatusDotShowcase() {\n  return (\n    <HStack gap={2} vAlign=\"center\">\n      <StatusDot variant=\"success\" label=\"Positive\" />\n      <StatusDot variant=\"warning\" label=\"Warning\" />\n      <StatusDot variant=\"error\" label=\"Negative\" />\n      <StatusDot variant=\"accent\" label=\"Info\" />\n      <StatusDot variant=\"neutral\" label=\"Neutral\" />\n    </HStack>\n  );\n}\n"
+                "code": "function Example() {\n  return (\n    <HStack gap={2} vAlign=\"center\">\n      <StatusDot variant=\"success\" label=\"Positive\" />\n      <StatusDot variant=\"warning\" label=\"Warning\" />\n      <StatusDot variant=\"error\" label=\"Negative\" />\n      <StatusDot variant=\"accent\" label=\"Info\" />\n      <StatusDot variant=\"neutral\" label=\"Neutral\" />\n    </HStack>\n  );\n}\n"
             }
         ]
     },
@@ -5654,7 +5654,7 @@
             {
                 "title": "Stepper — Checkout Progress",
                 "description": "The default stepper: a horizontal track where every step owns an equal segment of the progress bar above its label. The default auto indicator resolves itself per step: a check once the step is done, a ring on the current step, a number for the ones still ahead. Click any step to jump.",
-                "code": "<Stepper activeStep={1}>\n  <Step step={0} label=\"Details\" />\n  <Step step={1} label=\"Review\" />\n  <Step step={2} label=\"Complete\" />\n</Stepper>;\n"
+                "code": "function Example() {\n  return (\n    <Stepper activeStep={1}>\n      <Step step={0} label=\"Details\" />\n      <Step step={1} label=\"Review\" />\n      <Step step={2} label=\"Complete\" />\n    </Stepper>\n  );\n}\n"
             }
         ]
     },
@@ -5847,7 +5847,7 @@
             {
                 "title": "Switch",
                 "description": "A toggle switch for enabling notifications.",
-                "code": "function SwitchShowcase() {\n  const [enabled, setEnabled] = useState(true);\n  return (\n    <Switch\n      label=\"Enable notifications\"\n      value={enabled}\n      onChange={setEnabled}\n    />\n  );\n}\n"
+                "code": "function Example() {\n  const [enabled, setEnabled] = useState(true);\n  return (\n    <Switch\n      label=\"Enable notifications\"\n      value={enabled}\n      onChange={setEnabled}\n    />\n  );\n}\n"
             }
         ]
     },
@@ -6054,130 +6054,7 @@
             {
                 "title": "Table",
                 "description": "Data-driven table with proportional and pixel column widths and hover highlighting.",
-                "code": "const users = [\n  {\n    id: '1',\n    name: 'Alice Johnson',\n    email: 'alice@example.com',\n    role: 'Engineer',\n    age: 30,\n  },\n  {\n    id: '2',\n    name: 'Bob Smith',\n    email: 'bob@example.com',\n    role: 'Designer',\n    age: 25,\n  },\n  {\n    id: '3',\n    name: 'Charlie Brown',\n    email: 'charlie@example.com',\n    role: 'PM',\n    age: 35,\n  },\n];\n\nconst columns = [\n  { key: 'name', header: 'Name', width: proportional(1) },\n  { key: 'email', header: 'Email', width: proportional(2) },\n  { key: 'role', header: 'Role', width: proportional(1) },\n  { key: 'age', header: 'Age', width: pixel(80) },\n];\n\nfunction TableShowcase() {\n  return (\n    <Card width={600}>\n      <Table data={users} columns={columns} idKey=\"id\" hasHover />\n    </Card>\n  );\n}\n"
-            }
-        ]
-    },
-    {
-        "name": "TabList",
-        "url": "https://astryx.atmeta.com/components/TabList",
-        "introduction": "TabList provides tab-style navigation for organizing content into categorized sections. Use it to let users switch between related views without leaving the page, with overflow items handled by a built-in \"more\" menu.",
-        "anatomy": [
-            {
-                "name": "Left Content",
-                "required": false,
-                "description": "Most important area; hugs content width."
-            },
-            {
-                "name": "Center-Fill Content",
-                "required": false,
-                "description": "Stretches to fill available space."
-            },
-            {
-                "name": "Right Content",
-                "required": false,
-                "description": "Hugs content width."
-            }
-        ],
-        "properties": [
-            {
-                "name": "value",
-                "type": "string",
-                "required": true,
-                "description": "The currently selected tab value."
-            },
-            {
-                "name": "onChange",
-                "type": "(value: string) => void",
-                "required": true,
-                "description": "Callback fired when a tab is selected."
-            },
-            {
-                "name": "size",
-                "type": "'sm' | 'md' | 'lg'",
-                "default": "'md'",
-                "description": "Size variant applied to all child tabs."
-            },
-            {
-                "name": "layout",
-                "type": "'hug' | 'fill'",
-                "default": "'hug'",
-                "description": "Layout mode for tab sizing. 'hug': each tab hugs its content width. 'fill': tabs stretch equally to fill the container width."
-            },
-            {
-                "name": "hasDivider",
-                "type": "boolean",
-                "default": "false",
-                "description": "Whether to show a bottom border divider under the tab list."
-            },
-            {
-                "name": "isFullBleed",
-                "type": "boolean",
-                "default": "false",
-                "description": "Makes the tab strip escape its parent's container padding, extending to the container's content edges (cancels the nearest padded Layout container's --container-padding-* custom properties with negative margins). The inner strip pads back by the portion of the container inset that is not already supplied by the first or last tab stop, keeping edge labels aligned while a hasDivider underline spans the full content width. Matches Divider's isFullBleed: inline (start/end) edges only; block-edge docking stays with the surrounding layout."
-            },
-            {
-                "name": "role",
-                "type": "AriaRole",
-                "description": "ARIA role for the strip. 'tablist' asks for the WAI-ARIA tabs pattern: role=\"tablist\" / role=\"tab\" and aria-selected, with each tab pointing at the panel it controls via its panelId; only tabs may live in a tablist strip, and an href on a tab is ignored there. Left unset, the strip is a nav landmark marking the current tab with aria-current. Any other value is passed through to the element unchanged."
-            },
-            {
-                "name": "overflow",
-                "type": "'auto' | 'scroll' | 'visible'",
-                "default": "'auto'",
-                "description": "What happens when the tabs are wider than the strip. 'auto' lets the component choose, which today always scrolls. 'scroll' scrolls the tabs horizontally, with edge fades and arrow affordances for pointers that can hover. 'visible' turns overflow handling off and lets the tabs spill out of the strip. The selected tab is always scrolled back into view."
-            },
-            {
-                "name": "children",
-                "type": "ReactNode",
-                "required": true,
-                "description": "Tab and TabMenu items to render inside the strip."
-            },
-            {
-                "name": "xstyle",
-                "type": "StyleXStyles",
-                "description": "StyleX styles for layout customization (margins, positioning, sizing). Must be a stylex.create() value: not an inline style object like style={{}}."
-            }
-        ],
-        "practices": [
-            {
-                "guidance": true,
-                "description": "Keep tab labels short and descriptive so users can quickly scan available sections."
-            },
-            {
-                "guidance": true,
-                "description": "Leave overflow handling on: a strip narrower than its tabs scrolls, and the selected tab is kept in view. Use TabMenu when you want a curated group of extra options rather than a scrolling strip."
-            },
-            {
-                "guidance": true,
-                "description": "When using hasDivider with action buttons alongside tabs, match the Button size to the TabList size (both md, both sm); the divided tab strip reserves space so tabs and same-size buttons align to a shared baseline above the rail."
-            },
-            {
-                "guidance": true,
-                "description": "Reach for role=\"tablist\" when the strip switches panels in place, and give each tab a panelId pointing at the panel it opens: that link is how a screen reader gets from a tab to its content. Leave it off for navigation between views."
-            },
-            {
-                "guidance": true,
-                "description": "Set isFullBleed to stretch a tab bar inside a padded LayoutHeader, Card, or Section to the container's inline content edges, instead of reaching for negative-margin CSS."
-            },
-            {
-                "guidance": false,
-                "description": "Use tabs for sequential steps or workflows; use a stepper or wizard pattern instead."
-            },
-            {
-                "guidance": false,
-                "description": "Place more than 6–8 visible tabs before the overflow menu; prioritize the most important categories."
-            },
-            {
-                "guidance": false,
-                "description": "Confuse TabList with SegmentedControl or ToggleButton. TabList is for navigation between views. SegmentedControl and ToggleButton are input controls: SegmentedControl always has exactly one selected option, while ToggleButton can be toggled on or off."
-            }
-        ],
-        "examples": [
-            {
-                "title": "TabList",
-                "description": "",
-                "code": "function TabListShowcase() {\n  const [value, setValue] = useState('home');\n  return (\n    <TabList value={value} onChange={setValue}>\n      <Tab value=\"home\" label=\"Home\" />\n      <Tab value=\"projects\" label=\"Projects\" />\n      <Tab value=\"settings\" label=\"Settings\" />\n    </TabList>\n  );\n}\n"
+                "code": "const users = [\n  {\n    id: '1',\n    name: 'Alice Johnson',\n    email: 'alice@example.com',\n    role: 'Engineer',\n    age: 30,\n  },\n  {\n    id: '2',\n    name: 'Bob Smith',\n    email: 'bob@example.com',\n    role: 'Designer',\n    age: 25,\n  },\n  {\n    id: '3',\n    name: 'Charlie Brown',\n    email: 'charlie@example.com',\n    role: 'PM',\n    age: 35,\n  },\n];\n\nconst columns = [\n  { key: 'name', header: 'Name', width: proportional(1) },\n  { key: 'email', header: 'Email', width: proportional(2) },\n  { key: 'role', header: 'Role', width: proportional(1) },\n  { key: 'age', header: 'Age', width: pixel(80) },\n];\n\nfunction Example() {\n  return (\n    <Card width={600}>\n      <Table data={users} columns={columns} idKey=\"id\" hasHover />\n    </Card>\n  );\n}\n"
             }
         ]
     },
@@ -6341,7 +6218,7 @@
             {
                 "title": "Text",
                 "description": "",
-                "code": "function TextShowcase() {\n  return (\n    <Stack direction=\"vertical\" gap={2}>\n      <Text type=\"body\">Body: The bulk of content</Text>\n      <Text type=\"large\">Large: Emphasized content</Text>\n      <Text type=\"label\">Label: Form and chart labels</Text>\n      <Text type=\"supporting\">Supporting: Helper text</Text>\n      <Text type=\"code\">Code: const x = 42;</Text>\n    </Stack>\n  );\n}\n"
+                "code": "function Example() {\n  return (\n    <Stack direction=\"vertical\" gap={2}>\n      <Text type=\"body\">Body: The bulk of content</Text>\n      <Text type=\"large\">Large: Emphasized content</Text>\n      <Text type=\"label\">Label: Form and chart labels</Text>\n      <Text type=\"supporting\">Supporting: Helper text</Text>\n      <Text type=\"code\">Code: const x = 42;</Text>\n    </Stack>\n  );\n}\n"
             }
         ]
     },
@@ -6614,7 +6491,7 @@
             {
                 "title": "TextArea",
                 "description": "A text area with placeholder text.",
-                "code": "function TextAreaShowcase() {\n  const [value, setValue] = useState('');\n  return (\n    <div style={{ width: 400 }}>\n      <TextArea\n        label=\"Description\"\n        value={value}\n        onChange={setValue}\n        placeholder=\"Enter a description...\"\n      />\n    </div>\n  );\n}\n"
+                "code": "function Example() {\n  const [value, setValue] = useState('');\n  return (\n    <div style={{ width: 400 }}>\n      <TextArea\n        label=\"Description\"\n        value={value}\n        onChange={setValue}\n        placeholder=\"Enter a description...\"\n      />\n    </div>\n  );\n}\n"
             }
         ]
     },
@@ -6842,7 +6719,7 @@
             {
                 "title": "TextInput",
                 "description": "",
-                "code": "function TextInputShowcase() {\n  const [value, setValue] = useState('');\n  return (\n    <div style={{ width: 300 }}>\n      <TextInput\n        label=\"Name\"\n        value={value}\n        onChange={setValue}\n        placeholder=\"Enter your name\"\n      />\n    </div>\n  );\n}\n"
+                "code": "function Example() {\n  const [value, setValue] = useState('');\n  return (\n    <div style={{ width: 300 }}>\n      <TextInput\n        label=\"Name\"\n        value={value}\n        onChange={setValue}\n        placeholder=\"Enter your name\"\n      />\n    </div>\n  );\n}\n"
             }
         ]
     },
@@ -7066,7 +6943,7 @@
             {
                 "title": "TimeInput",
                 "description": "A time input that uses the browser/OS picker on touch by default and Astryx typed entry on fine pointers.",
-                "code": "function TimeInputShowcase() {\n  const [time, setTime] = useState(undefined);\n  return (\n    <Stack\n      direction=\"vertical\"\n      width=\"100%\"\n      style={{ minWidth: 240, maxWidth: 400 }}\n    >\n      <TimeInput\n        label=\"Time\"\n        placeholder=\"Select a time\"\n        value={time}\n        onChange={setTime}\n      />\n    </Stack>\n  );\n}\n"
+                "code": "function Example() {\n  const [time, setTime] = useState(undefined);\n  return (\n    <Stack\n      direction=\"vertical\"\n      width=\"100%\"\n      style={{ minWidth: 240, maxWidth: 400 }}\n    >\n      <TimeInput\n        label=\"Time\"\n        placeholder=\"Select a time\"\n        value={time}\n        onChange={setTime}\n      />\n    </Stack>\n  );\n}\n"
             }
         ]
     },
@@ -7215,7 +7092,7 @@
             {
                 "title": "Timestamp",
                 "description": "",
-                "code": "function TimestampShowcase() {\n  return <Timestamp value=\"2026-03-25T12:00:00Z\" color=\"primary\" />;\n}\n"
+                "code": "function Example() {\n  return <Timestamp value=\"2026-03-25T12:00:00Z\" color=\"primary\" />;\n}\n"
             }
         ]
     }

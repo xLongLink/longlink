@@ -22,7 +22,7 @@
     {
         "name": "Calendar",
         "category": "Form",
-        "declaration": "type ISODateString = `${number}${number}${number}${number}-${number}${number}-${number}${number}`;\n\ntype DateRange = { start: ISODateString; end: ISODateString };\n\ntype WeekStartsOn = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 'sun' | 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat';\n\ndeclare const Calendar: ViewComponent<\n    {\n        numberOfMonths?: 1 | 2;\n        min?: ISODateString;\n        max?: ISODateString;\n        dateConstraints?: readonly ((date: Date) => boolean)[];\n        minRangeSpan?: number;\n        maxRangeSpan?: number;\n        focusDate?: ISODateString;\n        onFocusDateChange?: (focusDate: ISODateString) => void;\n        hasOutsideDays?: boolean;\n        hasWeekNumbers?: boolean;\n        hasVariableRowCount?: boolean;\n        weekStartsOn?: WeekStartsOn;\n    } & (\n        | {\n              mode?: 'single';\n              value?: ISODateString;\n              defaultValue?: ISODateString;\n              onChange?: (value: ISODateString, valueAsDate: Date) => void;\n          }\n        | { mode: 'range'; value?: DateRange; defaultValue?: DateRange; onChange?: (value: DateRange) => void }\n    )\n>;"
+        "declaration": "type ISODateString = `${number}${number}${number}${number}-${number}${number}-${number}${number}`;\n\ntype DateRange = { start: ISODateString; end: ISODateString };\n\ndeclare const Calendar: ViewComponent<\n    {\n        min?: ISODateString;\n        max?: ISODateString;\n        dateConstraints?: readonly ((date: Date) => boolean)[];\n        minRangeSpan?: number;\n        maxRangeSpan?: number;\n    } & (\n        | {\n              mode?: 'single';\n              value?: ISODateString;\n              onChange?: (value: ISODateString) => void;\n          }\n        | { mode: 'range'; value?: DateRange; onChange?: (value: DateRange) => void }\n    )\n>;"
     },
     {
         "name": "Card",
@@ -57,7 +57,7 @@
     {
         "name": "DateInput",
         "category": "Form",
-        "declaration": "type DateInputProps = FieldProps & {\n    value?: ISODateString;\n    onChange?: (value: ISODateString | undefined) => void;\n    changeAction?: (value: ISODateString | undefined) => void | Promise<void>;\n    min?: ISODateString;\n    max?: ISODateString;\n    dateConstraints?: readonly ((date: Date) => boolean)[];\n    disabledMessage?: string;\n    isLoading?: boolean;\n    placeholder?: string;\n    size?: 'sm' | 'md' | 'lg';\n    hasClear?: boolean;\n    numberOfMonths?: 1 | 2;\n    weekStartsOn?: WeekStartsOn;\n    format?: 'date' | 'date_long' | 'date_weekday' | 'system_date' | ((value: ISODateString) => string);\n    presentation?: 'popover' | 'bottom-sheet' | 'native' | 'adaptive-bottom-sheet' | 'adaptive-native';\n};\n\ndeclare const DateInput: ViewComponent<DateInputProps>;"
+        "declaration": "type WeekStartsOn = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 'sun' | 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat';\n\ntype DateInputProps = FieldProps & {\n    value?: ISODateString;\n    onChange?: (value: ISODateString | undefined) => void;\n    changeAction?: (value: ISODateString | undefined) => void | Promise<void>;\n    min?: ISODateString;\n    max?: ISODateString;\n    dateConstraints?: readonly ((date: Date) => boolean)[];\n    disabledMessage?: string;\n    isLoading?: boolean;\n    placeholder?: string;\n    size?: 'sm' | 'md' | 'lg';\n    hasClear?: boolean;\n    numberOfMonths?: 1 | 2;\n    weekStartsOn?: WeekStartsOn;\n    format?: 'date' | 'date_long' | 'date_weekday' | 'system_date' | ((value: ISODateString) => string);\n    presentation?: 'popover' | 'bottom-sheet' | 'native' | 'adaptive-bottom-sheet' | 'adaptive-native';\n};\n\ndeclare const DateInput: ViewComponent<DateInputProps>;"
     },
     {
         "name": "DateRangeInput",
@@ -127,7 +127,7 @@
     {
         "name": "Menu",
         "category": "Layouts",
-        "declaration": "declare const Menu: ViewComponent<{\n    sections: {\n        title: string;\n        entries: {\n            kind: 'item';\n            id: string;\n            label: string;\n            content: ViewNode;\n        }[];\n    }[];\n    gap?: Spacing;\n}>;"
+        "declaration": "declare const Menu: ViewComponent<{\n    gap?: Spacing;\n}>;\n\ndeclare const MenuSection: ViewComponent<{\n    title: string;\n    isHeaderHidden?: boolean;\n}>;\n\ndeclare const MenuItem: ViewComponent<{\n    label: string;\n    id?: string;\n    icon?: string;\n}>;\n\ndeclare const MenuSubSection: ViewComponent<{\n    label: string;\n    icon?: string;\n}>;"
     },
     {
         "name": "MetadataList",
@@ -210,9 +210,9 @@
         "declaration": "type ColumnWidth = { type: 'proportional'; value: number; minWidth?: number } | { type: 'pixel'; value: number };\n\ndeclare function proportional(\n    value?: number,\n    options?: { minWidth?: number }\n): Extract<ColumnWidth, { type: 'proportional' }>;\n\ndeclare function pixel(value: number): Extract<ColumnWidth, { type: 'pixel' }>;\n\ndeclare function Table<T extends Record<string, unknown>>(props: {\n    data?: T[];\n    idKey?: (keyof T & string) | ((row: T) => string | number);\n    density?: 'compact' | 'balanced' | 'spacious';\n    dividers?: 'rows' | 'columns' | 'grid' | 'none';\n    isStriped?: boolean;\n    hasHover?: boolean;\n    verticalAlign?: 'middle' | 'top' | 'bottom';\n    textOverflow?: 'wrap' | 'truncate';\n    rowIndexStart?: number;\n    rowCount?: number;\n    emptyState?: ViewNode;\n    children?: ViewNode;\n    columns?: {\n        key: string;\n        header?: ViewNode;\n        width?: ColumnWidth;\n        align?: 'start' | 'center' | 'end';\n        renderCell?: (row: T) => ViewNode;\n    }[];\n}): React.JSX.Element;"
     },
     {
-        "name": "TabList",
+        "name": "Tabs",
         "category": "Layouts",
-        "declaration": "declare const TabList: ViewComponent<{\n    value?: string;\n    onChange?: (value: string) => void;\n}>;\n\ndeclare const Tab: ViewComponent<{\n    value: string;\n    label: string;\n}>;"
+        "declaration": "declare const Tabs: ViewComponent<{\n    value?: string;\n    onChange?: (value: string) => void;\n    gap?: Spacing;\n    hasDivider?: boolean;\n}>;\n\ndeclare const Tab: ViewComponent<{\n    value: string;\n    label: string;\n    isDisabled?: boolean;\n    panelId?: string;\n}>;"
     },
     {
         "name": "Text",
