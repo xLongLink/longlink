@@ -18,6 +18,11 @@ import { ArrowRight, Code2, Minimize2, ServerCog, ShieldCheck, Split } from 'luc
 const homeDescription =
     'LongLink is the open-source foundation for building, deploying, and operating dedicated business software in Python.';
 
+// Use the same default prompt for both AI providers.
+const aiPrompt = encodeURIComponent(
+    'Read https://longlink.dev. Explain what LongLink is, its technology choices, the benefits of defining business processes as code, and some practical examples of what I can build with it.'
+);
+
 /** Renders a platform capability card. */
 function CapabilityCard({ title, description, icon }: { title: string; description: ReactNode; icon: typeof Code2 }) {
     return (
@@ -124,7 +129,7 @@ export default function Home() {
                             <Stack direction="horizontal" gap={3} hAlign="center" paddingBlockStart={1} wrap="wrap">
                                 <Button
                                     className="w-44"
-                                    href="https://chatgpt.com/?q=Explain%20what%20is%20longlink.dev%20and%20what%20can%20I%20build%20with%20it"
+                                    href={`https://chatgpt.com/?q=${aiPrompt}`}
                                     icon={<OpenAI aria-hidden="true" className="size-5 scale-125" focusable="false" />}
                                     label="What is LongLink"
                                     rel="noopener noreferrer"
@@ -133,7 +138,7 @@ export default function Home() {
                                 />
                                 <Button
                                     className="w-44"
-                                    href="https://claude.ai/new?q=Explain%20what%20is%20longlink.dev%20and%20what%20can%20I%20build%20with%20it"
+                                    href={`https://claude.ai/new?q=${aiPrompt}`}
                                     icon={<ClaudeAI aria-hidden="true" className="size-5" focusable="false" />}
                                     label="What can I build"
                                     rel="noopener noreferrer"
