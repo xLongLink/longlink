@@ -3,10 +3,16 @@
 <img src="banner.png" alt="LongLink banner" />
 
 <br />
+<br />
 
 <a href="https://www.longlink.dev/">Website</a> &nbsp; · &nbsp; <a href="https://www.longlink.dev/docs/introduction/">Documentation</a> &nbsp; · &nbsp; <a href="https://github.com/xLongLink/sample">Sample</a> &nbsp; · &nbsp; <a href="https://pypi.org/project/longlink/">PyPI</a> &nbsp; · &nbsp; <a href="https://github.com/xLongLink/longlink/issues">Issues</a>
 
+<a target="_blank" href="https://betalist.com/startups/longlink?utm_campaign=badge-longlink&amp;utm_medium=badge&amp;utm_source=badge-featured">
+  <img alt="LongLink - Build and operate business processes as code | BetaList" width="156" height="54" style="width: 156px; height: 54px" src="https://betalist.com/badges/featured?id=191156&amp;theme=color">
+</a>
+
 </div>
+
 
 <br />
 
