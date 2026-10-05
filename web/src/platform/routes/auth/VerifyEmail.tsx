@@ -38,7 +38,7 @@ export default function VerifyEmail() {
         resolver: zodResolver(registrationCompleteSchema),
     });
     const [verification, setVerification] = useState<
-        { status: 'verified'; data: z.output<typeof zEmailPayload> } | { status: 'error'; error: unknown } | null
+        { status: 'verified'; data: z.output<typeof zEmailPayload> } | { status: 'error' } | null
     >(null);
     const [completionError, setCompletionError] = useState<unknown>(null);
 
@@ -56,21 +56,20 @@ export default function VerifyEmail() {
             : api('/api/v1/auth/register/setup', { signal }).json();
         await request.then(
             (value) => {
-                if (signal !== verificationController.current?.signal) return;
+                if (signal.aborted) return;
                 setVerification({ status: 'verified', data: zEmailPayload.parse(value) });
             },
             (error: unknown) => {
-                if (signal !== verificationController.current?.signal) return;
+                if (signal.aborted) return;
                 if (!(error instanceof ApiError) || error.status !== 400) throw error;
                 sessionStorage.removeItem(REGISTRATION_TOKEN_KEY);
-                setVerification({ status: 'error', error });
+                setVerification({ status: 'error' });
             }
         );
     }
 
-    const { controller: verificationController, startVerification } = useVerification(token, verify);
+    const { startVerification } = useVerification(token, verify);
     const verifiedEmail = verification?.status === 'verified' ? verification.data.email : null;
-    const verificationError = verification?.status === 'error' ? verification.error : null;
 
     /** Creates the account and publishes only the new authenticated query state. */
     async function handleComplete(payload: RegistrationCompleteValues) {
@@ -103,7 +102,7 @@ export default function VerifyEmail() {
     const pageMetadata = <NoIndex title="Verify Your Email | LongLink" />;
 
     // Invalid credentials require a replacement registration link.
-    if (verificationError) {
+    if (verification?.status === 'error') {
         return (
             <AuthLayout title="Verify your email" description="Request a new registration link to continue.">
                 {pageMetadata}

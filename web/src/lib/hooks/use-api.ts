@@ -7,7 +7,7 @@ import { useQueryClient, useSuspenseQuery, type UseSuspenseQueryOptions } from '
 export function useApi<T>(
     path: string,
     schema: z.ZodType<T>,
-    options: Pick<UseSuspenseQueryOptions<T, Error, T, readonly ['api', string]>, 'refetchInterval' | 'meta'> = {}
+    options?: Pick<UseSuspenseQueryOptions<T, Error, T, readonly ['api', string]>, 'refetchInterval' | 'meta'>
 ): readonly [T, () => Promise<void>] {
     const client = useQueryClient();
     const { data } = useSuspenseQuery({

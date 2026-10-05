@@ -8,10 +8,7 @@ import { Step, Stepper } from '@astryxdesign/core/Stepper';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 
-type Stage =
-    | { step: 0 }
-    | { step: 1; metadata: z.output<typeof schemas.zLongLinkMetadata> }
-    | { step: 2; metadata: z.output<typeof schemas.zLongLinkMetadata> };
+type Stage = { step: 0 } | { step: 1 | 2; metadata: z.output<typeof schemas.zLongLinkMetadata> };
 
 /** Owns one creation attempt, shared by the organization list and settings pages. */
 export default function CreateSolution({

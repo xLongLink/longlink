@@ -32,10 +32,8 @@ export default function ResetPassword() {
         defaultValues: { password: '' },
         resolver: zodResolver(resetPasswordSchema),
     });
-    const [verification, setVerification] = useState<
-        { status: 'verified' } | { status: 'error'; error: unknown } | null
-    >(null);
-    const [reset, setReset] = useState<{ status: 'saved' } | { status: 'error'; error: unknown } | null>(null);
+    const [verification, setVerification] = useState<{ status: 'verified' } | { status: 'error' } | null>(null);
+    const [reset, setReset] = useState<{ status: 'saved' } | { status: 'error' } | null>(null);
 
     /** Verifies the credential and ignores results from canceled or replaced attempts. */
     async function verify({ signal, token: resetToken }: VerificationRequest) {
@@ -51,28 +49,25 @@ export default function ResetPassword() {
             : api('/api/v1/auth/reset-password/setup', { signal });
         await request.then(
             () => {
-                if (signal !== verificationController.current?.signal) return;
+                if (signal.aborted) return;
                 sessionStorage.removeItem(PASSWORD_RESET_TOKEN_KEY);
                 setVerification({ status: 'verified' });
             },
             (error: unknown) => {
-                if (signal !== verificationController.current?.signal) return;
+                if (signal.aborted) return;
                 if (!isBadTokenError(error)) throw error;
                 sessionStorage.removeItem(PASSWORD_RESET_TOKEN_KEY);
-                setVerification({ status: 'error', error });
+                setVerification({ status: 'error' });
             }
         );
     }
 
-    const { controller: verificationController } = useVerification(token, verify);
-    const verificationError = verification?.status === 'error' ? verification.error : null;
-    const resetError = reset?.status === 'error' ? reset.error : null;
-    const hasTokenError = isBadTokenError(verificationError) || isBadTokenError(resetError);
+    useVerification(token, verify);
 
     const pageMetadata = <NoIndex title="Set a New Password | LongLink" />;
 
     // Invalid and expired credentials require a replacement email.
-    if (hasTokenError) {
+    if (verification?.status === 'error' || reset?.status === 'error') {
         return (
             <AuthLayout
                 title="Set a new password"
@@ -103,7 +98,7 @@ export default function ResetPassword() {
                                 () => setReset({ status: 'saved' }),
                                 (error: unknown) => {
                                     if (!isBadTokenError(error)) throw error;
-                                    setReset({ status: 'error', error });
+                                    setReset({ status: 'error' });
                                 }
                             );
                         })()
