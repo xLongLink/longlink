@@ -496,9 +496,7 @@ export default function OrganizationSettings() {
                 <DialogHeader
                     title="Invite user"
                     subtitle="Send an invitation to join this organization."
-                    onOpenChange={() => {
-                        setInviting(false);
-                    }}
+                    onOpenChange={() => setInviting(false)}
                 />
                 <form action={inviteMember}>
                     <Stack gap={3}>
@@ -528,12 +526,7 @@ export default function OrganizationSettings() {
                         if (!open) setMember(null);
                     }}
                 >
-                    <DialogHeader
-                        title="Change role"
-                        onOpenChange={() => {
-                            setMember(null);
-                        }}
-                    />
+                    <DialogHeader title="Change role" onOpenChange={() => setMember(null)} />
                     <Stack gap={3}>
                         <Text color="secondary">
                             Change {member.name} to {member.role}?
@@ -592,12 +585,7 @@ export default function OrganizationSettings() {
                         if (!open) setDeletion(null);
                     }}
                 >
-                    <DialogHeader
-                        title="Delete solution"
-                        onOpenChange={() => {
-                            setDeletion(null);
-                        }}
-                    />
+                    <DialogHeader title="Delete solution" onOpenChange={() => setDeletion(null)} />
                     <Stack gap={3}>
                         <Text color="secondary">Delete solution {deletion.name}?</Text>
                         <Stack direction="horizontal" gap={2} justify="end">

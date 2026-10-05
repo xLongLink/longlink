@@ -1,6 +1,6 @@
 import type { z } from 'zod';
 import { createContext, useContext } from 'react';
-import { zUserOrganizationMembership } from '@/lib/generated/platform-api-v1/zod.gen';
+import type { zUserOrganizationMembership } from '@/lib/generated/platform-api-v1/zod.gen';
 
 // The organization layout owns membership loading for its nested pages.
 export const OrganizationMembershipContext = createContext<z.output<typeof zUserOrganizationMembership> | undefined>(

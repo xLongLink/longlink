@@ -21,8 +21,7 @@ export default function Register() {
         defaultValues: { email: searchParams.get('email') ?? '' },
         resolver: zodResolver(emailPayloadSchema),
     });
-    const email = useWatch({ control: form.control, name: 'email' });
-    const trimmedEmail = email.trim();
+    const trimmedEmail = useWatch({ control: form.control, name: 'email' }).trim();
     const signInSearch = trimmedEmail ? `?${new URLSearchParams({ email: trimmedEmail })}` : '';
 
     return (

@@ -75,6 +75,5 @@ export async function request(base: string, command: RequestCommand, signal: Abo
     });
     if (command.binary) return body;
     const text = await body.text();
-    const data: unknown = text ? JSON.parse(text) : null;
-    return data;
+    return text ? JSON.parse(text) : null;
 }

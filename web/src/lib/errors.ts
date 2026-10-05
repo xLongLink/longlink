@@ -3,7 +3,7 @@ import { createContext, useContext } from 'react';
 import { isNetworkError, isTimeoutError } from 'ky';
 import { isCancelledError } from '@tanstack/react-query';
 
-export type ErrorReporter = (error: unknown) => void;
+type ErrorReporter = (error: unknown) => void;
 export const ApiErrorContext = createContext<ErrorReporter | null>(null);
 
 /** Returns the root-owned reporter for requests outside TanStack Query. */
