@@ -30,26 +30,18 @@ vp fmt --write     # Formats the code
 ## Guidelines
 
 - Use Astryx components and providers for UI, overlays, links, and notifications.
-- View adapters import components directly from `@astryxdesign/core/<Component>`.
+- Native components import Astryx components directly from `@astryxdesign/core/<Component>`.
 
 ## Theme
-
-```bash
-theme                   # light | dark
-background              # Page background color
-primary                 # Default text color
-accent                  # Accent color
-muted                   # Muted content color
-radius                  # none | small | medium | large
-```
 
 Theme preferences are defined in `src/theme.ts` and applied through the root provider. `src/lib/generated/stone.css` is a committed generated artifact; do not edit it directly. Run `vp run theme` after changing `src/theme.ts`.
 
 ## Primitives
 
-Solution Views use native JSX components from `src/views/components.ts`. React,
-`request`, `navigate`, `params`, and `useApi` are provided by
-the sandbox runtime. State uses React hooks; inputs use controlled callbacks;
+Solution Views use native JSX components from `src/views/components.ts`.
+Selected React hooks, JSX fragments, `request`, `navigate`, and `useApi` are provided by
+the sandbox runtime. Route parameters arrive through the component's `ViewProps.params` prop.
+State uses React hooks; inputs use controlled callbacks;
 queries and ordered actions use ordinary JavaScript.
 The runtime owns loading/error boundaries and refreshes cached View data after
 successful writes through `request()`.
@@ -57,7 +49,7 @@ successful writes through `request()`.
 ## Views
 
 - A Solution View is a `.jsx` file exporting one default React component, without package imports. Python discovers and serves source without compiling or executing JavaScript.
-- Titles and routes derive from JSX filenames, including `[parameter]` segments. Tabs use the default icon; no metadata files or exports are needed.
+- Titles and routes derive from JSX filenames, including `[parameter]` segments. No metadata files or exports are needed.
 - Sucrase compiles source only inside `src/views/runtime.tsx`. The host must never import, compile, or evaluate Solution source.
 - `JsxView` uses an opaque-origin iframe with only `allow-scripts`; never add `allow-same-origin`, top navigation, popups, forms, or downloads.
 - CSP permits only the hashed bootstrap, isolated evaluation, native inline styles, and data/blob images. Direct fetch, workers, external assets, and nested document frames are blocked.
