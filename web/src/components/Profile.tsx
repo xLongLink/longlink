@@ -11,8 +11,8 @@ import { Popover } from '@astryxdesign/core/Popover';
 import { List, ListItem } from '@astryxdesign/core/List';
 import { IconButton } from '@astryxdesign/core/IconButton';
 import { BookOpen, ChevronRight, ExternalLink } from 'lucide-react';
-import { zUserSummary } from '@/lib/generated/platform-api-v1/zod.gen';
 import { adminNavigation, userNavigation } from '@/platform/navigation';
+import type { zUserSummary } from '@/lib/generated/platform-api-v1/zod.gen';
 
 /** Renders a user profile popover with authentication and navigation actions. */
 export function ProfileMenu({ user }: { user: z.output<typeof zUserSummary> }) {

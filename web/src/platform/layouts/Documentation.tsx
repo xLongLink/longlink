@@ -17,19 +17,15 @@ export default function Documentation() {
                     <Stack paddingInline={2}>
                         {documentationSections.map((section) => (
                             <SideNavSection key={section.title} title={section.title}>
-                                {section.pages.map((page) => {
-                                    const Icon = page.icon;
-
-                                    return (
-                                        <SideNavItem
-                                            key={page.path}
-                                            href={`${page.path}/`}
-                                            icon={<Icon aria-hidden size={16} />}
-                                            isSelected={pagePath === page.path}
-                                            label={page.label}
-                                        />
-                                    );
-                                })}
+                                {section.pages.map((page) => (
+                                    <SideNavItem
+                                        key={page.path}
+                                        href={`${page.path}/`}
+                                        icon={<page.icon aria-hidden size={16} />}
+                                        isSelected={pagePath === page.path}
+                                        label={page.label}
+                                    />
+                                ))}
                             </SideNavSection>
                         ))}
                     </Stack>

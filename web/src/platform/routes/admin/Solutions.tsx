@@ -23,8 +23,7 @@ export default function Solutions() {
         | { kind: 'deletion'; item: { id: string; name: string } }
         | null
     >(null);
-    const path = `/api/v1/solutions?page=${page}&page_size=25`;
-    const [solutions, invalidate] = useApi(path, zPageSolutionResponse);
+    const [solutions, invalidate] = useApi(`/api/v1/solutions?page=${page}&page_size=25`, zPageSolutionResponse);
 
     return (
         <Stack gap={8}>
@@ -166,12 +165,7 @@ export default function Solutions() {
                         if (!open) setDialog(null);
                     }}
                 >
-                    <DialogHeader
-                        title="Delete solution"
-                        onOpenChange={() => {
-                            setDialog(null);
-                        }}
-                    />
+                    <DialogHeader title="Delete solution" onOpenChange={() => setDialog(null)} />
                     <Stack gap={3}>
                         <Text color="secondary">Delete solution {dialog.item.name}?</Text>
                         <Stack direction="horizontal" gap={2} justify="end">

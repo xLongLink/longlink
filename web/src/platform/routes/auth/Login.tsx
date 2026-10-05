@@ -56,8 +56,7 @@ export default function Login() {
         defaultValues: { email: searchParams.get('email') ?? '', password: '' },
         resolver: zodResolver(loginSchema),
     });
-    const email = useWatch({ control: form.control, name: 'email' });
-    const trimmedEmail = email.trim();
+    const trimmedEmail = useWatch({ control: form.control, name: 'email' }).trim();
     const registerSearch = trimmedEmail ? `?${new URLSearchParams({ email: trimmedEmail })}` : '';
 
     useEffect(() => {

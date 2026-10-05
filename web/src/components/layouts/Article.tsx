@@ -40,9 +40,7 @@ export function Article({ children, page }: { children: ReactNode; page: Article
     const nextPage = documentationPaths[currentPage + 1];
 
     const scrollToArticleTop = () => {
-        void requestAnimationFrame(() => {
-            window.scrollTo({ top: 0 });
-        });
+        void requestAnimationFrame(() => window.scrollTo({ top: 0 }));
     };
 
     const handleKeyDown = useEffectEvent((event: KeyboardEvent) => {

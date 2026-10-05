@@ -30,10 +30,10 @@ export function RootProvider({ children }: { children: ReactNode }) {
 }
 
 /** Connects cache and direct-request failures to the shared notification layer. */
-export function ApiProvider({ children }: { children: ReactNode }) {
+function ApiProvider({ children }: { children: ReactNode }) {
     const toast = useToast();
-    const [runtime] = useState(() => {
-        return createQueryRuntime(
+    const [runtime] = useState(() =>
+        createQueryRuntime(
             (body) => {
                 toast({ body, type: 'error', isAutoHide: true });
 
@@ -51,8 +51,8 @@ export function ApiProvider({ children }: { children: ReactNode }) {
                 });
             },
             import.meta.env.MODE !== 'sdk'
-        );
-    });
+        )
+    );
 
     return (
         <ApiErrorContext value={runtime.reportError}>

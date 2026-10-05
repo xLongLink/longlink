@@ -23,8 +23,10 @@ export default function Organizations() {
         | { kind: 'deletion'; item: { id: string; name: string } }
         | null
     >(null);
-    const path = `/api/v1/organizations?page=${page}&page_size=25`;
-    const [organizations, invalidate] = useApi(path, zPageOrganizationIdentity);
+    const [organizations, invalidate] = useApi(
+        `/api/v1/organizations?page=${page}&page_size=25`,
+        zPageOrganizationIdentity
+    );
 
     return (
         <Stack gap={8}>
@@ -126,12 +128,7 @@ export default function Organizations() {
                         if (!open) setDialog(null);
                     }}
                 >
-                    <DialogHeader
-                        title="Delete organization"
-                        onOpenChange={() => {
-                            setDialog(null);
-                        }}
-                    />
+                    <DialogHeader title="Delete organization" onOpenChange={() => setDialog(null)} />
                     <Stack gap={3}>
                         <Text color="secondary">Delete organization {dialog.item.name}?</Text>
                         <Stack direction="horizontal" gap={2} justify="end">

@@ -10,13 +10,6 @@ export const documentationRouteLabels: Record<string, string> = {
     views: 'Views',
 };
 
-type SeoProps = {
-    description: string;
-    hasBreadcrumbs?: boolean;
-    structuredData?: object;
-    title: string;
-};
-
 /** Returns the canonical path with the site-wide trailing-slash convention. */
 function canonicalPath(pathname: string): string {
     return pathname === '/' ? pathname : `${pathname.replace(/\/+$/, '')}/`;
@@ -24,10 +17,9 @@ function canonicalPath(pathname: string): string {
 
 /** Builds breadcrumb structured data for an article's current route. */
 function breadcrumbs(pathname: string): object {
-    const segments = buildBreadcrumbs(pathname, documentationRouteLabels);
     const items = [{ '@type': 'ListItem', position: 1, name: 'Home', item: `${siteUrl}/` }];
 
-    for (const [index, segment] of segments.entries()) {
+    for (const [index, segment] of buildBreadcrumbs(pathname, documentationRouteLabels).entries()) {
         items.push({
             '@type': 'ListItem',
             position: index + 2,
@@ -40,7 +32,17 @@ function breadcrumbs(pathname: string): object {
 }
 
 /** Renders the document metadata declared by the active route. */
-export function Seo({ description, hasBreadcrumbs = false, structuredData, title }: SeoProps) {
+export function Seo({
+    description,
+    hasBreadcrumbs,
+    structuredData,
+    title,
+}: {
+    description: string;
+    hasBreadcrumbs?: boolean;
+    structuredData?: object;
+    title: string;
+}) {
     const { pathname } = useLocation();
     const canonicalUrl = `${siteUrl}${canonicalPath(pathname)}`;
     const schema = structuredData ?? (hasBreadcrumbs ? breadcrumbs(pathname) : undefined);
