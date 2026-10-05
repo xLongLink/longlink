@@ -13,5 +13,10 @@ so a Compute chart can be installed with Helm alone.
   resolved from `ghcr.io/cloudnative-pg/cloudnative-pg:1.29.1`. The index reports
   version `1.29.1`, source revision `a4060c152`, and Linux amd64/arm64 images.
 - RustFS image `1.0.0`
+- Nginx storage TLS proxy `1.29.1-alpine`, pinned in the chart values to the
+  multi-architecture index `sha256:42a516af16b852e33b7682d5ef8acbd5d13fe08fecadc7ed98605ba5e3b26ab8`
+  resolved from the Docker Official Image `docker.io/library/nginx:1.29.1-alpine`.
+  The index reports version `1.29.1-alpine`, source revision
+  `5a4ad48c733b365d69a4d1c9946a9d8480469c7f`, and Linux amd64/arm64 images.
 
 Refresh these sources only with a reviewed dependency update.

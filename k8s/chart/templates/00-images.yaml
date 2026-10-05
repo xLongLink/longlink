@@ -1,6 +1,8 @@
-{{/* Require an immutable image for the cluster-wide CloudNativePG controller. */}}
-{{- $controller := index .Values "cloudnative-pg" -}}
-{{- $image := printf "%s:%s" $controller.image.repository ($controller.image.tag | default "") -}}
-{{- if not (regexMatch "^[^@[:space:]]+@sha256:[a-f0-9]{64}$" $image) -}}
-{{- fail "cloudnative-pg.image.tag must include an immutable @sha256: digest with 64 lowercase hexadecimal characters" -}}
+{{/* Require immutable images for shared infrastructure and the storage data plane. */}}
+{{- range $name := list "cloudnative-pg" "storage" "rustfs" -}}
+{{- $image := (index $.Values $name).image -}}
+{{- $reference := printf "%s:%s" $image.repository ($image.tag | default "") -}}
+{{- if not (regexMatch "^[^@[:space:]]+@sha256:[a-f0-9]{64}$" $reference) -}}
+{{- fail (printf "%s.image.tag must include an immutable @sha256: digest with 64 lowercase hexadecimal characters" $name) -}}
+{{- end -}}
 {{- end -}}

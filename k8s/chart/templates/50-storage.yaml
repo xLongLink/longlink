@@ -4,9 +4,22 @@ metadata:
     name: longlink-storage-proxy
     namespace: rustfs
 data:
+    nginx.conf: |
+        pid /tmp/nginx.pid;
+        error_log /dev/stderr;
+        events {}
+        http {
+            access_log /dev/stdout;
+            client_body_temp_path /tmp/client_temp;
+            proxy_temp_path /tmp/proxy_temp;
+            fastcgi_temp_path /tmp/fastcgi_temp;
+            uwsgi_temp_path /tmp/uwsgi_temp;
+            scgi_temp_path /tmp/scgi_temp;
+            include /etc/nginx/conf.d/default.conf;
+        }
     default.conf: |
         server {
-            listen 443 ssl;
+            listen 8443 ssl;
             ssl_certificate /etc/nginx/tls/tls.crt;
             ssl_certificate_key /etc/nginx/tls/tls.key;
             client_max_body_size 0;
@@ -36,11 +49,28 @@ spec:
             labels:
                 app.kubernetes.io/name: longlink-storage
         spec:
+            automountServiceAccountToken: false
+            securityContext:
+                runAsUser: 101
+                runAsGroup: 101
+                runAsNonRoot: true
+                fsGroup: 101
+                seccompProfile:
+                    type: RuntimeDefault
             containers:
                 - name: nginx
-                  image: nginx:1.29.1-alpine
+                  image: {{ .Values.storage.image.repository }}:{{ .Values.storage.image.tag }}
+                  command: ["nginx"]
+                  args: ["-c", "/etc/nginx/conf.d/nginx.conf", "-g", "daemon off;"]
+                  securityContext:
+                      allowPrivilegeEscalation: false
+                      capabilities:
+                          drop: [ALL]
+                      readOnlyRootFilesystem: true
+                  resources:
+{{ toYaml .Values.storage.resources | indent 22 }}
                   ports:
-                      - containerPort: 443
+                      - containerPort: 8443
                         name: https
                   volumeMounts:
                       - name: configuration
@@ -49,6 +79,8 @@ spec:
                       - name: tls
                         mountPath: /etc/nginx/tls
                         readOnly: true
+                      - name: temporary
+                        mountPath: /tmp
             volumes:
                 - name: configuration
                   configMap:
@@ -56,6 +88,9 @@ spec:
                 - name: tls
                   secret:
                       secretName: longlink-storage-tls
+                      defaultMode: 0440
+                - name: temporary
+                  emptyDir: {}
 ---
 apiVersion: v1
 kind: Service
@@ -77,6 +112,7 @@ spec:
     ports:
         - name: https
           port: 443
+          targetPort: https
 {{- with .Values.storage.service.nodePort }}
           nodePort: {{ . }}
 {{- end }}
