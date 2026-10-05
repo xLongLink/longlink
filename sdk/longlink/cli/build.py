@@ -1,4 +1,3 @@
-import os
 import re
 import sys
 import json
@@ -223,7 +222,9 @@ def resolve_docker_paths(root: Path, pyproject_data: Mapping[str, object]) -> tu
     """Resolve Docker build context and in-container working directory."""
 
     # Require an explicit UV workspace before expanding the build context beyond the Solution root.
+    root = root.resolve()
     workspace_root = root
+    workspace_paths = {root}
     for candidate in (root, *root.parents):
         candidate_pyproject = candidate / "pyproject.toml"
         if not candidate_pyproject.is_file():
@@ -233,6 +234,32 @@ def resolve_docker_paths(root: Path, pyproject_data: Mapping[str, object]) -> tu
         uv_data = tool_data.get("uv") if isinstance(tool_data, dict) else None
         if isinstance(uv_data, dict) and isinstance(uv_data.get("workspace"), dict):
             workspace_root = candidate
+            workspace_data = uv_data["workspace"]
+
+            # Resolve declared member and exclusion globs within the workspace boundary.
+            declared_paths: dict[str, set[Path]] = {}
+            for field in ("members", "exclude"):
+                patterns = workspace_data.get(field, [])
+                if not isinstance(patterns, list) or not all(isinstance(pattern, str) for pattern in patterns):
+                    raise CliError(f"[tool.uv.workspace].{field} must be a list of path patterns")
+                declared_paths[field] = set()
+                for pattern in patterns:
+                    if not pattern or Path(pattern).is_absolute() or ".." in Path(pattern).parts:
+                        raise CliError(f"UV workspace path pattern must stay inside the workspace: {pattern}")
+                    for member in candidate.glob(pattern):
+                        resolved_member = member.resolve()
+                        if resolved_member.is_dir():
+                            declared_paths[field].add(resolved_member)
+
+            # Validate included members after exclusions so excluded symlinks cannot expand the boundary.
+            workspace_paths = {workspace_root} | (declared_paths["members"] - declared_paths["exclude"])
+            for member in workspace_paths:
+                if not member.is_relative_to(workspace_root):
+                    raise CliError(f"UV workspace member must be inside the UV workspace: {member}")
+
+            # Require the Solution to belong to the discovered workspace, including its implicit root project.
+            if root not in workspace_paths:
+                raise CliError(f"Solution must be a member of the UV workspace: {root}")
             break
 
     # Validate the Solution root and initialize local dependency traversal.
@@ -288,12 +315,20 @@ def resolve_docker_paths(root: Path, pyproject_data: Mapping[str, object]) -> tu
                 continue
 
             # Reject dependencies outside the permitted workspace boundary.
-            if not resolved_source_path.is_relative_to(workspace_root) and not root.is_relative_to(resolved_source_path):
+            if not resolved_source_path.is_relative_to(workspace_root):
                 raise CliError(f"Local dependency must be inside the UV workspace: {resolved_source_path}")
+
+            # Never recursively copy a dependency that encloses the Solution.
+            if resolved_source_path != root and root.is_relative_to(resolved_source_path):
+                raise CliError(f"Local dependency must not be an ancestor of the Solution: {resolved_source_path}")
+
+            # Admit only explicitly declared workspace members, not arbitrary projects under the workspace.
+            if resolved_source_path not in workspace_paths:
+                raise CliError(f"Local dependency must be a member of the UV workspace: {resolved_source_path}")
             pending_paths.append(resolved_source_path)
 
     # Use a shared build context so relative source paths remain valid in container.
-    common_root = Path(os.path.commonpath(seen_paths))
+    common_root = workspace_root if seen_paths - {root} else root
     workdir = "/workspace"
 
     # Use a nested workdir when the Solution is below the common root.
