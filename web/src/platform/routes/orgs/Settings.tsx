@@ -162,12 +162,11 @@ export default function OrganizationSettings() {
     const base = `/api/v1/organizations/${membership.organization.id}`;
 
     // Keep each required resource paired with its own scoped invalidator.
-    const [details, invalidateDetails] = useApi(base, schemas.zOrganizationDetails);
-    const [storage] = useApi(`${base}/storage`, schemas.zOrganizationStorageUsageResponse);
-    const [solutions, invalidateSolutions] = useApi(
-        `${base}/solutions`,
-        schemas.zGetOrganizationSolutionsApiV1OrganizationsOrganizationIdSolutionsGetResponse
-    );
+    const [details, invalidateDetails] = useApi<z.output<typeof schemas.zOrganizationDetails>>(base);
+    const [storage] = useApi<z.output<typeof schemas.zOrganizationStorageUsageResponse>>(`${base}/storage`);
+    const [solutions, invalidateSolutions] = useApi<
+        z.output<typeof schemas.zGetOrganizationSolutionsApiV1OrganizationsOrganizationIdSolutionsGetResponse>
+    >(`${base}/solutions`);
 
     const canMaintain = ['maintain', 'admin', 'owner'].includes(membership.role);
     const canAdminister = ['admin', 'owner'].includes(membership.role);
@@ -610,9 +609,8 @@ export default function OrganizationSettings() {
 
 /** Loads pod logs only while their dialog is open. */
 function SolutionLogs({ solutionId }: { solutionId: string }) {
-    const [logs, invalidate] = useApi(
-        `/api/v1/solutions/${solutionId}/logs`,
-        schemas.zGetSolutionLogsApiV1SolutionsSolutionIdLogsGetResponse
+    const [logs, invalidate] = useApi<z.output<typeof schemas.zGetSolutionLogsApiV1SolutionsSolutionIdLogsGetResponse>>(
+        `/api/v1/solutions/${solutionId}/logs`
     );
     return (
         <Stack gap={3}>

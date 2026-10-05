@@ -27,7 +27,7 @@ export default function Compute() {
     >(null);
     const [registration, setRegistration] = useState<z.input<typeof registrationSchema> | null>(null);
     const path = `/api/v1/computes?page=${page}&page_size=25`;
-    const [computes, invalidate] = useApi(path, schemas.zPageComputeRegistryResponse);
+    const [computes, invalidate] = useApi<z.output<typeof schemas.zPageComputeRegistryResponse>>(path);
 
     /** Registers the validated Compute draft and refreshes the list. */
     async function registerCompute() {

@@ -1,3 +1,4 @@
+import type { z } from 'zod';
 import { ApiError } from '@/lib/api';
 import { useParams } from 'react-router';
 import { NoIndex } from '@/components/Seo';
@@ -17,7 +18,7 @@ import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { PageError, PageLoading } from '@/components/Utils';
 import { useAuthenticatedUser } from '@/lib/hooks/use-user';
 import { PageBreadcrumb } from '@/components/breadcrumb/Page';
-import {
+import type {
     zUserOrganizationMembership,
     zGetSolutionLogsApiV1SolutionsSolutionIdLogsGetResponse,
     zGetOrganizationSolutionsApiV1OrganizationsOrganizationIdSolutionsGetResponse,
@@ -53,23 +54,20 @@ export default function OrganizationSolution() {
 function SolutionPage() {
     const { organization = '', solution = '' } = useParams();
     const user = useAuthenticatedUser();
-    const [membership] = useApi(
-        `/api/v1/organizations/slug/${encodeURIComponent(organization)}`,
-        zUserOrganizationMembership
+    const [membership] = useApi<z.output<typeof zUserOrganizationMembership>>(
+        `/api/v1/organizations/slug/${encodeURIComponent(organization)}`
     );
 
     // Fetch accessible solutions after membership resolves and poll pending deployments.
-    const [solutions] = useApi(
-        `/api/v1/organizations/${membership.organization.id}/solutions`,
-        zGetOrganizationSolutionsApiV1OrganizationsOrganizationIdSolutionsGetResponse,
-        {
-            refetchInterval: (query) =>
-                query.state.data?.some((solution) => solution.status === 'creating' || solution.deployment_pending)
-                    ? 5000
-                    : false,
-            meta: { polling: true },
-        }
-    );
+    const [solutions] = useApi<
+        z.output<typeof zGetOrganizationSolutionsApiV1OrganizationsOrganizationIdSolutionsGetResponse>
+    >(`/api/v1/organizations/${membership.organization.id}/solutions`, {
+        refetchInterval: (query) =>
+            query.state.data?.some((solution) => solution.status === 'creating' || solution.deployment_pending)
+                ? 5000
+                : false,
+        meta: { polling: true },
+    });
 
     // Keep the solution lookup and its existence check together.
     const solutionAccess = solutions.find((item) => item.slug === solution);
@@ -154,9 +152,8 @@ function SolutionPage() {
 
 /** Reads failed-deployment logs only for authorized maintainers. */
 function DeploymentLogs({ solutionId }: { solutionId: string }) {
-    const [logs] = useApi(
-        `/api/v1/solutions/${solutionId}/logs`,
-        zGetSolutionLogsApiV1SolutionsSolutionIdLogsGetResponse
+    const [logs] = useApi<z.output<typeof zGetSolutionLogsApiV1SolutionsSolutionIdLogsGetResponse>>(
+        `/api/v1/solutions/${solutionId}/logs`
     );
 
     return (

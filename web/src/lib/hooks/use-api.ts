@@ -1,19 +1,17 @@
-import type { z } from 'zod';
 import { api } from '@/lib/api';
 import { useCallback } from 'react';
 import { useQueryClient, useSuspenseQuery, type UseSuspenseQueryOptions } from '@tanstack/react-query';
 
-/** Returns validated data and an awaitable invalidator scoped to the full request path. */
-export function useApi<T>(
+/** Returns API-validated data and an awaitable invalidator scoped to the full request path. */
+export function useApi<T = unknown>(
     path: string,
-    schema: z.ZodType<T>,
     options?: Pick<UseSuspenseQueryOptions<T, Error, T, readonly ['api', string]>, 'refetchInterval' | 'meta'>
 ): readonly [T, () => Promise<void>] {
     const client = useQueryClient();
     const { data } = useSuspenseQuery({
         ...options,
         queryKey: ['api', path],
-        queryFn: async ({ signal }) => schema.parse(await api(path, { signal }).json()),
+        queryFn: ({ signal }) => api(path, { signal }).json<T>(),
         retry: false,
         staleTime: 0,
     });

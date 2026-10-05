@@ -1,3 +1,4 @@
+import type { z } from 'zod';
 import { useState } from 'react';
 import { NoIndex } from '@/components/Seo';
 import { useApi } from '@/lib/hooks/use-api';
@@ -11,7 +12,7 @@ import CreateOrganization from './CreateOrganization';
 import { ApiBoundary } from '@/components/ApiBoundary';
 import { PageContainer } from '@/components/PageContainer';
 import { Table, proportional } from '@astryxdesign/core/Table';
-import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
+import type * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 
 /** Lists the current user's organizations and creates new organizations. */
 export default function Organizations() {
@@ -28,10 +29,8 @@ export default function Organizations() {
 /** Renders the organization's list while its boundary owns request lifecycle state. */
 function OrganizationList() {
     const [creating, setCreating] = useState(false);
-    const [memberships, invalidate] = useApi(
-        '/api/v1/me/organizations',
-        schemas.zGetMyOrganizationsApiV1MeOrganizationsGetResponse
-    );
+    const [memberships, invalidate] =
+        useApi<z.output<typeof schemas.zGetMyOrganizationsApiV1MeOrganizationsGetResponse>>('/api/v1/me/organizations');
 
     return (
         <>

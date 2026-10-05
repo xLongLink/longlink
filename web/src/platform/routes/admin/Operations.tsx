@@ -9,7 +9,7 @@ import { Button } from '@astryxdesign/core/Button';
 import { Heading } from '@astryxdesign/core/Heading';
 import { Table, proportional } from '@astryxdesign/core/Table';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
-import { zPageOperationResponse } from '@/lib/generated/platform-api-v1/zod.gen';
+import type { zPageOperationResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 
 const kinds = {
     'solution.deploy': 'Solution deployment',
@@ -23,7 +23,9 @@ const statuses = { scheduled: 'Scheduled', active: 'Active', completed: 'Complet
 export default function Operations() {
     const [page, setPage] = useState(1);
     const [metadata, setMetadata] = useState<z.output<typeof zPageOperationResponse>['items'][number] | null>(null);
-    const [operations] = useApi(`/api/v1/operations?page=${page}&page_size=25`, zPageOperationResponse);
+    const [operations] = useApi<z.output<typeof zPageOperationResponse>>(
+        `/api/v1/operations?page=${page}&page_size=25`
+    );
 
     return (
         <Stack gap={8}>

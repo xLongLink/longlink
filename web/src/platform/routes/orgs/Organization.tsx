@@ -1,3 +1,4 @@
+import type { z } from 'zod';
 import { useState } from 'react';
 import { useParams } from 'react-router';
 import { NoIndex } from '@/components/Seo';
@@ -10,7 +11,7 @@ import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
 import { Heading } from '@astryxdesign/core/Heading';
 import { Table, proportional } from '@astryxdesign/core/Table';
-import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
+import type * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { useResolvedOrganizationMembership } from '@/lib/hooks/use-organization';
 
 /** Lists an organization's Solutions; the layout owns organization-scoped state resets. */
@@ -19,10 +20,9 @@ export default function Organization() {
     const [creating, setCreating] = useState(false);
     const membership = useResolvedOrganizationMembership();
     const organizationId = membership.organization.id;
-    const [solutions, invalidateSolutions] = useApi(
-        `/api/v1/organizations/${organizationId}/solutions`,
-        schemas.zGetOrganizationSolutionsApiV1OrganizationsOrganizationIdSolutionsGetResponse
-    );
+    const [solutions, invalidateSolutions] = useApi<
+        z.output<typeof schemas.zGetOrganizationSolutionsApiV1OrganizationsOrganizationIdSolutionsGetResponse>
+    >(`/api/v1/organizations/${organizationId}/solutions`);
 
     return (
         <>
