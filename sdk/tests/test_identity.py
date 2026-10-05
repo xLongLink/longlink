@@ -1,7 +1,7 @@
 import jwt
 import pytest
 from uuid import UUID
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 from longlink import identity
 
 IDENTITY_SECRET = "test-identity-secret-01234567890"
@@ -15,15 +15,11 @@ def mint_identity_token(
 ) -> str:
     """Mint one execution-time identity token with controlled defects."""
 
-    # Construct claims at execution time so expiry stays relative to the test run.
-    issued_at = datetime.now(UTC)
-    payload: dict[str, object] = {
-        "sub": "00000000-0000-0000-0000-000000000001",
-        "aud": identity.IDENTITY_TOKEN_AUDIENCE,
-        "iat": issued_at,
-        "exp": issued_at + timedelta(seconds=identity.IDENTITY_TOKEN_LIFETIME_SECONDS),
-    }
+    # Start with a real current assertion and decode it only to construct controlled test defects.
+    token = identity.create_identity_token(UUID(int=1), secret)
+    payload = jwt.decode(token, options={"verify_signature": False})
 
+    # Apply only the requested claim defects before signing with the requested algorithm.
     if claims is not None:
         payload.update(claims)
 

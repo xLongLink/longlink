@@ -124,7 +124,16 @@ async def test_finish_transition_preserves_cancellation_when_terminal_persistenc
         await transition
 
 
-async def test_execute_persists_explicit_handler_failure(monkeypatch: pytest.MonkeyPatch) -> None:
+HANDLER_FAILURES = [
+    pytest.param(ForbiddenError("workload deployment failed"), "workload deployment failed", id="service-error"),
+    pytest.param(RuntimeError("provider unavailable"), "RuntimeError: provider unavailable", id="unexpected-error"),
+]
+
+
+@pytest.mark.parametrize(("failure", "expected_reason"), HANDLER_FAILURES)
+async def test_execute_persists_handler_failure(
+    monkeypatch: pytest.MonkeyPatch, failure: ForbiddenError | RuntimeError, expected_reason: str
+) -> None:
     """Persist a handler failure as the one claimed Operation's terminal outcome."""
 
     # Arrange
@@ -135,7 +144,7 @@ async def test_execute_persists_explicit_handler_failure(monkeypatch: pytest.Mon
         """Raise one expected terminal failure."""
 
         assert target_id == operation.target_id
-        raise ForbiddenError("workload deployment failed")
+        raise failure
 
     async def fake_fail(_session: object, operation_id: UUID, reason: str) -> Operation:
         """Record the terminal failure transition."""
@@ -145,16 +154,17 @@ async def test_execute_persists_explicit_handler_failure(monkeypatch: pytest.Mon
         operation.finished_at = datetime.now(UTC)
         return operation
 
+    monkeypatch.setitem(operation_worker.handlers, operation.kind, failing_handler)
     monkeypatch.setattr(operation_worker.operations, "fail", fake_fail)
 
     # Act
-    monkeypatch.setitem(operation_worker.handlers, operation.kind, failing_handler)
-
     result = await operation_worker.execute(operation)
 
     # Assert
+    assert result is operation
     assert result.status == OperationStatus.failed
-    assert transitions == [(operation.id, "workload deployment failed")]
+    assert result.failed == expected_reason
+    assert transitions == [(operation.id, expected_reason)]
 
 
 async def test_execute_fails_operation_when_handler_times_out(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -191,28 +201,6 @@ async def test_execute_fails_operation_when_handler_times_out(monkeypatch: pytes
     assert cancelled.is_set()
     assert result.status == OperationStatus.failed
     assert result.failed == "Operation timed out after 0.01 seconds"
-
-
-async def test_execute_persists_unexpected_handler_error_as_terminal_failure(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Contain an unexpected handler exception and release its Operation lease."""
-
-    # Arrange
-    operation = leased_operation()
-
-    async def failing_handler(_target_id: UUID) -> None:
-        """Raise an unexpected worker failure."""
-
-        raise RuntimeError("provider unavailable")
-
-    monkeypatch.setitem(operation_worker.handlers, operation.kind, failing_handler)
-    monkeypatch.setattr(operation_worker.operations, "fail", failed_transition(operation))
-
-    # Act
-    result = await operation_worker.execute(operation)
-
-    # Assert
-    assert result.status == OperationStatus.failed
-    assert result.failed == "RuntimeError: provider unavailable"
 
 
 async def test_execute_releases_operation_when_handler_is_cancelled(monkeypatch: pytest.MonkeyPatch) -> None:

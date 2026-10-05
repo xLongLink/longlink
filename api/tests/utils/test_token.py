@@ -1,6 +1,6 @@
 import jwt
 import pytest
-from uuid import uuid4
+from uuid import UUID
 from datetime import UTC, datetime, timedelta
 from src.utils import token
 from collections.abc import Mapping, Callable
@@ -79,34 +79,35 @@ def test_auth_token_claims_reject_malformed_user_identity() -> None:
         token.auth_token_claims(invalid_token)
 
 
-@pytest.mark.no_db
-def test_registration_claims_reject_expired_token() -> None:
-    """Reject expired email-ownership proof before registration."""
-
-    # Arrange
-    encoded = expired_token({"email": "member@example.com", "aud": token.REGISTRATION_TOKEN_AUDIENCE})
-
-    # Act and assert
-    with pytest.raises(jwt.InvalidTokenError):
-        token.registration_claims(encoded)
-
-
-@pytest.mark.no_db
-def test_auth_token_claims_reject_expired_token() -> None:
-    """Reject expired browser credentials before authentication."""
-
-    # Arrange
-    encoded = expired_token(
+EXPIRED_TOKEN_CLAIMS = [
+    pytest.param(
+        {"email": "member@example.com", "aud": token.REGISTRATION_TOKEN_AUDIENCE},
+        token.registration_claims,
+        id="registration",
+    ),
+    pytest.param(
         {
-            "sub": str(uuid4()),
+            "sub": "00000000-0000-0000-0000-000000000001",
             "password_fingerprint": "fingerprint",
             "aud": token.AUTH_TOKEN_AUDIENCE,
-        }
-    )
+        },
+        token.auth_token_claims,
+        id="authentication",
+    ),
+]
+
+
+@pytest.mark.no_db
+@pytest.mark.parametrize(("claims", "function"), EXPIRED_TOKEN_CLAIMS)
+def test_token_claims_reject_expired_token(claims: dict[str, str], function: Callable[[str], str | tuple[UUID, str]]) -> None:
+    """Reject expired registration and browser credentials."""
+
+    # Arrange
+    encoded = expired_token(claims)
 
     # Act and assert
     with pytest.raises(jwt.InvalidTokenError):
-        token.auth_token_claims(encoded)
+        function(encoded)
 
 
 @pytest.mark.no_db
