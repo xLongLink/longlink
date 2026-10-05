@@ -59,7 +59,7 @@ export function ProfileMenu({ user }: { user: z.output<typeof zUserSummary> }) {
                         })}
                         <ListItem
                             endContent={<ExternalLink aria-hidden="true" className="text-secondary" size={12} />}
-                            href="/docs/introduction/"
+                            href="/docs/"
                             label="Documentation"
                             onClickCapture={closeMenu}
                             startContent={<BookOpen aria-hidden="true" className="text-secondary" size={16} />}

@@ -13,9 +13,7 @@ export function Navbar() {
             <Center axis="horizontal">
                 <Card maxWidth={720} padding={0} width="100%">
                     <TopNav
-                        endContent={
-                            <Button href="/user/organizations" label="Get Started" size="sm" variant="primary" />
-                        }
+                        endContent={<Button href="/login/" label="Sign In" size="sm" variant="primary" />}
                         heading={
                             <Link href="/" label="LongLink home" color="inherit">
                                 <Wordmark />
@@ -26,7 +24,7 @@ export function Navbar() {
                             <>
                                 <Link
                                     className="sm:hidden"
-                                    href="/docs/introduction/"
+                                    href="/docs/"
                                     color="secondary"
                                     isStandalone
                                     weight="medium"
@@ -35,6 +33,9 @@ export function Navbar() {
                                 </Link>
                                 <Stack className="hidden sm:flex" direction="horizontal" gap={4} vAlign="center">
                                     <Link href="/docs/introduction/" color="secondary" isStandalone weight="medium">
+                                        Why LongLink
+                                    </Link>
+                                    <Link href="/docs/" color="secondary" isStandalone weight="medium">
                                         Documentation
                                     </Link>
                                     <Link href="/pricing/" color="secondary" isStandalone weight="medium">

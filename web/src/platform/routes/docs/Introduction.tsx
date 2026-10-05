@@ -10,7 +10,7 @@ const article = {
     toc: [{ id: 'why-longlink', label: 'Why LongLink', level: 1 }],
     lastUpdated: '2026-09-30',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/docs/Introduction.tsx',
-    title: 'Introduction | LongLink Documentation',
+    title: 'Why LongLink | LongLink Documentation',
 };
 
 /** Introduces LongLink and the relationship between Solutions and the Platform. */
