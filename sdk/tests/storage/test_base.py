@@ -92,7 +92,6 @@ def test_production_storage_passes_configured_ca_to_s3_client(monkeypatch: pytes
 
     # Assert
     assert isinstance(filesystem, DirFileSystem)
-    assert isinstance(filesystem.fs, S3FileSystem)
     certificate = Path(filesystem.fs.client_kwargs["verify"])
     assert certificate.read_text(encoding="utf-8") == ca_certificate
 

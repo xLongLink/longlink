@@ -405,6 +405,7 @@ def test_build_solution_filters_expanded_context(chdir_project: Path) -> None:
     "sources",
     [
         pytest.param('[tool.uv.sources]\nmissing = { path = "/" }\n', id="nonproject-path"),
+        pytest.param('[tool.uv.sources]\nincomplete = { path = "../incomplete-dependency" }\n', id="missing-project-metadata"),
         pytest.param("[tool.uv]\nsources = []\n", id="malformed-table"),
         pytest.param('[tool.uv.sources]\nunsupported = "workspace"\n', id="unsupported-source"),
         pytest.param("[tool.uv.sources]\nworkspace = { workspace = true }\n", id="source-without-path"),
@@ -414,26 +415,9 @@ def test_resolve_docker_paths_ignores_invalid_uv_sources(build_project: Path, so
     """Keep the Solution directory as context for unusable uv source metadata."""
 
     # Arrange
+    build_project.parent.joinpath("incomplete-dependency").mkdir()
     build_project.joinpath("pyproject.toml").write_text(
         f'[project]\nname = "demo"\nversion = "0.1.0"\n\n{sources}',
-        encoding="utf-8",
-    )
-
-    # Act
-    source_root, workdir, dependencies = build.resolve_docker_paths(build_project, build.read_pyproject(build_project))
-
-    # Assert
-    assert (source_root, workdir, dependencies) == (build_project, "/workspace", [])
-
-
-def test_resolve_docker_paths_ignores_local_directories_without_project_metadata(build_project: Path) -> None:
-    """Exclude local source paths that cannot be installed as uv projects."""
-
-    # Arrange
-    dependency = build_project.parent / "incomplete-dependency"
-    dependency.mkdir()
-    build_project.joinpath("pyproject.toml").write_text(
-        '[project]\nname = "demo"\nversion = "0.1.0"\n\n[tool.uv.sources]\nincomplete = { path = "../incomplete-dependency" }\n',
         encoding="utf-8",
     )
 

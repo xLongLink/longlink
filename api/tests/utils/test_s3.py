@@ -98,28 +98,16 @@ def make_s3() -> S3:
     return S3("https://s3.example.com", Credentials("access", "secret"))
 
 
-@pytest.mark.parametrize(
-    ("error_code", "should_raise"),
-    [
-        pytest.param("BucketAlreadyOwnedByYou", False, id="existing-bucket"),
-        pytest.param("AccessDenied", True, id="unexpected-error"),
-    ],
-)
-async def test_create_bucket_tolerates_only_existing_bucket(monkeypatch: pytest.MonkeyPatch, error_code: str, should_raise: bool) -> None:
-    """Treat a reconciler retry on an existing bucket as success and surface other failures."""
+async def test_create_bucket_protects_new_and_existing_buckets(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Protect new and existing buckets without swallowing public-access-block failures."""
 
     # Arrange
     client = FakeClient()
-    client.create_error = client_error(error_code)
+    client.create_error = client_error("BucketAlreadyOwnedByYou")
     serve(client, monkeypatch)
 
     # Act
-    if should_raise:
-        with pytest.raises(ClientError) as error:
-            await make_s3().create_bucket("org-bucket")
-        assert error.value.response["Error"]["Code"] == error_code
-    else:
-        await make_s3().create_bucket("org-bucket")
+    await make_s3().create_bucket("org-bucket")
 
     # Assert
     assert client.buckets_created == ["org-bucket"]
@@ -129,19 +117,36 @@ async def test_create_bucket_tolerates_only_existing_bucket(monkeypatch: pytest.
         "BlockPublicPolicy": True,
         "RestrictPublicBuckets": True,
     }
-    assert client.public_access_blocks == ([] if should_raise else [("org-bucket", configuration)])
+    assert client.public_access_blocks == [("org-bucket", configuration)]
 
     # Protect newly created buckets too, and never swallow block failures as creation retries.
-    if not should_raise:
-        client.create_error = None
+    client.create_error = None
+    await make_s3().create_bucket("org-bucket")
+    assert client.public_access_blocks == [("org-bucket", configuration)] * 2
+    client.create_error = client_error("BucketAlreadyExists")
+    client.block_error = client_error("BucketAlreadyOwnedByYou")
+    with pytest.raises(ClientError) as error:
         await make_s3().create_bucket("org-bucket")
-        assert client.public_access_blocks == [("org-bucket", configuration)] * 2
-        client.create_error = client_error("BucketAlreadyExists")
-        client.block_error = client_error("BucketAlreadyOwnedByYou")
-        with pytest.raises(ClientError) as error:
-            await make_s3().create_bucket("org-bucket")
-        assert error.value is client.block_error
-        assert client.public_access_blocks == [("org-bucket", configuration)] * 3
+    assert error.value is client.block_error
+    assert client.public_access_blocks == [("org-bucket", configuration)] * 3
+
+
+async def test_create_bucket_propagates_unexpected_creation_errors(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Surface unexpected creation failures without attempting public-access configuration."""
+
+    # Arrange
+    client = FakeClient()
+    client.create_error = client_error("AccessDenied")
+    serve(client, monkeypatch)
+
+    # Act
+    with pytest.raises(ClientError) as error:
+        await make_s3().create_bucket("org-bucket")
+
+    # Assert
+    assert error.value.response["Error"]["Code"] == "AccessDenied"
+    assert client.buckets_created == ["org-bucket"]
+    assert client.public_access_blocks == []
 
 
 @pytest.mark.parametrize(

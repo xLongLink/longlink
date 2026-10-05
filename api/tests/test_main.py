@@ -4,7 +4,9 @@ import pytest
 from pathlib import Path
 from src.database import session as database_session
 from collections.abc import Callable, Awaitable
+from sqlalchemy.engine import URL
 from fastapi.testclient import TestClient
+from sqlalchemy.ext.asyncio import AsyncEngine
 
 pytestmark = pytest.mark.no_db
 
@@ -75,36 +77,35 @@ async def test_lifespan_starts_and_stops_background_jobs(monkeypatch: pytest.Mon
     assert events[5] == "dispose"
 
 
-def test_get_session_applies_mysql_engine_options(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_get_session_applies_mysql_engine_options(monkeypatch: pytest.MonkeyPatch) -> None:
     """Apply transaction and pooling options to the MySQL database driver."""
 
     # Arrange
     captured: dict[str, dict[str, object]] = {}
-    session_factory = object()
+    real_create_async_engine = database_session.create_async_engine
 
-    def create_async_engine(url: object, **kwargs: object) -> object:
+    def create_async_engine(url: str | URL, **kwargs: object) -> AsyncEngine:
         """Capture engine construction without opening a database connection."""
 
         captured["kwargs"] = kwargs
-        return object()
-
-    def async_sessionmaker(_engine: object, **_kwargs: object) -> object:
-        """Return an opaque session factory after engine configuration."""
-
-        return session_factory
+        return real_create_async_engine(url, **kwargs)
 
     monkeypatch.setattr(database_session.env, "DATABASE_URL", "mysql+aiomysql://control:secret@db:3306/longlink")
     monkeypatch.setattr(database_session, "Session", None)
     monkeypatch.setattr(database_session, "Engine", None)
     monkeypatch.setattr(database_session, "create_async_engine", create_async_engine)
-    monkeypatch.setattr(database_session, "async_sessionmaker", async_sessionmaker)
 
     # Act
     result = database_session.get_session()
 
-    # Assert
-    assert result is session_factory
-    kwargs = captured["kwargs"]
-    assert kwargs["hide_parameters"] is True
-    assert kwargs["isolation_level"] == "READ COMMITTED"
-    assert kwargs["pool_use_lifo"] is True
+    # Assert the real session factory binds the configured engine, then release it.
+    engine = database_session.Engine
+    assert engine is not None
+    try:
+        assert result.kw["bind"] is engine
+        kwargs = captured["kwargs"]
+        assert kwargs["hide_parameters"] is True
+        assert kwargs["isolation_level"] == "READ COMMITTED"
+        assert kwargs["pool_use_lifo"] is True
+    finally:
+        await engine.dispose()

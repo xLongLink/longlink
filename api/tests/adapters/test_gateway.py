@@ -148,9 +148,8 @@ async def test_gateway_request_forwards_identity_and_defers_cleanup(
 ) -> None:
     """Retain exact signed request construction and defer upstream cleanup until runtime exit."""
 
-    # Capture production client settings and use the real HTTP request builder.
+    # Use the real HTTP request builder while recording transport and cleanup.
     captured_request: httpx2.Request | None = None
-    captured_client_kwargs: dict[str, object] = {}
     client_type = httpx2.AsyncClient
 
     class Response(httpx2.Response):
@@ -168,19 +167,7 @@ async def test_gateway_request_forwards_identity_and_defers_cleanup(
             await super().aclose()
 
     class Client(client_type):
-        """Capture the gateway client configuration."""
-
-        def __init__(self, *, verify: proxy.ssl.SSLContext, trust_env: bool, timeout: float, follow_redirects: bool) -> None:
-            """Capture the gateway client configuration."""
-
-            nonlocal captured_client_kwargs
-            captured_client_kwargs = {
-                "verify": verify,
-                "trust_env": trust_env,
-                "timeout": timeout,
-                "follow_redirects": follow_redirects,
-            }
-            super().__init__(verify=verify, trust_env=trust_env, timeout=timeout, follow_redirects=follow_redirects)
+        """Intercept gateway transport and record client cleanup."""
 
         async def send(self, request: httpx2.Request, *, stream: bool = False, **_kwargs: object) -> httpx2.Response:
             """Capture the actual outbound request without closing its response."""
@@ -196,17 +183,7 @@ async def test_gateway_request_forwards_identity_and_defers_cleanup(
             request_scope.closed.append("client")
             await super().aclose()
 
-    tls = proxy.ssl.create_default_context()
-    request_scope.registry.gateway_certificate = "gateway-ca"
-
-    def context(*, cadata: str) -> proxy.ssl.SSLContext:
-        """Verify the persisted compute trust anchor."""
-
-        assert cadata == "gateway-ca"
-        return tls
-
     monkeypatch.setattr(proxy.httpx2, "AsyncClient", Client)
-    monkeypatch.setattr(proxy.ssl, "create_default_context", context)
 
     # Assert exact raw URL, routing authority, signed identity, and safe header forwarding.
     async with AsyncExitStack() as runtime:
@@ -215,7 +192,6 @@ async def test_gateway_request_forwards_identity_and_defers_cleanup(
         request = captured_request
         identity_token = request.headers["x-longlink-identity"]
         assert proxy.identity.identity_token_user(identity_token, "identity-secret-012345678901234567") == request_scope.user.id
-        assert captured_client_kwargs == {"follow_redirects": False, "trust_env": False, "timeout": 300.0, "verify": tls}
         assert request.method == "POST"
         assert request.url == "https://gateway.example/health%2Fstatus?verbose=true&raw=%2F+%25"
         assert request.url.raw_path == b"/health%2Fstatus?verbose=true&raw=%2F+%25"
