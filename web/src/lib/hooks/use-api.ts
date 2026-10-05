@@ -1,7 +1,7 @@
 import type { z } from 'zod';
 import { api } from '@/lib/api';
 import { useCallback } from 'react';
-import { useMutation, useQueryClient, useSuspenseQuery, type UseSuspenseQueryOptions } from '@tanstack/react-query';
+import { useQueryClient, useSuspenseQuery, type UseSuspenseQueryOptions } from '@tanstack/react-query';
 
 /** Returns validated data and an awaitable invalidator scoped to the full request path. */
 export function useApi<T>(
@@ -22,9 +22,4 @@ export function useApi<T>(
         [client, path]
     );
     return [data, invalidate];
-}
-
-/** Runs a page action with pending state and root-owned mutation error reporting. */
-export function useAction() {
-    return useMutation({ mutationFn: (run: () => Promise<void>) => run() });
 }

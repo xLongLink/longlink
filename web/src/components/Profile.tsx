@@ -6,7 +6,6 @@ import { Text } from '@astryxdesign/core/Text';
 import { Avatar } from '@/components/ui/Avatar';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
-import { useMutation } from '@tanstack/react-query';
 import { Divider } from '@astryxdesign/core/Divider';
 import { Popover } from '@astryxdesign/core/Popover';
 import { List, ListItem } from '@astryxdesign/core/List';
@@ -17,13 +16,6 @@ import { adminNavigation, userNavigation } from '@/platform/navigation';
 
 /** Renders a user profile popover with authentication and navigation actions. */
 export function ProfileMenu({ user }: { user: z.output<typeof zUserSummary> }) {
-    const signOut = useMutation({
-        mutationFn: () => api('/api/v1/auth/logout', { method: 'POST' }),
-        onSuccess: () => {
-            // A full navigation disposes the query cache without exposing a transient unauthenticated render.
-            window.location.assign('/user/organizations');
-        },
-    });
     const [isOpen, setIsOpen] = useState(false);
     const closeMenu = () => setIsOpen(false);
     return (
@@ -106,9 +98,12 @@ export function ProfileMenu({ user }: { user: z.output<typeof zUserSummary> }) {
                     ) : null}
                     <Button
                         label="Sign out"
-                        onClick={() => {
+                        clickAction={async () => {
                             closeMenu();
-                            signOut.mutate();
+
+                            // A full navigation disposes the authenticated cache only after logout succeeds.
+                            await api('/api/v1/auth/logout', { method: 'POST' });
+                            window.location.assign('/user/organizations');
                         }}
                         variant="destructive"
                     />

@@ -1,6 +1,6 @@
 import { ApiError } from '@/lib/api';
+import { QueryCache, QueryClient } from '@tanstack/react-query';
 import { createErrorReporter, isCanceledRequest } from '@/lib/errors';
-import { MutationCache, QueryCache, QueryClient } from '@tanstack/react-query';
 
 /** Creates an isolated query cache for one browser or prerendered document. */
 export function createQueryRuntime(notify: (message: string) => void, platformSession: boolean) {
@@ -65,7 +65,6 @@ export function createQueryRuntime(notify: (message: string) => void, platformSe
 
     client = new QueryClient({
         queryCache,
-        mutationCache: new MutationCache({ onError: (error) => reportError(error) }),
         defaultOptions: {
             queries: {
                 staleTime: 60_000,

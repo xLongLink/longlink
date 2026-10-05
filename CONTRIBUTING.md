@@ -2,7 +2,7 @@
 
 The LongLink Platform owns authentication, authorization, orchestration, storage, and routing for Solutions.
 
-The web package owns the shared frontend runtime and the View rendering path used by both platform and SDK bundles.
+The web package owns native TypeScript Platform pages and the isolated JSX Solution View runtime used by both Platform and SDK bundles.
 
 The SDK owns shared-schema models, migrations, and synchronization helpers alongside Python helpers for Solution projects, project migrations, CLI commands, database helpers, and packaged JSX authoring declarations. The API executes shared migrations and writes with control-plane credentials; Solution runtimes receive read-only shared access.
 

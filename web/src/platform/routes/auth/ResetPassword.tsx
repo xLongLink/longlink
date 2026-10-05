@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { useState } from 'react';
 import { AuthLayout } from './AuthLayout';
 import { api, ApiError } from '@/lib/api';
 import { NoIndex } from '@/components/Seo';
@@ -6,7 +7,6 @@ import { passwordSchema } from './validation';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
-import { useMutation } from '@tanstack/react-query';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
 import { TextInput } from '@astryxdesign/core/TextInput';
@@ -32,38 +32,42 @@ export default function ResetPassword() {
         defaultValues: { password: '' },
         resolver: zodResolver(resetPasswordSchema),
     });
-    const verification = useMutation({
-        mutationFn: ({ signal, token: resetToken }: VerificationRequest) => {
-            if (!resetToken) {
-                return api('/api/v1/auth/reset-password/setup', { signal });
-            }
+    const [verification, setVerification] = useState<
+        { status: 'verified' } | { status: 'error'; error: unknown } | null
+    >(null);
+    const [reset, setReset] = useState<{ status: 'saved' } | { status: 'error'; error: unknown } | null>(null);
 
-            return api('/api/v1/auth/reset-password/verify', {
-                json: { token: resetToken },
-                method: 'POST',
-                signal,
-            });
-        },
-        onSuccess: (_data, variables) => {
-            // Ignore a request replaced by a newer verification attempt.
-            if (variables.signal === verificationController.current?.signal) {
-                sessionStorage.removeItem(PASSWORD_RESET_TOKEN_KEY);
-            }
-        },
-        onError: (error, variables) => {
-            // Invalid credentials cannot become valid through another retry.
-            if (variables.signal === verificationController.current?.signal && isBadTokenError(error)) {
-                sessionStorage.removeItem(PASSWORD_RESET_TOKEN_KEY);
-            }
-        },
-    });
-    const resetPassword = useMutation({
-        mutationFn: (payload: ResetPasswordValues) =>
-            api('/api/v1/auth/reset-password', { json: payload, method: 'POST' }),
-    });
-    const hasTokenError = isBadTokenError(verification.error) || isBadTokenError(resetPassword.error);
+    /** Verifies the credential and ignores results from canceled or replaced attempts. */
+    async function verify({ signal, token: resetToken }: VerificationRequest) {
+        setVerification(null);
 
-    const { controller: verificationController, startVerification } = useVerification(token, verification.mutate);
+        // Exchange the URL credential, or recover the already established setup cookie.
+        const request = resetToken
+            ? api('/api/v1/auth/reset-password/verify', {
+                  json: { token: resetToken },
+                  method: 'POST',
+                  signal,
+              })
+            : api('/api/v1/auth/reset-password/setup', { signal });
+        await request.then(
+            () => {
+                if (signal !== verificationController.current?.signal) return;
+                sessionStorage.removeItem(PASSWORD_RESET_TOKEN_KEY);
+                setVerification({ status: 'verified' });
+            },
+            (error: unknown) => {
+                if (signal !== verificationController.current?.signal) return;
+                if (!isBadTokenError(error)) throw error;
+                sessionStorage.removeItem(PASSWORD_RESET_TOKEN_KEY);
+                setVerification({ status: 'error', error });
+            }
+        );
+    }
+
+    const { controller: verificationController } = useVerification(token, verify);
+    const verificationError = verification?.status === 'error' ? verification.error : null;
+    const resetError = reset?.status === 'error' ? reset.error : null;
+    const hasTokenError = isBadTokenError(verificationError) || isBadTokenError(resetError);
 
     const pageMetadata = <NoIndex title="Set a New Password | LongLink" />;
 
@@ -80,61 +84,57 @@ export default function ResetPassword() {
         );
     }
 
-    // Keep transient exchange failures retryable without exposing the credential again.
-    if (verification.error) {
-        return (
-            <AuthLayout title="Set a new password" description="Please try again in a moment.">
-                {pageMetadata}
-                <Button label="Retry" onClick={() => startVerification(token)} variant="primary" />
-            </AuthLayout>
-        );
-    }
-
     return (
         <AuthLayout title="Set a new password" description="Choose a new password for your LongLink account.">
             {pageMetadata}
-            {!verification.isSuccess ? (
+            {verification?.status !== 'verified' ? (
                 <Button isLoading label="Reset password" variant="primary" />
-            ) : resetPassword.isSuccess ? (
+            ) : reset?.status === 'saved' ? (
                 <Stack gap={4}>
                     <Banner status="success" title="Your password has been reset. You can now sign in." />
                     <Button href="/login" label="Back to sign in" variant="primary" />
                 </Stack>
             ) : (
-                <Stack
-                    as="form"
-                    gap={4}
-                    onSubmit={(event) => {
-                        void form.handleSubmit((payload) => resetPassword.mutate(payload))(event);
-                    }}
-                >
-                    <Controller
-                        control={form.control}
-                        name="password"
-                        render={({ field, fieldState }) => (
-                            <TextInput
-                                ref={field.ref}
-                                htmlName={field.name}
-                                isRequired
-                                label="New password"
-                                onBlur={field.onBlur}
-                                onChange={field.onChange}
-                                status={
-                                    fieldState.error ? { type: 'error', message: fieldState.error.message } : undefined
+                <form
+                    action={() =>
+                        form.handleSubmit(async (payload) => {
+                            // Publish the saved result only after the password change succeeds.
+                            await api('/api/v1/auth/reset-password', { json: payload, method: 'POST' }).then(
+                                () => setReset({ status: 'saved' }),
+                                (error: unknown) => {
+                                    if (!isBadTokenError(error)) throw error;
+                                    setReset({ status: 'error', error });
                                 }
-                                value={field.value}
-                                width="100%"
-                                type="password"
-                            />
-                        )}
-                    />
-                    <Button
-                        isLoading={resetPassword.isPending}
-                        label="Reset password"
-                        type="submit"
-                        variant="primary"
-                    />
-                </Stack>
+                            );
+                        })()
+                    }
+                >
+                    <Stack gap={4}>
+                        <Controller
+                            control={form.control}
+                            name="password"
+                            render={({ field, fieldState }) => (
+                                <TextInput
+                                    ref={field.ref}
+                                    htmlName={field.name}
+                                    isRequired
+                                    label="New password"
+                                    onBlur={field.onBlur}
+                                    onChange={field.onChange}
+                                    status={
+                                        fieldState.error
+                                            ? { type: 'error', message: fieldState.error.message }
+                                            : undefined
+                                    }
+                                    value={field.value}
+                                    width="100%"
+                                    type="password"
+                                />
+                            )}
+                        />
+                        <Button label="Reset password" type="submit" variant="primary" />
+                    </Stack>
+                </form>
             )}
         </AuthLayout>
     );

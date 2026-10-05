@@ -1,11 +1,13 @@
 import type { z } from 'zod';
 import { api } from '@/lib/api';
-import { useState } from 'react';
 import { NoIndex } from '@/components/Seo';
 import { Menu } from '@/components/ui/Menu';
+import { useApi } from '@/lib/hooks/use-api';
+import CreateSolution from './CreateSolution';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Avatar } from '@/components/ui/Avatar';
+import { useState, useTransition } from 'react';
 import { Badge } from '@astryxdesign/core/Badge';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
@@ -15,14 +17,12 @@ import { RefreshCw, Logs, Trash } from 'lucide-react';
 import { ApiBoundary } from '@/components/ApiBoundary';
 import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { Selector } from '@astryxdesign/core/Selector';
-import { useApi, useAction } from '@/lib/hooks/use-api';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { ProgressBar } from '@astryxdesign/core/ProgressBar';
 import { Table, proportional } from '@astryxdesign/core/Table';
 import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
-import CreateSolution from '@/platform/views/orgs/CreateSolution';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { useResolvedOrganizationMembership } from '@/lib/hooks/use-organization';
 
@@ -35,13 +35,12 @@ type Update = {
 };
 type DeploymentReviewProps = {
     update: Update;
-    action: ReturnType<typeof useAction>;
     invalidate: () => Promise<void>;
     onClose: () => void;
 };
 
 /** Owns the deployment draft and submission for a freshly checked candidate. */
-function DeploymentReview({ update, action, invalidate, onClose }: DeploymentReviewProps) {
+function DeploymentReview({ update, invalidate, onClose }: DeploymentReviewProps) {
     const [envs, setEnvs] = useState<Record<string, string>>({});
     const [removed, setRemoved] = useState<Record<string, boolean>>({});
 
@@ -58,108 +57,93 @@ function DeploymentReview({ update, action, invalidate, onClose }: DeploymentRev
         Object.keys(envs).length > 0 ||
         Object.values(removed).some(Boolean);
 
+    /** Submits the reviewed deployment while preserving untouched secrets. */
+    async function updateSolution() {
+        if (missingRequired || !hasChanges) return;
+
+        // Send edited secrets and explicit removals, preserving omitted values.
+        const patchEnvs = {
+            ...envs,
+            ...Object.fromEntries(
+                Object.entries(removed)
+                    .filter(([, removed]) => removed)
+                    .map(([name]) => [name, null])
+            ),
+        };
+        await api.post(`/api/v1/solutions/${update.item.id}/update`, {
+            json: schemas.zSolutionPatch.parse({
+                envs: patchEnvs,
+                expected_revision_id: update.candidate.revision_id,
+            }),
+        });
+        await invalidate();
+        onClose();
+    }
+
     return (
         <Dialog
             isOpen
             purpose="form"
             onOpenChange={(open) => {
-                if (!open && !action.isPending) onClose();
+                if (!open) onClose();
             }}
         >
-            <DialogHeader
-                title={`Update ${update.item.name}`}
-                onOpenChange={() => {
-                    if (!action.isPending) onClose();
-                }}
-            />
-            <Stack
-                gap={3}
-                as="form"
-                onSubmit={(event) => {
-                    event.preventDefault();
-                    if (action.isPending || missingRequired || !hasChanges) return;
+            <DialogHeader title={`Update ${update.item.name}`} onOpenChange={onClose} />
+            <form action={updateSolution}>
+                <Stack gap={3}>
+                    <Stack direction="horizontal" gap={2} align="center" wrap="wrap">
+                        <Text type="supporting" color="secondary">
+                            Current {update.candidate.current_image_digest}
+                        </Text>
+                        <Text type="supporting" color="primary">
+                            New {update.candidate.image_digest}
+                        </Text>
+                    </Stack>
+                    {(update.candidate.metadata.environments ?? []).map((environment) => {
+                        const configured = update.candidate.configured_envs.includes(environment.name);
+                        const isRemoved = removed[environment.name] === true;
 
-                    // Send edited secrets and explicit removals, preserving all omitted values.
-                    action.mutate(async () => {
-                        const patchEnvs = {
-                            ...envs,
-                            ...Object.fromEntries(
-                                Object.entries(removed)
-                                    .filter(([, removed]) => removed)
-                                    .map(([name]) => [name, null])
-                            ),
-                        };
-                        await api.post(`/api/v1/solutions/${update.item.id}/update`, {
-                            json: schemas.zSolutionPatch.parse({
-                                envs: patchEnvs,
-                                expected_revision_id: update.candidate.revision_id,
-                            }),
-                        });
-                        await invalidate();
-                        onClose();
-                    });
-                }}
-            >
-                <Stack direction="horizontal" gap={2} align="center" wrap="wrap">
-                    <Text type="supporting" color="secondary">
-                        Current {update.candidate.current_image_digest}
-                    </Text>
-                    <Text type="supporting" color="primary">
-                        New {update.candidate.image_digest}
-                    </Text>
-                </Stack>
-                {(update.candidate.metadata.environments ?? []).map((environment) => {
-                    const configured = update.candidate.configured_envs.includes(environment.name);
-                    const isRemoved = removed[environment.name] === true;
-
-                    // Configured secrets remain hidden; blank untouched inputs preserve them.
-                    return (
-                        <Stack key={environment.name} gap={2}>
-                            <TextInput
-                                label={environment.name}
-                                labelTooltip={environment.description ?? undefined}
-                                type="password"
-                                value={Object.hasOwn(envs, environment.name) ? envs[environment.name] : ''}
-                                isDisabled={isRemoved}
-                                isOptional={!environment.required}
-                                isRequired={environment.required && (!configured || isRemoved)}
-                                placeholder={
-                                    isRemoved
-                                        ? 'Will be removed'
-                                        : configured
-                                          ? 'Configured: preserve existing value'
-                                          : environment.description || 'Enter value'
-                                }
-                                onChange={(value) => setEnvs({ ...envs, [environment.name]: value })}
-                            />
-                            {configured && !environment.required && (
-                                <CheckboxInput
-                                    label={`Remove ${environment.name}`}
-                                    value={isRemoved}
-                                    onChange={(value) => setRemoved({ ...removed, [environment.name]: value })}
+                        // Configured secrets remain hidden; blank untouched inputs preserve them.
+                        return (
+                            <Stack key={environment.name} gap={2}>
+                                <TextInput
+                                    label={environment.name}
+                                    labelTooltip={environment.description ?? undefined}
+                                    type="password"
+                                    value={Object.hasOwn(envs, environment.name) ? envs[environment.name] : ''}
+                                    isDisabled={isRemoved}
+                                    isOptional={!environment.required}
+                                    isRequired={environment.required && (!configured || isRemoved)}
+                                    placeholder={
+                                        isRemoved
+                                            ? 'Will be removed'
+                                            : configured
+                                              ? 'Configured: preserve existing value'
+                                              : environment.description || 'Enter value'
+                                    }
+                                    onChange={(value) => setEnvs({ ...envs, [environment.name]: value })}
                                 />
-                            )}
-                        </Stack>
-                    );
-                })}
-                <Stack direction="horizontal" gap={2} justify="end" wrap="wrap">
-                    <Button
-                        label="Cancel"
-                        variant="ghost"
-                        isDisabled={action.isPending}
-                        onClick={() => {
-                            if (!action.isPending) onClose();
-                        }}
-                    />
-                    <Button
-                        label="Update solution"
-                        variant="primary"
-                        type="submit"
-                        isDisabled={missingRequired || !hasChanges}
-                        isLoading={action.isPending}
-                    />
+                                {configured && !environment.required && (
+                                    <CheckboxInput
+                                        label={`Remove ${environment.name}`}
+                                        value={isRemoved}
+                                        onChange={(value) => setRemoved({ ...removed, [environment.name]: value })}
+                                    />
+                                )}
+                            </Stack>
+                        );
+                    })}
+                    <Stack direction="horizontal" gap={2} justify="end" wrap="wrap">
+                        <Button label="Cancel" variant="ghost" onClick={onClose} />
+                        <Button
+                            label="Update solution"
+                            variant="primary"
+                            type="submit"
+                            isDisabled={missingRequired || !hasChanges}
+                        />
+                    </Stack>
                 </Stack>
-            </Stack>
+            </form>
         </Dialog>
     );
 }
@@ -173,7 +157,7 @@ export default function OrganizationSettings() {
     const [update, setUpdate] = useState<Update | null>(null);
     const [deletion, setDeletion] = useState<{ id: string; name: string } | null>(null);
     const [logs, setLogs] = useState<string | null>(null);
-    const action = useAction();
+    const [, startAction] = useTransition();
     const membership = useResolvedOrganizationMembership();
     const base = `/api/v1/organizations/${membership.organization.id}`;
 
@@ -187,6 +171,19 @@ export default function OrganizationSettings() {
 
     const canMaintain = ['maintain', 'admin', 'owner'].includes(membership.role);
     const canAdminister = ['admin', 'owner'].includes(membership.role);
+
+    /** Sends the validated invitation and refreshes organization access. */
+    async function inviteMember() {
+        // Refresh organization access only after sending the invitation succeeds.
+        await api.post(`${base}/invitations`, {
+            json: schemas.zOrganizationInvitationCreate.parse({
+                ...invitation,
+                email: invitation.email.trim(),
+            }),
+        });
+        await invalidateDetails();
+        setInviting(false);
+    }
 
     return (
         <Stack gap={8}>
@@ -366,16 +363,13 @@ export default function OrganizationSettings() {
                                                                           <Button
                                                                               label="Revoke"
                                                                               variant="destructive"
-                                                                              isDisabled={action.isPending}
-                                                                              onClick={() =>
-                                                                                  action.mutate(async () => {
-                                                                                      // Refresh organization access only after revocation succeeds.
-                                                                                      await api.delete(
-                                                                                          `${base}/invitations/${row.id}`
-                                                                                      );
-                                                                                      await invalidateDetails();
-                                                                                  })
-                                                                              }
+                                                                              clickAction={async () => {
+                                                                                  // Refresh organization access only after revocation succeeds.
+                                                                                  await api.delete(
+                                                                                      `${base}/invitations/${row.id}`
+                                                                                  );
+                                                                                  await invalidateDetails();
+                                                                              }}
                                                                           />
                                                                       ),
                                                                   },
@@ -435,7 +429,6 @@ export default function OrganizationSettings() {
                                                               renderCell: (row: Solution) => (
                                                                   <MoreMenu
                                                                       alignment="end"
-                                                                      isDisabled={action.isPending}
                                                                       items={[
                                                                           ...(row.desired_revision_id &&
                                                                           !row.deployment_pending &&
@@ -445,8 +438,9 @@ export default function OrganizationSettings() {
                                                                                         id: 'update',
                                                                                         label: 'Update',
                                                                                         icon: <RefreshCw />,
-                                                                                        onClick: () =>
-                                                                                            action.mutate(async () => {
+                                                                                        onClick: () => {
+                                                                                            // Forward async menu failures to the surrounding boundary without tracking pending state.
+                                                                                            startAction(async () => {
                                                                                                 // Fetch a fresh candidate for each review; never reuse a stale revision fence.
                                                                                                 const checked =
                                                                                                     schemas.zSolutionUpdateCheck.parse(
@@ -462,7 +456,8 @@ export default function OrganizationSettings() {
                                                                                                     },
                                                                                                     candidate: checked,
                                                                                                 });
-                                                                                            }),
+                                                                                            });
+                                                                                        },
                                                                                     },
                                                                                 ]
                                                                               : []),
@@ -497,69 +492,46 @@ export default function OrganizationSettings() {
                     },
                 ]}
             />
-            <Dialog
-                isOpen={inviting}
-                purpose="form"
-                onOpenChange={(open) => {
-                    if (!action.isPending) setInviting(open);
-                }}
-            >
+            <Dialog isOpen={inviting} purpose="form" onOpenChange={setInviting}>
                 <DialogHeader
                     title="Invite user"
                     subtitle="Send an invitation to join this organization."
                     onOpenChange={() => {
-                        if (!action.isPending) setInviting(false);
+                        setInviting(false);
                     }}
                 />
-                <Stack
-                    gap={3}
-                    as="form"
-                    onSubmit={(event) => {
-                        event.preventDefault();
-                        if (action.isPending) return;
-
-                        // Validate the invitation and preserve the draft if sending fails.
-                        action.mutate(async () => {
-                            await api.post(`${base}/invitations`, {
-                                json: schemas.zOrganizationInvitationCreate.parse({
-                                    ...invitation,
-                                    email: invitation.email.trim(),
-                                }),
-                            });
-                            await invalidateDetails();
-                            setInviting(false);
-                        });
-                    }}
-                >
-                    <TextInput
-                        label="Email"
-                        type="email"
-                        value={invitation.email}
-                        placeholder="user@example.com"
-                        isRequired
-                        onChange={(email) => setInvitation({ ...invitation, email })}
-                    />
-                    <Selector
-                        label="Role"
-                        value={invitation.role}
-                        options={['read', 'write', 'maintain', 'admin'].map((value) => ({ value, label: value }))}
-                        onChange={(role) => setInvitation({ ...invitation, role })}
-                    />
-                    <Button label="Invite" variant="primary" type="submit" isLoading={action.isPending} />
-                </Stack>
+                <form action={inviteMember}>
+                    <Stack gap={3}>
+                        <TextInput
+                            label="Email"
+                            type="email"
+                            value={invitation.email}
+                            placeholder="user@example.com"
+                            isRequired
+                            onChange={(email) => setInvitation({ ...invitation, email })}
+                        />
+                        <Selector
+                            label="Role"
+                            value={invitation.role}
+                            options={['read', 'write', 'maintain', 'admin'].map((value) => ({ value, label: value }))}
+                            onChange={(role) => setInvitation({ ...invitation, role })}
+                        />
+                        <Button label="Invite" variant="primary" type="submit" />
+                    </Stack>
+                </form>
             </Dialog>
             {member && (
                 <Dialog
                     isOpen
                     purpose="form"
                     onOpenChange={(open) => {
-                        if (!open && !action.isPending) setMember(null);
+                        if (!open) setMember(null);
                     }}
                 >
                     <DialogHeader
                         title="Change role"
                         onOpenChange={() => {
-                            if (!action.isPending) setMember(null);
+                            setMember(null);
                         }}
                     />
                     <Stack gap={3}>
@@ -567,26 +539,18 @@ export default function OrganizationSettings() {
                             Change {member.name} to {member.role}?
                         </Text>
                         <Stack direction="horizontal" gap={2} justify="end">
-                            <Button
-                                label="Cancel"
-                                variant="ghost"
-                                isDisabled={action.isPending}
-                                onClick={() => setMember(null)}
-                            />
+                            <Button label="Cancel" variant="ghost" onClick={() => setMember(null)} />
                             <Button
                                 label="Confirm"
                                 variant="primary"
-                                isLoading={action.isPending}
-                                onClick={() =>
-                                    action.mutate(async () => {
-                                        // Update access on the server before refreshing the member list.
-                                        await api.patch(`${base}/members/${member.id}`, {
-                                            json: schemas.zOrganizationMemberUpdate.parse({ role: member.role }),
-                                        });
-                                        await invalidateDetails();
-                                        setMember(null);
-                                    })
-                                }
+                                clickAction={async () => {
+                                    // Update access on the server before refreshing the member list.
+                                    await api.patch(`${base}/members/${member.id}`, {
+                                        json: schemas.zOrganizationMemberUpdate.parse({ role: member.role }),
+                                    });
+                                    await invalidateDetails();
+                                    setMember(null);
+                                }}
                             />
                         </Stack>
                     </Stack>
@@ -603,7 +567,6 @@ export default function OrganizationSettings() {
                 <DeploymentReview
                     key={update.key}
                     update={update}
-                    action={action}
                     invalidate={invalidateSolutions}
                     onClose={() => setUpdate(null)}
                 />
@@ -626,36 +589,28 @@ export default function OrganizationSettings() {
                     isOpen
                     purpose="form"
                     onOpenChange={(open) => {
-                        if (!open && !action.isPending) setDeletion(null);
+                        if (!open) setDeletion(null);
                     }}
                 >
                     <DialogHeader
                         title="Delete solution"
                         onOpenChange={() => {
-                            if (!action.isPending) setDeletion(null);
+                            setDeletion(null);
                         }}
                     />
                     <Stack gap={3}>
                         <Text color="secondary">Delete solution {deletion.name}?</Text>
                         <Stack direction="horizontal" gap={2} justify="end">
-                            <Button
-                                label="Cancel"
-                                variant="ghost"
-                                isDisabled={action.isPending}
-                                onClick={() => setDeletion(null)}
-                            />
+                            <Button label="Cancel" variant="ghost" onClick={() => setDeletion(null)} />
                             <Button
                                 label="Delete"
                                 variant="destructive"
-                                isLoading={action.isPending}
-                                onClick={() =>
-                                    action.mutate(async () => {
-                                        // Refresh Solutions only after the delete request succeeds.
-                                        await api.delete(`/api/v1/solutions/${deletion.id}`);
-                                        await invalidateSolutions();
-                                        setDeletion(null);
-                                    })
-                                }
+                                clickAction={async () => {
+                                    // Refresh Solutions only after the delete request succeeds.
+                                    await api.delete(`/api/v1/solutions/${deletion.id}`);
+                                    await invalidateSolutions();
+                                    setDeletion(null);
+                                }}
                             />
                         </Stack>
                     </Stack>

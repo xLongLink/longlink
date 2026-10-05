@@ -1,17 +1,17 @@
 import { useState } from 'react';
 import { NoIndex } from '@/components/Seo';
+import { useApi } from '@/lib/hooks/use-api';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Avatar } from '@/components/ui/Avatar';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
 import { Heading } from '@astryxdesign/core/Heading';
+import CreateOrganization from './CreateOrganization';
 import { ApiBoundary } from '@/components/ApiBoundary';
-import { useApi, useAction } from '@/lib/hooks/use-api';
 import { PageContainer } from '@/components/PageContainer';
 import { Table, proportional } from '@astryxdesign/core/Table';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
-import CreateOrganization from '@/platform/views/user/CreateOrganization';
 
 /** Lists the current user's organizations and creates new organizations. */
 export default function Organizations() {
@@ -28,7 +28,6 @@ export default function Organizations() {
 /** Renders the organization's list while its boundary owns request lifecycle state. */
 function OrganizationList() {
     const [creating, setCreating] = useState(false);
-    const action = useAction();
     const [memberships, invalidate] = useApi(
         '/api/v1/me/organizations',
         schemas.zGetMyOrganizationsApiV1MeOrganizationsGetResponse
@@ -64,7 +63,7 @@ function OrganizationList() {
                     ]}
                 />
             </Stack>
-            <CreateOrganization isOpen={creating} onOpenChange={setCreating} action={action} invalidate={invalidate} />
+            <CreateOrganization isOpen={creating} onOpenChange={setCreating} invalidate={invalidate} />
         </>
     );
 }

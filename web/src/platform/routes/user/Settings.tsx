@@ -3,6 +3,7 @@ import { api } from '@/lib/api';
 import { useState } from 'react';
 import { NoIndex } from '@/components/Seo';
 import { Menu } from '@/components/ui/Menu';
+import { useApi } from '@/lib/hooks/use-api';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Avatar } from '@/components/ui/Avatar';
@@ -11,15 +12,14 @@ import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
 import { Divider } from '@astryxdesign/core/Divider';
 import { Heading } from '@astryxdesign/core/Heading';
+import CreateOrganization from './CreateOrganization';
 import { ApiBoundary } from '@/components/ApiBoundary';
-import { useApi, useAction } from '@/lib/hooks/use-api';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { PageContainer } from '@/components/PageContainer';
 import { useAuthenticatedUser } from '@/lib/hooks/use-user';
 import { Table, proportional } from '@astryxdesign/core/Table';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
-import CreateOrganization from '@/platform/views/user/CreateOrganization';
 
 /** Renders account metadata and resets drafts when the authenticated identity changes. */
 export default function Settings() {
@@ -36,8 +36,16 @@ export default function Settings() {
 /** Edits the authenticated profile and manages owned organizations. */
 function SettingsPage({ user }: { user: z.output<typeof schemas.zUserSummary> }) {
     const [name, setName] = useState(user.name);
-    const action = useAction();
     const [, invalidateUser] = useApi('/api/v1/me', schemas.zUserSummary);
+
+    /** Saves the validated account name and refreshes the profile. */
+    async function saveAccount() {
+        if (!name.trim()) return;
+
+        // Refresh the authoritative profile only after saving succeeds.
+        await api.patch('/api/v1/me', { json: schemas.zUserUpdate.parse({ name: name.trim() }) });
+        await invalidateUser();
+    }
 
     // Keep account editing independent of organization loading and failures.
     return (
@@ -64,38 +72,29 @@ function SettingsPage({ user }: { user: z.output<typeof schemas.zUserSummary> })
                                     label: 'Account',
                                     icon: 'userRound',
                                     content: (
-                                        <Stack
-                                            gap={4}
-                                            as="form"
-                                            onSubmit={(event) => {
-                                                event.preventDefault();
-                                                if (action.isPending || !name.trim()) return;
-
-                                                // Refresh the authoritative profile after saving the validated draft.
-                                                action.mutate(async () => {
-                                                    await api.patch('/api/v1/me', {
-                                                        json: schemas.zUserUpdate.parse({ name: name.trim() }),
-                                                    });
-                                                    await invalidateUser();
-                                                });
-                                            }}
-                                        >
-                                            <Heading level={2}>Account</Heading>
-                                            <Divider />
-                                            <TextInput label="Username" value={name} isRequired onChange={setName} />
-                                            <Text>
-                                                <b>Email</b> {user.email}
-                                            </Text>
-                                            <Stack direction="horizontal" justify="end">
-                                                <Button
-                                                    label="Save account"
-                                                    variant="primary"
-                                                    type="submit"
-                                                    isDisabled={!name.trim()}
-                                                    isLoading={action.isPending}
+                                        <form action={saveAccount}>
+                                            <Stack gap={4}>
+                                                <Heading level={2}>Account</Heading>
+                                                <Divider />
+                                                <TextInput
+                                                    label="Username"
+                                                    value={name}
+                                                    isRequired
+                                                    onChange={setName}
                                                 />
+                                                <Text>
+                                                    <b>Email</b> {user.email}
+                                                </Text>
+                                                <Stack direction="horizontal" justify="end">
+                                                    <Button
+                                                        label="Save account"
+                                                        variant="primary"
+                                                        type="submit"
+                                                        isDisabled={!name.trim()}
+                                                    />
+                                                </Stack>
                                             </Stack>
-                                        </Stack>
+                                        </form>
                                     ),
                                 },
                                 {
@@ -105,7 +104,7 @@ function SettingsPage({ user }: { user: z.output<typeof schemas.zUserSummary> })
                                     icon: 'building2',
                                     content: (
                                         <ApiBoundary>
-                                            <OrganizationSettings action={action} />
+                                            <OrganizationSettings />
                                         </ApiBoundary>
                                     ),
                                 },
@@ -119,7 +118,7 @@ function SettingsPage({ user }: { user: z.output<typeof schemas.zUserSummary> })
 }
 
 /** Owns organization management independently of account editing. */
-function OrganizationSettings({ action }: { action: ReturnType<typeof useAction> }) {
+function OrganizationSettings() {
     const [creating, setCreating] = useState(false);
     const [deletion, setDeletion] = useState<{ id: string; name: string } | null>(null);
     const [memberships, invalidate] = useApi(
@@ -181,43 +180,35 @@ function OrganizationSettings({ action }: { action: ReturnType<typeof useAction>
                         isOpen
                         purpose="form"
                         onOpenChange={(open) => {
-                            if (!open && !action.isPending) setDeletion(null);
+                            if (!open) setDeletion(null);
                         }}
                     >
                         <DialogHeader
                             title="Delete organization"
                             onOpenChange={() => {
-                                if (!action.isPending) setDeletion(null);
+                                setDeletion(null);
                             }}
                         />
                         <Stack gap={3}>
                             <Text color="secondary">Delete {deletion.name} from your account?</Text>
                             <Stack direction="horizontal" gap={2} justify="end">
-                                <Button
-                                    label="Cancel"
-                                    variant="ghost"
-                                    isDisabled={action.isPending}
-                                    onClick={() => setDeletion(null)}
-                                />
+                                <Button label="Cancel" variant="ghost" onClick={() => setDeletion(null)} />
                                 <Button
                                     label="Delete"
                                     variant="destructive"
-                                    isLoading={action.isPending}
-                                    onClick={() =>
-                                        action.mutate(async () => {
-                                            // Leave the confirmation open on failure and refresh memberships on success.
-                                            await api.delete(`/api/v1/organizations/${deletion.id}`);
-                                            await invalidate();
-                                            setDeletion(null);
-                                        })
-                                    }
+                                    clickAction={async () => {
+                                        // Refresh memberships only after deletion succeeds.
+                                        await api.delete(`/api/v1/organizations/${deletion.id}`);
+                                        await invalidate();
+                                        setDeletion(null);
+                                    }}
                                 />
                             </Stack>
                         </Stack>
                     </Dialog>
                 )}
             </Stack>
-            <CreateOrganization isOpen={creating} onOpenChange={setCreating} action={action} invalidate={invalidate} />
+            <CreateOrganization isOpen={creating} onOpenChange={setCreating} invalidate={invalidate} />
         </>
     );
 }

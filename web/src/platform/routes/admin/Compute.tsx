@@ -3,12 +3,12 @@ import { api } from '@/lib/api';
 import { useState } from 'react';
 import { Info } from 'lucide-react';
 import { NoIndex } from '@/components/Seo';
+import { useApi } from '@/lib/hooks/use-api';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
 import { Heading } from '@astryxdesign/core/Heading';
 import { TextArea } from '@astryxdesign/core/TextArea';
-import { useApi, useAction } from '@/lib/hooks/use-api';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { Table, proportional } from '@astryxdesign/core/Table';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
@@ -26,9 +26,16 @@ export default function Compute() {
         | null
     >(null);
     const [registration, setRegistration] = useState<z.input<typeof registrationSchema> | null>(null);
-    const action = useAction();
     const path = `/api/v1/computes?page=${page}&page_size=25`;
     const [computes, invalidate] = useApi(path, schemas.zPageComputeRegistryResponse);
+
+    /** Registers the validated Compute draft and refreshes the list. */
+    async function registerCompute(registration: z.input<typeof registrationSchema>) {
+        // Validate the draft and refresh the list only after registration succeeds.
+        await api.post('/api/v1/computes', { json: registrationSchema.parse(registration) });
+        await invalidate();
+        setRegistration(null);
+    }
 
     return (
         <Stack gap={8}>
@@ -85,67 +92,50 @@ export default function Compute() {
                     isOpen
                     purpose="form"
                     onOpenChange={(open) => {
-                        if (!open && !action.isPending) setRegistration(null);
+                        if (!open) setRegistration(null);
                     }}
                 >
                     <DialogHeader
                         title="Register Compute"
                         onOpenChange={() => {
-                            if (!action.isPending) setRegistration(null);
+                            setRegistration(null);
                         }}
                     />
-                    <Stack
-                        gap={3}
-                        as="form"
-                        onSubmit={(event) => {
-                            event.preventDefault();
-                            if (action.isPending) return;
-
-                            // Validate the registration and leave the draft open on failure.
-                            action.mutate(async () => {
-                                await api.post('/api/v1/computes', { json: registrationSchema.parse(registration) });
-                                await invalidate();
-                                setRegistration(null);
-                            });
-                        }}
-                    >
-                        <TextInput
-                            label="Name"
-                            value={registration.name}
-                            isRequired
-                            onChange={(name) => setRegistration({ ...registration, name })}
-                        />
-                        <TextInput
-                            label="Gateway URL"
-                            value={registration.gateway_url}
-                            placeholder="https://<nightly_gateway_floating_ip>"
-                            isRequired
-                            onChange={(gateway_url) => setRegistration({ ...registration, gateway_url })}
-                        />
-                        <TextInput
-                            label="Storage endpoint"
-                            value={registration.storage_endpoint}
-                            placeholder="https://<nightly_storage_floating_ip>"
-                            isRequired
-                            onChange={(storage_endpoint) => setRegistration({ ...registration, storage_endpoint })}
-                        />
-                        <TextArea
-                            label="Kubeconfig"
-                            value={registration.kubeconfig}
-                            placeholder="Paste the Compute kubeconfig"
-                            isRequired
-                            onChange={(kubeconfig) => setRegistration({ ...registration, kubeconfig })}
-                        />
-                        <Stack direction="horizontal" gap={2} justify="end">
-                            <Button
-                                label="Cancel"
-                                variant="ghost"
-                                isDisabled={action.isPending}
-                                onClick={() => setRegistration(null)}
+                    <form action={() => registerCompute(registration)}>
+                        <Stack gap={3}>
+                            <TextInput
+                                label="Name"
+                                value={registration.name}
+                                isRequired
+                                onChange={(name) => setRegistration({ ...registration, name })}
                             />
-                            <Button label="Register" variant="primary" type="submit" isLoading={action.isPending} />
+                            <TextInput
+                                label="Gateway URL"
+                                value={registration.gateway_url}
+                                placeholder="https://<nightly_gateway_floating_ip>"
+                                isRequired
+                                onChange={(gateway_url) => setRegistration({ ...registration, gateway_url })}
+                            />
+                            <TextInput
+                                label="Storage endpoint"
+                                value={registration.storage_endpoint}
+                                placeholder="https://<nightly_storage_floating_ip>"
+                                isRequired
+                                onChange={(storage_endpoint) => setRegistration({ ...registration, storage_endpoint })}
+                            />
+                            <TextArea
+                                label="Kubeconfig"
+                                value={registration.kubeconfig}
+                                placeholder="Paste the Compute kubeconfig"
+                                isRequired
+                                onChange={(kubeconfig) => setRegistration({ ...registration, kubeconfig })}
+                            />
+                            <Stack direction="horizontal" gap={2} justify="end">
+                                <Button label="Cancel" variant="ghost" onClick={() => setRegistration(null)} />
+                                <Button label="Register" variant="primary" type="submit" />
+                            </Stack>
                         </Stack>
-                    </Stack>
+                    </form>
                 </Dialog>
             )}
             {dialog?.kind === 'metadata' && (
@@ -189,13 +179,13 @@ export default function Compute() {
                     isOpen
                     purpose="form"
                     onOpenChange={(open) => {
-                        if (!open && !action.isPending) setDialog(null);
+                        if (!open) setDialog(null);
                     }}
                 >
                     <DialogHeader
                         title="Delete compute"
                         onOpenChange={() => {
-                            if (!action.isPending) setDialog(null);
+                            setDialog(null);
                         }}
                     />
                     <Stack gap={3}>
@@ -204,24 +194,16 @@ export default function Compute() {
                             remain unchanged.
                         </Text>
                         <Stack direction="horizontal" gap={2} justify="end">
-                            <Button
-                                label="Cancel"
-                                variant="ghost"
-                                isDisabled={action.isPending}
-                                onClick={() => setDialog(null)}
-                            />
+                            <Button label="Cancel" variant="ghost" onClick={() => setDialog(null)} />
                             <Button
                                 label="Delete"
                                 variant="destructive"
-                                isLoading={action.isPending}
-                                onClick={() =>
-                                    action.mutate(async () => {
-                                        // Remove the registry entry without deleting its Kubernetes resources.
-                                        await api.delete(`/api/v1/computes/${dialog.item.id}`);
-                                        await invalidate();
-                                        setDialog(null);
-                                    })
-                                }
+                                clickAction={async () => {
+                                    // Remove the registry entry without deleting its Kubernetes resources.
+                                    await api.delete(`/api/v1/computes/${dialog.item.id}`);
+                                    await invalidate();
+                                    setDialog(null);
+                                }}
                             />
                         </Stack>
                     </Stack>

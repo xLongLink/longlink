@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useParams } from 'react-router';
 import { NoIndex } from '@/components/Seo';
 import { useApi } from '@/lib/hooks/use-api';
+import CreateSolution from './CreateSolution';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Badge } from '@astryxdesign/core/Badge';
@@ -9,7 +10,6 @@ import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
 import { Heading } from '@astryxdesign/core/Heading';
 import { Table, proportional } from '@astryxdesign/core/Table';
-import CreateSolution from '@/platform/views/orgs/CreateSolution';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { useResolvedOrganizationMembership } from '@/lib/hooks/use-organization';
 

@@ -7,26 +7,26 @@ export const userNavigation = [
 ] as const satisfies readonly NavigationTab[];
 
 export const adminPages = [
-    { id: 'admin-users', path: 'users', module: './views/admin/users.tsx', icon: Users, label: 'Users' },
+    { id: 'admin-users', path: 'users', module: './routes/admin/Users.tsx', icon: Users, label: 'Users' },
     {
         id: 'admin-solutions',
         path: 'solutions',
-        module: './views/admin/solutions.tsx',
+        module: './routes/admin/Solutions.tsx',
         icon: AppWindow,
         label: 'Solutions',
     },
     {
         id: 'admin-organizations',
         path: 'organizations',
-        module: './views/admin/organizations.tsx',
+        module: './routes/admin/Organizations.tsx',
         icon: Building2,
         label: 'Organizations',
     },
-    { id: 'admin-compute', path: 'compute', module: './views/admin/compute.tsx', icon: Wrench, label: 'Compute' },
+    { id: 'admin-compute', path: 'compute', module: './routes/admin/Compute.tsx', icon: Wrench, label: 'Compute' },
     {
         id: 'admin-operations',
         path: 'operations',
-        module: './views/admin/operations.tsx',
+        module: './routes/admin/Operations.tsx',
         icon: ArrowUpDown,
         label: 'Operations',
     },

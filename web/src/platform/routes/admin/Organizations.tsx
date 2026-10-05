@@ -3,6 +3,7 @@ import { api } from '@/lib/api';
 import { useState } from 'react';
 import { Info } from 'lucide-react';
 import { NoIndex } from '@/components/Seo';
+import { useApi } from '@/lib/hooks/use-api';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Avatar } from '@/components/ui/Avatar';
@@ -10,7 +11,6 @@ import { Badge } from '@astryxdesign/core/Badge';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
 import { Heading } from '@astryxdesign/core/Heading';
-import { useApi, useAction } from '@/lib/hooks/use-api';
 import { Table, proportional } from '@astryxdesign/core/Table';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import { zPageOrganizationIdentity } from '@/lib/generated/platform-api-v1/zod.gen';
@@ -23,7 +23,6 @@ export default function Organizations() {
         | { kind: 'deletion'; item: { id: string; name: string } }
         | null
     >(null);
-    const action = useAction();
     const path = `/api/v1/organizations?page=${page}&page_size=25`;
     const [organizations, invalidate] = useApi(path, zPageOrganizationIdentity);
 
@@ -124,36 +123,28 @@ export default function Organizations() {
                     isOpen
                     purpose="form"
                     onOpenChange={(open) => {
-                        if (!open && !action.isPending) setDialog(null);
+                        if (!open) setDialog(null);
                     }}
                 >
                     <DialogHeader
                         title="Delete organization"
                         onOpenChange={() => {
-                            if (!action.isPending) setDialog(null);
+                            setDialog(null);
                         }}
                     />
                     <Stack gap={3}>
                         <Text color="secondary">Delete organization {dialog.item.name}?</Text>
                         <Stack direction="horizontal" gap={2} justify="end">
-                            <Button
-                                label="Cancel"
-                                variant="ghost"
-                                isDisabled={action.isPending}
-                                onClick={() => setDialog(null)}
-                            />
+                            <Button label="Cancel" variant="ghost" onClick={() => setDialog(null)} />
                             <Button
                                 label="Delete"
                                 variant="destructive"
-                                isLoading={action.isPending}
-                                onClick={() =>
-                                    action.mutate(async () => {
-                                        // Refresh the list only after deletion succeeds.
-                                        await api.delete(`/api/v1/organizations/${dialog.item.id}`);
-                                        await invalidate();
-                                        setDialog(null);
-                                    })
-                                }
+                                clickAction={async () => {
+                                    // Refresh the list only after deletion succeeds.
+                                    await api.delete(`/api/v1/organizations/${dialog.item.id}`);
+                                    await invalidate();
+                                    setDialog(null);
+                                }}
                             />
                         </Stack>
                     </Stack>

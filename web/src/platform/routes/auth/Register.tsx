@@ -6,7 +6,6 @@ import { useSearchParams } from 'react-router';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
 import { useToast } from '@astryxdesign/core/Toast';
-import { useMutation } from '@tanstack/react-query';
 import { Divider } from '@astryxdesign/core/Divider';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { WelcomeTitle } from '@/components/WelcomeTitle';
@@ -18,10 +17,6 @@ import { emailPayloadSchema, type EmailPayload } from './validation';
 export default function Register() {
     const showToast = useToast();
     const [searchParams] = useSearchParams();
-    const registration = useMutation({
-        mutationFn: (payload: EmailPayload) => api('/api/v1/auth/register', { json: payload, method: 'POST' }),
-        onSuccess: () => showToast({ body: 'Check your inbox for the registration link.' }),
-    });
     const form = useForm<EmailPayload>({
         defaultValues: { email: searchParams.get('email') ?? '' },
         resolver: zodResolver(emailPayloadSchema),
@@ -34,41 +29,42 @@ export default function Register() {
         <AuthLayout description={<Divider label="Please enter your email" />} title={<WelcomeTitle />}>
             <NoIndex title="Create Account | LongLink" />
             <Stack gap={3}>
-                <Stack
-                    as="form"
-                    gap={3}
-                    onSubmit={(event) => {
-                        void form.handleSubmit((value) => registration.mutate(value))(event);
-                    }}
+                <form
+                    action={() =>
+                        form.handleSubmit(async (payload) => {
+                            // Notify the user only after the email request succeeds.
+                            await api('/api/v1/auth/register', { json: payload, method: 'POST' });
+                            showToast({ body: 'Check your inbox for the registration link.' });
+                        })()
+                    }
                 >
-                    <Controller
-                        control={form.control}
-                        name="email"
-                        render={({ field, fieldState }) => (
-                            <TextInput
-                                ref={field.ref}
-                                autoComplete="email"
-                                htmlName={field.name}
-                                isRequired
-                                label="Email"
-                                onBlur={field.onBlur}
-                                onChange={field.onChange}
-                                status={
-                                    fieldState.error ? { type: 'error', message: fieldState.error.message } : undefined
-                                }
-                                type="email"
-                                value={field.value}
-                                width="100%"
-                            />
-                        )}
-                    />
-                    <Button
-                        isLoading={registration.isPending}
-                        label="Send registration link"
-                        type="submit"
-                        variant="primary"
-                    />
-                </Stack>
+                    <Stack gap={3}>
+                        <Controller
+                            control={form.control}
+                            name="email"
+                            render={({ field, fieldState }) => (
+                                <TextInput
+                                    ref={field.ref}
+                                    autoComplete="email"
+                                    htmlName={field.name}
+                                    isRequired
+                                    label="Email"
+                                    onBlur={field.onBlur}
+                                    onChange={field.onChange}
+                                    status={
+                                        fieldState.error
+                                            ? { type: 'error', message: fieldState.error.message }
+                                            : undefined
+                                    }
+                                    type="email"
+                                    value={field.value}
+                                    width="100%"
+                                />
+                            )}
+                        />
+                        <Button label="Send registration link" type="submit" variant="primary" />
+                    </Stack>
+                </form>
                 <Divider
                     label={
                         <>

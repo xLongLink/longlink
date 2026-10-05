@@ -1,12 +1,12 @@
 # Contributing
 
-The web folder contains the frontend runtime for LongLink. It owns the shared UI, View runtime, docs, and Platform rendering path.
+The web folder contains the frontend runtime for LongLink. It owns the shared UI, isolated Solution View runtime, docs, and native Platform pages.
 
 ## Architecture
 
 The combined repository architecture is maintained in `../AGENTS.md`.
 
-React Router Framework Mode builds two browser applications from the shared package. `src/platform/` contains the Platform routes and prerendered public pages, while `src/solution/` contains the SPA embedded in LongLink Solutions. Builds publish directly to `../api/src/.static/web/` and `../sdk/longlink/.static/web/`.
+React Router Framework Mode builds two browser applications from the shared package. `src/platform/routes/` contains native Platform pages and their co-located components, while `src/solution/` contains the SPA embedded in LongLink Solutions. The isolated JSX runtime lives in `src/views/`. Builds publish directly to `../api/src/.static/web/` and `../sdk/longlink/.static/web/`.
 
 ## Routes
 

@@ -1,4 +1,5 @@
 import { api } from '@/lib/api';
+import { useState } from 'react';
 import { AuthLayout } from './AuthLayout';
 import { NoIndex } from '@/components/Seo';
 import { Link } from '@astryxdesign/core/Link';
@@ -6,7 +7,6 @@ import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
-import { useMutation } from '@tanstack/react-query';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
 import { TextInput } from '@astryxdesign/core/TextInput';
@@ -14,9 +14,7 @@ import { emailPayloadSchema, type EmailPayload } from './validation';
 
 /** Requests a password reset email without disclosing whether an account exists. */
 export default function ForgotPassword() {
-    const requestReset = useMutation({
-        mutationFn: (payload: EmailPayload) => api('/api/v1/auth/forgot-password', { json: payload, method: 'POST' }),
-    });
+    const [sent, setSent] = useState(false);
     const form = useForm<EmailPayload>({
         defaultValues: { email: '' },
         resolver: zodResolver(emailPayloadSchema),
@@ -28,7 +26,7 @@ export default function ForgotPassword() {
             description="Enter your account email and LongLink will send password reset instructions."
         >
             <NoIndex title="Reset Your Password | LongLink" />
-            {requestReset.isSuccess ? (
+            {sent ? (
                 <Stack gap={4}>
                     <Banner
                         status="success"
@@ -38,43 +36,42 @@ export default function ForgotPassword() {
                 </Stack>
             ) : (
                 <>
-                    <Stack
-                        as="form"
-                        gap={4}
-                        onSubmit={(event) => {
-                            void form.handleSubmit((value) => requestReset.mutate(value))(event);
-                        }}
+                    <form
+                        action={() =>
+                            form.handleSubmit(async (payload) => {
+                                // Show the confirmation without disclosing whether an account exists.
+                                await api('/api/v1/auth/forgot-password', { json: payload, method: 'POST' });
+                                setSent(true);
+                            })()
+                        }
                     >
-                        <Controller
-                            control={form.control}
-                            name="email"
-                            render={({ field, fieldState }) => (
-                                <TextInput
-                                    ref={field.ref}
-                                    autoComplete="email"
-                                    htmlName={field.name}
-                                    isRequired
-                                    label="Email"
-                                    onBlur={field.onBlur}
-                                    onChange={field.onChange}
-                                    status={
-                                        fieldState.error
-                                            ? { type: 'error', message: fieldState.error.message }
-                                            : undefined
-                                    }
-                                    type="email"
-                                    value={field.value}
-                                    width="100%"
-                                />
-                            )}
-                        />
-                        <Button
-                            isLoading={requestReset.isPending}
-                            label="Send reset email"
-                            type="submit"
-                            variant="primary"
-                        />
-                    </Stack>
+                        <Stack gap={4}>
+                            <Controller
+                                control={form.control}
+                                name="email"
+                                render={({ field, fieldState }) => (
+                                    <TextInput
+                                        ref={field.ref}
+                                        autoComplete="email"
+                                        htmlName={field.name}
+                                        isRequired
+                                        label="Email"
+                                        onBlur={field.onBlur}
+                                        onChange={field.onChange}
+                                        status={
+                                            fieldState.error
+                                                ? { type: 'error', message: fieldState.error.message }
+                                                : undefined
+                                        }
+                                        type="email"
+                                        value={field.value}
+                                        width="100%"
+                                    />
+                                )}
+                            />
+                            <Button label="Send reset email" type="submit" variant="primary" />
+                        </Stack>
+                    </form>
                     <Text as="p" justify="center" type="supporting">
                         <Link href="/login" type="inherit" weight="medium">
                             Back to sign in
