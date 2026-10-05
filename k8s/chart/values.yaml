@@ -1,3 +1,7 @@
+cloudnative-pg:
+    image:
+        tag: 1.29.1@sha256:0dfff19ba7b52ca25851a1010028b6940fff2e233290465af1cfb08a5f3f4661
+
 gateway:
     service:
         type: LoadBalancer

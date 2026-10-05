@@ -1,0 +1,6 @@
+{{/* Require an immutable image for the cluster-wide CloudNativePG controller. */}}
+{{- $controller := index .Values "cloudnative-pg" -}}
+{{- $image := printf "%s:%s" $controller.image.repository ($controller.image.tag | default "") -}}
+{{- if not (regexMatch "^[^@[:space:]]+@sha256:[a-f0-9]{64}$" $image) -}}
+{{- fail "cloudnative-pg.image.tag must include an immutable @sha256: digest with 64 lowercase hexadecimal characters" -}}
+{{- end -}}
