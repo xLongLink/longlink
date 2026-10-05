@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import ViewLayout from './ViewLayout';
+import { TextArea } from '@/components/ui/TextArea';
 
 /** Documents TextArea in LongLink Views. */
 export default function TextAreaPage() {
@@ -9,6 +11,7 @@ export default function TextAreaPage() {
             examples={[
                 {
                     title: 'TextArea',
+                    preview: <TextAreaExample />,
                     code: `function Example() {
   const [value, setValue] = useState('');
 
@@ -18,4 +21,12 @@ export default function TextAreaPage() {
             ]}
         />
     );
+}
+
+/** Keeps note edits local to this example. */
+export function TextAreaExample() {
+    const [value, setValue] = useState('Review complete');
+
+    // Retain the user's edits to the sample notes.
+    return <TextArea isLabelHidden label="Notes" rows={2} value={value} onChange={setValue} />;
 }

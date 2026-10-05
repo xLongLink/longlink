@@ -106,12 +106,7 @@ export function Article({ children, page }: { children: ReactNode; page: Article
                                     </Stack>
                                 </PageContainer>
                                 <Center className="absolute end-0 top-0" height={64} paddingInline={4}>
-                                    <Button
-                                        href="/user/organizations"
-                                        label="Get Started"
-                                        size="sm"
-                                        variant="primary"
-                                    />
+                                    <Button href="/login/" label="Get Started" size="sm" variant="primary" />
                                 </Center>
                             </Stack>
                             <Stack paddingInline={5}>

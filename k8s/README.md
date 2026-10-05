@@ -12,6 +12,12 @@ non-root with a read-only root filesystem and no service-account token or Linux
 capabilities. Its internal TLS port is 8443; the public Service remains on 443.
 Tune `storage.resources` for the expected shared object-storage traffic.
 
+The CloudNativePG controller is pinned to a multi-architecture SHA-256 digest in
+the chart values. Helm rendering rejects tag-only or malformed image overrides.
+Controller updates must include a reviewed digest in `cloudnative-pg.image.tag`
+(`version@sha256:<64 lowercase hexadecimal characters>`); the same pinned image
+is used for `OPERATOR_IMAGE_NAME`.
+
 ## Install
 
 From source:

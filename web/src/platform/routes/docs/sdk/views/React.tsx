@@ -1,6 +1,7 @@
+import { useState } from 'react';
 import ViewLayout from './ViewLayout';
-import { ComponentPreview } from './Preview';
 import { Text } from '@astryxdesign/core/Text';
+import { Button } from '@/components/ui/Button';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Heading } from '@astryxdesign/core/Heading';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
@@ -71,7 +72,7 @@ export default function ReactPage() {
                 increments it safely.
             </Text>
             <Stack padding={4} className="rounded-lg border border-border" aria-label="Counter preview">
-                <ComponentPreview name="React" />
+                <CounterExample />
             </Stack>
             <CodeBlock
                 code={`function Example() {
@@ -92,5 +93,18 @@ export default function ReactPage() {
                 hasLanguageLabel={false}
             />
         </ViewLayout>
+    );
+}
+
+/** Demonstrates React state through an independently mounted counter. */
+function CounterExample() {
+    const [count, setCount] = useState(0);
+
+    // Increment from the previous value without affecting other examples.
+    return (
+        <Stack gap={3}>
+            <Text>Count: {count}</Text>
+            <Button label="Increment" onClick={() => setCount((previous) => previous + 1)} />
+        </Stack>
     );
 }

@@ -103,10 +103,16 @@ export function Footer() {
                                     Home
                                 </Link>
                                 <Link href="/docs/introduction/" color="secondary" type="supporting" weight="medium">
+                                    Why LongLink
+                                </Link>
+                                <Link href="/docs/" color="secondary" type="supporting" weight="medium">
                                     Documentation
                                 </Link>
                                 <Link href="/pricing/" color="secondary" type="supporting" weight="medium">
                                     Pricing
+                                </Link>
+                                <Link href="/login/" color="secondary" type="supporting" weight="medium">
+                                    Sign In
                                 </Link>
                             </Stack>
                         </Stack>

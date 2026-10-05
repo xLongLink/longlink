@@ -1,3 +1,5 @@
+import { Text } from '@astryxdesign/core/Text';
+import { Tabs, Tab } from '@/components/ui/Tabs';
 import ViewLayout, { type ViewProperties } from './ViewLayout';
 
 // Document the tab strip and its content definitions as separate contracts.
@@ -70,6 +72,7 @@ export default function TabsPage() {
             examples={[
                 {
                     title: 'Tabs',
+                    preview: <TabsExample />,
                     description: 'Select a tab to display its children below the tab strip.',
                     code: `function Example() {
   return (
@@ -86,5 +89,20 @@ export default function TabsPage() {
                 },
             ]}
         />
+    );
+}
+
+/** Demonstrates the page's tabs with independently selectable panels. */
+export function TabsExample() {
+    // Let the tabs manage selection and render the active panel.
+    return (
+        <Tabs>
+            <Tab label="Overview" value="overview">
+                <Text>Overview content</Text>
+            </Tab>
+            <Tab label="Activity" value="activity">
+                <Text>Activity content</Text>
+            </Tab>
+        </Tabs>
     );
 }

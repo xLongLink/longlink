@@ -1,5 +1,5 @@
-{{/* Require immutable images for the shared storage data plane. */}}
-{{- range $name := list "storage" "rustfs" -}}
+{{/* Require immutable images for shared infrastructure and the storage data plane. */}}
+{{- range $name := list "cloudnative-pg" "storage" "rustfs" -}}
 {{- $image := (index $.Values $name).image -}}
 {{- $reference := printf "%s:%s" $image.repository ($image.tag | default "") -}}
 {{- if not (regexMatch "^[^@[:space:]]+@sha256:[a-f0-9]{64}$" $reference) -}}

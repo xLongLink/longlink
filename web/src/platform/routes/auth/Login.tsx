@@ -1,19 +1,18 @@
 import { z } from 'zod';
 import { AuthLayout } from './AuthLayout';
 import { api, ApiError } from '@/lib/api';
-import { NoIndex } from '@/components/Seo';
 import { useApiError } from '@/lib/errors';
 import { Eye, EyeOff } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
+import { Seo, NoIndex } from '@/components/Seo';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
 import { Divider } from '@astryxdesign/core/Divider';
 import { useCurrentUser } from '@/lib/hooks/use-user';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { clearSessionQueries } from '@/lib/react-query';
-import { WelcomeTitle } from '@/components/WelcomeTitle';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { emailSchema, passwordSchema } from './validation';
 import { IconButton } from '@astryxdesign/core/IconButton';
@@ -76,8 +75,11 @@ export default function Login() {
     }
 
     return (
-        <AuthLayout title={<WelcomeTitle />} description={null}>
-            <NoIndex title="Sign In | LongLink" />
+        <AuthLayout title="Sign in to LongLink" description="Access your organizations and manage your Solutions.">
+            <Seo
+                title="Sign In | LongLink"
+                description="Sign in to LongLink to access your organizations and build, deploy, and manage your business process Solutions."
+            />
             <Stack gap={4}>
                 <Stack gap={2}>
                     {availableOAuthProviders.length > 0 ? (

@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import ViewLayout from './ViewLayout';
+import { CheckboxInput } from '@/components/ui/CheckboxInput';
 
 /** Documents CheckboxInput in LongLink Views. */
 export default function CheckboxInputPage() {
@@ -9,6 +11,7 @@ export default function CheckboxInputPage() {
             examples={[
                 {
                     title: 'CheckboxInput',
+                    preview: <CheckboxInputExample />,
                     code: `function Example() {
   const [value, setValue] = useState(false);
 
@@ -18,4 +21,12 @@ export default function CheckboxInputPage() {
             ]}
         />
     );
+}
+
+/** Keeps checkbox selection local to this example. */
+export function CheckboxInputExample() {
+    const [value, setValue] = useState(true);
+
+    // Update the selected state as the checkbox is toggled.
+    return <CheckboxInput label="Approved" size="sm" value={value} onChange={setValue} />;
 }
