@@ -11,23 +11,21 @@
 <br />
 
 > [!WARNING]
-> LongLink is under active development. APIs may change before 1.0.
+> LongLink is under active development. APIs may change before version 1.0.
 
 
 ## Introduction
 
-LongLink is a code-first platform for building and operating process-specific business software with Python.
+LongLink helps you build and run applications with Python.
 
-Build your Solution as a standard FastAPI application, using SQLModel for data and Pydantic for validation. LongLink provides the common runtime and services around the application: user management, permissions, database, storage, deployment, and logging.
-
-The result is software you can develop, test, version, review, and change using normal engineering tools.
+Use FastAPI, SQLModel, and Pydantic to define how your application works. LongLink handles users, access control, databases, storage, and deployment, so you don't have to build those services yourself.
 
 
 <br />
 
 ## Create a Solution
 
-Requirements: `Python 3.12` or newer and [`uv`](https://docs.astral.sh/uv/).
+Requirements: Python 3.12 or later and [`uv`](https://docs.astral.sh/uv/).
 
 ```bash
 uvx --from longlink longlink init --folder .
@@ -81,17 +79,17 @@ Specific workflows can be customized through code, built quickly with modern AI-
 
 ## Goals
 
-- **Keep it simple**: Processes are clear, easy to operate and cheap to maintain.
-- **Own the process**: Keep control and transparency over the process, its rules, and its data.
-- **Separate responsibilities**: Clear distinction between a human decision and a machine task.
+- **Keep it simple:** Make processes clear, easy to operate, and inexpensive to maintain.
+- **Own the process:** Keep your processes, rules, and data transparent and under your control.
+- **Separate responsibilities:** Distinguish human decisions from automated tasks.
 
 ### Standards and governance
 
-These principles align with [UN Sustainable Development Goal 9](https://sdgs.un.org/goals/goal9) and can support organisations implementing management systems and governance practices related to standards such as [ISO 9001](https://www.iso.org/standard/62085.html), [ISO 22301](https://www.iso.org/standard/75106.html), [ISO 37301](https://www.iso.org/standard/75080.html).
+These principles align with [UN Sustainable Development Goal 9](https://sdgs.un.org/goals/goal9) and can support organizations implementing management systems and governance practices related to standards such as [ISO 9001](https://www.iso.org/standard/62085.html), [ISO 22301](https://www.iso.org/standard/75106.html), and [ISO 37301](https://www.iso.org/standard/75080.html).
 
 <br />
 
-## Developing LongLink
+## Develop LongLink
 
 The repository contains the LongLink SDK in `sdk/`, the Platform API in `api/`, and the frontend in `web/`.
 On Linux, install the development requirements with:
@@ -100,26 +98,40 @@ On Linux, install the development requirements with:
 make apt   # Ubuntu, Debian, ...
 ```
 
-Work on the LongLink Platform, the default development credentials are `admin@admin.com` and `admin`:
+### Develop the Platform
+
+Run these commands from the repository root:
 
 ```bash
 make up     # Create local infrastructure
-make api    # In one terminal
-make seed   # In another terminal after the api is up
-make web    # In another terminal
+make api    # Start the API and leave it running
+make seed   # In another terminal, after API startup completes
+make web    # In the second terminal, after seeding finishes
 ```
 
-Work on the LongLink SDK runtime:
+`make seed` recreates `sdk/dev/`, removing any local edits in that directory.
+
+The default development email address is `admin@admin.com`, and the password is `admin`.
+
+### Develop the SDK runtime
+
+Run a standalone sample Solution from the repository root:
 
 ```bash
-make sdk    # Run a standalone demo application locally
+make sdk
 ```
 
-Clean up:
+If the Platform servers are running, use a separate terminal for this command.
+
+### Stop local services
+
+Stop running development servers with **Ctrl+C** in their terminals. Then run:
 
 ```bash
-make down  # Stop local services and the cluster
+make down
 ```
+
+This command removes the local cluster, API database, and sample Solution in `sdk/dev/`, including any local edits in that directory.
 
 <br />
 <br />

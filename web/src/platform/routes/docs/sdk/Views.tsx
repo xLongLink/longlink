@@ -79,11 +79,11 @@ export default function Item({ params }) {
                                         </Card>
                                         <Text type="supporting">
                                             {component.category === 'Action' || component.category === 'Form'
-                                                ? component.name.replace(/([a-z])([A-Z])/g, '$1 $2')
-                                                : component.name}
+                                                ? component.label.replace(/([a-z])([A-Z])/g, '$1 $2')
+                                                : component.label}
                                         </Text>
                                         <RouterLink
-                                            aria-label={`Open ${component.name} documentation`}
+                                            aria-label={`Open ${component.label} documentation`}
                                             className="absolute inset-0 z-10 rounded-lg focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
                                             to={`/docs/sdk/views/${component.slug}/`}
                                         />

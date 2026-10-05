@@ -66,13 +66,6 @@
                 "guidance": false,
                 "description": "Use Avatar for logos, product images, or anything that isn't a person or team. Use an image or icon instead."
             }
-        ],
-        "examples": [
-            {
-                "title": "Avatar",
-                "description": "Use Avatar in a LongLink View.",
-                "code": "function Example() {\n  return <Avatar name=\"Ada Lovelace\" />;\n}\n"
-            }
         ]
     },
     {
@@ -151,13 +144,6 @@
             {
                 "guidance": false,
                 "description": "Make badges clickable; they are read-only indicators. Use a button or link if the user needs to take action."
-            }
-        ],
-        "examples": [
-            {
-                "title": "Badge",
-                "description": "Use Badge in a LongLink View.",
-                "code": "function Example() {\n  return <Badge label=\"Open\" variant=\"info\" />;\n}\n"
             }
         ]
     },
@@ -298,13 +284,6 @@
                 "guidance": false,
                 "description": "Use a button for navigation. If it only takes the user to another page, use a link instead. Buttons are for actions like saving, deleting, or submitting."
             }
-        ],
-        "examples": [
-            {
-                "title": "Button",
-                "description": "Use Button in a LongLink View.",
-                "code": "function Example() {\n  return (\n    <Button\n      label=\"Save\"\n      onClick={async () => {\n        await request('/api/settings', {\n          method: 'PATCH',\n          json: { enabled: true },\n        });\n      }}\n    />\n  );\n}\n"
-            }
         ]
     },
     {
@@ -391,13 +370,6 @@
             {
                 "guidance": false,
                 "description": "Don't disable the group to show that an action is in flight. A disabled member drops focus, so a keyboard user loses their place; leave the group enabled and show progress on the button that started the work."
-            }
-        ],
-        "examples": [
-            {
-                "title": "ButtonGroup",
-                "description": "Use ButtonGroup in a LongLink View.",
-                "code": "function Example() {\n  return (\n    <ButtonGroup label=\"Actions\">\n      <Button label=\"Save\" />\n      <Button label=\"Cancel\" variant=\"ghost\" />\n    </ButtonGroup>\n  );\n}\n"
             }
         ]
     },
@@ -545,13 +517,6 @@
                 "guidance": false,
                 "description": "Disable large blocks of dates without context. The user should understand why dates are unavailable."
             }
-        ],
-        "examples": [
-            {
-                "title": "Calendar",
-                "description": "Use Calendar in a LongLink View.",
-                "code": "function Example() {\n  const [value, setValue] = useState('2026-10-02');\n  return <Calendar value={value} onChange={setValue} />;\n}\n"
-            }
         ]
     },
     {
@@ -675,13 +640,6 @@
                 "guidance": false,
                 "description": "Use a checkbox for actions that take effect immediately; use a toggle switch or button instead."
             }
-        ],
-        "examples": [
-            {
-                "title": "CheckboxInput",
-                "description": "Use CheckboxInput in a LongLink View.",
-                "code": "function Example() {\n  const [value, setValue] = useState(false);\n  return <CheckboxInput label=\"Approved\" value={value} onChange={setValue} />;\n}\n"
-            }
         ]
     },
     {
@@ -757,13 +715,6 @@
             {
                 "guidance": false,
                 "description": "Enable line numbers on short snippets (under 5 lines) where they add clutter without helping navigation."
-            }
-        ],
-        "examples": [
-            {
-                "title": "CodeBlock",
-                "description": "Use CodeBlock in a LongLink View.",
-                "code": "function Example() {\n  return (\n    <CodeBlock\n      code={'function Example() { return <Text>Hello</Text>; }'}\n      language=\"jsx\"\n      title=\"example.jsx\"\n    />\n  );\n}\n"
             }
         ]
     },
@@ -858,13 +809,6 @@
             {
                 "guidance": false,
                 "description": "Use a collapsible for a single short paragraph; just show the text directly instead."
-            }
-        ],
-        "examples": [
-            {
-                "title": "Collapsible",
-                "description": "Use Collapsible in a LongLink View.",
-                "code": "function Example() {\n  return (\n    <Collapsible trigger=\"Details\">\n      <Text>Additional information</Text>\n    </Collapsible>\n  );\n}\n"
             }
         ]
     },
@@ -998,13 +942,6 @@
             {
                 "guidance": false,
                 "description": "Do not use ComplexSelector for a plain single-column text list; use Selector instead."
-            }
-        ],
-        "examples": [
-            {
-                "title": "ComplexSelector",
-                "description": "Use ComplexSelector in a LongLink View.",
-                "code": "function Example() {\n  const [value, setValue] = useState('team');\n  return (\n    <ComplexSelector\n      label=\"Plan\"\n      value={value}\n      onChange={setValue}\n      triggerLabel={value}\n    >\n      {(value, onChange, close) => (\n        <RadioList\n          label=\"Choose a plan\"\n          value={value}\n          onChange={(next) => {\n            onChange(next);\n            close();\n          }}\n        >\n          <RadioListItem label=\"Solo\" value=\"solo\" />\n          <RadioListItem label=\"Team\" value=\"team\" />\n        </RadioList>\n      )}\n    </ComplexSelector>\n  );\n}\n"
             }
         ]
     },
@@ -1164,13 +1101,6 @@
             {
                 "guidance": false,
                 "description": "Rely on the calendar alone; the text input lets users type dates directly, which is faster for known dates."
-            }
-        ],
-        "examples": [
-            {
-                "title": "DateInput",
-                "description": "Use DateInput in a LongLink View.",
-                "code": "function Example() {\n  const [value, setValue] = useState('2026-10-02');\n  return <DateInput label=\"Due date\" value={value} onChange={setValue} />;\n}\n"
             }
         ]
     },
@@ -1350,13 +1280,6 @@
                 "guidance": false,
                 "description": "Hide the label without surrounding context that makes the purpose obvious."
             }
-        ],
-        "examples": [
-            {
-                "title": "DateRangeInput",
-                "description": "Use DateRangeInput in a LongLink View.",
-                "code": "function Example() {\n  const [value, setValue] = useState({\n    start: '2026-10-02',\n    end: '2026-10-09',\n  });\n  return <DateRangeInput label=\"Period\" value={value} onChange={setValue} />;\n}\n"
-            }
         ]
     },
     {
@@ -1532,13 +1455,6 @@
                 "guidance": false,
                 "description": "Hide the label without surrounding context that makes the field purpose obvious."
             }
-        ],
-        "examples": [
-            {
-                "title": "DateTimeInput",
-                "description": "Use DateTimeInput in a LongLink View.",
-                "code": "function Example() {\n  const [value, setValue] = useState();\n  return (\n    <DateTimeInput label=\"Appointment\" value={value} onChange={setValue} />\n  );\n}\n"
-            }
         ]
     },
     {
@@ -1624,13 +1540,6 @@
                 "guidance": false,
                 "description": "Nest dialogs inside other dialogs; restructure the flow into steps within a single dialog instead."
             }
-        ],
-        "examples": [
-            {
-                "title": "Dialog",
-                "description": "Use Dialog in a LongLink View.",
-                "code": "function Example() {\n  const [isOpen, setIsOpen] = useState(false);\n  return (\n    <Stack gap={3}>\n      <Button label=\"Open dialog\" onClick={() => setIsOpen(true)} />\n      <Dialog\n        aria-label=\"Order details\"\n        isOpen={isOpen}\n        onOpenChange={setIsOpen}\n      >\n        <Text>Order details</Text>\n        <Button label=\"Close\" onClick={() => setIsOpen(false)} />\n      </Dialog>\n    </Stack>\n  );\n}\n"
-            }
         ]
     },
     {
@@ -1663,13 +1572,6 @@
             {
                 "guidance": false,
                 "description": "Overuse dividers; rely on spacing and layout to separate content when possible."
-            }
-        ],
-        "examples": [
-            {
-                "title": "Divider",
-                "description": "Use Divider in a LongLink View.",
-                "code": "function Example() {\n  return (\n    <Stack gap={3}>\n      <Text>Before</Text>\n      <Divider />\n      <Text>After</Text>\n    </Stack>\n  );\n}\n"
             }
         ]
     },
@@ -1815,13 +1717,6 @@
                 "guidance": false,
                 "description": "Place more than 10–12 items in a single menu without grouping them into sections."
             }
-        ],
-        "examples": [
-            {
-                "title": "DropdownMenu",
-                "description": "Use DropdownMenu in a LongLink View.",
-                "code": "function Example() {\n  return (\n    <DropdownMenu\n      button={{ label: 'Actions' }}\n      items={[{ id: 'edit', label: 'Edit', onClick: () => navigate('/edit') }]}\n    />\n  );\n}\n"
-            }
         ]
     },
     {
@@ -1884,13 +1779,6 @@
             {
                 "guidance": false,
                 "description": "Use an EmptyState for error messages that require immediate action; use a Banner instead."
-            }
-        ],
-        "examples": [
-            {
-                "title": "EmptyState",
-                "description": "Use EmptyState in a LongLink View.",
-                "code": "function Example() {\n  return <EmptyState title=\"No results found\" />;\n}\n"
             }
         ]
     },
@@ -2058,13 +1946,6 @@
                 "guidance": false,
                 "description": "Don't avoid dropzone mode unless space is constrained; drag-and-drop is the expected interaction for file uploads."
             }
-        ],
-        "examples": [
-            {
-                "title": "FileInput",
-                "description": "Use FileInput in a LongLink View.",
-                "code": "function Example() {\n  const [value, setValue] = useState(null);\n  return (\n    <FileInput\n      label=\"Attachment\"\n      value={value}\n      onChange={setValue}\n      accept=\".pdf\"\n      maxSize={5 * 1024 * 1024}\n    />\n  );\n}\n"
-            }
         ]
     },
     {
@@ -2120,13 +2001,6 @@
                 "guidance": false,
                 "description": "Use `HStack` with wrapping for grids; use Grid instead."
             }
-        ],
-        "examples": [
-            {
-                "title": "Grid",
-                "description": "Use Grid in a LongLink View.",
-                "code": "function Example() {\n  return (\n    <Grid columns={2} gap={3}>\n      <Text>First column</Text>\n      <GridSpan columns=\"full\">\n        <Text>Full-width content</Text>\n      </GridSpan>\n    </Grid>\n  );\n}\n"
-            }
         ]
     },
     {
@@ -2180,13 +2054,6 @@
             {
                 "guidance": false,
                 "description": "Use Text for headings; use Heading with a `level` prop (1–6) for section titles and headings."
-            }
-        ],
-        "examples": [
-            {
-                "title": "Heading",
-                "description": "Use Heading in a LongLink View.",
-                "code": "function Example() {\n  return <Heading level={2}>Order details</Heading>;\n}\n"
             }
         ]
     },
@@ -2276,13 +2143,6 @@
                 "guidance": false,
                 "description": "Pass a `name` prop; Icon uses `icon` (not `name`) to specify which icon to render."
             }
-        ],
-        "examples": [
-            {
-                "title": "Icon",
-                "description": "Use Icon in a LongLink View.",
-                "code": "function Example() {\n  return <Icon icon=\"search\" size=\"md\" />;\n}\n"
-            }
         ]
     },
     {
@@ -2355,13 +2215,6 @@
                 "guidance": false,
                 "description": "Skip the tooltip; label only reaches screen readers, sighted users need the hover hint."
             }
-        ],
-        "examples": [
-            {
-                "title": "IconButton",
-                "description": "Use IconButton in a LongLink View.",
-                "code": "function Example() {\n  return (\n    <IconButton\n      label=\"Refresh\"\n      icon={<Icon icon=\"refresh\" size=\"sm\" />}\n      onClick={async () => {\n        await request('/api/refresh', { method: 'POST' });\n      }}\n    />\n  );\n}\n"
-            }
         ]
     },
     {
@@ -2411,13 +2264,6 @@
             {
                 "guidance": false,
                 "description": "Use generic text like \"click here\" or \"read more\"; describe the destination."
-            }
-        ],
-        "examples": [
-            {
-                "title": "Link",
-                "description": "Use Link in a LongLink View.",
-                "code": "function Example() {\n  return <Link to=\"/orders\">Orders</Link>;\n}\n"
             }
         ]
     },
@@ -2475,13 +2321,6 @@
             {
                 "guidance": false,
                 "description": "Use for data that doesn't have a clear key-value structure."
-            }
-        ],
-        "examples": [
-            {
-                "title": "MetadataList",
-                "description": "Use MetadataList in a LongLink View.",
-                "code": "function Example() {\n  return (\n    <MetadataList title=\"Order details\">\n      <MetadataListItem label=\"Owner\">Ada Lovelace</MetadataListItem>\n      <MetadataListItem label=\"Status\">Open</MetadataListItem>\n    </MetadataList>\n  );\n}\n"
             }
         ]
     },
@@ -2565,13 +2404,6 @@
             {
                 "guidance": false,
                 "description": "Hide primary actions inside a MoreMenu; they should be directly visible."
-            }
-        ],
-        "examples": [
-            {
-                "title": "MoreMenu",
-                "description": "Use MoreMenu in a LongLink View.",
-                "code": "function Example() {\n  return (\n    <MoreMenu\n      items={[{ id: 'edit', label: 'Edit', onClick: () => navigate('/edit') }]}\n    />\n  );\n}\n"
             }
         ]
     },
@@ -2800,13 +2632,6 @@
                 "guidance": false,
                 "description": "Show more than ~20 options without enabling search."
             }
-        ],
-        "examples": [
-            {
-                "title": "MultiSelector",
-                "description": "Use MultiSelector in a LongLink View.",
-                "code": "function Example() {\n  const [value, setValue] = useState(['design']);\n  return (\n    <MultiSelector\n      label=\"Teams\"\n      options={['design', 'engineering']}\n      value={value}\n      onChange={setValue}\n      hasSearch\n    />\n  );\n}\n"
-            }
         ]
     },
     {
@@ -2979,13 +2804,6 @@
                 "guidance": false,
                 "description": "Use NumberInput for free-form text that happens to contain numbers; use TextInput instead."
             }
-        ],
-        "examples": [
-            {
-                "title": "NumberInput",
-                "description": "Use NumberInput in a LongLink View.",
-                "code": "function Example() {\n  const [value, setValue] = useState(1);\n  return (\n    <NumberInput\n      label=\"Quantity\"\n      value={value}\n      onChange={setValue}\n      min={1}\n      step={1}\n    />\n  );\n}\n"
-            }
         ]
     },
     {
@@ -3079,13 +2897,6 @@
             {
                 "guidance": false,
                 "description": "Use PowerSearch for simple keyword searches; a standard text input is more appropriate for single-field lookups."
-            }
-        ],
-        "examples": [
-            {
-                "title": "PowerSearch",
-                "description": "Use PowerSearch in a LongLink View.",
-                "code": "function Example() {\n  const [filters, setFilters] = useState([]);\n  const config = {\n    name: 'Orders',\n    fields: [\n      {\n        key: 'status',\n        label: 'Status',\n        operators: [\n          {\n            key: 'is',\n            label: 'is',\n            value: {\n              type: 'enum',\n              values: [\n                { value: 'open', label: 'Open' },\n                { value: 'closed', label: 'Closed' },\n              ],\n            },\n          },\n        ],\n      },\n    ],\n  };\n  return (\n    <PowerSearch\n      config={config}\n      filters={filters}\n      onChange={setFilters}\n      label=\"Search orders\"\n    />\n  );\n}\n"
             }
         ]
     },
@@ -3193,13 +3004,6 @@
             {
                 "guidance": false,
                 "description": "Use multiple progress bars stacked together for the same operation; use one bar with a value label instead."
-            }
-        ],
-        "examples": [
-            {
-                "title": "ProgressBar",
-                "description": "Use ProgressBar in a LongLink View.",
-                "code": "function Example() {\n  return <ProgressBar label=\"Progress\" value={60} max={100} hasValueLabel />;\n}\n"
             }
         ]
     },
@@ -3328,13 +3132,6 @@
             {
                 "guidance": false,
                 "description": "Use horizontal layout with more than 4 options; it wraps awkwardly."
-            }
-        ],
-        "examples": [
-            {
-                "title": "RadioList",
-                "description": "Use RadioList in a LongLink View.",
-                "code": "function Example() {\n  const [value, setValue] = useState('team');\n  return (\n    <RadioList label=\"Plan\" value={value} onChange={setValue}>\n      <RadioListItem label=\"Solo\" value=\"solo\" />\n      <RadioListItem label=\"Team\" value=\"team\" />\n    </RadioList>\n  );\n}\n"
             }
         ]
     },
@@ -3579,13 +3376,6 @@
                 "guidance": false,
                 "description": "Put more than ~20 options without sections; consider Typeahead for large lists."
             }
-        ],
-        "examples": [
-            {
-                "title": "Selector",
-                "description": "Use Selector in a LongLink View.",
-                "code": "function Example() {\n  const [value, setValue] = useState('open');\n  return (\n    <Selector\n      label=\"Status\"\n      options={['open', 'closed']}\n      value={value}\n      onChange={setValue}\n    />\n  );\n}\n"
-            }
         ]
     },
     {
@@ -3757,13 +3547,6 @@
                 "guidance": false,
                 "description": "Set a step size so large that only a few positions are possible; use SegmentedControl or radio buttons instead."
             }
-        ],
-        "examples": [
-            {
-                "title": "Slider",
-                "description": "Use Slider in a LongLink View.",
-                "code": "function Example() {\n  const [value, setValue] = useState(60);\n  return (\n    <Slider\n      label=\"Progress\"\n      value={value}\n      onChange={setValue}\n      min={0}\n      max={100}\n    />\n  );\n}\n"
-            }
         ]
     },
     {
@@ -3844,13 +3627,6 @@
                 "guidance": false,
                 "description": "Nest stacks inside stacks; try wrap=\"wrap\" first to let items flow to the next line."
             }
-        ],
-        "examples": [
-            {
-                "title": "Stack",
-                "description": "Use Stack in a LongLink View.",
-                "code": "function Example() {\n  return (\n    <Stack direction=\"horizontal\" gap={3}>\n      <Text>Label</Text>\n      <StackItem size=\"fill\">\n        <Text>Flexible content</Text>\n      </StackItem>\n    </Stack>\n  );\n}\n"
-            }
         ]
     },
     {
@@ -3905,13 +3681,6 @@
             {
                 "guidance": false,
                 "description": "Use the pulse animation for purely decorative purposes; reserve it for states that require immediate attention."
-            }
-        ],
-        "examples": [
-            {
-                "title": "StatusDot",
-                "description": "Use StatusDot in a LongLink View.",
-                "code": "function Example() {\n  return <StatusDot label=\"Online\" variant=\"success\" />;\n}\n"
             }
         ]
     },
@@ -3998,13 +3767,6 @@
             {
                 "guidance": false,
                 "description": "Use more than 7 steps; consider grouping related steps or using a different pattern."
-            }
-        ],
-        "examples": [
-            {
-                "title": "Stepper",
-                "description": "Use Stepper in a LongLink View.",
-                "code": "function Example() {\n  return (\n    <Stepper activeStep={1}>\n      <Step step={0} label=\"Details\" />\n      <Step step={1} label=\"Review\" />\n      <Step step={2} label=\"Complete\" />\n    </Stepper>\n  );\n}\n"
             }
         ]
     },
@@ -4133,13 +3895,6 @@
             {
                 "guidance": false,
                 "description": "Use a switch for multi-state values; it's strictly on/off."
-            }
-        ],
-        "examples": [
-            {
-                "title": "Switch",
-                "description": "Use Switch in a LongLink View.",
-                "code": "function Example() {\n  const [value, setValue] = useState(true);\n  return <Switch label=\"Enabled\" value={value} onChange={setValue} />;\n}\n"
             }
         ]
     },
@@ -4296,13 +4051,6 @@
                 "guidance": false,
                 "description": "Omit width on text-heavy columns; without an explicit proportional() width they have no minimum and can squish to near-zero on mobile."
             }
-        ],
-        "examples": [
-            {
-                "title": "Table",
-                "description": "Use Table in a LongLink View.",
-                "code": "function Example() {\n  return (\n    <Table\n      data={[{ id: '1', name: 'Order', status: 'Open' }]}\n      idKey=\"id\"\n      columns={[\n        { key: 'name', header: 'Name', width: proportional(2) },\n        { key: 'status', header: 'Status', width: proportional(1) },\n      ]}\n    />\n  );\n}\n"
-            }
         ]
     },
     {
@@ -4362,13 +4110,6 @@
             {
                 "guidance": false,
                 "description": "Use Text for headings; use Heading with a `level` prop (1–6) for section titles and headings."
-            }
-        ],
-        "examples": [
-            {
-                "title": "Text",
-                "description": "Use Text in a LongLink View.",
-                "code": "function Example() {\n  return <Text>Order details</Text>;\n}\n"
             }
         ]
     },
@@ -4571,13 +4312,6 @@
                 "guidance": false,
                 "description": "Don't show a status message without also setting the status type; the colored border and icon are what draw the user's attention to the message."
             }
-        ],
-        "examples": [
-            {
-                "title": "TextArea",
-                "description": "Use TextArea in a LongLink View.",
-                "code": "function Example() {\n  const [value, setValue] = useState('');\n  return <TextArea label=\"Notes\" value={value} onChange={setValue} rows={4} />;\n}\n"
-            }
         ]
     },
     {
@@ -4766,13 +4500,6 @@
                 "guidance": false,
                 "description": "Don't mark every field as required; only flag mandatory fields so users are not overwhelmed by validation errors."
             }
-        ],
-        "examples": [
-            {
-                "title": "TextInput",
-                "description": "Use TextInput in a LongLink View.",
-                "code": "function Example() {\n  const [value, setValue] = useState('');\n  return (\n    <TextInput label=\"Name\" value={value} onChange={setValue} isRequired />\n  );\n}\n"
-            }
         ]
     },
     {
@@ -4943,13 +4670,6 @@
                 "guidance": false,
                 "description": "Don't hide the label; even when space is tight, keep the label visible or provide a description so the purpose is clear."
             }
-        ],
-        "examples": [
-            {
-                "title": "TimeInput",
-                "description": "Use TimeInput in a LongLink View.",
-                "code": "function Example() {\n  const [value, setValue] = useState();\n  return <TimeInput label=\"Start time\" value={value} onChange={setValue} />;\n}\n"
-            }
         ]
     },
     {
@@ -5024,13 +4744,6 @@
             {
                 "guidance": false,
                 "description": "Don't pass a fixed-offset abbreviation like \"EST\" as timezoneID; it is a valid identifier but never observes daylight saving, so it reads an hour wrong for half the year. Use the region id, \"America/New_York\"."
-            }
-        ],
-        "examples": [
-            {
-                "title": "Timestamp",
-                "description": "Use Timestamp in a LongLink View.",
-                "code": "function Example() {\n  return <Timestamp value=\"2026-10-02T12:00:00Z\" format=\"date_time\" />;\n}\n"
             }
         ]
     }

@@ -4,7 +4,6 @@ import * as prettier from 'prettier';
 import * as astryx from '@astryxdesign/cli/api';
 import { readFile, writeFile } from 'node:fs/promises';
 import { documentationCategories } from '../src/lib/documentation.ts';
-import { examples as viewExamples } from './examples.mjs';
 
 const root = path.resolve(import.meta.dirname, '..');
 const input = path.resolve(root, '../sdk/longlink/.static/jsx/frontend.d.ts');
@@ -203,16 +202,6 @@ for (const entry of components) {
     const upstreamProps =
         detail.props ?? detail.components?.find((component) => component.name === entry.name)?.props ?? [];
 
-    const examples = [];
-    // Publish runnable examples written for the narrower LongLink API.
-    const viewExample = viewExamples[entry.name];
-    if (viewExample) {
-        const code = await prettier.format(
-            `function Example() {\n${viewExample.state ?? ''}\nreturn (${viewExample.content});\n}`,
-            { parser: 'babel', singleQuote: true, tabWidth: 2 },
-        );
-        examples.push({ title: entry.name, description: `Use ${entry.name} in a LongLink View.`, code });
-    }
     references.push({
         name: entry.name,
         url: `https://astryx.atmeta.com/components/${parentName ?? entry.name}`,
@@ -245,7 +234,6 @@ for (const entry of components) {
                         practice.description.includes(property.name),
                 ),
         ),
-        examples,
     });
 }
 

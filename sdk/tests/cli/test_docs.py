@@ -37,7 +37,7 @@ def test_docs_command_resolves_a_component_name_case_insensitively() -> None:
     assert "Button [Action]" in result.output
     assert "Props and types" in result.output
     assert "onClick" in result.output
-    assert "Example" in result.output
+    assert "Example" not in result.output
 
 
 def test_docs_command_reports_an_unknown_component_without_a_traceback() -> None:
