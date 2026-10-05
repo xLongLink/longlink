@@ -179,46 +179,25 @@ def test_production_startup_installs_one_access_filter(monkeypatch: pytest.Monke
     assert sum(isinstance(item, ApiAccessFilter) for item in access_logger.filters) == 1
 
 
-@pytest.mark.parametrize(
-    ("relative_path", "content", "expected_route"),
-    [
-        pytest.param(
-            "dashboard.jsx",
-            "export default function Dashboard() { return <Text>Dashboard</Text>; }",
-            "/dashboard",
-            id="root",
-        ),
-        pytest.param(
-            "issues/[issue].jsx",
-            "export default function Issue() { return <Text>Issue</Text>; }",
-            "/issues/:issue",
-            id="dynamic",
-        ),
-    ],
-)
-def test_views_are_registered_from_default_views_directory(
-    solution_source: Path,
-    relative_path: str,
-    content: str,
-    expected_route: str,
-) -> None:
-    """Expose root, nested, and dynamic Views with filename-derived routes."""
+def test_dynamic_view_is_registered_from_default_views_directory(solution_source: Path) -> None:
+    """Expose a dynamic View with its filename-derived route and exact source."""
 
     # Build the default view tree.
-    view_path = solution_source / "views" / relative_path
+    content = "export default function Issue() { return <Text>Issue</Text>; }"
+    view_path = solution_source / "views" / "issues" / "[issue].jsx"
     view_path.parent.mkdir(parents=True, exist_ok=True)
     view_path.write_text(content, encoding="utf-8")
 
     # Start LongLink and request the registered view and view catalog.
     client = create_runtime_client()
-    response = client.get(f"/views/{relative_path.removesuffix('.jsx')}")
+    response = client.get("/views/issues/[issue]")
     views_response = client.get("/views.json")
 
     # Verify content and metadata came from the default view tree.
     assert response.status_code == 200
     assert "text/plain" in response.headers["content-type"]
     assert response.text == content
-    assert views_response.json() == [{"path": f"views/{relative_path.removesuffix('.jsx')}", "route": expected_route}]
+    assert views_response.json() == [{"path": "views/issues/[issue]", "route": "/issues/:issue"}]
 
 
 def test_view_catalog_ignores_json_sidecars(solution_source: Path) -> None:

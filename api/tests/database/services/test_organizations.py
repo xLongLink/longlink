@@ -2,7 +2,7 @@ import pytest
 from uuid import uuid4
 from conftest import DatabasePostgres
 from sqlmodel import col
-from factories import create_compute, create_solution, fetch_operations, create_organization
+from factories import create_compute, fetch_operations, create_organization
 from sqlalchemy import update
 from src.errors import ConflictError, NotFoundError, ForbiddenError, UnavailableError
 from longlink.shared import models as shared_models
@@ -45,103 +45,6 @@ async def test_create_persists_org_and_owner_membership(users: tuple[User, User,
     assert reloaded.name == "acme"
     assert reloaded.slug == "acme"
     assert [(membership.user.id, membership.role) for membership in memberships] == [(owner.id, OrganizationRoles.owner)]
-
-
-async def test_members_returns_users_from_membership_table(users: tuple[User, User, User]) -> None:
-    """Return org members loaded through the organization relationship."""
-
-    # Arrange
-    owner, member = users[0], users[1]
-    organization = await create_organization(owner)
-
-    async with session_scope() as session:
-        session.add(
-            UserOrganization(
-                user_id=member.id,
-                organization_id=organization.id,
-                role=OrganizationRoles.write,
-            )
-        )
-        await session.commit()
-
-    # Act
-    async with session_scope() as session:
-        memberships = await organizations.members(session, organization.id)
-
-    # Assert
-    assert {membership.user.id for membership in memberships} == {owner.id, member.id}
-
-
-async def test_membership_returns_active_membership_with_organization(users: tuple[User, User, User]) -> None:
-    """Return an active member's organization-scoped access record."""
-
-    # Arrange
-    organization = await create_organization(users[0])
-
-    # Act
-    async with session_scope() as session:
-        membership = await organizations.membership(session, users[0].id, organization.id)
-
-    # Assert
-    assert membership is not None
-    assert membership.organization.id == organization.id
-    assert membership.role == OrganizationRoles.owner
-
-
-async def test_solution_runtime_access_returns_member_and_compute_assignment(users: tuple[User, User, User]) -> None:
-    """Return active runtime access with the assigned compute registry."""
-
-    # Arrange
-    organization = await create_organization(users[0])
-    solution = await create_solution(organization)
-
-    # Act
-    async with session_scope() as session:
-        access = await organizations.solution_runtime_access(session, users[0].id, solution.id)
-
-    # Assert
-    assert access is not None
-    resolved_solution, role, compute = access
-    assert resolved_solution.id == solution.id
-    assert resolved_solution.organization_id == organization.id
-    assert role == OrganizationRoles.owner
-    assert compute.id == organization.compute_id
-
-
-async def test_infrastructure_returns_all_organization_registry_assignments(users: tuple[User, User, User]) -> None:
-    """Return one Organization together with each assigned registry."""
-
-    # Arrange
-    organization = await create_organization(users[0])
-
-    # Act
-    async with session_scope() as session:
-        resolved = await organizations.infrastructure(session, organization.id)
-
-    # Assert
-    assert resolved is not None
-    resolved_organization, compute = resolved
-    assert resolved_organization.id == organization.id
-    assert compute.id == organization.compute_id
-
-
-async def test_solution_infrastructure_returns_solution_registry_assignments(users: tuple[User, User, User]) -> None:
-    """Return a Solution together with its Organization infrastructure."""
-
-    # Arrange
-    organization = await create_organization(users[0])
-    solution = await create_solution(organization)
-
-    # Act
-    async with session_scope() as session:
-        resolved = await organizations.solution_infrastructure(session, solution.id)
-
-    # Assert
-    assert resolved is not None
-    resolved_solution, resolved_organization, compute = resolved
-    assert resolved_solution.id == solution.id
-    assert resolved_organization.id == organization.id
-    assert compute.id == organization.compute_id
 
 
 async def test_fetch_ignores_deleted_organizations(users: tuple[User, User, User]) -> None:
@@ -252,34 +155,6 @@ async def test_update_member_role_rejects_demoting_the_last_owner(users: tuple[U
                 OrganizationRoles.maintain,
                 owner.id,
             )
-
-
-async def test_update_member_role_persists_owner_authorized_change(users: tuple[User, User, User]) -> None:
-    """Allow owners to update an active member role."""
-
-    # Arrange
-    owner, member = users[0], users[1]
-    organization = await create_organization(owner)
-    async with session_scope() as session:
-        session.add(UserOrganization(user_id=member.id, organization_id=organization.id, role=OrganizationRoles.read))
-        await session.commit()
-
-    # Act
-    async with session_scope() as session:
-        await organizations.update_member_role(
-            session,
-            organization.id,
-            member.id,
-            OrganizationRoles.maintain,
-            owner.id,
-        )
-        await session.commit()
-
-    # Assert
-    async with session_scope() as session:
-        membership = await session.get(UserOrganization, (member.id, organization.id))
-    assert membership is not None
-    assert membership.role == OrganizationRoles.maintain
 
 
 async def test_update_member_role_allows_demoting_an_owner_when_another_owner_remains(

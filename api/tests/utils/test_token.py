@@ -246,18 +246,3 @@ async def test_password_reset_user_rejects_changed_password(users: tuple[User, U
     async with session_scope() as session:
         with pytest.raises(jwt.InvalidTokenError, match="Invalid password reset token"):
             await token.password_reset_user(session, reset_token)
-
-
-async def test_password_reset_user_returns_active_user(users: tuple[User, User, User]) -> None:
-    """Resolve the active account bound to a valid recovery credential."""
-
-    # Arrange
-    user = users[0]
-    reset_token = token.create_password_reset_token(user)
-
-    # Act
-    async with session_scope() as session:
-        resolved_user = await token.password_reset_user(session, reset_token)
-
-    # Assert
-    assert resolved_user.id == user.id

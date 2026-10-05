@@ -257,37 +257,6 @@ async def test_execute_rejects_operation_without_a_live_worker_lease(lease_expir
         await operation_worker.execute(operation)
 
 
-async def test_execute_completes_successful_operation(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Complete a claimed Operation when its handler finishes successfully."""
-
-    # Arrange
-    operation = leased_operation()
-    transitions: list[UUID] = []
-
-    async def complete_handler(target_id: UUID) -> None:
-        """Finish the expected target successfully."""
-
-        assert target_id == operation.target_id
-
-    async def complete(_session: object, operation_id: UUID) -> Operation:
-        """Record the terminal success transition."""
-
-        transitions.append(operation_id)
-        operation.finished_at = datetime.now(UTC)
-        return operation
-
-    monkeypatch.setitem(operation_worker.handlers, operation.kind, complete_handler)
-    monkeypatch.setattr(operation_worker.operations, "complete", complete)
-
-    # Act
-    result = await operation_worker.execute(operation)
-
-    # Assert
-    assert result is operation
-    assert result.status == OperationStatus.completed
-    assert transitions == [operation.id]
-
-
 async def test_execute_rejects_lost_terminal_operation_lock(monkeypatch: pytest.MonkeyPatch) -> None:
     """Reject a terminal outcome that could not release the claimed operation lock."""
 

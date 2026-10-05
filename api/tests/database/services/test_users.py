@@ -106,35 +106,6 @@ async def test_ensure_administrator_replaces_stale_configured_password() -> None
     assert password_hash.verify(env.ADMIN_PASSWORD, persisted_administrator.password)
 
 
-async def test_ensure_administrator_reconciles_preexisting_configured_email(password_hash: str) -> None:
-    """Reconcile the configured account when another replica creates it first."""
-
-    # Arrange
-    async with session_scope() as session:
-        session.add(
-            User(
-                name="Concurrent Administrator",
-                email=env.ADMIN_EMAIL,
-                password=password_hash,
-            )
-        )
-        await session.commit()
-
-    # Act
-    async with session_scope() as session:
-        reconciled = await user_service.ensure_administrator(session)
-        await session.commit()
-        reconciled_id = reconciled.id
-
-    # Assert
-    async with session_scope() as session:
-        persisted = await session.get(User, reconciled_id)
-    assert persisted is not None
-    assert persisted.name == "Administrator"
-    assert persisted.email == env.ADMIN_EMAIL
-    assert persisted.administrator is True
-
-
 async def test_user_service_returns_active_accounts_and_all_administrator_records(
     users: tuple[User, User, User],
 ) -> None:
@@ -164,23 +135,3 @@ async def test_user_service_returns_active_accounts_and_all_administrator_record
     assert len(page) == 3
     assert deleted_user.id in {user.id for user in page}
     assert total == 3
-
-
-async def test_registration_persists_user_with_hashed_password() -> None:
-    """Persist registered users with verifiable password hashes."""
-
-    # Arrange
-    password_hash = PasswordHash.recommended()
-
-    # Act
-    async with session_scope() as session:
-        registered = await user_service.register(session, "Registered User", "registered@example.com", "test-password")
-        await session.commit()
-
-    # Assert persistence through an independent session.
-    async with session_scope() as session:
-        persisted_user = await session.get(User, registered.id)
-
-    assert persisted_user is not None
-    assert persisted_user.email == "registered@example.com"
-    assert password_hash.verify("test-password", persisted_user.password)

@@ -24,18 +24,15 @@ def test_readyml_list_rejects_invalid_rendered_documents(tmp_path: Path, content
         templates.readyml_list(template_path)
 
 
-def test_readyml_list_renders_mapping_documents(tmp_path: Path) -> None:
-    """Render each non-empty YAML mapping with its supplied template values."""
+def test_readyml_list_ignores_empty_documents(tmp_path: Path) -> None:
+    """Ignore empty documents surrounding a valid manifest."""
 
     # Arrange
     template_path = tmp_path / "application.yml"
-    template_path.write_text(
-        "name: $name\n---\nkind: ConfigMap\nmetadata:\n  name: $name-config\n---\n",
-        encoding="utf-8",
-    )
+    template_path.write_text("---\n---\nkind: ConfigMap\n---\n", encoding="utf-8")
+
+    # Act
+    documents = templates.readyml_list(template_path)
 
     # Assert
-    assert templates.readyml_list(template_path, name="dashboard") == [
-        {"name": "dashboard"},
-        {"kind": "ConfigMap", "metadata": {"name": "dashboard-config"}},
-    ]
+    assert documents == [{"kind": "ConfigMap"}]

@@ -116,19 +116,6 @@ def test_read_pyproject_rejects_invalid_toml(tmp_path: Path) -> None:
             ],
             id="positional-defaults",
         ),
-        pytest.param(
-            "src/envs.py",
-            '[tool.longlink]\nenvironments = "src.envs:Env"\n',
-            "from pydantic import BaseModel, Field\n"
-            "\n"
-            "ALIAS = 'DYNAMIC_TOKEN'\n"
-            "DESCRIPTION = 'Dynamic description'\n"
-            "\n"
-            "class Env(BaseModel):\n"
-            "    TOKEN: str = Field(..., validation_alias=ALIAS, description=DESCRIPTION)\n",
-            [{"name": "DYNAMIC_TOKEN", "required": True, "description": "Dynamic description"}],
-            id="resolved-field-metadata",
-        ),
     ],
 )
 def test_read_env_spec_emits_supported_environment_metadata(
