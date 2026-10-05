@@ -217,7 +217,8 @@ async def inspect(client: httpx2.AsyncClient, image: Image, base: str) -> LongLi
             description=labels.get("org.opencontainers.image.description"),
         )
 
-        environments = labels.get("longlink.environments")
+        # Prefer the domain-namespaced label while supporting previously built images.
+        environments = labels.get("dev.longlink.environments", labels.get("longlink.environments"))
         if environments is not None:
             result.environments = ENVIRONMENTS_ADAPTER.validate_json(environments)
 

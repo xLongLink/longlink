@@ -68,7 +68,7 @@ async def test_metadata_fetches_digest_image_references(
                 "config": {
                     "Labels": {
                         "org.opencontainers.image.description": "Demo app",
-                        "longlink.environments": '[{"name":"API_KEY","required":true}]',
+                        "dev.longlink.environments": '[{"name":"API_KEY","required":true}]',
                     }
                 }
             },
@@ -317,10 +317,10 @@ async def test_metadata_accepts_config_without_labels(monkeypatch: pytest.Monkey
         pytest.param({"config": []}, id="invalid-image-config"),
         pytest.param({"config": {"Labels": []}}, id="invalid-labels"),
         pytest.param({"config": {"Labels": {"org.opencontainers.image.description": 1}}}, id="invalid-label-value"),
-        pytest.param({"config": {"Labels": {"longlink.environments": "not-json"}}}, id="invalid-environments-json"),
-        pytest.param({"config": {"Labels": {"longlink.environments": "{}"}}}, id="invalid-environments-shape"),
+        pytest.param({"config": {"Labels": {"dev.longlink.environments": "not-json"}}}, id="invalid-environments-json"),
+        pytest.param({"config": {"Labels": {"dev.longlink.environments": "{}"}}}, id="invalid-environments-shape"),
         pytest.param(
-            {"config": {"Labels": {"longlink.environments": '[{"name":"API_KEY","required":[]}]'}}},
+            {"config": {"Labels": {"dev.longlink.environments": '[{"name":"API_KEY","required":[]}]'}}},
             id="invalid-environment-entry",
         ),
     ],
@@ -445,7 +445,7 @@ async def test_local_registry_selects_amd64_child_without_authentication(monkeyp
             json={
                 "os": "linux",
                 "architecture": "amd64",
-                "config": {"Labels": {"longlink.environments": '[{"name":"NEW","required":true}]'}},
+                "config": {"Labels": {"dev.longlink.environments": '[{"name":"NEW","required":true}]'}},
             },
         )
 
