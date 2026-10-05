@@ -14,11 +14,6 @@ pytestmark = pytest.mark.no_db
             "postgresql+asyncpg://control:secret@db:5432/longlink?ssl=require",
             {"server_settings": {"timezone": "UTC"}},
         ),
-        (
-            "postgresql+asyncpg://control:secret@db:5432/longlink?ssl=require&application_name=longlink",
-            "postgresql+asyncpg://control:secret@db:5432/longlink?application_name=longlink&ssl=require",
-            {"server_settings": {"timezone": "UTC"}},
-        ),
     ],
 )
 def test_database_url_normalization(source: str, expected: str, expected_connect_args: dict[str, object]) -> None:

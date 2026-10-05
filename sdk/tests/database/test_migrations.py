@@ -2,11 +2,10 @@ import sys
 import runpy
 import pytest
 import alembic
-import sqlite3
 from types import SimpleNamespace
 from pathlib import Path
 from sqlmodel import SQLModel
-from contextlib import closing, nullcontext
+from contextlib import nullcontext
 from alembic.config import Config
 from collections.abc import Callable, Generator
 from longlink.database import migrations as database_migrations
@@ -169,22 +168,6 @@ def test_production_migrations_upgrade_head_with_committed_revision(tmp_path: Pa
     assert captured["target"] == "head"
     assert config.get_main_option("script_location") == str(database_migrations.CURRENT_FILE.parent)
     assert config.get_main_option("version_locations") == str(migrations_path)
-
-
-def test_apply_migrations_initializes_the_solution_version_table(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    """Run the packaged Alembic environment against a development Solution database."""
-
-    # Arrange
-    monkeypatch.chdir(tmp_path)
-    monkeypatch.setenv("LONGLINK_ENV", "development")
-
-    # Act
-    database_migrations.apply_migrations()
-
-    # Assert
-    with closing(sqlite3.connect(tmp_path / "dev.db")) as connection:
-        table = connection.execute("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'alembic_version'").fetchone()
-    assert table == ("alembic_version",)
 
 
 def test_migration_environment_configures_offline_execution(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:

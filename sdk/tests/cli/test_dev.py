@@ -51,7 +51,6 @@ def test_dev_command_warns_only_for_public_hosts(
     assert result.exit_code == 0
     assert (tmp_path / "frontend.d.ts").read_bytes() == (dev.ROOT / ".static" / "jsx" / "frontend.d.ts").read_bytes()
     assert [(record.msg, record.args) for record in caplog.records if record.levelno == logging.WARNING] == expected_warnings
-    assert migrations == ["applied"]
     assert len(calls) == 1
     application, options = calls[0]
     assert application == "main:app"

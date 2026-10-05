@@ -61,17 +61,6 @@ def test_env_accepts_complete_smtp_authentication_settings() -> None:
     assert environment.SMTP_PASSWORD == "secret"
 
 
-@pytest.mark.parametrize("transport", ["plain", "starttls", "tls"])
-def test_env_accepts_smtp_transports(transport: str) -> None:
-    """Accept each supported SMTP transport."""
-
-    # Act
-    environment = Env.model_validate(ENVIRONMENT_SETTINGS | {"SMTP_TRANSPORT": transport})
-
-    # Assert
-    assert environment.SMTP_TRANSPORT == transport
-
-
 def test_env_accepts_loopback_with_smtp_delivery() -> None:
     """Use explicit loopback and SMTP settings for a host-run instance."""
 

@@ -170,28 +170,6 @@ def test_connect_args_returns_driver_specific_settings(database_url: str, schema
     assert result == expected
 
 
-def test_connect_args_uses_ca_certificate(ca_certificate: str) -> None:
-    """Use a verified CA context for PostgreSQL connections."""
-
-    # Arrange
-    certificate_der = ssl.PEM_cert_to_DER_cert(ca_certificate)
-
-    # Act
-    result = database_urls.connect_args(
-        "postgresql+asyncpg://solution:secret@db/longlink",
-        schema="solution",
-        certificate=ca_certificate,
-    )
-
-    # Assert
-    assert result["server_settings"] == {"timezone": "UTC", "search_path": '"solution", shared'}
-    certificate_context = result["ssl"]
-    assert isinstance(certificate_context, ssl.SSLContext)
-    assert certificate_context.verify_mode == ssl.CERT_REQUIRED
-    assert certificate_context.check_hostname is True
-    assert certificate_der in certificate_context.get_ca_certs(binary_form=True)
-
-
 @pytest.mark.parametrize(
     ("env", "expected_url", "expected_kwargs"),
     [

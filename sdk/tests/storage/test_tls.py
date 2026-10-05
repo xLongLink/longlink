@@ -16,9 +16,8 @@ def test_certificate_file_rejects_invalid_pem_before_creating_file(monkeypatch: 
     monkeypatch.setattr(tls.tempfile, "NamedTemporaryFile", unexpected_file)
 
     # Act and assert
-    with pytest.raises(ssl.SSLError):
-        with tls.certificate_file("storage-ca-pem"):
-            pass
+    with pytest.raises(ssl.SSLError), tls.certificate_file("storage-ca-pem"):
+        pass
 
 
 def test_certificate_file_publishes_validated_pem_for_caller_lifetime(ca_certificate: str) -> None:

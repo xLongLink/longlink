@@ -198,9 +198,8 @@ def test_production_context_requires_signed_identity_except_for_probes() -> None
     assert authorized.json() == {"authenticated": True}
     assert client.get("/health").status_code == 200
     assert client.get("/ready").status_code == 200
-    with pytest.raises(WebSocketDisconnect) as rejection:
-        with client.websocket_connect("/events"):
-            pass
+    with pytest.raises(WebSocketDisconnect) as rejection, client.websocket_connect("/events"):
+        pass
     assert rejection.value.code == 1008
 
 
