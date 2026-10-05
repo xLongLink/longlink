@@ -56,8 +56,9 @@ export const stoneTheme = defineTheme({
 
     syntax: stoneSyntax,
 
-    // Success toast surface mirrors error-inverted: solid green, dark enough for white text in both modes.
+    // Shared handwritten typography and the success toast's inverted surface.
     localTokens: {
+        '--font-family-handwritten': 'Kalam, "Segoe Print", "Bradley Hand", cursive',
         '--color-background-success-inverted': ['#2e6b33', '#2e7d32'],
     },
 

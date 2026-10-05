@@ -2,8 +2,6 @@ import type { ReactNode } from 'react';
 import { GridExample } from './views/Grid';
 import { IconExample } from './views/Icon';
 import { LinkExample } from './views/Link';
-import { MenuExample } from './views/Menu';
-import { TabsExample } from './views/Tabs';
 import { TextExample } from './views/Text';
 import { Card } from '@/components/ui/Card';
 import { BadgeExample } from './views/Badge';
@@ -15,13 +13,13 @@ import { SliderExample } from './views/Slider';
 import { SwitchExample } from './views/Switch';
 import { Code } from '@astryxdesign/core/Code';
 import { Grid } from '@astryxdesign/core/Grid';
+import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { DividerExample } from './views/Divider';
 import { HeadingExample } from './views/Heading';
 import { StepperExample } from './views/Stepper';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Link as RouterLink } from 'react-router';
-import { CalendarExample } from './views/Calendar';
 import { MoreMenuExample } from './views/MoreMenu';
 import { SelectorExample } from './views/Selector';
 import { TextAreaExample } from './views/TextArea';
@@ -42,19 +40,20 @@ import { IconButtonExample } from './views/IconButton';
 import { Article } from '@/components/layouts/Article';
 import { CollapsibleExample } from './views/Collapsible';
 import { NumberInputExample } from './views/NumberInput';
-import { PowerSearchExample } from './views/PowerSearch';
 import { ProgressBarExample } from './views/ProgressBar';
 import { componentDocumentation } from '@/platform/docs';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
+import { Tab, TabList } from '@astryxdesign/core/TabList';
 import { DropdownMenuExample } from './views/DropdownMenu';
 import { MetadataListExample } from './views/MetadataList';
+import { Blockquote } from '@astryxdesign/core/Blockquote';
 import { CheckboxInputExample } from './views/CheckboxInput';
 import { DateTimeInputExample } from './views/DateTimeInput';
 import { MultiSelectorExample } from './views/MultiSelector';
 import { documentationCategories } from '@/lib/documentation';
 import { DateRangeInputExample } from './views/DateRangeInput';
-import { ComplexSelectorExample } from './views/ComplexSelector';
 import { ButtonExample, ButtonGroupExample } from './views/Buttons';
+import { SideNav, SideNavItem, SideNavSection } from '@astryxdesign/core/SideNav';
 
 const article = {
     description: 'Build interfaces with LongLink Views and components.',
@@ -77,12 +76,10 @@ const previews: Record<string, ReactNode> = {
     Badge: <BadgeExample />,
     Button: <ButtonExample />,
     ButtonGroup: <ButtonGroupExample />,
-    Calendar: <CalendarExample />,
     Card: <Card>Lorem ipsum dolor sit amet.</Card>,
     CheckboxInput: <CheckboxInputExample />,
     CodeBlock: <CodeBlockExample />,
     Collapsible: <CollapsibleExample />,
-    ComplexSelector: <ComplexSelectorExample />,
     Currency: <Currency value={1275.5} currency="CHF" />,
     DateInput: <DateInputExample />,
     DateRangeInput: <DateRangeInputExample />,
@@ -94,26 +91,44 @@ const previews: Record<string, ReactNode> = {
     FileInput: <FileInputExample />,
     FileViewer: <FileViewerExample />,
     Grid: <GridExample />,
-    Heading: <HeadingExample />,
+    // Keep article section spacing out of the centered heading thumbnail.
+    Heading: (
+        <Stack className="[&_.astryx-heading]:mt-0">
+            <HeadingExample />
+        </Stack>
+    ),
     Icon: <IconExample />,
     IconButton: <IconButtonExample />,
     Link: <LinkExample />,
-    Menu: <MenuExample />,
+    // Show only the navigation in the thumbnail; the full Menu has a fixed-width sidebar and content panel.
+    Menu: (
+        <SideNav className="h-auto w-full">
+            <SideNavSection title="Settings">
+                <SideNavItem label="Profile" isSelected size="sm" />
+                <SideNavItem label="Workflow" size="sm" />
+            </SideNavSection>
+        </SideNav>
+    ),
     MetadataList: <MetadataListExample />,
     MoreMenu: <MoreMenuExample />,
     MultiSelector: <MultiSelectorExample />,
     NumberInput: <NumberInputExample />,
-    PowerSearch: <PowerSearchExample />,
     ProgressBar: <ProgressBarExample />,
     RadioList: <RadioListExample />,
     Selector: <SelectorExample />,
     Slider: <SliderExample />,
     Stack: <StackExample />,
     StatusDot: <StatusDotExample />,
-    Stepper: <StepperExample />,
+    Stepper: <StepperExample orientation="vertical" />,
     Switch: <SwitchExample />,
     Table: <TableExample />,
-    Tabs: <TabsExample />,
+    // Keep the thumbnail focused on the tab strip rather than its panel content.
+    Tabs: (
+        <TabList value="overview" onChange={() => undefined} size="sm">
+            <Tab label="Overview" value="overview" />
+            <Tab label="Activity" value="activity" />
+        </TabList>
+    ),
     Text: <TextExample />,
     TextArea: <TextAreaExample />,
     TextInput: <TextInputExample />,
@@ -129,6 +144,14 @@ export default function DocsArticleRoute() {
                 <Heading id="views" level={1}>
                     Views
                 </Heading>
+                <Blockquote className="border-s-(--color-text-orange) text-(--color-text-orange)">
+                    <Stack gap={0}>
+                        <Text type="inherit">Beta notice: This page is being built.</Text>
+                        <Link color="inherit" href={article.editUrl} hasUnderline isExternalLink type="inherit">
+                            Edit on GitHub
+                        </Link>
+                    </Stack>
+                </Blockquote>
                 <Text as="p">
                     Create each interface as a .jsx file exporting a default React component. LongLink supplies UI
                     components, hooks such as useState() and useEffect(), fragments, queries, and scoped requests

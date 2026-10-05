@@ -12,13 +12,26 @@ if (requestedMode === 'api' || requestedMode === 'sdk') {
 }
 
 const isSolution = process.env.LONGLINK_WEB_TARGET === 'sdk';
-const publicPagePaths = ['/', '/login', '/pricing', '/terms', '/impressum', '/privacy', ...documentationPaths];
+const publicPagePaths = [
+    '/',
+    '/login',
+    '/pricing',
+    '/use-cases',
+    '/use-cases/approvals-and-decisions',
+    '/use-cases/operations',
+    '/use-cases/compliance-and-quality',
+    '/use-cases/cases-and-projects',
+    '/terms',
+    '/impressum',
+    '/privacy',
+    ...documentationPaths,
+];
 
 /** Sitemap priorities signal the important pages to search engines. */
 const publicPagePriorities: Record<string, number> = {
     '/': 1.0,
     '/docs': 0.9,
-    '/docs/introduction': 0.9,
+    '/use-cases': 0.9,
     '/pricing': 0.6,
 };
 

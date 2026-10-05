@@ -232,45 +232,8 @@ type FieldProps = {
     width?: number | string;
 };
 
-/** @category Form @group Calendar */
+/** @category Form @group DateInput */
 type ISODateString = `${number}${number}${number}${number}-${number}${number}-${number}${number}`;
-
-/** @category Form @group Calendar */
-type DateRange = { start: ISODateString; end: ISODateString };
-
-/** @category Form */
-declare const Calendar: ViewComponent<
-    {
-        min?: ISODateString;
-        max?: ISODateString;
-        dateConstraints?: readonly ((date: Date) => boolean)[];
-        minRangeSpan?: number;
-        maxRangeSpan?: number;
-    } & (
-        | {
-              mode?: 'single';
-              value?: ISODateString;
-              onChange?: (value: ISODateString) => void;
-          }
-        | { mode: 'range'; value?: DateRange; onChange?: (value: DateRange) => void }
-    )
->;
-
-/** @category Form */
-declare function ComplexSelector<Value>(
-    props: FieldProps & {
-        value: Value;
-        onChange?: (value: Value) => void;
-        triggerLabel?: ViewNode;
-        placeholder?: ViewNode;
-        children: (
-            value: Value,
-            onChange: (value: Value) => void,
-            close: () => void,
-            state: { isOpen: boolean; isBusy: boolean; triggerId: string; contentId: string },
-        ) => ViewNode;
-    },
-): React.JSX.Element;
 
 /** @category Form @group DateInput */
 type DateInputProps = FieldProps & {
@@ -286,6 +249,9 @@ type DateInputProps = FieldProps & {
 
 /** @category Form */
 declare function DateInput(props: DateInputProps): React.JSX.Element;
+
+/** @category Form @group DateRangeInput */
+type DateRange = { start: ISODateString; end: ISODateString };
 
 /** @category Form */
 declare function DateRangeInput(
@@ -339,131 +305,6 @@ declare function TimeInput(
         size?: 'sm' | 'md' | 'lg';
     },
 ): React.JSX.Element;
-
-/** @category Form @group PowerSearch */
-type SearchableItem<T = unknown> = { id: string; label: string; element?: ViewNode; auxiliaryData?: T };
-
-/** @category Form @group PowerSearch */
-type SearchSource<T extends SearchableItem = SearchableItem> = {
-    search: (query: string) => T[] | Promise<T[]>;
-    bootstrap: () => T[] | Promise<T[]>;
-    cancel?: () => void;
-};
-
-/** @category Form @group PowerSearch */
-type DateTimeRangePart =
-    | { readonly type: 'NOW' }
-    | { readonly type: 'ABSOLUTE'; readonly unixSeconds: number }
-    | {
-          readonly type: 'RELATIVE';
-          readonly backValue: number;
-          readonly unit: 'second' | 'minute' | 'hour' | 'day' | 'week' | 'month' | 'year';
-          readonly anchorKey?: string;
-      };
-
-/** @category Form @group PowerSearch */
-type DateTimeRange = { readonly start: DateTimeRangePart; readonly end: DateTimeRangePart };
-
-/** @category Form @group PowerSearch */
-type OperatorValue =
-    | { readonly type: 'empty' | 'nested' }
-    | { readonly type: 'string'; readonly searchSource?: SearchSource; readonly isArbitraryStringAllowed?: boolean }
-    | {
-          readonly type: 'string_list' | 'entity_list';
-          readonly searchSource?: SearchSource;
-          readonly isArbitraryStringAllowed?: boolean;
-          readonly tokenization?: { readonly regex?: string; readonly sort?: boolean };
-          readonly renderItem?: (item: SearchableItem) => ViewNode;
-      }
-    | {
-          readonly type: 'integer' | 'float';
-          readonly minValue?: number;
-          readonly maxValue?: number;
-          readonly units?: string;
-      }
-    | { readonly type: 'time'; readonly minValue?: string; readonly maxValue?: string }
-    | { readonly type: 'date_absolute'; readonly isDateOnly?: boolean }
-    | { readonly type: 'date_relative'; readonly isPastAllowed?: boolean; readonly isFutureAllowed?: boolean }
-    | {
-          readonly type: 'date_range';
-          readonly intervalDatePresets?: readonly { readonly label: string; readonly value: DateTimeRange }[];
-          readonly relativeDatePresets?: readonly { readonly label: string; readonly value: string }[];
-      }
-    | {
-          readonly type: 'enum' | 'enum_list';
-          readonly values: readonly { readonly value: string; readonly label: string; readonly icon?: ViewNode }[];
-      }
-    | {
-          readonly type: 'custom';
-          readonly Editor: ViewComponent<{
-              isDisabled?: boolean;
-              onChange: (value: string | null) => void;
-              placeholder: string;
-              value: string | null;
-          }>;
-          readonly getString: (value: string) => string;
-      };
-
-/** @category Form @group PowerSearch */
-type PowerSearchOperator = { readonly key: string; readonly value: OperatorValue } & (
-    { readonly label: string; readonly i18nKey?: never } | { readonly i18nKey: string; readonly label?: never }
-);
-
-/** @category Form @group PowerSearch */
-type PowerSearchConfig = {
-    readonly name: string;
-    readonly contentSearchFieldKey?: string;
-    readonly fields: readonly {
-        readonly key: string;
-        readonly label: string;
-        readonly operators: readonly PowerSearchOperator[];
-        readonly icon?: ViewNode;
-        readonly defaultOperator?: string;
-        readonly group?: string;
-        readonly description?: string;
-        readonly typeaheadAliases?: readonly string[];
-        readonly typeaheadMinQueryLength?: number;
-        readonly isValueMatchAllowed?: boolean;
-    }[];
-};
-
-/** @category Form @group PowerSearch */
-type FilterValue =
-    | { readonly type: 'empty' }
-    | { readonly type: 'string' | 'time' | 'date_relative' | 'enum' | 'custom'; readonly value: string }
-    | { readonly type: 'string_list' | 'enum_list'; readonly value: readonly string[] }
-    | { readonly type: 'integer' | 'float'; readonly value: number }
-    | { readonly type: 'date_absolute'; readonly unixSeconds: number }
-    | { readonly type: 'date_range'; readonly value: DateTimeRange }
-    | {
-          readonly type: 'entity_list';
-          readonly value: readonly { readonly id: string; readonly label: string; readonly photo?: string }[];
-      }
-    | { readonly type: 'nested'; readonly value: readonly PowerSearchFilter[] };
-
-/** @category Form @group PowerSearch */
-type PowerSearchFilter = {
-    readonly field: string;
-    readonly operator: string;
-    readonly value: FilterValue;
-    readonly isReadOnly?: boolean;
-};
-
-/** @category Form */
-declare function PowerSearch(props: {
-    config: PowerSearchConfig;
-    filters: readonly PowerSearchFilter[];
-    onChange: (filters: readonly PowerSearchFilter[], changeType: 'add' | 'edit' | 'remove', index: number) => void;
-    label?: string;
-    isLabelHidden?: boolean;
-    placeholder?: string;
-    hasClear?: boolean;
-    isReadOnly?: boolean;
-    isDisabled?: boolean;
-    status?: FieldProps['status'];
-    resultCount?: number | string;
-    timezoneID?: string;
-}): React.JSX.Element;
 
 /** @category Form */
 declare function TextInput(

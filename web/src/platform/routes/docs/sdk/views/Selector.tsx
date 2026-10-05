@@ -46,7 +46,6 @@ export function SelectorExample() {
             value={value}
             width="100%"
             onChange={setValue}
-            isLabelHidden
         />
     );
 }

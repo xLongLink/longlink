@@ -99,11 +99,8 @@ export function Footer() {
                                 wrap="wrap"
                                 aria-label="Footer navigation"
                             >
-                                <Link href="/" color="secondary" type="supporting" weight="medium">
-                                    Home
-                                </Link>
-                                <Link href="/docs/introduction/" color="secondary" type="supporting" weight="medium">
-                                    Why LongLink
+                                <Link href="/use-cases/" color="secondary" type="supporting" weight="medium">
+                                    Use cases
                                 </Link>
                                 <Link href="/docs/" color="secondary" type="supporting" weight="medium">
                                     Documentation

@@ -30,5 +30,5 @@ export function TextInputExample() {
     const [value, setValue] = useState('New order');
 
     // Retain the user's edits to the sample name.
-    return <TextInput isLabelHidden label="Name" size="sm" value={value} width="100%" onChange={setValue} />;
+    return <TextInput label="Name" size="sm" value={value} width="100%" onChange={setValue} />;
 }

@@ -23,7 +23,7 @@ for (const binding of bindings.statements) {
     if (!ts.isExportDeclaration(binding) || !binding.moduleSpecifier || !ts.isNamedExports(binding.exportClause))
         continue;
     const modulePath = binding.moduleSpecifier.text;
-    if (!modulePath.startsWith('@/components/ui/') || ['Card', 'Icon', 'Calendar'].includes(path.basename(modulePath)))
+    if (!modulePath.startsWith('@/components/ui/') || ['Card', 'Icon'].includes(path.basename(modulePath)))
         continue;
     const filename = path.join(root, 'src', modulePath.slice(2) + '.tsx');
     const wrapper = ts.createSourceFile(

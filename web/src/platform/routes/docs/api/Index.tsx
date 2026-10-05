@@ -1,7 +1,9 @@
+import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Heading } from '@astryxdesign/core/Heading';
 import { Article } from '@/components/layouts/Article';
+import { Blockquote } from '@astryxdesign/core/Blockquote';
 import { ArrowUp, CheckCheck, CheckCircle, EyeOff, Wrench } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHeader, TableHeaderCell, TableRow } from '@astryxdesign/core/Table';
 
@@ -93,6 +95,14 @@ export default function DocsArticleRoute() {
                 <Heading id="platform" level={1}>
                     Platform
                 </Heading>
+                <Blockquote className="border-s-(--color-text-orange) text-(--color-text-orange)">
+                    <Stack gap={0}>
+                        <Text type="inherit">Beta notice: This page is being built.</Text>
+                        <Link color="inherit" href={article.editUrl} hasUnderline isExternalLink type="inherit">
+                            Edit on GitHub
+                        </Link>
+                    </Stack>
+                </Blockquote>
                 <Text as="p">
                     The Platform exists to keep an organization’s processes and data in a single place. This keeps both
                     the work and the information organized: work is done locally, while the cloud provides validation

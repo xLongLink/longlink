@@ -2,11 +2,15 @@ import { siteName, siteUrl } from '@/site';
 import { useLocation } from 'react-router';
 import { buildBreadcrumbs } from '@/components/breadcrumb/text';
 
-/** Labels for documentation route segments shared with article breadcrumbs. */
-export const documentationRouteLabels: Record<string, string> = {
+/** Labels for public article route segments shared with visible breadcrumbs. */
+export const articleRouteLabels: Record<string, string> = {
+    'approvals-and-decisions': 'Approvals & decisions',
     api: 'Platform',
+    'cases-and-projects': 'Cases & projects',
+    'compliance-and-quality': 'Compliance & quality',
     docs: 'Documentation',
     sdk: 'Solutions',
+    'use-cases': 'Use cases',
     views: 'Views',
 };
 
@@ -19,7 +23,7 @@ function canonicalPath(pathname: string): string {
 function breadcrumbs(pathname: string): object {
     const items = [{ '@type': 'ListItem', position: 1, name: 'Home', item: `${siteUrl}/` }];
 
-    for (const [index, segment] of buildBreadcrumbs(pathname, documentationRouteLabels).entries()) {
+    for (const [index, segment] of buildBreadcrumbs(pathname, articleRouteLabels).entries()) {
         items.push({
             '@type': 'ListItem',
             position: index + 2,

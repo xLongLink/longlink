@@ -28,5 +28,5 @@ export function TextAreaExample() {
     const [value, setValue] = useState('Review complete');
 
     // Retain the user's edits to the sample notes.
-    return <TextArea isLabelHidden label="Notes" rows={2} value={value} onChange={setValue} />;
+    return <TextArea label="Notes" rows={2} value={value} onChange={setValue} />;
 }

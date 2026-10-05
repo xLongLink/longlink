@@ -316,6 +316,7 @@
     --shadow-inset-success: inset 0px 0px 0px 2px #83838a30;
     --shadow-inset-warning: inset 0px 0px 0px 2px #83838a30;
     --shadow-inset-error: inset 0px 0px 0px 2px #83838a30;
+    --font-family-handwritten: Kalam, "Segoe Print", "Bradley Hand", cursive;
     --color-background-success-inverted: light-dark(#2e6b33, #2e7d32);
   }
 

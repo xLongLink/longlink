@@ -9,9 +9,9 @@ import { Outline } from '@astryxdesign/core/Outline';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router';
 import { PageContainer } from '@/components/PageContainer';
+import { Seo, articleRouteLabels } from '@/components/Seo';
 import { PathBreadcrumb } from '@/components/breadcrumb/Path';
 import { BreadcrumbItem } from '@astryxdesign/core/Breadcrumbs';
-import { Seo, documentationRouteLabels } from '@/components/Seo';
 import { useEffect, useEffectEvent, type ReactNode } from 'react';
 import { Layout, LayoutContent, LayoutHeader } from '@astryxdesign/core/Layout';
 
@@ -29,15 +29,31 @@ const dateFormatter = new Intl.DateTimeFormat(undefined, {
     year: 'numeric',
 });
 
-/** Renders shared documentation and legal article content. */
+const legalPaths = ['/terms', '/impressum', '/privacy'];
+const useCasePaths = [
+    '/use-cases',
+    '/use-cases/approvals-and-decisions',
+    '/use-cases/operations',
+    '/use-cases/compliance-and-quality',
+    '/use-cases/cases-and-projects',
+];
+
+/** Renders shared documentation, use-case, and legal article content. */
 export function Article({ children, page }: { children: ReactNode; page: ArticlePage }) {
     const { pathname } = useLocation();
     const navigate = useNavigate();
     const pagePath = pathname.replace(/\/+$/, '') || '/';
-    const isDocumentation = pagePath.startsWith('/docs');
-    const currentPage = documentationPaths.indexOf(pagePath);
-    const previousPage = documentationPaths[currentPage - 1];
-    const nextPage = documentationPaths[currentPage + 1];
+    const isGuide = pagePath.startsWith('/docs') || pagePath === '/use-cases' || pagePath.startsWith('/use-cases/');
+
+    // Keep each article collection within its own reading order.
+    const navigationPaths = legalPaths.includes(pagePath)
+        ? legalPaths
+        : useCasePaths.includes(pagePath)
+          ? useCasePaths
+          : documentationPaths;
+    const currentPage = navigationPaths.indexOf(pagePath);
+    const previousPage = navigationPaths[currentPage - 1];
+    const nextPage = navigationPaths[currentPage + 1];
 
     const scrollToArticleTop = () => {
         void requestAnimationFrame(() => window.scrollTo({ top: 0 }));
@@ -92,11 +108,9 @@ export function Article({ children, page }: { children: ReactNode; page: Article
                                         <PageContainer className="min-w-0" maxWidth={720}>
                                             <PathBreadcrumb
                                                 className="min-w-0 overflow-hidden"
-                                                labels={isDocumentation ? documentationRouteLabels : undefined}
+                                                labels={articleRouteLabels}
                                                 root={
-                                                    isDocumentation ? undefined : (
-                                                        <BreadcrumbItem href="/">Home</BreadcrumbItem>
-                                                    )
+                                                    isGuide ? undefined : <BreadcrumbItem href="/">Home</BreadcrumbItem>
                                                 }
                                             />
                                         </PageContainer>
@@ -120,13 +134,13 @@ export function Article({ children, page }: { children: ReactNode; page: Article
                         <Stack className="mx-auto" direction="horizontal" gap={6} maxWidth={1016} width="100%">
                             <PageContainer className="min-w-0" maxWidth={720}>
                                 <article
-                                    className={`article-content space-y-7${isDocumentation ? ' documentation-content' : ''}`}
+                                    className={`article-content space-y-7${isGuide ? ' documentation-content [--font-family-heading:var(--font-family-handwritten)] [&_.astryx-heading]:uppercase' : ''}${pagePath.startsWith('/docs') ? ' [&_.astryx-heading]:tracking-wide' : ''}`}
                                 >
                                     {children}
                                     <Stack as="footer" gap={3}>
                                         {currentPage >= 0 ? (
                                             <Stack
-                                                aria-label="Documentation page navigation"
+                                                aria-label="Article page navigation"
                                                 direction="horizontal"
                                                 hAlign="between"
                                                 paddingBlockStart={8}

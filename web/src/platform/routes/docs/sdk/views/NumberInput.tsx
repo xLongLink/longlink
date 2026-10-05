@@ -37,15 +37,6 @@ export function NumberInputExample() {
 
     // Retain a quantity within the input's minimum constraint.
     return (
-        <NumberInput
-            isLabelHidden
-            label="Quantity"
-            min={1}
-            size="sm"
-            units="qty"
-            value={value}
-            width="100%"
-            onChange={setValue}
-        />
+        <NumberInput label="Quantity" min={1} size="sm" units="qty" value={value} width="100%" onChange={setValue} />
     );
 }

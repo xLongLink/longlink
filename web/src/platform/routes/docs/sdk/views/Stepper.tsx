@@ -27,10 +27,10 @@ export default function StepperPage() {
 }
 
 /** Renders the page's stepper example for documentation and the catalog. */
-export function StepperExample() {
+export function StepperExample({ orientation = 'horizontal' }: { orientation?: 'horizontal' | 'vertical' }) {
     // Show the review stage in a three-step process.
     return (
-        <Stepper activeStep={1}>
+        <Stepper activeStep={1} orientation={orientation}>
             <Step step={0} label="Details" />
             <Step step={1} label="Review" />
             <Step step={2} label="Complete" />

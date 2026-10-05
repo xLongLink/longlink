@@ -25,7 +25,7 @@ function CapabilityCard({ title, description, icon }: { title: string; descripti
             <Stack height="100%" justify="between">
                 <Icon color="tertiary" icon={icon} size="lg" />
                 <Stack gap={3}>
-                    <Heading className="text-2xl" level={2}>
+                    <Heading className="font-(family-name:--font-family-handwritten) tracking-wide uppercase" level={2}>
                         {title}
                     </Heading>
                     <Text as="p" color="secondary" textWrap="pretty">
@@ -91,28 +91,27 @@ export default function Home() {
                                 </Link>
                             </Text>
                             <Heading
-                                className="text-3xl sm:text-5xl"
+                                className="flex flex-wrap items-center justify-center gap-2 font-(family-name:--font-family-handwritten) text-3xl tracking-wide uppercase sm:text-5xl"
                                 justify="center"
                                 level={1}
                                 textWrap="balance"
                                 type="display-2"
                             >
-                                Design
-                                <ArrowRight
-                                    aria-hidden="true"
-                                    className="mx-2 inline-block size-6 align-middle sm:size-8"
-                                />
-                                Build
-                                <ArrowRight
-                                    aria-hidden="true"
-                                    className="mx-2 inline-block size-6 align-middle sm:size-8"
-                                />
-                                Operate
-                                <ArrowRight
-                                    aria-hidden="true"
-                                    className="mx-2 inline-block size-6 align-middle sm:size-8"
-                                />
-                                Improve
+                                <Text hasCapsize type="inherit">
+                                    Design
+                                </Text>
+                                <ArrowRight aria-hidden="true" className="size-6 shrink-0 sm:size-8" />
+                                <Text hasCapsize type="inherit">
+                                    Build
+                                </Text>
+                                <ArrowRight aria-hidden="true" className="size-6 shrink-0 sm:size-8" />
+                                <Text hasCapsize type="inherit">
+                                    Operate
+                                </Text>
+                                <ArrowRight aria-hidden="true" className="size-6 shrink-0 sm:size-8" />
+                                <Text hasCapsize type="inherit">
+                                    Improve
+                                </Text>
                             </Heading>
                             <Text as="p" className="pt-1 text-lg sm:text-2xl" color="secondary" textWrap="pretty">
                                 <Text display="block" type="inherit">
@@ -202,14 +201,19 @@ export default function Home() {
                     <Text aria-hidden="true" className="text-xl leading-none">
                         🇨🇭
                     </Text>
-                    <Heading level={2} textWrap="balance" type="display-2" justify="center">
+                    <Heading
+                        className="font-(family-name:--font-family-handwritten) tracking-wide uppercase"
+                        level={2}
+                        textWrap="balance"
+                        justify="center"
+                    >
                         Made in Switzerland
                     </Heading>
                     <Grid columns={2} gap={3}>
                         <Button
                             className="w-full"
                             endContent={<ArrowRight aria-hidden="true" size={16} />}
-                            href="/docs/introduction/"
+                            href="/use-cases/"
                             label="Why LongLink"
                             variant="secondary"
                         />
