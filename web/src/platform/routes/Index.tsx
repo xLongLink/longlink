@@ -196,7 +196,7 @@ export default function Home() {
                         <Button
                             className="w-full"
                             endContent={<ArrowRight aria-hidden="true" size={16} />}
-                            href="/user/organizations"
+                            href="/login/"
                             label="Get Started"
                             variant="primary"
                         />

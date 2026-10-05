@@ -53,7 +53,7 @@ export default function Pricing() {
                                         hAlign="center"
                                         width="100%"
                                     >
-                                        <Button href="/user/organizations" label="Try it now" variant="primary" />
+                                        <Button href="/login/" label="Try it now" variant="primary" />
                                     </Stack>
                                 </Stack>
                             </Card>
