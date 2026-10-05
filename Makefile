@@ -114,7 +114,7 @@ image:
 		cd sdk && uv run --locked longlink init --folder dev --name sample && \
 		printf '\n\n[tool.uv.sources]\nlonglink = { path = "..", editable = true }\n' >> dev/pyproject.toml; \
 	fi
-	cd sdk/dev && uv run longlink build --registry localhost:15000 --push --tag dev
+	cd sdk && uv run --locked python ../dev/scripts/image.py
 
 
 # Stop local services and remove generated cluster, API, and sample Solution state.

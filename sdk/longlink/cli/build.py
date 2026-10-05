@@ -322,8 +322,8 @@ def resolve_docker_paths(root: Path, pyproject_data: Mapping[str, object]) -> tu
             if resolved_source_path != root and root.is_relative_to(resolved_source_path):
                 raise CliError(f"Local dependency must not be an ancestor of the Solution: {resolved_source_path}")
 
-            # Admit only explicitly declared workspace members, not arbitrary projects under the workspace.
-            if resolved_source_path not in workspace_paths:
+            # Admit contained Solution dependencies or declared workspace members, not arbitrary sibling projects.
+            if not resolved_source_path.is_relative_to(root) and resolved_source_path not in workspace_paths:
                 raise CliError(f"Local dependency must be a member of the UV workspace: {resolved_source_path}")
             pending_paths.append(resolved_source_path)
 
