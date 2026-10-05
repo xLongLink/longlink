@@ -75,17 +75,6 @@ LongLink provides that foundation. It turns processes into maintainable business
 
 Specific workflows can be customized through code, built quickly with modern AI-assisted tooling, and maintained using standard engineering practices. LongLink brings software-development principles to operational processes, making them testable, reviewable, and maintainable.
 
-<br />
-
-## Goals
-
-- **Keep it simple:** Make processes clear, easy to operate, and inexpensive to maintain.
-- **Own the process:** Keep your processes, rules, and data transparent and under your control.
-- **Separate responsibilities:** Distinguish human decisions from automated tasks.
-
-### Standards and governance
-
-These principles align with [UN Sustainable Development Goal 9](https://sdgs.un.org/goals/goal9) and can support organizations implementing management systems and governance practices related to standards such as [ISO 9001](https://www.iso.org/standard/62085.html), [ISO 22301](https://www.iso.org/standard/75106.html), and [ISO 37301](https://www.iso.org/standard/75080.html).
 
 <br />
 
