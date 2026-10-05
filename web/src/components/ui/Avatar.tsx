@@ -7,7 +7,7 @@ import { Avatar as AstryxAvatar, type AvatarShape } from '@astryxdesign/core/Ava
 const glyphsStyle = new dicebear.Style(glyphs);
 const wavesStyle = new dicebear.Style(waves);
 
-interface AvatarProps extends Omit<ComponentProps<typeof AstryxAvatar>, 'fallbackSrc' | 'shape' | 'src'> {
+interface AvatarProps extends Omit<ComponentProps<typeof AstryxAvatar>, 'className' | 'fallbackSrc' | 'shape' | 'src'> {
     name?: string;
     shape?: AvatarShape;
     src?: string | null;

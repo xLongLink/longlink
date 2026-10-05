@@ -679,118 +679,7 @@
             {
                 "title": "Calendar",
                 "description": "An interactive single-date calendar with a selected date. Click any day to change the selection.",
-                "code": "function CalendarShowcase() {\n  const [value, setValue] = useState<ISODateString | undefined>('2026-04-15');\n\n  return <Calendar mode=\"single\" value={value} onChange={setValue} />;\n}\n"
-            }
-        ]
-    },
-    {
-        "name": "Card",
-        "url": "https://astryx.atmeta.com/components/Card",
-        "introduction": "Card is a bordered, elevated container for discrete, self-contained items: things you could reorder, remove, or interact with independently. Cards are NOT the default layout tool. Most content groups don't need a container at all; spacing and alignment create visual grouping naturally. Only reach for a Card when items need clear interaction boundaries or visual comparison in a grid.",
-        "anatomy": [
-            {
-                "name": "Container",
-                "required": true,
-                "description": "The outer box with border, background, border-radius, and padding."
-            },
-            {
-                "name": "Content",
-                "required": true,
-                "description": "Any children rendered inside the card. Often a stack of heading, text, and actions."
-            }
-        ],
-        "properties": [
-            {
-                "name": "width",
-                "type": "SizeValue",
-                "description": "Width of the card (number = pixels, string = used as-is)."
-            },
-            {
-                "name": "height",
-                "type": "SizeValue",
-                "description": "Height of the card (number = pixels, string = used as-is)."
-            },
-            {
-                "name": "maxWidth",
-                "type": "SizeValue",
-                "description": "Maximum width of the card."
-            },
-            {
-                "name": "minHeight",
-                "type": "SizeValue",
-                "description": "Minimum height of the card."
-            },
-            {
-                "name": "children",
-                "type": "ReactNode",
-                "description": "Content to render inside the card."
-            },
-            {
-                "name": "padding",
-                "type": "0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10",
-                "default": "the theme's card padding (spacing step 4 with no theme)",
-                "description": "Internal padding using the spacing scale. Omit it and the card takes the theme's card padding rather than a step, so passing a step is a decision to override the theme, not a way to restate the default."
-            },
-            {
-                "name": "variant",
-                "type": "'default' | 'transparent' | 'muted' | 'blue' | 'cyan' | 'gray' | 'green' | 'orange' | 'pink' | 'purple' | 'red' | 'teal' | 'yellow'",
-                "default": "'default'",
-                "description": "Background color variant. `default` uses the standard card background. `transparent` drops the background entirely. `muted` uses the muted background for de-emphasised cards. The non-semantic variants use the corresponding `--color-background-<name>` token."
-            },
-            {
-                "name": "elevation",
-                "type": "'none' | 'low' | 'med' | 'high'",
-                "default": "'none'",
-                "description": "Resting shadow depth. `none` is flat; `low`/`med`/`high` map to the shadow token scale. Raise a card only when it needs to float above surrounding content."
-            }
-        ],
-        "practices": [
-            {
-                "guidance": true,
-                "description": "Ask \"could I reorder or remove this independently?\" If yes, it's a card. If no, it's just a section of the page: use a heading + Stack or Section."
-            },
-            {
-                "guidance": true,
-                "description": "Use cards for discrete items: a single user profile, a single notification, a single metric, a product in a grid. Each card represents one \"thing\" with clear interaction boundaries."
-            },
-            {
-                "guidance": true,
-                "description": "Spacing and alignment alone create visual grouping. Not everything needs a container; try removing the card and see if the grouping is still clear from whitespace and typography."
-            },
-            {
-                "guidance": true,
-                "description": "Keep padding consistent across sibling cards so they align visually in a grid or list."
-            },
-            {
-                "guidance": true,
-                "description": "Pair a card with Layout when you need a structured header, scrollable content, and footer with actions."
-            },
-            {
-                "guidance": false,
-                "description": "Default to cards for visual grouping. A heading + Stack with proper spacing creates hierarchy without adding borders everywhere. Cards should be the exception, not the default."
-            },
-            {
-                "guidance": false,
-                "description": "Wrap page sections in cards. \"General Settings\", \"Notification Preferences\", form groups: these are page regions, use Section or heading + stack."
-            },
-            {
-                "guidance": false,
-                "description": "Create identical card grids (icon + heading + text, repeated). Vary the layout or question whether cards are needed at all."
-            },
-            {
-                "guidance": false,
-                "description": "Nest cards inside other cards; flatten the hierarchy or use spacing and dividers instead."
-            },
-            {
-                "guidance": false,
-                "description": "Use color variants for status; use Banner or Badge for that. Color cards are for categorization."
-            }
-        ],
-        "examples": [
-            {
-                "title": "Card",
-                "description": "A card with a heading and body text showing the default container style.",
-                "code": "function CardShowcase() {\n  return (\n    <Card width={320}>\n      <Stack direction=\"vertical\" gap={2}>\n        <Heading level={4}>Card title</Heading>\n        <Text type=\"body\" color=\"secondary\">\n          Cards group related content with a border and background. Use them for\n          profiles, settings panels, or data summaries.\n        </Text>\n      </Stack>\n    </Card>\n  );\n}\n"
+                "code": "function CalendarShowcase() {\n  const [value, setValue] = useState('2026-04-15');\n\n  return <Calendar mode=\"single\" value={value} onChange={setValue} />;\n}\n"
             }
         ]
     },
@@ -966,117 +855,6 @@
         ]
     },
     {
-        "name": "ClickableCard",
-        "url": "https://astryx.atmeta.com/components/ClickableCard",
-        "introduction": "An interactive card for navigation or action targets. Nested interactive elements work independently.",
-        "anatomy": [
-            {
-                "name": "Container",
-                "required": true,
-                "description": "Interactive div with hover/focus/active states."
-            },
-            {
-                "name": "Content",
-                "required": true,
-                "description": "Children, which may include nested interactive elements."
-            }
-        ],
-        "properties": [
-            {
-                "name": "label",
-                "type": "string",
-                "required": true,
-                "description": "Accessibility label."
-            },
-            {
-                "name": "onClick",
-                "type": "(event: MouseEvent) => void",
-                "description": "Click handler: fires on card surface only."
-            },
-            {
-                "name": "href",
-                "type": "string",
-                "description": "Navigation URL. Plain, new-tab, Cmd/Ctrl-click, and middle-click activation all follow the shared navigation rule described on the Link `href` prop."
-            },
-            {
-                "name": "target",
-                "type": "string",
-                "default": "'_self'",
-                "description": "Link target."
-            },
-            {
-                "name": "isDisabled",
-                "type": "boolean",
-                "default": "false",
-                "description": "Disables the card."
-            },
-            {
-                "name": "children",
-                "type": "ReactNode",
-                "description": "Card content."
-            },
-            {
-                "name": "padding",
-                "type": "0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10",
-                "default": "4",
-                "description": "Inner padding."
-            },
-            {
-                "name": "variant",
-                "type": "'default' | 'transparent' | 'muted' | 'blue' | 'cyan' | 'gray' | 'green' | 'orange' | 'pink' | 'purple' | 'red' | 'teal' | 'yellow'",
-                "default": "'default'",
-                "description": "Background color variant."
-            },
-            {
-                "name": "elevation",
-                "type": "'none' | 'low' | 'med' | 'high'",
-                "default": "'none'",
-                "description": "Resting shadow depth. Often raised to signal the whole card is clickable."
-            },
-            {
-                "name": "width",
-                "type": "SizeValue",
-                "description": "Card width."
-            },
-            {
-                "name": "height",
-                "type": "SizeValue",
-                "description": "Card height."
-            },
-            {
-                "name": "maxWidth",
-                "type": "SizeValue",
-                "description": "Maximum card width."
-            },
-            {
-                "name": "xstyle",
-                "type": "StyleXStyles",
-                "description": "StyleX styles for layout customization (margins, positioning, sizing). Must be a stylex.create() value, not an inline style object like style={{}}."
-            }
-        ],
-        "practices": [
-            {
-                "guidance": true,
-                "description": "Use for cards that navigate to a detail page or trigger a single action."
-            },
-            {
-                "guidance": true,
-                "description": "Nest buttons or links freely inside; they handle their own events."
-            },
-            {
-                "guidance": false,
-                "description": "Use for toggling selection; use SelectableCard for that."
-            }
-        ],
-        "examples": [
-            {
-                "title": "ClickableCard",
-                "description": "A clickable card that navigates on click. Nested interactive elements work independently.",
-                "code": "function ClickableCardShowcase() {\n  return (\n    <ClickableCard label=\"Settings\" href=\"#\" width={320}>\n      <Stack direction=\"vertical\" gap={2}>\n        <Heading level={4}>Settings</Heading>\n        <Text type=\"body\" color=\"secondary\">\n          Click anywhere on this card to navigate. Nested buttons and links work\n          independently.\n        </Text>\n      </Stack>\n    </ClickableCard>\n  );\n}\n"
-            }
-        ]
-    },
-    {
         "name": "CodeBlock",
         "url": "https://astryx.atmeta.com/components/CodeBlock",
         "introduction": "CodeBlock renders syntax-highlighted code with line numbers, a copy button, and optional collapsible sections. Use CodeBlock for multi-line snippets like source files, terminal commands, and configuration examples. Use Code for inline references to function names, variables, or CLI flags within body text.",
@@ -1216,11 +994,6 @@
                 "description": "StyleX styles for layout customization. Must be a stylex.create() value."
             },
             {
-                "name": "className",
-                "type": "string",
-                "description": "CSS class name for the root element. Prefer xstyle for styling."
-            },
-            {
                 "name": "style",
                 "type": "CSSProperties",
                 "description": "Inline styles. Prefer xstyle for StyleX-optimized styling."
@@ -1256,8 +1029,8 @@
         "examples": [
             {
                 "title": "CodeBlock",
-                "description": "A syntax-highlighted TypeScript code block with line numbers, a title bar, and a copy button.",
-                "code": "const code = `import {useState, useEffect} from 'react';\n\nexport function useUser(id: string) {\n  const [user, setUser] = useState<User | null>(null);\n\n  useEffect(() => {\n    fetch(\\`/api/users/\\${id}\\`)\n      .then(res => res.json())\n      .then(setUser);\n  }, [id]);\n\n  return user;\n}`;\n\nfunction CodeBlockShowcase() {\n  return (\n    <CodeBlock\n      code={code}\n      language=\"typescript\"\n      title=\"useUser.ts\"\n      hasLineNumbers\n      hasCopyButton\n    />\n  );\n}\n"
+                "description": "A syntax-highlighted JSX code block with line numbers, a title bar, and a copy button.",
+                "code": "const code = `export default function Counter() {\n  const [count, setCount] = useState(0);\n\n  return <Button label=\"Increment\" onClick={() => setCount(count + 1)} />;\n}`;\n\nfunction CodeBlockShowcase() {\n  return (\n    <CodeBlock\n      code={code}\n      language=\"jsx\"\n      title=\"counter.jsx\"\n      hasLineNumbers\n      hasCopyButton\n    />\n  );\n}\n"
             }
         ]
     },
@@ -1366,7 +1139,7 @@
             {
                 "title": "Collapsible",
                 "description": "An accordion group with three collapsible sections in single mode: opening one closes the others.",
-                "code": "/**\n * Rows inside one card, coordinated so only one is open at a time.\n *\n * Triggers take body-semibold rather than the trigger's default `large`: three\n * rows sharing a single surface are peers, and at 17px semibold each would\n * read as its own section heading. Keep `large` for the case it is for — one\n * Collapsible per card or per Section, where the trigger really is the\n * heading of that surface (see the Multiple Mode and Controlled examples).\n */\nfunction CollapsibleShowcase() {\n  return (\n    <Card width={420}>\n      <CollapsibleGroup type=\"single\" defaultValue=\"notifications\">\n        <Stack gap={4}>\n          <Collapsible\n            trigger={\n              <Text type=\"body\" weight=\"semibold\">\n                General\n              </Text>\n            }\n            value=\"general\">\n            <Text type=\"body\" color=\"secondary\">\n              Display name, language, and time zone. Time zone drives every date\n              shown in the product, including scheduled reports.\n            </Text>\n          </Collapsible>\n\n          <Collapsible\n            trigger={\n              <Text type=\"body\" weight=\"semibold\">\n                Notifications\n              </Text>\n            }\n            value=\"notifications\">\n            <Stack gap={2}>\n              <Text type=\"body\" color=\"secondary\">\n                Choose which email and push notifications you receive. Mentions\n                and direct messages are always delivered — everything else can\n                be turned off or batched into a daily digest.\n              </Text>\n              <Text type=\"body\" color=\"secondary\">\n                Quiet hours pause push notifications overnight in your local\n                time zone without affecting email.\n              </Text>\n            </Stack>\n          </Collapsible>\n\n          <Collapsible\n            trigger={\n              <Text type=\"body\" weight=\"semibold\">\n                Privacy\n              </Text>\n            }\n            value=\"privacy\">\n            <Text type=\"body\" color=\"secondary\">\n              Control who can see your profile and activity, and whether your\n              workspace appears in search for people outside your organization.\n            </Text>\n          </Collapsible>\n        </Stack>\n      </CollapsibleGroup>\n    </Card>\n  );\n}\n"
+                "code": "/**\n * Rows inside one card, coordinated so only one is open at a time.\n *\n * Triggers take body-semibold rather than the trigger's default `large`: three\n * rows sharing a single surface are peers, and at 17px semibold each would\n * read as its own section heading. Keep `large` for the case it is for — one\n * Collapsible per card or per Section, where the trigger really is the\n * heading of that surface (see the Multiple Mode and Controlled examples).\n */\nfunction CollapsibleShowcase() {\n  return (\n    <Card width={420}>\n      <CollapsibleGroup type=\"single\" defaultValue=\"notifications\">\n        <Stack gap={4}>\n          <Collapsible\n            trigger={\n              <Text type=\"body\" weight=\"semibold\">\n                General\n              </Text>\n            }\n            value=\"general\"\n          >\n            <Text type=\"body\" color=\"secondary\">\n              Display name, language, and time zone. Time zone drives every date\n              shown in the product, including scheduled reports.\n            </Text>\n          </Collapsible>\n\n          <Collapsible\n            trigger={\n              <Text type=\"body\" weight=\"semibold\">\n                Notifications\n              </Text>\n            }\n            value=\"notifications\"\n          >\n            <Stack gap={2}>\n              <Text type=\"body\" color=\"secondary\">\n                Choose which email and push notifications you receive. Mentions\n                and direct messages are always delivered — everything else can\n                be turned off or batched into a daily digest.\n              </Text>\n              <Text type=\"body\" color=\"secondary\">\n                Quiet hours pause push notifications overnight in your local\n                time zone without affecting email.\n              </Text>\n            </Stack>\n          </Collapsible>\n\n          <Collapsible\n            trigger={\n              <Text type=\"body\" weight=\"semibold\">\n                Privacy\n              </Text>\n            }\n            value=\"privacy\"\n          >\n            <Text type=\"body\" color=\"secondary\">\n              Control who can see your profile and activity, and whether your\n              workspace appears in search for people outside your organization.\n            </Text>\n          </Collapsible>\n        </Stack>\n      </CollapsibleGroup>\n    </Card>\n  );\n}\n"
             }
         ]
     },
@@ -1553,7 +1326,7 @@
             {
                 "title": "ComplexSelector",
                 "description": "A two-axis picker: choose a fruit and a ripeness level from one control. ComplexSelector owns the trigger, popover, and focus restore while the custom grid owns its keyboard semantics.",
-                "code": "type Fruit = 'Apple' | 'Pear' | 'Peach' | 'Plum';\ntype Ripeness = 'Crisp' | 'Tender' | 'Juicy' | 'Peak';\n\ninterface FruitValue {\n  fruit: Fruit;\n  ripeness: Ripeness;\n}\n\nconst fruits: Array<{id: Fruit; emoji: string; description: string}> = [\n  {id: 'Apple', emoji: '🍎', description: 'Bright and balanced'},\n  {id: 'Pear', emoji: '🍐', description: 'Soft floral sweetness'},\n  {id: 'Peach', emoji: '🍑', description: 'Round summer flavor'},\n  {id: 'Plum', emoji: '🟣', description: 'Jammy and tart'},\n];\n\nconst ripenessLevels: Array<{\n  id: Ripeness;\n  shortLabel: string;\n  description: string;\n}> = [\n  {id: 'Crisp', shortLabel: 'C', description: 'Snappy bite'},\n  {id: 'Tender', shortLabel: 'T', description: 'Easy bite'},\n  {id: 'Juicy', shortLabel: 'J', description: 'Full juice'},\n  {id: 'Peak', shortLabel: 'P', description: 'Most intense'},\n];\n\nconst GRID_CELL_SELECTOR = '[role=\"gridcell\"]';\n\nconst styles = stylex.create({\n  grid: {\n    display: 'flex',\n    flexDirection: 'column',\n    gap: spacingVars['--spacing-1'],\n    minWidth: 280,\n  },\n  row: {\n    display: 'grid',\n    gridTemplateColumns: 'minmax(150px, 1fr) repeat(4, 44px)',\n    alignItems: 'center',\n    columnGap: spacingVars['--spacing-1'],\n  },\n  rowHeader: {\n    display: 'flex',\n    alignItems: 'center',\n    gap: spacingVars['--spacing-2'],\n    textAlign: 'start',\n    minWidth: 0,\n  },\n  emoji: {\n    fontSize: 18,\n    flexShrink: 0,\n  },\n  fruitText: {\n    display: 'flex',\n    flexDirection: 'column',\n    minWidth: 0,\n  },\n  cell: {\n    display: 'flex',\n    alignItems: 'center',\n    justifyContent: 'center',\n    height: 36,\n    borderWidth: borderVars['--border-width'],\n    borderStyle: 'solid',\n    borderColor: colorVars['--color-border'],\n    borderRadius: radiusVars['--radius-container'],\n    backgroundColor: colorVars['--color-background-card'],\n    color: colorVars['--color-text-secondary'],\n    fontFamily: 'inherit',\n    cursor: 'pointer',\n    ':hover': {\n      '@media (hover: hover)': {\n        borderColor: colorVars['--color-border-emphasized'],\n        color: colorVars['--color-text-primary'],\n      },\n    },\n  },\n  cellSelected: {\n    borderColor: colorVars['--color-accent'],\n    backgroundColor: colorVars['--color-accent'],\n    color: colorVars['--color-on-accent'],\n  },\n});\n\nfunction FruitRipenessGrid({\n  value,\n  onChange,\n}: {\n  value: FruitValue;\n  onChange: (value: FruitValue) => void;\n}) {\n  const {gridRef, handleKeyDown, handleFocus, focusCell} =\n    useGridFocus<HTMLDivElement>({\n      columns: ripenessLevels.length,\n      cellSelector: GRID_CELL_SELECTOR,\n      hasRovingTabIndex: true,\n    });\n\n  useEffect(() => {\n    const rowIndex = fruits.findIndex(f => f.id === value.fruit);\n    const columnIndex = ripenessLevels.findIndex(l => l.id === value.ripeness);\n    requestAnimationFrame(() => {\n      focusCell(\n        rowIndex >= 0 && columnIndex >= 0\n          ? rowIndex * ripenessLevels.length + columnIndex\n          : 0,\n      );\n    });\n  }, [focusCell, value]);\n\n  return (\n    <div\n      ref={gridRef}\n      role=\"grid\"\n      aria-label=\"Fruit ripeness choices\"\n      onKeyDown={handleKeyDown}\n      onFocus={handleFocus}\n      {...stylex.props(styles.grid)}>\n      {fruits.map(fruit => (\n        <div key={fruit.id} role=\"row\" {...stylex.props(styles.row)}>\n          <div role=\"rowheader\" {...stylex.props(styles.rowHeader)}>\n            <span aria-hidden=\"true\" {...stylex.props(styles.emoji)}>\n              {fruit.emoji}\n            </span>\n            <span {...stylex.props(styles.fruitText)}>\n              <Text type=\"body\">{fruit.id}</Text>\n              <Text type=\"supporting\" color=\"secondary\">\n                {fruit.description}\n              </Text>\n            </span>\n          </div>\n          {ripenessLevels.map(level => {\n            const isSelected =\n              value.fruit === fruit.id && value.ripeness === level.id;\n            return (\n              <button\n                key={`${fruit.id}-${level.id}`}\n                type=\"button\"\n                role=\"gridcell\"\n                aria-label={`${fruit.id}, ${level.id}: ${level.description}`}\n                aria-selected={isSelected || undefined}\n                tabIndex={isSelected ? 0 : -1}\n                onClick={() => onChange({fruit: fruit.id, ripeness: level.id})}\n                {...stylex.props(\n                  styles.cell,\n                  isSelected && styles.cellSelected,\n                )}>\n                {level.shortLabel}\n              </button>\n            );\n          })}\n        </div>\n      ))}\n    </div>\n  );\n}\n\nfunction ComplexSelectorShowcase() {\n  const [value, setValue] = useState<FruitValue>({\n    fruit: 'Apple',\n    ripeness: 'Juicy',\n  });\n\n  return (\n    <ComplexSelector<FruitValue>\n      label=\"Fruit blend\"\n      description=\"Choose a fruit and ripeness in one control. Arrow keys move across the grid.\"\n      value={value}\n      onChange={setValue}\n      triggerLabel={`${value.fruit} · ${value.ripeness}`}\n      style={{width: 280}}>\n      {(selectedValue, onChange, close) => (\n        <FruitRipenessGrid\n          value={selectedValue}\n          onChange={nextValue => {\n            onChange(nextValue);\n            close();\n          }}\n        />\n      )}\n    </ComplexSelector>\n  );\n}\n"
+                "code": "const fruits = [\n  { id: 'Apple', emoji: '🍎', description: 'Bright and balanced' },\n  { id: 'Pear', emoji: '🍐', description: 'Soft floral sweetness' },\n  { id: 'Peach', emoji: '🍑', description: 'Round summer flavor' },\n  { id: 'Plum', emoji: '🟣', description: 'Jammy and tart' },\n];\n\nconst ripenessLevels = [\n  { id: 'Crisp', shortLabel: 'C', description: 'Snappy bite' },\n  { id: 'Tender', shortLabel: 'T', description: 'Easy bite' },\n  { id: 'Juicy', shortLabel: 'J', description: 'Full juice' },\n  { id: 'Peak', shortLabel: 'P', description: 'Most intense' },\n];\n\nconst GRID_CELL_SELECTOR = '[role=\"gridcell\"]';\n\nconst styles = stylex.create({\n  grid: {\n    display: 'flex',\n    flexDirection: 'column',\n    gap: spacingVars['--spacing-1'],\n    minWidth: 280,\n  },\n  row: {\n    display: 'grid',\n    gridTemplateColumns: 'minmax(150px, 1fr) repeat(4, 44px)',\n    alignItems: 'center',\n    columnGap: spacingVars['--spacing-1'],\n  },\n  rowHeader: {\n    display: 'flex',\n    alignItems: 'center',\n    gap: spacingVars['--spacing-2'],\n    textAlign: 'start',\n    minWidth: 0,\n  },\n  emoji: {\n    fontSize: 18,\n    flexShrink: 0,\n  },\n  fruitText: {\n    display: 'flex',\n    flexDirection: 'column',\n    minWidth: 0,\n  },\n  cell: {\n    display: 'flex',\n    alignItems: 'center',\n    justifyContent: 'center',\n    height: 36,\n    borderWidth: borderVars['--border-width'],\n    borderStyle: 'solid',\n    borderColor: colorVars['--color-border'],\n    borderRadius: radiusVars['--radius-container'],\n    backgroundColor: colorVars['--color-background-card'],\n    color: colorVars['--color-text-secondary'],\n    fontFamily: 'inherit',\n    cursor: 'pointer',\n    ':hover': {\n      '@media (hover: hover)': {\n        borderColor: colorVars['--color-border-emphasized'],\n        color: colorVars['--color-text-primary'],\n      },\n    },\n  },\n  cellSelected: {\n    borderColor: colorVars['--color-accent'],\n    backgroundColor: colorVars['--color-accent'],\n    color: colorVars['--color-on-accent'],\n  },\n});\n\nfunction FruitRipenessGrid({ value, onChange }) {\n  const { gridRef, handleKeyDown, handleFocus, focusCell } = useGridFocus({\n    columns: ripenessLevels.length,\n    cellSelector: GRID_CELL_SELECTOR,\n    hasRovingTabIndex: true,\n  });\n\n  useEffect(() => {\n    const rowIndex = fruits.findIndex((f) => f.id === value.fruit);\n    const columnIndex = ripenessLevels.findIndex(\n      (l) => l.id === value.ripeness,\n    );\n    requestAnimationFrame(() => {\n      focusCell(\n        rowIndex >= 0 && columnIndex >= 0\n          ? rowIndex * ripenessLevels.length + columnIndex\n          : 0,\n      );\n    });\n  }, [focusCell, value]);\n\n  return (\n    <div\n      ref={gridRef}\n      role=\"grid\"\n      aria-label=\"Fruit ripeness choices\"\n      onKeyDown={handleKeyDown}\n      onFocus={handleFocus}\n      {...stylex.props(styles.grid)}\n    >\n      {fruits.map((fruit) => (\n        <div key={fruit.id} role=\"row\" {...stylex.props(styles.row)}>\n          <div role=\"rowheader\" {...stylex.props(styles.rowHeader)}>\n            <span aria-hidden=\"true\" {...stylex.props(styles.emoji)}>\n              {fruit.emoji}\n            </span>\n            <span {...stylex.props(styles.fruitText)}>\n              <Text type=\"body\">{fruit.id}</Text>\n              <Text type=\"supporting\" color=\"secondary\">\n                {fruit.description}\n              </Text>\n            </span>\n          </div>\n          {ripenessLevels.map((level) => {\n            const isSelected =\n              value.fruit === fruit.id && value.ripeness === level.id;\n            return (\n              <button\n                key={`${fruit.id}-${level.id}`}\n                type=\"button\"\n                role=\"gridcell\"\n                aria-label={`${fruit.id}, ${level.id}: ${level.description}`}\n                aria-selected={isSelected || undefined}\n                tabIndex={isSelected ? 0 : -1}\n                onClick={() =>\n                  onChange({ fruit: fruit.id, ripeness: level.id })\n                }\n                {...stylex.props(\n                  styles.cell,\n                  isSelected && styles.cellSelected,\n                )}\n              >\n                {level.shortLabel}\n              </button>\n            );\n          })}\n        </div>\n      ))}\n    </div>\n  );\n}\n\nfunction ComplexSelectorShowcase() {\n  const [value, setValue] = useState({\n    fruit: 'Apple',\n    ripeness: 'Juicy',\n  });\n\n  return (\n    <ComplexSelector\n      label=\"Fruit blend\"\n      description=\"Choose a fruit and ripeness in one control. Arrow keys move across the grid.\"\n      value={value}\n      onChange={setValue}\n      triggerLabel={`${value.fruit} · ${value.ripeness}`}\n      style={{ width: 280 }}\n    >\n      {(selectedValue, onChange, close) => (\n        <FruitRipenessGrid\n          value={selectedValue}\n          onChange={(nextValue) => {\n            onChange(nextValue);\n            close();\n          }}\n        />\n      )}\n    </ComplexSelector>\n  );\n}\n"
             }
         ]
     },
@@ -1787,7 +1560,7 @@
             {
                 "title": "DateInput",
                 "description": "A date input field with a calendar popover. Type a date or click the calendar icon to pick one.",
-                "code": "type DateString =\n  `${number}${number}${number}${number}-${number}${number}-${number}${number}`;\n\nfunction DateInputShowcase() {\n  const [date, setDate] = useState<DateString | undefined>(undefined);\n\n  return (\n    <Stack\n      direction=\"vertical\"\n      width=\"100%\"\n      style={{minWidth: 240, maxWidth: 400}}>\n      <DateInput\n        label=\"Start date\"\n        placeholder=\"Select a date\"\n        value={date}\n        onChange={setDate}\n        hasClear\n      />\n    </Stack>\n  );\n}\n"
+                "code": "function DateInputShowcase() {\n  const [date, setDate] = useState(undefined);\n\n  return (\n    <Stack\n      direction=\"vertical\"\n      width=\"100%\"\n      style={{ minWidth: 240, maxWidth: 400 }}\n    >\n      <DateInput\n        label=\"Start date\"\n        placeholder=\"Select a date\"\n        value={date}\n        onChange={setDate}\n        hasClear\n      />\n    </Stack>\n  );\n}\n"
             }
         ]
     },
@@ -2027,7 +1800,7 @@
             {
                 "title": "DateRangeInput",
                 "description": "A date range picker with a button trigger and dual-month calendar popover with preset ranges.",
-                "code": "function daysAgo(n: number): ISODateString {\n  const d = new Date();\n  d.setDate(d.getDate() - n);\n  return d.toISOString().slice(0, 10) as ISODateString;\n}\n\nfunction today(): ISODateString {\n  return new Date().toISOString().slice(0, 10) as ISODateString;\n}\n\nconst presets = [\n  {label: 'Last 7 days', getRange: () => ({start: daysAgo(7), end: today()})},\n  {label: 'Last 30 days', getRange: () => ({start: daysAgo(30), end: today()})},\n];\n\nfunction DateRangeInputShowcase() {\n  const [range, setRange] = useState<DateRange | null>(null);\n\n  return (\n    <Stack direction=\"vertical\" width=\"100%\" style={{maxWidth: 400}}>\n      <DateRangeInput\n        label=\"Date range\"\n        value={range}\n        onChange={setRange}\n        presets={presets}\n      />\n    </Stack>\n  );\n}\n"
+                "code": "function daysAgo(n) {\n  const d = new Date();\n  d.setDate(d.getDate() - n);\n  return d.toISOString().slice(0, 10);\n}\n\nfunction today() {\n  return new Date().toISOString().slice(0, 10);\n}\n\nconst presets = [\n  {\n    label: 'Last 7 days',\n    getRange: () => ({ start: daysAgo(7), end: today() }),\n  },\n  {\n    label: 'Last 30 days',\n    getRange: () => ({ start: daysAgo(30), end: today() }),\n  },\n];\n\nfunction DateRangeInputShowcase() {\n  const [range, setRange] = useState(null);\n\n  return (\n    <Stack direction=\"vertical\" width=\"100%\" style={{ maxWidth: 400 }}>\n      <DateRangeInput\n        label=\"Date range\"\n        value={range}\n        onChange={setRange}\n        presets={presets}\n      />\n    </Stack>\n  );\n}\n"
             }
         ]
     },
@@ -2290,7 +2063,7 @@
             {
                 "title": "DateTimeInput",
                 "description": "A combined date and time picker. Desktop opens a calendar popover with a time input; touch devices open a Date/Time bottom sheet.",
-                "code": "function DateTimeInputShowcase() {\n  const [dateTime, setDateTime] = useState<ISODateTimeString | undefined>(\n    undefined,\n  );\n\n  return (\n    <Stack\n      direction=\"vertical\"\n      width=\"100%\"\n      style={{minWidth: 240, maxWidth: 400}}>\n      <DateTimeInput\n        label=\"Meeting time\"\n        placeholder=\"Select a date\"\n        value={dateTime}\n        onChange={setDateTime}\n        hasClear\n      />\n    </Stack>\n  );\n}\n"
+                "code": "function DateTimeInputShowcase() {\n  const [dateTime, setDateTime] = useState(undefined);\n\n  return (\n    <Stack\n      direction=\"vertical\"\n      width=\"100%\"\n      style={{ minWidth: 240, maxWidth: 400 }}\n    >\n      <DateTimeInput\n        label=\"Meeting time\"\n        placeholder=\"Select a date\"\n        value={dateTime}\n        onChange={setDateTime}\n        hasClear\n      />\n    </Stack>\n  );\n}\n"
             }
         ]
     },
@@ -2487,7 +2260,7 @@
             {
                 "title": "Divider — Variants",
                 "description": "Horizontal dividers in subtle and strong variants, plus a labeled divider. A quick visual reference for separator styles.",
-                "code": "function DividerShowcase() {\n  return (\n    <Stack direction=\"vertical\" gap={4} style={{width: 500}}>\n      <Divider variant=\"subtle\" />\n      <Divider variant=\"strong\" />\n      <Divider label=\"or\" />\n    </Stack>\n  );\n}\n"
+                "code": "function DividerShowcase() {\n  return (\n    <Stack direction=\"vertical\" gap={4} style={{ width: 500 }}>\n      <Divider variant=\"subtle\" />\n      <Divider variant=\"strong\" />\n      <Divider label=\"or\" />\n    </Stack>\n  );\n}\n"
             }
         ]
     },
@@ -2687,7 +2460,7 @@
             {
                 "title": "DropdownMenu",
                 "description": "A button that opens a dropdown menu with action items. The menu starts open for preview.",
-                "code": "function DropdownMenuShowcase() {\n  return (\n    <DropdownMenu\n      button={{label: 'Actions'}}\n      items={[\n        {label: 'Edit', onClick: () => {}},\n        {label: 'Duplicate', onClick: () => {}},\n        {label: 'Delete', onClick: () => {}},\n      ]}\n    />\n  );\n}\n"
+                "code": "function DropdownMenuShowcase() {\n  return (\n    <DropdownMenu\n      button={{ label: 'Actions' }}\n      items={[\n        { label: 'Edit', onClick: () => {} },\n        { label: 'Duplicate', onClick: () => {} },\n        { label: 'Delete', onClick: () => {} },\n      ]}\n    />\n  );\n}\n"
             }
         ]
     },
@@ -2995,7 +2768,7 @@
             {
                 "title": "FileInput",
                 "description": "",
-                "code": "function FileInputShowcase() {\n  const [value, setValue] = useState<File | File[] | null>(null);\n  return (\n    <div style={{width: 350}}>\n      <FileInput\n        label=\"Upload file\"\n        value={value}\n        onChange={setValue}\n        placeholder=\"Drag files here or click to browse\"\n      />\n    </div>\n  );\n}\n"
+                "code": "function FileInputShowcase() {\n  const [value, setValue] = useState(null);\n  return (\n    <div style={{ width: 350 }}>\n      <FileInput\n        label=\"Upload file\"\n        value={value}\n        onChange={setValue}\n        placeholder=\"Drag files here or click to browse\"\n      />\n    </div>\n  );\n}\n"
             }
         ]
     },
@@ -3109,7 +2882,7 @@
             {
                 "title": "Grid",
                 "description": "",
-                "code": "function GridShowcase() {\n  return (\n    <Grid columns={3} gap={2} width={400}>\n      {Array.from({length: 12}, (_, i) => (\n        <Card key={i}>Item {i + 1}</Card>\n      ))}\n    </Grid>\n  );\n}\n"
+                "code": "function GridShowcase() {\n  return (\n    <Grid columns={3} gap={2} width={400}>\n      {Array.from({ length: 12 }, (_, i) => (\n        <Card key={i}>Item {i + 1}</Card>\n      ))}\n    </Grid>\n  );\n}\n"
             }
         ]
     },
@@ -3622,108 +3395,6 @@
         ]
     },
     {
-        "name": "List",
-        "url": "https://astryx.atmeta.com/components/List",
-        "introduction": "A vertical collection of items with consistent spacing, dividers, and optional markers. Supports headers, icons, avatars, badges, and interactive items with click or link behavior. Use it to display ordered or unordered groups of related content.",
-        "anatomy": [
-            {
-                "name": "List title",
-                "required": true,
-                "description": "Heading that labels the list."
-            },
-            {
-                "name": "Description",
-                "required": false,
-                "description": "Supplementary text below the title."
-            },
-            {
-                "name": "List items",
-                "required": true,
-                "description": "Individual entries, which may include icons or images."
-            },
-            {
-                "name": "Item description",
-                "required": false,
-                "description": "Additional detail for an individual list item."
-            }
-        ],
-        "properties": [
-            {
-                "name": "children",
-                "type": "ReactNode",
-                "description": "List items (ListItem components)."
-            },
-            {
-                "name": "density",
-                "type": "'compact' | 'balanced' | 'spacious'",
-                "default": "'balanced'",
-                "description": "Spacing density for items."
-            },
-            {
-                "name": "hasDividers",
-                "type": "boolean",
-                "default": "false",
-                "description": "Show dividers between items."
-            },
-            {
-                "name": "edgeCompensation",
-                "type": "'inline'",
-                "description": "Compensate for item content inset on each inline edge by cancelling the smaller of each item's built-in horizontal inset and the container's published inline padding. The margin reads the same variable the items derive their inline padding from, so it tracks density and theme padding overrides automatically without pulling rows outside zero-padding or full-bleed surfaces. Use under a section heading to bring row text toward the heading text. Content aligns when container padding is at least the item inset; smaller padding leaves some inset uncompensated. Omit to leave item positions unchanged."
-            },
-            {
-                "name": "header",
-                "type": "ReactNode",
-                "description": "Header content, associated with the list via aria-labelledby."
-            },
-            {
-                "name": "listStyle",
-                "type": "'none' | 'disc' | 'decimal' | 'circle'",
-                "default": "'none'",
-                "description": "List marker style. 'decimal' renders an <ol> element instead of <ul>."
-            },
-            {
-                "name": "start",
-                "type": "number",
-                "default": "1",
-                "description": "Starting number for ordered lists (listStyle='decimal'). Sets the CSS counter to begin at this value."
-            },
-            {
-                "name": "xstyle",
-                "type": "StyleXStyles",
-                "description": "StyleX styles for layout customization (margins, positioning, sizing). Must be a stylex.create() value: not an inline style object like style={{}}."
-            }
-        ],
-        "practices": [
-            {
-                "guidance": true,
-                "description": "Provide a header to label the list and give context to screen readers."
-            },
-            {
-                "guidance": true,
-                "description": "Use start and end content slots to add icons, avatars, or badges to each item."
-            },
-            {
-                "guidance": false,
-                "description": "Place interactive elements inside an interactive list item; it creates nested click targets and confusing focus behavior."
-            },
-            {
-                "guidance": false,
-                "description": "Use a list for a single item or for laying out unrelated content; lists imply a meaningful collection."
-            },
-            {
-                "guidance": false,
-                "description": "Mix clickable and non-clickable items in the same list without clear visual distinction."
-            }
-        ],
-        "examples": [
-            {
-                "title": "List",
-                "description": "",
-                "code": "function ListShowcase() {\n  return (\n    <List>\n      <ListItem label=\"Notifications\" description=\"Manage your alerts\" />\n      <ListItem label=\"Privacy\" description=\"Control your data\" />\n      <ListItem label=\"Security\" description=\"Password and 2FA\" />\n    </List>\n  );\n}\n"
-            }
-        ]
-    },
-    {
         "name": "MetadataList",
         "url": "https://astryx.atmeta.com/components/MetadataList",
         "introduction": "MetadataList displays key-value pairs for object attributes like quality, condition, and status, in a structured layout. Use it for detail panels, settings summaries, and record information.",
@@ -3939,7 +3610,7 @@
             {
                 "title": "MoreMenu",
                 "description": "A basic three-dot menu with simple action items.",
-                "code": "function MoreMenuShowcase() {\n  return (\n    <MoreMenu\n      items={[\n        {label: 'Edit', onClick: () => {}},\n        {label: 'Duplicate', onClick: () => {}},\n        {label: 'Delete', onClick: () => {}},\n      ]}\n    />\n  );\n}\n"
+                "code": "function MoreMenuShowcase() {\n  return (\n    <MoreMenu\n      items={[\n        { label: 'Edit', onClick: () => {} },\n        { label: 'Duplicate', onClick: () => {} },\n        { label: 'Delete', onClick: () => {} },\n      ]}\n    />\n  );\n}\n"
             }
         ]
     },
@@ -4286,7 +3957,7 @@
             {
                 "title": "MultiSelector",
                 "description": "",
-                "code": "function MultiSelectorShowcase() {\n  const [value, setValue] = useState<string[]>([]);\n  return (\n    <div style={{width: 300}}>\n      <MultiSelector\n        label=\"Columns\"\n        options={['Name', 'Email', 'Role', 'Status', 'Created']}\n        value={value}\n        onChange={setValue}\n        placeholder=\"Select columns...\"\n      />\n    </div>\n  );\n}\n"
+                "code": "function MultiSelectorShowcase() {\n  const [value, setValue] = useState([]);\n  return (\n    <div style={{ width: 300 }}>\n      <MultiSelector\n        label=\"Columns\"\n        options={['Name', 'Email', 'Role', 'Status', 'Created']}\n        value={value}\n        onChange={setValue}\n        placeholder=\"Select columns...\"\n      />\n    </div>\n  );\n}\n"
             }
         ]
     },
@@ -4537,7 +4208,7 @@
             {
                 "title": "NumberInput",
                 "description": "A number input for quantity entry.",
-                "code": "function NumberInputShowcase() {\n  const [value, setValue] = useState<number | null>(0);\n  return (\n    <div style={{width: 300}}>\n      <NumberInput\n        label=\"Quantity\"\n        placeholder=\"Enter quantity\"\n        value={value}\n        onChange={setValue}\n        formatValue={number => `${number} items`}\n        hasNumberSteppers\n      />\n    </div>\n  );\n}\n"
+                "code": "function NumberInputShowcase() {\n  const [value, setValue] = useState(0);\n  return (\n    <div style={{ width: 300 }}>\n      <NumberInput\n        label=\"Quantity\"\n        placeholder=\"Enter quantity\"\n        value={value}\n        onChange={setValue}\n        formatValue={(number) => `${number} items`}\n        hasNumberSteppers\n      />\n    </div>\n  );\n}\n"
             }
         ]
     },
@@ -4737,7 +4408,7 @@
             {
                 "title": "PowerSearch",
                 "description": "Token-based filter bar with enum and text fields, pre-populated with sample filters.",
-                "code": "const config: PowerSearchConfig = {\n  name: 'BasicSearch',\n  fields: [\n    {\n      key: 'status',\n      label: 'Status',\n      defaultOperator: 'is',\n      operators: [\n        {\n          key: 'is',\n          label: 'is',\n          value: {\n            type: 'enum',\n            values: [\n              {value: 'open', label: 'Open'},\n              {value: 'in_progress', label: 'In Progress'},\n              {value: 'closed', label: 'Closed'},\n            ],\n          },\n        },\n      ],\n    },\n    {\n      key: 'title',\n      label: 'Title',\n      defaultOperator: 'contains',\n      operators: [\n        {key: 'contains', label: 'contains', value: {type: 'string'}},\n      ],\n    },\n  ],\n};\n\nconst initialFilters: PowerSearchFilter[] = [\n  {field: 'status', operator: 'is', value: {type: 'enum', value: 'open'}},\n  {\n    field: 'title',\n    operator: 'contains',\n    value: {type: 'string', value: 'dashboard'},\n  },\n];\n\nfunction PowerSearchShowcase() {\n  const [filters, setFilters] = useState<PowerSearchFilter[]>(initialFilters);\n\n  return (\n    <PowerSearch\n      style={{width: 400}}\n      config={config}\n      filters={filters}\n      onChange={newFilters => setFilters([...newFilters])}\n      placeholder=\"Search by status, title...\"\n    />\n  );\n}\n"
+                "code": "const config = {\n  name: 'BasicSearch',\n  fields: [\n    {\n      key: 'status',\n      label: 'Status',\n      defaultOperator: 'is',\n      operators: [\n        {\n          key: 'is',\n          label: 'is',\n          value: {\n            type: 'enum',\n            values: [\n              { value: 'open', label: 'Open' },\n              { value: 'in_progress', label: 'In Progress' },\n              { value: 'closed', label: 'Closed' },\n            ],\n          },\n        },\n      ],\n    },\n    {\n      key: 'title',\n      label: 'Title',\n      defaultOperator: 'contains',\n      operators: [\n        { key: 'contains', label: 'contains', value: { type: 'string' } },\n      ],\n    },\n  ],\n};\n\nconst initialFilters = [\n  { field: 'status', operator: 'is', value: { type: 'enum', value: 'open' } },\n  {\n    field: 'title',\n    operator: 'contains',\n    value: { type: 'string', value: 'dashboard' },\n  },\n];\n\nfunction PowerSearchShowcase() {\n  const [filters, setFilters] = useState(initialFilters);\n\n  return (\n    <PowerSearch\n      style={{ width: 400 }}\n      config={config}\n      filters={filters}\n      onChange={(newFilters) => setFilters([...newFilters])}\n      placeholder=\"Search by status, title...\"\n    />\n  );\n}\n"
             }
         ]
     },
@@ -4872,7 +4543,7 @@
             {
                 "title": "ProgressBar",
                 "description": "A progress bar filled to 60%.",
-                "code": "function ProgressBarShowcase() {\n  return <ProgressBar value={60} label=\"Progress\" style={{width: 300}} />;\n}\n"
+                "code": "function ProgressBarShowcase() {\n  return <ProgressBar value={60} label=\"Progress\" style={{ width: 300 }} />;\n}\n"
             }
         ]
     },
@@ -5028,118 +4699,7 @@
             {
                 "title": "RadioList",
                 "description": "",
-                "code": "function RadioListShowcase() {\n  const [value, setValue] = useState('');\n  return (\n    <RadioList\n      label=\"Notification preference\"\n      value={value}\n      onChange={setValue}>\n      <RadioListItem label=\"Email\" value=\"email\" />\n      <RadioListItem label=\"SMS\" value=\"sms\" />\n      <RadioListItem label=\"Push notification\" value=\"push\" />\n    </RadioList>\n  );\n}\n"
-            }
-        ]
-    },
-    {
-        "name": "SelectableCard",
-        "url": "https://astryx.atmeta.com/components/SelectableCard",
-        "introduction": "A card that toggles between selected and unselected states with an accent border. For navigation use ClickableCard.",
-        "anatomy": [
-            {
-                "name": "Container",
-                "required": true,
-                "description": "Interactive div with accent border on selection."
-            },
-            {
-                "name": "Content",
-                "required": true,
-                "description": "Children rendered inside the card."
-            }
-        ],
-        "properties": [
-            {
-                "name": "label",
-                "type": "string",
-                "required": true,
-                "description": "Accessibility label."
-            },
-            {
-                "name": "isSelected",
-                "type": "boolean",
-                "required": true,
-                "description": "Controlled selection state."
-            },
-            {
-                "name": "onChange",
-                "type": "(isSelected: boolean) => void",
-                "required": true,
-                "description": "Called when toggled."
-            },
-            {
-                "name": "isDisabled",
-                "type": "boolean",
-                "default": "false",
-                "description": "Disables the card."
-            },
-            {
-                "name": "children",
-                "type": "ReactNode",
-                "description": "Card content."
-            },
-            {
-                "name": "padding",
-                "type": "0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10",
-                "default": "4",
-                "description": "Inner padding."
-            },
-            {
-                "name": "variant",
-                "type": "'default' | 'transparent' | 'muted' | 'blue' | 'cyan' | 'gray' | 'green' | 'orange' | 'pink' | 'purple' | 'red' | 'teal' | 'yellow'",
-                "default": "'default'",
-                "description": "Background color variant."
-            },
-            {
-                "name": "elevation",
-                "type": "'none' | 'low' | 'med' | 'high'",
-                "default": "'none'",
-                "description": "Resting shadow depth. The selection ring composes on top, so a selected card keeps its shadow."
-            },
-            {
-                "name": "width",
-                "type": "SizeValue",
-                "description": "Card width."
-            },
-            {
-                "name": "height",
-                "type": "SizeValue",
-                "description": "Card height."
-            },
-            {
-                "name": "maxWidth",
-                "type": "SizeValue",
-                "description": "Maximum card width."
-            },
-            {
-                "name": "xstyle",
-                "type": "StyleXStyles",
-                "description": "StyleX styles for layout customization (margins, positioning, sizing). Must be a stylex.create() value, not an inline style object like style={{}}."
-            }
-        ],
-        "practices": [
-            {
-                "guidance": true,
-                "description": "Use for plan pickers, filter chips, or option grids."
-            },
-            {
-                "guidance": true,
-                "description": "For single-select track one ID; for multi-select use a Set."
-            },
-            {
-                "guidance": true,
-                "description": "When focused, toggle selection with Space or Enter."
-            },
-            {
-                "guidance": false,
-                "description": "Use for navigation; use ClickableCard for that."
-            }
-        ],
-        "examples": [
-            {
-                "title": "SelectableCard",
-                "description": "A plan picker with single-select radio behavior. Cards show an accent border when selected.",
-                "code": "const plans = [\n  {id: 'basic', name: 'Basic', price: '$9/mo', desc: 'For individuals'},\n  {id: 'pro', name: 'Pro', price: '$29/mo', desc: 'For small teams'},\n  {\n    id: 'enterprise',\n    name: 'Enterprise',\n    price: '$99/mo',\n    desc: 'For organizations',\n  },\n];\n\nfunction SelectableCardShowcase() {\n  const [selected, setSelected] = useState<string | null>('pro');\n\n  return (\n    <Stack direction=\"horizontal\" gap={3}>\n      {plans.map(plan => (\n        <SelectableCard\n          key={plan.id}\n          label={plan.name}\n          isSelected={selected === plan.id}\n          onChange={() => setSelected(plan.id)}\n          width={180}>\n          <Stack direction=\"vertical\" gap={1}>\n            <Heading level={4}>{plan.name}</Heading>\n            <Text type=\"large\" weight=\"bold\">\n              {plan.price}\n            </Text>\n            <Text type=\"supporting\" color=\"secondary\">\n              {plan.desc}\n            </Text>\n          </Stack>\n        </SelectableCard>\n      ))}\n    </Stack>\n  );\n}\n"
+                "code": "function RadioListShowcase() {\n  const [value, setValue] = useState('');\n  return (\n    <RadioList\n      label=\"Notification preference\"\n      value={value}\n      onChange={setValue}\n    >\n      <RadioListItem label=\"Email\" value=\"email\" />\n      <RadioListItem label=\"SMS\" value=\"sms\" />\n      <RadioListItem label=\"Push notification\" value=\"push\" />\n    </RadioList>\n  );\n}\n"
             }
         ]
     },
@@ -5478,7 +5038,7 @@
             {
                 "title": "Selector",
                 "description": "",
-                "code": "function SelectorShowcase() {\n  const [value, setValue] = useState<string | undefined>();\n  return (\n    <Selector\n      style={{width: 300}}\n      label=\"Fruit\"\n      options={['Apple', 'Banana', 'Orange', 'Mango', 'Pineapple']}\n      placeholder=\"Select a fruit...\"\n      value={value}\n      onChange={setValue}\n    />\n  );\n}\n"
+                "code": "function SelectorShowcase() {\n  const [value, setValue] = useState();\n  return (\n    <Selector\n      style={{ width: 300 }}\n      label=\"Fruit\"\n      options={['Apple', 'Banana', 'Orange', 'Mango', 'Pineapple']}\n      placeholder=\"Select a fruit...\"\n      value={value}\n      onChange={setValue}\n    />\n  );\n}\n"
             }
         ]
     },
@@ -5703,7 +5263,7 @@
             {
                 "title": "Slider",
                 "description": "A slider control set to 50%.",
-                "code": "function SliderShowcase() {\n  const [value, setValue] = useState(50);\n  return (\n    <Slider\n      label=\"Volume\"\n      value={value}\n      onChange={setValue}\n      style={{width: 300}}\n    />\n  );\n}\n"
+                "code": "function SliderShowcase() {\n  const [value, setValue] = useState(50);\n  return (\n    <Slider\n      label=\"Volume\"\n      value={value}\n      onChange={setValue}\n      style={{ width: 300 }}\n    />\n  );\n}\n"
             }
         ]
     },
@@ -6094,7 +5654,7 @@
             {
                 "title": "Stepper — Checkout Progress",
                 "description": "The default stepper: a horizontal track where every step owns an equal segment of the progress bar above its label. The default auto indicator resolves itself per step: a check once the step is done, a ring on the current step, a number for the ones still ahead. Click any step to jump.",
-                "code": "function StepperShowcase() {\n  const [active, setActive] = useState(2);\n  return (\n    <div style={{width: '100%', maxWidth: 640}}>\n      <Stepper\n        activeStep={active}\n        orientation=\"horizontal\"\n        onStepClick={setActive}>\n        <Step step={0} label=\"Cart\" />\n        <Step step={1} label=\"Shipping\" />\n        <Step step={2} label=\"Payment\" />\n        <Step step={3} label=\"Review\" />\n        <Step step={4} label=\"Confirm\" />\n      </Stepper>\n    </div>\n  );\n}\n"
+                "code": "<Stepper activeStep={1}>\n  <Step step={0} label=\"Details\" />\n  <Step step={1} label=\"Review\" />\n  <Step step={2} label=\"Complete\" />\n</Stepper>;\n"
             }
         ]
     },
@@ -6494,7 +6054,7 @@
             {
                 "title": "Table",
                 "description": "Data-driven table with proportional and pixel column widths and hover highlighting.",
-                "code": "interface User extends Record<string, unknown> {\n  id: string;\n  name: string;\n  email: string;\n  role: string;\n  age: number;\n}\n\nconst users: User[] = [\n  {\n    id: '1',\n    name: 'Alice Johnson',\n    email: 'alice@example.com',\n    role: 'Engineer',\n    age: 30,\n  },\n  {\n    id: '2',\n    name: 'Bob Smith',\n    email: 'bob@example.com',\n    role: 'Designer',\n    age: 25,\n  },\n  {\n    id: '3',\n    name: 'Charlie Brown',\n    email: 'charlie@example.com',\n    role: 'PM',\n    age: 35,\n  },\n];\n\nconst columns: TableColumn<User>[] = [\n  {key: 'name', header: 'Name', width: proportional(1)},\n  {key: 'email', header: 'Email', width: proportional(2)},\n  {key: 'role', header: 'Role', width: proportional(1)},\n  {key: 'age', header: 'Age', width: pixel(80)},\n];\n\nfunction TableShowcase() {\n  return (\n    <Card width={600}>\n      <Table data={users} columns={columns} idKey=\"id\" hasHover />\n    </Card>\n  );\n}\n"
+                "code": "const users = [\n  {\n    id: '1',\n    name: 'Alice Johnson',\n    email: 'alice@example.com',\n    role: 'Engineer',\n    age: 30,\n  },\n  {\n    id: '2',\n    name: 'Bob Smith',\n    email: 'bob@example.com',\n    role: 'Designer',\n    age: 25,\n  },\n  {\n    id: '3',\n    name: 'Charlie Brown',\n    email: 'charlie@example.com',\n    role: 'PM',\n    age: 35,\n  },\n];\n\nconst columns = [\n  { key: 'name', header: 'Name', width: proportional(1) },\n  { key: 'email', header: 'Email', width: proportional(2) },\n  { key: 'role', header: 'Role', width: proportional(1) },\n  { key: 'age', header: 'Age', width: pixel(80) },\n];\n\nfunction TableShowcase() {\n  return (\n    <Card width={600}>\n      <Table data={users} columns={columns} idKey=\"id\" hasHover />\n    </Card>\n  );\n}\n"
             }
         ]
     },
@@ -7054,7 +6614,7 @@
             {
                 "title": "TextArea",
                 "description": "A text area with placeholder text.",
-                "code": "function TextAreaShowcase() {\n  const [value, setValue] = useState('');\n  return (\n    <div style={{width: 400}}>\n      <TextArea\n        label=\"Description\"\n        value={value}\n        onChange={setValue}\n        placeholder=\"Enter a description...\"\n      />\n    </div>\n  );\n}\n"
+                "code": "function TextAreaShowcase() {\n  const [value, setValue] = useState('');\n  return (\n    <div style={{ width: 400 }}>\n      <TextArea\n        label=\"Description\"\n        value={value}\n        onChange={setValue}\n        placeholder=\"Enter a description...\"\n      />\n    </div>\n  );\n}\n"
             }
         ]
     },
@@ -7282,7 +6842,7 @@
             {
                 "title": "TextInput",
                 "description": "",
-                "code": "function TextInputShowcase() {\n  const [value, setValue] = useState('');\n  return (\n    <div style={{width: 300}}>\n      <TextInput\n        label=\"Name\"\n        value={value}\n        onChange={setValue}\n        placeholder=\"Enter your name\"\n      />\n    </div>\n  );\n}\n"
+                "code": "function TextInputShowcase() {\n  const [value, setValue] = useState('');\n  return (\n    <div style={{ width: 300 }}>\n      <TextInput\n        label=\"Name\"\n        value={value}\n        onChange={setValue}\n        placeholder=\"Enter your name\"\n      />\n    </div>\n  );\n}\n"
             }
         ]
     },
@@ -7506,7 +7066,7 @@
             {
                 "title": "TimeInput",
                 "description": "A time input that uses the browser/OS picker on touch by default and Astryx typed entry on fine pointers.",
-                "code": "function TimeInputShowcase() {\n  const [time, setTime] = useState<ISOTimeString | undefined>(undefined);\n  return (\n    <Stack\n      direction=\"vertical\"\n      width=\"100%\"\n      style={{minWidth: 240, maxWidth: 400}}>\n      <TimeInput\n        label=\"Time\"\n        placeholder=\"Select a time\"\n        value={time}\n        onChange={setTime}\n      />\n    </Stack>\n  );\n}\n"
+                "code": "function TimeInputShowcase() {\n  const [time, setTime] = useState(undefined);\n  return (\n    <Stack\n      direction=\"vertical\"\n      width=\"100%\"\n      style={{ minWidth: 240, maxWidth: 400 }}\n    >\n      <TimeInput\n        label=\"Time\"\n        placeholder=\"Select a time\"\n        value={time}\n        onChange={setTime}\n      />\n    </Stack>\n  );\n}\n"
             }
         ]
     },

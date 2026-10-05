@@ -1,9 +1,7 @@
 export { Stack, StackItem } from '@astryxdesign/core/Stack';
 export { Grid, GridSpan } from '@astryxdesign/core/Grid';
-export { Card } from '@astryxdesign/core/Card';
-export { ClickableCard } from '@astryxdesign/core/ClickableCard';
+export { Card } from '@/components/ui/Card';
 export { Collapsible } from '@astryxdesign/core/Collapsible';
-export { SelectableCard } from '@astryxdesign/core/SelectableCard';
 export { Heading } from '@astryxdesign/core/Heading';
 export { Text } from '@astryxdesign/core/Text';
 export { Avatar } from '@/components/ui/Avatar';
@@ -32,7 +30,6 @@ export { Slider } from '@astryxdesign/core/Slider';
 export { FileInput } from '@astryxdesign/core/FileInput';
 export { Selector } from '@astryxdesign/core/Selector';
 export { RadioList, RadioListItem } from '@astryxdesign/core/RadioList';
-export { List, ListItem } from '@astryxdesign/core/List';
 export { MetadataList, MetadataListItem } from '@astryxdesign/core/MetadataList';
 export { Table, proportional, pixel } from '@astryxdesign/core/Table';
 export { Timestamp } from '@astryxdesign/core/Timestamp';

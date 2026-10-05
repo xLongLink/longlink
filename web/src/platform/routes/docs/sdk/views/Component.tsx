@@ -1,3 +1,4 @@
+import { ComponentPreview } from './Preview';
 import { Code } from '@astryxdesign/core/Code';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
@@ -66,11 +67,111 @@ const reactExample = `export default function Counter() {
   );
 }`;
 
-// LongLink-only components have no equivalent Astryx reference or upstream examples.
+// LongLink components document their own contracts instead of an upstream component's props.
 const solutionReferences: Record<
     string,
     Pick<(typeof references)[number], 'introduction' | 'examples' | 'anatomy' | 'properties' | 'practices'>
 > = {
+    Card: {
+        introduction:
+            'Card has one shared set of props. onChange makes it selectable, onClick or href makes it clickable, and otherwise it is a plain content card. Selection takes priority when both kinds of interaction props are supplied.',
+        examples: [
+            {
+                title: 'Plain card',
+                description: '',
+                code: '<Card padding={3}><Text>Order details</Text></Card>',
+            },
+            {
+                title: 'Clickable card',
+                description: '',
+                code: '<Card label="View order" href="/orders/123"><Text>View order</Text></Card>',
+            },
+            {
+                title: 'Selectable card',
+                description: '',
+                code: `export default function Plan() {
+  const [selected, setSelected] = useState(false);
+
+  return (
+    <Card label="Team plan" isSelected={selected} onChange={setSelected}>
+      <Text>Team plan</Text>
+    </Card>
+  );
+}`,
+            },
+        ],
+        anatomy: [
+            {
+                name: 'Container',
+                required: true,
+                description:
+                    'A bordered surface whose accessibility and interaction behavior follow the supplied props.',
+            },
+            { name: 'Content', required: true, description: 'Children rendered inside the card.' },
+        ],
+        properties: [
+            { name: 'children', type: 'ViewNode', description: 'Content rendered inside the card.' },
+            {
+                name: 'label',
+                type: 'string',
+                description: 'Accessible label for interactive cards. Supply a descriptive label; defaults to Card.',
+            },
+            {
+                name: 'onClick',
+                type: '(event: ViewMouseEvent) => void',
+                description:
+                    'Makes the card clickable. Runs when the card surface is activated; nested controls act independently.',
+            },
+            {
+                name: 'href',
+                type: 'string',
+                description: 'Makes the card a navigation target when onChange is absent.',
+            },
+            { name: 'target', type: 'string', description: 'Link target, such as _blank.' },
+            {
+                name: 'isSelected',
+                type: 'boolean',
+                description: 'Selection state, defaulting to false. Supply onChange to let users toggle it.',
+            },
+            {
+                name: 'onChange',
+                type: '(isSelected: boolean) => void',
+                description:
+                    'Makes the card selectable and receives its next selection state. Takes priority over onClick and href.',
+            },
+            {
+                name: 'isDisabled',
+                type: 'boolean',
+                description: 'Disables activation of an interactive card.',
+            },
+            { name: 'padding', type: 'Spacing', description: 'Inner spacing using the theme spacing scale.' },
+            {
+                name: 'variant',
+                type: "'default' | 'transparent' | 'muted' | 'blue' | 'cyan' | 'gray' | 'green' | 'orange' | 'pink' | 'purple' | 'red' | 'teal' | 'yellow'",
+                description: 'Background color variant, independent of the interaction mode.',
+            },
+            { name: 'width', type: 'number | string', description: 'Card width.' },
+            { name: 'height', type: 'number | string', description: 'Card height.' },
+            { name: 'maxWidth', type: 'number | string', description: 'Maximum card width.' },
+            { name: 'minHeight', type: 'number | string', description: 'Minimum card height.' },
+        ],
+        practices: [
+            {
+                guidance: true,
+                description:
+                    'Use plain cards for independent content, clickable cards for actions or navigation, and selectable cards for choices.',
+            },
+            {
+                guidance: true,
+                description:
+                    'Give interactive cards a descriptive label and keep selectable state in the parent component.',
+            },
+            {
+                guidance: false,
+                description: 'Use onClick to toggle selection, or mix navigation and selection on the same card.',
+            },
+        ],
+    },
     Currency: {
         introduction: 'Currency formats a numeric value with the browser’s locale-aware currency formatter.',
         examples: [{ title: 'Currency', description: '', code: '<Currency value={1234.5} currency="USD" />' }],
@@ -242,6 +343,9 @@ export default function DocsArticleRoute() {
                             This View stores a counter in local state. The setter receives the previous value so each
                             click increments it safely.
                         </Text>
+                        <Stack padding={4} className="rounded-lg border border-border" aria-label="Counter preview">
+                            <ComponentPreview name="React" />
+                        </Stack>
                         <CodeBlock code={reactExample} language="jsx" title="counter.jsx" hasLanguageLabel={false} />
                     </>
                 ) : runtime ? (
@@ -285,12 +389,16 @@ export default function DocsArticleRoute() {
                             {tab === 'examples' && (
                                 <>
                                     {reference?.examples.map((example) => (
-                                        <CodeBlock
-                                            key={example.title}
-                                            code={example.code}
-                                            language={upstream ? 'tsx' : 'jsx'}
-                                            hasLanguageLabel={false}
-                                        />
+                                        <Stack key={example.title} gap={3}>
+                                            <Stack
+                                                padding={4}
+                                                className="overflow-auto rounded-lg border border-border"
+                                                aria-label={`${example.title} preview`}
+                                            >
+                                                <ComponentPreview name={component.name} example={example.title} />
+                                            </Stack>
+                                            <CodeBlock code={example.code} language="jsx" hasLanguageLabel={false} />
+                                        </Stack>
                                     ))}
                                     {upstream && !reference?.examples.length && (
                                         <Text as="p">
@@ -302,7 +410,7 @@ export default function DocsArticleRoute() {
                             )}
                             {tab === 'anatomy' &&
                                 reference &&
-                                (upstream ? (
+                                (upstream || component.name === 'Card' ? (
                                     reference.anatomy.length ? (
                                         <Table
                                             data={reference.anatomy}
@@ -345,7 +453,7 @@ export default function DocsArticleRoute() {
                                         </Text>
                                     ))
                                 ))}
-                            {tab === 'properties' && upstream && reference && (
+                            {tab === 'properties' && reference && reference.properties.length > 0 && (
                                 <Table
                                     data={reference.properties}
                                     idKey="name"
