@@ -74,16 +74,11 @@ async def test_postgres_creates_idempotent_runtime_schema_with_readonly_audit_ac
                 await connection.execute(text("INSERT INTO runtime_items (id, name) VALUES (1, 'Widget')"))
                 await connection.execute(text("UPDATE runtime_items SET name = 'Updated Widget' WHERE id = 1"))
                 runtime_name = await connection.scalar(text("SELECT name FROM runtime_items WHERE id = 1"))
-                shared_user = (
-                    (
-                        await connection.execute(
-                            text("SELECT email FROM shared.audit WHERE id = :user_id"),
-                            {"user_id": active_user.id},
-                        )
-                    )
-                    .mappings()
-                    .one()
+                result = await connection.execute(
+                    text("SELECT email FROM shared.audit WHERE id = :user_id"),
+                    {"user_id": active_user.id},
                 )
+                shared_email = result.scalar_one()
 
             with pytest.raises(DBAPIError) as error:
                 async with runtime_engine.begin() as connection:
@@ -132,7 +127,7 @@ async def test_postgres_creates_idempotent_runtime_schema_with_readonly_audit_ac
     assert retried_runtime_username == runtime_username
     assert runtime_username.startswith("longlink_")
     assert len(runtime_username) <= 63
-    assert shared_user == {"email": "owner@example.com"}
+    assert shared_email == "owner@example.com"
     assert updated_name == "Updated User"
 
 

@@ -281,6 +281,7 @@ async def test_solution_proxy_strips_credential_headers_and_pins_gateway_tls(
         assert isinstance(verify, ssl.SSLContext)
         captured["follow_redirects"] = follow_redirects
         captured["trust_env"] = trust_env
+        captured["timeout"] = timeout
 
         return real_client(*args, **kwargs)
 
@@ -320,6 +321,7 @@ async def test_solution_proxy_strips_credential_headers_and_pins_gateway_tls(
     assert captured.get("cadata") == "test-gateway-ca"
     assert captured.get("follow_redirects") is False
     assert captured.get("trust_env") is False
+    assert captured.get("timeout") == 300.0
 
 
 async def test_solution_proxy_sanitizes_json_upstream_error(

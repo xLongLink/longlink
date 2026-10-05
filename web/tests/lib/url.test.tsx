@@ -7,12 +7,17 @@ describe('resolveNavigationUrl', () => {
         expect(resolveNavigationUrl('/solutions/123', '   ')).toBe('');
     });
 
-    it('joins base and relative paths', () => {
-        expect(resolveNavigationUrl('/api', '/items')).toBe('/api/items');
-        expect(resolveNavigationUrl('/api/', 'items')).toBe('/api/items');
-        expect(resolveNavigationUrl('https://solutions.example/api/solutions/123/proxy/', '/items')).toBe(
-            'https://solutions.example/api/solutions/123/proxy/items'
-        );
+    it.each([
+        ['/api', '/items', '/api/items'],
+        ['/api/', 'items', '/api/items'],
+        [
+            'https://solutions.example/api/solutions/123/proxy/',
+            '/items',
+            'https://solutions.example/api/solutions/123/proxy/items',
+        ],
+    ])('joins base %s and relative path %s', (baseUrl, path, expected) => {
+        // Act and assert
+        expect(resolveNavigationUrl(baseUrl, path)).toBe(expected);
     });
 
     it('resolves dot segments', () => {

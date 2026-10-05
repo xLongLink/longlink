@@ -22,30 +22,26 @@ def expired_token(claims: dict[str, str]) -> str:
     return signed_token({**claims, "exp": datetime.now(UTC) - timedelta(seconds=1)})
 
 
-@pytest.mark.no_db
-def test_registration_claims_reject_auth_token_audience() -> None:
-    """Keep registration proof separate from browser session credentials."""
-
-    # Arrange
-    user = User(email="member@example.com", password="hashed-password")
-    authentication = token.create_auth_token(user)
-
-    # Act and assert
-    with pytest.raises(jwt.InvalidTokenError):
-        token.registration_claims(authentication)
+WRONG_AUDIENCE_TOKEN_READERS = [
+    pytest.param(token.create_auth_token, token.registration_claims, id="auth-as-registration"),
+    pytest.param(token.create_password_reset_token, token.auth_token_claims, id="reset-as-auth"),
+]
 
 
 @pytest.mark.no_db
-def test_auth_token_claims_reject_password_reset_token_audience() -> None:
-    """Keep browser session credentials separate from reset credentials."""
+@pytest.mark.parametrize(("create_token", "read_claims"), WRONG_AUDIENCE_TOKEN_READERS)
+def test_token_claims_reject_wrong_audience(
+    create_token: Callable[[User], str], read_claims: Callable[[str], str | tuple[UUID, str]]
+) -> None:
+    """Keep registration, browser session, and password-reset credentials separate."""
 
     # Arrange
     user = User(email="member@example.com", password="hashed-password")
-    password_reset = token.create_password_reset_token(user)
+    encoded = create_token(user)
 
     # Act and assert
     with pytest.raises(jwt.InvalidTokenError):
-        token.auth_token_claims(password_reset)
+        read_claims(encoded)
 
 
 @pytest.mark.no_db

@@ -12,14 +12,6 @@ from fastapi.testclient import TestClient
 from longlink.testclient import TestClient as SolutionTestClient
 
 
-def create_runtime_client() -> TestClient:
-    """Build an SDK runtime client from the current generated Solution source tree."""
-
-    # Register the generated view catalog before serving requests.
-    app = LongLink()
-    return TestClient(app)
-
-
 @pytest.mark.usefixtures("solution_source")
 @pytest.mark.parametrize(("environment", "name"), [("development", "Development user"), ("testing", "Testing user")])
 def test_longlink_solution_serves_runtime_routes_and_frontend(monkeypatch: pytest.MonkeyPatch, environment: str, name: str) -> None:
@@ -189,7 +181,8 @@ def test_dynamic_view_is_registered_from_default_views_directory(solution_source
     view_path.write_text(content, encoding="utf-8")
 
     # Start LongLink and request the registered view and view catalog.
-    client = create_runtime_client()
+    app = LongLink()
+    client = TestClient(app)
     response = client.get("/views/issues/[issue]")
     views_response = client.get("/views.json")
 
@@ -209,7 +202,8 @@ def test_view_catalog_ignores_json_sidecars(solution_source: Path) -> None:
         encoding="utf-8",
     )
     (solution_source / "views" / "dashboard.json").write_text('{"name": "Custom title", "icon": "banknote"}', encoding="utf-8")
-    client = create_runtime_client()
+    app = LongLink()
+    client = TestClient(app)
 
     # Act
     response = client.get("/views.json")
@@ -227,7 +221,8 @@ def test_view_catalog_uses_deterministic_path_order(solution_source: Path) -> No
     nested_directory.mkdir()
     (nested_directory / "alpha.jsx").write_text("export default function Alpha() { return <Text>Alpha</Text>; }", encoding="utf-8")
     (solution_source / "views" / "zebra.jsx").write_text("export default function Zebra() { return <Text>Zebra</Text>; }", encoding="utf-8")
-    client = create_runtime_client()
+    app = LongLink()
+    client = TestClient(app)
 
     # Act
     catalog_response = client.get("/views.json")
@@ -253,7 +248,8 @@ def test_root_redirect_skips_dynamic_views(solution_source: Path) -> None:
     (solution_source / "views" / "overview.jsx").write_text(
         "export default function Overview() { return <Text>Overview</Text>; }", encoding="utf-8"
     )
-    client = create_runtime_client()
+    app = LongLink()
+    client = TestClient(app)
 
     # Act
     response = client.get("/", follow_redirects=False)
