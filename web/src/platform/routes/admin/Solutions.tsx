@@ -13,7 +13,7 @@ import { Button } from '@astryxdesign/core/Button';
 import { Heading } from '@astryxdesign/core/Heading';
 import { Table, proportional } from '@astryxdesign/core/Table';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
-import { zPageSolutionResponse } from '@/lib/generated/platform-api-v1/zod.gen';
+import type { zPageSolutionResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 
 /** Lists Solutions and manages administrator metadata and deletion dialogs. */
 export default function Solutions() {
@@ -23,7 +23,9 @@ export default function Solutions() {
         | { kind: 'deletion'; item: { id: string; name: string } }
         | null
     >(null);
-    const [solutions, invalidate] = useApi(`/api/v1/solutions?page=${page}&page_size=25`, zPageSolutionResponse);
+    const [solutions, invalidate] = useApi<z.output<typeof zPageSolutionResponse>>(
+        `/api/v1/solutions?page=${page}&page_size=25`
+    );
 
     return (
         <Stack gap={8}>

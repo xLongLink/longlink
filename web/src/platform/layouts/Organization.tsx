@@ -1,3 +1,4 @@
+import type { z } from 'zod';
 import { ApiError } from '@/lib/api';
 import { NoIndex } from '@/components/Seo';
 import { useApi } from '@/lib/hooks/use-api';
@@ -11,7 +12,7 @@ import { PageError, PageLoading } from '@/components/Utils';
 import { useAuthenticatedUser } from '@/lib/hooks/use-user';
 import { PageBreadcrumb } from '@/components/breadcrumb/Page';
 import { OrganizationMembershipContext } from '@/lib/hooks/use-organization';
-import { zUserOrganizationMembership } from '@/lib/generated/platform-api-v1/zod.gen';
+import type { zUserOrganizationMembership } from '@/lib/generated/platform-api-v1/zod.gen';
 
 /** Renders the fixed navigation around organization pages. */
 export default function OrganizationLayout() {
@@ -41,9 +42,8 @@ export default function OrganizationLayout() {
 function OrganizationPage() {
     const { organization = '' } = useParams();
     const user = useAuthenticatedUser();
-    const [membership] = useApi(
-        `/api/v1/organizations/slug/${encodeURIComponent(organization)}`,
-        zUserOrganizationMembership
+    const [membership] = useApi<z.output<typeof zUserOrganizationMembership>>(
+        `/api/v1/organizations/slug/${encodeURIComponent(organization)}`
     );
 
     return (

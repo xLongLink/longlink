@@ -13,7 +13,7 @@ import { Button } from '@astryxdesign/core/Button';
 import { Heading } from '@astryxdesign/core/Heading';
 import { Table, proportional } from '@astryxdesign/core/Table';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
-import { zPageOrganizationIdentity } from '@/lib/generated/platform-api-v1/zod.gen';
+import type { zPageOrganizationIdentity } from '@/lib/generated/platform-api-v1/zod.gen';
 
 /** Lists organizations and confirms administrator deletion. */
 export default function Organizations() {
@@ -23,9 +23,8 @@ export default function Organizations() {
         | { kind: 'deletion'; item: { id: string; name: string } }
         | null
     >(null);
-    const [organizations, invalidate] = useApi(
-        `/api/v1/organizations?page=${page}&page_size=25`,
-        zPageOrganizationIdentity
+    const [organizations, invalidate] = useApi<z.output<typeof zPageOrganizationIdentity>>(
+        `/api/v1/organizations?page=${page}&page_size=25`
     );
 
     return (

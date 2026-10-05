@@ -1,3 +1,4 @@
+import type { z } from 'zod';
 import { useState } from 'react';
 import { NoIndex } from '@/components/Seo';
 import { useApi } from '@/lib/hooks/use-api';
@@ -9,12 +10,12 @@ import { Button } from '@astryxdesign/core/Button';
 import { Heading } from '@astryxdesign/core/Heading';
 import { Timestamp } from '@astryxdesign/core/Timestamp';
 import { Table, proportional } from '@astryxdesign/core/Table';
-import { zPageAdminUserSummary } from '@/lib/generated/platform-api-v1/zod.gen';
+import type { zPageAdminUserSummary } from '@/lib/generated/platform-api-v1/zod.gen';
 
 /** Lists Platform users with server-side pagination. */
 export default function Users() {
     const [page, setPage] = useState(1);
-    const [users] = useApi(`/api/v1/users?page=${page}&page_size=25`, zPageAdminUserSummary);
+    const [users] = useApi<z.output<typeof zPageAdminUserSummary>>(`/api/v1/users?page=${page}&page_size=25`);
 
     return (
         <Stack gap={8}>

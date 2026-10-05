@@ -14,6 +14,7 @@ import { Divider } from '@astryxdesign/core/Divider';
 import { Heading } from '@astryxdesign/core/Heading';
 import CreateOrganization from './CreateOrganization';
 import { ApiBoundary } from '@/components/ApiBoundary';
+import { useQueryClient } from '@tanstack/react-query';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { PageContainer } from '@/components/PageContainer';
 import { useAuthenticatedUser } from '@/lib/hooks/use-user';
@@ -36,7 +37,7 @@ export default function Settings() {
 /** Edits the authenticated profile and manages owned organizations. */
 function SettingsPage({ user }: { user: z.output<typeof schemas.zUserSummary> }) {
     const [name, setName] = useState(user.name);
-    const [, invalidateUser] = useApi('/api/v1/me', schemas.zUserSummary);
+    const queryClient = useQueryClient();
 
     /** Saves the validated account name and refreshes the profile. */
     async function saveAccount() {
@@ -44,7 +45,7 @@ function SettingsPage({ user }: { user: z.output<typeof schemas.zUserSummary> })
 
         // Refresh the authoritative profile only after saving succeeds.
         await api.patch('/api/v1/me', { json: schemas.zUserUpdate.parse({ name: name.trim() }) });
-        await invalidateUser();
+        await queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/me'], exact: true });
     }
 
     // Keep account editing independent of organization loading and failures.
@@ -114,10 +115,8 @@ function SettingsPage({ user }: { user: z.output<typeof schemas.zUserSummary> })
 function OrganizationSettings() {
     const [creating, setCreating] = useState(false);
     const [deletion, setDeletion] = useState<{ id: string; name: string } | null>(null);
-    const [memberships, invalidate] = useApi(
-        '/api/v1/me/organizations',
-        schemas.zGetMyOrganizationsApiV1MeOrganizationsGetResponse
-    );
+    const [memberships, invalidate] =
+        useApi<z.output<typeof schemas.zGetMyOrganizationsApiV1MeOrganizationsGetResponse>>('/api/v1/me/organizations');
 
     return (
         <>
