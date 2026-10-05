@@ -110,8 +110,6 @@ Run a standalone sample Solution from the repository root:
 make sdk
 ```
 
-If the Platform servers are running, use a separate terminal for this command.
-
 ### Stop local services
 
 Stop running development servers with **Ctrl+C** in their terminals. Then run:
