@@ -10,11 +10,6 @@
         "declaration": "declare const Badge: ViewComponent<{\n    label?: ViewNode;\n    icon?: ViewNode;\n    variant?:\n        | 'neutral'\n        | 'info'\n        | 'success'\n        | 'warning'\n        | 'error'\n        | 'blue'\n        | 'cyan'\n        | 'green'\n        | 'orange'\n        | 'pink'\n        | 'purple'\n        | 'red'\n        | 'teal'\n        | 'yellow';\n}>;"
     },
     {
-        "name": "Banner",
-        "category": "Content",
-        "declaration": "declare const Banner: ViewComponent<{\n    status?: 'error' | 'warning' | 'success' | 'info';\n    title: string;\n}>;"
-    },
-    {
         "name": "Button",
         "category": "Action",
         "declaration": "type ViewMouseEvent = Omit<MouseEvent, 'currentTarget'> & { currentTarget: HTMLElement; nativeEvent: MouseEvent };\n\ntype ButtonProps = {\n    label: string;\n    variant?: 'primary' | 'secondary' | 'ghost' | 'destructive';\n    size?: 'sm' | 'md' | 'lg';\n    elevation?: 'none' | 'low' | 'med' | 'high';\n    type?: 'button' | 'submit' | 'reset';\n    name?: string;\n    value?: string | number | readonly string[];\n    form?: string;\n    icon?: ViewNode;\n    endContent?: React.JSX.Element;\n    tooltip?: string;\n    width?: number | string;\n    isIconOnly?: boolean;\n    isLoading?: boolean;\n    isDisabled?: boolean;\n    isInterruptible?: boolean;\n    href?: string;\n    target?: string;\n    rel?: string;\n    onClick?: (event: ViewMouseEvent) => void;\n    clickAction?: (event: ViewMouseEvent) => void | Promise<void>;\n};\n\ndeclare const Button: ViewComponent<ButtonProps>;"
@@ -33,11 +28,6 @@
         "name": "Card",
         "category": "Container",
         "declaration": "type CardProps = {\n    padding?: Spacing;\n    elevation?: 'none' | 'low' | 'med' | 'high';\n    variant?:\n        | 'default'\n        | 'transparent'\n        | 'muted'\n        | 'blue'\n        | 'cyan'\n        | 'gray'\n        | 'green'\n        | 'orange'\n        | 'pink'\n        | 'purple'\n        | 'red'\n        | 'teal'\n        | 'yellow';\n    width?: number | string;\n    height?: number | string;\n    maxWidth?: number | string;\n    minHeight?: number | string;\n    className?: string;\n};\n\ndeclare const Card: ViewComponent<CardProps>;"
-    },
-    {
-        "name": "Carousel",
-        "category": "Container",
-        "declaration": "declare const Carousel: ViewComponent<{\n    gap?: 0 | 0.5 | 1 | 1.5 | 2 | 3 | 4;\n    padding?: Spacing;\n    hasButtons?: boolean;\n    hasEdgeFade?: boolean;\n    hasLoop?: boolean;\n    hasSnap?: boolean;\n    'aria-label'?: string;\n    className?: string;\n}>;"
     },
     {
         "name": "CheckboxInput",
@@ -105,11 +95,6 @@
         "declaration": "declare const EmptyState: ViewComponent<{\n    title: string;\n    isCompact?: boolean;\n}>;"
     },
     {
-        "name": "Field",
-        "category": "Form Controls",
-        "declaration": "type FieldProps = {\n    label: string;\n    isLabelHidden?: boolean;\n    description?: string;\n    isOptional?: boolean;\n    isRequired?: boolean;\n    isDisabled?: boolean;\n    labelTooltip?: string;\n    status?: { type: 'warning' | 'error' | 'success'; message?: string; messageID?: string };\n    statusVariant?: 'attached' | 'detached' | 'tooltip';\n    width?: number | string;\n};\n\ndeclare const Field: ViewComponent<\n    FieldProps & {\n        inputID: string;\n        labelID?: string;\n        descriptionID?: string;\n        isGroupLabel?: boolean;\n        labelIcon?: ViewNode;\n    }\n>;"
-    },
-    {
         "name": "FileInput",
         "category": "Form Controls",
         "declaration": "declare const FileInput: ViewComponent<\n    FieldProps & {\n        value: File | File[] | null;\n        accept?: string;\n        onChange: (value: File | File[] | null) => void;\n        changeAction?: (value: File | File[] | null) => Promise<void>;\n        isMultiple?: boolean;\n        maxSize?: number;\n        maxFiles?: number;\n        disabledMessage?: string;\n        isLoading?: boolean;\n        placeholder?: string;\n        mode?: 'input' | 'dropzone';\n    }\n>;"
@@ -122,12 +107,7 @@
     {
         "name": "Grid",
         "category": "Layouts",
-        "declaration": "declare const Grid: ViewComponent<{\n    columns?: number;\n    gap?: Spacing;\n}>;"
-    },
-    {
-        "name": "GridSpan",
-        "category": "Layouts",
-        "declaration": "declare const GridSpan: ViewComponent<{\n    columns?: number | 'full';\n}>;"
+        "declaration": "declare const Grid: ViewComponent<{\n    columns?: number;\n    gap?: Spacing;\n}>;\n\ndeclare const GridSpan: ViewComponent<{\n    columns?: number | 'full';\n}>;"
     },
     {
         "name": "Heading",
@@ -200,11 +180,6 @@
         "declaration": "declare function createElement(type: unknown, props: unknown, ...children: ViewNode[]): React.JSX.Element;\n\ndeclare const Fragment: ViewComponent<{\n    key?: string | number;\n}>;\n\ndeclare function useState<T = undefined>(initial?: T | (() => T)): [T, (value: T | ((previous: T) => T)) => void];\n\ndeclare function useEffect(effect: () => void | (() => void), dependencies?: readonly unknown[]): void;\n\ndeclare function useMemo<T>(factory: () => T, dependencies: readonly unknown[]): T;\n\ndeclare function useRef<T>(initial: T): { current: T };"
     },
     {
-        "name": "SegmentedControl",
-        "category": "Action",
-        "declaration": "declare const SegmentedControl: ViewComponent<{\n    label: string;\n    value: string;\n    onChange: (value: string) => void;\n    size?: 'sm' | 'md' | 'lg';\n    layout?: 'hug' | 'fill';\n    isDisabled?: boolean;\n    disabledMessage?: string;\n}>;\n\ndeclare const SegmentedControlItem: ViewComponent<{\n    label: string;\n    value: string;\n    icon?: ViewNode;\n    isLabelHidden?: boolean;\n    isDisabled?: boolean;\n}>;"
-    },
-    {
         "name": "SelectableCard",
         "category": "Container",
         "declaration": "declare const SelectableCard: ViewComponent<\n    Omit<CardProps, 'minHeight'> & {\n        label: string;\n        isSelected: boolean;\n        onChange: (isSelected: boolean) => void;\n        isDisabled?: boolean;\n    }\n>;"
@@ -225,19 +200,9 @@
         "declaration": "declare function navigate(path: string): void;\n\ndeclare function request<T = unknown>(\n    path: string,\n    options?: {\n        method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';\n        json?: unknown;\n        form?: [string, string | Blob][];\n        binary?: boolean;\n    }\n): Promise<T>;\n\ndeclare function useApi<T = unknown>(path: string): readonly [T, () => Promise<void>];"
     },
     {
-        "name": "Spinner",
-        "category": "Content",
-        "declaration": "declare const Spinner: ViewComponent<{\n    label?: string;\n}>;"
-    },
-    {
         "name": "Stack",
         "category": "Layouts",
-        "declaration": "declare const Stack: ViewComponent<{\n    gap?: Spacing;\n    direction?: 'horizontal' | 'vertical';\n    justify?: 'start' | 'center' | 'end' | 'between' | 'around' | 'evenly';\n    align?: 'start' | 'center' | 'end' | 'stretch';\n    wrap?: 'nowrap' | 'wrap' | 'wrap-reverse';\n    padding?: Spacing;\n}>;"
-    },
-    {
-        "name": "StackItem",
-        "category": "Layouts",
-        "declaration": "declare const StackItem: ViewComponent<{\n    size?: 'static' | 'fill';\n    isScrollable?: boolean;\n    crossAlignSelf?: 'start' | 'center' | 'end' | 'stretch';\n}>;"
+        "declaration": "declare const Stack: ViewComponent<{\n    gap?: Spacing;\n    direction?: 'horizontal' | 'vertical';\n    justify?: 'start' | 'center' | 'end' | 'between' | 'around' | 'evenly';\n    align?: 'start' | 'center' | 'end' | 'stretch';\n    wrap?: 'nowrap' | 'wrap' | 'wrap-reverse';\n    padding?: Spacing;\n}>;\n\ndeclare const StackItem: ViewComponent<{\n    size?: 'static' | 'fill';\n    isScrollable?: boolean;\n    crossAlignSelf?: 'start' | 'center' | 'end' | 'stretch';\n}>;"
     },
     {
         "name": "StatusDot",
@@ -288,15 +253,5 @@
         "name": "Timestamp",
         "category": "Display",
         "declaration": "declare const Timestamp: ViewComponent<{\n    value: number | string;\n    format?: string;\n}>;"
-    },
-    {
-        "name": "ToggleButton",
-        "category": "Action",
-        "declaration": "declare const ToggleButton: ViewComponent<{\n    label: string;\n    value?: string;\n    isPressed?: boolean;\n    onPressedChange?: (isPressed: boolean, event: ViewMouseEvent) => void;\n    pressedChangeAction?: (isPressed: boolean) => void | Promise<void>;\n    size?: 'sm' | 'md' | 'lg';\n    elevation?: 'none' | 'low' | 'med' | 'high';\n    isDisabled?: boolean;\n    isLoading?: boolean;\n    isIconOnly?: boolean;\n    icon?: ViewNode;\n    pressedIcon?: ViewNode;\n    tooltip?: string;\n}>;"
-    },
-    {
-        "name": "ToggleButtonGroup",
-        "category": "Action",
-        "declaration": "declare const ToggleButtonGroup: ViewComponent<\n    {\n        label: string;\n        orientation?: 'horizontal' | 'vertical';\n        size?: 'sm' | 'md' | 'lg';\n        isDisabled?: boolean;\n    } & (\n        | { type?: 'single'; value: string | null; onChange: (value: string | null) => void }\n        | { type: 'multiple'; value: string[]; onChange: (value: string[]) => void }\n    )\n>;"
     }
 ]

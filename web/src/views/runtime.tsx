@@ -6,6 +6,8 @@ import * as components from './components';
 import { createRoot } from 'react-dom/client';
 import * as links from '@astryxdesign/core/Link';
 import { Theme } from '@astryxdesign/core/theme';
+import { Banner } from '@astryxdesign/core/Banner';
+import { Spinner } from '@astryxdesign/core/Spinner';
 import { ErrorBoundary } from 'react-error-boundary';
 import { LayerProvider } from '@astryxdesign/core/Layer';
 import { QueryClient, QueryClientProvider, QueryErrorResetBoundary, useSuspenseQuery } from '@tanstack/react-query';
@@ -157,7 +159,7 @@ function FilePreview({ src, title }: { src: string; title: string }) {
     ) : preview.status === 'ready' ? (
         <img src={preview.url} alt={title} className="max-h-full max-w-full rounded-lg object-contain" />
     ) : (
-        <components.Spinner label="Loading attachment" />
+        <Spinner label="Loading attachment" />
     );
 }
 
@@ -255,7 +257,7 @@ function initialize(event: MessageEvent<unknown>): void {
                                 <ErrorBoundary
                                     onReset={reset}
                                     fallbackRender={({ resetErrorBoundary }) => (
-                                        <components.Banner
+                                        <Banner
                                             status="error"
                                             title="View could not be loaded"
                                             endContent={
@@ -264,7 +266,7 @@ function initialize(event: MessageEvent<unknown>): void {
                                         />
                                     )}
                                 >
-                                    <React.Suspense fallback={<components.Spinner label="Loading View" />}>
+                                    <React.Suspense fallback={<Spinner label="Loading View" />}>
                                         <View params={params} />
                                     </React.Suspense>
                                 </ErrorBoundary>

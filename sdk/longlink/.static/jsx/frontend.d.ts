@@ -182,56 +182,6 @@ declare const Link: ViewComponent<{
     to: string;
 }>;
 
-/** @category Action */
-declare const SegmentedControl: ViewComponent<{
-    label: string;
-    value: string;
-    onChange: (value: string) => void;
-    size?: 'sm' | 'md' | 'lg';
-    layout?: 'hug' | 'fill';
-    isDisabled?: boolean;
-    disabledMessage?: string;
-}>;
-
-/** @category Action @group SegmentedControl */
-declare const SegmentedControlItem: ViewComponent<{
-    label: string;
-    value: string;
-    icon?: ViewNode;
-    isLabelHidden?: boolean;
-    isDisabled?: boolean;
-}>;
-
-/** @category Action */
-declare const ToggleButton: ViewComponent<{
-    label: string;
-    value?: string;
-    isPressed?: boolean;
-    onPressedChange?: (isPressed: boolean, event: ViewMouseEvent) => void;
-    pressedChangeAction?: (isPressed: boolean) => void | Promise<void>;
-    size?: 'sm' | 'md' | 'lg';
-    elevation?: 'none' | 'low' | 'med' | 'high';
-    isDisabled?: boolean;
-    isLoading?: boolean;
-    isIconOnly?: boolean;
-    icon?: ViewNode;
-    pressedIcon?: ViewNode;
-    tooltip?: string;
-}>;
-
-/** @category Action */
-declare const ToggleButtonGroup: ViewComponent<
-    {
-        label: string;
-        orientation?: 'horizontal' | 'vertical';
-        size?: 'sm' | 'md' | 'lg';
-        isDisabled?: boolean;
-    } & (
-        | { type?: 'single'; value: string | null; onChange: (value: string | null) => void }
-        | { type: 'multiple'; value: string[]; onChange: (value: string[]) => void }
-    )
->;
-
 /** @category Feedback & Status */
 declare const Badge: ViewComponent<{
     label?: ViewNode;
@@ -277,7 +227,7 @@ declare const Dialog: ViewComponent<{
     purpose?: 'form' | 'info' | 'required';
 }>;
 
-/** @category Form Controls @group Field */
+/** Shared props for form controls. */
 type FieldProps = {
     label: string;
     isLabelHidden?: boolean;
@@ -290,17 +240,6 @@ type FieldProps = {
     statusVariant?: 'attached' | 'detached' | 'tooltip';
     width?: number | string;
 };
-
-/** @category Form Controls */
-declare const Field: ViewComponent<
-    FieldProps & {
-        inputID: string;
-        labelID?: string;
-        descriptionID?: string;
-        isGroupLabel?: boolean;
-        labelIcon?: ViewNode;
-    }
->;
 
 /** @category Form Controls @group Calendar */
 type ISODateString = `${number}${number}${number}${number}-${number}${number}-${number}${number}`;
@@ -771,12 +710,12 @@ declare const Grid: ViewComponent<{
     gap?: Spacing;
 }>;
 
-/** @category Layouts */
+/** @category Layouts @group Grid */
 declare const GridSpan: ViewComponent<{
     columns?: number | 'full';
 }>;
 
-/** @category Layouts */
+/** @category Layouts @group Stack */
 declare const StackItem: ViewComponent<{
     size?: 'static' | 'fill';
     isScrollable?: boolean;
@@ -810,18 +749,6 @@ type CardProps = {
 
 /** @category Container */
 declare const Card: ViewComponent<CardProps>;
-
-/** @category Container */
-declare const Carousel: ViewComponent<{
-    gap?: 0 | 0.5 | 1 | 1.5 | 2 | 3 | 4;
-    padding?: Spacing;
-    hasButtons?: boolean;
-    hasEdgeFade?: boolean;
-    hasLoop?: boolean;
-    hasSnap?: boolean;
-    'aria-label'?: string;
-    className?: string;
-}>;
 
 /** @category Container */
 declare const ClickableCard: ViewComponent<
@@ -1030,17 +957,6 @@ declare const Timestamp: ViewComponent<{
 
 /** @category Content */
 declare const Divider: ViewComponent<Record<string, never>>;
-
-/** @category Content */
-declare const Spinner: ViewComponent<{
-    label?: string;
-}>;
-
-/** @category Content */
-declare const Banner: ViewComponent<{
-    status?: 'error' | 'warning' | 'success' | 'info';
-    title: string;
-}>;
 
 /** @category Table & List */
 declare const List: ViewComponent<{
