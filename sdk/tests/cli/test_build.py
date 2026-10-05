@@ -316,7 +316,7 @@ def test_resolve_docker_paths_includes_transitive_local_workspace_projects(build
     transitive_dependency = build_project.parent / "common"
     transitive_dependency.mkdir()
     build_project.parent.joinpath("pyproject.toml").write_text(
-        '[tool.uv.workspace]\nmembers = ["solution", "shared", "common"]\n', encoding="utf-8"
+        '[tool.uv.workspace]\nmembers = ["*"]\nexclude = ["unrelated"]\n', encoding="utf-8"
     )
     transitive_dependency.joinpath("pyproject.toml").write_text(
         '[project]\nname = "common"\nversion = "0.1.0"\n\n[tool.uv.sources]\ndemo = { path = "../solution" }\n', encoding="utf-8"
@@ -339,22 +339,50 @@ def test_resolve_docker_paths_includes_transitive_local_workspace_projects(build
     assert dependencies == [transitive_dependency, dependency]
 
 
-def test_resolve_docker_paths_rejects_local_dependencies_outside_workspace(build_project: Path) -> None:
-    """Reject a valid local project outside the explicitly declared UV workspace."""
+@pytest.mark.parametrize(
+    ("source_path", "members", "exclude", "error"),
+    [
+        pytest.param("../../outside", ["solution"], [], "inside the UV workspace", id="outside"),
+        pytest.param("..", None, [], "inside the UV workspace", id="standalone-ancestor"),
+        pytest.param("../..", ["solution"], [], "inside the UV workspace", id="ancestor-outside"),
+        pytest.param("..", ["solution"], [], "ancestor of the Solution", id="workspace-ancestor"),
+        pytest.param("../shared", ["solution"], [], "member of the UV workspace", id="undeclared"),
+        pytest.param("../shared", ["*"], ["shared", "linked-outside"], "member of the UV workspace", id="excluded"),
+        pytest.param("../shared", ["shared"], [], "Solution must be a member", id="nonmember-solution"),
+        pytest.param("../linked-outside", ["solution", "linked-outside"], [], "inside the UV workspace", id="symlink-outside"),
+    ],
+)
+def test_resolve_docker_paths_rejects_local_dependencies_outside_workspace(
+    build_project: Path, source_path: str, members: list[str] | None, exclude: list[str], error: str
+) -> None:
+    """Reject ancestor projects and projects outside the declared workspace membership."""
 
     # Arrange
-    workspace = build_project.parent
+    workspace = build_project.parent / "workspace"
+    workspace.mkdir()
+    build_project = build_project.rename(workspace / "solution")
     outside = workspace.parent / "outside"
     outside.mkdir()
     outside.joinpath("pyproject.toml").write_text('[project]\nname = "outside"\nversion = "0.1.0"\n', encoding="utf-8")
-    workspace.joinpath("pyproject.toml").write_text('[tool.uv.workspace]\nmembers = ["solution"]\n', encoding="utf-8")
+    if source_path == "../linked-outside" or "linked-outside" in exclude:
+        workspace.joinpath("linked-outside").symlink_to(outside, target_is_directory=True)
+    workspace.parent.joinpath("pyproject.toml").write_text('[project]\nname = "ancestor"\nversion = "0.1.0"\n', encoding="utf-8")
+    shared = workspace / "shared"
+    shared.mkdir()
+    shared.joinpath("pyproject.toml").write_text('[project]\nname = "shared"\nversion = "0.1.0"\n', encoding="utf-8")
+    workspace.joinpath("pyproject.toml").write_text(
+        '[project]\nname = "ancestor"\nversion = "0.1.0"\n'
+        if members is None
+        else f"[tool.uv.workspace]\nmembers = {members!r}\nexclude = {exclude!r}\n",
+        encoding="utf-8",
+    )
     build_project.joinpath("pyproject.toml").write_text(
-        '[project]\nname = "demo"\nversion = "0.1.0"\n\n[tool.uv.sources]\noutside = { path = "../../outside" }\n',
+        f'[project]\nname = "demo"\nversion = "0.1.0"\n\n[tool.uv.sources]\noutside = {{ path = "{source_path}" }}\n',
         encoding="utf-8",
     )
 
     # Act and assert
-    with pytest.raises(build.CliError, match="Local dependency must be inside the UV workspace"):
+    with pytest.raises(build.CliError, match=error):
         build.resolve_docker_paths(build_project, build.read_pyproject(build_project))
 
 
@@ -370,6 +398,7 @@ def test_build_solution_filters_expanded_context(chdir_project: Path) -> None:
     unrelated = chdir_project.parent / "unrelated"
     unrelated.mkdir()
     unrelated.joinpath("private.txt").write_text("unrelated content", encoding="utf-8")
+    unrelated.joinpath("pyproject.toml").write_text('[project]\nname = "unrelated"\nversion = "0.1.0"\n', encoding="utf-8")
     dependency.joinpath("nested").mkdir()
     dependency.joinpath("nested", ".env").write_text("dependency secret", encoding="utf-8")
     chdir_project.joinpath("pyproject.toml").write_text(
