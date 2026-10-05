@@ -1,5 +1,7 @@
 import path from 'node:path';
 import ts from 'typescript';
+import { transform } from 'sucrase';
+import * as prettier from 'prettier';
 import * as astryx from '@astryxdesign/cli/api';
 import { readFile, writeFile } from 'node:fs/promises';
 import { documentationCategories } from '../src/lib/documentation.ts';
@@ -66,7 +68,7 @@ const references = [];
 const parentBlocks = new Map();
 const exampleCodes = new Map();
 for (const entry of components) {
-    if (entry.category === 'Runtime' || ['Currency', 'FileViewer', 'Menu'].includes(entry.name)) continue;
+    if (entry.category === 'Runtime' || ['Card', 'Currency', 'FileViewer', 'Menu'].includes(entry.name)) continue;
     const result = await astryx.component(entry.name);
     const detail = result.data;
     const parentName = detail.subComponentOf ?? detail.parentDoc;
@@ -109,25 +111,70 @@ for (const entry of components) {
             for (const omission of omissions.reverse()) {
                 code = code.slice(0, omission.start) + code.slice(omission.end).trimStart();
             }
-            code = code.trimStart();
+
+            // The CodeBlock showcase must display JSX too, not an embedded TypeScript example.
+            if (entry.name === 'CodeBlock') {
+                code = `const code = \`export default function Counter() {
+  const [count, setCount] = useState(0);
+
+  return <Button label="Increment" onClick={() => setCount(count + 1)} />;
+}\`;
+
+function CodeBlockShowcase() {
+  return (
+    <CodeBlock
+      code={code}
+      language="jsx"
+      title="counter.jsx"
+      hasLineNumbers
+      hasCopyButton
+    />
+  );
+}`;
+            }
+
+            // Keep the Stepper example focused on three steps without an inline-styled wrapper.
+            if (entry.name === 'Stepper') {
+                code = `<Stepper activeStep={1}>
+  <Step step={0} label="Details" />
+  <Step step={1} label="Review" />
+  <Step step={2} label="Complete" />
+</Stepper>`;
+            }
+
+            // Strip TypeScript syntax while preserving JSX, then remove leftover type-only whitespace.
+            code = transform(code, {
+                transforms: ['typescript', 'jsx'],
+                jsxRuntime: 'preserve',
+                filePath: 'example.tsx',
+            }).code.trimStart();
+            code = await prettier.format(code, { parser: 'babel', singleQuote: true, tabWidth: 2 });
             exampleCodes.set(block.name, code);
         }
-        examples.push({ title: block.displayName, description: block.description, code });
+        examples.push({
+            title: block.displayName,
+            description:
+                entry.name === 'CodeBlock'
+                    ? 'A syntax-highlighted JSX code block with line numbers, a title bar, and a copy button.'
+                    : block.description,
+            code,
+        });
     }
     references.push({
         name: entry.name,
         url: `https://astryx.atmeta.com/components/${parentName ?? entry.name}`,
         introduction: detail.usage?.description ?? detail.description ?? usage?.description ?? '',
         anatomy: usage?.anatomy ?? [],
-        properties: (detail.props ?? detail.components?.find((component) => component.name === entry.name)?.props ?? []).map(
-            ({ name, type, required, default: defaultValue, description }) => ({
+        properties: (detail.props ?? detail.components?.find((component) => component.name === entry.name)?.props ?? [])
+            // View components use their preset styling rather than caller-provided classes.
+            .filter((property) => property.name !== 'className')
+            .map(({ name, type, required, default: defaultValue, description }) => ({
                 name,
                 type,
                 required,
                 default: defaultValue,
                 description,
-            })
-        ),
+            })),
         practices: usage?.bestPractices ?? [],
         examples,
     });

@@ -51,7 +51,7 @@ export function Menu({ sections, gap = 3 }: { sections: MenuSection[]; gap?: Com
             height="auto"
             start={
                 <LayoutPanel isScrollable={false} label="Settings navigation" padding={0} role="navigation" width={260}>
-                    <AstryxSideNav className="w-full pr-4 [&>div:first-child]:pt-0 [&_.astryx-side-nav-section>div:first-child]:pt-0 [&_.astryx-side-nav-section>div:first-child]:pl-0">
+                    <AstryxSideNav className="h-auto w-full pr-4 [&>div:first-child]:pt-0 [&_.astryx-side-nav-section>div:first-child]:pt-0 [&_.astryx-side-nav-section>div:first-child]:pl-0">
                         {sections.map(({ entries, ...section }) => (
                             <AstryxSideNavSection {...section} className="pt-0" key={section.title}>
                                 {entries.map((entry) => {

@@ -132,12 +132,12 @@ declare const Stack: ViewComponent<{
     padding?: Spacing;
 }>;
 
-/** @category Content */
+/** @category Display */
 declare const Heading: ViewComponent<{
     level?: 1 | 2 | 3 | 4 | 5 | 6;
 }>;
 
-/** @category Content */
+/** @category Display */
 declare const Text: ViewComponent<{
     color?: 'primary' | 'secondary';
     type?: 'body' | 'large' | 'label' | 'supporting' | 'code';
@@ -182,7 +182,7 @@ declare const Link: ViewComponent<{
     to: string;
 }>;
 
-/** @category Feedback & Status */
+/** @category Display */
 declare const Badge: ViewComponent<{
     label?: ViewNode;
     icon?: ViewNode;
@@ -203,7 +203,7 @@ declare const Badge: ViewComponent<{
         | 'yellow';
 }>;
 
-/** @category Feedback & Status */
+/** @category Display */
 declare const StatusDot: ViewComponent<{
     label: string;
     variant: 'success' | 'warning' | 'error' | 'accent' | 'neutral';
@@ -212,7 +212,7 @@ declare const StatusDot: ViewComponent<{
     icon?: ViewNode;
 }>;
 
-/** @category Content */
+/** @category Display */
 declare const Avatar: ViewComponent<{
     name?: string;
     src?: string;
@@ -241,16 +241,16 @@ type FieldProps = {
     width?: number | string;
 };
 
-/** @category Form Controls @group Calendar */
+/** @category Form @group Calendar */
 type ISODateString = `${number}${number}${number}${number}-${number}${number}-${number}${number}`;
 
-/** @category Form Controls @group Calendar */
+/** @category Form @group Calendar */
 type DateRange = { start: ISODateString; end: ISODateString };
 
-/** @category Form Controls @group Calendar */
+/** @category Form @group Calendar */
 type WeekStartsOn = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 'sun' | 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat';
 
-/** @category Form Controls */
+/** @category Form */
 declare const Calendar: ViewComponent<
     {
         numberOfMonths?: 1 | 2;
@@ -276,7 +276,7 @@ declare const Calendar: ViewComponent<
     )
 >;
 
-/** @category Form Controls */
+/** @category Form */
 declare function ComplexSelector<Value>(
     props: FieldProps & {
         value: Value;
@@ -305,7 +305,7 @@ declare function ComplexSelector<Value>(
     }
 ): React.JSX.Element;
 
-/** @category Form Controls @group DateInput */
+/** @category Form @group DateInput */
 type DateInputProps = FieldProps & {
     value?: ISODateString;
     onChange?: (value: ISODateString | undefined) => void;
@@ -324,10 +324,10 @@ type DateInputProps = FieldProps & {
     presentation?: 'popover' | 'bottom-sheet' | 'native' | 'adaptive-bottom-sheet' | 'adaptive-native';
 };
 
-/** @category Form Controls */
+/** @category Form */
 declare const DateInput: ViewComponent<DateInputProps>;
 
-/** @category Form Controls */
+/** @category Form */
 declare const DateRangeInput: ViewComponent<
     Omit<DateInputProps, 'value' | 'onChange' | 'changeAction' | 'format' | 'presentation'> & {
         value: DateRange | null;
@@ -339,10 +339,10 @@ declare const DateRangeInput: ViewComponent<
     }
 >;
 
-/** @category Form Controls @group DateTimeInput */
+/** @category Form @group DateTimeInput */
 type ISODateTimeString = string & { readonly __brand: 'ISODateTimeString' };
 
-/** @category Form Controls */
+/** @category Form */
 declare const DateTimeInput: ViewComponent<
     Omit<DateInputProps, 'value' | 'onChange' | 'changeAction' | 'min' | 'max' | 'format' | 'statusVariant'> & {
         value?: ISODateTimeString;
@@ -359,10 +359,10 @@ declare const DateTimeInput: ViewComponent<
     }
 >;
 
-/** @category Form Controls @group TimeInput */
+/** @category Form @group TimeInput */
 type ISOTimeString = string & { readonly __brand: 'ISOTimeString' };
 
-/** @category Form Controls */
+/** @category Form */
 declare const TimeInput: ViewComponent<
     FieldProps & {
         value?: ISOTimeString;
@@ -388,17 +388,17 @@ declare const TimeInput: ViewComponent<
     }
 >;
 
-/** @category Form Controls @group PowerSearch */
+/** @category Form @group PowerSearch */
 type SearchableItem<T = unknown> = { id: string; label: string; element?: ViewNode; auxiliaryData?: T };
 
-/** @category Form Controls @group PowerSearch */
+/** @category Form @group PowerSearch */
 type SearchSource<T extends SearchableItem = SearchableItem> = {
     search: (query: string) => T[] | Promise<T[]>;
     bootstrap: () => T[] | Promise<T[]>;
     cancel?: () => void;
 };
 
-/** @category Form Controls @group PowerSearch */
+/** @category Form @group PowerSearch */
 type DateTimeRangePart =
     | { readonly type: 'NOW' }
     | { readonly type: 'ABSOLUTE'; readonly unixSeconds: number }
@@ -409,10 +409,10 @@ type DateTimeRangePart =
           readonly anchorKey?: string;
       };
 
-/** @category Form Controls @group PowerSearch */
+/** @category Form @group PowerSearch */
 type DateTimeRange = { readonly start: DateTimeRangePart; readonly end: DateTimeRangePart };
 
-/** @category Form Controls @group PowerSearch */
+/** @category Form @group PowerSearch */
 type OperatorValue =
     | { readonly type: 'empty' | 'nested' }
     | { readonly type: 'string'; readonly searchSource?: SearchSource; readonly isArbitraryStringAllowed?: boolean }
@@ -452,13 +452,13 @@ type OperatorValue =
           readonly getString: (value: string) => string;
       };
 
-/** @category Form Controls @group PowerSearch */
+/** @category Form @group PowerSearch */
 type PowerSearchOperator = { readonly key: string; readonly value: OperatorValue } & (
     | { readonly label: string; readonly i18nKey?: never }
     | { readonly i18nKey: string; readonly label?: never }
 );
 
-/** @category Form Controls @group PowerSearch */
+/** @category Form @group PowerSearch */
 type PowerSearchConfig = {
     readonly name: string;
     readonly contentSearchFieldKey?: string;
@@ -476,7 +476,7 @@ type PowerSearchConfig = {
     }[];
 };
 
-/** @category Form Controls @group PowerSearch */
+/** @category Form @group PowerSearch */
 type FilterValue =
     | { readonly type: 'empty' }
     | { readonly type: 'string' | 'time' | 'date_relative' | 'enum' | 'custom'; readonly value: string }
@@ -490,7 +490,7 @@ type FilterValue =
       }
     | { readonly type: 'nested'; readonly value: readonly PowerSearchFilter[] };
 
-/** @category Form Controls @group PowerSearch */
+/** @category Form @group PowerSearch */
 type PowerSearchFilter = {
     readonly field: string;
     readonly operator: string;
@@ -498,7 +498,7 @@ type PowerSearchFilter = {
     readonly isReadOnly?: boolean;
 };
 
-/** @category Form Controls */
+/** @category Form */
 declare const PowerSearch: ViewComponent<{
     config: PowerSearchConfig;
     filters: readonly PowerSearchFilter[];
@@ -526,7 +526,7 @@ declare const PowerSearch: ViewComponent<{
     tokenOverflowBehavior?: 'none' | 'unfocusedInline' | 'unfocusedLayer';
 }>;
 
-/** @category Form Controls */
+/** @category Form */
 declare const TextInput: ViewComponent<
     FieldProps & {
         value: string;
@@ -547,7 +547,7 @@ declare const TextInput: ViewComponent<
     }
 >;
 
-/** @category Form Controls */
+/** @category Form */
 declare const TextArea: ViewComponent<
     FieldProps & {
         value: string;
@@ -568,7 +568,7 @@ declare const TextArea: ViewComponent<
     }
 >;
 
-/** @category Form Controls */
+/** @category Form */
 declare const NumberInput: ViewComponent<
     FieldProps & {
         value: number | null | undefined;
@@ -594,7 +594,7 @@ declare const NumberInput: ViewComponent<
         )
 >;
 
-/** @category Form Controls @group Selector */
+/** @category Form @group Selector */
 type SelectorOptionData = {
     value: string;
     label?: string;
@@ -603,7 +603,7 @@ type SelectorOptionData = {
     disabled?: boolean;
 };
 
-/** @category Form Controls @group Selector */
+/** @category Form @group Selector */
 type SelectorOptionType =
     | string
     | SelectorOptionData
@@ -614,7 +614,7 @@ type SelectorOptionType =
           options: SelectorOptionData[];
       };
 
-/** @category Form Controls */
+/** @category Form */
 declare const MultiSelector: ViewComponent<
     FieldProps & {
         options: SelectorOptionType[];
@@ -646,7 +646,7 @@ declare const MultiSelector: ViewComponent<
     }
 >;
 
-/** @category Form Controls */
+/** @category Form */
 declare const Selector: ViewComponent<
     FieldProps & {
         value?: string | null;
@@ -681,7 +681,7 @@ declare const Selector: ViewComponent<
         )
 >;
 
-/** @category Form Controls */
+/** @category Form */
 declare const FileInput: ViewComponent<
     FieldProps & {
         value: File | File[] | null;
@@ -698,7 +698,7 @@ declare const FileInput: ViewComponent<
     }
 >;
 
-/** @category Content */
+/** @category Display */
 declare const FileViewer: ViewComponent<{
     src: string;
     title: string;
@@ -722,10 +722,9 @@ declare const StackItem: ViewComponent<{
     crossAlignSelf?: 'start' | 'center' | 'end' | 'stretch';
 }>;
 
-/** @category Container @group Card */
+/** @category Layouts @group Card */
 type CardProps = {
     padding?: Spacing;
-    elevation?: 'none' | 'low' | 'med' | 'high';
     variant?:
         | 'default'
         | 'transparent'
@@ -744,24 +743,19 @@ type CardProps = {
     height?: number | string;
     maxWidth?: number | string;
     minHeight?: number | string;
-    className?: string;
+    label?: string;
+    onClick?: (event: ViewMouseEvent) => void;
+    href?: string;
+    target?: string;
+    isDisabled?: boolean;
+    isSelected?: boolean;
+    onChange?: (isSelected: boolean) => void;
 };
 
-/** @category Container */
+/** @category Layouts */
 declare const Card: ViewComponent<CardProps>;
 
-/** @category Container */
-declare const ClickableCard: ViewComponent<
-    Omit<CardProps, 'minHeight'> & {
-        label: string;
-        onClick?: (event: ViewMouseEvent) => void;
-        href?: string;
-        target?: string;
-        isDisabled?: boolean;
-    }
->;
-
-/** @category Container */
+/** @category Layouts */
 declare const Collapsible: ViewComponent<{
     trigger: ViewNode;
     defaultIsOpen?: boolean;
@@ -772,17 +766,7 @@ declare const Collapsible: ViewComponent<{
     value?: string;
 }>;
 
-/** @category Container */
-declare const SelectableCard: ViewComponent<
-    Omit<CardProps, 'minHeight'> & {
-        label: string;
-        isSelected: boolean;
-        onChange: (isSelected: boolean) => void;
-        isDisabled?: boolean;
-    }
->;
-
-/** @category Form Controls */
+/** @category Form */
 declare const CheckboxInput: ViewComponent<
     FieldProps & {
         value: boolean | 'indeterminate';
@@ -797,7 +781,7 @@ declare const CheckboxInput: ViewComponent<
     }
 >;
 
-/** @category Form Controls */
+/** @category Form */
 declare const Switch: ViewComponent<
     FieldProps & {
         value: boolean;
@@ -813,7 +797,7 @@ declare const Switch: ViewComponent<
     }
 >;
 
-/** @category Form Controls */
+/** @category Form */
 declare const Slider: ViewComponent<
     FieldProps & {
         min?: number;
@@ -836,7 +820,7 @@ declare const Slider: ViewComponent<
         )
 >;
 
-/** @category Form Controls */
+/** @category Form */
 declare const RadioList: ViewComponent<
     FieldProps & {
         value: string;
@@ -848,7 +832,7 @@ declare const RadioList: ViewComponent<
     }
 >;
 
-/** @category Form Controls @group RadioList */
+/** @category Form @group RadioList */
 declare const RadioListItem: ViewComponent<{
     label: string;
     value: string;
@@ -884,13 +868,13 @@ declare const Menu: ViewComponent<{
     gap?: Spacing;
 }>;
 
-/** @category Content */
+/** @category Display */
 declare const Icon: ViewComponent<{
     icon: string;
     size: 'sm' | 'md' | 'lg';
 }>;
 
-/** @category Content */
+/** @category Display */
 declare const CodeBlock: ViewComponent<{
     code: string;
     language?: string;
@@ -898,7 +882,7 @@ declare const CodeBlock: ViewComponent<{
     isWrapped?: boolean;
 }>;
 
-/** @category Feedback & Status */
+/** @category Display */
 declare const ProgressBar: ViewComponent<{
     label: string;
     value?: number;
@@ -936,7 +920,7 @@ declare const Tab: ViewComponent<{
     label: string;
 }>;
 
-/** @category Content */
+/** @category Display */
 declare const EmptyState: ViewComponent<{
     title: string;
     isCompact?: boolean;
@@ -955,35 +939,10 @@ declare const Timestamp: ViewComponent<{
     format?: string;
 }>;
 
-/** @category Content */
+/** @category Display */
 declare const Divider: ViewComponent<Record<string, never>>;
 
-/** @category Table & List */
-declare const List: ViewComponent<{
-    density?: 'compact' | 'balanced' | 'spacious';
-    hasDividers?: boolean;
-    edgeCompensation?: 'inline';
-    header?: ViewNode;
-    listStyle?: 'none' | 'disc' | 'decimal' | 'circle';
-    start?: number;
-}>;
-
-/** @category Table & List @group List */
-declare const ListItem: ViewComponent<{
-    label: ViewNode;
-    description?: ViewNode;
-    startContent?: ViewNode;
-    endContent?: ViewNode;
-    onClick?: (event: ViewMouseEvent) => void;
-    interactiveRef?: { current: HTMLElement | null };
-    href?: string;
-    target?: string;
-    rel?: string;
-    isDisabled?: boolean;
-    isSelected?: boolean;
-}>;
-
-/** @category Table & List */
+/** @category Display */
 declare const MetadataList: ViewComponent<{
     columns?: 'multi' | 'single' | number;
     label?: { position?: 'start' | 'top'; width?: number | string };
@@ -992,25 +951,25 @@ declare const MetadataList: ViewComponent<{
     title?: ViewNode;
 }>;
 
-/** @category Table & List @group MetadataList */
+/** @category Display @group MetadataList */
 declare const MetadataListItem: ViewComponent<{
     label: string;
     icon?: ViewNode;
 }>;
 
-/** @category Table & List @group Table */
+/** @category Display @group Table */
 type ColumnWidth = { type: 'proportional'; value: number; minWidth?: number } | { type: 'pixel'; value: number };
 
-/** @category Table & List @group Table */
+/** @category Display @group Table */
 declare function proportional(
     value?: number,
     options?: { minWidth?: number }
 ): Extract<ColumnWidth, { type: 'proportional' }>;
 
-/** @category Table & List @group Table */
+/** @category Display @group Table */
 declare function pixel(value: number): Extract<ColumnWidth, { type: 'pixel' }>;
 
-/** @category Table & List */
+/** @category Display */
 declare function Table<T extends Record<string, unknown>>(props: {
     data?: T[];
     idKey?: (keyof T & string) | ((row: T) => string | number);
