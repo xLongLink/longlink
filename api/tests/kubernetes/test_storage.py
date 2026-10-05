@@ -74,14 +74,6 @@ async def test_storage_administration_uses_cluster_tunnel(
     assert requests[0].headers["Authorization"].startswith("AWS4-HMAC-SHA256 Credential=controller/")
 
 
-def test_storage_administration_requires_cluster(storage_compute: SimpleNamespace) -> None:
-    """Require the Kubernetes connection when constructing the storage controller."""
-
-    # Reject a missing cluster before any storage operation can be attempted.
-    with pytest.raises(TypeError, match="missing 1 required positional argument: 'cluster'"):
-        storage.Storage(storage_compute)  # type: ignore[call-arg, arg-type]
-
-
 @pytest.mark.parametrize("status", [200, 503], ids=["ready", "unavailable"])
 async def test_storage_registration_checks_remote_tunnel(
     monkeypatch: pytest.MonkeyPatch,

@@ -202,10 +202,6 @@ def test_build_solution_generates_docker_artifacts_from_project_metadata(
     """Generate Docker instructions and ignore rules from project metadata."""
 
     # Arrange
-    chdir_project.joinpath("pyproject.toml").write_text(
-        '[project]\nname = "demo"\nversion = "0.1.0"\ndescription = "Demo Solution"\n\n[tool.longlink]\nenvironments = "src.envs:Env"\n',
-        encoding="utf-8",
-    )
     chdir_project.joinpath("src", "envs.py").write_text(
         "from pydantic import BaseModel\n\nclass Env(BaseModel):\n    API_KEY: str\n",
         encoding="utf-8",
@@ -311,7 +307,6 @@ def test_build_solution_filters_symlinks_by_resolved_target(chdir_project: Path)
     build.build_solution(build_context, pyproject_data=pyproject_data)
 
     # Assert
-    assert build_context.joinpath("linked-envs.py").is_symlink()
     assert build_context.joinpath("linked-envs.py").readlink() == Path("src/envs.py")
     assert not build_context.joinpath("dev.db").exists()
     assert not os.path.lexists(build_context / "linked-database")

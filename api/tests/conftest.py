@@ -282,11 +282,6 @@ class FakeKubernetes(AsyncKubernetes):
 
         return cast(Api, object())
 
-    async def cluster_uid(self) -> str:
-        """Return the identity expected by the installed package fixture."""
-
-        return "test-cluster"
-
 
 def kubernetes_client() -> "Kubernetes":
     """Return the Kubernetes test double typed as its production client."""

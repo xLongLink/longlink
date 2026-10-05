@@ -89,6 +89,7 @@ async def test_list_users_returns_administrator_page_and_total(
     assert users[0].password not in response.text
 
 
+@pytest.mark.no_db
 async def test_list_users_rejects_anonymous_requests(client: AsyncClient) -> None:
     """Require authentication before exposing user summaries."""
 

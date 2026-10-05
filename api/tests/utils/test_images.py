@@ -264,7 +264,7 @@ async def test_metadata_stops_when_registry_responses_are_invalid(
 
     # Arrange
     requested_paths: list[str] = []
-    response_queue = [httpx2.Response(response.status_code, content=response.content, headers=response.headers) for response in responses]
+    response_queue = responses.copy()
 
     def respond(request: httpx2.Request) -> httpx2.Response:
         """Return the configured invalid registry response."""

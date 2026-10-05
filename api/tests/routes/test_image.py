@@ -4,6 +4,7 @@ from src.models.types import Image
 from src.models.metadata import LongLinkMetadata, EnvironmentMetadata
 
 
+@pytest.mark.no_db
 async def test_inspect_image_requires_authentication_before_metadata_inspection(
     client: AsyncClient, monkeypatch: pytest.MonkeyPatch
 ) -> None:

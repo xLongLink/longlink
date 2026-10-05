@@ -119,17 +119,12 @@ async def test_postgres_creates_idempotent_runtime_schema_with_readonly_audit_ac
     updated_user = active_user.model_copy(update={"name": "Updated User"})
     async with adapter.connection(organization_id.hex, search_path="shared") as conn:
         await shared_audit.sync(conn, [updated_user])
-    maintenance_engine = create_async_engine(urls.enter_context(adapter.url(organization_id.hex)))
-    try:
-        async with maintenance_engine.begin() as connection:
-            updated_name = (
-                await connection.execute(
-                    text("SELECT name FROM shared.audit WHERE id = :user_id"),
-                    {"user_id": active_user.id},
-                )
-            ).scalar_one()
-    finally:
-        await maintenance_engine.dispose()
+    async with adapter.connection(organization_id.hex) as connection:
+        result = await connection.execute(
+            text("SELECT name FROM shared.audit WHERE id = :user_id"),
+            {"user_id": active_user.id},
+        )
+        updated_name = result.scalar_one()
 
     # Assert
     assert getattr(error.value.orig, "sqlstate", None) == "42501"

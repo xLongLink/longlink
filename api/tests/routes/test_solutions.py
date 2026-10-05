@@ -232,13 +232,12 @@ async def test_create_app_rejects_invalid_image_metadata(
 
 async def test_create_app_validates_payload_before_checking_organization_access(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-    users: tuple[User, User, User],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Reject an invalid request body before inspecting membership or image metadata."""
 
     # Arrange
-    organization = await create_organization(users[0])
+    organization_id = UUID(int=1)
 
     async def unexpected_metadata(_image: Image) -> LongLinkMetadata:
         """Fail if invalid input reaches remote image inspection."""
@@ -255,7 +254,7 @@ async def test_create_app_validates_payload_before_checking_organization_access(
 
     # Act
     response = await clients[1].post(
-        f"/api/v1/organizations/{organization.id}/solutions",
+        f"/api/v1/organizations/{organization_id}/solutions",
         json={"name": "dashboard"},
     )
 
@@ -653,6 +652,7 @@ async def test_delete_solution_rejects_write_member_without_mutating_solution(
         assert operation is None
 
 
+@pytest.mark.no_db
 async def test_list_solutions_rejects_anonymous_without_admin_lookup(
     client: AsyncClient,
 ) -> None:

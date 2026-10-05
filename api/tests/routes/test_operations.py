@@ -8,6 +8,7 @@ from src.database.models.users import User
 from src.database.models.operations import Operation
 
 
+@pytest.mark.no_db
 async def test_operations_endpoint_rejects_anonymous_requests(client: AsyncClient) -> None:
     """Require authentication before exposing reconciliation history."""
 

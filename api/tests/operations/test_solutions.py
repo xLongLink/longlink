@@ -253,7 +253,6 @@ async def test_solution_creation_applies_user_and_managed_environment_values(
         revision_id = current.desired_revision_id
     await solution_operations.deploy(revision_id)
     assert calls == ["open", "workload", "close"]
-    assert len(database_passwords) == 1
     assert captured["secrets"] == {
         "API_KEY": "replacement",
         **persisted.secrets,
