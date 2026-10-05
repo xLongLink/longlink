@@ -304,30 +304,26 @@ async def test_solution_apply_reports_quota_admission_failure(monkeypatch: pytes
                 ]
             }
 
-    class MigrationJob(Resource, MigrationJobs):
-        """Report a completed migration Job."""
-
-        async def refresh(self) -> None:
-            """Complete the migration before the rollout failure."""
-
-            self.raw["status"] = {"conditions": [{"type": "Complete", "status": "True"}]}
-
     async def apply(_resource: AppliedResource) -> None:
         """Accept a resource without contacting Kubernetes."""
 
-    monkeypatch.setattr(solutions, "Job", MigrationJob)
+    monkeypatch.setattr(solutions, "Job", MigrationJobs)
     monkeypatch.setattr(solutions, "KnativeServiceResource", Resource)
     monkeypatch.setattr(solutions, "apply", apply)
+    solution_client = solutions.Solutions(
+        kubernetes_client(),
+    )
 
     # Act and assert
     with pytest.raises(RuntimeError, match="capacity exhausted"):
         async with asyncio.timeout(1):
-            await solutions.Solutions(kubernetes_client()).apply(
+            await solution_client.apply(
                 ORGANIZATION_ID,
                 UUID("00000000-0000-4000-8000-000000000001"),
                 "ghcr.io/longlink/dashboard:latest",
                 {},
                 revision_id=UUID(int=1),
+                migrate=False,
             )
 
 
@@ -348,25 +344,25 @@ async def test_solution_apply_reports_disappeared_deployment(monkeypatch: pytest
 
             raise solutions.NotFoundError("Knative Service missing")
 
-    class MigrationJob(Resource, MigrationJobs):
-        """Report a completed migration Job."""
-
-        async def refresh(self) -> None:
-            """Complete the migration before rollout polling."""
-
-            self.raw["status"] = {"conditions": [{"type": "Complete", "status": "True"}]}
-
     async def apply(_resource: AppliedResource) -> None:
         """Accept a resource without contacting Kubernetes."""
 
-    monkeypatch.setattr(solutions, "Job", MigrationJob)
+    monkeypatch.setattr(solutions, "Job", MigrationJobs)
     monkeypatch.setattr(solutions, "KnativeServiceResource", Resource)
     monkeypatch.setattr(solutions, "apply", apply)
+    solution_client = solutions.Solutions(
+        kubernetes_client(),
+    )
 
     # Act and assert
     with pytest.raises(RuntimeError, match="Knative Solution Service disappeared during rollout"):
-        await solutions.Solutions(kubernetes_client()).apply(
-            ORGANIZATION_ID, UUID("00000000-0000-4000-8000-000000000001"), "ghcr.io/longlink/dashboard:latest", {}, revision_id=UUID(int=1)
+        await solution_client.apply(
+            ORGANIZATION_ID,
+            UUID("00000000-0000-4000-8000-000000000001"),
+            "ghcr.io/longlink/dashboard:latest",
+            {},
+            revision_id=UUID(int=1),
+            migrate=False,
         )
 
 
@@ -397,14 +393,6 @@ async def test_solution_apply_waits_for_route_after_deployment_readiness(monkeyp
         async def refresh(self) -> None:
             """Keep resource state current between polling attempts."""
 
-    class MigrationJob(Resource, MigrationJobs):
-        """Report a completed migration Job."""
-
-        async def refresh(self) -> None:
-            """Complete the migration before rollout polling."""
-
-            self.raw["status"] = {"conditions": [{"type": "Complete", "status": "True"}]}
-
     async def apply(_resource: AppliedResource) -> None:
         """Accept a resource without contacting Kubernetes."""
 
@@ -429,14 +417,22 @@ async def test_solution_apply_waits_for_route_after_deployment_readiness(monkeyp
 
     resources: dict[str, Resource] = {}
 
-    monkeypatch.setattr(solutions, "Job", MigrationJob)
+    monkeypatch.setattr(solutions, "Job", MigrationJobs)
     monkeypatch.setattr(solutions, "KnativeServiceResource", Resource)
     monkeypatch.setattr(solutions, "apply", apply)
     monkeypatch.setattr(solutions.asyncio, "sleep", sleep)
+    solution_client = solutions.Solutions(
+        kubernetes_client(),
+    )
 
     # Act
-    await solutions.Solutions(kubernetes_client()).apply(
-        ORGANIZATION_ID, UUID("00000000-0000-4000-8000-000000000001"), "ghcr.io/longlink/dashboard:latest", {}, revision_id=UUID(int=1)
+    await solution_client.apply(
+        ORGANIZATION_ID,
+        UUID("00000000-0000-4000-8000-000000000001"),
+        "ghcr.io/longlink/dashboard:latest",
+        {},
+        revision_id=UUID(int=1),
+        migrate=False,
     )
 
     # Assert
@@ -587,9 +583,6 @@ async def test_solution_logs_translates_kubernetes_api_errors(monkeypatch: pytes
     """Hide Kubernetes transport errors behind the Solution logs contract."""
 
     # Arrange
-    class KubernetesError(Exception):
-        """Represent a Kubernetes API failure."""
-
     class PodResource:
         """Fail while listing Solution Pods."""
 
@@ -597,16 +590,15 @@ async def test_solution_logs_translates_kubernetes_api_errors(monkeypatch: pytes
         async def list(cls, **_kwargs: object):
             """Raise the Kubernetes API failure."""
 
-            raise KubernetesError("connection failed")
+            raise solutions.APITimeoutError("connection failed")
             yield cls()
 
-    monkeypatch.setattr(solutions, "APITimeoutError", KubernetesError)
     monkeypatch.setattr(solutions, "Pod", PodResource)
 
     # Act and assert
     with pytest.raises(RuntimeError, match="Solution logs unavailable") as error:
         await solutions.Solutions(kubernetes_client()).logs(ORGANIZATION_ID, UUID("00000000-0000-4000-8000-000000000001"))
-    assert isinstance(error.value.__cause__, KubernetesError)
+    assert isinstance(error.value.__cause__, solutions.APITimeoutError)
 
 
 async def test_solution_delete_removes_resources_before_waiting_for_pods(monkeypatch: pytest.MonkeyPatch) -> None:

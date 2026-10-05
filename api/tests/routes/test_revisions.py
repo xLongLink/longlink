@@ -158,7 +158,11 @@ async def test_update_check_exposes_names_without_secrets(
 
     # Arrange
     organization = await create_organization(users[0])
-    solution = await create_solution(organization, secrets={"KEEP": "private-value", "DROP": "old-value"})
+    solution = await create_solution(
+        organization,
+        image="ghcr.io/longlink/dashboard@sha256:first",
+        secrets={"KEEP": "private-value", "DROP": "old-value"},
+    )
     url = f"/api/v1/solutions/{solution.id}/update"
     resolved = LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:first"))
 
@@ -168,7 +172,6 @@ async def test_update_check_exposes_names_without_secrets(
         return resolved
 
     monkeypatch.setattr("src.routes.v1.solutions.images.metadata", metadata)
-    assert (await clients[0].post(url, json={})).status_code == 204
 
     # Act
     check = await clients[0].get(url)

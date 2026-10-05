@@ -387,9 +387,6 @@ async def test_solution_creation_retry_reuses_persisted_runtime_secrets(
 
             captured.append(secrets)
 
-        async def aclose(self) -> None:
-            """Provide the Kubernetes client cleanup contract."""
-
     monkeypatch.setattr(DatabasePostgres, "solution_schema", unexpected_provider, raising=False)
     monkeypatch.setattr(StorageKubernetes, "service_account", unexpected_provider)
     monkeypatch.setattr(solution_operations, "Kubernetes", FakeKubernetes)

@@ -36,33 +36,37 @@ def configure_production_environment(monkeypatch: pytest.MonkeyPatch, bucket: st
     monkeypatch.setenv("LONGLINK_STORAGE_PREFIX", prefix)
 
 
-@pytest.mark.parametrize(
-    ("bucket", "prefix", "message"),
-    [
-        ("acme", "../shared/", "Storage prefixes must be relative paths inside a bucket"),
-        ("acme", "/shared/", "Storage prefixes must be relative paths inside a bucket"),
-        ("acme", ".", "Storage prefixes must be relative paths inside a bucket"),
-        (".", "solutions/dashboard", "Storage buckets must be bucket names"),
-        ("/acme", "solutions/dashboard", "Storage buckets must be bucket names"),
-        ("acme/../shared", "solutions/dashboard", "Storage buckets must be bucket names"),
-    ],
-)
-def test_production_storage_requires_safe_bucket_scope(monkeypatch: pytest.MonkeyPatch, bucket: str, prefix: str, message: str) -> None:
-    """Reject production storage that is not safely scoped within a bucket."""
+UNSAFE_STORAGE_SCOPES = [
+    ("acme", "../shared/", "Storage prefixes must be relative paths inside a bucket"),
+    ("acme", "/shared/", "Storage prefixes must be relative paths inside a bucket"),
+    ("acme", ".", "Storage prefixes must be relative paths inside a bucket"),
+    (".", "solutions/dashboard", "Storage buckets must be bucket names"),
+    ("/acme", "solutions/dashboard", "Storage buckets must be bucket names"),
+    ("acme/../shared", "solutions/dashboard", "Storage buckets must be bucket names"),
+]
 
-    # Configure unsafe production storage scopes.
-    configure_production_environment(monkeypatch, bucket, prefix)
+
+@pytest.mark.parametrize(("bucket", "prefix", "message"), UNSAFE_STORAGE_SCOPES)
+def test_storage_requires_safe_bucket_scope(monkeypatch: pytest.MonkeyPatch, bucket: str, prefix: str, message: str) -> None:
+    """Reject unsafe storage scopes before filesystem selection."""
+
+    # Arrange
+    settings = Envs(
+        ENV="testing",
+        STORAGE_BUCKET=bucket,
+        STORAGE_PREFIX=prefix,
+    )
 
     def unexpected_filesystem(*_args: object, **_kwargs: object) -> None:
-        """Fail if an unsafe scope reaches remote filesystem construction."""
+        """Fail if an unsafe scope reaches filesystem construction."""
 
         pytest.fail("Unsafe storage scope must be rejected before filesystem construction")
 
     monkeypatch.setattr(storage_base.fsspec, "filesystem", unexpected_filesystem)
 
-    # Reject the configured scope before constructing the filesystem.
+    # Act and assert
     with pytest.raises(ValueError, match=message):
-        storage_base.create_fs(Envs())
+        storage_base.create_fs(settings)
 
 
 def test_production_storage_scopes_paths_to_configured_bucket_prefix(monkeypatch: pytest.MonkeyPatch) -> None:

@@ -1,6 +1,6 @@
 import pytest
 from uuid import UUID, uuid4
-from conftest import DatabasePostgres, StorageKubernetes, OperationKubernetes, reject_provider_construction
+from conftest import AsyncKubernetes, DatabasePostgres, StorageKubernetes, OperationKubernetes, reject_provider_construction
 from datetime import UTC, datetime
 from factories import create_compute, create_solution, create_organization
 from src.errors import ForbiddenError
@@ -57,13 +57,12 @@ def install_recording_delete(
         assert target_organization_id == organization_id
         calls.append("namespace")
 
-    class Kubernetes(OperationKubernetes):
+    class Kubernetes(AsyncKubernetes):
         """Expose the recording Organization delete operations."""
 
         def __init__(self, *args: object) -> None:
             """Expose the recording Organization database operations."""
 
-            super().__init__(*args)
             self.databases = Database()
 
     monkeypatch.setattr(organization_operations, "Kubernetes", Kubernetes)

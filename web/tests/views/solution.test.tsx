@@ -160,8 +160,11 @@ describe('SolutionRuntime', () => {
 
         // Assert
         await vi.waitFor(() => expect(output.querySelector('iframe')?.srcdoc).toContain('Content-Security-Policy'));
-        expect(requests).toHaveLength(4);
-        const [manifestRequest, viewRequest] = requests;
+
+        // Identify contract requests independently of runtime asset loading order and count.
+        const manifestRequest = requests.find((request) => new URL(request.url).pathname === '/proxy/views.json');
+        const viewRequest = requests.find((request) => new URL(request.url).pathname === '/proxy/home.jsx');
+        if (!manifestRequest || !viewRequest) throw new Error('Missing manifest or JSX request');
         const manifestUrl = new URL(manifestRequest.url);
         const viewUrl = new URL(viewRequest.url);
         expect(`${manifestUrl.pathname}${manifestUrl.search}${manifestUrl.hash}`).toBe(

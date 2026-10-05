@@ -1,5 +1,6 @@
 import pytest
 import logging
+from types import SimpleNamespace
 from pathlib import Path
 from longlink import Context
 from longlink import app as longlink_app
@@ -158,7 +159,7 @@ def test_production_startup_installs_one_access_filter(monkeypatch: pytest.Monke
     monkeypatch.setattr(
         longlink_app,
         "Envs",
-        lambda: type("Settings", (), {"ENV": "production", "IDENTITY_SECRET": "identity-secret"})(),
+        lambda: SimpleNamespace(ENV="production", IDENTITY_SECRET="identity-secret"),
     )
     monkeypatch.setattr(longlink_app, "create_fs", lambda _settings: object())
     monkeypatch.setattr(access_logger, "filters", [])

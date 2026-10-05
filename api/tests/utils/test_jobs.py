@@ -266,11 +266,14 @@ async def test_execute_rejects_lost_terminal_operation_lock(monkeypatch: pytest.
     async def complete_handler(_target_id: UUID) -> None:
         """Complete the operation handler successfully."""
 
-    async def finish_transition(_transition: object, _operation_id: UUID) -> None:
+    async def complete(_session: object, operation_id: UUID) -> None:
         """Simulate a concurrent worker releasing the operation lock."""
 
+        assert operation_id == operation.id
+
     monkeypatch.setitem(operation_worker.handlers, operation.kind, complete_handler)
-    monkeypatch.setattr(operation_worker, "_finish_transition", finish_transition)
+    monkeypatch.setattr(operation_worker, "session_scope", fake_scheduler_session_scope)
+    monkeypatch.setattr(operation_worker.operations, "complete", complete)
 
     # Act and assert
     with pytest.raises(RuntimeError, match=f"Operation '{operation.id}' lock was lost"):
