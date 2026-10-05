@@ -1,4 +1,6 @@
+import { Text } from '@astryxdesign/core/Text';
 import ViewLayout, { type ViewProperties } from './ViewLayout';
+import { Menu, MenuSection, MenuItem } from '@/components/ui/Menu';
 
 // Keep each Menu component's JSX contract separately readable.
 const properties: ViewProperties = [
@@ -67,6 +69,7 @@ export default function MenuPage() {
             examples={[
                 {
                     title: 'Menu',
+                    preview: <MenuExample />,
                     description: 'Select Profile or Workflow to display its settings beside the navigation.',
                     code: `function Example() {
   return (
@@ -85,5 +88,22 @@ export default function MenuPage() {
                 },
             ]}
         />
+    );
+}
+
+/** Demonstrates the page's settings menu with switchable content. */
+export function MenuExample() {
+    // Let the menu manage selection and show the chosen settings panel.
+    return (
+        <Menu>
+            <MenuSection title="Settings">
+                <MenuItem label="Profile">
+                    <Text>Profile settings</Text>
+                </MenuItem>
+                <MenuItem label="Workflow">
+                    <Text>Workflow settings</Text>
+                </MenuItem>
+            </MenuSection>
+        </Menu>
     );
 }

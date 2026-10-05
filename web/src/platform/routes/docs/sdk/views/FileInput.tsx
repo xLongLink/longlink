@@ -1,4 +1,6 @@
 import ViewLayout from './ViewLayout';
+import { FileInput } from '@/components/ui/FileInput';
+import { useState, type ComponentProps } from 'react';
 
 /** Documents FileInput in LongLink Views. */
 export default function FileInputPage() {
@@ -9,6 +11,7 @@ export default function FileInputPage() {
             examples={[
                 {
                     title: 'FileInput',
+                    preview: <FileInputExample />,
                     code: `function Example() {
   const [value, setValue] = useState(null);
 
@@ -24,6 +27,24 @@ export default function FileInputPage() {
 }`,
                 },
             ]}
+        />
+    );
+}
+
+/** Keeps selected files local without uploading them. */
+export function FileInputExample() {
+    const [value, setValue] = useState<ComponentProps<typeof FileInput>['value']>(null);
+
+    // Allow selecting and clearing a PDF attachment in the demo.
+    return (
+        <FileInput
+            accept=".pdf"
+            isLabelHidden
+            label="Attachment"
+            placeholder="File"
+            value={value}
+            width="100%"
+            onChange={setValue}
         />
     );
 }

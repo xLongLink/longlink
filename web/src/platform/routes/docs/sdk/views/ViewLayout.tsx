@@ -1,5 +1,4 @@
 import type { ReactNode } from 'react';
-import { ComponentPreview } from './Preview';
 import { Code } from '@astryxdesign/core/Code';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
@@ -18,7 +17,7 @@ import { Table, proportional } from '@astryxdesign/core/Table';
 
 export type ViewReference = Pick<(typeof references)[number], 'introduction' | 'properties' | 'practices'>;
 export type ViewProperties = { name: string; properties: ViewReference['properties'] }[];
-export type ViewExample = { title: string; code: string; name?: string; description?: string };
+export type ViewExample = { title: string; code: string; preview: ReactNode; description?: string };
 
 const tabs = [
     { value: 'examples', label: 'Examples' },
@@ -138,10 +137,7 @@ export default function ViewLayout({
                                                     className="overflow-auto rounded-lg border border-border"
                                                     aria-label={`${example.title} preview`}
                                                 >
-                                                    <ComponentPreview
-                                                        name={example.name ?? name}
-                                                        example={example.title}
-                                                    />
+                                                    {example.preview}
                                                 </Stack>
                                                 <CodeBlock
                                                     code={example.code}

@@ -1,4 +1,5 @@
 import ViewLayout from './ViewLayout';
+import { CodeBlock } from '@/components/ui/CodeBlock';
 
 /** Documents CodeBlock in LongLink Views. */
 export default function CodeBlockPage() {
@@ -9,6 +10,7 @@ export default function CodeBlockPage() {
             examples={[
                 {
                     title: 'CodeBlock',
+                    preview: <CodeBlockExample />,
                     code: `function Example() {
   return (
     <CodeBlock
@@ -22,4 +24,10 @@ export default function CodeBlockPage() {
             ]}
         />
     );
+}
+
+/** Renders the page's code example for documentation and the catalog. */
+export function CodeBlockExample() {
+    // Display a copyable sample without evaluating its source.
+    return <CodeBlock code={'function Example() {\n  return <Text>Hello world</Text>;\n}'} language="jsx" isWrapped />;
 }
