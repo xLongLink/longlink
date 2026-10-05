@@ -31,9 +31,7 @@ def docs_command(component: str | None = None, category: str | None = None) -> N
         entry = next((entry for entry in components if entry.name.casefold() == component.casefold()), None)
         if entry is None:
             raise CliError(f"Unknown component: {component}. Run `longlink docs` to list available components.")
-        typer.echo(
-            f"{entry.name} [{entry.category}]\nProps and types\n{entry.declaration}\n\nExamples: src/views/items.jsx and src/views/items/[item].jsx"
-        )
+        typer.echo(f"{entry.name} [{entry.category}]\nProps and types\n{entry.declaration}")
         return
 
     # Explain the execution boundary before listing the JSX APIs that are actually available.

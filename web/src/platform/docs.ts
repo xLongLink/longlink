@@ -21,13 +21,26 @@ type DocumentationPage = {
 };
 
 // Derive website route identity from names without storing it in the SDK documentation catalog.
-export const componentDocumentation = componentCatalog.map((component) => ({
-    ...component,
-    slug: component.name
-        .replace(/([a-z])([A-Z])/g, '$1-$2')
-        .replace(/\s+/g, '-')
-        .toLowerCase(),
-}));
+export const componentDocumentation = componentCatalog
+    .filter((component) => component.name !== 'ButtonGroup')
+    .map((component) => ({
+        ...component,
+        declaration:
+            component.name === 'Button'
+                ? componentCatalog
+                      .filter((candidate) => candidate.name === 'Button' || candidate.name === 'ButtonGroup')
+                      .map((candidate) => candidate.declaration)
+                      .join('\n\n')
+                : component.declaration,
+        label: component.name === 'Button' ? 'Buttons' : component.name,
+        slug:
+            component.name === 'Button'
+                ? 'buttons'
+                : component.name
+                      .replace(/([a-z])([A-Z])/g, '$1-$2')
+                      .replace(/\s+/g, '-')
+                      .toLowerCase(),
+    }));
 
 export const documentationSections: Array<{ title: string; pages: Array<DocumentationPage> }> = [
     {
