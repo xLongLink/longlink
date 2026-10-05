@@ -11,7 +11,7 @@ export function Document({ children }: { children: ReactNode }) {
                 <Meta />
                 <Links />
                 <link rel="icon" href="/favicon.ico" />
-                <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+                <link rel="icon" href="/favicon.svg?v=2" type="image/svg+xml" sizes="any" />
             </head>
             <body>
                 {children}
