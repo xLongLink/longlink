@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import ViewLayout from './ViewLayout';
+import { Slider } from '@/components/ui/Slider';
 
 /** Documents Slider in LongLink Views. */
 export default function SliderPage() {
@@ -9,6 +11,7 @@ export default function SliderPage() {
             examples={[
                 {
                     title: 'Slider',
+                    preview: <SliderExample />,
                     code: `function Example() {
   const [value, setValue] = useState(60);
 
@@ -26,4 +29,12 @@ export default function SliderPage() {
             ]}
         />
     );
+}
+
+/** Keeps slider progress local to this example. */
+export function SliderExample() {
+    const [value, setValue] = useState(60);
+
+    // Retain pointer and keyboard changes to the progress value.
+    return <Slider label="Progress" value={value} width="100%" onChange={setValue} isLabelHidden />;
 }

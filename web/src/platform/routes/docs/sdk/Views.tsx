@@ -1,16 +1,60 @@
+import type { ReactNode } from 'react';
+import { GridExample } from './views/Grid';
+import { IconExample } from './views/Icon';
+import { LinkExample } from './views/Link';
+import { MenuExample } from './views/Menu';
+import { TabsExample } from './views/Tabs';
+import { TextExample } from './views/Text';
 import { Card } from '@/components/ui/Card';
+import { BadgeExample } from './views/Badge';
+import { StackExample } from './views/Stack';
+import { TableExample } from './views/Table';
+import { AvatarExample } from './views/Avatar';
+import { DialogExample } from './views/Dialog';
+import { SliderExample } from './views/Slider';
+import { SwitchExample } from './views/Switch';
 import { Code } from '@astryxdesign/core/Code';
 import { Grid } from '@astryxdesign/core/Grid';
 import { Text } from '@astryxdesign/core/Text';
+import { DividerExample } from './views/Divider';
+import { HeadingExample } from './views/Heading';
+import { StepperExample } from './views/Stepper';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Link as RouterLink } from 'react-router';
-import { ComponentPreview } from './views/Preview';
+import { CalendarExample } from './views/Calendar';
+import { MoreMenuExample } from './views/MoreMenu';
+import { SelectorExample } from './views/Selector';
+import { TextAreaExample } from './views/TextArea';
 import { Center } from '@astryxdesign/core/Center';
+import { Currency } from '@/components/ui/Currency';
+import { CodeBlockExample } from './views/CodeBlock';
+import { DateInputExample } from './views/DateInput';
+import { FileInputExample } from './views/FileInput';
+import { RadioListExample } from './views/RadioList';
+import { StatusDotExample } from './views/StatusDot';
+import { TextInputExample } from './views/TextInput';
+import { TimeInputExample } from './views/TimeInput';
+import { TimestampExample } from './views/Timestamp';
 import { Heading } from '@astryxdesign/core/Heading';
+import { EmptyStateExample } from './views/EmptyState';
+import { FileViewerExample } from './views/FileViewer';
+import { IconButtonExample } from './views/IconButton';
 import { Article } from '@/components/layouts/Article';
+import { CollapsibleExample } from './views/Collapsible';
+import { NumberInputExample } from './views/NumberInput';
+import { PowerSearchExample } from './views/PowerSearch';
+import { ProgressBarExample } from './views/ProgressBar';
 import { componentDocumentation } from '@/platform/docs';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
+import { DropdownMenuExample } from './views/DropdownMenu';
+import { MetadataListExample } from './views/MetadataList';
+import { CheckboxInputExample } from './views/CheckboxInput';
+import { DateTimeInputExample } from './views/DateTimeInput';
+import { MultiSelectorExample } from './views/MultiSelector';
 import { documentationCategories } from '@/lib/documentation';
+import { DateRangeInputExample } from './views/DateRangeInput';
+import { ComplexSelectorExample } from './views/ComplexSelector';
+import { ButtonExample, ButtonGroupExample } from './views/Buttons';
 
 const article = {
     description: 'Build interfaces with LongLink Views and components.',
@@ -25,6 +69,56 @@ const article = {
     lastUpdated: '2026-10-02',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/sdk/longlink/.static/jsx/frontend.d.ts',
     title: 'Views | LongLink Documentation',
+};
+
+// Reuse page-owned examples as inert catalog artwork, without a shared preview implementation.
+const previews: Record<string, ReactNode> = {
+    Avatar: <AvatarExample />,
+    Badge: <BadgeExample />,
+    Button: <ButtonExample />,
+    ButtonGroup: <ButtonGroupExample />,
+    Calendar: <CalendarExample />,
+    Card: <Card>Lorem ipsum dolor sit amet.</Card>,
+    CheckboxInput: <CheckboxInputExample />,
+    CodeBlock: <CodeBlockExample />,
+    Collapsible: <CollapsibleExample />,
+    ComplexSelector: <ComplexSelectorExample />,
+    Currency: <Currency value={1275.5} currency="CHF" />,
+    DateInput: <DateInputExample />,
+    DateRangeInput: <DateRangeInputExample />,
+    DateTimeInput: <DateTimeInputExample />,
+    Dialog: <DialogExample />,
+    Divider: <DividerExample />,
+    DropdownMenu: <DropdownMenuExample />,
+    EmptyState: <EmptyStateExample />,
+    FileInput: <FileInputExample />,
+    FileViewer: <FileViewerExample />,
+    Grid: <GridExample />,
+    Heading: <HeadingExample />,
+    Icon: <IconExample />,
+    IconButton: <IconButtonExample />,
+    Link: <LinkExample />,
+    Menu: <MenuExample />,
+    MetadataList: <MetadataListExample />,
+    MoreMenu: <MoreMenuExample />,
+    MultiSelector: <MultiSelectorExample />,
+    NumberInput: <NumberInputExample />,
+    PowerSearch: <PowerSearchExample />,
+    ProgressBar: <ProgressBarExample />,
+    RadioList: <RadioListExample />,
+    Selector: <SelectorExample />,
+    Slider: <SliderExample />,
+    Stack: <StackExample />,
+    StatusDot: <StatusDotExample />,
+    Stepper: <StepperExample />,
+    Switch: <SwitchExample />,
+    Table: <TableExample />,
+    Tabs: <TabsExample />,
+    Text: <TextExample />,
+    TextArea: <TextAreaExample />,
+    TextInput: <TextInputExample />,
+    TimeInput: <TimeInputExample />,
+    Timestamp: <TimestampExample />,
 };
 
 /** Renders the native JSX catalog generated from the shared editor declarations. */
@@ -73,7 +167,7 @@ export default function Item({ params }) {
                                                 {component.category === 'Runtime' ? (
                                                     <Code>{component.name}</Code>
                                                 ) : (
-                                                    <ComponentPreview name={component.name} />
+                                                    (previews[component.name] ?? <Code>{`<${component.name} />`}</Code>)
                                                 )}
                                             </Center>
                                         </Card>

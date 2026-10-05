@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import ViewLayout from './ViewLayout';
+import { RadioList, RadioListItem } from '@/components/ui/RadioList';
 
 /** Documents RadioList in LongLink Views. */
 export default function RadioListPage() {
@@ -9,6 +11,7 @@ export default function RadioListPage() {
             examples={[
                 {
                     title: 'RadioList',
+                    preview: <RadioListExample />,
                     code: `function Example() {
   const [value, setValue] = useState('team');
 
@@ -22,5 +25,18 @@ export default function RadioListPage() {
                 },
             ]}
         />
+    );
+}
+
+/** Keeps the chosen plan local to this example. */
+export function RadioListExample() {
+    const [value, setValue] = useState('team');
+
+    // Allow exactly one plan to remain selected.
+    return (
+        <RadioList label="Plan" orientation="horizontal" size="sm" value={value} onChange={setValue} isLabelHidden>
+            <RadioListItem label="Solo" value="solo" />
+            <RadioListItem label="Team" value="team" />
+        </RadioList>
     );
 }

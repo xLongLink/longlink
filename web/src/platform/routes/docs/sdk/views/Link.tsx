@@ -1,4 +1,5 @@
 import ViewLayout from './ViewLayout';
+import { Link } from '@/components/ui/Link';
 
 /** Documents Link in LongLink Views. */
 export default function LinkPage() {
@@ -9,6 +10,7 @@ export default function LinkPage() {
             examples={[
                 {
                     title: 'Link',
+                    preview: <LinkExample />,
                     code: `function Example() {
   return <Link to="/orders">Orders</Link>;
 }`,
@@ -16,4 +18,10 @@ export default function LinkPage() {
             ]}
         />
     );
+}
+
+/** Demonstrates navigation to an existing documentation page. */
+export function LinkExample() {
+    // Avoid navigating to a nonexistent Solution route from the example.
+    return <Link to="/docs/sdk/views">Docs</Link>;
 }

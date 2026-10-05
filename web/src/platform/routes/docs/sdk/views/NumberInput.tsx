@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import ViewLayout from './ViewLayout';
+import { NumberInput } from '@/components/ui/NumberInput';
 
 /** Documents NumberInput in LongLink Views. */
 export default function NumberInputPage() {
@@ -9,6 +11,7 @@ export default function NumberInputPage() {
             examples={[
                 {
                     title: 'NumberInput',
+                    preview: <NumberInputExample />,
                     code: `function Example() {
   const [value, setValue] = useState(1);
 
@@ -24,6 +27,25 @@ export default function NumberInputPage() {
 }`,
                 },
             ]}
+        />
+    );
+}
+
+/** Keeps quantity edits local to this example. */
+export function NumberInputExample() {
+    const [value, setValue] = useState(3);
+
+    // Retain a quantity within the input's minimum constraint.
+    return (
+        <NumberInput
+            isLabelHidden
+            label="Quantity"
+            min={1}
+            size="sm"
+            units="qty"
+            value={value}
+            width="100%"
+            onChange={setValue}
         />
     );
 }

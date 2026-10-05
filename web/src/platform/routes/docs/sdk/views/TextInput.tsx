@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import ViewLayout from './ViewLayout';
+import { TextInput } from '@/components/ui/TextInput';
 
 /** Documents TextInput in LongLink Views. */
 export default function TextInputPage() {
@@ -9,6 +11,7 @@ export default function TextInputPage() {
             examples={[
                 {
                     title: 'TextInput',
+                    preview: <TextInputExample />,
                     code: `function Example() {
   const [value, setValue] = useState('');
 
@@ -20,4 +23,12 @@ export default function TextInputPage() {
             ]}
         />
     );
+}
+
+/** Keeps name edits local to this example. */
+export function TextInputExample() {
+    const [value, setValue] = useState('New order');
+
+    // Retain the user's edits to the sample name.
+    return <TextInput isLabelHidden label="Name" size="sm" value={value} width="100%" onChange={setValue} />;
 }

@@ -1,5 +1,8 @@
+import { useState } from 'react';
 import ViewLayout from './ViewLayout';
+import { Calendar } from '@/components/ui/Calendar';
 import references from '@/lib/generated/components.json';
+import type { ISODateString } from '@astryxdesign/core/Calendar';
 
 // Preserve LongLink's standardized calendar selection and presentation contract.
 const upstream = references.find((reference) => reference.name === 'Calendar');
@@ -47,6 +50,7 @@ export default function CalendarPage() {
             examples={[
                 {
                     title: 'Calendar',
+                    preview: <CalendarExample />,
                     code: `function Example() {
   const [value, setValue] = useState('2026-10-02');
 
@@ -56,4 +60,12 @@ export default function CalendarPage() {
             ]}
         />
     );
+}
+
+/** Keeps the selected calendar date local to this example. */
+export function CalendarExample() {
+    const [value, setValue] = useState<ISODateString>('2026-10-02');
+
+    // Let the calendar manage month navigation while retaining the selected date.
+    return <Calendar value={value} onChange={setValue} />;
 }

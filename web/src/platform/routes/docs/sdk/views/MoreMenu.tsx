@@ -1,4 +1,9 @@
+import { useState } from 'react';
 import ViewLayout from './ViewLayout';
+import { Ellipsis } from 'lucide-react';
+import { Text } from '@astryxdesign/core/Text';
+import { Stack } from '@astryxdesign/core/Stack';
+import { MoreMenu } from '@/components/ui/MoreMenu';
 
 /** Documents MoreMenu in LongLink Views. */
 export default function MoreMenuPage() {
@@ -9,6 +14,7 @@ export default function MoreMenuPage() {
             examples={[
                 {
                     title: 'MoreMenu',
+                    preview: <MoreMenuExample />,
                     code: `function Example() {
   return (
     <MoreMenu
@@ -19,5 +25,24 @@ export default function MoreMenuPage() {
                 },
             ]}
         />
+    );
+}
+
+/** Demonstrates overflow actions without changing real orders. */
+export function MoreMenuExample() {
+    const [action, setAction] = useState('');
+
+    // Keep edit and delete feedback within this example.
+    return (
+        <Stack gap={2}>
+            <MoreMenu
+                icon={<Ellipsis aria-hidden="true" size={20} />}
+                items={[
+                    { label: 'Edit', onClick: () => setAction('Editing order') },
+                    { label: 'Delete', variant: 'destructive', onClick: () => setAction('Deleted') },
+                ]}
+            />
+            {action && <Text role="status">{action}</Text>}
+        </Stack>
     );
 }

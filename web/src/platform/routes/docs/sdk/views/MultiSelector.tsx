@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import ViewLayout from './ViewLayout';
+import { MultiSelector } from '@/components/ui/MultiSelector';
 
 /** Documents MultiSelector in LongLink Views. */
 export default function MultiSelectorPage() {
@@ -9,6 +11,7 @@ export default function MultiSelectorPage() {
             examples={[
                 {
                     title: 'MultiSelector',
+                    preview: <MultiSelectorExample />,
                     code: `function Example() {
   const [value, setValue] = useState(['design']);
 
@@ -24,6 +27,26 @@ export default function MultiSelectorPage() {
 }`,
                 },
             ]}
+        />
+    );
+}
+
+/** Keeps multiple team selections local to this example. */
+export function MultiSelectorExample() {
+    const [value, setValue] = useState(['design']);
+
+    // Allow teams to be selected and removed independently.
+    return (
+        <MultiSelector
+            label="Teams"
+            options={[
+                { value: 'design', label: 'Design' },
+                { value: 'engineering', label: 'Engineering' },
+            ]}
+            value={value}
+            onChange={setValue}
+            size="sm"
+            width="100%"
         />
     );
 }

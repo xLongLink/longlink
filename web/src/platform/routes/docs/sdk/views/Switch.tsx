@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import ViewLayout from './ViewLayout';
+import { Switch } from '@/components/ui/Switch';
 
 /** Documents Switch in LongLink Views. */
 export default function SwitchPage() {
@@ -9,6 +11,7 @@ export default function SwitchPage() {
             examples={[
                 {
                     title: 'Switch',
+                    preview: <SwitchExample />,
                     code: `function Example() {
   const [value, setValue] = useState(true);
 
@@ -18,4 +21,12 @@ export default function SwitchPage() {
             ]}
         />
     );
+}
+
+/** Keeps the enabled setting local to this example. */
+export function SwitchExample() {
+    const [value, setValue] = useState(true);
+
+    // Toggle the setting without changing any real preferences.
+    return <Switch label="Enabled" size="sm" value={value} onChange={setValue} />;
 }
