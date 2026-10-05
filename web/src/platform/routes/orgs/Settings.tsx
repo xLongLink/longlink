@@ -19,6 +19,7 @@ import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { Selector } from '@astryxdesign/core/Selector';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { TextInput } from '@astryxdesign/core/TextInput';
+import { AlertDialog } from '@astryxdesign/core/AlertDialog';
 import { ProgressBar } from '@astryxdesign/core/ProgressBar';
 import { Table, proportional } from '@astryxdesign/core/Table';
 import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
@@ -158,6 +159,7 @@ export default function OrganizationSettings() {
     const [deletion, setDeletion] = useState<{ id: string; name: string } | null>(null);
     const [logs, setLogs] = useState<string | null>(null);
     const [, startAction] = useTransition();
+    const [isDeleting, startDeletion] = useTransition();
     const membership = useResolvedOrganizationMembership();
     const base = `/api/v1/organizations/${membership.organization.id}`;
 
@@ -577,31 +579,24 @@ export default function OrganizationSettings() {
                 </Dialog>
             )}
             {deletion && (
-                <Dialog
+                <AlertDialog
                     isOpen
-                    purpose="form"
+                    title="Delete solution"
+                    description={`Delete solution ${deletion.name}?`}
+                    actionLabel="Delete"
+                    isActionLoading={isDeleting}
                     onOpenChange={(open) => {
                         if (!open) setDeletion(null);
                     }}
-                >
-                    <DialogHeader title="Delete solution" onOpenChange={() => setDeletion(null)} />
-                    <Stack gap={3}>
-                        <Text color="secondary">Delete solution {deletion.name}?</Text>
-                        <Stack direction="horizontal" gap={2} justify="end">
-                            <Button label="Cancel" variant="ghost" onClick={() => setDeletion(null)} />
-                            <Button
-                                label="Delete"
-                                variant="destructive"
-                                clickAction={async () => {
-                                    // Refresh Solutions only after the delete request succeeds.
-                                    await api.delete(`/api/v1/solutions/${deletion.id}`);
-                                    await invalidateSolutions();
-                                    setDeletion(null);
-                                }}
-                            />
-                        </Stack>
-                    </Stack>
-                </Dialog>
+                    onAction={() =>
+                        startDeletion(async () => {
+                            // Refresh Solutions only after the delete request succeeds.
+                            await api.delete(`/api/v1/solutions/${deletion.id}`);
+                            await invalidateSolutions();
+                            setDeletion(null);
+                        })
+                    }
+                />
             )}
         </Stack>
     );

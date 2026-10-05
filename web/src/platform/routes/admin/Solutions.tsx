@@ -1,16 +1,17 @@
 import type { z } from 'zod';
 import { api } from '@/lib/api';
-import { useState } from 'react';
 import { Info } from 'lucide-react';
 import { NoIndex } from '@/components/Seo';
 import { useApi } from '@/lib/hooks/use-api';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Avatar } from '@/components/ui/Avatar';
+import { useState, useTransition } from 'react';
 import { Badge } from '@astryxdesign/core/Badge';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
 import { Heading } from '@astryxdesign/core/Heading';
+import { AlertDialog } from '@astryxdesign/core/AlertDialog';
 import { Table, proportional } from '@astryxdesign/core/Table';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import type { zPageSolutionResponse } from '@/lib/generated/platform-api-v1/zod.gen';
@@ -18,6 +19,7 @@ import type { zPageSolutionResponse } from '@/lib/generated/platform-api-v1/zod.
 /** Lists Solutions and manages administrator metadata and deletion dialogs. */
 export default function Solutions() {
     const [page, setPage] = useState(1);
+    const [isDeleting, startDeletion] = useTransition();
     const [dialog, setDialog] = useState<
         | { kind: 'metadata'; item: z.output<typeof zPageSolutionResponse>['items'][number] }
         | { kind: 'deletion'; item: { id: string; name: string } }
@@ -160,31 +162,24 @@ export default function Solutions() {
                 </Dialog>
             )}
             {dialog?.kind === 'deletion' && (
-                <Dialog
+                <AlertDialog
                     isOpen
-                    purpose="form"
+                    title="Delete solution"
+                    description={`Delete solution ${dialog.item.name}?`}
+                    actionLabel="Delete"
+                    isActionLoading={isDeleting}
                     onOpenChange={(open) => {
                         if (!open) setDialog(null);
                     }}
-                >
-                    <DialogHeader title="Delete solution" onOpenChange={() => setDialog(null)} />
-                    <Stack gap={3}>
-                        <Text color="secondary">Delete solution {dialog.item.name}?</Text>
-                        <Stack direction="horizontal" gap={2} justify="end">
-                            <Button label="Cancel" variant="ghost" onClick={() => setDialog(null)} />
-                            <Button
-                                label="Delete"
-                                variant="destructive"
-                                clickAction={async () => {
-                                    // Refresh the list only after deletion succeeds.
-                                    await api.delete(`/api/v1/solutions/${dialog.item.id}`);
-                                    await invalidate();
-                                    setDialog(null);
-                                }}
-                            />
-                        </Stack>
-                    </Stack>
-                </Dialog>
+                    onAction={() =>
+                        startDeletion(async () => {
+                            // Refresh the list only after deletion succeeds.
+                            await api.delete(`/api/v1/solutions/${dialog.item.id}`);
+                            await invalidate();
+                            setDialog(null);
+                        })
+                    }
+                />
             )}
         </Stack>
     );

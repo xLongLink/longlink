@@ -1,12 +1,12 @@
 import type { z } from 'zod';
 import { api } from '@/lib/api';
-import { useState } from 'react';
 import { NoIndex } from '@/components/Seo';
 import { Menu } from '@/components/ui/Menu';
 import { useApi } from '@/lib/hooks/use-api';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Avatar } from '@/components/ui/Avatar';
+import { useState, useTransition } from 'react';
 import { Badge } from '@astryxdesign/core/Badge';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
@@ -18,8 +18,8 @@ import { useQueryClient } from '@tanstack/react-query';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { PageContainer } from '@/components/PageContainer';
 import { useAuthenticatedUser } from '@/lib/hooks/use-user';
+import { AlertDialog } from '@astryxdesign/core/AlertDialog';
 import { Table, proportional } from '@astryxdesign/core/Table';
-import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 
 /** Renders account metadata and resets drafts when the authenticated identity changes. */
@@ -114,6 +114,7 @@ function SettingsPage({ user }: { user: z.output<typeof schemas.zUserSummary> })
 /** Owns organization management independently of account editing. */
 function OrganizationSettings() {
     const [creating, setCreating] = useState(false);
+    const [isDeleting, startDeletion] = useTransition();
     const [deletion, setDeletion] = useState<{ id: string; name: string } | null>(null);
     const [memberships, invalidate] =
         useApi<z.output<typeof schemas.zGetMyOrganizationsApiV1MeOrganizationsGetResponse>>('/api/v1/me/organizations');
@@ -168,36 +169,24 @@ function OrganizationSettings() {
                     ]}
                 />
                 {deletion && (
-                    <Dialog
+                    <AlertDialog
                         isOpen
-                        purpose="form"
+                        title="Delete organization"
+                        description={`Delete ${deletion.name} from your account?`}
+                        actionLabel="Delete"
+                        isActionLoading={isDeleting}
                         onOpenChange={(open) => {
                             if (!open) setDeletion(null);
                         }}
-                    >
-                        <DialogHeader
-                            title="Delete organization"
-                            onOpenChange={() => {
+                        onAction={() =>
+                            startDeletion(async () => {
+                                // Refresh memberships only after deletion succeeds.
+                                await api.delete(`/api/v1/organizations/${deletion.id}`);
+                                await invalidate();
                                 setDeletion(null);
-                            }}
-                        />
-                        <Stack gap={3}>
-                            <Text color="secondary">Delete {deletion.name} from your account?</Text>
-                            <Stack direction="horizontal" gap={2} justify="end">
-                                <Button label="Cancel" variant="ghost" onClick={() => setDeletion(null)} />
-                                <Button
-                                    label="Delete"
-                                    variant="destructive"
-                                    clickAction={async () => {
-                                        // Refresh memberships only after deletion succeeds.
-                                        await api.delete(`/api/v1/organizations/${deletion.id}`);
-                                        await invalidate();
-                                        setDeletion(null);
-                                    }}
-                                />
-                            </Stack>
-                        </Stack>
-                    </Dialog>
+                            })
+                        }
+                    />
                 )}
             </Stack>
             <CreateOrganization isOpen={creating} onOpenChange={setCreating} invalidate={invalidate} />
