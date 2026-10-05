@@ -6,7 +6,6 @@ import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Avatar } from '@/components/ui/Avatar';
 import { Badge } from '@astryxdesign/core/Badge';
-import { Field } from '@astryxdesign/core/Field';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Ellipsis, Info, X } from 'lucide-react';
 import { Link as RouterLink } from 'react-router';
@@ -19,7 +18,6 @@ import { Divider } from '@astryxdesign/core/Divider';
 import { Heading } from '@astryxdesign/core/Heading';
 import { Article } from '@/components/layouts/Article';
 import { Calendar } from '@astryxdesign/core/Calendar';
-import { Carousel } from '@astryxdesign/core/Carousel';
 import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { Selector } from '@astryxdesign/core/Selector';
 import { TextArea } from '@astryxdesign/core/TextArea';
@@ -53,8 +51,6 @@ import { ComplexSelector } from '@astryxdesign/core/ComplexSelector';
 import { RadioList, RadioListItem } from '@astryxdesign/core/RadioList';
 import { MetadataList, MetadataListItem } from '@astryxdesign/core/MetadataList';
 import { SideNav, SideNavItem, SideNavSection } from '@astryxdesign/core/SideNav';
-import { ToggleButton, ToggleButtonGroup } from '@astryxdesign/core/ToggleButton';
-import { SegmentedControl, SegmentedControlItem } from '@astryxdesign/core/SegmentedControl';
 
 /** Leaves inert, controlled previews unchanged. */
 const noop = () => {};
@@ -86,19 +82,6 @@ const previews: Record<string, ReactNode> = {
         />
     ),
     IconButton: <IconButton icon={<X aria-hidden="true" size={20} />} label="Close" size="sm" tooltip="Close" />,
-    SegmentedControl: (
-        <SegmentedControl label="Time range" value="week" onChange={noop} size="sm">
-            <SegmentedControlItem label="Day" value="day" />
-            <SegmentedControlItem label="Week" value="week" />
-        </SegmentedControl>
-    ),
-    ToggleButton: <ToggleButton label="Bold" isPressed onPressedChange={noop} size="sm" />,
-    ToggleButtonGroup: (
-        <ToggleButtonGroup label="Formatting" type="multiple" value={['bold']} onChange={noop} size="sm">
-            <ToggleButton label="Bold" value="bold" />
-            <ToggleButton label="Italic" value="italic" />
-        </ToggleButtonGroup>
-    ),
     MoreMenu: (
         <MoreMenu
             icon={<Ellipsis aria-hidden="true" size={20} />}
@@ -172,11 +155,6 @@ const previews: Record<string, ReactNode> = {
         />
     ),
     DateTimeInput: <DateTimeInput label="Appointment" onChange={noop} size="sm" width="100%" />,
-    Field: (
-        <Field label="Confidence" inputID="preview-confidence" description="Choose a confidence level." width="100%">
-            <input id="preview-confidence" type="range" min={0} max={100} defaultValue={60} />
-        </Field>
-    ),
     MultiSelector: (
         <MultiSelector
             label="Teams"
@@ -269,19 +247,6 @@ const previews: Record<string, ReactNode> = {
     TextArea: <TextArea isLabelHidden label="Notes" rows={2} size="sm" value="Review complete" onChange={noop} />,
     TextInput: <TextInput isLabelHidden label="Name" size="sm" value="New order" width="100%" onChange={noop} />,
     Card: <Card elevation="low">Lorem ipsum dolor sit amet.</Card>,
-    Carousel: (
-        <Carousel aria-label="Featured items" gap={2} hasSnap className="w-full">
-            <Card className="w-32" padding={3}>
-                <Text>Overview</Text>
-            </Card>
-            <Card className="w-32" padding={3}>
-                <Text>Details</Text>
-            </Card>
-            <Card className="w-32" padding={3}>
-                <Text>Activity</Text>
-            </Card>
-        </Carousel>
-    ),
     ClickableCard: (
         <ClickableCard label="View order" onClick={noop} padding={3}>
             <Text>View order</Text>
