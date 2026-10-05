@@ -2,22 +2,22 @@
     {
         "name": "Avatar",
         "category": "Display",
-        "declaration": "declare const Avatar: ViewComponent<{\n    name?: string;\n    src?: string;\n    alt?: string;\n}>;"
+        "declaration": "declare function Avatar(props: {\n    name?: string;\n    shape?: 'circle' | 'rounded';\n    src?: string | null;\n    alt?: string;\n    size?: 'sm' | 'md' | 'lg';\n}): React.JSX.Element;"
     },
     {
         "name": "Badge",
         "category": "Display",
-        "declaration": "declare const Badge: ViewComponent<{\n    label?: ViewNode;\n    icon?: ViewNode;\n    variant?:\n        | 'neutral'\n        | 'info'\n        | 'success'\n        | 'warning'\n        | 'error'\n        | 'blue'\n        | 'cyan'\n        | 'green'\n        | 'orange'\n        | 'pink'\n        | 'purple'\n        | 'red'\n        | 'teal'\n        | 'yellow';\n}>;"
+        "declaration": "declare function Badge(props: {\n    label?: ViewNode;\n    icon?: ViewNode;\n    variant?:\n        | 'neutral'\n        | 'info'\n        | 'success'\n        | 'warning'\n        | 'error'\n        | 'blue'\n        | 'cyan'\n        | 'green'\n        | 'orange'\n        | 'pink'\n        | 'purple'\n        | 'red'\n        | 'teal'\n        | 'yellow';\n}): React.JSX.Element;"
     },
     {
         "name": "Button",
         "category": "Action",
-        "declaration": "type ViewMouseEvent = Omit<MouseEvent, 'currentTarget'> & { currentTarget: HTMLElement; nativeEvent: MouseEvent };\n\ntype ButtonProps = {\n    label: string;\n    variant?: 'primary' | 'secondary' | 'ghost' | 'destructive';\n    size?: 'sm' | 'md' | 'lg';\n    elevation?: 'none' | 'low' | 'med' | 'high';\n    type?: 'button' | 'submit' | 'reset';\n    name?: string;\n    value?: string | number | readonly string[];\n    form?: string;\n    icon?: ViewNode;\n    endContent?: React.JSX.Element;\n    tooltip?: string;\n    width?: number | string;\n    isIconOnly?: boolean;\n    isLoading?: boolean;\n    isDisabled?: boolean;\n    isInterruptible?: boolean;\n    href?: string;\n    target?: string;\n    rel?: string;\n    onClick?: (event: ViewMouseEvent) => void;\n    clickAction?: (event: ViewMouseEvent) => void | Promise<void>;\n};\n\ndeclare const Button: ViewComponent<ButtonProps>;"
+        "declaration": "type ViewMouseEvent = Omit<MouseEvent, 'currentTarget'> & { currentTarget: HTMLElement; nativeEvent: MouseEvent };\n\ntype ButtonProps = {\n    label: string;\n    variant?: 'primary' | 'secondary' | 'ghost' | 'destructive';\n    size?: 'sm' | 'md' | 'lg';\n    type?: 'button' | 'submit' | 'reset';\n    name?: string;\n    value?: string | number | readonly string[];\n    form?: string;\n    icon?: ViewNode;\n    endContent?: ViewNode;\n    tooltip?: string;\n    width?: number | string;\n    isDisabled?: boolean;\n    href?: string;\n    onClick?: (event: ViewMouseEvent) => void | Promise<void>;\n};\n\ndeclare function Button(props: ButtonProps): React.JSX.Element;"
     },
     {
         "name": "ButtonGroup",
         "category": "Action",
-        "declaration": "declare const ButtonGroup: ViewComponent<{\n    label: string;\n    orientation?: 'horizontal' | 'vertical';\n    size?: 'sm' | 'md' | 'lg';\n    elevation?: 'none' | 'low' | 'med' | 'high';\n    isDisabled?: boolean;\n}>;"
+        "declaration": "declare function ButtonGroup(props: {\n    children?: ViewNode;\n    label: string;\n    orientation?: 'horizontal' | 'vertical';\n    size?: 'sm' | 'md' | 'lg';\n    isDisabled?: boolean;\n}): React.JSX.Element;"
     },
     {
         "name": "Calendar",
@@ -32,82 +32,82 @@
     {
         "name": "CheckboxInput",
         "category": "Form",
-        "declaration": "declare const CheckboxInput: ViewComponent<\n    FieldProps & {\n        value: boolean | 'indeterminate';\n        onChange?: (value: boolean) => void;\n        changeAction?: (value: boolean) => void | Promise<void>;\n        isLoading?: boolean;\n        isReadOnly?: boolean;\n        disabledMessage?: string;\n        htmlName?: string;\n        size?: 'sm' | 'md';\n        labelIcon?: ViewNode;\n    }\n>;"
+        "declaration": "declare function CheckboxInput(\n    props: FieldProps & {\n        value: boolean | 'indeterminate';\n        onChange?: (value: boolean) => void;\n        isReadOnly?: boolean;\n        htmlName?: string;\n        size?: 'sm' | 'md';\n    },\n): React.JSX.Element;"
     },
     {
         "name": "CodeBlock",
         "category": "Display",
-        "declaration": "declare const CodeBlock: ViewComponent<{\n    code: string;\n    language?: string;\n    title?: string;\n    isWrapped?: boolean;\n}>;"
+        "declaration": "declare function CodeBlock(props: {\n    code: string;\n    language?: string;\n    title?: string;\n    isWrapped?: boolean;\n}): React.JSX.Element;"
     },
     {
         "name": "Collapsible",
         "category": "Layouts",
-        "declaration": "declare const Collapsible: ViewComponent<{\n    trigger: ViewNode;\n    defaultIsOpen?: boolean;\n    isOpen?: boolean;\n    isDisabled?: boolean;\n    onOpenChange?: (isOpen: boolean) => void;\n    chevronPosition?: 'start' | 'end';\n    value?: string;\n}>;"
+        "declaration": "declare function Collapsible(props: {\n    children?: ViewNode;\n    trigger: ViewNode;\n    defaultIsOpen?: boolean;\n    isOpen?: boolean;\n    isDisabled?: boolean;\n    onOpenChange?: (isOpen: boolean) => void;\n}): React.JSX.Element;"
     },
     {
         "name": "ComplexSelector",
         "category": "Form",
-        "declaration": "declare function ComplexSelector<Value>(\n    props: FieldProps & {\n        value: Value;\n        onChange?: (value: Value) => void;\n        changeAction?: (value: Value) => void | Promise<void>;\n        children: (\n            value: Value,\n            onChange: (value: Value) => void,\n            close: () => void,\n            state: {\n                isOpen: boolean;\n                isBusy: boolean;\n                triggerId: string;\n                contentId: string;\n            }\n        ) => ViewNode;\n        triggerLabel?: ViewNode;\n        placeholder?: ViewNode;\n        isLoading?: boolean;\n        size?: 'sm' | 'md' | 'lg';\n        variant?: 'input' | 'ghost';\n        startIcon?: ViewNode;\n        placement?: 'above' | 'below' | 'start' | 'end';\n        alignment?: 'start' | 'center' | 'end';\n        onOpenChange?: (isOpen: boolean) => void;\n    }\n): React.JSX.Element;"
+        "declaration": "declare function ComplexSelector<Value>(\n    props: FieldProps & {\n        value: Value;\n        onChange?: (value: Value) => void;\n        triggerLabel?: ViewNode;\n        placeholder?: ViewNode;\n        children: (\n            value: Value,\n            onChange: (value: Value) => void,\n            close: () => void,\n            state: { isOpen: boolean; isBusy: boolean; triggerId: string; contentId: string },\n        ) => ViewNode;\n    },\n): React.JSX.Element;"
     },
     {
         "name": "Currency",
         "category": "Display",
-        "declaration": "declare const Currency: ViewComponent<{\n    value: number;\n    currency: string;\n    locale?: string;\n}>;"
+        "declaration": "declare function Currency(props: { value: number; currency: string; locale?: string }): React.JSX.Element;"
     },
     {
         "name": "DateInput",
         "category": "Form",
-        "declaration": "type WeekStartsOn = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 'sun' | 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat';\n\ntype DateInputProps = FieldProps & {\n    value?: ISODateString;\n    onChange?: (value: ISODateString | undefined) => void;\n    changeAction?: (value: ISODateString | undefined) => void | Promise<void>;\n    min?: ISODateString;\n    max?: ISODateString;\n    dateConstraints?: readonly ((date: Date) => boolean)[];\n    disabledMessage?: string;\n    isLoading?: boolean;\n    placeholder?: string;\n    size?: 'sm' | 'md' | 'lg';\n    hasClear?: boolean;\n    numberOfMonths?: 1 | 2;\n    weekStartsOn?: WeekStartsOn;\n    format?: 'date' | 'date_long' | 'date_weekday' | 'system_date' | ((value: ISODateString) => string);\n    presentation?: 'popover' | 'bottom-sheet' | 'native' | 'adaptive-bottom-sheet' | 'adaptive-native';\n};\n\ndeclare const DateInput: ViewComponent<DateInputProps>;"
+        "declaration": "type DateInputProps = FieldProps & {\n    value?: ISODateString;\n    onChange?: (value: ISODateString | undefined) => void;\n    min?: ISODateString;\n    max?: ISODateString;\n    dateConstraints?: readonly ((date: Date) => boolean)[];\n    placeholder?: string;\n    hasClear?: boolean;\n    size?: 'sm' | 'md' | 'lg';\n};\n\ndeclare function DateInput(props: DateInputProps): React.JSX.Element;"
     },
     {
         "name": "DateRangeInput",
         "category": "Form",
-        "declaration": "declare const DateRangeInput: ViewComponent<\n    Omit<DateInputProps, 'value' | 'onChange' | 'changeAction' | 'format' | 'presentation'> & {\n        value: DateRange | null;\n        onChange: (value: DateRange | null) => void;\n        changeAction?: (value: DateRange | null) => void | Promise<void>;\n        minRangeSpan?: number;\n        maxRangeSpan?: number;\n        presets?: readonly { label: string; getRange: () => DateRange }[];\n    }\n>;"
+        "declaration": "declare function DateRangeInput(\n    props: FieldProps & {\n        value: DateRange | null;\n        onChange: (value: DateRange | null) => void;\n        min?: ISODateString;\n        max?: ISODateString;\n        dateConstraints?: readonly ((date: Date) => boolean)[];\n        minRangeSpan?: number;\n        maxRangeSpan?: number;\n        placeholder?: string;\n        size?: 'sm' | 'md' | 'lg';\n        hasClear?: boolean;\n    },\n): React.JSX.Element;"
     },
     {
         "name": "DateTimeInput",
         "category": "Form",
-        "declaration": "type ISODateTimeString = string & { readonly __brand: 'ISODateTimeString' };\n\ndeclare const DateTimeInput: ViewComponent<\n    Omit<DateInputProps, 'value' | 'onChange' | 'changeAction' | 'min' | 'max' | 'format' | 'statusVariant'> & {\n        value?: ISODateTimeString;\n        onChange: (value: ISODateTimeString | undefined) => void;\n        changeAction?: (value: ISODateTimeString | undefined) => void | Promise<void>;\n        min?: ISODateTimeString;\n        max?: ISODateTimeString;\n        hasSeconds?: boolean;\n        hourFormat?: '12h' | '24h';\n        timeIncrement?: 1 | 5 | 10 | 15 | 30;\n        timeOptionInterval?: 5 | 10 | 15 | 30 | 60;\n        timePlaceholder?: string;\n        timeLabel?: string;\n    }\n>;"
+        "declaration": "type ISODateTimeString = string & { readonly __brand: 'ISODateTimeString' };\n\ndeclare function DateTimeInput(\n    props: FieldProps & {\n        value?: ISODateTimeString;\n        onChange: (value: ISODateTimeString | undefined) => void;\n        min?: ISODateTimeString;\n        max?: ISODateTimeString;\n        placeholder?: string;\n        hasClear?: boolean;\n        hasSeconds?: boolean;\n        hourFormat?: '12h' | '24h';\n        size?: 'sm' | 'md' | 'lg';\n    },\n): React.JSX.Element;"
     },
     {
         "name": "Dialog",
         "category": "Layouts",
-        "declaration": "declare const Dialog: ViewComponent<{\n    'aria-label': string;\n    isOpen: boolean;\n    onOpenChange: (open: boolean) => void;\n    purpose?: 'form' | 'info' | 'required';\n}>;"
+        "declaration": "declare function Dialog(props: {\n    children?: ViewNode;\n    'aria-label': string;\n    isOpen: boolean;\n    onOpenChange: (open: boolean) => void;\n    purpose?: 'form' | 'info' | 'required';\n}): React.JSX.Element;"
     },
     {
         "name": "Divider",
         "category": "Display",
-        "declaration": "declare const Divider: ViewComponent<Record<string, never>>;"
+        "declaration": "declare function Divider(props: {}): React.JSX.Element;"
     },
     {
         "name": "DropdownMenu",
         "category": "Action",
-        "declaration": "type DropdownMenuItemData = {\n    id?: string;\n    label: ViewNode;\n    icon?: ViewNode;\n    description?: ViewNode;\n    endContent?: ViewNode;\n    variant?: 'default' | 'destructive';\n    isDisabled?: boolean;\n    hasCloseOnSelect?: boolean;\n    onClick?: () => void;\n    items?: DropdownMenuOption[];\n};\n\ntype DropdownMenuOption =\n    | DropdownMenuItemData\n    | { type: 'divider' }\n    | {\n          type: 'section';\n          id?: string;\n          title?: string;\n          items: DropdownMenuItemData[];\n      };\n\ndeclare const DropdownMenu: ViewComponent<{\n    button?: Omit<ButtonProps, 'onClick'>;\n    items: DropdownMenuOption[];\n    presentation?: 'popover' | 'bottom-sheet' | 'adaptive';\n    isMenuOpen?: boolean;\n    onOpenChange?: (isOpen: boolean) => void;\n    menuWidth?: number | string;\n    placement?: 'above' | 'below' | 'start' | 'end';\n    alignment?: 'start' | 'center' | 'end';\n    hasChevron?: boolean;\n    onClick?: () => void;\n    children?: never;\n}>;"
+        "declaration": "type DropdownMenuItemData = {\n    id?: string;\n    label: ViewNode;\n    icon?: ViewNode;\n    description?: ViewNode;\n    endContent?: ViewNode;\n    variant?: 'default' | 'destructive';\n    isDisabled?: boolean;\n    hasCloseOnSelect?: boolean;\n    onClick?: () => void;\n    items?: DropdownMenuOption[];\n};\n\ntype DropdownMenuOption =\n    | DropdownMenuItemData\n    | { type: 'divider' }\n    | {\n          type: 'section';\n          id?: string;\n          title?: string;\n          items: DropdownMenuItemData[];\n      };\n\ndeclare function DropdownMenu(props: {\n    button?: {\n        label: string;\n        variant?: 'primary' | 'secondary' | 'ghost' | 'destructive';\n        size?: 'sm' | 'md' | 'lg';\n        isDisabled?: boolean;\n    };\n    items: DropdownMenuOption[];\n    isMenuOpen?: boolean;\n    onOpenChange?: (isOpen: boolean) => void;\n}): React.JSX.Element;"
     },
     {
         "name": "EmptyState",
         "category": "Display",
-        "declaration": "declare const EmptyState: ViewComponent<{\n    title: string;\n    isCompact?: boolean;\n}>;"
+        "declaration": "declare function EmptyState(props: { title: string; isCompact?: boolean }): React.JSX.Element;"
     },
     {
         "name": "FileInput",
         "category": "Form",
-        "declaration": "declare const FileInput: ViewComponent<\n    FieldProps & {\n        value: File | File[] | null;\n        accept?: string;\n        onChange: (value: File | File[] | null) => void;\n        changeAction?: (value: File | File[] | null) => Promise<void>;\n        isMultiple?: boolean;\n        maxSize?: number;\n        maxFiles?: number;\n        disabledMessage?: string;\n        isLoading?: boolean;\n        placeholder?: string;\n        mode?: 'input' | 'dropzone';\n    }\n>;"
+        "declaration": "declare function FileInput(\n    props: FieldProps & {\n        value: File | File[] | null;\n        onChange: (value: File | File[] | null) => void;\n        accept?: string;\n        isMultiple?: boolean;\n        maxSize?: number;\n        maxFiles?: number;\n        placeholder?: string;\n        mode?: 'input' | 'dropzone';\n    },\n): React.JSX.Element;"
     },
     {
         "name": "FileViewer",
         "category": "Display",
-        "declaration": "declare const FileViewer: ViewComponent<{\n    src: string;\n    title: string;\n}>;"
+        "declaration": "declare function FileViewer(props: { src: string; title: string }): React.JSX.Element;"
     },
     {
         "name": "Grid",
         "category": "Layouts",
-        "declaration": "declare const Grid: ViewComponent<{\n    columns?: number;\n    gap?: Spacing;\n}>;\n\ndeclare const GridSpan: ViewComponent<{\n    columns?: number | 'full';\n}>;"
+        "declaration": "declare function Grid(props: { children?: ViewNode; columns?: number; gap?: Spacing }): React.JSX.Element;\n\ndeclare function GridSpan(props: { children?: ViewNode; columns?: number | 'full' }): React.JSX.Element;"
     },
     {
         "name": "Heading",
         "category": "Display",
-        "declaration": "declare const Heading: ViewComponent<{\n    level?: 1 | 2 | 3 | 4 | 5 | 6;\n}>;"
+        "declaration": "declare function Heading(props: { children?: ViewNode; level?: 1 | 2 | 3 | 4 | 5 | 6 }): React.JSX.Element;"
     },
     {
         "name": "Icon",
@@ -117,52 +117,52 @@
     {
         "name": "IconButton",
         "category": "Action",
-        "declaration": "declare const IconButton: ViewComponent<\n    Omit<ButtonProps, 'isIconOnly' | 'endContent'> & {\n        icon: ViewNode;\n    }\n>;"
+        "declaration": "declare function IconButton(props: {\n    label: string;\n    icon: ViewNode;\n    variant?: 'primary' | 'secondary' | 'ghost' | 'destructive';\n    size?: 'sm' | 'md' | 'lg';\n    tooltip?: string;\n    isDisabled?: boolean;\n    onClick?: (event: ViewMouseEvent) => void | Promise<void>;\n}): React.JSX.Element;"
     },
     {
         "name": "Link",
         "category": "Action",
-        "declaration": "declare const Link: ViewComponent<{\n    to: string;\n}>;"
+        "declaration": "declare function Link(props: { to: string; children?: ViewNode }): React.JSX.Element;"
     },
     {
         "name": "Menu",
         "category": "Layouts",
-        "declaration": "declare const Menu: ViewComponent<{\n    gap?: Spacing;\n}>;\n\ndeclare const MenuSection: ViewComponent<{\n    title: string;\n    isHeaderHidden?: boolean;\n}>;\n\ndeclare const MenuItem: ViewComponent<{\n    label: string;\n    id?: string;\n    icon?: string;\n}>;\n\ndeclare const MenuSubSection: ViewComponent<{\n    label: string;\n    icon?: string;\n}>;"
+        "declaration": "declare function Menu(props: {\n    children?: ViewNode;\n    gap?: 0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10;\n}): React.JSX.Element;\n\ndeclare function MenuSection(props: {\n    children?: ViewNode;\n    isHeaderHidden?: boolean;\n    title: string;\n}): React.JSX.Element;\n\ndeclare function MenuItem(props: { children?: ViewNode; id?: string; icon?: string; label: string }): React.JSX.Element;\n\ndeclare function MenuSubSection(props: { children?: ViewNode; icon?: string; label: string }): React.JSX.Element;"
     },
     {
         "name": "MetadataList",
         "category": "Display",
-        "declaration": "declare const MetadataList: ViewComponent<{\n    columns?: 'multi' | 'single' | number;\n    label?: { position?: 'start' | 'top'; width?: number | string };\n    maxNumOfItems?: number;\n    orientation?: 'vertical' | 'horizontal';\n    title?: ViewNode;\n}>;\n\ndeclare const MetadataListItem: ViewComponent<{\n    label: string;\n    icon?: ViewNode;\n}>;"
+        "declaration": "declare function MetadataList(props: {\n    children?: ViewNode;\n    columns?: 'multi' | 'single' | number;\n    title?: ViewNode;\n}): React.JSX.Element;\n\ndeclare function MetadataListItem(props: { children?: ViewNode; label: string; icon?: ViewNode }): React.JSX.Element;"
     },
     {
         "name": "MoreMenu",
         "category": "Action",
-        "declaration": "declare const MoreMenu: ViewComponent<{\n    items: DropdownMenuOption[];\n    label?: string;\n    icon?: ViewNode;\n    variant?: ButtonProps['variant'];\n    size?: ButtonProps['size'];\n    isDisabled?: boolean;\n    placement?: 'above' | 'below' | 'start' | 'end';\n    alignment?: 'start' | 'center' | 'end';\n    presentation?: 'popover' | 'bottom-sheet' | 'adaptive';\n    onOpenChange?: (isOpen: boolean) => void;\n}>;"
+        "declaration": "declare function MoreMenu(props: {\n    items: DropdownMenuOption[];\n    label?: string;\n    icon?: ViewNode;\n    isDisabled?: boolean;\n    onOpenChange?: (isOpen: boolean) => void;\n}): React.JSX.Element;"
     },
     {
         "name": "MultiSelector",
         "category": "Form",
-        "declaration": "declare const MultiSelector: ViewComponent<\n    FieldProps & {\n        options: SelectorOptionType[];\n        value: string[];\n        onChange: (value: string[]) => void;\n        changeAction?: (value: string[]) => void | Promise<void>;\n        placeholder?: string;\n        size?: 'sm' | 'md' | 'lg';\n        variant?: 'input' | 'ghost';\n        triggerDisplay?: 'count' | 'labels' | 'badges';\n        formatValue?: (items: { value: string; label: string }[]) => string;\n        maxBadges?: number;\n        hasSelectAll?: boolean;\n        selectAllLabel?: string;\n        hasSearch?: boolean;\n        searchPlaceholder?: string;\n        emptyText?: ViewNode;\n        emptySearchText?: ViewNode;\n        isReadOnly?: boolean;\n        htmlName?: string;\n        disabledMessage?: string;\n        isLoading?: boolean;\n        renderOption?: (option: SelectorOptionData) => ViewNode;\n        indicatorPosition?: 'start' | 'end';\n        presentation?: 'popover' | 'bottom-sheet' | 'adaptive';\n        startIcon?: ViewNode;\n        hasClear?: boolean;\n        isDefaultOpen?: boolean;\n    }\n>;"
+        "declaration": "declare function MultiSelector(\n    props: FieldProps & {\n        options: SelectorOptionType[];\n        value: string[];\n        onChange: (value: string[]) => void;\n        placeholder?: string;\n        size?: 'sm' | 'md' | 'lg';\n        hasSelectAll?: boolean;\n        hasSearch?: boolean;\n        isReadOnly?: boolean;\n        htmlName?: string;\n        hasClear?: boolean;\n    },\n): React.JSX.Element;"
     },
     {
         "name": "NumberInput",
         "category": "Form",
-        "declaration": "declare const NumberInput: ViewComponent<\n    FieldProps & {\n        value: number | null | undefined;\n        min?: number | null;\n        max?: number | null;\n        step?: number | null;\n        placeholder?: string;\n        size?: 'sm' | 'md' | 'lg';\n        isReadOnly?: boolean;\n        disabledMessage?: string;\n        formatValue?: (value: number) => string;\n        isWheelEnabled?: boolean;\n        hasNumberSteppers?: boolean;\n        units?: string | null;\n        isIntegerOnly?: boolean;\n        htmlName?: string;\n        autoComplete?: string;\n        hasAutoFocus?: boolean;\n        onEnter?: () => void;\n    } & (\n            | { hasClear?: false; onChange: (value: number) => void }\n            | { hasClear: true; onChange: (value: number | null) => void }\n        )\n>;"
+        "declaration": "declare function NumberInput(\n    props: FieldProps & {\n        value: number | null | undefined;\n        min?: number | null;\n        max?: number | null;\n        step?: number | null;\n        placeholder?: string;\n        size?: 'sm' | 'md' | 'lg';\n        isReadOnly?: boolean;\n        units?: string | null;\n        isIntegerOnly?: boolean;\n        htmlName?: string;\n        autoComplete?: string;\n    } & (\n            | { hasClear?: false; onChange: (value: number) => void }\n            | { hasClear: true; onChange: (value: number | null) => void }\n        ),\n): React.JSX.Element;"
     },
     {
         "name": "PowerSearch",
         "category": "Form",
-        "declaration": "type SearchableItem<T = unknown> = { id: string; label: string; element?: ViewNode; auxiliaryData?: T };\n\ntype SearchSource<T extends SearchableItem = SearchableItem> = {\n    search: (query: string) => T[] | Promise<T[]>;\n    bootstrap: () => T[] | Promise<T[]>;\n    cancel?: () => void;\n};\n\ntype DateTimeRangePart =\n    | { readonly type: 'NOW' }\n    | { readonly type: 'ABSOLUTE'; readonly unixSeconds: number }\n    | {\n          readonly type: 'RELATIVE';\n          readonly backValue: number;\n          readonly unit: 'second' | 'minute' | 'hour' | 'day' | 'week' | 'month' | 'year';\n          readonly anchorKey?: string;\n      };\n\ntype DateTimeRange = { readonly start: DateTimeRangePart; readonly end: DateTimeRangePart };\n\ntype OperatorValue =\n    | { readonly type: 'empty' | 'nested' }\n    | { readonly type: 'string'; readonly searchSource?: SearchSource; readonly isArbitraryStringAllowed?: boolean }\n    | {\n          readonly type: 'string_list' | 'entity_list';\n          readonly searchSource?: SearchSource;\n          readonly isArbitraryStringAllowed?: boolean;\n          readonly tokenization?: { readonly regex?: string; readonly sort?: boolean };\n          readonly renderItem?: (item: SearchableItem) => ViewNode;\n      }\n    | {\n          readonly type: 'integer' | 'float';\n          readonly minValue?: number;\n          readonly maxValue?: number;\n          readonly units?: string;\n      }\n    | { readonly type: 'time'; readonly minValue?: string; readonly maxValue?: string }\n    | { readonly type: 'date_absolute'; readonly isDateOnly?: boolean }\n    | { readonly type: 'date_relative'; readonly isPastAllowed?: boolean; readonly isFutureAllowed?: boolean }\n    | {\n          readonly type: 'date_range';\n          readonly intervalDatePresets?: readonly { readonly label: string; readonly value: DateTimeRange }[];\n          readonly relativeDatePresets?: readonly { readonly label: string; readonly value: string }[];\n      }\n    | {\n          readonly type: 'enum' | 'enum_list';\n          readonly values: readonly { readonly value: string; readonly label: string; readonly icon?: ViewNode }[];\n      }\n    | {\n          readonly type: 'custom';\n          readonly Editor: ViewComponent<{\n              isDisabled?: boolean;\n              onChange: (value: string | null) => void;\n              placeholder: string;\n              value: string | null;\n          }>;\n          readonly getString: (value: string) => string;\n      };\n\ntype PowerSearchOperator = { readonly key: string; readonly value: OperatorValue } & (\n    | { readonly label: string; readonly i18nKey?: never }\n    | { readonly i18nKey: string; readonly label?: never }\n);\n\ntype PowerSearchConfig = {\n    readonly name: string;\n    readonly contentSearchFieldKey?: string;\n    readonly fields: readonly {\n        readonly key: string;\n        readonly label: string;\n        readonly operators: readonly PowerSearchOperator[];\n        readonly icon?: ViewNode;\n        readonly defaultOperator?: string;\n        readonly group?: string;\n        readonly description?: string;\n        readonly typeaheadAliases?: readonly string[];\n        readonly typeaheadMinQueryLength?: number;\n        readonly isValueMatchAllowed?: boolean;\n    }[];\n};\n\ntype FilterValue =\n    | { readonly type: 'empty' }\n    | { readonly type: 'string' | 'time' | 'date_relative' | 'enum' | 'custom'; readonly value: string }\n    | { readonly type: 'string_list' | 'enum_list'; readonly value: readonly string[] }\n    | { readonly type: 'integer' | 'float'; readonly value: number }\n    | { readonly type: 'date_absolute'; readonly unixSeconds: number }\n    | { readonly type: 'date_range'; readonly value: DateTimeRange }\n    | {\n          readonly type: 'entity_list';\n          readonly value: readonly { readonly id: string; readonly label: string; readonly photo?: string }[];\n      }\n    | { readonly type: 'nested'; readonly value: readonly PowerSearchFilter[] };\n\ntype PowerSearchFilter = {\n    readonly field: string;\n    readonly operator: string;\n    readonly value: FilterValue;\n    readonly isReadOnly?: boolean;\n};\n\ndeclare const PowerSearch: ViewComponent<{\n    config: PowerSearchConfig;\n    filters: readonly PowerSearchFilter[];\n    onChange: (filters: readonly PowerSearchFilter[], changeType: 'add' | 'edit' | 'remove', index: number) => void;\n    label?: string;\n    isLabelHidden?: boolean;\n    placeholder?: string;\n    hasAutoFocus?: boolean;\n    hasClear?: boolean;\n    isReadOnly?: boolean;\n    isDisabled?: boolean;\n    disabledMessage?: string;\n    status?: FieldProps['status'];\n    statusVariant?: 'attached' | 'detached';\n    startIcon?: ViewNode;\n    maxTokenLength?: number;\n    maxOperatorMenuItems?: number;\n    maxSearchResults?: number;\n    menuWidth?: number;\n    popoverSaveButtonLabel?: string;\n    timezoneID?: string;\n    endContent?: ViewNode;\n    resultCount?: number | string;\n    size?: 'sm' | 'md' | 'lg';\n    tokenOverflowBehavior?: 'none' | 'unfocusedInline' | 'unfocusedLayer';\n}>;"
+        "declaration": "type SearchableItem<T = unknown> = { id: string; label: string; element?: ViewNode; auxiliaryData?: T };\n\ntype SearchSource<T extends SearchableItem = SearchableItem> = {\n    search: (query: string) => T[] | Promise<T[]>;\n    bootstrap: () => T[] | Promise<T[]>;\n    cancel?: () => void;\n};\n\ntype DateTimeRangePart =\n    | { readonly type: 'NOW' }\n    | { readonly type: 'ABSOLUTE'; readonly unixSeconds: number }\n    | {\n          readonly type: 'RELATIVE';\n          readonly backValue: number;\n          readonly unit: 'second' | 'minute' | 'hour' | 'day' | 'week' | 'month' | 'year';\n          readonly anchorKey?: string;\n      };\n\ntype DateTimeRange = { readonly start: DateTimeRangePart; readonly end: DateTimeRangePart };\n\ntype OperatorValue =\n    | { readonly type: 'empty' | 'nested' }\n    | { readonly type: 'string'; readonly searchSource?: SearchSource; readonly isArbitraryStringAllowed?: boolean }\n    | {\n          readonly type: 'string_list' | 'entity_list';\n          readonly searchSource?: SearchSource;\n          readonly isArbitraryStringAllowed?: boolean;\n          readonly tokenization?: { readonly regex?: string; readonly sort?: boolean };\n          readonly renderItem?: (item: SearchableItem) => ViewNode;\n      }\n    | {\n          readonly type: 'integer' | 'float';\n          readonly minValue?: number;\n          readonly maxValue?: number;\n          readonly units?: string;\n      }\n    | { readonly type: 'time'; readonly minValue?: string; readonly maxValue?: string }\n    | { readonly type: 'date_absolute'; readonly isDateOnly?: boolean }\n    | { readonly type: 'date_relative'; readonly isPastAllowed?: boolean; readonly isFutureAllowed?: boolean }\n    | {\n          readonly type: 'date_range';\n          readonly intervalDatePresets?: readonly { readonly label: string; readonly value: DateTimeRange }[];\n          readonly relativeDatePresets?: readonly { readonly label: string; readonly value: string }[];\n      }\n    | {\n          readonly type: 'enum' | 'enum_list';\n          readonly values: readonly { readonly value: string; readonly label: string; readonly icon?: ViewNode }[];\n      }\n    | {\n          readonly type: 'custom';\n          readonly Editor: ViewComponent<{\n              isDisabled?: boolean;\n              onChange: (value: string | null) => void;\n              placeholder: string;\n              value: string | null;\n          }>;\n          readonly getString: (value: string) => string;\n      };\n\ntype PowerSearchOperator = { readonly key: string; readonly value: OperatorValue } & (\n    { readonly label: string; readonly i18nKey?: never } | { readonly i18nKey: string; readonly label?: never }\n);\n\ntype PowerSearchConfig = {\n    readonly name: string;\n    readonly contentSearchFieldKey?: string;\n    readonly fields: readonly {\n        readonly key: string;\n        readonly label: string;\n        readonly operators: readonly PowerSearchOperator[];\n        readonly icon?: ViewNode;\n        readonly defaultOperator?: string;\n        readonly group?: string;\n        readonly description?: string;\n        readonly typeaheadAliases?: readonly string[];\n        readonly typeaheadMinQueryLength?: number;\n        readonly isValueMatchAllowed?: boolean;\n    }[];\n};\n\ntype FilterValue =\n    | { readonly type: 'empty' }\n    | { readonly type: 'string' | 'time' | 'date_relative' | 'enum' | 'custom'; readonly value: string }\n    | { readonly type: 'string_list' | 'enum_list'; readonly value: readonly string[] }\n    | { readonly type: 'integer' | 'float'; readonly value: number }\n    | { readonly type: 'date_absolute'; readonly unixSeconds: number }\n    | { readonly type: 'date_range'; readonly value: DateTimeRange }\n    | {\n          readonly type: 'entity_list';\n          readonly value: readonly { readonly id: string; readonly label: string; readonly photo?: string }[];\n      }\n    | { readonly type: 'nested'; readonly value: readonly PowerSearchFilter[] };\n\ntype PowerSearchFilter = {\n    readonly field: string;\n    readonly operator: string;\n    readonly value: FilterValue;\n    readonly isReadOnly?: boolean;\n};\n\ndeclare function PowerSearch(props: {\n    config: PowerSearchConfig;\n    filters: readonly PowerSearchFilter[];\n    onChange: (filters: readonly PowerSearchFilter[], changeType: 'add' | 'edit' | 'remove', index: number) => void;\n    label?: string;\n    isLabelHidden?: boolean;\n    placeholder?: string;\n    hasClear?: boolean;\n    isReadOnly?: boolean;\n    isDisabled?: boolean;\n    status?: FieldProps['status'];\n    resultCount?: number | string;\n    timezoneID?: string;\n}): React.JSX.Element;"
     },
     {
         "name": "ProgressBar",
         "category": "Display",
-        "declaration": "declare const ProgressBar: ViewComponent<{\n    label: string;\n    value?: number;\n    max?: number;\n    isLabelHidden?: boolean;\n    hasValueLabel?: boolean;\n    formatValueLabel?: (value: number, max: number) => string;\n    variant?: 'accent' | 'success' | 'warning' | 'error' | 'neutral';\n    isIndeterminate?: boolean;\n    marks?: readonly { value: number; label: string }[];\n    isDisabled?: boolean;\n}>;"
+        "declaration": "declare function ProgressBar(props: {\n    label: string;\n    value?: number;\n    max?: number;\n    isLabelHidden?: boolean;\n    hasValueLabel?: boolean;\n    variant?: 'accent' | 'success' | 'warning' | 'error' | 'neutral';\n    isIndeterminate?: boolean;\n}): React.JSX.Element;"
     },
     {
         "name": "RadioList",
         "category": "Form",
-        "declaration": "declare const RadioList: ViewComponent<\n    FieldProps & {\n        value: string;\n        onChange: (value: string) => void;\n        orientation?: 'vertical' | 'horizontal';\n        htmlName?: string;\n        disabledMessage?: string;\n        size?: 'sm' | 'md';\n    }\n>;\n\ndeclare const RadioListItem: ViewComponent<{\n    label: string;\n    value: string;\n    description?: string;\n    isDisabled?: boolean;\n}>;"
+        "declaration": "declare function RadioList(\n    props: FieldProps & {\n        children?: ViewNode;\n        value: string;\n        onChange: (value: string) => void;\n        orientation?: 'vertical' | 'horizontal';\n        htmlName?: string;\n        size?: 'sm' | 'md';\n    },\n): React.JSX.Element;\n\ndeclare function RadioListItem(props: {\n    label: string;\n    value: string;\n    description?: string;\n    isDisabled?: boolean;\n}): React.JSX.Element;"
     },
     {
         "name": "React",
@@ -172,71 +172,71 @@
     {
         "name": "Selector",
         "category": "Form",
-        "declaration": "type SelectorOptionData = {\n    value: string;\n    label?: string;\n    description?: ViewNode;\n    icon?: ViewNode;\n    disabled?: boolean;\n};\n\ntype SelectorOptionType =\n    | string\n    | SelectorOptionData\n    | { type: 'divider' }\n    | {\n          type: 'section';\n          title?: string;\n          options: SelectorOptionData[];\n      };\n\ndeclare const Selector: ViewComponent<\n    FieldProps & {\n        value?: string | null;\n        options: SelectorOptionType[];\n        hasSearch?: boolean;\n        searchPlaceholder?: string;\n        emptyText?: ViewNode;\n        emptySearchText?: ViewNode;\n        placeholder?: string;\n        size?: 'sm' | 'md' | 'lg';\n        variant?: 'input' | 'ghost';\n        isReadOnly?: boolean;\n        htmlName?: string;\n        disabledMessage?: string;\n        isLoading?: boolean;\n        renderOption?: (option: SelectorOptionData) => ViewNode;\n        renderValue?: (option: SelectorOptionData) => ViewNode;\n        indicatorPosition?: 'start' | 'end';\n        presentation?: 'popover' | 'bottom-sheet' | 'adaptive';\n        startIcon?: ViewNode;\n    } & (\n            | {\n                  hasClear?: false;\n                  onChange?: (value: string) => void;\n                  changeAction?: (value: string) => void | Promise<void>;\n              }\n            | {\n                  hasClear: true;\n                  onChange?: (value: string | null) => void;\n                  changeAction?: (value: string | null) => void | Promise<void>;\n              }\n        )\n>;"
+        "declaration": "type SelectorOptionData = {\n    value: string;\n    label?: string;\n    description?: ViewNode;\n    icon?: ViewNode;\n    disabled?: boolean;\n};\n\ntype SelectorOptionType =\n    | string\n    | SelectorOptionData\n    | { type: 'divider' }\n    | {\n          type: 'section';\n          title?: string;\n          options: SelectorOptionData[];\n      };\n\ndeclare function Selector(\n    props: FieldProps & {\n        options: SelectorOptionType[];\n        hasSearch?: boolean;\n        placeholder?: string;\n        size?: 'sm' | 'md' | 'lg';\n        isReadOnly?: boolean;\n        htmlName?: string;\n    } & (\n            | { hasClear?: false; value?: string; onChange?: (value: string) => void }\n            | { hasClear: true; value: string | null; onChange?: (value: string | null) => void }\n        ),\n): React.JSX.Element;"
     },
     {
         "name": "Slider",
         "category": "Form",
-        "declaration": "declare const Slider: ViewComponent<\n    FieldProps & {\n        min?: number;\n        max?: number;\n        step?: number;\n        orientation?: 'horizontal' | 'vertical';\n        formatValue?: (value: number) => string;\n        valueDisplay?: 'tooltip' | 'text' | 'none';\n        marks?: { value: number; label?: string }[];\n        htmlName?: string;\n        disabledMessage?: string;\n    } & (\n            | { value: number; onChange?: (value: number) => void; onChangeEnd?: (value: number) => void }\n            | {\n                  value: [number, number];\n                  onChange?: (value: [number, number]) => void;\n                  onChangeEnd?: (value: [number, number]) => void;\n                  minStepsBetweenThumbs?: number;\n              }\n        )\n>;"
+        "declaration": "declare function Slider(\n    props: FieldProps & {\n        min?: number;\n        max?: number;\n        step?: number;\n        htmlName?: string;\n    } & (\n            | { value: number; onChange?: (value: number) => void; onChangeEnd?: (value: number) => void }\n            | {\n                  value: [number, number];\n                  onChange?: (value: [number, number]) => void;\n                  onChangeEnd?: (value: [number, number]) => void;\n                  minStepsBetweenThumbs?: number;\n              }\n        ),\n): React.JSX.Element;"
     },
     {
         "name": "Solution API",
         "category": "Runtime",
-        "declaration": "declare function navigate(path: string): void;\n\ndeclare function request<T = unknown>(\n    path: string,\n    options?: {\n        method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';\n        json?: unknown;\n        form?: [string, string | Blob][];\n        binary?: boolean;\n    }\n): Promise<T>;\n\ndeclare function useApi<T = unknown>(path: string): readonly [T, () => Promise<void>];"
+        "declaration": "declare function navigate(path: string): void;\n\ndeclare function request<T = unknown>(\n    path: string,\n    options?: {\n        method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';\n        json?: unknown;\n        form?: [string, string | Blob][];\n        binary?: boolean;\n    },\n): Promise<T>;\n\ndeclare function useApi<T = unknown>(path: string): readonly [T, () => Promise<void>];"
     },
     {
         "name": "Stack",
         "category": "Layouts",
-        "declaration": "declare const Stack: ViewComponent<{\n    gap?: Spacing;\n    direction?: 'horizontal' | 'vertical';\n    justify?: 'start' | 'center' | 'end' | 'between' | 'around' | 'evenly';\n    align?: 'start' | 'center' | 'end' | 'stretch';\n    wrap?: 'nowrap' | 'wrap' | 'wrap-reverse';\n    padding?: Spacing;\n}>;\n\ndeclare const StackItem: ViewComponent<{\n    size?: 'static' | 'fill';\n    isScrollable?: boolean;\n    crossAlignSelf?: 'start' | 'center' | 'end' | 'stretch';\n}>;"
+        "declaration": "declare function Stack(props: {\n    children?: ViewNode;\n    gap?: Spacing;\n    padding?: Spacing;\n    direction?: 'horizontal' | 'vertical';\n    justify?: 'start' | 'center' | 'end' | 'between' | 'around' | 'evenly';\n    align?: 'start' | 'center' | 'end' | 'stretch';\n    wrap?: 'nowrap' | 'wrap' | 'wrap-reverse';\n}): React.JSX.Element;\n\ndeclare function StackItem(props: {\n    children?: ViewNode;\n    size?: 'static' | 'fill';\n    isScrollable?: boolean;\n    crossAlignSelf?: 'start' | 'center' | 'end' | 'stretch';\n}): React.JSX.Element;"
     },
     {
         "name": "StatusDot",
         "category": "Display",
-        "declaration": "declare const StatusDot: ViewComponent<{\n    label: string;\n    variant: 'success' | 'warning' | 'error' | 'accent' | 'neutral';\n    isPulsing?: boolean;\n    tooltip?: string;\n    icon?: ViewNode;\n}>;"
+        "declaration": "declare function StatusDot(props: {\n    label: string;\n    variant: 'success' | 'warning' | 'error' | 'accent' | 'neutral';\n    tooltip?: string;\n}): React.JSX.Element;"
     },
     {
         "name": "Stepper",
         "category": "Layouts",
-        "declaration": "declare const Stepper: ViewComponent<{\n    activeStep?: number;\n    orientation?: 'horizontal' | 'vertical';\n}>;\n\ndeclare const Step: ViewComponent<{\n    step: number;\n    label: string;\n}>;"
+        "declaration": "declare function Stepper(props: {\n    children?: ViewNode;\n    activeStep?: number;\n    orientation?: 'horizontal' | 'vertical';\n}): React.JSX.Element;\n\ndeclare function Step(props: { step: number; label: string }): React.JSX.Element;"
     },
     {
         "name": "Switch",
         "category": "Form",
-        "declaration": "declare const Switch: ViewComponent<\n    FieldProps & {\n        value: boolean;\n        onChange?: (value: boolean) => void;\n        changeAction?: (value: boolean) => void | Promise<void>;\n        isLoading?: boolean;\n        disabledMessage?: string;\n        htmlName?: string;\n        size?: 'sm' | 'md';\n        labelIcon?: ViewNode;\n        labelPosition?: 'start' | 'end';\n        labelSpacing?: 'hug' | 'spread';\n    }\n>;"
+        "declaration": "declare function Switch(\n    props: FieldProps & { value: boolean; onChange?: (value: boolean) => void; htmlName?: string; size?: 'sm' | 'md' },\n): React.JSX.Element;"
     },
     {
         "name": "Table",
         "category": "Display",
-        "declaration": "type ColumnWidth = { type: 'proportional'; value: number; minWidth?: number } | { type: 'pixel'; value: number };\n\ndeclare function proportional(\n    value?: number,\n    options?: { minWidth?: number }\n): Extract<ColumnWidth, { type: 'proportional' }>;\n\ndeclare function pixel(value: number): Extract<ColumnWidth, { type: 'pixel' }>;\n\ndeclare function Table<T extends Record<string, unknown>>(props: {\n    data?: T[];\n    idKey?: (keyof T & string) | ((row: T) => string | number);\n    density?: 'compact' | 'balanced' | 'spacious';\n    dividers?: 'rows' | 'columns' | 'grid' | 'none';\n    isStriped?: boolean;\n    hasHover?: boolean;\n    verticalAlign?: 'middle' | 'top' | 'bottom';\n    textOverflow?: 'wrap' | 'truncate';\n    rowIndexStart?: number;\n    rowCount?: number;\n    emptyState?: ViewNode;\n    children?: ViewNode;\n    columns?: {\n        key: string;\n        header?: ViewNode;\n        width?: ColumnWidth;\n        align?: 'start' | 'center' | 'end';\n        renderCell?: (row: T) => ViewNode;\n    }[];\n}): React.JSX.Element;"
+        "declaration": "type ColumnWidth = { type: 'proportional'; value: number; minWidth?: number } | { type: 'pixel'; value: number };\n\ndeclare function proportional(\n    value?: number,\n    options?: { minWidth?: number },\n): Extract<ColumnWidth, { type: 'proportional' }>;\n\ndeclare function pixel(value: number): Extract<ColumnWidth, { type: 'pixel' }>;\n\ndeclare function Table<T extends Record<string, unknown>>(props: {\n    data: T[];\n    idKey?: (keyof T & string) | ((row: T) => string | number);\n    density?: 'compact' | 'balanced' | 'spacious';\n    hasHover?: boolean;\n    isStriped?: boolean;\n    columns?: {\n        key: string;\n        header?: ViewNode;\n        width?: ColumnWidth;\n        align?: 'start' | 'center' | 'end';\n        renderCell?: (row: T) => ViewNode;\n    }[];\n}): React.JSX.Element;"
     },
     {
         "name": "Tabs",
         "category": "Layouts",
-        "declaration": "declare const Tabs: ViewComponent<{\n    value?: string;\n    onChange?: (value: string) => void;\n    gap?: Spacing;\n    hasDivider?: boolean;\n}>;\n\ndeclare const Tab: ViewComponent<{\n    value: string;\n    label: string;\n    isDisabled?: boolean;\n    panelId?: string;\n}>;"
+        "declaration": "declare function Tabs(props: {\n    children?: ViewNode;\n    gap?: 0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10;\n    hasDivider?: boolean;\n    onChange?: (value: string) => void;\n    value?: string;\n}): React.JSX.Element;\n\ndeclare function Tab(props: {\n    children?: ViewNode;\n    value: string;\n    label: string;\n    isDisabled?: boolean;\n    panelId?: string;\n}): React.JSX.Element;"
     },
     {
         "name": "Text",
         "category": "Display",
-        "declaration": "declare const Text: ViewComponent<{\n    color?: 'primary' | 'secondary';\n    type?: 'body' | 'large' | 'label' | 'supporting' | 'code';\n}>;"
+        "declaration": "declare function Text(props: {\n    children?: ViewNode;\n    color?: 'primary' | 'secondary';\n    type?: 'body' | 'large' | 'label' | 'supporting' | 'code';\n}): React.JSX.Element;"
     },
     {
         "name": "TextArea",
         "category": "Form",
-        "declaration": "declare const TextArea: ViewComponent<\n    FieldProps & {\n        value: string;\n        onChange?: (value: string) => void;\n        changeAction?: (value: string) => void | Promise<void>;\n        placeholder?: string;\n        rows?: number;\n        maxLength?: number;\n        isReadOnly?: boolean;\n        disabledMessage?: string;\n        isLoading?: boolean;\n        hasSpellCheck?: boolean;\n        hasAutoFocus?: boolean;\n        startIcon?: ViewNode;\n        size?: 'sm' | 'md' | 'lg';\n        htmlName?: string;\n        autoComplete?: string;\n    }\n>;"
+        "declaration": "declare function TextArea(\n    props: FieldProps & {\n        value: string;\n        onChange?: (value: string) => void;\n        placeholder?: string;\n        rows?: number;\n        maxLength?: number;\n        isReadOnly?: boolean;\n        hasSpellCheck?: boolean;\n        hasAutoFocus?: boolean;\n        htmlName?: string;\n        autoComplete?: string;\n    },\n): React.JSX.Element;"
     },
     {
         "name": "TextInput",
         "category": "Form",
-        "declaration": "declare const TextInput: ViewComponent<\n    FieldProps & {\n        value: string;\n        placeholder?: string;\n        type?: 'text' | 'password' | 'email';\n        size?: 'sm' | 'md' | 'lg';\n        htmlName?: string;\n        autoComplete?: string;\n        isReadOnly?: boolean;\n        disabledMessage?: string;\n        isLoading?: boolean;\n        hasClear?: boolean;\n        hasAutoFocus?: boolean;\n        startIcon?: ViewNode;\n        onEnter?: () => void;\n        onChange?: (value: string) => void;\n        changeAction?: (value: string) => void | Promise<void>;\n    }\n>;"
+        "declaration": "declare function TextInput(\n    props: FieldProps & {\n        value: string;\n        onChange?: (value: string) => void;\n        placeholder?: string;\n        type?: 'text' | 'password' | 'email';\n        size?: 'sm' | 'md' | 'lg';\n        htmlName?: string;\n        autoComplete?: string;\n        isReadOnly?: boolean;\n        hasClear?: boolean;\n        hasAutoFocus?: boolean;\n        startIcon?: ViewNode;\n        onEnter?: () => void;\n    },\n): React.JSX.Element;"
     },
     {
         "name": "TimeInput",
         "category": "Form",
-        "declaration": "type ISOTimeString = string & { readonly __brand: 'ISOTimeString' };\n\ndeclare const TimeInput: ViewComponent<\n    FieldProps & {\n        value?: ISOTimeString;\n        onChange?: (value: ISOTimeString | undefined) => void;\n        changeAction?: (value: ISOTimeString | undefined) => void | Promise<void>;\n        min?: ISOTimeString;\n        max?: ISOTimeString;\n        hasSeconds?: boolean;\n        hasClear?: boolean;\n        hourFormat?: '12h' | '24h';\n        increment?: number;\n        presentation?:\n            | 'text-input'\n            | 'popover'\n            | 'bottom-sheet'\n            | 'native'\n            | 'adaptive-bottom-sheet'\n            | 'adaptive-native';\n        isLoading?: boolean;\n        disabledMessage?: string;\n        placeholder?: string;\n        size?: 'sm' | 'md' | 'lg';\n    }\n>;"
+        "declaration": "type ISOTimeString = string & { readonly __brand: 'ISOTimeString' };\n\ndeclare function TimeInput(\n    props: FieldProps & {\n        value?: ISOTimeString;\n        onChange?: (value: ISOTimeString | undefined) => void;\n        min?: ISOTimeString;\n        max?: ISOTimeString;\n        hasSeconds?: boolean;\n        hasClear?: boolean;\n        hourFormat?: '12h' | '24h';\n        increment?: number;\n        placeholder?: string;\n        size?: 'sm' | 'md' | 'lg';\n    },\n): React.JSX.Element;"
     },
     {
         "name": "Timestamp",
         "category": "Display",
-        "declaration": "declare const Timestamp: ViewComponent<{\n    value: number | string;\n    format?: string;\n}>;"
+        "declaration": "declare function Timestamp(props: {\n    value: number | string;\n    format?:\n        | 'date'\n        | 'date_long'\n        | 'date_weekday'\n        | 'date_time'\n        | 'time'\n        | 'relative'\n        | 'system_date'\n        | 'system_date_time'\n        | 'system_time';\n}): React.JSX.Element;"
     }
 ]

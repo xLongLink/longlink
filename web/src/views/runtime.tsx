@@ -4,13 +4,14 @@ import { transform } from 'sucrase';
 import { stoneTheme } from '@/theme';
 import * as components from './components';
 import { createRoot } from 'react-dom/client';
-import * as links from '@astryxdesign/core/Link';
 import { Theme } from '@astryxdesign/core/theme';
 import { Banner } from '@astryxdesign/core/Banner';
 import { Spinner } from '@astryxdesign/core/Spinner';
 import { ErrorBoundary } from 'react-error-boundary';
 import { LayerProvider } from '@astryxdesign/core/Layer';
+import { LinkNavigationContext } from '@/components/ui/Link';
 import { MenuNavigationContext } from '@/components/ui/Menu';
+import { FileRequestContext } from '@/components/ui/FileViewer';
 import { QueryClient, QueryClientProvider, QueryErrorResetBoundary, useSuspenseQuery } from '@tanstack/react-query';
 import {
     requestSchema,
@@ -57,7 +58,9 @@ function MenuNavigationProvider({ children }: { children: React.ReactNode }) {
                 },
             }}
         >
-            {children}
+            <LinkNavigationContext value={navigate}>
+                <FileRequestContext value={requestImage}>{children}</FileRequestContext>
+            </LinkNavigationContext>
         </MenuNavigationContext>
     );
 }
@@ -101,6 +104,11 @@ async function request(
     return data;
 }
 
+/** Supplies a stable binary-request capability without exposing the general request API to image components. */
+function requestImage(path: string): Promise<unknown> {
+    return request(path, { binary: true });
+}
+
 /** Requests navigation inside the host's Solution route prefix. */
 function navigate(path: string): void {
     port.postMessage({ type: 'navigate', path });
@@ -118,79 +126,6 @@ function useApi(path: string): readonly [unknown, () => Promise<void>] {
         [path]
     );
     return [data, invalidate];
-}
-
-/** Limits navigation to a host capability rather than granting top-level browser access. */
-function Link({ to, children }: { to: string; children: React.ReactNode }) {
-    return (
-        <links.Link
-            href={to}
-            onClick={(event) => {
-                // Keep navigation inside the host bridge instead of loading a page in the sandbox.
-                event.preventDefault();
-                navigate(to);
-            }}
-        >
-            {children}
-        </links.Link>
-    );
-}
-
-/** Formats numeric currency values using the browser's standard internationalization support. */
-function Currency({ value, currency, locale }: { value: number; currency: string; locale?: string }) {
-    return new Intl.NumberFormat(locale, { style: 'currency', currency }).format(value);
-}
-
-/** Loads image attachments through the scoped bridge only after a user requests their preview. */
-function FileViewer({ src, title }: { src: string; title: string }) {
-    const [open, setOpen] = React.useState(false);
-
-    // Each opened attachment owns a fresh preview and its blob URL.
-    return (
-        <components.Stack gap={2}>
-            <components.Button variant="ghost" label={title} clickAction={() => setOpen(!open)} />
-            {open && <FilePreview key={src} src={src} title={title} />}
-        </components.Stack>
-    );
-}
-
-/** Owns one attachment attempt and releases its blob URL when the preview closes or changes. */
-function FilePreview({ src, title }: { src: string; title: string }) {
-    const [preview, setPreview] = React.useState<
-        { status: 'loading' } | { status: 'error' } | { status: 'ready'; url: string }
-    >({ status: 'loading' });
-
-    // Own every blob URL and reject unsupported media rather than loading a privileged document frame.
-    React.useEffect(() => {
-        let active = true;
-        let objectUrl: string | undefined;
-        void request(src, { binary: true })
-            .then((value) => {
-                if (!active) return;
-                if (!(value instanceof Blob) || !value.type.startsWith('image/')) {
-                    setPreview({ status: 'error' });
-                    return;
-                }
-                objectUrl = URL.createObjectURL(value);
-                setPreview({ status: 'ready', url: objectUrl });
-            })
-            .catch(() => {
-                if (active) setPreview({ status: 'error' });
-            });
-        return () => {
-            active = false;
-            if (objectUrl) URL.revokeObjectURL(objectUrl);
-        };
-    }, [src]);
-
-    // Render only states belonging to the current mounted preview.
-    return preview.status === 'error' ? (
-        <components.Text>Preview unavailable for this file type.</components.Text>
-    ) : preview.status === 'ready' ? (
-        <img src={preview.url} alt={title} className="max-h-full max-w-full rounded-lg object-contain" />
-    ) : (
-        <Spinner label="Loading attachment" />
-    );
 }
 
 const initialization = z.object({ session: z.string(), source: z.string(), params: parametersSchema }).strict();
@@ -259,9 +194,6 @@ function initialize(event: MessageEvent<unknown>): void {
             useMemo: React.useMemo,
             useRef: React.useRef,
             ...components,
-            Link,
-            Currency,
-            FileViewer,
             request,
             navigate,
             useApi,
@@ -291,7 +223,7 @@ function initialize(event: MessageEvent<unknown>): void {
                                             status="error"
                                             title="View could not be loaded"
                                             endContent={
-                                                <components.Button label="Retry" clickAction={resetErrorBoundary} />
+                                                <components.Button label="Retry" onClick={resetErrorBoundary} />
                                             }
                                         />
                                     )}

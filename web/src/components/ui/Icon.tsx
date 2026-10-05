@@ -1,5 +1,5 @@
+import { createElement, type ReactNode } from 'react';
 import { Icon as AstryxIcon } from '@astryxdesign/core/Icon';
-import { createElement, type ReactNode, type ComponentProps } from 'react';
 import {
     X,
     AlertTriangle,
@@ -91,6 +91,6 @@ export const stoneIconRegistry = Object.fromEntries(
 ) as Record<StoneIconName, ReactNode>;
 
 /** Renders a registered Lucide icon at the requested Astryx size. */
-export function Icon({ icon, size }: { icon: StoneIconName; size: ComponentProps<typeof AstryxIcon>['size'] }) {
+export function Icon({ icon, size }: { icon: StoneIconName; size: 'sm' | 'md' | 'lg' }) {
     return <AstryxIcon icon={stoneIconComponents[icon]} size={size} />;
 }

@@ -1,19 +1,12 @@
 import { Stack } from '@astryxdesign/core/Stack';
 import { Tab as AstryxTab, TabList } from '@astryxdesign/core/TabList';
-import {
-    Children,
-    isValidElement,
-    useId,
-    useState,
-    type ComponentProps,
-    type ReactElement,
-    type ReactNode,
-} from 'react';
+import { Children, isValidElement, useId, useState, type ReactElement, type ReactNode } from 'react';
 
-type TabProps = Omit<ComponentProps<typeof AstryxTab>, 'icon'> & { children?: ReactNode };
-type TabsProps = Omit<ComponentProps<typeof TabList>, 'children' | 'onChange' | 'value' | 'role'> & {
+type TabProps = { children?: ReactNode; value: string; label: string; isDisabled?: boolean; panelId?: string };
+type TabsProps = {
     children?: ReactNode;
-    gap?: ComponentProps<typeof Stack>['gap'];
+    gap?: 0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10;
+    hasDivider?: boolean;
     onChange?: (value: string) => void;
     value?: string;
 };

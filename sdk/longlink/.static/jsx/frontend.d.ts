@@ -14,24 +14,17 @@ type ButtonProps = {
     label: string;
     variant?: 'primary' | 'secondary' | 'ghost' | 'destructive';
     size?: 'sm' | 'md' | 'lg';
-    elevation?: 'none' | 'low' | 'med' | 'high';
     type?: 'button' | 'submit' | 'reset';
     name?: string;
     value?: string | number | readonly string[];
     form?: string;
     icon?: ViewNode;
-    endContent?: React.JSX.Element;
+    endContent?: ViewNode;
     tooltip?: string;
     width?: number | string;
-    isIconOnly?: boolean;
-    isLoading?: boolean;
     isDisabled?: boolean;
-    isInterruptible?: boolean;
     href?: string;
-    target?: string;
-    rel?: string;
-    onClick?: (event: ViewMouseEvent) => void;
-    clickAction?: (event: ViewMouseEvent) => void | Promise<void>;
+    onClick?: (event: ViewMouseEvent) => void | Promise<void>;
 };
 
 /** @category Action @group DropdownMenu */
@@ -112,7 +105,7 @@ declare function request<T = unknown>(
         json?: unknown;
         form?: [string, string | Blob][];
         binary?: boolean;
-    }
+    },
 ): Promise<T>;
 
 /**
@@ -123,67 +116,67 @@ declare function request<T = unknown>(
 declare function useApi<T = unknown>(path: string): readonly [T, () => Promise<void>];
 
 /** @category Layouts */
-declare const Stack: ViewComponent<{
+declare function Stack(props: {
+    children?: ViewNode;
     gap?: Spacing;
+    padding?: Spacing;
     direction?: 'horizontal' | 'vertical';
     justify?: 'start' | 'center' | 'end' | 'between' | 'around' | 'evenly';
     align?: 'start' | 'center' | 'end' | 'stretch';
     wrap?: 'nowrap' | 'wrap' | 'wrap-reverse';
-    padding?: Spacing;
-}>;
+}): React.JSX.Element;
 
 /** @category Display */
-declare const Heading: ViewComponent<{
-    level?: 1 | 2 | 3 | 4 | 5 | 6;
-}>;
+declare function Heading(props: { children?: ViewNode; level?: 1 | 2 | 3 | 4 | 5 | 6 }): React.JSX.Element;
 
 /** @category Display */
-declare const Text: ViewComponent<{
+declare function Text(props: {
+    children?: ViewNode;
     color?: 'primary' | 'secondary';
     type?: 'body' | 'large' | 'label' | 'supporting' | 'code';
-}>;
+}): React.JSX.Element;
 
 /** @category Action */
-declare const Button: ViewComponent<ButtonProps>;
+declare function Button(props: ButtonProps): React.JSX.Element;
 
 /** @category Action */
-declare const ButtonGroup: ViewComponent<{
+declare function ButtonGroup(props: {
+    children?: ViewNode;
     label: string;
     orientation?: 'horizontal' | 'vertical';
     size?: 'sm' | 'md' | 'lg';
-    elevation?: 'none' | 'low' | 'med' | 'high';
     isDisabled?: boolean;
-}>;
+}): React.JSX.Element;
 
 /** @category Action */
-declare const DropdownMenu: ViewComponent<{
-    button?: Omit<ButtonProps, 'onClick'>;
+declare function DropdownMenu(props: {
+    button?: {
+        label: string;
+        variant?: 'primary' | 'secondary' | 'ghost' | 'destructive';
+        size?: 'sm' | 'md' | 'lg';
+        isDisabled?: boolean;
+    };
     items: DropdownMenuOption[];
-    presentation?: 'popover' | 'bottom-sheet' | 'adaptive';
     isMenuOpen?: boolean;
     onOpenChange?: (isOpen: boolean) => void;
-    menuWidth?: number | string;
-    placement?: 'above' | 'below' | 'start' | 'end';
-    alignment?: 'start' | 'center' | 'end';
-    hasChevron?: boolean;
-    onClick?: () => void;
-    children?: never;
-}>;
+}): React.JSX.Element;
 
 /** @category Action */
-declare const IconButton: ViewComponent<
-    Omit<ButtonProps, 'isIconOnly' | 'endContent'> & {
-        icon: ViewNode;
-    }
->;
+declare function IconButton(props: {
+    label: string;
+    icon: ViewNode;
+    variant?: 'primary' | 'secondary' | 'ghost' | 'destructive';
+    size?: 'sm' | 'md' | 'lg';
+    tooltip?: string;
+    isDisabled?: boolean;
+    onClick?: (event: ViewMouseEvent) => void | Promise<void>;
+}): React.JSX.Element;
 
 /** @category Action */
-declare const Link: ViewComponent<{
-    to: string;
-}>;
+declare function Link(props: { to: string; children?: ViewNode }): React.JSX.Element;
 
 /** @category Display */
-declare const Badge: ViewComponent<{
+declare function Badge(props: {
     label?: ViewNode;
     icon?: ViewNode;
     variant?:
@@ -201,43 +194,41 @@ declare const Badge: ViewComponent<{
         | 'red'
         | 'teal'
         | 'yellow';
-}>;
+}): React.JSX.Element;
 
 /** @category Display */
-declare const StatusDot: ViewComponent<{
+declare function StatusDot(props: {
     label: string;
     variant: 'success' | 'warning' | 'error' | 'accent' | 'neutral';
-    isPulsing?: boolean;
     tooltip?: string;
-    icon?: ViewNode;
-}>;
+}): React.JSX.Element;
 
 /** @category Display */
-declare const Avatar: ViewComponent<{
+declare function Avatar(props: {
     name?: string;
-    src?: string;
+    shape?: 'circle' | 'rounded';
+    src?: string | null;
     alt?: string;
-}>;
+    size?: 'sm' | 'md' | 'lg';
+}): React.JSX.Element;
 
 /** @category Layouts */
-declare const Dialog: ViewComponent<{
+declare function Dialog(props: {
+    children?: ViewNode;
     'aria-label': string;
     isOpen: boolean;
     onOpenChange: (open: boolean) => void;
     purpose?: 'form' | 'info' | 'required';
-}>;
+}): React.JSX.Element;
 
 /** Shared props for form controls. */
 type FieldProps = {
     label: string;
-    isLabelHidden?: boolean;
     description?: string;
-    isOptional?: boolean;
+    isLabelHidden?: boolean;
     isRequired?: boolean;
     isDisabled?: boolean;
-    labelTooltip?: string;
-    status?: { type: 'warning' | 'error' | 'success'; message?: string; messageID?: string };
-    statusVariant?: 'attached' | 'detached' | 'tooltip';
+    status?: { type: 'warning' | 'error' | 'success'; message?: string };
     width?: number | string;
 };
 
@@ -246,9 +237,6 @@ type ISODateString = `${number}${number}${number}${number}-${number}${number}-${
 
 /** @category Form @group Calendar */
 type DateRange = { start: ISODateString; end: ISODateString };
-
-/** @category Form @group DateInput */
-type WeekStartsOn = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 'sun' | 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat';
 
 /** @category Form */
 declare const Calendar: ViewComponent<
@@ -273,112 +261,84 @@ declare function ComplexSelector<Value>(
     props: FieldProps & {
         value: Value;
         onChange?: (value: Value) => void;
-        changeAction?: (value: Value) => void | Promise<void>;
+        triggerLabel?: ViewNode;
+        placeholder?: ViewNode;
         children: (
             value: Value,
             onChange: (value: Value) => void,
             close: () => void,
-            state: {
-                isOpen: boolean;
-                isBusy: boolean;
-                triggerId: string;
-                contentId: string;
-            }
+            state: { isOpen: boolean; isBusy: boolean; triggerId: string; contentId: string },
         ) => ViewNode;
-        triggerLabel?: ViewNode;
-        placeholder?: ViewNode;
-        isLoading?: boolean;
-        size?: 'sm' | 'md' | 'lg';
-        variant?: 'input' | 'ghost';
-        startIcon?: ViewNode;
-        placement?: 'above' | 'below' | 'start' | 'end';
-        alignment?: 'start' | 'center' | 'end';
-        onOpenChange?: (isOpen: boolean) => void;
-    }
+    },
 ): React.JSX.Element;
 
 /** @category Form @group DateInput */
 type DateInputProps = FieldProps & {
     value?: ISODateString;
     onChange?: (value: ISODateString | undefined) => void;
-    changeAction?: (value: ISODateString | undefined) => void | Promise<void>;
     min?: ISODateString;
     max?: ISODateString;
     dateConstraints?: readonly ((date: Date) => boolean)[];
-    disabledMessage?: string;
-    isLoading?: boolean;
     placeholder?: string;
-    size?: 'sm' | 'md' | 'lg';
     hasClear?: boolean;
-    numberOfMonths?: 1 | 2;
-    weekStartsOn?: WeekStartsOn;
-    format?: 'date' | 'date_long' | 'date_weekday' | 'system_date' | ((value: ISODateString) => string);
-    presentation?: 'popover' | 'bottom-sheet' | 'native' | 'adaptive-bottom-sheet' | 'adaptive-native';
+    size?: 'sm' | 'md' | 'lg';
 };
 
 /** @category Form */
-declare const DateInput: ViewComponent<DateInputProps>;
+declare function DateInput(props: DateInputProps): React.JSX.Element;
 
 /** @category Form */
-declare const DateRangeInput: ViewComponent<
-    Omit<DateInputProps, 'value' | 'onChange' | 'changeAction' | 'format' | 'presentation'> & {
+declare function DateRangeInput(
+    props: FieldProps & {
         value: DateRange | null;
         onChange: (value: DateRange | null) => void;
-        changeAction?: (value: DateRange | null) => void | Promise<void>;
+        min?: ISODateString;
+        max?: ISODateString;
+        dateConstraints?: readonly ((date: Date) => boolean)[];
         minRangeSpan?: number;
         maxRangeSpan?: number;
-        presets?: readonly { label: string; getRange: () => DateRange }[];
-    }
->;
+        placeholder?: string;
+        size?: 'sm' | 'md' | 'lg';
+        hasClear?: boolean;
+    },
+): React.JSX.Element;
 
 /** @category Form @group DateTimeInput */
 type ISODateTimeString = string & { readonly __brand: 'ISODateTimeString' };
 
 /** @category Form */
-declare const DateTimeInput: ViewComponent<
-    Omit<DateInputProps, 'value' | 'onChange' | 'changeAction' | 'min' | 'max' | 'format' | 'statusVariant'> & {
+declare function DateTimeInput(
+    props: FieldProps & {
         value?: ISODateTimeString;
         onChange: (value: ISODateTimeString | undefined) => void;
-        changeAction?: (value: ISODateTimeString | undefined) => void | Promise<void>;
         min?: ISODateTimeString;
         max?: ISODateTimeString;
+        placeholder?: string;
+        hasClear?: boolean;
         hasSeconds?: boolean;
         hourFormat?: '12h' | '24h';
-        timeIncrement?: 1 | 5 | 10 | 15 | 30;
-        timeOptionInterval?: 5 | 10 | 15 | 30 | 60;
-        timePlaceholder?: string;
-        timeLabel?: string;
-    }
->;
+        size?: 'sm' | 'md' | 'lg';
+    },
+): React.JSX.Element;
 
 /** @category Form @group TimeInput */
 type ISOTimeString = string & { readonly __brand: 'ISOTimeString' };
 
 /** @category Form */
-declare const TimeInput: ViewComponent<
-    FieldProps & {
+declare function TimeInput(
+    props: FieldProps & {
         value?: ISOTimeString;
         onChange?: (value: ISOTimeString | undefined) => void;
-        changeAction?: (value: ISOTimeString | undefined) => void | Promise<void>;
         min?: ISOTimeString;
         max?: ISOTimeString;
         hasSeconds?: boolean;
         hasClear?: boolean;
         hourFormat?: '12h' | '24h';
         increment?: number;
-        presentation?:
-            | 'text-input'
-            | 'popover'
-            | 'bottom-sheet'
-            | 'native'
-            | 'adaptive-bottom-sheet'
-            | 'adaptive-native';
-        isLoading?: boolean;
-        disabledMessage?: string;
         placeholder?: string;
         size?: 'sm' | 'md' | 'lg';
-    }
->;
+    },
+): React.JSX.Element;
 
 /** @category Form @group PowerSearch */
 type SearchableItem<T = unknown> = { id: string; label: string; element?: ViewNode; auxiliaryData?: T };
@@ -446,8 +406,7 @@ type OperatorValue =
 
 /** @category Form @group PowerSearch */
 type PowerSearchOperator = { readonly key: string; readonly value: OperatorValue } & (
-    | { readonly label: string; readonly i18nKey?: never }
-    | { readonly i18nKey: string; readonly label?: never }
+    { readonly label: string; readonly i18nKey?: never } | { readonly i18nKey: string; readonly label?: never }
 );
 
 /** @category Form @group PowerSearch */
@@ -491,78 +450,58 @@ type PowerSearchFilter = {
 };
 
 /** @category Form */
-declare const PowerSearch: ViewComponent<{
+declare function PowerSearch(props: {
     config: PowerSearchConfig;
     filters: readonly PowerSearchFilter[];
     onChange: (filters: readonly PowerSearchFilter[], changeType: 'add' | 'edit' | 'remove', index: number) => void;
     label?: string;
     isLabelHidden?: boolean;
     placeholder?: string;
-    hasAutoFocus?: boolean;
     hasClear?: boolean;
     isReadOnly?: boolean;
     isDisabled?: boolean;
-    disabledMessage?: string;
     status?: FieldProps['status'];
-    statusVariant?: 'attached' | 'detached';
-    startIcon?: ViewNode;
-    maxTokenLength?: number;
-    maxOperatorMenuItems?: number;
-    maxSearchResults?: number;
-    menuWidth?: number;
-    popoverSaveButtonLabel?: string;
-    timezoneID?: string;
-    endContent?: ViewNode;
     resultCount?: number | string;
-    size?: 'sm' | 'md' | 'lg';
-    tokenOverflowBehavior?: 'none' | 'unfocusedInline' | 'unfocusedLayer';
-}>;
+    timezoneID?: string;
+}): React.JSX.Element;
 
 /** @category Form */
-declare const TextInput: ViewComponent<
-    FieldProps & {
+declare function TextInput(
+    props: FieldProps & {
         value: string;
+        onChange?: (value: string) => void;
         placeholder?: string;
         type?: 'text' | 'password' | 'email';
         size?: 'sm' | 'md' | 'lg';
         htmlName?: string;
         autoComplete?: string;
         isReadOnly?: boolean;
-        disabledMessage?: string;
-        isLoading?: boolean;
         hasClear?: boolean;
         hasAutoFocus?: boolean;
         startIcon?: ViewNode;
         onEnter?: () => void;
-        onChange?: (value: string) => void;
-        changeAction?: (value: string) => void | Promise<void>;
-    }
->;
+    },
+): React.JSX.Element;
 
 /** @category Form */
-declare const TextArea: ViewComponent<
-    FieldProps & {
+declare function TextArea(
+    props: FieldProps & {
         value: string;
         onChange?: (value: string) => void;
-        changeAction?: (value: string) => void | Promise<void>;
         placeholder?: string;
         rows?: number;
         maxLength?: number;
         isReadOnly?: boolean;
-        disabledMessage?: string;
-        isLoading?: boolean;
         hasSpellCheck?: boolean;
         hasAutoFocus?: boolean;
-        startIcon?: ViewNode;
-        size?: 'sm' | 'md' | 'lg';
         htmlName?: string;
         autoComplete?: string;
-    }
->;
+    },
+): React.JSX.Element;
 
 /** @category Form */
-declare const NumberInput: ViewComponent<
-    FieldProps & {
+declare function NumberInput(
+    props: FieldProps & {
         value: number | null | undefined;
         min?: number | null;
         max?: number | null;
@@ -570,21 +509,15 @@ declare const NumberInput: ViewComponent<
         placeholder?: string;
         size?: 'sm' | 'md' | 'lg';
         isReadOnly?: boolean;
-        disabledMessage?: string;
-        formatValue?: (value: number) => string;
-        isWheelEnabled?: boolean;
-        hasNumberSteppers?: boolean;
         units?: string | null;
         isIntegerOnly?: boolean;
         htmlName?: string;
         autoComplete?: string;
-        hasAutoFocus?: boolean;
-        onEnter?: () => void;
     } & (
             | { hasClear?: false; onChange: (value: number) => void }
             | { hasClear: true; onChange: (value: number | null) => void }
-        )
->;
+        ),
+): React.JSX.Element;
 
 /** @category Form @group Selector */
 type SelectorOptionData = {
@@ -607,112 +540,66 @@ type SelectorOptionType =
       };
 
 /** @category Form */
-declare const MultiSelector: ViewComponent<
-    FieldProps & {
+declare function MultiSelector(
+    props: FieldProps & {
         options: SelectorOptionType[];
         value: string[];
         onChange: (value: string[]) => void;
-        changeAction?: (value: string[]) => void | Promise<void>;
         placeholder?: string;
         size?: 'sm' | 'md' | 'lg';
-        variant?: 'input' | 'ghost';
-        triggerDisplay?: 'count' | 'labels' | 'badges';
-        formatValue?: (items: { value: string; label: string }[]) => string;
-        maxBadges?: number;
         hasSelectAll?: boolean;
-        selectAllLabel?: string;
         hasSearch?: boolean;
-        searchPlaceholder?: string;
-        emptyText?: ViewNode;
-        emptySearchText?: ViewNode;
         isReadOnly?: boolean;
         htmlName?: string;
-        disabledMessage?: string;
-        isLoading?: boolean;
-        renderOption?: (option: SelectorOptionData) => ViewNode;
-        indicatorPosition?: 'start' | 'end';
-        presentation?: 'popover' | 'bottom-sheet' | 'adaptive';
-        startIcon?: ViewNode;
         hasClear?: boolean;
-        isDefaultOpen?: boolean;
-    }
->;
+    },
+): React.JSX.Element;
 
 /** @category Form */
-declare const Selector: ViewComponent<
-    FieldProps & {
-        value?: string | null;
+declare function Selector(
+    props: FieldProps & {
         options: SelectorOptionType[];
         hasSearch?: boolean;
-        searchPlaceholder?: string;
-        emptyText?: ViewNode;
-        emptySearchText?: ViewNode;
         placeholder?: string;
         size?: 'sm' | 'md' | 'lg';
-        variant?: 'input' | 'ghost';
         isReadOnly?: boolean;
         htmlName?: string;
-        disabledMessage?: string;
-        isLoading?: boolean;
-        renderOption?: (option: SelectorOptionData) => ViewNode;
-        renderValue?: (option: SelectorOptionData) => ViewNode;
-        indicatorPosition?: 'start' | 'end';
-        presentation?: 'popover' | 'bottom-sheet' | 'adaptive';
-        startIcon?: ViewNode;
     } & (
-            | {
-                  hasClear?: false;
-                  onChange?: (value: string) => void;
-                  changeAction?: (value: string) => void | Promise<void>;
-              }
-            | {
-                  hasClear: true;
-                  onChange?: (value: string | null) => void;
-                  changeAction?: (value: string | null) => void | Promise<void>;
-              }
-        )
->;
+            | { hasClear?: false; value?: string; onChange?: (value: string) => void }
+            | { hasClear: true; value: string | null; onChange?: (value: string | null) => void }
+        ),
+): React.JSX.Element;
 
 /** @category Form */
-declare const FileInput: ViewComponent<
-    FieldProps & {
+declare function FileInput(
+    props: FieldProps & {
         value: File | File[] | null;
-        accept?: string;
         onChange: (value: File | File[] | null) => void;
-        changeAction?: (value: File | File[] | null) => Promise<void>;
+        accept?: string;
         isMultiple?: boolean;
         maxSize?: number;
         maxFiles?: number;
-        disabledMessage?: string;
-        isLoading?: boolean;
         placeholder?: string;
         mode?: 'input' | 'dropzone';
-    }
->;
+    },
+): React.JSX.Element;
 
 /** @category Display */
-declare const FileViewer: ViewComponent<{
-    src: string;
-    title: string;
-}>;
+declare function FileViewer(props: { src: string; title: string }): React.JSX.Element;
 
 /** @category Layouts */
-declare const Grid: ViewComponent<{
-    columns?: number;
-    gap?: Spacing;
-}>;
+declare function Grid(props: { children?: ViewNode; columns?: number; gap?: Spacing }): React.JSX.Element;
 
 /** @category Layouts @group Grid */
-declare const GridSpan: ViewComponent<{
-    columns?: number | 'full';
-}>;
+declare function GridSpan(props: { children?: ViewNode; columns?: number | 'full' }): React.JSX.Element;
 
 /** @category Layouts @group Stack */
-declare const StackItem: ViewComponent<{
+declare function StackItem(props: {
+    children?: ViewNode;
     size?: 'static' | 'fill';
     isScrollable?: boolean;
     crossAlignSelf?: 'start' | 'center' | 'end' | 'stretch';
-}>;
+}): React.JSX.Element;
 
 /** @category Layouts @group Card */
 type CardProps = {
@@ -748,59 +635,38 @@ type CardProps = {
 declare const Card: ViewComponent<CardProps>;
 
 /** @category Layouts */
-declare const Collapsible: ViewComponent<{
+declare function Collapsible(props: {
+    children?: ViewNode;
     trigger: ViewNode;
     defaultIsOpen?: boolean;
     isOpen?: boolean;
     isDisabled?: boolean;
     onOpenChange?: (isOpen: boolean) => void;
-    chevronPosition?: 'start' | 'end';
-    value?: string;
-}>;
+}): React.JSX.Element;
 
 /** @category Form */
-declare const CheckboxInput: ViewComponent<
-    FieldProps & {
+declare function CheckboxInput(
+    props: FieldProps & {
         value: boolean | 'indeterminate';
         onChange?: (value: boolean) => void;
-        changeAction?: (value: boolean) => void | Promise<void>;
-        isLoading?: boolean;
         isReadOnly?: boolean;
-        disabledMessage?: string;
         htmlName?: string;
         size?: 'sm' | 'md';
-        labelIcon?: ViewNode;
-    }
->;
+    },
+): React.JSX.Element;
 
 /** @category Form */
-declare const Switch: ViewComponent<
-    FieldProps & {
-        value: boolean;
-        onChange?: (value: boolean) => void;
-        changeAction?: (value: boolean) => void | Promise<void>;
-        isLoading?: boolean;
-        disabledMessage?: string;
-        htmlName?: string;
-        size?: 'sm' | 'md';
-        labelIcon?: ViewNode;
-        labelPosition?: 'start' | 'end';
-        labelSpacing?: 'hug' | 'spread';
-    }
->;
+declare function Switch(
+    props: FieldProps & { value: boolean; onChange?: (value: boolean) => void; htmlName?: string; size?: 'sm' | 'md' },
+): React.JSX.Element;
 
 /** @category Form */
-declare const Slider: ViewComponent<
-    FieldProps & {
+declare function Slider(
+    props: FieldProps & {
         min?: number;
         max?: number;
         step?: number;
-        orientation?: 'horizontal' | 'vertical';
-        formatValue?: (value: number) => string;
-        valueDisplay?: 'tooltip' | 'text' | 'none';
-        marks?: { value: number; label?: string }[];
         htmlName?: string;
-        disabledMessage?: string;
     } & (
             | { value: number; onChange?: (value: number) => void; onChangeEnd?: (value: number) => void }
             | {
@@ -809,66 +675,56 @@ declare const Slider: ViewComponent<
                   onChangeEnd?: (value: [number, number]) => void;
                   minStepsBetweenThumbs?: number;
               }
-        )
->;
+        ),
+): React.JSX.Element;
 
 /** @category Form */
-declare const RadioList: ViewComponent<
-    FieldProps & {
+declare function RadioList(
+    props: FieldProps & {
+        children?: ViewNode;
         value: string;
         onChange: (value: string) => void;
         orientation?: 'vertical' | 'horizontal';
         htmlName?: string;
-        disabledMessage?: string;
         size?: 'sm' | 'md';
-    }
->;
+    },
+): React.JSX.Element;
 
 /** @category Form @group RadioList */
-declare const RadioListItem: ViewComponent<{
+declare function RadioListItem(props: {
     label: string;
     value: string;
     description?: string;
     isDisabled?: boolean;
-}>;
+}): React.JSX.Element;
 
 /** @category Action */
-declare const MoreMenu: ViewComponent<{
+declare function MoreMenu(props: {
     items: DropdownMenuOption[];
     label?: string;
     icon?: ViewNode;
-    variant?: ButtonProps['variant'];
-    size?: ButtonProps['size'];
     isDisabled?: boolean;
-    placement?: 'above' | 'below' | 'start' | 'end';
-    alignment?: 'start' | 'center' | 'end';
-    presentation?: 'popover' | 'bottom-sheet' | 'adaptive';
     onOpenChange?: (isOpen: boolean) => void;
-}>;
+}): React.JSX.Element;
 
 /** @category Layouts */
-declare const Menu: ViewComponent<{
-    gap?: Spacing;
-}>;
+declare function Menu(props: {
+    children?: ViewNode;
+    gap?: 0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10;
+}): React.JSX.Element;
 
 /** @category Layouts @group Menu */
-declare const MenuSection: ViewComponent<{
-    title: string;
+declare function MenuSection(props: {
+    children?: ViewNode;
     isHeaderHidden?: boolean;
-}>;
+    title: string;
+}): React.JSX.Element;
 
 /** @category Layouts @group Menu */
-declare const MenuItem: ViewComponent<{
-    label: string;
-    id?: string;
-    icon?: string;
-}>;
+declare function MenuItem(props: { children?: ViewNode; id?: string; icon?: string; label: string }): React.JSX.Element;
 
 /** @category Layouts @group Menu */
-declare const MenuSubSection: ViewComponent<{
-    label: string;
-    icon?: string;
-}>;
+declare function MenuSubSection(props: { children?: ViewNode; icon?: string; label: string }): React.JSX.Element;
 
 /** @category Display */
 declare const Icon: ViewComponent<{
@@ -877,91 +733,85 @@ declare const Icon: ViewComponent<{
 }>;
 
 /** @category Display */
-declare const CodeBlock: ViewComponent<{
+declare function CodeBlock(props: {
     code: string;
     language?: string;
     title?: string;
     isWrapped?: boolean;
-}>;
+}): React.JSX.Element;
 
 /** @category Display */
-declare const ProgressBar: ViewComponent<{
+declare function ProgressBar(props: {
     label: string;
     value?: number;
     max?: number;
     isLabelHidden?: boolean;
     hasValueLabel?: boolean;
-    formatValueLabel?: (value: number, max: number) => string;
     variant?: 'accent' | 'success' | 'warning' | 'error' | 'neutral';
     isIndeterminate?: boolean;
-    marks?: readonly { value: number; label: string }[];
-    isDisabled?: boolean;
-}>;
+}): React.JSX.Element;
 
 /** @category Layouts */
-declare const Stepper: ViewComponent<{
+declare function Stepper(props: {
+    children?: ViewNode;
     activeStep?: number;
     orientation?: 'horizontal' | 'vertical';
-}>;
+}): React.JSX.Element;
 
 /** @category Layouts @group Stepper */
-declare const Step: ViewComponent<{
-    step: number;
-    label: string;
-}>;
+declare function Step(props: { step: number; label: string }): React.JSX.Element;
 
 /** @category Layouts */
-declare const Tabs: ViewComponent<{
-    value?: string;
-    onChange?: (value: string) => void;
-    gap?: Spacing;
+declare function Tabs(props: {
+    children?: ViewNode;
+    gap?: 0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10;
     hasDivider?: boolean;
-}>;
+    onChange?: (value: string) => void;
+    value?: string;
+}): React.JSX.Element;
 
 /** @category Layouts @group Tabs */
-declare const Tab: ViewComponent<{
+declare function Tab(props: {
+    children?: ViewNode;
     value: string;
     label: string;
     isDisabled?: boolean;
     panelId?: string;
-}>;
+}): React.JSX.Element;
 
 /** @category Display */
-declare const EmptyState: ViewComponent<{
-    title: string;
-    isCompact?: boolean;
-}>;
+declare function EmptyState(props: { title: string; isCompact?: boolean }): React.JSX.Element;
 
 /** @category Display */
-declare const Currency: ViewComponent<{
-    value: number;
-    currency: string;
-    locale?: string;
-}>;
+declare function Currency(props: { value: number; currency: string; locale?: string }): React.JSX.Element;
 
 /** @category Display */
-declare const Timestamp: ViewComponent<{
+declare function Timestamp(props: {
     value: number | string;
-    format?: string;
-}>;
+    format?:
+        | 'date'
+        | 'date_long'
+        | 'date_weekday'
+        | 'date_time'
+        | 'time'
+        | 'relative'
+        | 'system_date'
+        | 'system_date_time'
+        | 'system_time';
+}): React.JSX.Element;
 
 /** @category Display */
-declare const Divider: ViewComponent<Record<string, never>>;
+declare function Divider(props: {}): React.JSX.Element;
 
 /** @category Display */
-declare const MetadataList: ViewComponent<{
+declare function MetadataList(props: {
+    children?: ViewNode;
     columns?: 'multi' | 'single' | number;
-    label?: { position?: 'start' | 'top'; width?: number | string };
-    maxNumOfItems?: number;
-    orientation?: 'vertical' | 'horizontal';
     title?: ViewNode;
-}>;
+}): React.JSX.Element;
 
 /** @category Display @group MetadataList */
-declare const MetadataListItem: ViewComponent<{
-    label: string;
-    icon?: ViewNode;
-}>;
+declare function MetadataListItem(props: { children?: ViewNode; label: string; icon?: ViewNode }): React.JSX.Element;
 
 /** @category Display @group Table */
 type ColumnWidth = { type: 'proportional'; value: number; minWidth?: number } | { type: 'pixel'; value: number };
@@ -969,7 +819,7 @@ type ColumnWidth = { type: 'proportional'; value: number; minWidth?: number } | 
 /** @category Display @group Table */
 declare function proportional(
     value?: number,
-    options?: { minWidth?: number }
+    options?: { minWidth?: number },
 ): Extract<ColumnWidth, { type: 'proportional' }>;
 
 /** @category Display @group Table */
@@ -977,18 +827,11 @@ declare function pixel(value: number): Extract<ColumnWidth, { type: 'pixel' }>;
 
 /** @category Display */
 declare function Table<T extends Record<string, unknown>>(props: {
-    data?: T[];
+    data: T[];
     idKey?: (keyof T & string) | ((row: T) => string | number);
     density?: 'compact' | 'balanced' | 'spacious';
-    dividers?: 'rows' | 'columns' | 'grid' | 'none';
-    isStriped?: boolean;
     hasHover?: boolean;
-    verticalAlign?: 'middle' | 'top' | 'bottom';
-    textOverflow?: 'wrap' | 'truncate';
-    rowIndexStart?: number;
-    rowCount?: number;
-    emptyState?: ViewNode;
-    children?: ViewNode;
+    isStriped?: boolean;
     columns?: {
         key: string;
         header?: ViewNode;

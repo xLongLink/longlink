@@ -1,17 +1,18 @@
 import * as dicebear from '@dicebear/core';
-import type { ComponentProps } from 'react';
+import { Avatar as AstryxAvatar } from '@astryxdesign/core/Avatar';
 import waves from '@dicebear/styles/waves.json' with { type: 'json' };
 import glyphs from '@dicebear/styles/glyphs.json' with { type: 'json' };
-import { Avatar as AstryxAvatar, type AvatarShape } from '@astryxdesign/core/Avatar';
 
 const glyphsStyle = new dicebear.Style(glyphs);
 const wavesStyle = new dicebear.Style(waves);
 
-interface AvatarProps extends Omit<ComponentProps<typeof AstryxAvatar>, 'className' | 'fallbackSrc' | 'shape' | 'src'> {
+type AvatarProps = {
     name?: string;
-    shape?: AvatarShape;
+    shape?: 'circle' | 'rounded';
     src?: string | null;
-}
+    alt?: string;
+    size?: 'sm' | 'md' | 'lg';
+};
 
 /** Uses local Waves fallbacks for rounded organization avatars and Glyphs for users. */
 export function Avatar({ shape = 'circle', src, name, ...props }: AvatarProps) {
