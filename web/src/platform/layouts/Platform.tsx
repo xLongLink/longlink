@@ -8,7 +8,6 @@ import { Stack } from '@astryxdesign/core/Stack';
 import { TopNav } from '@astryxdesign/core/TopNav';
 import { AppShell } from '@astryxdesign/core/AppShell';
 import { Tab, TabList } from '@astryxdesign/core/TabList';
-import { DevelopmentNotice } from '@/components/DevelopmentNotice';
 
 export type NavigationTab = {
     href: string;
@@ -43,7 +42,6 @@ export default function Platform({ action, breadcrumb, children, tabs }: Platfor
 
     return (
         <AppShell
-            banner={<DevelopmentNotice />}
             height="auto"
             mobileNav={false}
             topNav={
