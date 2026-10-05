@@ -75,7 +75,7 @@ environments = "src.envs:Env"
                                     <Code>environments</Code>
                                 </TableCell>
                                 <TableCell>
-                                    <Code>longlink.environments</Code>
+                                    <Code>dev.longlink.environments</Code>
                                 </TableCell>
                             </TableRow>
                         </TableBody>

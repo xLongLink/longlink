@@ -238,7 +238,7 @@ def test_build_solution_generates_docker_artifacts_from_project_metadata(
     dockerfile = build_context.joinpath("Dockerfile").read_text(encoding="utf-8")
     assert 'ENV SETUPTOOLS_SCM_PRETEND_VERSION_FOR_LONGLINK="0.0.0"' in dockerfile
     assert 'LABEL org.opencontainers.image.description="Demo Solution"' in dockerfile
-    assert 'LABEL longlink.environments="[{\\"name\\":\\"API_KEY\\",\\"required\\":true}]"' in dockerfile
+    assert 'LABEL dev.longlink.environments="[{\\"name\\":\\"API_KEY\\",\\"required\\":true}]"' in dockerfile
     dockerignore = build_context.joinpath(".dockerignore").read_text(encoding="utf-8")
     assert dockerignore.splitlines() == [".git", ".hg", ".svn", "Dockerfile", ".dockerignore"]
     assert not build_context.joinpath(".env").exists()

@@ -324,7 +324,7 @@ def build_solution(build_context: Path, *, pyproject_data: Mapping[str, object])
         labels.append(f"LABEL org.opencontainers.image.description={json.dumps(project_description)}")
     environments = read_env_spec(root, pyproject_data)
     if environments:
-        labels.append(f"LABEL longlink.environments={json.dumps(json.dumps(environments, separators=(',', ':')))}")
+        labels.append(f"LABEL dev.longlink.environments={json.dumps(json.dumps(environments, separators=(',', ':')))}")
 
     # Apply a fixed context policy without interpreting project-specific ignore syntax.
     context_root = build_context.resolve()
