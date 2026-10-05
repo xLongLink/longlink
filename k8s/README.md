@@ -4,6 +4,12 @@ This Helm chart installs shared Knative, Kourier, CloudNativePG, and RustFS infr
 Install it before registering a Compute in the Platform. Registration requires a
 kubeconfig with cluster access and the gateway and storage addresses.
 
+The CloudNativePG controller is pinned to a multi-architecture SHA-256 digest in
+the chart values. Helm rendering rejects tag-only or malformed image overrides.
+Controller updates must include a reviewed digest in `cloudnative-pg.image.tag`
+(`version@sha256:<64 lowercase hexadecimal characters>`); the same pinned image
+is used for `OPERATOR_IMAGE_NAME`.
+
 ## Install
 
 From source:
