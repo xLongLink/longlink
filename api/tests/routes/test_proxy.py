@@ -4,11 +4,12 @@ import pytest
 import asyncio
 from uuid import UUID
 from httpx2 import AsyncClient
+from typing import Unpack, TypedDict
 from conftest import UNTRUSTED_ORIGINS, assert_origin_rejected, untrusted_origin_headers
 from longlink import identity
 from factories import create_compute, create_solution, create_organization
 from src.routes.v1 import proxy as proxy_routes
-from collections.abc import Callable, Sequence, Awaitable, AsyncIterator
+from collections.abc import Callable, Sequence, Awaitable, AsyncIterator, AsyncGenerator
 from src.models.roles import OrganizationRoles
 from src.models.statuses import Status
 from src.database.session import session_scope
@@ -42,7 +43,7 @@ class FakeGatewayResponse(httpx2.Response):
         self._error = error
         self.on_close = on_close
 
-    async def aiter_bytes(self, chunk_size: int | None = None) -> AsyncIterator[bytes]:
+    async def aiter_bytes(self, chunk_size: int | None = None) -> AsyncGenerator[bytes, None]:
         """Stream the configured upstream body, optionally delayed or failed."""
 
         # Preserve lazy streaming so timeout and failure tests observe real cancellation.
@@ -263,7 +264,15 @@ async def test_solution_proxy_strips_credential_headers_and_pins_gateway_tls(
 
         return real_create_context()
 
-    def record_client(*args: object, **kwargs: object) -> httpx2.AsyncClient:
+    class ClientKwargs(TypedDict, total=False):
+        """Type the gateway client's recorded constructor options."""
+
+        follow_redirects: bool
+        trust_env: bool
+        timeout: float
+        verify: ssl.SSLContext
+
+    def record_client(*args: object, **kwargs: Unpack[ClientKwargs]) -> httpx2.AsyncClient:
         """Record client trust configuration while delegating to the real client."""
 
         follow_redirects = kwargs.get("follow_redirects")
@@ -279,12 +288,7 @@ async def test_solution_proxy_strips_credential_headers_and_pins_gateway_tls(
         captured["follow_redirects"] = follow_redirects
         captured["trust_env"] = trust_env
 
-        return real_client(
-            follow_redirects=follow_redirects,
-            trust_env=trust_env,
-            timeout=timeout,
-            verify=verify,
-        )
+        return real_client(*args, **kwargs)
 
     async def send(_transport: object, request: httpx2.Request) -> httpx2.Response:
         """Record the exact headers crossing into the tenant workload."""

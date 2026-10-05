@@ -1,8 +1,8 @@
 import pytest
 from s3fs import S3FileSystem
 from typing import Literal
+from pathlib import Path
 from pydantic import ValidationError
-from contextlib import contextmanager
 from longlink.storage import base as storage_base
 from longlink.utils.settings import Envs
 from fsspec.implementations.dirfs import DirFileSystem
@@ -80,22 +80,12 @@ def test_production_storage_scopes_paths_to_configured_bucket_prefix(monkeypatch
     assert isinstance(scoped_filesystem.fs, S3FileSystem)
 
 
-def test_production_storage_passes_configured_ca_to_s3_client(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_production_storage_passes_configured_ca_to_s3_client(monkeypatch: pytest.MonkeyPatch, ca_certificate: str) -> None:
     """Use the Platform storage CA to verify the remote S3 endpoint."""
 
     # Arrange
     configure_production_environment(monkeypatch, "acme", "solutions/dashboard")
-    @contextmanager
-    def certificate_file(pem: str):
-        """Verify the configured PEM and yield its temporary filename."""
-
-        # Assert the configured CA reaches the certificate boundary.
-        assert pem == "storage-ca-pem"
-        yield "/tmp/storage-ca.crt"
-
-    # Replace only the certificate boundary; S3 construction does not contact storage.
-    monkeypatch.setattr(storage_base.tls, "certificate_file", certificate_file)
-    monkeypatch.setenv("LONGLINK_STORAGE_CERTIFICATE", "storage-ca-pem")
+    monkeypatch.setenv("LONGLINK_STORAGE_CERTIFICATE", ca_certificate)
 
     # Act
     filesystem = storage_base.create_fs(Envs())
@@ -103,7 +93,8 @@ def test_production_storage_passes_configured_ca_to_s3_client(monkeypatch: pytes
     # Assert
     assert isinstance(filesystem, DirFileSystem)
     assert isinstance(filesystem.fs, S3FileSystem)
-    assert filesystem.fs.client_kwargs["verify"] == "/tmp/storage-ca.crt"
+    certificate = Path(filesystem.fs.client_kwargs["verify"])
+    assert certificate.read_text(encoding="utf-8") == ca_certificate
 
 
 def test_storage_rejects_prefix_without_bucket(monkeypatch: pytest.MonkeyPatch) -> None:

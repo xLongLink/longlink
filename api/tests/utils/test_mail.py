@@ -1,4 +1,5 @@
 import pytest
+from types import SimpleNamespace
 from src.utils import mail
 from email.message import EmailMessage
 from src.environments import env
@@ -11,12 +12,7 @@ def test_render_mjml_template_rejects_compilation_errors(monkeypatch: pytest.Mon
     """Expose MJML compiler errors instead of delivering incomplete email HTML."""
 
     # Arrange
-    class Result:
-        """Represent a failed MJML compilation."""
-
-        errors = ["invalid markup"]
-
-    monkeypatch.setattr(mail, "mjml_to_html", lambda _source: Result())
+    monkeypatch.setattr(mail, "mjml_to_html", lambda _source: SimpleNamespace(errors=["invalid markup"]))
 
     # Act and assert
     with pytest.raises(ValueError, match=r"Failed to render MJML template password_reset.mjml: \['invalid markup'\]"):
@@ -29,17 +25,11 @@ def test_render_mjml_template_escapes_context_before_compilation(monkeypatch: py
     # Arrange
     compiled_sources: list[str] = []
 
-    class Result:
-        """Represent one successful MJML compilation."""
-
-        errors: list[str] = []
-        html = "rendered"
-
-    def compile_mjml(source: str) -> Result:
+    def compile_mjml(source: str) -> SimpleNamespace:
         """Capture the fully interpolated MJML source."""
 
         compiled_sources.append(source)
-        return Result()
+        return SimpleNamespace(errors=[], html="rendered")
 
     monkeypatch.setattr(mail, "mjml_to_html", compile_mjml)
     organization_name = "<Acme & Sons>"

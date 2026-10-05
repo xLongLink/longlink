@@ -13,6 +13,43 @@ from starlette.websockets import WebSocketDisconnect
 IDENTITY_SECRET = "test-identity-secret-01234567890"
 
 
+class RequestDatabase:
+    """Record user lookups and session cleanup at the request database boundary."""
+
+    def __init__(self) -> None:
+        """Initialize an authenticated user and isolated session observations."""
+
+        # Keep each request test's user and observations independent.
+        self.user: object | None = object()
+        self.lookups: list[tuple[object, UUID]] = []
+        self.session_closed = False
+
+    async def get(self, model: object, user_id: UUID) -> object | None:
+        """Record the audit-user lookup and return the configured user."""
+
+        # Observe the identity passed through the real context dependency.
+        self.lookups.append((model, user_id))
+        return self.user
+
+    @asynccontextmanager
+    async def session(self) -> AsyncIterator["RequestDatabase"]:
+        """Yield the test session and record finalization on every exit path."""
+
+        # Preserve cleanup observations for both successful and failing endpoints.
+        try:
+            yield self
+        finally:
+            self.session_closed = True
+
+
+@pytest.fixture
+def request_database() -> RequestDatabase:
+    """Provide a fresh request database boundary for each test."""
+
+    # Share only the boundary implementation, never its mutable state.
+    return RequestDatabase()
+
+
 def identity_headers(user_id: UUID) -> dict[str, str]:
     """Build one current Platform identity assertion for context tests."""
 
@@ -31,44 +68,15 @@ def identity_headers(user_id: UUID) -> dict[str, str]:
 def test_data_resolves_request_services(
     identity: UUID | None,
     user: object | None,
+    request_database: RequestDatabase,
 ) -> None:
     """Yield request services only when an identity resolves to a user."""
 
     # Arrange
     storage = object()
-    session_closed = False
-
-    class Database:
-        """Record audit-user lookups for the request."""
-
-        def __init__(self) -> None:
-            """Initialize recorded audit lookups."""
-
-            self.lookups: list[tuple[object, UUID]] = []
-
-        async def get(self, model: object, user_id: UUID) -> object | None:
-            """Record an audit lookup and return the configured result."""
-
-            self.lookups.append((model, user_id))
-            return user
-
-    database = Database()
-
-    class DatabaseService:
-        """Provide the configured request database session."""
-
-        @asynccontextmanager
-        async def session(self) -> AsyncIterator[Database]:
-            """Yield the test database session and record cleanup."""
-
-            nonlocal session_closed
-            try:
-                yield database
-            finally:
-                session_closed = True
-
+    request_database.user = user
     app = FastAPI()
-    app.state.longlink = SimpleNamespace(storage=storage, database=DatabaseService())
+    app.state.longlink = SimpleNamespace(storage=storage, database=request_database)
     context.install_context_middleware(app, IDENTITY_SECRET)
 
     @app.get("/")
@@ -88,39 +96,16 @@ def test_data_resolves_request_services(
     else:
         assert response.status_code == 200
         assert response.json() == {"user_matches": True, "storage_matches": True}
-    assert database.lookups == ([] if identity is None else [(context.User, identity)])
-    assert session_closed
+    assert request_database.lookups == ([] if identity is None else [(context.User, identity)])
+    assert request_database.session_closed
 
 
-def test_data_closes_database_session_when_endpoint_fails() -> None:
+def test_data_closes_database_session_when_endpoint_fails(request_database: RequestDatabase) -> None:
     """Close the request database session when a dependent endpoint raises."""
 
     # Arrange
-    session_closed = False
-
-    class Database:
-        """Provide the minimal lookup behavior required by the dependency."""
-
-        async def get(self, _model: object, _user_id: UUID) -> object:
-            """Return the shared audit user needed to enter the endpoint."""
-
-            return object()
-
-    class DatabaseService:
-        """Open the configured request database session."""
-
-        @asynccontextmanager
-        async def session(self) -> AsyncIterator[Database]:
-            """Yield a database session and record finalization."""
-
-            nonlocal session_closed
-            try:
-                yield Database()
-            finally:
-                session_closed = True
-
     app = FastAPI()
-    app.state.longlink = SimpleNamespace(storage=object(), database=DatabaseService())
+    app.state.longlink = SimpleNamespace(storage=object(), database=request_database)
     context.install_context_middleware(app, IDENTITY_SECRET)
 
     @app.get("/")
@@ -134,7 +119,7 @@ def test_data_closes_database_session_when_endpoint_fails() -> None:
         client.get("/", headers=identity_headers(UUID("00000000-0000-0000-0000-000000000001")))
 
     # Assert
-    assert session_closed
+    assert request_database.session_closed
 
 
 @pytest.mark.parametrize(

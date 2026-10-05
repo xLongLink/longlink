@@ -90,9 +90,7 @@ def test_mysql_database_url_rejects_invalid_tls_configuration(query: str, messag
         pytest.param("?ssl-mode=VERIFY_CA", False, ssl.CERT_REQUIRED, id="verify-ca"),
     ],
 )
-def test_mysql_database_url_builds_tls_context_for_verification_mode(
-    query: str, check_hostname: bool, verify_mode: ssl.VerifyMode
-) -> None:
+def test_mysql_database_url_builds_tls_context_for_verification_mode(query: str, check_hostname: bool, verify_mode: ssl.VerifyMode) -> None:
     """Build the configured TLS context without passing mode options to the driver."""
 
     # Act
@@ -113,25 +111,21 @@ def test_mysql_database_url_loads_optional_client_certificate(monkeypatch: pytes
     # Arrange
     loaded_certificates: list[tuple[str, str | None]] = []
 
-    class Context:
-        """Record client identity loading without requiring certificate files."""
+    def load_cert_chain(self: ssl.SSLContext, certfile: str, keyfile: str | None = None) -> None:
+        """Capture the configured certificate paths without reading certificate files."""
 
-        check_hostname = True
+        loaded_certificates.append((certfile, keyfile))
 
-        def load_cert_chain(self, certfile: str, keyfile: str | None = None) -> None:
-            """Capture the configured certificate paths."""
-
-            loaded_certificates.append((certfile, keyfile))
-
-    monkeypatch.setattr(urls.ssl, "create_default_context", lambda **_kwargs: Context())
+    monkeypatch.setattr(ssl.SSLContext, "load_cert_chain", load_cert_chain)
 
     # Act
     connection = urls.database("mysql+aiomysql://control:secret@db:3306/longlink?ssl-mode=VERIFY_CA&ssl_cert=cert.pem&ssl_key=key.pem")
 
     # Assert
     context = connection.connect_args["ssl"]
-    assert isinstance(context, Context)
+    assert isinstance(context, ssl.SSLContext)
     assert context.check_hostname is False
+    assert context.verify_mode == ssl.CERT_REQUIRED
     assert loaded_certificates == [("cert.pem", "key.pem")]
 
 

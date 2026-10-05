@@ -1,4 +1,5 @@
 import pytest
+import logging
 from pathlib import Path
 from longlink.cli import dev
 from typer.testing import CliRunner
@@ -8,20 +9,23 @@ from longlink.cli.main import main
 @pytest.mark.parametrize(
     ("host", "expected_warnings"),
     [
-        pytest.param("0.0.0.0", [("Development server is exposed on host %s", "0.0.0.0")], id="public"),
+        pytest.param("0.0.0.0", [("Development server is exposed on host %s", ("0.0.0.0",))], id="public"),
         pytest.param("127.0.0.1", [], id="ipv4-loopback"),
         pytest.param("::1", [], id="ipv6-loopback"),
         pytest.param("localhost", [], id="localhost"),
     ],
 )
 def test_dev_command_warns_only_for_public_hosts(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, host: str, expected_warnings: list[tuple[str, str]]
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    caplog: pytest.LogCaptureFixture,
+    host: str,
+    expected_warnings: list[tuple[str, tuple[str]]],
 ) -> None:
     """Warn only when the development server is exposed beyond loopback interfaces."""
 
     # Arrange
     calls: list[tuple[str, dict[str, object]]] = []
-    warnings: list[tuple[str, str]] = []
     migrations: list[str] = []
     monkeypatch.chdir(tmp_path)
     if host == "0.0.0.0":
@@ -33,22 +37,20 @@ def test_dev_command_warns_only_for_public_hosts(
         assert migrations == ["applied"]
         calls.append((application, kwargs))
 
-    def warning(message: str, host: str) -> None:
-        """Capture the network-exposure warning."""
-
-        warnings.append((message, host))
-
     monkeypatch.setattr(dev.uvicorn, "run", run)
-    monkeypatch.setattr(dev.logger, "warning", warning)
     monkeypatch.setattr(dev, "apply_migrations", lambda: migrations.append("applied"))
 
     # Act
-    result = CliRunner().invoke(main, ["dev", "--host", host])
+    dev.logger.addHandler(caplog.handler)
+    try:
+        result = CliRunner().invoke(main, ["dev", "--host", host])
+    finally:
+        dev.logger.removeHandler(caplog.handler)
 
     # Assert
     assert result.exit_code == 0
     assert (tmp_path / "frontend.d.ts").read_bytes() == (dev.ROOT / ".static" / "jsx" / "frontend.d.ts").read_bytes()
-    assert warnings == expected_warnings
+    assert [(record.msg, record.args) for record in caplog.records if record.levelno == logging.WARNING] == expected_warnings
     assert migrations == ["applied"]
     assert len(calls) == 1
     application, options = calls[0]

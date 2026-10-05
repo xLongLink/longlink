@@ -21,42 +21,47 @@ def create_runtime_client() -> TestClient:
 
 
 @pytest.mark.usefixtures("solution_source")
-def test_longlink_solution_serves_runtime_routes_and_frontend(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Serve SDK routes with local users and app-local testing services."""
+@pytest.mark.parametrize(("environment", "name"), [("development", "Development user"), ("testing", "Testing user")])
+def test_longlink_solution_serves_runtime_routes_and_frontend(monkeypatch: pytest.MonkeyPatch, environment: str, name: str) -> None:
+    """Serve SDK routes and the frontend with each environment's local user."""
 
-    # Exercise both local environments with real request context and storage.
-    for environment, name in (("development", "Development user"), ("testing", "Testing user")):
-        monkeypatch.setenv("LONGLINK_ENV", environment)
-        app = LongLink()
+    # Arrange
+    monkeypatch.setenv("LONGLINK_ENV", environment)
+    app = LongLink()
 
-        @app.get("/api/me", response_model=str)
-        async def current_user(value: Context) -> str:
-            """Return the locally seeded user name."""
+    @app.get("/api/me", response_model=str)
+    async def current_user(value: Context) -> str:
+        """Return the locally seeded user name."""
 
-            return value.user.name
+        return value.user.name
 
-        # Exercise runtime metadata, the frontend fallback, and the current user route.
-        client = TestClient(app)
-        with client:
-            frontend_response = client.get("/")
-            frontend_route_response = client.get("/settings", headers={"accept": "text/html"})
-            health_response = client.get("/health")
-            ready_response = client.get("/ready")
-            user_response = client.get("/api/me")
+    # Act
+    client = TestClient(app)
+    with client:
+        frontend_response = client.get("/")
+        frontend_route_response = client.get("/settings", headers={"accept": "text/html"})
+        health_response = client.get("/health")
+        ready_response = client.get("/ready")
+        user_response = client.get("/api/me")
 
-        # Verify each runtime route and the seeded user.
-        assert frontend_response.status_code == 200
-        assert "text/html" in frontend_response.headers["content-type"]
-        assert frontend_route_response.status_code == 200
-        assert "text/html" in frontend_route_response.headers["content-type"]
-        assert health_response.status_code == 200
-        assert health_response.json() == {"ok": True}
-        assert ready_response.status_code == 200
-        assert ready_response.json() == {"ok": True}
-        assert user_response.status_code == 200
-        assert user_response.json() == name
+    # Assert
+    assert frontend_response.status_code == 200
+    assert "text/html" in frontend_response.headers["content-type"]
+    assert frontend_route_response.status_code == 200
+    assert "text/html" in frontend_route_response.headers["content-type"]
+    assert health_response.status_code == 200
+    assert health_response.json() == {"ok": True}
+    assert ready_response.status_code == 200
+    assert ready_response.json() == {"ok": True}
+    assert user_response.status_code == 200
+    assert user_response.json() == name
 
-    # Create an app in development, then select in-memory services only for that app.
+
+@pytest.mark.usefixtures("solution_source")
+def test_solution_test_client_replaces_development_services_with_testing_services(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Select in-memory services and the testing user for an existing development app."""
+
+    # Arrange
     monkeypatch.setenv("LONGLINK_ENV", "development")
     app = LongLink()
     assert "file" in app.state.longlink.storage.protocol
@@ -67,10 +72,12 @@ def test_longlink_solution_serves_runtime_routes_and_frontend(monkeypatch: pytes
 
         return value.user.name
 
+    # Act
     client = SolutionTestClient(app)
     with client:
         user_response = client.get("/api/me")
 
+    # Assert
     assert user_response.status_code == 200
     assert user_response.json() == "Testing user"
     assert app.state.longlink.storage.protocol == "memory"
