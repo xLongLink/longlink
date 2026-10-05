@@ -1,11 +1,13 @@
 # AGENTS.md
 
-You are working on a LongLink Solution project:
+You are working on a LongLink Solution project.
+
+## Schema ownership
 
 - Models and migrations own only this project's schema.
-- The SDK owns shared schema definitions and migrations, which the LongLink Platform executes.
-- Use `longlink.Audit` for tables that need Platform-user attribution.
-- For additional user roles, inherit from `longlink.Model` and declare each as `role: User = UserRelationship()`.
+- The SDK owns shared schema definitions and migrations. The LongLink Platform executes those migrations.
+- For tables that need Platform-user attribution, DO use `longlink.Audit`.
+- For additional user roles, DO inherit from `longlink.Model` and declare each role as `role: User = UserRelationship()`.
 
 ## Code structure
 
@@ -23,43 +25,54 @@ You are working on a LongLink Solution project:
 
 ## Solution runtime
 
-- Build the app with `app = LongLink()` and register routers via `app.include_router(...)` in `main.py`.
-- Type route parameters as `ctx: Context` for the request database session, storage filesystem, and signed-in user.
-- Store one item's files under its own `{item_id}/` storage prefix.
+- DO build the app with `app = LongLink()`.
+- DO register routers with `app.include_router(...)` in `main.py`.
+- DO type route parameters as `ctx: Context` for the request database session, storage filesystem, and signed-in user.
+- DO store each item's files under its own `{item_id}/` storage prefix.
 
 ## Views
 
-- `longlink dev` generates SDK-owned `frontend.d.ts` in the project root for editor hints. Do not edit or commit this generated file.
-
-- A View is a `.jsx` file exporting one default React component; no frontend build is needed in the Solution.
-- React hooks, `Fragment`, `createElement`, LongLink UI components, `request`, `navigate`, and `useApi` are supplied by the isolated renderer. Do not import packages.
-- Route parameters are passed to the default View function as props: `export default function Item({ params })`. For `[item].jsx`, read the URL segment with `params.item`. Use `@param {ViewProps} props` in JSDoc for editor hints.
-- Use ordinary JSX props, React state, controlled input callbacks, and JavaScript expressions.
-- Use `useState()`, `useEffect()`, `useMemo()`, and `useRef()` directly; no import or `React.` prefix is needed. Use fragments as `<>...</>` or `<Fragment>...</Fragment>`.
-- Display titles come from JSX filenames (`items.jsx` → Items, `[item].jsx` → Item); tabs use the default icon. Do not add metadata sidecars or exports.
-- Requests are Solution-relative and pass through a restricted host bridge. Never use direct fetch, Platform credentials, external resources, or parent-window access.
-- Prefer `const [data, invalidate] = useApi(path)` for required data. Call `await invalidate()` to revalidate that exact path when needed; the renderer handles initial loading, errors, and retry. Cache keys are derived internally from the full path, including query parameters.
-- Successful writes through `request()` automatically refresh cached data within this isolated View. No explicit invalidation is needed.
-- Use separate `useApi` calls for multiple resources. Mount a component using `useApi` only when its resource is needed. Cached data remains visible if a background refresh fails.
-- Use the sample Views as the current JSX API reference.
+- `longlink dev` generates SDK-owned `frontend.d.ts` in the project root for editor hints. DON'T edit or commit this generated file.
+- A View is a `.jsx` file that exports one default React component. The Solution does not need a frontend build.
+- The isolated renderer supplies React hooks, `Fragment`, `createElement`, LongLink UI components, `request`, `navigate`, and `useApi`. DON'T import packages.
+- Route parameters are passed to the default View function as props: `export default function Item({ params })`.
+- For `[item].jsx`, DO read the URL segment with `params.item`.
+- DO use `@param {ViewProps} props` in JSDoc for editor hints.
+- DO use ordinary JSX props, React state, controlled input callbacks, and JavaScript expressions.
+- DO use `useState()`, `useEffect()`, `useMemo()`, and `useRef()` directly, without imports or a `React.` prefix.
+- DO use `<>...</>` or `<Fragment>...</Fragment>` for fragments.
+- Display titles come from JSX filenames (`items.jsx` → Items, `[item].jsx` → Item). Tabs use the default icon.
+- DON'T add metadata sidecars or exports.
+- Requests are Solution-relative and pass through a restricted host bridge.
+- DON'T use direct fetch, Platform credentials, external resources, or parent-window access.
+- For required data, PREFER `const [data, invalidate] = useApi(path)`.
+- When that exact path needs revalidation, DO call `await invalidate()`.
+- The renderer handles initial loading, errors, and retry. Cache keys come from the full path, including query parameters.
+- Successful writes through `request()` automatically refresh cached data within the isolated View. Explicit invalidation is not needed.
+- For multiple resources, DO use separate `useApi` calls.
+- DO mount a component that uses `useApi` only when its resource is needed.
+- Cached data remains visible if a background refresh fails.
+- DO use the sample Views as the current JSX API reference.
 
 ## Python Guidelines
 
-- Avoid renaming imports.
-- Validate types at the boundary.
-- Channel YAGNI and KISS principle.
-- Avoid `Any`, prefer precise type annotations.
-- Keep the code pytonic, prefer readability over efficiency.
-- Use clear domain names, prefer single-word Python filenames.
-- Prefer namespaced module APIs, over directly importing many related functions.
-- Declare `response_model` on FastAPI routes, let FastAPI validating response model.
-- Prefer explicit duplication over a local helper when it makes lifecycle code clearer.
-- Use exceptions for genuine error conditions, avoid unnecessary `try`/`except` blocks.
+- AVOID renaming imports.
+- DO validate types at system boundaries.
+- PREFER the simplest correct implementation. AVOID features needed only for hypothetical future use.
+- PREFER precise type annotations to `Any`.
+- PREFER idiomatic Python and readability over efficiency.
+- DO use clear domain names.
+- PREFER single-word Python filenames.
+- PREFER namespaced module APIs to importing many related functions directly.
+- DO declare `response_model` on FastAPI routes and let FastAPI validate responses.
+- When duplication makes lifecycle code clearer, PREFER explicit duplication to a local helper.
+- DO use exceptions for genuine errors.
+- AVOID unnecessary `try`/`except` blocks.
 
 ## Testing
 
-- Write tests only when instructed.
-- Test observable behavior with clear, deterministic assertions.
-- Use Arrange, Act, Assert sections for non-trivial tests.
-- Mock external boundaries, not business logic.
-- Use `longlink.testclient.TestClient` for route tests; constructing it selects in-memory testing services for the app.
+- Unless the user requests tests, DON'T write them.
+- DO test observable behavior with clear, deterministic assertions.
+- For non-trivial tests, DO use Arrange, Act, and Assert sections.
+- DO mock external boundaries, not business logic.
+- DO use `longlink.testclient.TestClient` for route tests. Constructing it selects in-memory testing services for the app.
