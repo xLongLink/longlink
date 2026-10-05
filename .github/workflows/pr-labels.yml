@@ -1,0 +1,32 @@
+name: PR labels
+
+on:
+    pull_request_target:
+        types: [opened, edited, reopened]
+
+permissions: {}
+
+concurrency:
+    group: pr-labels-${{ github.event.pull_request.number }}
+    cancel-in-progress: false
+
+jobs:
+    label:
+        runs-on: ubuntu-24.04
+        timeout-minutes: 5
+
+        permissions:
+            pull-requests: write
+
+        steps:
+            # Use only GitHub metadata; never check out or execute pull request code.
+            - name: Apply change-type label from title
+              uses: bcoe/conventional-release-labels@886f696738527c7be444262c327c89436dfb95a8 # v1.3.1
+              # The upstream release declares a legacy Node runtime.
+              env:
+                  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+              with:
+                  type_labels: >-
+                      {"feat": "feature", "fix": "fix", "docs": "docs", "refactor": "refactor", "perf": "performance", "style": "improvement", "breaking": "breaking"}
+                  # Keep maintenance changes in Other Changes rather than excluding them.
+                  ignored_types: "[]"
