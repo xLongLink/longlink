@@ -1,9 +1,9 @@
 import jwt
 import hmac
 from uuid import UUID
-from typing import Literal
 from datetime import UTC, datetime, timedelta
 from pydantic import TypeAdapter, ValidationError
+from src.utils.oauth import OAuthProvider
 from src.environments import env
 from src.database.services import users
 from longlink.shared.models import Email
@@ -72,7 +72,7 @@ def create_password_reset_token(user: User) -> str:
     )
 
 
-def create_oauth_state_token(provider: Literal["google", "github"], state: str, verifier: str) -> str:
+def create_oauth_state_token(provider: OAuthProvider, state: str, verifier: str) -> str:
     """Create browser-only OAuth state bound to one provider and PKCE verifier."""
 
     # Keep the anti-forgery state and reusable verifier out of browser-accessible storage and redirect URLs.
@@ -89,7 +89,7 @@ def create_oauth_state_token(provider: Literal["google", "github"], state: str, 
     )
 
 
-def oauth_state_claims(token: str, provider: Literal["google", "github"]) -> tuple[str, str]:
+def oauth_state_claims(token: str, provider: OAuthProvider) -> tuple[str, str]:
     """Return state and verifier from one valid OAuth browser credential."""
 
     # Bind callbacks to their initiating provider before exchanging an authorization code.
