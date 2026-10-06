@@ -111,6 +111,24 @@ async def prevent_authenticated_response_caching(
 
 app.add_middleware(FrontendMiddleware)
 
+
+@app.middleware("http")
+async def redirect_public_hostname(
+    request: Request,
+    call_next: Callable[[Request], Awaitable[Response]],
+) -> Response:
+    """Redirect the production apex hostname without affecting other installations."""
+
+    # Normalize the public hostname before frontend routing or authentication runs.
+    if request.url.hostname == "longlink.dev":
+        raw_path = request.scope.get("raw_path")
+        path = raw_path.decode("latin-1") if raw_path is not None else request.url.path
+        url = request.url.replace(scheme="https", netloc="www.longlink.dev", path=path)
+        return RedirectResponse(str(url), status_code=308)
+
+    return await call_next(request)
+
+
 # Register the versioned Platform API after constructing the application.
 app.include_router(v1.router)
 app.include_router(branding.router)
