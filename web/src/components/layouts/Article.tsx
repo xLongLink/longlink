@@ -36,6 +36,15 @@ const useCasePaths = [
     '/use-cases/operations',
     '/use-cases/compliance-and-quality',
     '/use-cases/cases-and-projects',
+    '/use-cases/longlink-vs-retool',
+    '/use-cases/longlink-vs-lovable',
+    '/use-cases/longlink-vs-windmill',
+    '/use-cases/longlink-vs-microsoft-power-apps',
+    '/use-cases/longlink-vs-replit',
+    '/use-cases/longlink-vs-appsmith',
+    '/use-cases/longlink-vs-superblocks',
+    '/use-cases/longlink-vs-fastapi',
+    '/use-cases/longlink-vs-reflex',
 ];
 
 /** Renders shared documentation, use-case, and legal article content. */
