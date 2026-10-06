@@ -1,7 +1,15 @@
 import typer
-from pydantic import BaseModel, TypeAdapter
+from pydantic import Field, BaseModel, TypeAdapter
 from longlink.constants import ROOT
 from longlink.cli.errors import CliError
+
+
+class MemberDoc(BaseModel):
+    """Describe one binding in a grouped runtime reference."""
+
+    # Binding documentation.
+    name: str
+    description: str
 
 
 class ComponentDoc(BaseModel):
@@ -9,6 +17,7 @@ class ComponentDoc(BaseModel):
 
     # Authoring documentation.
     name: str
+    members: list[MemberDoc] = Field(default_factory=list)
     category: str
     declaration: str
 
@@ -31,7 +40,14 @@ def docs_command(component: str | None = None, category: str | None = None) -> N
         entry = next((entry for entry in components if entry.name.casefold() == component.casefold()), None)
         if entry is None:
             raise CliError(f"Unknown component: {component}. Run `longlink docs` to list available components.")
-        typer.echo(f"{entry.name} [{entry.category}]\nProps and types\n{entry.declaration}")
+
+        # Render documented bindings as a readable list rather than type declarations.
+        if entry.members:
+            typer.echo(
+                f"{entry.name} [{entry.category}]\n" + "\n\n".join(f"- {member.name}:\n  {member.description}" for member in entry.members)
+            )
+        else:
+            typer.echo(f"{entry.name} [{entry.category}]\nProps and types\n{entry.declaration}")
         return
 
     # Explain the execution boundary before listing the JSX APIs that are actually available.

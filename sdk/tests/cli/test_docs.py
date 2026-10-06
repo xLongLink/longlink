@@ -17,9 +17,9 @@ def test_docs_command_lists_documented_component_categories() -> None:
     assert "\nForm\n" in result.output
     assert "\nLayouts\n" in result.output
     assert "React state and controlled callbacks" in result.output
-    assert "- React" in result.output
+    assert "- Hooks" in result.output
     assert "- useState" not in result.output
-    assert "- Solution API" in result.output
+    assert "- Functions" in result.output
     assert "- navigate" not in result.output
     assert "- request" not in result.output
     assert "- useApi" not in result.output

@@ -182,12 +182,13 @@ function initialize(event: MessageEvent<unknown>): void {
         const code = transform(parsed.data.source, {
             transforms: ['jsx', 'imports'],
             jsxRuntime: 'classic',
-            jsxPragma: 'createElement',
+            jsxPragma: '__jsx',
             jsxFragmentPragma: 'Fragment',
             production: true,
         }).code;
         const bindings = {
-            createElement: React.createElement,
+            // Keep JSX compilation separate from the public View API.
+            __jsx: React.createElement,
             Fragment: React.Fragment,
             useState: React.useState,
             useEffect: React.useEffect,
