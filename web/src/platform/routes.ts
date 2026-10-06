@@ -90,6 +90,11 @@ export default [
         route('terms', './routes/legal/Terms.tsx'),
         route('privacy', './routes/legal/Privacy.tsx'),
         route('impressum', './routes/legal/Impressum.tsx'),
+        ...prefix('branding', [
+            route('logo', './routes/branding/Logo.tsx'),
+            route('values', './routes/branding/Values.tsx'),
+            route('comunication', './routes/branding/Communication.tsx'),
+        ]),
     ]),
     layout('./layouts/Brand.tsx', [
         ...prefix('auth', [

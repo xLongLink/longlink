@@ -33,6 +33,9 @@ const publicPagePaths = [
     '/terms',
     '/impressum',
     '/privacy',
+    '/branding/logo',
+    '/branding/values',
+    '/branding/comunication',
     ...documentationPaths,
 ];
 
