@@ -22,6 +22,11 @@ export function Stepper({
 }
 
 /** Defines the label and index of a step. */
-export function Step(props: { step: number; label: string }) {
+export function Step(props: {
+    /** Zero-based index of this step in the process. */
+    step: number;
+    /** Visible label identifying the step. */
+    label: string;
+}) {
     return <AstryxStep {...props} />;
 }

@@ -9,7 +9,12 @@ export function Grid(props: { children?: ReactNode; columns?: number; gap?: Spac
 }
 
 /** Spans a View item across grid columns. */
-export function GridSpan(props: { children?: ReactNode; columns?: number | 'full' }) {
+export function GridSpan(props: {
+    /** Content rendered inside the grid item. */
+    children?: ReactNode;
+    /** Number of columns to occupy, or full to span the entire grid. */
+    columns?: number | 'full';
+}) {
     // Unspecified items occupy one column.
     return <AstryxGridSpan {...props} columns={props.columns ?? 1} />;
 }

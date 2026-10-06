@@ -200,7 +200,7 @@ export default function OrganizationSettings() {
             </Stack>
             <Menu>
                 <MenuSection title="Settings" isHeaderHidden>
-                    <MenuItem id="organization" label="Organization" icon="building2">
+                    <MenuItem label="Organization" icon="building2">
                         <Stack gap={4}>
                             <Stack gap={1}>
                                 <Heading level={2}>Organization</Heading>
@@ -211,7 +211,7 @@ export default function OrganizationSettings() {
                         </Stack>
                     </MenuItem>
                     <MenuSubSection label="People" icon="users">
-                        <MenuItem id="members" label="Members">
+                        <MenuItem label="Members">
                             <Stack gap={4}>
                                 <Stack gap={1}>
                                     <Heading level={2}>Members</Heading>
@@ -276,7 +276,7 @@ export default function OrganizationSettings() {
                                 />
                             </Stack>
                         </MenuItem>
-                        <MenuItem id="invitations" label="Invitations">
+                        <MenuItem label="Invitations">
                             <Stack gap={4}>
                                 <Stack direction="horizontal" justify="between" align="center" wrap="wrap">
                                     <Stack gap={1}>
@@ -327,7 +327,7 @@ export default function OrganizationSettings() {
                             </Stack>
                         </MenuItem>
                     </MenuSubSection>
-                    <MenuItem id="solutions" label="Solutions" icon="boxes">
+                    <MenuItem label="Solutions" icon="boxes">
                         <Stack gap={4}>
                             <Stack direction="horizontal" justify="between" align="center" wrap="wrap">
                                 <Heading level={1}>Solutions</Heading>

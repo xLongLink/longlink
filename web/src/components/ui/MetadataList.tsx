@@ -15,6 +15,13 @@ export function MetadataList(props: {
 }
 
 /** Displays one labeled value inside a MetadataList. */
-export function MetadataListItem(props: { children?: ReactNode; label: string; icon?: ReactNode }) {
+export function MetadataListItem(props: {
+    /** Value rendered beside the metadata label. */
+    children?: ReactNode;
+    /** Label identifying the metadata value. */
+    label: string;
+    /** Optional icon displayed beside the metadata label. */
+    icon?: ReactNode;
+}) {
     return <AstryxMetadataListItem {...props} children={props.children} />;
 }

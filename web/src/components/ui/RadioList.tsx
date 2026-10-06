@@ -28,7 +28,15 @@ export function RadioList(
 }
 
 /** Defines one option using the surrounding RadioList's selection context. */
-export function RadioListItem(props: { label: string; value: string; description?: string; isDisabled?: boolean }) {
+export function RadioListItem(props: {
+    /** Visible label identifying this choice. */
+    label: string;
+    /** Value passed to the surrounding RadioList when selected. */
+    value: string;
+    /** Optional helper text explaining the choice. */
+    description?: string;
+    isDisabled?: boolean;
+}) {
     // Individual options remain selectable unless disabled.
     return <AstryxRadioListItem {...props} isDisabled={props.isDisabled ?? false} />;
 }

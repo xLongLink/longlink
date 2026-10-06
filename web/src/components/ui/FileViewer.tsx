@@ -8,7 +8,15 @@ import { createContext, useContext, useEffect, useState } from 'react';
 export const FileRequestContext = createContext<((path: string) => Promise<unknown>) | null>(null);
 
 /** Requests an image preview only after the user opens it. */
-export function FileViewer({ src, title }: { src: string; title: string }) {
+export function FileViewer({
+    src,
+    title,
+}: {
+    /** Scoped Solution operation path returning the file to preview. */
+    src: string;
+    /** Accessible label for the preview trigger and file dialog. */
+    title: string;
+}) {
     const [open, setOpen] = useState(false);
 
     // Each opened attachment owns a fresh preview and its blob URL.

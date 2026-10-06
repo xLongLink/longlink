@@ -30,9 +30,11 @@ export function Stack(props: StackProps) {
 
 /** Controls how one item participates in its surrounding Stack. */
 export function StackItem(props: {
+    /** Content rendered inside the stack item. */
     children?: ReactNode;
     size?: 'static' | 'fill';
     isScrollable?: boolean;
+    /** Overrides this item's cross-axis alignment; omitted values inherit the parent alignment. */
     crossAlignSelf?: 'start' | 'center' | 'end' | 'stretch';
 }) {
     // Preserve natural sizing and visible overflow unless explicitly overridden.

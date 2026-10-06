@@ -2,12 +2,26 @@ import { Stack } from '@astryxdesign/core/Stack';
 import { Tab as AstryxTab, TabList } from '@astryxdesign/core/TabList';
 import { Children, isValidElement, useId, useState, type ReactElement, type ReactNode } from 'react';
 
-type TabProps = { children?: ReactNode; value: string; label: string; isDisabled?: boolean; panelId?: string };
+type TabProps = {
+    /** Panel content mounted only while this tab is selected. */
+    children?: ReactNode;
+    /** Unique value identifying this tab. */
+    value: string;
+    /** Visible tab label and accessible panel name. */
+    label: string;
+    /** Whether the tab is disabled. */
+    isDisabled?: boolean;
+    /** Panel element ID; omitted values use an automatically generated ID. */
+    panelId?: string;
+};
 type TabsProps = {
+    /** Tab elements defining labels and panel content. */
     children?: ReactNode;
     gap?: 0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10;
     hasDivider?: boolean;
+    /** Receives the selected Tab value; use with value to control selection. */
     onChange?: (value: string) => void;
+    /** Selected Tab value; omit for internal selection, initially choosing the first tab. */
     value?: string;
 };
 

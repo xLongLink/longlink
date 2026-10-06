@@ -88,15 +88,13 @@ for (const binding of bindings.statements) {
         readDefaults(implementation);
         propertyDefaults.set(name, defaults);
 
-        // These editor declarations intentionally retain their shared component aliases.
-        if (['Card', 'Icon'].includes(name)) continue;
         let props = parameter?.type;
         if (props && ts.isTypeReferenceNode(props) && aliases.has(props.typeName.getText(wrapper)))
             props = aliases.get(props.typeName.getText(wrapper));
         const propText = (props?.getText(wrapper) ?? '{}')
             .replaceAll('ReactNode', 'ViewNode')
             .replaceAll('StoneIconName', 'string')
-            .replace(/MouseEvent<HTMLButtonElement>/g, 'ViewMouseEvent');
+            .replace(/MouseEvent<(HTMLButtonElement|HTMLElement)>/g, 'ViewMouseEvent');
         const generics = implementation.typeParameters?.length
             ? `<${implementation.typeParameters.map((type) => type.getText(wrapper)).join(', ')}>`
             : '';
@@ -106,14 +104,14 @@ for (const binding of bindings.statements) {
                 : ts.isVariableStatement(statement) &&
                   statement.declarationList.declarations[0].name.getText(editor) === name,
         );
-        const publicType = name === 'Button' || name === 'DateInput' ? `${name}Props` : propText;
+        const publicType = ['Button', 'Card', 'DateInput'].includes(name) ? `${name}Props` : propText;
         if (statement)
             replacements.push({
                 start: statement.getStart(editor),
                 end: statement.end,
                 text: `declare function ${name}${generics}(props: ${publicType}): React.JSX.Element;`,
             });
-        if (name === 'Button' || name === 'DateInput') {
+        if (['Button', 'Card', 'DateInput'].includes(name)) {
             const alias = editor.statements.find(
                 (statement) => ts.isTypeAliasDeclaration(statement) && statement.name.text === `${name}Props`,
             );
@@ -164,6 +162,9 @@ compilerHost.getSourceFile = (filename, ...args) =>
 const program = ts.createProgram([input], { skipLibCheck: true, strictNullChecks: true }, compilerHost);
 const checker = program.getTypeChecker();
 const publicProps = new Map();
+const spacing = document.statements.find(
+    (statement) => ts.isTypeAliasDeclaration(statement) && statement.name.text === 'Spacing',
+);
 
 /** Hides omission from prop choices while preserving empty values in callback contracts. */
 function documentedType(type) {
@@ -171,10 +172,16 @@ function documentedType(type) {
     const node = checker.typeToTypeNode(type, undefined, ts.NodeBuilderFlags.NoTruncation);
     const result = ts.transform(node, [
         (context) => {
-            /** Removes undefined options from prop unions, not callback inputs or results. */
-            function visit(node) {
-                if (ts.isFunctionTypeNode(node) || ts.isConstructorTypeNode(node)) return node;
-                if (ts.isUnionTypeNode(node)) {
+            /** Uses familiar React types and explicit spacing choices without hiding callback empty values. */
+            function visit(node, preserveUndefined = false) {
+                // Render wrapper React content and the supported spacing scale instead of editor-only aliases.
+                if (ts.isTypeReferenceNode(node) && ts.isIdentifier(node.typeName)) {
+                    if (node.typeName.text === 'ViewNode') return ts.factory.createTypeReferenceNode('ReactNode');
+                    if (node.typeName.text === 'Spacing') return spacing.type;
+                }
+
+                // Omission is not a prop choice, but callbacks can genuinely emit an empty value.
+                if (ts.isUnionTypeNode(node) && !preserveUndefined) {
                     const options = node.types.filter((option) => option.kind !== ts.SyntaxKind.UndefinedKeyword);
                     if (options.length === 1) return ts.visitNode(options[0], visit);
                     return ts.factory.updateUnionTypeNode(
@@ -182,7 +189,15 @@ function documentedType(type) {
                         options.map((option) => ts.visitNode(option, visit)),
                     );
                 }
-                return ts.visitEachChild(node, visit, context);
+                return ts.visitEachChild(
+                    node,
+                    (child) =>
+                        visit(
+                            child,
+                            preserveUndefined || ts.isFunctionTypeNode(node) || ts.isConstructorTypeNode(node),
+                        ),
+                    context,
+                );
             }
             return (node) => ts.visitNode(node, visit);
         },

@@ -89,13 +89,13 @@
         "properties": [
             {
                 "name": "label",
-                "type": "ViewNode",
+                "type": "ReactNode",
                 "required": false,
                 "description": "Badge text content. A badge is one line, so a label wider than the space available is cut with an ellipsis rather than escaping its container; a string or number label is also set as the badge's title so the full text stays reachable on hover."
             },
             {
                 "name": "icon",
-                "type": "ViewNode",
+                "type": "ReactNode",
                 "required": false,
                 "description": "Optional leading icon."
             },
@@ -224,13 +224,13 @@
             },
             {
                 "name": "icon",
-                "type": "ViewNode",
+                "type": "ReactNode",
                 "required": false,
                 "description": "Icon element rendered before the label text. An Astryx Icon with no explicit size defaults to sm for sm/md buttons and md for lg buttons."
             },
             {
                 "name": "endContent",
-                "type": "ViewNode",
+                "type": "ReactNode",
                 "required": false,
                 "description": "Trailing icon or badge rendered after the label. Ignored when isIconOnly is true. Color is inherited from the button variant."
             },
@@ -312,7 +312,7 @@
         "properties": [
             {
                 "name": "children",
-                "type": "ViewNode",
+                "type": "ReactNode",
                 "required": false,
                 "description": "Button or IconButton children."
             },
@@ -613,13 +613,13 @@
         "properties": [
             {
                 "name": "children",
-                "type": "ViewNode",
+                "type": "ReactNode",
                 "required": false,
                 "description": "Content that collapses and expands."
             },
             {
                 "name": "trigger",
-                "type": "ViewNode",
+                "type": "ReactNode",
                 "required": true,
                 "description": "Content shown in the trigger area (always visible)."
             },
@@ -1246,7 +1246,7 @@
         "properties": [
             {
                 "name": "children",
-                "type": "ViewNode",
+                "type": "ReactNode",
                 "required": false,
                 "description": "Dialog content."
             },
@@ -1306,7 +1306,7 @@
     {
         "name": "Divider",
         "url": "https://astryx.atmeta.com/components/Divider",
-        "introduction": "Separates adjacent View content with the standard horizontal rule.",
+        "introduction": "Separates View content with an optional label and configurable line presentation.",
         "anatomy": [
             {
                 "name": "Divider group",
@@ -1324,11 +1324,43 @@
                 "description": "Optional content displayed between two rule segments."
             }
         ],
-        "properties": [],
+        "properties": [
+            {
+                "name": "label",
+                "type": "ReactNode",
+                "required": false,
+                "description": "Optional label centered on the divider."
+            },
+            {
+                "name": "variant",
+                "type": "\"subtle\" | \"strong\"",
+                "required": false,
+                "default": "'subtle'",
+                "description": "Visual weight of the divider line. Default: 'subtle'."
+            },
+            {
+                "name": "orientation",
+                "type": "\"horizontal\" | \"vertical\"",
+                "required": false,
+                "default": "'horizontal'",
+                "description": "Orientation of the divider. Default: 'horizontal'."
+            },
+            {
+                "name": "isFullBleed",
+                "type": "boolean",
+                "required": false,
+                "default": "false",
+                "description": "Extend the divider to container edges with negative margins. Default: false."
+            }
+        ],
         "practices": [
             {
                 "guidance": true,
                 "description": "Use subtle dividers between related content sections and strong dividers for high-contrast boundaries."
+            },
+            {
+                "guidance": true,
+                "description": "Add a label to the divider when sections need a visible category heading."
             },
             {
                 "guidance": false,
@@ -1736,7 +1768,7 @@
         "properties": [
             {
                 "name": "children",
-                "type": "ViewNode",
+                "type": "ReactNode",
                 "required": false,
                 "description": "Grid content."
             },
@@ -1749,7 +1781,7 @@
             },
             {
                 "name": "gap",
-                "type": "Spacing",
+                "type": "0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10",
                 "required": false,
                 "default": "3",
                 "description": "Spacing between all items. Default: 3."
@@ -1798,7 +1830,7 @@
         "properties": [
             {
                 "name": "children",
-                "type": "ViewNode",
+                "type": "ReactNode",
                 "required": false,
                 "description": "Heading content."
             },
@@ -1852,12 +1884,6 @@
                 "type": "\"sm\" | \"md\" | \"lg\"",
                 "required": true,
                 "description": "Icon size. An explicit value wins. When omitted, Icon uses the nearest default supplied by an owning Astryx component for its icon slot, then falls back to md when no contextual default exists."
-            },
-            {
-                "name": "children",
-                "type": "ViewNode",
-                "required": false,
-                "description": "The children prop."
             }
         ],
         "practices": [
@@ -1905,7 +1931,7 @@
             },
             {
                 "name": "icon",
-                "type": "ViewNode",
+                "type": "ReactNode",
                 "required": true,
                 "description": "Icon element rendered inside the button. An Astryx Icon with no explicit size defaults to sm for sm/md buttons and md for lg buttons."
             },
@@ -1996,7 +2022,7 @@
             },
             {
                 "name": "children",
-                "type": "ViewNode",
+                "type": "ReactNode",
                 "required": false,
                 "description": "Link content"
             }
@@ -2045,7 +2071,7 @@
         "properties": [
             {
                 "name": "children",
-                "type": "ViewNode",
+                "type": "ReactNode",
                 "required": false,
                 "description": "Metadata items (MetadataListItem components)."
             },
@@ -2058,7 +2084,7 @@
             },
             {
                 "name": "title",
-                "type": "ViewNode",
+                "type": "ReactNode",
                 "required": false,
                 "description": "Optional title or heading above the list."
             }
@@ -2126,7 +2152,7 @@
             },
             {
                 "name": "icon",
-                "type": "ViewNode",
+                "type": "ReactNode",
                 "required": false,
                 "description": "Override the default three-dot icon. Accepts any ReactNode."
             },
@@ -2757,7 +2783,7 @@
             },
             {
                 "name": "children",
-                "type": "ViewNode",
+                "type": "ReactNode",
                 "required": false,
                 "description": "RadioListItem elements."
             },
@@ -3280,20 +3306,20 @@
         "properties": [
             {
                 "name": "children",
-                "type": "ViewNode",
+                "type": "ReactNode",
                 "required": false,
                 "description": "Stack content."
             },
             {
                 "name": "gap",
-                "type": "Spacing",
+                "type": "0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10",
                 "required": false,
                 "default": "3",
                 "description": "Spacing step (number literal): 0, 0.5, 1, 1.5, 2, 3, 4, 5, 6, 8, 10. Pass as a JSX number expression e.g. gap={4}, NOT a string like gap=\"4\". Default: 3."
             },
             {
                 "name": "padding",
-                "type": "Spacing",
+                "type": "0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10",
                 "required": false,
                 "default": "0",
                 "description": "Inner padding on all sides, using the spacing scale. Pass as a JSX number expression e.g. padding={3}. Default: 0."
@@ -3451,7 +3477,7 @@
         "properties": [
             {
                 "name": "children",
-                "type": "ViewNode",
+                "type": "ReactNode",
                 "required": false,
                 "description": "Step elements to render in the stepper."
             },
@@ -3739,7 +3765,7 @@
             },
             {
                 "name": "columns",
-                "type": "{ key: string; header?: ViewNode; width?: ColumnWidth; align?: \"start\" | \"center\" | \"end\"; renderCell?: ((row: T) => ViewNode); }[]",
+                "type": "{ key: string; header?: ReactNode; width?: ColumnWidth; align?: \"start\" | \"center\" | \"end\"; renderCell?: ((row: T) => ReactNode); }[]",
                 "required": false,
                 "description": "Column definitions: each column has {key, header, width?, align?, renderCell?}. The `header` field sets the column heading text. If omitted, columns are auto-generated from data object keys. The `width` field is typed as `ColumnWidth` (not a number); use `proportional(n)` or `pixel(n)` helpers imported from `@astryxdesign/core/Table`. Example: `width: pixel(120)` for 120px fixed, `width: proportional(1)` for flex distribution."
             }
@@ -3799,7 +3825,7 @@
         "properties": [
             {
                 "name": "children",
-                "type": "ViewNode",
+                "type": "ReactNode",
                 "required": false,
                 "description": "Text content."
             },
@@ -4199,7 +4225,7 @@
             },
             {
                 "name": "startIcon",
-                "type": "ViewNode",
+                "type": "ReactNode",
                 "required": false,
                 "description": "SVG icon component displayed at the start of the input. See `astryx docs icons` for valid semantic names."
             },

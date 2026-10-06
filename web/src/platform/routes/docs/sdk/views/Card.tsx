@@ -9,7 +9,14 @@ const reference: ViewReference = {
     introduction:
         'Card has one shared set of props. onChange makes it selectable, onClick or href makes it clickable, and otherwise it is a plain content card. Selection takes priority when both kinds of interaction props are supplied.',
     properties: [
-        { name: 'children', type: 'ViewNode', description: 'Content rendered inside the card.' },
+        { name: 'children', type: 'ReactNode', description: 'Content rendered inside the card.' },
+        { name: 'id', type: 'string', description: 'HTML ID for linking to the card.' },
+        { name: 'inert', type: 'boolean', description: 'Makes the card and its descendants non-interactive.' },
+        {
+            name: 'aria-hidden',
+            type: "boolean | 'true' | 'false'",
+            description: 'Hides the card from assistive technologies.',
+        },
         {
             name: 'label',
             type: 'string',
@@ -41,7 +48,7 @@ const reference: ViewReference = {
         },
         {
             name: 'padding',
-            type: 'Spacing',
+            type: '0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10',
             description: 'Inner spacing using the theme spacing scale. Defaults to 4.',
         },
         {

@@ -45,13 +45,13 @@
         "properties": [
             {
                 "name": "label",
-                "type": "ViewNode",
+                "type": "ReactNode",
                 "required": false,
                 "description": "Badge text content. A badge is one line, so a label wider than the space available is cut with an ellipsis rather than escaping its container; a string or number label is also set as the badge's title so the full text stays reachable on hover."
             },
             {
                 "name": "icon",
-                "type": "ViewNode",
+                "type": "ReactNode",
                 "required": false,
                 "description": "Optional leading icon."
             },
@@ -116,13 +116,13 @@
             },
             {
                 "name": "icon",
-                "type": "ViewNode",
+                "type": "ReactNode",
                 "required": false,
                 "description": "Icon element rendered before the label text. An Astryx Icon with no explicit size defaults to sm for sm/md buttons and md for lg buttons."
             },
             {
                 "name": "endContent",
-                "type": "ViewNode",
+                "type": "ReactNode",
                 "required": false,
                 "description": "Trailing icon or badge rendered after the label. Ignored when isIconOnly is true. Color is inherited from the button variant."
             },
@@ -166,7 +166,7 @@
         "properties": [
             {
                 "name": "children",
-                "type": "ViewNode",
+                "type": "ReactNode",
                 "required": false,
                 "description": "Button or IconButton children."
             },
@@ -202,11 +202,17 @@
     {
         "name": "Card",
         "category": "Layouts",
-        "declaration": "type CardProps = {\n    padding?: Spacing;\n    variant?:\n        | 'default'\n        | 'transparent'\n        | 'muted'\n        | 'blue'\n        | 'cyan'\n        | 'gray'\n        | 'green'\n        | 'orange'\n        | 'pink'\n        | 'purple'\n        | 'red'\n        | 'teal'\n        | 'yellow';\n    width?: number | string;\n    height?: number | string;\n    maxWidth?: number | string;\n    minHeight?: number | string;\n    label?: string;\n    onClick?: (event: ViewMouseEvent) => void;\n    href?: string;\n    target?: string;\n    isDisabled?: boolean;\n    isSelected?: boolean;\n    onChange?: (isSelected: boolean) => void;\n};\n\ndeclare const Card: ViewComponent<CardProps>;",
+        "declaration": "type CardProps = {\n    /** Content rendered inside the card. */\n    children?: ViewNode;\n    padding?: 0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10;\n    variant?:\n        | 'default'\n        | 'transparent'\n        | 'muted'\n        | 'blue'\n        | 'cyan'\n        | 'gray'\n        | 'green'\n        | 'orange'\n        | 'pink'\n        | 'purple'\n        | 'red'\n        | 'teal'\n        | 'yellow';\n    /** Card width; numbers are pixels and strings are CSS sizes. */\n    width?: number | string;\n    /** Card height; numbers are pixels and strings are CSS sizes. */\n    height?: number | string;\n    /** Maximum card width. */\n    maxWidth?: number | string;\n    /** Minimum card height. */\n    minHeight?: number | string;\n    /** HTML ID for linking to the card. */\n    id?: string;\n    /** Makes the card and its descendants non-interactive. */\n    inert?: boolean;\n    /** Hides the card from assistive technologies. */\n    'aria-hidden'?: boolean | 'true' | 'false';\n    label?: string;\n    /** Makes the card clickable and receives its activation event. */\n    onClick?: (event: ViewMouseEvent) => void;\n    /** Makes the card a navigation target when no selection callback is supplied. */\n    href?: string;\n    target?: string;\n    isDisabled?: boolean;\n    isSelected?: boolean;\n    /** Makes the card selectable and receives its next selection state; takes priority over activation. */\n    onChange?: (isSelected: boolean) => void;\n};\n\ndeclare function Card(props: CardProps): React.JSX.Element;",
         "properties": [
             {
+                "name": "children",
+                "type": "ReactNode",
+                "required": false,
+                "description": "Content rendered inside the card."
+            },
+            {
                 "name": "padding",
-                "type": "Spacing",
+                "type": "0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10",
                 "required": false,
                 "default": "4",
                 "description": "The padding prop. Default: 4."
@@ -221,22 +227,44 @@
             {
                 "name": "width",
                 "type": "string | number",
-                "required": false
+                "required": false,
+                "description": "Card width; numbers are pixels and strings are CSS sizes."
             },
             {
                 "name": "height",
                 "type": "string | number",
-                "required": false
+                "required": false,
+                "description": "Card height; numbers are pixels and strings are CSS sizes."
             },
             {
                 "name": "maxWidth",
                 "type": "string | number",
-                "required": false
+                "required": false,
+                "description": "Maximum card width."
             },
             {
                 "name": "minHeight",
                 "type": "string | number",
-                "required": false
+                "required": false,
+                "description": "Minimum card height."
+            },
+            {
+                "name": "id",
+                "type": "string",
+                "required": false,
+                "description": "HTML ID for linking to the card."
+            },
+            {
+                "name": "inert",
+                "type": "boolean",
+                "required": false,
+                "description": "Makes the card and its descendants non-interactive."
+            },
+            {
+                "name": "aria-hidden",
+                "type": "boolean | \"true\" | \"false\"",
+                "required": false,
+                "description": "Hides the card from assistive technologies."
             },
             {
                 "name": "label",
@@ -248,12 +276,14 @@
             {
                 "name": "onClick",
                 "type": "(event: ViewMouseEvent) => void",
-                "required": false
+                "required": false,
+                "description": "Makes the card clickable and receives its activation event."
             },
             {
                 "name": "href",
                 "type": "string",
-                "required": false
+                "required": false,
+                "description": "Makes the card a navigation target when no selection callback is supplied."
             },
             {
                 "name": "target",
@@ -279,12 +309,8 @@
             {
                 "name": "onChange",
                 "type": "(isSelected: boolean) => void",
-                "required": false
-            },
-            {
-                "name": "children",
-                "type": "ViewNode",
-                "required": false
+                "required": false,
+                "description": "Makes the card selectable and receives its next selection state; takes priority over activation."
             }
         ]
     },
@@ -412,13 +438,13 @@
         "properties": [
             {
                 "name": "children",
-                "type": "ViewNode",
+                "type": "ReactNode",
                 "required": false,
                 "description": "Content that collapses and expands."
             },
             {
                 "name": "trigger",
-                "type": "ViewNode",
+                "type": "ReactNode",
                 "required": true,
                 "description": "Content shown in the trigger area (always visible)."
             },
@@ -453,22 +479,25 @@
     {
         "name": "Currency",
         "category": "Display",
-        "declaration": "declare function Currency(props: { value: number; currency: string; locale?: string }): React.JSX.Element;",
+        "declaration": "declare function Currency(props: {\n    /** Amount to format in currency units. */\n    value: number;\n    /** ISO 4217 currency code, such as USD or CHF. */\n    currency: string;\n    /** Locale for formatting; omitted values use the viewer's locale. */\n    locale?: string;\n}): React.JSX.Element;",
         "properties": [
             {
                 "name": "value",
                 "type": "number",
-                "required": true
+                "required": true,
+                "description": "Amount to format in currency units."
             },
             {
                 "name": "currency",
                 "type": "string",
-                "required": true
+                "required": true,
+                "description": "ISO 4217 currency code, such as USD or CHF."
             },
             {
                 "name": "locale",
                 "type": "string",
-                "required": false
+                "required": false,
+                "description": "Locale for formatting; omitted values use the viewer's locale."
             }
         ]
     },
@@ -808,7 +837,7 @@
         "properties": [
             {
                 "name": "children",
-                "type": "ViewNode",
+                "type": "ReactNode",
                 "required": false,
                 "description": "Dialog content."
             },
@@ -842,8 +871,36 @@
     {
         "name": "Divider",
         "category": "Display",
-        "declaration": "declare function Divider(props: {}): React.JSX.Element;",
-        "properties": []
+        "declaration": "declare function Divider(props: {\n    label?: ViewNode;\n    variant?: 'subtle' | 'strong';\n    orientation?: 'horizontal' | 'vertical';\n    isFullBleed?: boolean;\n}): React.JSX.Element;",
+        "properties": [
+            {
+                "name": "label",
+                "type": "ReactNode",
+                "required": false,
+                "description": "Optional label centered on the divider."
+            },
+            {
+                "name": "variant",
+                "type": "\"subtle\" | \"strong\"",
+                "required": false,
+                "default": "'subtle'",
+                "description": "Visual weight of the divider line. Default: 'subtle'."
+            },
+            {
+                "name": "orientation",
+                "type": "\"horizontal\" | \"vertical\"",
+                "required": false,
+                "default": "'horizontal'",
+                "description": "Orientation of the divider. Default: 'horizontal'."
+            },
+            {
+                "name": "isFullBleed",
+                "type": "boolean",
+                "required": false,
+                "default": "false",
+                "description": "Extend the divider to container edges with negative margins. Default: false."
+            }
+        ]
     },
     {
         "name": "DropdownMenu",
@@ -1003,17 +1060,19 @@
     {
         "name": "FileViewer",
         "category": "Display",
-        "declaration": "declare function FileViewer(props: { src: string; title: string }): React.JSX.Element;",
+        "declaration": "declare function FileViewer(props: {\n    /** Scoped Solution operation path returning the file to preview. */\n    src: string;\n    /** Accessible label for the preview trigger and file dialog. */\n    title: string;\n}): React.JSX.Element;",
         "properties": [
             {
                 "name": "src",
                 "type": "string",
-                "required": true
+                "required": true,
+                "description": "Scoped Solution operation path returning the file to preview."
             },
             {
                 "name": "title",
                 "type": "string",
-                "required": true
+                "required": true,
+                "description": "Accessible label for the preview trigger and file dialog."
             }
         ]
     },
@@ -1035,11 +1094,11 @@
     {
         "name": "Grid",
         "category": "Layouts",
-        "declaration": "declare function Grid(props: { children?: ViewNode; columns?: number; gap?: Spacing }): React.JSX.Element;\n\ndeclare function GridSpan(props: { children?: ViewNode; columns?: number | 'full' }): React.JSX.Element;",
+        "declaration": "declare function Grid(props: { children?: ViewNode; columns?: number; gap?: Spacing }): React.JSX.Element;\n\ndeclare function GridSpan(props: {\n    /** Content rendered inside the grid item. */\n    children?: ViewNode;\n    /** Number of columns to occupy, or full to span the entire grid. */\n    columns?: number | 'full';\n}): React.JSX.Element;",
         "properties": [
             {
                 "name": "children",
-                "type": "ViewNode",
+                "type": "ReactNode",
                 "required": false,
                 "description": "Grid content."
             },
@@ -1052,22 +1111,23 @@
             },
             {
                 "name": "gap",
-                "type": "Spacing",
+                "type": "0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10",
                 "required": false,
                 "default": "3",
                 "description": "Spacing between all items. Default: 3."
             },
             {
                 "name": "GridSpan.children",
-                "type": "ViewNode",
-                "required": false
+                "type": "ReactNode",
+                "required": false,
+                "description": "Content rendered inside the grid item."
             },
             {
                 "name": "GridSpan.columns",
                 "type": "number | \"full\"",
                 "required": false,
                 "default": "1",
-                "description": "The GridSpan.columns prop. Default: 1."
+                "description": "Number of columns to occupy, or full to span the entire grid. Default: 1."
             }
         ]
     },
@@ -1078,7 +1138,7 @@
         "properties": [
             {
                 "name": "children",
-                "type": "ViewNode",
+                "type": "ReactNode",
                 "required": false,
                 "description": "Heading content."
             },
@@ -1121,7 +1181,7 @@
     {
         "name": "Icon",
         "category": "Display",
-        "declaration": "declare const Icon: ViewComponent<{\n    icon: string;\n    size: 'sm' | 'md' | 'lg';\n}>;",
+        "declaration": "declare function Icon(props: { icon: string; size: 'sm' | 'md' | 'lg' }): React.JSX.Element;",
         "properties": [
             {
                 "name": "icon",
@@ -1134,12 +1194,6 @@
                 "type": "\"sm\" | \"md\" | \"lg\"",
                 "required": true,
                 "description": "Icon size. An explicit value wins. When omitted, Icon uses the nearest default supplied by an owning Astryx component for its icon slot, then falls back to md when no contextual default exists."
-            },
-            {
-                "name": "children",
-                "type": "ViewNode",
-                "required": false,
-                "description": "The children prop."
             }
         ]
     },
@@ -1156,7 +1210,7 @@
             },
             {
                 "name": "icon",
-                "type": "ViewNode",
+                "type": "ReactNode",
                 "required": true,
                 "description": "Icon element rendered inside the button. An Astryx Icon with no explicit size defaults to sm for sm/md buttons and md for lg buttons."
             },
@@ -1208,7 +1262,7 @@
             },
             {
                 "name": "children",
-                "type": "ViewNode",
+                "type": "ReactNode",
                 "required": false,
                 "description": "Link content"
             }
@@ -1217,12 +1271,13 @@
     {
         "name": "Menu",
         "category": "Layouts",
-        "declaration": "declare function Menu(props: {\n    children?: ViewNode;\n    gap?: 0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10;\n}): React.JSX.Element;\n\ndeclare function MenuSection(props: {\n    children?: ViewNode;\n    isHeaderHidden?: boolean;\n    title: string;\n}): React.JSX.Element;\n\ndeclare function MenuItem(props: { children?: ViewNode; id?: string; icon?: string; label: string }): React.JSX.Element;\n\ndeclare function MenuSubSection(props: { children?: ViewNode; icon?: string; label: string }): React.JSX.Element;",
+        "declaration": "declare function Menu(props: {\n    /** MenuSection elements defining navigation and content. */\n    children?: ViewNode;\n    gap?: 0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10;\n}): React.JSX.Element;\n\ndeclare function MenuSection(props: {\n    /** MenuItem elements or nested MenuSubSection groups. */\n    children?: ViewNode;\n    /** Hides the section heading; visible by default. */\n    isHeaderHidden?: boolean;\n    /** Section heading displayed in the navigation. */\n    title: string;\n}): React.JSX.Element;\n\ndeclare function MenuItem(props: {\n    /** Content mounted beside the navigation while this item is selected. */\n    children?: ViewNode;\n    /** Optional LongLink icon name displayed beside the label. */\n    icon?: string;\n    /** Navigation label; its lowercase, hyphenated form identifies the item's URL fragment. */\n    label: string;\n}): React.JSX.Element;\n\ndeclare function MenuSubSection(props: {\n    /** MenuItem elements nested inside this collapsible group. */\n    children?: ViewNode;\n    /** Optional LongLink icon name displayed beside the group label. */\n    icon?: string;\n    /** Label displayed on the collapsible navigation group. */\n    label: string;\n}): React.JSX.Element;",
         "properties": [
             {
                 "name": "children",
-                "type": "ViewNode",
-                "required": false
+                "type": "ReactNode",
+                "required": false,
+                "description": "MenuSection elements defining navigation and content."
             },
             {
                 "name": "gap",
@@ -1233,64 +1288,68 @@
             },
             {
                 "name": "MenuSection.children",
-                "type": "ViewNode",
-                "required": false
+                "type": "ReactNode",
+                "required": false,
+                "description": "MenuItem elements or nested MenuSubSection groups."
             },
             {
                 "name": "MenuSection.isHeaderHidden",
                 "type": "boolean",
-                "required": false
+                "required": false,
+                "description": "Hides the section heading; visible by default."
             },
             {
                 "name": "MenuSection.title",
                 "type": "string",
-                "required": true
+                "required": true,
+                "description": "Section heading displayed in the navigation."
             },
             {
                 "name": "MenuItem.children",
-                "type": "ViewNode",
-                "required": false
-            },
-            {
-                "name": "MenuItem.id",
-                "type": "string",
-                "required": false
+                "type": "ReactNode",
+                "required": false,
+                "description": "Content mounted beside the navigation while this item is selected."
             },
             {
                 "name": "MenuItem.icon",
                 "type": "string",
-                "required": false
+                "required": false,
+                "description": "Optional LongLink icon name displayed beside the label."
             },
             {
                 "name": "MenuItem.label",
                 "type": "string",
-                "required": true
+                "required": true,
+                "description": "Navigation label; its lowercase, hyphenated form identifies the item's URL fragment."
             },
             {
                 "name": "MenuSubSection.children",
-                "type": "ViewNode",
-                "required": false
+                "type": "ReactNode",
+                "required": false,
+                "description": "MenuItem elements nested inside this collapsible group."
             },
             {
                 "name": "MenuSubSection.icon",
                 "type": "string",
-                "required": false
+                "required": false,
+                "description": "Optional LongLink icon name displayed beside the group label."
             },
             {
                 "name": "MenuSubSection.label",
                 "type": "string",
-                "required": true
+                "required": true,
+                "description": "Label displayed on the collapsible navigation group."
             }
         ]
     },
     {
         "name": "MetadataList",
         "category": "Display",
-        "declaration": "declare function MetadataList(props: {\n    children?: ViewNode;\n    columns?: 'multi' | 'single' | number;\n    title?: ViewNode;\n}): React.JSX.Element;\n\ndeclare function MetadataListItem(props: { children?: ViewNode; label: string; icon?: ViewNode }): React.JSX.Element;",
+        "declaration": "declare function MetadataList(props: {\n    children?: ViewNode;\n    columns?: 'multi' | 'single' | number;\n    title?: ViewNode;\n}): React.JSX.Element;\n\ndeclare function MetadataListItem(props: {\n    /** Value rendered beside the metadata label. */\n    children?: ViewNode;\n    /** Label identifying the metadata value. */\n    label: string;\n    /** Optional icon displayed beside the metadata label. */\n    icon?: ViewNode;\n}): React.JSX.Element;",
         "properties": [
             {
                 "name": "children",
-                "type": "ViewNode",
+                "type": "ReactNode",
                 "required": false,
                 "description": "Metadata items (MetadataListItem components)."
             },
@@ -1303,24 +1362,27 @@
             },
             {
                 "name": "title",
-                "type": "ViewNode",
+                "type": "ReactNode",
                 "required": false,
                 "description": "Optional title or heading above the list."
             },
             {
                 "name": "MetadataListItem.children",
-                "type": "ViewNode",
-                "required": false
+                "type": "ReactNode",
+                "required": false,
+                "description": "Value rendered beside the metadata label."
             },
             {
                 "name": "MetadataListItem.label",
                 "type": "string",
-                "required": true
+                "required": true,
+                "description": "Label identifying the metadata value."
             },
             {
                 "name": "MetadataListItem.icon",
-                "type": "ViewNode",
-                "required": false
+                "type": "ReactNode",
+                "required": false,
+                "description": "Optional icon displayed beside the metadata label."
             }
         ]
     },
@@ -1344,7 +1406,7 @@
             },
             {
                 "name": "icon",
-                "type": "ViewNode",
+                "type": "ReactNode",
                 "required": false,
                 "description": "Override the default three-dot icon. Accepts any ReactNode."
             },
@@ -1674,7 +1736,7 @@
     {
         "name": "RadioList",
         "category": "Form",
-        "declaration": "declare function RadioList(\n    props: FieldProps & {\n        children?: ViewNode;\n        value: string;\n        onChange: (value: string) => void;\n        orientation?: 'vertical' | 'horizontal';\n        htmlName?: string;\n        size?: 'sm' | 'md';\n    },\n): React.JSX.Element;\n\ndeclare function RadioListItem(props: {\n    label: string;\n    value: string;\n    description?: string;\n    isDisabled?: boolean;\n}): React.JSX.Element;",
+        "declaration": "declare function RadioList(\n    props: FieldProps & {\n        children?: ViewNode;\n        value: string;\n        onChange: (value: string) => void;\n        orientation?: 'vertical' | 'horizontal';\n        htmlName?: string;\n        size?: 'sm' | 'md';\n    },\n): React.JSX.Element;\n\ndeclare function RadioListItem(props: {\n    /** Visible label identifying this choice. */\n    label: string;\n    /** Value passed to the surrounding RadioList when selected. */\n    value: string;\n    /** Optional helper text explaining the choice. */\n    description?: string;\n    isDisabled?: boolean;\n}): React.JSX.Element;",
         "properties": [
             {
                 "name": "label",
@@ -1723,7 +1785,7 @@
             },
             {
                 "name": "children",
-                "type": "ViewNode",
+                "type": "ReactNode",
                 "required": false,
                 "description": "RadioListItem elements."
             },
@@ -1762,17 +1824,20 @@
             {
                 "name": "RadioListItem.label",
                 "type": "string",
-                "required": true
+                "required": true,
+                "description": "Visible label identifying this choice."
             },
             {
                 "name": "RadioListItem.value",
                 "type": "string",
-                "required": true
+                "required": true,
+                "description": "Value passed to the surrounding RadioList when selected."
             },
             {
                 "name": "RadioListItem.description",
                 "type": "string",
-                "required": false
+                "required": false,
+                "description": "Optional helper text explaining the choice."
             },
             {
                 "name": "RadioListItem.isDisabled",
@@ -2001,24 +2066,24 @@
     {
         "name": "Stack",
         "category": "Layouts",
-        "declaration": "declare function Stack(props: {\n    children?: ViewNode;\n    gap?: Spacing;\n    padding?: Spacing;\n    direction?: 'horizontal' | 'vertical';\n    justify?: 'start' | 'center' | 'end' | 'between' | 'around' | 'evenly';\n    align?: 'start' | 'center' | 'end' | 'stretch';\n    wrap?: 'nowrap' | 'wrap' | 'wrap-reverse';\n}): React.JSX.Element;\n\ndeclare function StackItem(props: {\n    children?: ViewNode;\n    size?: 'static' | 'fill';\n    isScrollable?: boolean;\n    crossAlignSelf?: 'start' | 'center' | 'end' | 'stretch';\n}): React.JSX.Element;",
+        "declaration": "declare function Stack(props: {\n    children?: ViewNode;\n    gap?: Spacing;\n    padding?: Spacing;\n    direction?: 'horizontal' | 'vertical';\n    justify?: 'start' | 'center' | 'end' | 'between' | 'around' | 'evenly';\n    align?: 'start' | 'center' | 'end' | 'stretch';\n    wrap?: 'nowrap' | 'wrap' | 'wrap-reverse';\n}): React.JSX.Element;\n\ndeclare function StackItem(props: {\n    /** Content rendered inside the stack item. */\n    children?: ViewNode;\n    size?: 'static' | 'fill';\n    isScrollable?: boolean;\n    /** Overrides this item's cross-axis alignment; omitted values inherit the parent alignment. */\n    crossAlignSelf?: 'start' | 'center' | 'end' | 'stretch';\n}): React.JSX.Element;",
         "properties": [
             {
                 "name": "children",
-                "type": "ViewNode",
+                "type": "ReactNode",
                 "required": false,
                 "description": "Stack content."
             },
             {
                 "name": "gap",
-                "type": "Spacing",
+                "type": "0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10",
                 "required": false,
                 "default": "3",
                 "description": "Spacing step (number literal): 0, 0.5, 1, 1.5, 2, 3, 4, 5, 6, 8, 10. Pass as a JSX number expression e.g. gap={4}, NOT a string like gap=\"4\". Default: 3."
             },
             {
                 "name": "padding",
-                "type": "Spacing",
+                "type": "0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10",
                 "required": false,
                 "default": "0",
                 "description": "Inner padding on all sides, using the spacing scale. Pass as a JSX number expression e.g. padding={3}. Default: 0."
@@ -2053,8 +2118,9 @@
             },
             {
                 "name": "StackItem.children",
-                "type": "ViewNode",
-                "required": false
+                "type": "ReactNode",
+                "required": false,
+                "description": "Content rendered inside the stack item."
             },
             {
                 "name": "StackItem.size",
@@ -2073,7 +2139,8 @@
             {
                 "name": "StackItem.crossAlignSelf",
                 "type": "\"start\" | \"center\" | \"end\" | \"stretch\"",
-                "required": false
+                "required": false,
+                "description": "Overrides this item's cross-axis alignment; omitted values inherit the parent alignment."
             }
         ]
     },
@@ -2105,11 +2172,11 @@
     {
         "name": "Stepper",
         "category": "Layouts",
-        "declaration": "declare function Stepper(props: {\n    children?: ViewNode;\n    activeStep?: number;\n    orientation?: 'horizontal' | 'vertical';\n}): React.JSX.Element;\n\ndeclare function Step(props: { step: number; label: string }): React.JSX.Element;",
+        "declaration": "declare function Stepper(props: {\n    children?: ViewNode;\n    activeStep?: number;\n    orientation?: 'horizontal' | 'vertical';\n}): React.JSX.Element;\n\ndeclare function Step(props: {\n    /** Zero-based index of this step in the process. */\n    step: number;\n    /** Visible label identifying the step. */\n    label: string;\n}): React.JSX.Element;",
         "properties": [
             {
                 "name": "children",
-                "type": "ViewNode",
+                "type": "ReactNode",
                 "required": false,
                 "description": "Step elements to render in the stepper."
             },
@@ -2130,12 +2197,14 @@
             {
                 "name": "Step.step",
                 "type": "number",
-                "required": true
+                "required": true,
+                "description": "Zero-based index of this step in the process."
             },
             {
                 "name": "Step.label",
                 "type": "string",
-                "required": true
+                "required": true,
+                "description": "Visible label identifying the step."
             }
         ]
     },
@@ -2256,7 +2325,7 @@
             },
             {
                 "name": "columns",
-                "type": "{ key: string; header?: ViewNode; width?: ColumnWidth; align?: \"start\" | \"center\" | \"end\"; renderCell?: ((row: T) => ViewNode); }[]",
+                "type": "{ key: string; header?: ReactNode; width?: ColumnWidth; align?: \"start\" | \"center\" | \"end\"; renderCell?: ((row: T) => ReactNode); }[]",
                 "required": false,
                 "description": "Column definitions: each column has {key, header, width?, align?, renderCell?}. The `header` field sets the column heading text. If omitted, columns are auto-generated from data object keys. The `width` field is typed as `ColumnWidth` (not a number); use `proportional(n)` or `pixel(n)` helpers imported from `@astryxdesign/core/Table`. Example: `width: pixel(120)` for 120px fixed, `width: proportional(1)` for flex distribution."
             }
@@ -2265,12 +2334,13 @@
     {
         "name": "Tabs",
         "category": "Layouts",
-        "declaration": "declare function Tabs(props: {\n    children?: ViewNode;\n    gap?: 0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10;\n    hasDivider?: boolean;\n    onChange?: (value: string) => void;\n    value?: string;\n}): React.JSX.Element;\n\ndeclare function Tab(props: {\n    children?: ViewNode;\n    value: string;\n    label: string;\n    isDisabled?: boolean;\n    panelId?: string;\n}): React.JSX.Element;",
+        "declaration": "declare function Tabs(props: {\n    /** Tab elements defining labels and panel content. */\n    children?: ViewNode;\n    gap?: 0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10;\n    hasDivider?: boolean;\n    /** Receives the selected Tab value; use with value to control selection. */\n    onChange?: (value: string) => void;\n    /** Selected Tab value; omit for internal selection, initially choosing the first tab. */\n    value?: string;\n}): React.JSX.Element;\n\ndeclare function Tab(props: {\n    /** Panel content mounted only while this tab is selected. */\n    children?: ViewNode;\n    /** Unique value identifying this tab. */\n    value: string;\n    /** Visible tab label and accessible panel name. */\n    label: string;\n    /** Whether the tab is disabled. */\n    isDisabled?: boolean;\n    /** Panel element ID; omitted values use an automatically generated ID. */\n    panelId?: string;\n}): React.JSX.Element;",
         "properties": [
             {
                 "name": "children",
-                "type": "ViewNode",
-                "required": false
+                "type": "ReactNode",
+                "required": false,
+                "description": "Tab elements defining labels and panel content."
             },
             {
                 "name": "gap",
@@ -2289,37 +2359,44 @@
             {
                 "name": "onChange",
                 "type": "(value: string) => void",
-                "required": false
+                "required": false,
+                "description": "Receives the selected Tab value; use with value to control selection."
             },
             {
                 "name": "value",
                 "type": "string",
-                "required": false
+                "required": false,
+                "description": "Selected Tab value; omit for internal selection, initially choosing the first tab."
             },
             {
                 "name": "Tab.children",
-                "type": "ViewNode",
-                "required": false
+                "type": "ReactNode",
+                "required": false,
+                "description": "Panel content mounted only while this tab is selected."
             },
             {
                 "name": "Tab.value",
                 "type": "string",
-                "required": true
+                "required": true,
+                "description": "Unique value identifying this tab."
             },
             {
                 "name": "Tab.label",
                 "type": "string",
-                "required": true
+                "required": true,
+                "description": "Visible tab label and accessible panel name."
             },
             {
                 "name": "Tab.isDisabled",
                 "type": "boolean",
-                "required": false
+                "required": false,
+                "description": "Whether the tab is disabled."
             },
             {
                 "name": "Tab.panelId",
                 "type": "string",
-                "required": false
+                "required": false,
+                "description": "Panel element ID; omitted values use an automatically generated ID."
             }
         ]
     },
@@ -2330,7 +2407,7 @@
         "properties": [
             {
                 "name": "children",
-                "type": "ViewNode",
+                "type": "ReactNode",
                 "required": false,
                 "description": "Text content."
             },
@@ -2583,7 +2660,7 @@
             },
             {
                 "name": "startIcon",
-                "type": "ViewNode",
+                "type": "ReactNode",
                 "required": false,
                 "description": "SVG icon component displayed at the start of the input. See `astryx docs icons` for valid semantic names."
             },
