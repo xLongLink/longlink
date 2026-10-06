@@ -21,13 +21,16 @@ export default function Organizations() {
     const [page, setPage] = useState(1);
     const [isDeleting, startDeletion] = useTransition();
     const [dialog, setDialog] = useState<
-        | { kind: 'metadata'; item: z.output<typeof zPageOrganizationIdentity>['items'][number] }
-        | { kind: 'deletion'; item: { id: string; name: string } }
-        | null
+        { kind: 'metadata'; id: string } | { kind: 'deletion'; item: { id: string; name: string } } | null
     >(null);
     const [organizations, invalidate] = useApi<z.output<typeof zPageOrganizationIdentity>>(
         `/api/v1/organizations?page=${page}&page_size=25`
     );
+
+    // Use current metadata and clear missing selections so returning to a page cannot reopen the dialog.
+    const metadata =
+        dialog?.kind === 'metadata' ? organizations.items.find((item) => item.id === dialog.id) : undefined;
+    if (dialog?.kind === 'metadata' && !metadata) setDialog(null);
 
     return (
         <Stack gap={8}>
@@ -73,7 +76,7 @@ export default function Organizations() {
                                     icon={<Info />}
                                     size="sm"
                                     variant="ghost"
-                                    onClick={() => setDialog({ kind: 'metadata', item: row })}
+                                    onClick={() => setDialog({ kind: 'metadata', id: row.id })}
                                 />
                             ),
                         },
@@ -88,7 +91,7 @@ export default function Organizations() {
                     />
                 </Stack>
             </Stack>
-            {dialog?.kind === 'metadata' && (
+            {metadata && (
                 <Dialog
                     isOpen
                     onOpenChange={(open) => {
@@ -98,13 +101,13 @@ export default function Organizations() {
                     <DialogHeader title="Organization metadata" onOpenChange={() => setDialog(null)} />
                     <Stack gap={2}>
                         <Text>
-                            <b>Status</b> {dialog.item.status}
+                            <b>Status</b> {metadata.status}
                         </Text>
                         <Text>
-                            <b>Slug</b> {dialog.item.slug}
+                            <b>Slug</b> {metadata.slug}
                         </Text>
                         <Text>
-                            <b>ID</b> {dialog.item.id}
+                            <b>ID</b> {metadata.id}
                         </Text>
                         <Stack direction="horizontal" justify="end">
                             <Button
@@ -113,7 +116,7 @@ export default function Organizations() {
                                 onClick={() =>
                                     setDialog({
                                         kind: 'deletion',
-                                        item: { id: dialog.item.id, name: dialog.item.name },
+                                        item: { id: metadata.id, name: metadata.name },
                                     })
                                 }
                             />

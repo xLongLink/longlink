@@ -149,42 +149,16 @@ function DeploymentReview({ update, invalidate, onClose }: DeploymentReviewProps
     );
 }
 
-/** Manages organization access, storage, and deployments; the layout owns route-scoped resets. */
+/** Shares organization identity and permissions while sections own resource lifetimes. */
 export default function OrganizationSettings() {
-    const [invitation, setInvitation] = useState({ email: '', role: 'write' });
-    const [inviting, setInviting] = useState(false);
-    const [member, setMember] = useState<{ id: string; name: string; role: string } | null>(null);
-    const [creating, setCreating] = useState(false);
-    const [update, setUpdate] = useState<Update | null>(null);
-    const [deletion, setDeletion] = useState<{ id: string; name: string } | null>(null);
-    const [logs, setLogs] = useState<string | null>(null);
-    const [, startAction] = useTransition();
-    const [isDeleting, startDeletion] = useTransition();
     const membership = useResolvedOrganizationMembership();
     const base = `/api/v1/organizations/${membership.organization.id}`;
 
-    // Keep each required resource paired with its own scoped invalidator.
+    // Share organization identity and access data across settings sections.
     const [details, invalidateDetails] = useApi<z.output<typeof schemas.zOrganizationDetails>>(base);
-    const [storage] = useApi<z.output<typeof schemas.zOrganizationStorageUsageResponse>>(`${base}/storage`);
-    const [solutions, invalidateSolutions] = useApi<
-        z.output<typeof schemas.zGetOrganizationSolutionsApiV1OrganizationsOrganizationIdSolutionsGetResponse>
-    >(`${base}/solutions`);
 
     const canMaintain = ['maintain', 'admin', 'owner'].includes(membership.role);
     const canAdminister = ['admin', 'owner'].includes(membership.role);
-
-    /** Sends the validated invitation and refreshes organization access. */
-    async function inviteMember() {
-        // Refresh organization access only after sending the invitation succeeds.
-        await api.post(`${base}/invitations`, {
-            json: schemas.zOrganizationInvitationCreate.parse({
-                ...invitation,
-                email: invitation.email.trim(),
-            }),
-        });
-        await invalidateDetails();
-        setInviting(false);
-    }
 
     return (
         <Stack gap={8}>
@@ -201,256 +175,114 @@ export default function OrganizationSettings() {
             <Menu>
                 <MenuSection title="Settings" isHeaderHidden>
                     <MenuItem id="organization" label="Organization" icon="building2">
-                        <Stack gap={4}>
-                            <Stack gap={1}>
-                                <Heading level={2}>Organization</Heading>
-                                <Text color="secondary">Review storage usage.</Text>
-                            </Stack>
-                            <Divider />
-                            <ProgressBar label="Storage" value={storage.space_used} max={storage.quota_bytes} />
-                        </Stack>
+                        <ApiBoundary key="storage">
+                            <StorageSection base={base} />
+                        </ApiBoundary>
                     </MenuItem>
                     <MenuSubSection label="People" icon="users">
                         <MenuItem id="members" label="Members">
-                            <Stack gap={4}>
-                                <Stack gap={1}>
-                                    <Heading level={2}>Members</Heading>
-                                    <Text color="secondary">Manage the people in this organization.</Text>
-                                </Stack>
-                                <Divider />
-                                <Table
-                                    data={details.members}
-                                    idKey={(row) => row.user.id}
-                                    hasHover
-                                    density="compact"
-                                    columns={[
-                                        {
-                                            key: 'user',
-                                            header: 'User',
-                                            width: proportional(1),
-                                            renderCell: (row) => (
-                                                <Stack direction="horizontal" gap={3} align="center">
-                                                    <Avatar name={row.user.name} src={row.user.avatar} />
-                                                    <Stack align="start">
-                                                        <Stack direction="horizontal" gap={1} align="center">
-                                                            <Text>{row.user.name}</Text>
-                                                            <Badge label={row.role} />
-                                                        </Stack>
-                                                        <Text type="supporting">{row.user.email}</Text>
-                                                    </Stack>
-                                                </Stack>
-                                            ),
-                                        },
-                                        ...(canAdminister
-                                            ? [
-                                                  {
-                                                      key: 'role',
-                                                      header: 'Actions',
-                                                      align: 'end' as const,
-                                                      width: proportional(0.5),
-                                                      renderCell: (
-                                                          row: z.output<
-                                                              typeof schemas.zOrganizationMemberAccessResponse
-                                                          >
-                                                      ) => (
-                                                          <MoreMenu
-                                                              alignment="end"
-                                                              items={['read', 'write', 'maintain', 'admin']
-                                                                  .filter((role) => role !== row.role)
-                                                                  .map((role) => ({
-                                                                      id: role,
-                                                                      label: `Set as ${role[0].toUpperCase() + role.slice(1)}`,
-                                                                      onClick: () =>
-                                                                          setMember({
-                                                                              id: row.user.id,
-                                                                              name: row.user.name,
-                                                                              role,
-                                                                          }),
-                                                                  }))}
-                                                          />
-                                                      ),
-                                                  },
-                                              ]
-                                            : []),
-                                    ]}
-                                />
-                            </Stack>
+                            <MembersSection
+                                base={base}
+                                members={details.members}
+                                canAdminister={canAdminister}
+                                invalidateDetails={invalidateDetails}
+                            />
                         </MenuItem>
                         <MenuItem id="invitations" label="Invitations">
-                            <Stack gap={4}>
-                                <Stack direction="horizontal" justify="between" align="center" wrap="wrap">
-                                    <Stack gap={1}>
-                                        <Heading level={2}>Invitations</Heading>
-                                        <Text color="secondary">Send an invitation to join this organization.</Text>
-                                    </Stack>
-                                    {canMaintain && <Button label="Invite" onClick={() => setInviting(true)} />}
-                                </Stack>
-                                <Divider />
-                                <Table
-                                    data={details.invitations}
-                                    idKey="id"
-                                    hasHover
-                                    density="compact"
-                                    columns={[
-                                        { key: 'email', header: 'Email', width: proportional(1) },
-                                        {
-                                            key: 'role',
-                                            header: 'Role',
-                                            width: proportional(1),
-                                            renderCell: (row) => <Badge label={row.role} />,
-                                        },
-                                        ...(canMaintain
-                                            ? [
-                                                  {
-                                                      key: 'id',
-                                                      header: 'Actions',
-                                                      align: 'end' as const,
-                                                      width: proportional(0.5),
-                                                      renderCell: (
-                                                          row: z.output<typeof schemas.zOrganizationInvitationResponse>
-                                                      ) => (
-                                                          <Button
-                                                              label="Revoke"
-                                                              variant="destructive"
-                                                              clickAction={async () => {
-                                                                  // Refresh organization access only after revocation succeeds.
-                                                                  await api.delete(`${base}/invitations/${row.id}`);
-                                                                  await invalidateDetails();
-                                                              }}
-                                                          />
-                                                      ),
-                                                  },
-                                              ]
-                                            : []),
-                                    ]}
-                                />
-                            </Stack>
+                            <InvitationsSection
+                                base={base}
+                                invitations={details.invitations}
+                                canMaintain={canMaintain}
+                                invalidateDetails={invalidateDetails}
+                            />
                         </MenuItem>
                     </MenuSubSection>
                     <MenuItem id="solutions" label="Solutions" icon="boxes">
-                        <Stack gap={4}>
-                            <Stack direction="horizontal" justify="between" align="center" wrap="wrap">
-                                <Heading level={1}>Solutions</Heading>
-                                {canMaintain && <Button label="New Solution" onClick={() => setCreating(true)} />}
-                            </Stack>
-                            <Divider />
-                            <Table
-                                data={solutions}
-                                idKey="id"
-                                hasHover
-                                density="compact"
-                                columns={[
-                                    {
-                                        key: 'name',
-                                        header: 'Solution',
-                                        width: proportional(1),
-                                        renderCell: (row) => (
-                                            <Stack>
-                                                <Link
-                                                    href={`/orgs/${membership.organization.slug}/solutions/${row.slug}`}
-                                                >
-                                                    {row.name}
-                                                </Link>
-                                                {row.description && <Text type="supporting">{row.description}</Text>}
-                                            </Stack>
-                                        ),
-                                    },
-                                    ...(canMaintain
-                                        ? [
-                                              {
-                                                  key: 'id',
-                                                  header: 'Actions',
-                                                  align: 'end' as const,
-                                                  width: proportional(0.5),
-                                                  renderCell: (row: Solution) => (
-                                                      <MoreMenu
-                                                          alignment="end"
-                                                          items={[
-                                                              ...(row.desired_revision_id &&
-                                                              !row.deployment_pending &&
-                                                              row.status !== 'creating'
-                                                                  ? [
-                                                                        {
-                                                                            id: 'update',
-                                                                            label: 'Update',
-                                                                            icon: <RefreshCw />,
-                                                                            onClick: () => {
-                                                                                // Forward async menu failures to the surrounding boundary without tracking pending state.
-                                                                                startAction(async () => {
-                                                                                    // Fetch a fresh candidate for each review; never reuse a stale revision fence.
-                                                                                    const checked =
-                                                                                        schemas.zSolutionUpdateCheck.parse(
-                                                                                            await api(
-                                                                                                `/api/v1/solutions/${row.id}/update`
-                                                                                            ).json()
-                                                                                        );
-                                                                                    setUpdate({
-                                                                                        key: crypto.randomUUID(),
-                                                                                        item: {
-                                                                                            id: row.id,
-                                                                                            name: row.name,
-                                                                                        },
-                                                                                        candidate: checked,
-                                                                                    });
-                                                                                });
-                                                                            },
-                                                                        },
-                                                                    ]
-                                                                  : []),
-                                                              {
-                                                                  id: 'logs',
-                                                                  label: 'Logs',
-                                                                  icon: <Logs />,
-                                                                  onClick: () => setLogs(row.id),
-                                                              },
-                                                              {
-                                                                  id: 'delete',
-                                                                  label: 'Delete',
-                                                                  icon: <Trash />,
-                                                                  onClick: () =>
-                                                                      setDeletion({
-                                                                          id: row.id,
-                                                                          name: row.name,
-                                                                      }),
-                                                              },
-                                                          ]}
-                                                      />
-                                                  ),
-                                              },
-                                          ]
-                                        : []),
-                                ]}
-                            />
-                        </Stack>
+                        <ApiBoundary key="solutions">
+                            <SolutionsSection organization={membership.organization} canMaintain={canMaintain} />
+                        </ApiBoundary>
                     </MenuItem>
                 </MenuSection>
             </Menu>
-            <Dialog isOpen={inviting} purpose="form" onOpenChange={setInviting}>
-                <DialogHeader
-                    title="Invite user"
-                    subtitle="Send an invitation to join this organization."
-                    onOpenChange={() => setInviting(false)}
+        </Stack>
+    );
+}
+
+/** Owns role-change confirmation only while the members section is active. */
+function MembersSection({
+    base,
+    members,
+    canAdminister,
+    invalidateDetails,
+}: {
+    base: string;
+    members: z.output<typeof schemas.zOrganizationDetails>['members'];
+    canAdminister: boolean;
+    invalidateDetails: () => Promise<void>;
+}) {
+    const [member, setMember] = useState<{ id: string; name: string; role: string } | null>(null);
+
+    return (
+        <>
+            <Stack gap={4}>
+                <Stack gap={1}>
+                    <Heading level={2}>Members</Heading>
+                    <Text color="secondary">Manage the people in this organization.</Text>
+                </Stack>
+                <Divider />
+                <Table
+                    data={members}
+                    idKey={(row) => row.user.id}
+                    hasHover
+                    density="compact"
+                    columns={[
+                        {
+                            key: 'user',
+                            header: 'User',
+                            width: proportional(1),
+                            renderCell: (row) => (
+                                <Stack direction="horizontal" gap={3} align="center">
+                                    <Avatar name={row.user.name} src={row.user.avatar} />
+                                    <Stack align="start">
+                                        <Stack direction="horizontal" gap={1} align="center">
+                                            <Text>{row.user.name}</Text>
+                                            <Badge label={row.role} />
+                                        </Stack>
+                                        <Text type="supporting">{row.user.email}</Text>
+                                    </Stack>
+                                </Stack>
+                            ),
+                        },
+                        ...(canAdminister
+                            ? [
+                                  {
+                                      key: 'role',
+                                      header: 'Actions',
+                                      align: 'end' as const,
+                                      width: proportional(0.5),
+                                      renderCell: (row: z.output<typeof schemas.zOrganizationMemberAccessResponse>) => (
+                                          <MoreMenu
+                                              alignment="end"
+                                              items={['read', 'write', 'maintain', 'admin']
+                                                  .filter((role) => role !== row.role)
+                                                  .map((role) => ({
+                                                      id: role,
+                                                      label: `Set as ${role[0].toUpperCase() + role.slice(1)}`,
+                                                      onClick: () =>
+                                                          setMember({
+                                                              id: row.user.id,
+                                                              name: row.user.name,
+                                                              role,
+                                                          }),
+                                                  }))}
+                                          />
+                                      ),
+                                  },
+                              ]
+                            : []),
+                    ]}
                 />
-                <form action={inviteMember}>
-                    <Stack gap={3}>
-                        <TextInput
-                            label="Email"
-                            type="email"
-                            value={invitation.email}
-                            placeholder="user@example.com"
-                            isRequired
-                            onChange={(email) => setInvitation({ ...invitation, email })}
-                        />
-                        <Selector
-                            label="Role"
-                            value={invitation.role}
-                            options={['read', 'write', 'maintain', 'admin'].map((value) => ({ value, label: value }))}
-                            onChange={(role) => setInvitation({ ...invitation, role })}
-                        />
-                        <Button label="Invite" variant="primary" type="submit" />
-                    </Stack>
-                </form>
-            </Dialog>
+            </Stack>
             {member && (
                 <Dialog
                     isOpen
@@ -482,9 +314,248 @@ export default function OrganizationSettings() {
                     </Stack>
                 </Dialog>
             )}
+        </>
+    );
+}
+
+/** Owns invitation drafts and actions only while their section is active. */
+function InvitationsSection({
+    base,
+    invitations,
+    canMaintain,
+    invalidateDetails,
+}: {
+    base: string;
+    invitations: z.output<typeof schemas.zOrganizationDetails>['invitations'];
+    canMaintain: boolean;
+    invalidateDetails: () => Promise<void>;
+}) {
+    const [invitation, setInvitation] = useState({ email: '', role: 'write' });
+    const [inviting, setInviting] = useState(false);
+
+    /** Sends the validated invitation and refreshes organization access. */
+    async function inviteMember() {
+        // Refresh organization access only after sending the invitation succeeds.
+        await api.post(`${base}/invitations`, {
+            json: schemas.zOrganizationInvitationCreate.parse({
+                ...invitation,
+                email: invitation.email.trim(),
+            }),
+        });
+        await invalidateDetails();
+        setInviting(false);
+    }
+
+    return (
+        <>
+            <Stack gap={4}>
+                <Stack direction="horizontal" justify="between" align="center" wrap="wrap">
+                    <Stack gap={1}>
+                        <Heading level={2}>Invitations</Heading>
+                        <Text color="secondary">Send an invitation to join this organization.</Text>
+                    </Stack>
+                    {canMaintain && <Button label="Invite" onClick={() => setInviting(true)} />}
+                </Stack>
+                <Divider />
+                <Table
+                    data={invitations}
+                    idKey="id"
+                    hasHover
+                    density="compact"
+                    columns={[
+                        { key: 'email', header: 'Email', width: proportional(1) },
+                        {
+                            key: 'role',
+                            header: 'Role',
+                            width: proportional(1),
+                            renderCell: (row) => <Badge label={row.role} />,
+                        },
+                        ...(canMaintain
+                            ? [
+                                  {
+                                      key: 'id',
+                                      header: 'Actions',
+                                      align: 'end' as const,
+                                      width: proportional(0.5),
+                                      renderCell: (row: z.output<typeof schemas.zOrganizationInvitationResponse>) => (
+                                          <Button
+                                              label="Revoke"
+                                              variant="destructive"
+                                              clickAction={async () => {
+                                                  // Refresh organization access only after revocation succeeds.
+                                                  await api.delete(`${base}/invitations/${row.id}`);
+                                                  await invalidateDetails();
+                                              }}
+                                          />
+                                      ),
+                                  },
+                              ]
+                            : []),
+                    ]}
+                />
+            </Stack>
+            <Dialog isOpen={inviting} purpose="form" onOpenChange={setInviting}>
+                <DialogHeader
+                    title="Invite user"
+                    subtitle="Send an invitation to join this organization."
+                    onOpenChange={() => setInviting(false)}
+                />
+                <form action={inviteMember}>
+                    <Stack gap={3}>
+                        <TextInput
+                            label="Email"
+                            type="email"
+                            value={invitation.email}
+                            placeholder="user@example.com"
+                            isRequired
+                            onChange={(email) => setInvitation({ ...invitation, email })}
+                        />
+                        <Selector
+                            label="Role"
+                            value={invitation.role}
+                            options={['read', 'write', 'maintain', 'admin'].map((value) => ({ value, label: value }))}
+                            onChange={(role) => setInvitation({ ...invitation, role })}
+                        />
+                        <Button label="Invite" variant="primary" type="submit" />
+                    </Stack>
+                </form>
+            </Dialog>
+        </>
+    );
+}
+
+/** Loads storage usage only while the organization section is active. */
+function StorageSection({ base }: { base: string }) {
+    const [storage] = useApi<z.output<typeof schemas.zOrganizationStorageUsageResponse>>(`${base}/storage`);
+
+    return (
+        <Stack gap={4}>
+            <Stack gap={1}>
+                <Heading level={2}>Organization</Heading>
+                <Text color="secondary">Review storage usage.</Text>
+            </Stack>
+            <Divider />
+            <ProgressBar label="Storage" value={storage.space_used} max={storage.quota_bytes} />
+        </Stack>
+    );
+}
+
+/** Owns solution reads and dialogs for the lifetime of the active section. */
+function SolutionsSection({
+    organization,
+    canMaintain,
+}: {
+    organization: z.output<typeof schemas.zOrganizationDetails>['organization'];
+    canMaintain: boolean;
+}) {
+    const [creating, setCreating] = useState(false);
+    const [update, setUpdate] = useState<Update | null>(null);
+    const [deletion, setDeletion] = useState<{ id: string; name: string } | null>(null);
+    const [logs, setLogs] = useState<string | null>(null);
+    const [, startAction] = useTransition();
+    const [isDeleting, startDeletion] = useTransition();
+    const base = `/api/v1/organizations/${organization.id}`;
+
+    // Keep solution refreshes scoped to the section's resource.
+    const [solutions, invalidateSolutions] = useApi<
+        z.output<typeof schemas.zGetOrganizationSolutionsApiV1OrganizationsOrganizationIdSolutionsGetResponse>
+    >(`${base}/solutions`);
+
+    return (
+        <>
+            <Stack gap={4}>
+                <Stack direction="horizontal" justify="between" align="center" wrap="wrap">
+                    <Heading level={1}>Solutions</Heading>
+                    {canMaintain && <Button label="New Solution" onClick={() => setCreating(true)} />}
+                </Stack>
+                <Divider />
+                <Table
+                    data={solutions}
+                    idKey="id"
+                    hasHover
+                    density="compact"
+                    columns={[
+                        {
+                            key: 'name',
+                            header: 'Solution',
+                            width: proportional(1),
+                            renderCell: (row) => (
+                                <Stack>
+                                    <Link href={`/orgs/${organization.slug}/solutions/${row.slug}`}>{row.name}</Link>
+                                    {row.description && <Text type="supporting">{row.description}</Text>}
+                                </Stack>
+                            ),
+                        },
+                        ...(canMaintain
+                            ? [
+                                  {
+                                      key: 'id',
+                                      header: 'Actions',
+                                      align: 'end' as const,
+                                      width: proportional(0.5),
+                                      renderCell: (row: Solution) => (
+                                          <MoreMenu
+                                              alignment="end"
+                                              items={[
+                                                  ...(row.desired_revision_id &&
+                                                  !row.deployment_pending &&
+                                                  row.status !== 'creating'
+                                                      ? [
+                                                            {
+                                                                id: 'update',
+                                                                label: 'Update',
+                                                                icon: <RefreshCw />,
+                                                                onClick: () => {
+                                                                    // Forward async menu failures to the surrounding boundary without tracking pending state.
+                                                                    startAction(async () => {
+                                                                        // Fetch a fresh candidate for each review; never reuse a stale revision fence.
+                                                                        const checked =
+                                                                            schemas.zSolutionUpdateCheck.parse(
+                                                                                await api(
+                                                                                    `/api/v1/solutions/${row.id}/update`
+                                                                                ).json()
+                                                                            );
+                                                                        setUpdate({
+                                                                            key: crypto.randomUUID(),
+                                                                            item: {
+                                                                                id: row.id,
+                                                                                name: row.name,
+                                                                            },
+                                                                            candidate: checked,
+                                                                        });
+                                                                    });
+                                                                },
+                                                            },
+                                                        ]
+                                                      : []),
+                                                  {
+                                                      id: 'logs',
+                                                      label: 'Logs',
+                                                      icon: <Logs />,
+                                                      onClick: () => setLogs(row.id),
+                                                  },
+                                                  {
+                                                      id: 'delete',
+                                                      label: 'Delete',
+                                                      icon: <Trash />,
+                                                      onClick: () =>
+                                                          setDeletion({
+                                                              id: row.id,
+                                                              name: row.name,
+                                                          }),
+                                                  },
+                                              ]}
+                                          />
+                                      ),
+                                  },
+                              ]
+                            : []),
+                    ]}
+                />
+            </Stack>
             {creating && (
                 <CreateSolution
-                    organizationId={membership.organization.id}
+                    organizationId={organization.id}
                     invalidate={invalidateSolutions}
                     onClose={() => setCreating(false)}
                 />
@@ -530,7 +601,7 @@ export default function OrganizationSettings() {
                     }
                 />
             )}
-        </Stack>
+        </>
     );
 }
 
