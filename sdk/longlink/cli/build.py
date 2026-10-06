@@ -64,9 +64,16 @@ DOCKER_CONTEXT_IGNORE_RULES = (
     ".dockerignore",
 )
 
-DOCKERFILE_TEMPLATE = """FROM python:3.12.13-bookworm@sha256:9bed8554e926c07c6f908841d5ee88c33e8df9236b191526bbce81a9062ab43a AS builder
+DOCKERFILE_TEMPLATE = """FROM buildpack-deps:bookworm@sha256:88c9154b6b438be20b616e2e74c158cfd79feafc6bcf1d9a3b47874b38c91992 AS builder
 
 COPY --from=ghcr.io/astral-sh/uv:0.11.32@sha256:df4cae8f3a96d175e2e5f992e597550000edbe78fdc2594d5cd8de1a217f504c /uv /uvx /usr/local/bin/
+
+# Install the benchmarked Astral build at a path preserved in the runtime image.
+ENV UV_PYTHON=3.12.13
+ENV UV_PYTHON_INSTALL_DIR=/opt/python
+ENV UV_PYTHON_CPYTHON_BUILD=20260718
+RUN uv python install 3.12.13
+ENV UV_PYTHON_DOWNLOADS=never
 
 COPY {dependency_source}pyproject.toml {dependency_source}uv.lock {workdir}/
 {local_dependency_manifests}
@@ -74,8 +81,6 @@ COPY {dependency_source}pyproject.toml {dependency_source}uv.lock {workdir}/
 WORKDIR {workdir}
 
 ENV SETUPTOOLS_SCM_PRETEND_VERSION_FOR_LONGLINK={sdk_version}
-ENV UV_PYTHON=/usr/local/bin/python
-ENV UV_PYTHON_DOWNLOADS=never
 
 # Install locked remote dependencies before Solution source changes can invalidate this layer.
 RUN --mount=type=cache,target=/root/.cache/uv uv sync --locked --no-dev --no-install-local
@@ -84,10 +89,16 @@ COPY . /workspace
 
 RUN --mount=type=cache,target=/root/.cache/uv uv sync --locked --no-dev
 
-FROM python:3.12.13-slim-bookworm@sha256:d50fb7611f86d04a3b0471b46d7557818d88983fc3136726336b2a4c657aa30b
+FROM debian:bookworm-slim@sha256:7c7b2c966bc9ee8cedfeef67e0e279108992c77681fa595db4a9d65c06ccc587
+
+# Retain certificate trust, network defaults, and timezone data for Solution code.
+RUN apt-get update \\
+    && apt-get install -y --no-install-recommends ca-certificates netbase tzdata \\
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR {workdir}
 
+COPY --from=builder /opt/python /opt/python
 COPY --from=builder /workspace /workspace
 
 {labels}
@@ -95,6 +106,9 @@ COPY --from=builder /workspace /workspace
 ENV PATH="{workdir}/.venv/bin:$PATH"
 ENV HOME="/tmp"
 ENV PYTHONDONTWRITEBYTECODE="1"
+
+# Precompile imports for the non-root, read-only Solution runtime.
+RUN python -m compileall -q /opt/python /workspace
 
 RUN groupadd --system --gid 10001 longlink \
     && useradd --system --uid 10001 --gid 10001 --home-dir /tmp --shell /usr/sbin/nologin longlink \
