@@ -231,17 +231,23 @@ async def project_users(session: AsyncSession, organization_id: UUID, db: postgr
     """Project a Platform snapshot while runtime coordination owns synchronization."""
 
     # Load every authoritative membership for the Organization database snapshot.
-    memberships = await members(session, organization_id)
+    statement = (
+        select(col(User.id), col(User.name), col(User.email), col(User.avatar))
+        .join(UserOrganization, col(UserOrganization.user_id) == col(User.id))
+        .where(col(UserOrganization.organization_id) == organization_id)
+    )
+    result = await session.execute(statement)
+    users = result.all()
 
     # Build the shared-schema user snapshot from Platform-authoritative memberships.
     rows = [
         shared_models.User(
-            id=membership.user.id,
-            name=membership.user.name,
-            email=membership.user.email,
-            avatar=membership.user.avatar,
+            id=user.id,
+            name=user.name,
+            email=user.email,
+            avatar=user.avatar,
         )
-        for membership in memberships
+        for user in users
     ]
 
     # Empty snapshots must not open an Organization database connection.
@@ -333,7 +339,7 @@ async def update_member_role(
     membership.role = role
 
 
-async def create_default(
+async def create(
     session: AsyncSession,
     name: str,
     user: User,
@@ -370,23 +376,6 @@ async def create_default(
     if compute_id is None:
         raise UnavailableError("No ready compute registry available")
 
-    return await create(
-        session,
-        name,
-        user,
-        compute_id=compute_id,
-    )
-
-
-async def create(
-    session: AsyncSession,
-    name: str,
-    user: User,
-    *,
-    compute_id: UUID,
-) -> Organization:
-    """Create an Organization with the specified infrastructure."""
-
     # A no-op write serializes admission on every supported backend, including SQLite.
     await session.execute(sql_update(ComputeRegistry).where(col(ComputeRegistry.id) == compute_id).values(name=col(ComputeRegistry.name)))
     compute = await session.get(ComputeRegistry, compute_id, populate_existing=True)
@@ -419,6 +408,7 @@ async def create(
     except IntegrityError as exc:
         raise ConflictError("Organization already exists") from exc
 
+    # Queue infrastructure creation in the caller's transaction after persisting the Organization.
     await operations.enqueue(session, kind=OperationKind.organization_create, target_id=organization.id)
     return organization
 

@@ -1,4 +1,5 @@
 from uuid import UUID, uuid4
+from src.utils import names
 from sqlalchemy import select
 from collections.abc import Sequence
 from src.models.roles import OrganizationRoles
@@ -6,7 +7,7 @@ from src.models.types import Image
 from src.models.metadata import LongLinkMetadata
 from src.database.session import session_scope
 from src.models.solutions import SolutionCreate
-from src.database.services import solutions, operations, organizations
+from src.database.services import solutions, operations
 from src.models.operations import OperationKind
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
@@ -122,18 +123,31 @@ async def create_organization(
     name: str = "acme",
     compute: ComputeRegistry | None = None,
 ) -> Organization:
-    """Create one Organization with the specified or independent Compute registry."""
+    """Persist deterministic Organization fixture state without production admission."""
 
+    # Use the specified registry or give the fixture independent infrastructure.
     if compute is None:
         compute = await create_compute()
 
+    # Construct fixture rows directly rather than reproducing production quota or selection rules.
+    organization = Organization(
+        name=name,
+        slug=names.slugify(name),
+        compute_id=compute.id,
+        created_id=owner.id,
+    )
+    membership = UserOrganization(
+        user_id=owner.id,
+        organization_id=organization.id,
+        role=OrganizationRoles.owner,
+    )
+
+    # Retain queued creation work expected by lifecycle fixtures in the same transaction.
     async with session_scope() as session:
-        organization = await organizations.create(
-            session,
-            name,
-            owner,
-            compute_id=compute.id,
-        )
+        session.add(organization)
+        session.add(membership)
+        await session.flush()
+        await operations.enqueue(session, kind=OperationKind.organization_create, target_id=organization.id)
         await session.commit()
         return organization
 

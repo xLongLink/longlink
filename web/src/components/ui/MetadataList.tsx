@@ -6,17 +6,27 @@ import {
 } from '@astryxdesign/core/MetadataList';
 
 /** Lists labeled values without configurable truncation or label geometry. */
-export function MetadataList(props: {
+export function MetadataList({
+    children,
+    ...props
+}: {
     children?: ReactNode;
     columns?: 'multi' | 'single' | number;
     title?: ReactNode;
 }) {
     // Keep labeled values in one readable column by default.
-    return <AstryxMetadataList {...props} children={props.children} columns={props.columns ?? 'single'} />;
+    return (
+        <AstryxMetadataList {...props} columns={props.columns ?? 'single'}>
+            {children}
+        </AstryxMetadataList>
+    );
 }
 
 /** Displays one labeled value inside a MetadataList. */
-export function MetadataListItem(props: {
+export function MetadataListItem({
+    children,
+    ...props
+}: {
     /** Value rendered beside the metadata label. */
     children?: ReactNode;
     /** Label identifying the metadata value. */
@@ -26,10 +36,8 @@ export function MetadataListItem(props: {
 }) {
     // Resolve the registered icon name without changing the metadata content.
     return (
-        <AstryxMetadataListItem
-            {...props}
-            icon={props.icon ? <Icon icon={props.icon} size="sm" /> : undefined}
-            children={props.children}
-        />
+        <AstryxMetadataListItem {...props} icon={props.icon ? <Icon icon={props.icon} size="sm" /> : undefined}>
+            {children}
+        </AstryxMetadataListItem>
     );
 }

@@ -18,7 +18,6 @@ class PropertyDoc(BaseModel):
     # Property contract.
     name: str
     type: str
-    required: bool
     description: str = ""
 
 
@@ -30,7 +29,6 @@ class ComponentDoc(BaseModel):
     members: list[MemberDoc] = Field(default_factory=list)
     category: str
     properties: list[PropertyDoc] = Field(default_factory=list)
-    declaration: str
 
 
 def docs_command(component: str | None = None, category: str | None = None) -> None:

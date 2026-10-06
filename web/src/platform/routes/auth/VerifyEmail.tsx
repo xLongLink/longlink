@@ -40,7 +40,7 @@ export default function VerifyEmail() {
     const [verification, setVerification] = useState<
         { status: 'verified'; data: z.output<typeof zEmailPayload> } | { status: 'error' } | null
     >(null);
-    const [completionError, setCompletionError] = useState<unknown>(null);
+    const [accountConflict, setAccountConflict] = useState(false);
 
     /** Verifies the signed email claim without publishing canceled or replaced results. */
     async function verify({ signal, token: registrationToken }: VerificationRequest) {
@@ -73,7 +73,7 @@ export default function VerifyEmail() {
 
     /** Creates the account and publishes only the new authenticated query state. */
     async function handleComplete(payload: RegistrationCompleteValues) {
-        setCompletionError(null);
+        setAccountConflict(false);
 
         // Publish the new authenticated identity only after account creation succeeds.
         await api('/api/v1/auth/register/complete', { json: payload, method: 'POST' })
@@ -88,7 +88,7 @@ export default function VerifyEmail() {
                 },
                 (error: unknown) => {
                     if (!(error instanceof ApiError) || ![400, 409].includes(error.status)) throw error;
-                    setCompletionError(error);
+                    if (error.status === 409) setAccountConflict(true);
 
                     // Expired setup cookies require recovering or replacing the registration link.
                     if (error.status === 400) startVerification('');
@@ -124,7 +124,7 @@ export default function VerifyEmail() {
     }
 
     // Account races cannot succeed by resubmitting the same form.
-    if (completionError instanceof ApiError && completionError.status === 409) {
+    if (accountConflict) {
         return (
             <AuthLayout title="Complete your account" description="Request a new registration link to continue.">
                 {pageMetadata}

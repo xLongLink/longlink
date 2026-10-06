@@ -2,13 +2,12 @@ import asyncio
 from alembic import context
 from sqlmodel import SQLModel
 from sqlalchemy.engine import Connection
-from longlink.database.base import create_engine
+from longlink.database.base import database_url, create_engine
 from longlink.utils.settings import Envs
 from longlink.database.migrations import include_object
 
-# Initialize the migration engine.
+# Load the migration environment.
 settings = Envs()
-engine = create_engine(settings)
 
 # Keep Solution migration state out of the shared schema resolved by the production search path.
 version_table_schema = settings.DATABASE_SCHEMA if settings.ENV == "production" else None
@@ -34,7 +33,7 @@ def run_migrations_offline() -> None:
     """Run Alembic migrations in offline mode."""
 
     # Configure Alembic to emit migration SQL without a live connection.
-    _configure_migrations(url=str(engine.url), literal_binds=True)
+    _configure_migrations(url=str(database_url(settings)), literal_binds=True)
 
     # Wrap offline migration output in Alembic's transaction context.
     with context.begin_transaction():
@@ -54,6 +53,9 @@ def do_run_migrations(connection: Connection) -> None:
 
 async def run_migrations_online() -> None:
     """Run Alembic migrations in online mode."""
+
+    # Own the engine only while running online migrations.
+    engine = create_engine(settings)
 
     # Release migration-engine resources even when the migration fails.
     try:

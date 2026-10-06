@@ -11,6 +11,7 @@ from src.models.statuses import Status
 from src.database.session import session_scope
 from src.models.solutions import SolutionCreate
 from src.database.services import solutions, organizations
+from src.models.operations import OperationKind
 from src.models.pagination import Pagination
 from src.models.organizations import DatabaseState, OrganizationInvitationCreate
 from src.database.models.users import User
@@ -28,7 +29,9 @@ async def test_create_persists_org_and_owner_membership(users: tuple[User, User,
     compute = await create_compute()
 
     # Act
-    organization = await create_organization(owner, compute=compute)
+    async with session_scope() as session:
+        organization = await organizations.create(session, "acme", owner)
+        await session.commit()
 
     # Assert
     assert organization.compute_id == compute.id
@@ -43,6 +46,12 @@ async def test_create_persists_org_and_owner_membership(users: tuple[User, User,
     assert reloaded.name == "acme"
     assert reloaded.slug == "acme"
     assert [(membership.user.id, membership.role) for membership in memberships] == [(owner.id, OrganizationRoles.owner)]
+
+    # Verify creation queued infrastructure work for the persisted Organization.
+    recorded_operations = await fetch_operations()
+    assert [(operation.kind, operation.target_id) for operation in recorded_operations] == [
+        (OperationKind.organization_create, organization.id)
+    ]
 
 
 async def test_fetch_ignores_deleted_organizations(users: tuple[User, User, User]) -> None:
@@ -213,7 +222,7 @@ async def test_soft_delete_revalidates_demoted_owner_access(users: tuple[User, U
     assert persisted.deleted_at is None
 
 
-async def test_create_default_selects_least_assigned_infrastructure(users: tuple[User, User, User]) -> None:
+async def test_create_selects_least_assigned_infrastructure(users: tuple[User, User, User]) -> None:
     """Assign the least-used Compute registry."""
 
     # Arrange
@@ -224,20 +233,27 @@ async def test_create_default_selects_least_assigned_infrastructure(users: tuple
 
     # Act
     async with session_scope() as session:
-        organization = await organizations.create_default(session, "balanced", owner)
+        organization = await organizations.create(session, "balanced", owner)
         await session.commit()
 
     # Assert
     assert organization.compute_id == available_compute.id
 
 
-async def test_create_rejects_missing_assigned_infrastructure(users: tuple[User, User, User]) -> None:
-    """Reject direct Organization creation when the assigned Compute registry is absent."""
+async def test_create_rejects_missing_available_infrastructure(users: tuple[User, User, User]) -> None:
+    """Reject Organization admission when no Compute registry is available."""
 
     # Act and assert
     async with session_scope() as session:
-        with pytest.raises(UnavailableError, match="No compute registry available"):
-            await organizations.create(session, "acme", users[0], compute_id=uuid4())
+        with pytest.raises(UnavailableError, match="No ready compute registry available"):
+            await organizations.create(session, "acme", users[0])
+
+    # Failed admission must leave both desired state and infrastructure work absent.
+    async with session_scope() as session:
+        fetched, total = await organizations.fetch_page(session, Pagination())
+    assert fetched == []
+    assert total == 0
+    assert await fetch_operations() == []
 
 
 async def test_create_rejects_duplicate_organization_name(users: tuple[User, User, User]) -> None:
@@ -245,16 +261,22 @@ async def test_create_rejects_duplicate_organization_name(users: tuple[User, Use
 
     # Arrange
     organization = await create_organization(users[0])
+    previous_operations = await fetch_operations()
 
     # Act and assert
     async with session_scope() as session:
         with pytest.raises(ConflictError, match="Organization already exists"):
-            await organizations.create(
-                session,
-                "acme",
-                users[0],
-                compute_id=organization.compute_id,
-            )
+            await organizations.create(session, "acme", users[0])
+        await session.commit()
+
+    # The savepoint retains the original Organization and owner without queueing duplicate work.
+    async with session_scope() as session:
+        fetched, total = await organizations.fetch_page(session, Pagination())
+        memberships = await organizations.members(session, organization.id)
+    assert [item.id for item in fetched] == [organization.id]
+    assert total == 1
+    assert [(membership.user_id, membership.role) for membership in memberships] == [(users[0].id, OrganizationRoles.owner)]
+    assert [operation.id for operation in await fetch_operations()] == [operation.id for operation in previous_operations]
 
 
 async def test_soft_delete_tombstones_solutions_and_retains_memberships(users: tuple[User, User, User]) -> None:
