@@ -128,6 +128,14 @@ export function Footer() {
                                 LongLink LLC - 2026 - {import.meta.env.VERSION ?? 'v0.0.0'}
                             </Text>
                             <Stack as="nav" direction="horizontal" gap={4} aria-label="Legal navigation">
+                                <Link
+                                    href="mailto:info@longlink.dev"
+                                    color="secondary"
+                                    type="supporting"
+                                    weight="medium"
+                                >
+                                    Contact
+                                </Link>
                                 <Link href="/impressum/" color="secondary" type="supporting" weight="medium">
                                     Impressum
                                 </Link>
