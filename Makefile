@@ -37,6 +37,7 @@ install:
 	cd api && uv sync --locked --extra dev
 	cd sdk && uv sync --locked --group dev
 	cd web && vp install --frozen-lockfile
+	cd web && bun add --global --trust @stripe/cli
 
 
 # Reset local main to origin and remove branches absent from origin.
