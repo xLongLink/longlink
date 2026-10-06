@@ -22,10 +22,14 @@ const statuses = { scheduled: 'Scheduled', active: 'Active', completed: 'Complet
 /** Lists operation history and exposes its metadata. */
 export default function Operations() {
     const [page, setPage] = useState(1);
-    const [metadata, setMetadata] = useState<z.output<typeof zPageOperationResponse>['items'][number] | null>(null);
+    const [metadataId, setMetadataId] = useState<string | null>(null);
     const [operations] = useApi<z.output<typeof zPageOperationResponse>>(
         `/api/v1/operations?page=${page}&page_size=25`
     );
+
+    // Use current metadata and clear missing selections so returning to a page cannot reopen the dialog.
+    const metadata = operations.items.find((item) => item.id === metadataId);
+    if (metadataId !== null && !metadata) setMetadataId(null);
 
     return (
         <Stack gap={8}>
@@ -77,7 +81,7 @@ export default function Operations() {
                                     icon={<Info />}
                                     size="sm"
                                     variant="ghost"
-                                    onClick={() => setMetadata(row)}
+                                    onClick={() => setMetadataId(row.id)}
                                 />
                             ),
                         },
@@ -92,10 +96,10 @@ export default function Operations() {
                 <Dialog
                     isOpen
                     onOpenChange={(open) => {
-                        if (!open) setMetadata(null);
+                        if (!open) setMetadataId(null);
                     }}
                 >
-                    <DialogHeader title="Operation metadata" onOpenChange={() => setMetadata(null)} />
+                    <DialogHeader title="Operation metadata" onOpenChange={() => setMetadataId(null)} />
                     <Stack gap={2}>
                         <Text>
                             <b>Operation</b> {metadata.kind}

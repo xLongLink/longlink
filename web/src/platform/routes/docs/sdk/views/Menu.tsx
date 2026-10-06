@@ -64,7 +64,6 @@ export default function MenuPage() {
                 {
                     title: 'Menu',
                     preview: <MenuExample />,
-                    description: 'Select Profile or Workflow to display its settings beside the navigation.',
                     code: `function Example() {
   return (
     <Menu>

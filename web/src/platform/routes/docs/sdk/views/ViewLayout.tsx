@@ -24,7 +24,7 @@ export type ViewReference = Pick<(typeof references)[number], 'introduction' | '
     }[];
 };
 export type ViewProperties = { name: string; properties: ViewReference['properties'] }[];
-export type ViewExample = { title: string; code: string; preview: ReactNode; description?: string };
+export type ViewExample = { title: string; code: string; preview: ReactNode };
 
 const tabs = [
     { value: 'examples', label: 'Examples' },

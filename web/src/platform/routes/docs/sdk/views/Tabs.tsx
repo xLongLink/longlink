@@ -77,7 +77,6 @@ export default function TabsPage() {
                 {
                     title: 'Tabs',
                     preview: <TabsExample />,
-                    description: 'Select a tab to display its children below the tab strip.',
                     code: `function Example() {
   return (
     <Tabs hasDivider>

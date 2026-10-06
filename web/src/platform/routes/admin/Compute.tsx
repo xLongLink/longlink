@@ -21,13 +21,15 @@ const registrationSchema = schemas.zComputeRegistryCreate.extend({ kubeconfig: z
 export default function Compute() {
     const [page, setPage] = useState(1);
     const [dialog, setDialog] = useState<
-        | { kind: 'metadata'; item: z.output<typeof schemas.zComputeRegistryResponse> }
-        | { kind: 'deletion'; item: { id: string; name: string } }
-        | null
+        { kind: 'metadata'; id: string } | { kind: 'deletion'; item: { id: string; name: string } } | null
     >(null);
     const [registration, setRegistration] = useState<z.input<typeof registrationSchema> | null>(null);
     const path = `/api/v1/computes?page=${page}&page_size=25`;
     const [computes, invalidate] = useApi<z.output<typeof schemas.zPageComputeRegistryResponse>>(path);
+
+    // Use current metadata and clear missing selections so returning to a page cannot reopen the dialog.
+    const metadata = dialog?.kind === 'metadata' ? computes.items.find((item) => item.id === dialog.id) : undefined;
+    if (dialog?.kind === 'metadata' && !metadata) setDialog(null);
 
     /** Registers the validated Compute draft and refreshes the list. */
     async function registerCompute() {
@@ -78,7 +80,7 @@ export default function Compute() {
                                     icon={<Info />}
                                     size="sm"
                                     variant="ghost"
-                                    onClick={() => setDialog({ kind: 'metadata', item: row })}
+                                    onClick={() => setDialog({ kind: 'metadata', id: row.id })}
                                 />
                             ),
                         },
@@ -135,7 +137,7 @@ export default function Compute() {
                     </form>
                 </Dialog>
             )}
-            {dialog?.kind === 'metadata' && (
+            {metadata && (
                 <Dialog
                     isOpen
                     onOpenChange={(open) => {
@@ -145,16 +147,16 @@ export default function Compute() {
                     <DialogHeader title="Compute metadata" onOpenChange={() => setDialog(null)} />
                     <Stack gap={2}>
                         <Text>
-                            <b>Gateway</b> {dialog.item.gateway_url}
+                            <b>Gateway</b> {metadata.gateway_url}
                         </Text>
                         <Text>
-                            <b>Database storage class</b> {dialog.item.database_storage_class}
+                            <b>Database storage class</b> {metadata.database_storage_class}
                         </Text>
                         <Text>
-                            <b>ID</b> {dialog.item.id}
+                            <b>ID</b> {metadata.id}
                         </Text>
                         <Text>
-                            <b>Storage endpoint</b> {dialog.item.storage_endpoint}
+                            <b>Storage endpoint</b> {metadata.storage_endpoint}
                         </Text>
                         <Stack direction="horizontal" justify="end">
                             <Button
@@ -163,7 +165,7 @@ export default function Compute() {
                                 onClick={() =>
                                     setDialog({
                                         kind: 'deletion',
-                                        item: { id: dialog.item.id, name: dialog.item.name },
+                                        item: { id: metadata.id, name: metadata.name },
                                     })
                                 }
                             />

@@ -340,13 +340,24 @@ const components = [...groups.values()].sort((left, right) => left.name.localeCo
 
 // Read the same authored component content used by the Astryx website, pinned to the installed library.
 const references = [];
+const componentDetails = new Map();
+
+/** Reuses successful documentation lookups for the lifetime of this generation. */
+async function componentDetail(name) {
+    // Load each component or shared parent only once, preserving lookup failures.
+    if (!componentDetails.has(name)) {
+        const result = await astryx.component(name);
+        componentDetails.set(name, result.data);
+    }
+    return componentDetails.get(name);
+}
+
 for (const entry of components) {
     if (entry.category === 'Runtime' || ['Card', 'Currency', 'FileViewer', 'Menu', 'Tabs'].includes(entry.name))
         continue;
-    const result = await astryx.component(entry.name);
-    const detail = result.data;
+    const detail = await componentDetail(entry.name);
     const parentName = detail.subComponentOf ?? detail.parentDoc;
-    const parent = parentName ? (await astryx.component(parentName)).data : detail;
+    const parent = parentName ? await componentDetail(parentName) : detail;
     const usage = detail.usage ?? parent.usage;
     const supportedProps = publicProps.get(entry.name);
     const upstreamProps =
@@ -361,7 +372,6 @@ for (const entry of components) {
             detail.description ??
             usage?.description ??
             '',
-        anatomy: usage?.anatomy ?? [],
         properties: (supportedProps ?? upstreamProps)
             // View components use their preset styling rather than caller-provided classes.
             .filter((property) => property.name !== 'className')
