@@ -201,6 +201,41 @@ def test_production_context_requires_signed_identity_except_for_probes() -> None
         assert rejection.value.code == 1008
 
 
+def test_production_websocket_rejects_valid_signed_identity() -> None:
+    """Deny authenticated WebSockets that bypass the role-checked HTTP proxy."""
+
+    # Arrange
+    app = FastAPI()
+    context.install_context_middleware(app, IDENTITY_SECRET, require_identity=True)
+
+    @app.get("/identity")
+    async def get_identity() -> dict[str, bool]:
+        """Confirm the same signed assertion is accepted over HTTP."""
+
+        # Expose the identity verified by the real middleware.
+        return {"authenticated": audit.current_actor.get() is not None}
+
+    @app.websocket("/events")
+    async def events(socket: WebSocket) -> None:
+        """Accept the connection if the transport guard is bypassed."""
+
+        # Make an incorrectly permitted connection observable.
+        await socket.accept()
+
+    headers = identity_headers(UUID("00000000-0000-0000-0000-000000000001"))
+
+    # Act
+    with TestClient(app) as client:
+        response = client.get("/identity", headers=headers)
+        with pytest.raises(WebSocketDisconnect) as rejection, client.websocket_connect("/events", headers=headers):
+            pass
+
+    # Assert
+    assert response.status_code == 200
+    assert response.json() == {"authenticated": True}
+    assert rejection.value.code == 1008
+
+
 async def test_context_middleware_isolates_concurrent_audit_identities() -> None:
     """Keep audit identities isolated across concurrently handled requests."""
 
