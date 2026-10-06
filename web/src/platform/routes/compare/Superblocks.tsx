@@ -6,20 +6,20 @@ import { Article } from '@/components/layouts/Article';
 import { Blockquote } from '@astryxdesign/core/Blockquote';
 
 const article = {
-    description: 'LongLink vs Microsoft Power Apps. This comparison page is being built.',
-    toc: [{ id: 'longlink-vs-microsoft-power-apps', label: 'LongLink vs Microsoft Power Apps', level: 1 }],
+    description: 'LongLink vs Superblocks. This comparison page is being built.',
+    toc: [{ id: 'longlink-vs-superblocks', label: 'LongLink vs Superblocks', level: 1 }],
     lastUpdated: '2026-10-06',
-    editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/usecases/PowerApps.tsx',
-    title: 'LongLink vs Microsoft Power Apps | LongLink Use Cases',
+    editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/compare/Superblocks.tsx',
+    title: 'LongLink vs Superblocks | LongLink Compare',
 };
 
-/** Renders the placeholder for the Microsoft Power Apps comparison. */
-export default function PowerApps() {
+/** Renders the placeholder for the Superblocks comparison. */
+export default function Superblocks() {
     return (
         <Article page={article}>
             <Stack gap={4}>
-                <Heading id="longlink-vs-microsoft-power-apps" level={1} textWrap="balance">
-                    LongLink vs Microsoft Power Apps
+                <Heading id="longlink-vs-superblocks" level={1} textWrap="balance">
+                    LongLink vs Superblocks
                 </Heading>
                 <Blockquote className="border-s-(--color-text-orange) text-(--color-text-orange)">
                     <Stack gap={0}>

@@ -1,9 +1,10 @@
+import type { ComponentProps } from 'react';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Outlet, useLocation } from 'react-router';
 import { SideLayout } from '@/components/layouts/SideLayout';
 import { SideNavHeader } from '@/components/layouts/SideNavHeader';
 import { SideNav, SideNavItem, SideNavSection } from '@astryxdesign/core/SideNav';
-import { BookOpen, ClipboardCheck, FolderKanban, Settings, ShieldCheck } from 'lucide-react';
+import { BookOpen, ClipboardCheck, ExternalLink, FolderKanban, Settings, ShieldCheck } from 'lucide-react';
 import {
     Appsmith,
     FastAPI,
@@ -16,7 +17,12 @@ import {
     Windmill,
 } from '@/components/Brands';
 
-/** Renders use cases in the same sidebar shell as the documentation. */
+/** Opens sidebar documentation links in a separate tab. */
+function DocumentationLink(props: ComponentProps<'a'>) {
+    return <a {...props} rel="noopener noreferrer" target="_blank" />;
+}
+
+/** Renders use cases and comparisons in the same sidebar shell as the documentation. */
 export default function UseCases() {
     const { pathname } = useLocation();
     const pagePath = pathname.replace(/\/+$/, '') || '/';
@@ -32,6 +38,14 @@ export default function UseCases() {
                                 icon={<BookOpen aria-hidden size={16} />}
                                 isSelected={pagePath === '/use-cases'}
                                 label="Why LongLink"
+                            />
+                            <SideNavItem
+                                aria-label="Documentation (opens in a new tab)"
+                                as={DocumentationLink}
+                                endContent={<ExternalLink aria-hidden size={16} />}
+                                href="/docs/"
+                                icon={<BookOpen aria-hidden size={16} />}
+                                label="Documentation"
                             />
                         </SideNavSection>
                         <SideNavSection title="Use cases">
@@ -62,57 +76,57 @@ export default function UseCases() {
                         </SideNavSection>
                         <SideNavSection title="Compare">
                             <SideNavItem
-                                href="/use-cases/longlink-vs-retool/"
+                                href="/compare/longlink-vs-retool/"
                                 icon={<Retool aria-hidden className="size-4" />}
-                                isSelected={pagePath === '/use-cases/longlink-vs-retool'}
+                                isSelected={pagePath === '/compare/longlink-vs-retool'}
                                 label="Retool"
                             />
                             <SideNavItem
-                                href="/use-cases/longlink-vs-lovable/"
+                                href="/compare/longlink-vs-lovable/"
                                 icon={<Lovable aria-hidden className="size-4" />}
-                                isSelected={pagePath === '/use-cases/longlink-vs-lovable'}
+                                isSelected={pagePath === '/compare/longlink-vs-lovable'}
                                 label="Lovable"
                             />
                             <SideNavItem
-                                href="/use-cases/longlink-vs-windmill/"
+                                href="/compare/longlink-vs-windmill/"
                                 icon={<Windmill aria-hidden className="size-4" />}
-                                isSelected={pagePath === '/use-cases/longlink-vs-windmill'}
+                                isSelected={pagePath === '/compare/longlink-vs-windmill'}
                                 label="Windmill"
                             />
                             <SideNavItem
-                                href="/use-cases/longlink-vs-microsoft-power-apps/"
+                                href="/compare/longlink-vs-microsoft-power-apps/"
                                 icon={<Microsoft aria-hidden className="size-4" />}
-                                isSelected={pagePath === '/use-cases/longlink-vs-microsoft-power-apps'}
+                                isSelected={pagePath === '/compare/longlink-vs-microsoft-power-apps'}
                                 label="Microsoft Power Apps"
                             />
                             <SideNavItem
-                                href="/use-cases/longlink-vs-replit/"
+                                href="/compare/longlink-vs-replit/"
                                 icon={<Replit aria-hidden className="size-4" />}
-                                isSelected={pagePath === '/use-cases/longlink-vs-replit'}
+                                isSelected={pagePath === '/compare/longlink-vs-replit'}
                                 label="Replit"
                             />
                             <SideNavItem
-                                href="/use-cases/longlink-vs-appsmith/"
+                                href="/compare/longlink-vs-appsmith/"
                                 icon={<Appsmith aria-hidden className="size-4" />}
-                                isSelected={pagePath === '/use-cases/longlink-vs-appsmith'}
+                                isSelected={pagePath === '/compare/longlink-vs-appsmith'}
                                 label="Appsmith"
                             />
                             <SideNavItem
-                                href="/use-cases/longlink-vs-superblocks/"
+                                href="/compare/longlink-vs-superblocks/"
                                 icon={<Superblocks aria-hidden className="size-4" />}
-                                isSelected={pagePath === '/use-cases/longlink-vs-superblocks'}
+                                isSelected={pagePath === '/compare/longlink-vs-superblocks'}
                                 label="Superblocks"
                             />
                             <SideNavItem
-                                href="/use-cases/longlink-vs-fastapi/"
+                                href="/compare/longlink-vs-fastapi/"
                                 icon={<FastAPI aria-hidden className="size-4" />}
-                                isSelected={pagePath === '/use-cases/longlink-vs-fastapi'}
+                                isSelected={pagePath === '/compare/longlink-vs-fastapi'}
                                 label="FastAPI"
                             />
                             <SideNavItem
-                                href="/use-cases/longlink-vs-reflex/"
+                                href="/compare/longlink-vs-reflex/"
                                 icon={<Reflex aria-hidden className="size-4" />}
-                                isSelected={pagePath === '/use-cases/longlink-vs-reflex'}
+                                isSelected={pagePath === '/compare/longlink-vs-reflex'}
                                 label="Reflex"
                             />
                         </SideNavSection>

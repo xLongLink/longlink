@@ -8,6 +8,7 @@ export const articleRouteLabels: Record<string, string> = {
     api: 'Platform',
     'cases-and-projects': 'Cases & projects',
     'compliance-and-quality': 'Compliance & quality',
+    compare: 'Compare',
     comunication: 'Communication',
     docs: 'Documentation',
     'longlink-vs-retool': 'LongLink vs Retool',

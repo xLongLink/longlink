@@ -6,20 +6,20 @@ import { Article } from '@/components/layouts/Article';
 import { Blockquote } from '@astryxdesign/core/Blockquote';
 
 const article = {
-    description: 'LongLink vs FastAPI. This comparison page is being built.',
-    toc: [{ id: 'longlink-vs-fastapi', label: 'LongLink vs FastAPI', level: 1 }],
+    description: 'LongLink vs Windmill. This comparison page is being built.',
+    toc: [{ id: 'longlink-vs-windmill', label: 'LongLink vs Windmill', level: 1 }],
     lastUpdated: '2026-10-06',
-    editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/usecases/FastAPI.tsx',
-    title: 'LongLink vs FastAPI | LongLink Use Cases',
+    editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/compare/Windmill.tsx',
+    title: 'LongLink vs Windmill | LongLink Compare',
 };
 
-/** Renders the placeholder for the FastAPI comparison. */
-export default function FastAPI() {
+/** Renders the placeholder for the Windmill comparison. */
+export default function Windmill() {
     return (
         <Article page={article}>
             <Stack gap={4}>
-                <Heading id="longlink-vs-fastapi" level={1} textWrap="balance">
-                    LongLink vs FastAPI
+                <Heading id="longlink-vs-windmill" level={1} textWrap="balance">
+                    LongLink vs Windmill
                 </Heading>
                 <Blockquote className="border-s-(--color-text-orange) text-(--color-text-orange)">
                     <Stack gap={0}>
