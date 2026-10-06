@@ -1,9 +1,9 @@
 import { Stack } from '@astryxdesign/core/Stack';
 import { Outlet, useLocation } from 'react-router';
 import { SideLayout } from '@/components/layouts/SideLayout';
-import { Building2, FileText, ShieldCheck } from 'lucide-react';
 import { SideNavHeader } from '@/components/layouts/SideNavHeader';
 import { SideNav, SideNavItem, SideNavSection } from '@astryxdesign/core/SideNav';
+import { Building2, FileText, Gem, Image, MessageSquare, ShieldCheck } from 'lucide-react';
 
 /** Renders legal content with the fixed legal navigation. */
 export default function Legal() {
@@ -33,6 +33,26 @@ export default function Legal() {
                                 icon={<ShieldCheck aria-hidden size={16} />}
                                 isSelected={pagePath === '/privacy'}
                                 label="Privacy"
+                            />
+                        </SideNavSection>
+                        <SideNavSection title="Branding">
+                            <SideNavItem
+                                href="/branding/logo"
+                                icon={<Image aria-hidden size={16} />}
+                                isSelected={pagePath === '/branding/logo'}
+                                label="Logo"
+                            />
+                            <SideNavItem
+                                href="/branding/values"
+                                icon={<Gem aria-hidden size={16} />}
+                                isSelected={pagePath === '/branding/values'}
+                                label="Values"
+                            />
+                            <SideNavItem
+                                href="/branding/comunication"
+                                icon={<MessageSquare aria-hidden size={16} />}
+                                isSelected={pagePath === '/branding/comunication'}
+                                label="Communication"
                             />
                         </SideNavSection>
                     </Stack>
