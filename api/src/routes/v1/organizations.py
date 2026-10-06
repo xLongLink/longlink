@@ -220,7 +220,7 @@ async def create_organization(
     """Create Organization desired state and queue infrastructure creation."""
 
     # Persist the Organization with transactionally selected infrastructure registries.
-    organization = await organizations.create_default(
+    organization = await organizations.create(
         session,
         payload.name,
         user,

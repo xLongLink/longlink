@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Document } from '@/components/Root';
+import { Document } from '@/components/layouts/Document';
 
 export { Root as default } from '@/components/Root';
 

@@ -39,33 +39,37 @@ class Audit(Model):
     deleted_by = declared_attr(lambda cls: relationship(User, foreign_keys=[cls.deleted_id], lazy="selectin"))
 
 
+def database_url(env: Envs) -> URL:
+    """Select the database URL for the current environment."""
+
+    # Testing uses an isolated in-memory SQLite database.
+    if env.ENV == "testing":
+        return make_url("sqlite+aiosqlite:///:memory:")
+
+    # Development keeps data in a local SQLite file.
+    if env.ENV == "development":
+        return make_url("sqlite+aiosqlite:///./dev.db")
+
+    # Production builds the URL from injected database settings.
+    return URL.create(
+        "postgresql+asyncpg",
+        username=env.DATABASE_USERNAME,
+        password=env.DATABASE_PASSWORD,
+        host=env.DATABASE_HOST,
+        port=env.DATABASE_PORT,
+        database=env.DATABASE_NAME,
+    )
+
+
 def create_engine(env: Envs) -> AsyncEngine:
     """Create the async SQLModel engine for the current environment."""
 
     # Hide bound values in SQL logging and database exceptions, including runtime credentials.
+    dburl = database_url(env)
     engine_kwargs: dict[str, object] = {"hide_parameters": True}
 
-    # Testing uses an isolated in-memory SQLite database.
-    if env.ENV == "testing":
-        dburl = make_url("sqlite+aiosqlite:///:memory:")
-
-    # Development keeps data in a local SQLite file.
-    elif env.ENV == "development":
-        dburl = make_url("sqlite+aiosqlite:///./dev.db")
-
-    # Production builds the URL from injected database settings.
-    else:
-        # Production runtimes receive database connection components from the LongLink Platform.
-        dburl = URL.create(
-            "postgresql+asyncpg",
-            username=env.DATABASE_USERNAME,
-            password=env.DATABASE_PASSWORD,
-            host=env.DATABASE_HOST,
-            port=env.DATABASE_PORT,
-            database=env.DATABASE_NAME,
-        )
-
-        # Configure connection health checks and reuse only for the production database.
+    # Configure connection health checks and reuse only for the production database.
+    if env.ENV == "production":
         engine_kwargs["pool_pre_ping"] = True
         engine_kwargs["pool_recycle"] = 20
         engine_kwargs["pool_use_lifo"] = True

@@ -4,6 +4,7 @@ import { Stepper as AstryxStepper, Step as AstryxStep } from '@astryxdesign/core
 /** Displays the current step using standard progress indicators. */
 export function Stepper({
     activeStep = 0,
+    children,
     ...props
 }: {
     children?: ReactNode;
@@ -12,12 +13,9 @@ export function Stepper({
 }) {
     // Show horizontal progress unless a vertical flow is requested.
     return (
-        <AstryxStepper
-            {...props}
-            children={props.children}
-            activeStep={activeStep}
-            orientation={props.orientation ?? 'horizontal'}
-        />
+        <AstryxStepper {...props} activeStep={activeStep} orientation={props.orientation ?? 'horizontal'}>
+            {children}
+        </AstryxStepper>
     );
 }
 

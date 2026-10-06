@@ -92,20 +92,19 @@ async def test_get_session_applies_mysql_engine_options(monkeypatch: pytest.Monk
 
     monkeypatch.setattr(database_session.env, "DATABASE_URL", "mysql+aiomysql://control:secret@db:3306/longlink")
     monkeypatch.setattr(database_session, "Session", None)
-    monkeypatch.setattr(database_session, "Engine", None)
     monkeypatch.setattr(database_session, "create_async_engine", create_async_engine)
 
     # Act
     result = database_session.get_session()
 
     # Assert the real session factory binds the configured engine, then release it.
-    engine = database_session.Engine
-    assert engine is not None
+    engine = result.kw["bind"]
+    assert isinstance(engine, AsyncEngine)
     try:
-        assert result.kw["bind"] is engine
         kwargs = captured["kwargs"]
         assert kwargs["hide_parameters"] is True
         assert kwargs["isolation_level"] == "READ COMMITTED"
         assert kwargs["pool_use_lifo"] is True
     finally:
-        await engine.dispose()
+        await database_session.dispose_engine()
+    assert database_session.Session is None
