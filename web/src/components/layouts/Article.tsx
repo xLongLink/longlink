@@ -13,6 +13,7 @@ import { Seo, articleRouteLabels } from '@/components/Seo';
 import { PathBreadcrumb } from '@/components/breadcrumb/Path';
 import { BreadcrumbItem } from '@astryxdesign/core/Breadcrumbs';
 import { useEffect, useEffectEvent, type ReactNode } from 'react';
+import { comparisonPaths, useCasePaths } from '@/platform/usecases';
 import { Layout, LayoutContent, LayoutHeader } from '@astryxdesign/core/Layout';
 
 type ArticlePage = {
@@ -30,24 +31,6 @@ const dateFormatter = new Intl.DateTimeFormat(undefined, {
 });
 
 const legalPaths = ['/terms', '/impressum', '/privacy'];
-const useCasePaths = [
-    '/use-cases',
-    '/use-cases/approvals-and-decisions',
-    '/use-cases/operations',
-    '/use-cases/compliance-and-quality',
-    '/use-cases/cases-and-projects',
-];
-const comparisonPaths = [
-    '/compare/longlink-vs-retool',
-    '/compare/longlink-vs-lovable',
-    '/compare/longlink-vs-windmill',
-    '/compare/longlink-vs-microsoft-power-apps',
-    '/compare/longlink-vs-replit',
-    '/compare/longlink-vs-appsmith',
-    '/compare/longlink-vs-superblocks',
-    '/compare/longlink-vs-fastapi',
-    '/compare/longlink-vs-reflex',
-];
 
 /** Renders shared documentation, use-case, comparison, and legal article content. */
 export function Article({ children, page }: { children: ReactNode; page: ArticlePage }) {

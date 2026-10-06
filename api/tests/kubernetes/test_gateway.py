@@ -147,8 +147,8 @@ async def test_gateway_propagates_controller_lookup_errors(
         await gateway.verify(kubernetes_client(), "https://gateway.example")
 
 
-async def test_gateway_translates_readiness_timeout(monkeypatch: pytest.MonkeyPatch, observed_resources: list[tuple[str, str]]) -> None:
-    """Expose readiness deadline failures without attempting an infrastructure repair."""
+async def test_gateway_obeys_caller_deadline(monkeypatch: pytest.MonkeyPatch, observed_resources: list[tuple[str, str]]) -> None:
+    """Cancel readiness observations at the caller's deadline without repairing infrastructure."""
 
     # Arrange a suspended Deployment read without stalling release metadata or allowing writes.
     interrupted = asyncio.Event()
@@ -158,7 +158,7 @@ async def test_gateway_translates_readiness_timeout(monkeypatch: pytest.MonkeyPa
         """Retain read-only observations while suspending the Deployment refresh."""
 
         async def refresh(self) -> None:
-            """Wait until the verifier's actual readiness deadline interrupts observation."""
+            """Wait until the caller's actual readiness deadline interrupts observation."""
 
             # Record cancellation of the in-flight read rather than manufacturing a timeout error.
             try:
@@ -168,10 +168,11 @@ async def test_gateway_translates_readiness_timeout(monkeypatch: pytest.MonkeyPa
 
     monkeypatch.setattr(gateway, "Deployment", PendingDeployment)
 
-    # Act under a larger diagnostic deadline that cannot pass as the translated inner timeout.
+    # Keep a larger diagnostic deadline outside the caller-owned readiness deadline.
     async with asyncio.timeout(1):
-        with pytest.raises(RuntimeError, match="^Shared controllers or verified Kourier endpoint did not become ready$"):
-            await gateway.verify(kubernetes_client(), "https://gateway.example", timeout_seconds=0.01)
+        with pytest.raises(TimeoutError):
+            async with asyncio.timeout(0.01):
+                await gateway.verify(kubernetes_client(), "https://gateway.example")
 
     # Assert that the deadline interrupted a read-only controller observation after the release read.
     assert interrupted.is_set()

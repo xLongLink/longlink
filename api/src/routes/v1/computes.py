@@ -56,11 +56,9 @@ async def create_compute_registry(payload: ComputeRegistryCreate, session: Async
                         cluster,
                         candidate.gateway_url,
                         candidate.gateway_certificate,
-                        timeout_seconds=7,
                     )
                     storage = Storage(candidate, cluster)
                     await storage.verify()
-                    await storage.verify_admin()
                 except Exception as exc:
                     # Any verification failure means unreachable infrastructure.
                     logger.warning("Compute infrastructure unavailable: %s", exc)

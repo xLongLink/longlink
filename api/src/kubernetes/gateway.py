@@ -32,7 +32,6 @@ async def verify(
     client: "Kubernetes",
     gateway_url: str,
     gateway_certificate: str | None = None,
-    timeout_seconds: float = 300,
 ) -> None:
     """Inspect package compatibility and readiness without changing infrastructure."""
 
@@ -57,34 +56,31 @@ async def verify(
     data = release.raw.get("data", {})
     if data.get("contract") != "1":
         raise ValueError("Compute package is incompatible; deploy a supported Compute package")
-    # Observe current rollouts; registration never repairs or upgrades these controllers.
-    try:
-        async with asyncio.timeout(timeout_seconds):
-            for namespace, name in (
-                ("knative-serving", "controller"),
-                ("knative-serving", "webhook"),
-                ("knative-serving", "net-kourier-controller"),
-                ("kourier-system", "3scale-kourier-gateway"),
-                ("cnpg-system", "cnpg-controller-manager"),
-            ):
-                deployment = Deployment(name, namespace=namespace, api=api)
-                while True:
-                    await deployment.refresh()
-                    if _deployment_is_ready(deployment):
-                        break
-                    await asyncio.sleep(5)
 
-            # Preserve TLS SNI while addressing Kourier's internal readiness vhost.
-            http_client = httpx2.AsyncClient(verify=context, trust_env=False, timeout=10, follow_redirects=False)
-            async with http_client:
-                while True:
-                    try:
-                        response = await http_client.get(f"{gateway_url.rstrip('/')}/ready", headers={"Host": "internalkourier"})
-                    except httpx2.TransportError:
-                        await asyncio.sleep(5)
-                        continue
-                    if response.status_code == 200:
-                        return
-                    await asyncio.sleep(5)
-    except TimeoutError:
-        raise RuntimeError("Shared controllers or verified Kourier endpoint did not become ready") from None
+    # Observe current rollouts under the caller's deadline; registration never repairs these controllers.
+    for namespace, name in (
+        ("knative-serving", "controller"),
+        ("knative-serving", "webhook"),
+        ("knative-serving", "net-kourier-controller"),
+        ("kourier-system", "3scale-kourier-gateway"),
+        ("cnpg-system", "cnpg-controller-manager"),
+    ):
+        deployment = Deployment(name, namespace=namespace, api=api)
+        while True:
+            await deployment.refresh()
+            if _deployment_is_ready(deployment):
+                break
+            await asyncio.sleep(5)
+
+    # Preserve TLS SNI while addressing Kourier's internal readiness vhost.
+    http_client = httpx2.AsyncClient(verify=context, trust_env=False, timeout=10, follow_redirects=False)
+    async with http_client:
+        while True:
+            try:
+                response = await http_client.get(f"{gateway_url.rstrip('/')}/ready", headers={"Host": "internalkourier"})
+            except httpx2.TransportError:
+                await asyncio.sleep(5)
+                continue
+            if response.status_code == 200:
+                return
+            await asyncio.sleep(5)
