@@ -6,20 +6,20 @@ import { Article } from '@/components/layouts/Article';
 import { Blockquote } from '@astryxdesign/core/Blockquote';
 
 const article = {
-    description: 'LongLink vs Retool. This comparison page is being built.',
-    toc: [{ id: 'longlink-vs-retool', label: 'LongLink vs Retool', level: 1 }],
+    description: 'LongLink vs Replit. This comparison page is being built.',
+    toc: [{ id: 'longlink-vs-replit', label: 'LongLink vs Replit', level: 1 }],
     lastUpdated: '2026-10-06',
-    editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/usecases/Retool.tsx',
-    title: 'LongLink vs Retool | LongLink Use Cases',
+    editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/compare/Replit.tsx',
+    title: 'LongLink vs Replit | LongLink Compare',
 };
 
-/** Renders the placeholder for the Retool comparison. */
-export default function Retool() {
+/** Renders the placeholder for the Replit comparison. */
+export default function Replit() {
     return (
         <Article page={article}>
             <Stack gap={4}>
-                <Heading id="longlink-vs-retool" level={1} textWrap="balance">
-                    LongLink vs Retool
+                <Heading id="longlink-vs-replit" level={1} textWrap="balance">
+                    LongLink vs Replit
                 </Heading>
                 <Blockquote className="border-s-(--color-text-orange) text-(--color-text-orange)">
                     <Stack gap={0}>

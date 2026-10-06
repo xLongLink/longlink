@@ -6,20 +6,20 @@ import { Article } from '@/components/layouts/Article';
 import { Blockquote } from '@astryxdesign/core/Blockquote';
 
 const article = {
-    description: 'LongLink vs Replit. This comparison page is being built.',
-    toc: [{ id: 'longlink-vs-replit', label: 'LongLink vs Replit', level: 1 }],
+    description: 'LongLink vs FastAPI. This comparison page is being built.',
+    toc: [{ id: 'longlink-vs-fastapi', label: 'LongLink vs FastAPI', level: 1 }],
     lastUpdated: '2026-10-06',
-    editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/usecases/Replit.tsx',
-    title: 'LongLink vs Replit | LongLink Use Cases',
+    editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/compare/FastAPI.tsx',
+    title: 'LongLink vs FastAPI | LongLink Compare',
 };
 
-/** Renders the placeholder for the Replit comparison. */
-export default function Replit() {
+/** Renders the placeholder for the FastAPI comparison. */
+export default function FastAPI() {
     return (
         <Article page={article}>
             <Stack gap={4}>
-                <Heading id="longlink-vs-replit" level={1} textWrap="balance">
-                    LongLink vs Replit
+                <Heading id="longlink-vs-fastapi" level={1} textWrap="balance">
+                    LongLink vs FastAPI
                 </Heading>
                 <Blockquote className="border-s-(--color-text-orange) text-(--color-text-orange)">
                     <Stack gap={0}>

@@ -6,20 +6,20 @@ import { Article } from '@/components/layouts/Article';
 import { Blockquote } from '@astryxdesign/core/Blockquote';
 
 const article = {
-    description: 'LongLink vs Appsmith. This comparison page is being built.',
-    toc: [{ id: 'longlink-vs-appsmith', label: 'LongLink vs Appsmith', level: 1 }],
+    description: 'LongLink vs Retool. This comparison page is being built.',
+    toc: [{ id: 'longlink-vs-retool', label: 'LongLink vs Retool', level: 1 }],
     lastUpdated: '2026-10-06',
-    editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/usecases/Appsmith.tsx',
-    title: 'LongLink vs Appsmith | LongLink Use Cases',
+    editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/compare/Retool.tsx',
+    title: 'LongLink vs Retool | LongLink Compare',
 };
 
-/** Renders the placeholder for the Appsmith comparison. */
-export default function Appsmith() {
+/** Renders the placeholder for the Retool comparison. */
+export default function Retool() {
     return (
         <Article page={article}>
             <Stack gap={4}>
-                <Heading id="longlink-vs-appsmith" level={1} textWrap="balance">
-                    LongLink vs Appsmith
+                <Heading id="longlink-vs-retool" level={1} textWrap="balance">
+                    LongLink vs Retool
                 </Heading>
                 <Blockquote className="border-s-(--color-text-orange) text-(--color-text-orange)">
                     <Stack gap={0}>

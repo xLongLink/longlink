@@ -36,30 +36,38 @@ const useCasePaths = [
     '/use-cases/operations',
     '/use-cases/compliance-and-quality',
     '/use-cases/cases-and-projects',
-    '/use-cases/longlink-vs-retool',
-    '/use-cases/longlink-vs-lovable',
-    '/use-cases/longlink-vs-windmill',
-    '/use-cases/longlink-vs-microsoft-power-apps',
-    '/use-cases/longlink-vs-replit',
-    '/use-cases/longlink-vs-appsmith',
-    '/use-cases/longlink-vs-superblocks',
-    '/use-cases/longlink-vs-fastapi',
-    '/use-cases/longlink-vs-reflex',
+];
+const comparisonPaths = [
+    '/compare/longlink-vs-retool',
+    '/compare/longlink-vs-lovable',
+    '/compare/longlink-vs-windmill',
+    '/compare/longlink-vs-microsoft-power-apps',
+    '/compare/longlink-vs-replit',
+    '/compare/longlink-vs-appsmith',
+    '/compare/longlink-vs-superblocks',
+    '/compare/longlink-vs-fastapi',
+    '/compare/longlink-vs-reflex',
 ];
 
-/** Renders shared documentation, use-case, and legal article content. */
+/** Renders shared documentation, use-case, comparison, and legal article content. */
 export function Article({ children, page }: { children: ReactNode; page: ArticlePage }) {
     const { pathname } = useLocation();
     const navigate = useNavigate();
     const pagePath = pathname.replace(/\/+$/, '') || '/';
-    const isGuide = pagePath.startsWith('/docs') || pagePath === '/use-cases' || pagePath.startsWith('/use-cases/');
+    const isGuide =
+        pagePath.startsWith('/docs') ||
+        pagePath === '/use-cases' ||
+        pagePath.startsWith('/use-cases/') ||
+        pagePath.startsWith('/compare/');
 
     // Keep each article collection within its own reading order.
     const navigationPaths = legalPaths.includes(pagePath)
         ? legalPaths
         : useCasePaths.includes(pagePath)
           ? useCasePaths
-          : documentationPaths;
+          : comparisonPaths.includes(pagePath)
+            ? comparisonPaths
+            : documentationPaths;
     const currentPage = navigationPaths.indexOf(pagePath);
     const previousPage = navigationPaths[currentPage - 1];
     const nextPage = navigationPaths[currentPage + 1];

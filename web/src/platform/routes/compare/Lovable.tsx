@@ -6,20 +6,20 @@ import { Article } from '@/components/layouts/Article';
 import { Blockquote } from '@astryxdesign/core/Blockquote';
 
 const article = {
-    description: 'LongLink vs Reflex. This comparison page is being built.',
-    toc: [{ id: 'longlink-vs-reflex', label: 'LongLink vs Reflex', level: 1 }],
+    description: 'LongLink vs Lovable. This comparison page is being built.',
+    toc: [{ id: 'longlink-vs-lovable', label: 'LongLink vs Lovable', level: 1 }],
     lastUpdated: '2026-10-06',
-    editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/usecases/Reflex.tsx',
-    title: 'LongLink vs Reflex | LongLink Use Cases',
+    editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/compare/Lovable.tsx',
+    title: 'LongLink vs Lovable | LongLink Compare',
 };
 
-/** Renders the placeholder for the Reflex comparison. */
-export default function Reflex() {
+/** Renders the placeholder for the Lovable comparison. */
+export default function Lovable() {
     return (
         <Article page={article}>
             <Stack gap={4}>
-                <Heading id="longlink-vs-reflex" level={1} textWrap="balance">
-                    LongLink vs Reflex
+                <Heading id="longlink-vs-lovable" level={1} textWrap="balance">
+                    LongLink vs Lovable
                 </Heading>
                 <Blockquote className="border-s-(--color-text-orange) text-(--color-text-orange)">
                     <Stack gap={0}>
