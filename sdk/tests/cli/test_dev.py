@@ -1,6 +1,9 @@
 import pytest
+import shutil
 import logging
+import sqlite3
 from pathlib import Path
+from contextlib import closing
 from longlink.cli import dev
 from typer.testing import CliRunner
 from longlink.cli.main import main
@@ -26,19 +29,26 @@ def test_dev_command_warns_only_for_public_hosts(
 
     # Arrange
     calls: list[tuple[str, dict[str, object]]] = []
-    migrations: list[str] = []
     monkeypatch.chdir(tmp_path)
+    monkeypatch.setenv("LONGLINK_ENV", "development")
+    migrations_path = tmp_path / "migrations"
+    migrations_path.mkdir()
+    shutil.copyfile(dev.ROOT / ".static" / "new" / "migrations" / "20260713_0001_initial.py", migrations_path / "20260713_0001_initial.py")
     if host == "0.0.0.0":
         (tmp_path / "frontend.d.ts").write_text("// Outdated SDK declarations", encoding="utf-8")
 
     def run(application: str, **kwargs: object) -> None:
-        """Capture the Uvicorn launch configuration."""
+        """Verify committed migrations before capturing the Uvicorn launch configuration."""
 
-        assert migrations == ["applied"]
+        # Read through an independent connection before the server can start.
+        with closing(sqlite3.connect(tmp_path / "dev.db")) as connection:
+            revision = connection.execute("SELECT version_num FROM alembic_version").fetchone()
+            tables = connection.execute("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'item'").fetchall()
+        assert revision == ("20260713_0001",)
+        assert tables == [("item",)]
         calls.append((application, kwargs))
 
     monkeypatch.setattr(dev.uvicorn, "run", run)
-    monkeypatch.setattr(dev, "apply_migrations", lambda: migrations.append("applied"))
 
     # Act
     dev.logger.addHandler(caplog.handler)

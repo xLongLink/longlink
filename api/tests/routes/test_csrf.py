@@ -216,6 +216,7 @@ async def test_authenticated_solution_creation_rejects_untrusted_origin_before_p
 async def test_authenticated_compute_creation_rejects_untrusted_origin_before_verification(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     monkeypatch: pytest.MonkeyPatch,
+    compute_runtime: None,
     origin: str | None,
 ) -> None:
     """Reject cookie-authenticated Compute writes before gateway verification."""

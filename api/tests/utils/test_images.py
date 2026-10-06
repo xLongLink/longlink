@@ -12,14 +12,9 @@ pytestmark = pytest.mark.no_db
 def mock_async_client(monkeypatch: pytest.MonkeyPatch, respond: Callable[[httpx2.Request], httpx2.Response]) -> None:
     """Patch image HTTP requests to use a deterministic registry transport."""
 
-    async_client = httpx2.AsyncClient
-
-    def client(*args: object, **kwargs: object) -> httpx2.AsyncClient:
-        """Build an HTTP client backed by the supplied registry transport."""
-
-        return async_client(*args, transport=httpx2.MockTransport(respond), **kwargs)
-
-    monkeypatch.setattr(images.httpx2, "AsyncClient", client)
+    # Keep real client construction and replace only outbound transport requests.
+    transport = httpx2.MockTransport(respond)
+    monkeypatch.setattr(httpx2.AsyncHTTPTransport, "handle_async_request", transport.handle_async_request)
 
 
 @pytest.mark.parametrize(

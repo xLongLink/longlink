@@ -3,6 +3,39 @@ from pathlib import Path
 
 
 @pytest.fixture
+def production_settings() -> dict[str, str | int]:
+    """Provide the complete Platform runtime contract for database and storage tests."""
+
+    # Share production inputs while keeping each test's overrides isolated.
+    return {
+        "ENV": "production",
+        "IDENTITY_SECRET": "identity-secret",
+        "DATABASE_HOST": "db",
+        "DATABASE_NAME": "longlink",
+        "DATABASE_PORT": 5432,
+        "DATABASE_SCHEMA": "solution",
+        "DATABASE_CERTIFICATE": "database-ca-pem",
+        "DATABASE_PASSWORD": "secret",
+        "DATABASE_USERNAME": "solution",
+        "STORAGE_BUCKET": "acme",
+        "STORAGE_PREFIX": "solutions/dashboard",
+        "STORAGE_REGION": "ch-gva-2",
+        "STORAGE_PASSWORD": "secret@key",
+        "STORAGE_USERNAME": "access/key",
+        "STORAGE_ENDPOINT_URL": "http://storage.runtime.longlink.internal:19000",
+    }
+
+
+@pytest.fixture
+def production_environment(monkeypatch: pytest.MonkeyPatch, production_settings: dict[str, str | int]) -> None:
+    """Install the complete Platform runtime contract as process variables."""
+
+    # Load production settings through the same boundary used by the runtime.
+    for name, value in production_settings.items():
+        monkeypatch.setenv(f"LONGLINK_{name}", str(value))
+
+
+@pytest.fixture
 def ca_certificate() -> str:
     """Provide a valid CA certificate for offline database and storage TLS checks."""
 

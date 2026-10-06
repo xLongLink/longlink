@@ -88,7 +88,8 @@ def test_data_resolves_request_services(
     client = TestClient(app)
 
     # Act
-    response = client.get("/", headers={} if identity is None else identity_headers(identity))
+    with client:
+        response = client.get("/", headers={} if identity is None else identity_headers(identity))
 
     # Assert
     if user is None:
@@ -148,7 +149,8 @@ def test_context_middleware_treats_untrusted_identity_as_anonymous(secret: str, 
     headers = {} if identity_header is None else {"x-longlink-identity": identity_header}
     if not secret:
         headers = identity_headers(UUID("00000000-0000-0000-0000-000000000001"))
-    response = client.get("/", headers=headers)
+    with client:
+        response = client.get("/", headers=headers)
 
     # Assert
     assert response.status_code == 200
@@ -184,18 +186,19 @@ def test_production_context_requires_signed_identity_except_for_probes() -> None
     client = TestClient(app)
 
     # Direct gateway requests have no valid Platform assertion; proxy requests do.
-    anonymous = client.get("/views.json")
-    assert anonymous.status_code == 401
-    assert anonymous.json() == {"detail": "Authentication required"}
-    assert client.get("/views.json", headers={"x-longlink-identity": "invalid-token"}).status_code == 401
-    authorized = client.get("/views.json", headers=identity_headers(UUID("00000000-0000-0000-0000-000000000001")))
-    assert authorized.status_code == 200
-    assert authorized.json() == {"authenticated": True}
-    assert client.get("/health").status_code == 200
-    assert client.get("/ready").status_code == 200
-    with pytest.raises(WebSocketDisconnect) as rejection, client.websocket_connect("/events"):
-        pass
-    assert rejection.value.code == 1008
+    with client:
+        anonymous = client.get("/views.json")
+        assert anonymous.status_code == 401
+        assert anonymous.json() == {"detail": "Authentication required"}
+        assert client.get("/views.json", headers={"x-longlink-identity": "invalid-token"}).status_code == 401
+        authorized = client.get("/views.json", headers=identity_headers(UUID("00000000-0000-0000-0000-000000000001")))
+        assert authorized.status_code == 200
+        assert authorized.json() == {"authenticated": True}
+        assert client.get("/health").status_code == 200
+        assert client.get("/ready").status_code == 200
+        with pytest.raises(WebSocketDisconnect) as rejection, client.websocket_connect("/events"):
+            pass
+        assert rejection.value.code == 1008
 
 
 async def test_context_middleware_isolates_concurrent_audit_identities() -> None:
@@ -204,8 +207,7 @@ async def test_context_middleware_isolates_concurrent_audit_identities() -> None
     # Arrange
     first_id = UUID("00000000-0000-0000-0000-000000000006")
     second_id = UUID("00000000-0000-0000-0000-000000000007")
-    requests_arrived = 0
-    both_requests_arrived = asyncio.Event()
+    both_requests_arrived = asyncio.Barrier(2)
     app = FastAPI()
     context.install_context_middleware(app, IDENTITY_SECRET)
 
@@ -213,12 +215,7 @@ async def test_context_middleware_isolates_concurrent_audit_identities() -> None
     async def current_user() -> dict[str, str | None]:
         """Return the audit identity after both requests reach the handler."""
 
-        nonlocal requests_arrived
-        requests_arrived += 1
-
-        if requests_arrived == 2:
-            both_requests_arrived.set()
-
+        # Read each request's identity only after both handlers have arrived.
         await both_requests_arrived.wait()
         user_id = audit.current_actor.get()
         return {"user_id": str(user_id) if user_id is not None else None}

@@ -1,3 +1,4 @@
+import httpx2
 import pytest
 import contextlib
 from uuid import uuid4
@@ -69,15 +70,18 @@ async def test_service_account_replaces_abandoned_credentials(monkeypatch: pytes
     solution = uuid4()
     calls: list[str] = []
 
-    async def fake_request(method: str, path: str, payload: dict[str, object] | None = None) -> dict[str, object]:
-        """Fail once with a conflict, then succeed."""
+    responses = iter([httpx2.Response(409, text="access key is already in use"), httpx2.Response(200), httpx2.Response(200, json={})])
 
-        calls.append(f"{method} {path}")
-        if len(calls) == 1:
-            raise Error(409, "access key is already in use")
-        return {}
+    def respond(request: httpx2.Request) -> httpx2.Response:
+        """Return a conflict followed by successful revocation and creation."""
 
-    monkeypatch.setattr(storage, "_request", fake_request)
+        assert request.url.scheme == "https"
+        assert request.url.host == "storage.example.com"
+        calls.append(f"{request.method} {request.url.raw_path.decode()}")
+        return next(responses)
+
+    transport = httpx2.MockTransport(respond)
+    monkeypatch.setattr(httpx2.AsyncHTTPTransport, "handle_async_request", transport.handle_async_request)
 
     # Act
     credentials = await storage.service_account("org-bucket", solution)
@@ -96,23 +100,26 @@ async def test_service_account_reraises_unexpected_error(monkeypatch: pytest.Mon
 
     # Arrange
     storage = RustFS("https://storage.example.com", s3.Credentials("owner", "secret"))
-    error = Error(500, "internal error")
     requests: list[tuple[str, str]] = []
 
-    async def failing_request(method: str, path: str, payload: dict[str, object] | None = None) -> dict[str, object]:
+    def respond(request: httpx2.Request) -> httpx2.Response:
         """Simulate an administrative outage."""
 
-        requests.append((method, path))
-        raise error
+        assert request.url.scheme == "https"
+        assert request.url.host == "storage.example.com"
+        requests.append((request.method, request.url.raw_path.decode()))
+        return httpx2.Response(500, text="internal error")
 
-    monkeypatch.setattr(storage, "_request", failing_request)
+    transport = httpx2.MockTransport(respond)
+    monkeypatch.setattr(httpx2.AsyncHTTPTransport, "handle_async_request", transport.handle_async_request)
 
     # Act
     with pytest.raises(Error) as captured:
         await storage.service_account("org-bucket", uuid4())
 
     # Assert
-    assert captured.value is error
+    assert captured.value.status_code == 500
+    assert str(captured.value) == "RustFS administration failed with HTTP 500: internal error"
     assert requests == [("PUT", "/rustfs/admin/v3/add-service-account")]
 
 
@@ -130,18 +137,30 @@ async def test_revoke_handles_administrative_errors(monkeypatch: pytest.MonkeyPa
     storage = RustFS("https://storage.example.com", s3.Credentials("owner", "secret"))
     solution = uuid4()
     requests: list[tuple[str, str]] = []
-    error = Error(status_code, message)
 
-    async def failing_request(method: str, path: str, payload: dict[str, object] | None = None) -> dict[str, object]:
+    def respond(request: httpx2.Request) -> httpx2.Response:
         """Record the revocation request and return the configured error."""
 
-        requests.append((method, path))
-        raise error
+        assert request.url.scheme == "https"
+        assert request.url.host == "storage.example.com"
+        requests.append((request.method, request.url.raw_path.decode()))
+        return httpx2.Response(status_code, text=message)
 
-    monkeypatch.setattr(storage, "_request", failing_request)
+    transport = httpx2.MockTransport(respond)
+    monkeypatch.setattr(httpx2.AsyncHTTPTransport, "handle_async_request", transport.handle_async_request)
 
     # Act
-    expectation = contextlib.nullcontext() if ignored else pytest.raises(Error, check=lambda exception: exception is error)
+    expectation = (
+        contextlib.nullcontext()
+        if ignored
+        else pytest.raises(
+            Error,
+            check=lambda exception: (
+                exception.status_code == status_code
+                and str(exception) == f"RustFS administration failed with HTTP {status_code}: {message}"
+            ),
+        )
+    )
     with expectation:
         await storage.revoke(solution)
 

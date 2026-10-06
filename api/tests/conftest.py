@@ -1,5 +1,7 @@
 import os
+import yaml
 import pytest
+import subprocess
 import pytest_asyncio
 from uuid import UUID, uuid4
 from types import TracebackType
@@ -206,6 +208,34 @@ class SeedPostgres(DatabasePostgres):
 
 
 @pytest.fixture
+def rendered_chart() -> list[dict]:
+    """Render the real Compute chart with fixed gateway and storage addresses."""
+
+    # Render the production chart with the gateway test's infrastructure settings.
+    chart = Path(__file__).resolve().parents[2] / "k8s/chart"
+    release = subprocess.run(
+        [
+            "helm",
+            "template",
+            "longlink-compute",
+            str(chart),
+            "--namespace",
+            "longlink-system",
+            "--set",
+            "gateway.address=203.0.113.10",
+            "--set",
+            "storage.address=203.0.113.11",
+            "--set",
+            "gatewayAllowedSourceCidr=203.0.113.0/24",
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    return list(yaml.safe_load_all(release.stdout))
+
+
+@pytest.fixture
 def database_runtime(monkeypatch: pytest.MonkeyPatch) -> None:
     """Replace only external CNPG and SQL I/O for request and lifecycle tests."""
 
@@ -221,7 +251,7 @@ def database_runtime(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 @pytest.fixture
-def seed_runtime(monkeypatch: pytest.MonkeyPatch, database_runtime: None) -> None:
+def seed_runtime(monkeypatch: pytest.MonkeyPatch, database_runtime: None, compute_runtime: None) -> None:
     """Replace every seed lifecycle provider boundary without external I/O."""
 
     from src.operations import databases, solutions, organizations
@@ -229,7 +259,7 @@ def seed_runtime(monkeypatch: pytest.MonkeyPatch, database_runtime: None) -> Non
     async def apply(client: object, organization_id: UUID) -> None:
         """Accept Organization boundary provisioning without external I/O."""
 
-    # Override the Compute registry boundary already installed by the database fixture.
+    # Preserve the seed-specific client after installing the Compute verification boundary.
     monkeypatch.setattr("src.routes.v1.computes.Kubernetes", SeedKubernetes)
     monkeypatch.setattr(databases, "Kubernetes", SeedKubernetes)
     monkeypatch.setattr(organizations, "Kubernetes", SeedKubernetes)
@@ -330,6 +360,18 @@ async def database_storage_class(_cluster: object) -> str:
 
 
 @pytest.fixture
+def compute_runtime(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Replace external infrastructure discovery and verification for Compute registration."""
+
+    # Keep provider replacements local to tests that explicitly register Compute infrastructure.
+    monkeypatch.setattr("src.routes.v1.computes.Kubernetes", RegistryKubernetes)
+    monkeypatch.setattr("src.routes.v1.computes.tls.certificate", tls_certificate)
+    monkeypatch.setattr("src.routes.v1.computes.gateway.verify", verify_compute_gateway)
+    monkeypatch.setattr("src.routes.v1.computes.storageclasses.resolve", database_storage_class)
+    monkeypatch.setattr("src.routes.v1.computes.Storage", StorageKubernetes)
+
+
+@pytest.fixture
 def captured_mail(monkeypatch: pytest.MonkeyPatch) -> list[tuple[str, str, str, str | None]]:
     """Capture outbound email without sending it through SMTP."""
 
@@ -361,11 +403,6 @@ async def reset_db(
     monkeypatch.setattr(env, "DATABASE_URL", db_url)
 
     engine = create_async_engine(db_url)
-    monkeypatch.setattr("src.routes.v1.computes.Kubernetes", RegistryKubernetes)
-    monkeypatch.setattr("src.routes.v1.computes.tls.certificate", tls_certificate)
-    monkeypatch.setattr("src.routes.v1.computes.gateway.verify", verify_compute_gateway)
-    monkeypatch.setattr("src.routes.v1.computes.storageclasses.resolve", database_storage_class)
-    monkeypatch.setattr("src.routes.v1.computes.Storage", StorageKubernetes)
     session.enable_sqlite_foreign_keys(engine)
     async with engine.begin() as conn:
         await conn.run_sync(registry.metadata.create_all)

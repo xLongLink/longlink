@@ -19,19 +19,10 @@ def test_render_mjml_template_rejects_compilation_errors(monkeypatch: pytest.Mon
         mail.render_mjml_template("password_reset.mjml", reset_url="https://example.com/reset")
 
 
-def test_render_mjml_template_escapes_context_before_compilation(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Escape text and attribute context before compiling an email template."""
+def test_render_mjml_template_preserves_escaped_context_in_html() -> None:
+    """Keep hostile text and link attributes safely escaped in compiled email HTML."""
 
     # Arrange
-    compiled_sources: list[str] = []
-
-    def compile_mjml(source: str) -> SimpleNamespace:
-        """Capture the fully interpolated MJML source."""
-
-        compiled_sources.append(source)
-        return SimpleNamespace(errors=[], html="rendered")
-
-    monkeypatch.setattr(mail, "mjml_to_html", compile_mjml)
     organization_name = "<Acme & Sons>"
     role_label = 'owner "admin"'
     invitation_url = 'https://example.test/invite?name="quoted"&next=<unsafe>'
@@ -45,14 +36,10 @@ def test_render_mjml_template_escapes_context_before_compilation(monkeypatch: py
     )
 
     # Assert
-    assert rendered == "rendered"
-    assert len(compiled_sources) == 1
-    source = compiled_sources[0]
-    assert organization_name not in source
-    assert role_label not in source
-    assert invitation_url not in source
-    assert "Join &lt;Acme &amp; Sons&gt; with owner &quot;admin&quot; access." in source
-    assert 'href="https://example.test/invite?name=&quot;quoted&quot;&amp;next=&lt;unsafe&gt;"' in source
+    assert organization_name not in rendered
+    assert invitation_url not in rendered
+    assert 'Join &lt;Acme &amp; Sons&gt; with owner "admin" access.' in rendered
+    assert "href='https://example.test/invite?name=\"quoted\"&amp;next=&lt;unsafe&gt;'" in rendered
 
 
 @pytest.mark.parametrize(

@@ -1,10 +1,8 @@
 import ssl
-import yaml
 import httpx2
 import pytest
-import subprocess
+import asyncio
 from types import SimpleNamespace
-from pathlib import Path
 from conftest import kubernetes_client
 from src.kubernetes import gateway
 from src.kubernetes.gateway import _deployment_is_ready
@@ -152,15 +150,32 @@ async def test_gateway_propagates_controller_lookup_errors(
 async def test_gateway_translates_readiness_timeout(monkeypatch: pytest.MonkeyPatch, observed_resources: list[tuple[str, str]]) -> None:
     """Expose readiness deadline failures without attempting an infrastructure repair."""
 
-    # Expire the current-rollout lookup inside the verifier's deadline.
-    def deployment(*args: object, **kwargs: object) -> None:
-        """Report the expired deadline."""
+    # Arrange a suspended Deployment read without stalling release metadata or allowing writes.
+    interrupted = asyncio.Event()
+    waiting = asyncio.Event()
 
-        raise TimeoutError
+    class PendingDeployment(gateway.Deployment):
+        """Retain read-only observations while suspending the Deployment refresh."""
 
-    monkeypatch.setattr(gateway, "Deployment", deployment)
-    with pytest.raises(RuntimeError, match="Shared controllers or verified Kourier endpoint did not become ready"):
-        await gateway.verify(kubernetes_client(), "https://gateway.example")
+        async def refresh(self) -> None:
+            """Wait until the verifier's actual readiness deadline interrupts observation."""
+
+            # Record cancellation of the in-flight read rather than manufacturing a timeout error.
+            try:
+                await waiting.wait()
+            finally:
+                interrupted.set()
+
+    monkeypatch.setattr(gateway, "Deployment", PendingDeployment)
+
+    # Act under a larger diagnostic deadline that cannot pass as the translated inner timeout.
+    async with asyncio.timeout(1):
+        with pytest.raises(RuntimeError, match="^Shared controllers or verified Kourier endpoint did not become ready$"):
+            await gateway.verify(kubernetes_client(), "https://gateway.example", timeout_seconds=0.01)
+
+    # Assert that the deadline interrupted a read-only controller observation after the release read.
+    assert interrupted.is_set()
+    assert observed_resources == [("longlink-system", "compute-release"), ("knative-serving", "controller")]
 
 
 async def test_gateway_rejects_contract_mismatch(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -183,31 +198,11 @@ async def test_gateway_rejects_contract_mismatch(monkeypatch: pytest.MonkeyPatch
         await gateway.verify(kubernetes_client(), "https://gateway.example")
 
 
-def test_compute_package_keeps_gateway_tls_and_infrastructure_boundaries() -> None:
+def test_compute_package_keeps_gateway_tls_and_infrastructure_boundaries(rendered_chart: list[dict]) -> None:
     """Validate the actual external package's fixed infrastructure boundaries."""
 
-    # Render the production chart rather than reproducing its fixed-IP resources.
-    chart = Path(__file__).resolve().parents[3] / "k8s/chart"
-    release = subprocess.run(
-        [
-            "helm",
-            "template",
-            "longlink-compute",
-            str(chart),
-            "--namespace",
-            "longlink-system",
-            "--set",
-            "gateway.address=203.0.113.10",
-            "--set",
-            "storage.address=203.0.113.11",
-            "--set",
-            "gatewayAllowedSourceCidr=203.0.113.0/24",
-        ],
-        check=True,
-        capture_output=True,
-        text=True,
-    )
-    documents = list(yaml.safe_load_all(release.stdout))
+    # Check the rendered production chart's infrastructure boundaries.
+    documents = rendered_chart
     policies = {document["metadata"]["name"]: document for document in documents if document and document["kind"] == "NetworkPolicy"}
     assert "longlink-runtime-gateway" not in policies
     assert policies["longlink-gateway-boundary"]["spec"]["ingress"][1] == {

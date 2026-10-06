@@ -1,13 +1,11 @@
 import pytest
 import logging
-from types import SimpleNamespace
 from pathlib import Path
 from longlink import Context
 from longlink import app as longlink_app
 from pydantic import ValidationError
-from contextlib import asynccontextmanager
 from longlink.app import LongLink
-from collections.abc import AsyncIterator
+from sqlalchemy.exc import OperationalError
 from longlink.logger import ApiAccessFilter
 from fastapi.testclient import TestClient
 from longlink.testclient import TestClient as SolutionTestClient
@@ -77,37 +75,29 @@ def test_solution_test_client_replaces_development_services_with_testing_service
     assert app.state.longlink.database._env.ENV == "testing"
 
 
-@pytest.mark.usefixtures("solution_source")
-def test_readiness_fails_when_the_solution_database_is_unavailable() -> None:
+async def test_readiness_fails_when_the_solution_database_is_unavailable(solution_source: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Keep the readiness probe dependent on a live Solution database."""
 
     # Arrange
-    class UnavailableSession:
-        """Reject the database connectivity probe."""
-
-        async def scalar(self, _statement: object) -> None:
-            """Raise the connection failure observed by the readiness route."""
-
-            raise RuntimeError("database unavailable")
-
-    class UnavailableDatabase:
-        """Provide only the unavailable database session boundary."""
-
-        @asynccontextmanager
-        async def session(self) -> AsyncIterator[UnavailableSession]:
-            """Yield the unavailable database session."""
-
-            yield UnavailableSession()
-
+    monkeypatch.setenv("LONGLINK_ENV", "development")
+    (solution_source.parent / "dev.db").mkdir()
     app = LongLink()
-    app.state.longlink.database = UnavailableDatabase()
+
+    # Verify the otherwise valid runtime fails specifically at SQLite connection setup.
+    with pytest.raises(OperationalError, match="unable to open database file"):
+        async with app.state.longlink.database.session():
+            pytest.fail("A directory cannot be opened as a SQLite database")
     client = TestClient(app, raise_server_exceptions=False)
 
     # Act
-    health_response = client.get("/health")
-    ready_response = client.get("/ready")
+    with client:
+        frontend_response = client.get("/")
+        health_response = client.get("/health")
+        ready_response = client.get("/ready")
 
     # Assert
+    assert frontend_response.status_code == 200
+    assert "text/html" in frontend_response.headers["content-type"]
     assert health_response.status_code == 200
     assert health_response.json() == {"ok": True}
     assert ready_response.status_code == 500
@@ -150,18 +140,12 @@ def test_startup_rejects_a_missing_solution_views_directory(tmp_path: Path, monk
         LongLink()
 
 
-@pytest.mark.usefixtures("solution_source")
+@pytest.mark.usefixtures("solution_source", "production_environment")
 def test_production_startup_installs_one_access_filter(monkeypatch: pytest.MonkeyPatch) -> None:
     """Avoid duplicate Uvicorn access filtering across Solution instances."""
 
     # Arrange
     access_logger = logging.getLogger("uvicorn.access")
-    monkeypatch.setattr(
-        longlink_app,
-        "Envs",
-        lambda: SimpleNamespace(ENV="production", IDENTITY_SECRET="identity-secret"),
-    )
-    monkeypatch.setattr(longlink_app, "create_fs", lambda _settings: object())
     monkeypatch.setattr(access_logger, "filters", [])
 
     # Act
@@ -185,8 +169,9 @@ def test_dynamic_view_is_registered_from_jsx_without_sidecar_metadata(solution_s
     # Act
     app = LongLink()
     client = TestClient(app)
-    response = client.get("/views/issues/[issue]")
-    views_response = client.get("/views.json")
+    with client:
+        response = client.get("/views/issues/[issue]")
+        views_response = client.get("/views.json")
 
     # Assert
     assert response.status_code == 200
@@ -209,8 +194,9 @@ def test_view_catalog_orders_paths_and_redirects_to_first_static_view(solution_s
     client = TestClient(app)
 
     # Act
-    catalog_response = client.get("/views.json")
-    root_response = client.get("/", follow_redirects=False)
+    with client:
+        catalog_response = client.get("/views.json")
+        root_response = client.get("/", follow_redirects=False)
 
     # Assert
     assert catalog_response.status_code == 200

@@ -142,9 +142,10 @@ async def create_solution(
     organization: Organization,
     name: str = "dashboard",
     image: str = "ghcr.io/longlink/dashboard:latest",
-    secrets: dict[str, str] | None = None,
+    envs: dict[str, str] | None = None,
+    runtime_secrets: dict[str, str] | None = None,
 ) -> Solution:
-    """Create one Solution with the specified Organization."""
+    """Create one Solution with explicit release envs and runtime credentials."""
 
     parsed_image = Image(image)
     resolved_image = parsed_image if "@" in image else Image(f"{parsed_image.registry}/{parsed_image.repository}@sha256:test")
@@ -158,11 +159,11 @@ async def create_solution(
             SolutionCreate(
                 name=name,
                 image=resolved_image,
-                envs={name: value for name, value in (secrets or {}).items() if not name.startswith("LONGLINK_")},
+                envs=envs or {},
             ),
             user_id=organization.created_id,
             metadata=LongLinkMetadata(image=resolved_image),
         )
-        solution.secrets = {name: value for name, value in (secrets or {}).items() if name.startswith("LONGLINK_")}
+        solution.secrets = runtime_secrets or {}
         await session.commit()
         return solution

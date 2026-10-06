@@ -98,12 +98,11 @@ def test_solution_template_constrains_workloads() -> None:
             }
 
 
-async def test_solution_apply_stops_after_failed_migration_job(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_solution_apply_stops_after_failed_migration_job(monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture) -> None:
     """Avoid creating runtime resources when the Solution migration fails."""
 
     # Arrange
     applied: list[str] = []
-    logged: list[str] = []
 
     class MigrationJob(MigrationJobs):
         """Report a terminally failed migration Job."""
@@ -160,16 +159,11 @@ async def test_solution_apply_stops_after_failed_migration_job(monkeypatch: pyte
 
         applied.append(str(resource.raw.get("kind", "Secret")))
 
-    def log_error(message: str, *args: object) -> None:
-        """Capture formatted operation error output."""
-
-        logged.append(message % args)
-
     monkeypatch.setattr(solutions, "Job", MigrationJob)
     monkeypatch.setattr(solutions, "Pod", MigrationPod)
     monkeypatch.setattr(solutions, "Event", MigrationEvent)
     monkeypatch.setattr(solutions, "apply", apply)
-    monkeypatch.setattr(solutions.logger, "error", log_error)
+    monkeypatch.setattr(solutions.logger, "handlers", [*solutions.logger.handlers, caplog.handler])
 
     # Act and assert
     with pytest.raises(RuntimeError, match=r"Solution migration Job .* failed"):
@@ -181,7 +175,7 @@ async def test_solution_apply_stops_after_failed_migration_job(monkeypatch: pyte
             revision_id=UUID(int=1),
         )
     assert applied == ["Secret", "Job"]
-    assert logged[-1] == "Recent output from migration Pod failed-migration-pod:\ndatabase connection refused"
+    assert "Recent output from migration Pod failed-migration-pod:\ndatabase connection refused" in caplog.messages
 
 
 @pytest.mark.parametrize("migrate", [True, False])
@@ -384,43 +378,50 @@ async def test_solution_apply_waits_for_route_after_deployment_readiness(monkeyp
             assert isinstance(spec, dict)
             self.raw = raw
             self.metadata = metadata
-            kind = raw.get("kind")
-            assert isinstance(kind, str)
-            resources[kind] = self
-            if kind == "Service":
-                self.metadata["generation"] = 1
+            self.metadata["generation"] = 1
+            self.rollout_states = iter(
+                [
+                    {},
+                    {
+                        "status": {
+                            "observedGeneration": 1,
+                            "latestCreatedRevisionName": "new-revision",
+                            "latestReadyRevisionName": "old-revision",
+                            "conditions": [{"type": "Ready", "status": "True"}],
+                        }
+                    },
+                    {
+                        "status": {
+                            "observedGeneration": 1,
+                            "latestCreatedRevisionName": "new-revision",
+                            "latestReadyRevisionName": "new-revision",
+                            "conditions": [{"type": "Ready", "status": "True"}],
+                        }
+                    },
+                ]
+            )
 
         async def refresh(self) -> None:
-            """Keep resource state current between polling attempts."""
+            """Supply missing status, an old ready revision, then the current revision."""
+
+            self.raw.update(next(self.rollout_states))
 
     async def apply(_resource: AppliedResource) -> None:
         """Accept a resource without contacting Kubernetes."""
 
-    async def sleep(delay: float) -> None:
-        """Make each independent rollout gate ready in sequence."""
+    class Clock:
+        """Replace only the rollout module's clock without mutating asyncio."""
 
-        sleeps.append(delay)
-        if len(sleeps) == 1:
-            resources["Service"].raw["status"] = {
-                "observedGeneration": 1,
-                "latestCreatedRevisionName": "new-revision",
-                "latestReadyRevisionName": "old-revision",
-                "conditions": [{"type": "Ready", "status": "True"}],
-            }
-        else:
-            resources["Service"].raw["status"] = {
-                "observedGeneration": 1,
-                "latestCreatedRevisionName": "new-revision",
-                "latestReadyRevisionName": "new-revision",
-                "conditions": [{"type": "Ready", "status": "True"}],
-            }
+        @staticmethod
+        async def sleep(delay: float) -> None:
+            """Record polling without delaying the test."""
 
-    resources: dict[str, Resource] = {}
+            sleeps.append(delay)
 
     monkeypatch.setattr(solutions, "Job", MigrationJobs)
     monkeypatch.setattr(solutions, "KnativeServiceResource", Resource)
     monkeypatch.setattr(solutions, "apply", apply)
-    monkeypatch.setattr(solutions.asyncio, "sleep", sleep)
+    monkeypatch.setattr(solutions, "asyncio", Clock)
     solution_client = solutions.Solutions(
         kubernetes_client(),
     )
@@ -688,17 +689,21 @@ async def test_solution_delete_removes_resources_before_waiting_for_pods(monkeyp
             if "Secret" not in deleted:
                 yield Resource("Secret")
 
-    async def sleep(delay: float) -> None:
-        """Record polling without delaying the test."""
+    class Clock:
+        """Replace only the deletion module's clock without mutating asyncio."""
 
-        sleeps.append(delay)
+        @staticmethod
+        async def sleep(delay: float) -> None:
+            """Record polling without delaying the test."""
+
+            sleeps.append(delay)
 
     monkeypatch.setattr(solutions, "Namespace", NamespaceResource)
     monkeypatch.setattr(solutions, "KnativeServiceResource", Resource)
     monkeypatch.setattr(solutions, "Secret", SecretResource)
     monkeypatch.setattr(solutions, "Job", JobResource)
     monkeypatch.setattr(solutions, "Pod", PodResource)
-    monkeypatch.setattr(solutions.asyncio, "sleep", sleep)
+    monkeypatch.setattr(solutions, "asyncio", Clock)
 
     # Act
     await solutions.Solutions(kubernetes_client()).delete(
@@ -783,16 +788,20 @@ async def test_solution_delete_does_not_repeat_deletions_for_terminating_resourc
 
             deleted.append("resource")
 
-    async def sleep(delay: float) -> None:
-        """Record the cleanup retry without waiting."""
+    class Clock:
+        """Replace only the deletion module's clock without mutating asyncio."""
 
-        sleeps.append(delay)
+        @staticmethod
+        async def sleep(delay: float) -> None:
+            """Record the cleanup retry without waiting."""
+
+            sleeps.append(delay)
 
     monkeypatch.setattr(solutions, "Namespace", NamespaceResource)
     monkeypatch.setattr(solutions, "KnativeServiceResource", Resource)
     monkeypatch.setattr(solutions, "Secret", Resource)
     monkeypatch.setattr(solutions, "Job", Resource)
-    monkeypatch.setattr(solutions.asyncio, "sleep", sleep)
+    monkeypatch.setattr(solutions, "asyncio", Clock)
 
     # Act
     await solutions.Solutions(kubernetes_client()).delete(ORGANIZATION_ID, UUID("00000000-0000-4000-8000-000000000001"))

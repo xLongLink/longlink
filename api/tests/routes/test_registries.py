@@ -41,7 +41,9 @@ async def test_platform_user_cannot_delete_compute_registry(clients: tuple[Async
     assert str(compute.id) in {item["id"] for item in list_response.json()["items"]}
 
 
-async def test_compute_list_returns_ordered_page_and_total(clients: tuple[AsyncClient, AsyncClient, AsyncClient]) -> None:
+async def test_compute_list_returns_ordered_page_and_total(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient], compute_runtime: None
+) -> None:
     """Return an ordered registry page without credentials."""
 
     # Arrange
@@ -77,6 +79,7 @@ async def test_compute_list_returns_ordered_page_and_total(clients: tuple[AsyncC
 
 async def test_compute_registry_creation_redacts_credentials_and_rejects_duplicate_name(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    compute_runtime: None,
 ) -> None:
     """Create a Compute registry without exposing credentials and reject a duplicate name."""
 

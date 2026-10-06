@@ -2,15 +2,14 @@ import pytest
 import asyncio
 from uuid import UUID
 from datetime import UTC, datetime, timedelta
+from factories import claim_operation, queue_operation, fetch_operations
 from functools import partial
 from src.utils import jobs as operation_worker
 from contextlib import asynccontextmanager
 from src.errors import ForbiddenError
-from collections.abc import Callable, Awaitable, AsyncIterator
+from collections.abc import AsyncIterator
 from src.models.operations import OperationKind, OperationStatus
 from src.database.models.operations import Operation
-
-pytestmark = pytest.mark.no_db
 
 
 def leased_operation() -> Operation:
@@ -21,20 +20,6 @@ def leased_operation() -> Operation:
         target_id=UUID("22222222-2222-2222-2222-222222222222"),
         lease_expires_at=datetime.now(UTC) + timedelta(minutes=1),
     )
-
-
-def failed_transition(operation: Operation) -> Callable[[object, UUID, str], Awaitable[Operation]]:
-    """Build a failure transition for one claimed Operation."""
-
-    async def fail(_session: object, operation_id: UUID, reason: str) -> Operation:
-        """Mark the expected Operation as failed."""
-
-        assert operation_id == operation.id
-        operation.failed = reason
-        operation.finished_at = datetime.now(UTC)
-        return operation
-
-    return fail
 
 
 class SchedulerSession:
@@ -51,6 +36,7 @@ async def fake_scheduler_session_scope() -> AsyncIterator[SchedulerSession]:
     yield SchedulerSession()
 
 
+@pytest.mark.no_db
 async def test_execute_finishes_terminal_transition_when_cancelled(monkeypatch: pytest.MonkeyPatch) -> None:
     """Finish the claimed Operation transition before propagating cancellation."""
 
@@ -93,6 +79,7 @@ async def test_execute_finishes_terminal_transition_when_cancelled(monkeypatch: 
     assert completed_operation_ids == [operation.id]
 
 
+@pytest.mark.no_db
 async def test_finish_transition_preserves_cancellation_when_terminal_persistence_fails(monkeypatch: pytest.MonkeyPatch) -> None:
     """Propagate cancellation when its protected terminal transition also fails."""
 
@@ -137,8 +124,11 @@ async def test_execute_persists_handler_failure(
     """Persist a handler failure as the one claimed Operation's terminal outcome."""
 
     # Arrange
-    operation = leased_operation()
-    transitions: list[tuple[UUID, str]] = []
+    queued = await queue_operation(target_id=UUID("22222222-2222-2222-2222-222222222222"))
+    operation = await claim_operation()
+    assert operation is not None
+    assert operation.id == queued.id
+    assert operation.status == OperationStatus.active
 
     async def failing_handler(target_id: UUID) -> None:
         """Raise one expected terminal failure."""
@@ -146,32 +136,34 @@ async def test_execute_persists_handler_failure(
         assert target_id == operation.target_id
         raise failure
 
-    async def fake_fail(_session: object, operation_id: UUID, reason: str) -> Operation:
-        """Record the terminal failure transition."""
-
-        transitions.append((operation_id, reason))
-        operation.failed = reason
-        operation.finished_at = datetime.now(UTC)
-        return operation
-
     monkeypatch.setitem(operation_worker.handlers, operation.kind, failing_handler)
-    monkeypatch.setattr(operation_worker.operations, "fail", fake_fail)
 
     # Act
     result = await operation_worker.execute(operation)
 
     # Assert
-    assert result is operation
+    assert result.id == operation.id
     assert result.status == OperationStatus.failed
     assert result.failed == expected_reason
-    assert transitions == [(operation.id, expected_reason)]
+
+    # Verify the committed outcome independently, including no successor work.
+    [persisted] = await fetch_operations()
+    assert persisted.id == operation.id
+    assert persisted.status == OperationStatus.failed
+    assert persisted.failed == expected_reason
+    assert persisted.finished_at is not None
+    assert persisted.lease_expires_at is None
 
 
 async def test_execute_fails_operation_when_handler_times_out(monkeypatch: pytest.MonkeyPatch) -> None:
     """Cancel a stalled handler and persist its terminal timeout failure."""
 
     # Arrange
-    operation = leased_operation()
+    queued = await queue_operation(target_id=UUID("22222222-2222-2222-2222-222222222222"))
+    operation = await claim_operation()
+    assert operation is not None
+    assert operation.id == queued.id
+    assert operation.status == OperationStatus.active
     cancelled = asyncio.Event()
     monkeypatch.setattr(operation_worker.env, "OPERATION_TIMEOUT_SECONDS", 0.01)
 
@@ -184,14 +176,7 @@ async def test_execute_fails_operation_when_handler_times_out(monkeypatch: pytes
         finally:
             cancelled.set()
 
-    async def unexpected_complete(_session: object, _operation_id: UUID) -> Operation:
-        """Reject a success transition after the handler times out."""
-
-        raise AssertionError("Timed-out operations must not complete")
-
     monkeypatch.setitem(operation_worker.handlers, operation.kind, stalled_handler)
-    monkeypatch.setattr(operation_worker.operations, "fail", failed_transition(operation))
-    monkeypatch.setattr(operation_worker.operations, "complete", unexpected_complete)
 
     # Act
     async with asyncio.timeout(1):
@@ -199,42 +184,50 @@ async def test_execute_fails_operation_when_handler_times_out(monkeypatch: pytes
 
     # Assert
     assert cancelled.is_set()
+    assert result.id == operation.id
     assert result.status == OperationStatus.failed
     assert result.failed == "Operation timed out after 0.01 seconds"
+
+    # Verify timeout committed a failure and cleared the lease without queuing work.
+    [persisted] = await fetch_operations()
+    assert persisted.id == operation.id
+    assert persisted.status == OperationStatus.failed
+    assert persisted.failed == "Operation timed out after 0.01 seconds"
+    assert persisted.finished_at is not None
+    assert persisted.lease_expires_at is None
 
 
 async def test_execute_releases_operation_when_handler_is_cancelled(monkeypatch: pytest.MonkeyPatch) -> None:
     """Release an interrupted Operation before propagating handler cancellation."""
 
     # Arrange
-    operation = leased_operation()
-    released_operation_ids: list[UUID] = []
+    queued = await queue_operation(target_id=UUID("22222222-2222-2222-2222-222222222222"))
+    operation = await claim_operation()
+    assert operation is not None
+    assert operation.id == queued.id
+    assert operation.status == OperationStatus.active
 
     async def cancelled_handler(_target_id: UUID) -> None:
         """Model worker shutdown while the handler is executing."""
 
         raise asyncio.CancelledError
 
-    async def release(_session: object, operation_id: UUID) -> Operation:
-        """Release the claimed Operation without making it terminal."""
-
-        released_operation_ids.append(operation_id)
-        operation.lease_expires_at = None
-        return operation
-
     monkeypatch.setitem(operation_worker.handlers, operation.kind, cancelled_handler)
-    monkeypatch.setattr(operation_worker.operations, "release", release)
 
     # Act and assert
     with pytest.raises(asyncio.CancelledError):
         await operation_worker.execute(operation)
 
-    assert released_operation_ids == [operation.id]
-    assert operation.status == OperationStatus.scheduled
-    assert operation.finished_at is None
-    assert operation.failed is None
+    # Verify shutdown committed only a lease release, not a terminal outcome or successor.
+    [persisted] = await fetch_operations()
+    assert persisted.id == operation.id
+    assert persisted.status == OperationStatus.scheduled
+    assert persisted.finished_at is None
+    assert persisted.failed is None
+    assert persisted.lease_expires_at is None
 
 
+@pytest.mark.no_db
 @pytest.mark.parametrize(
     "lease_expires_at",
     [
@@ -261,23 +254,38 @@ async def test_execute_rejects_lost_terminal_operation_lock(monkeypatch: pytest.
     """Reject a terminal outcome that could not release the claimed operation lock."""
 
     # Arrange
-    operation = leased_operation()
+    queued = await queue_operation(target_id=UUID("22222222-2222-2222-2222-222222222222"))
+    operation = await claim_operation()
+    assert operation is not None
+    assert operation.id == queued.id
+    assert operation.status == OperationStatus.active
 
-    async def complete_handler(_target_id: UUID) -> None:
-        """Complete the operation handler successfully."""
+    async def complete_handler(target_id: UUID) -> None:
+        """Complete successfully after another transaction releases the worker lease."""
 
-    async def complete(_session: object, operation_id: UUID) -> None:
-        """Simulate a concurrent worker releasing the operation lock."""
+        assert target_id == operation.target_id
 
-        assert operation_id == operation.id
+        # Commit the lost lease before the worker attempts its real terminal transition.
+        async with operation_worker.session_scope() as session:
+            released = await operation_worker.operations.release(session, operation.id)
+            assert released is not None
+            assert released.id == operation.id
+            await session.commit()
 
     monkeypatch.setitem(operation_worker.handlers, operation.kind, complete_handler)
-    monkeypatch.setattr(operation_worker, "session_scope", fake_scheduler_session_scope)
-    monkeypatch.setattr(operation_worker.operations, "complete", complete)
 
     # Act and assert
-    with pytest.raises(RuntimeError, match=f"Operation '{operation.id}' lock was lost"):
+    with pytest.raises(RuntimeError, match=f"Operation '{operation.id}' lock was lost") as exc_info:
         await operation_worker.execute(operation)
+    assert str(exc_info.value) == f"Operation '{operation.id}' lock was lost"
+
+    # Verify the lost lock left only the unfinished, unleased Operation available to retry.
+    [persisted] = await fetch_operations()
+    assert persisted.id == operation.id
+    assert persisted.status == OperationStatus.scheduled
+    assert persisted.finished_at is None
+    assert persisted.lease_expires_at is None
+    assert persisted.failed is None
 
 
 SCHEDULER_FAILURES = [
@@ -286,6 +294,7 @@ SCHEDULER_FAILURES = [
 ]
 
 
+@pytest.mark.no_db
 @pytest.mark.parametrize(("polling_failure", "execution_failure"), SCHEDULER_FAILURES)
 async def test_scheduler_recovers_from_worker_failures(
     monkeypatch: pytest.MonkeyPatch,
@@ -298,6 +307,7 @@ async def test_scheduler_recovers_from_worker_failures(
     operation = leased_operation()
     claims = iter((polling_failure, operation, None) if polling_failure is not None else (operation, None))
     executed: list[Operation] = []
+    idle = asyncio.Event()
 
     async def claim(_session: SchedulerSession) -> Operation | None:
         """Raise once when configured, then return queued Operations."""
@@ -305,6 +315,8 @@ async def test_scheduler_recovers_from_worker_failures(
         result = next(claims)
         if isinstance(result, Exception):
             raise result
+        if result is None:
+            idle.set()
         return result
 
     async def execute(claimed: Operation) -> Operation:
@@ -315,20 +327,21 @@ async def test_scheduler_recovers_from_worker_failures(
             raise execution_failure
         return claimed
 
-    async def sleep(_delay: float) -> None:
-        """Stop after the scheduler proves it returned to idle polling."""
-
-        if executed:
-            raise asyncio.CancelledError
-
     monkeypatch.setattr(operation_worker, "session_scope", fake_scheduler_session_scope)
     monkeypatch.setattr(operation_worker.operations, "claim", claim)
     monkeypatch.setattr(operation_worker, "execute", execute)
-    monkeypatch.setattr(operation_worker.asyncio, "sleep", sleep)
 
     # Act
-    with pytest.raises(asyncio.CancelledError):
-        await operation_worker.run_operation_scheduler()
+    scheduler = asyncio.create_task(operation_worker.run_operation_scheduler())
+    try:
+        async with asyncio.timeout(3):
+            await idle.wait()
+    finally:
+        # Always stop and await the worker, even when recovery never reaches idle.
+        scheduler.cancel()
+        async with asyncio.timeout(1):
+            with pytest.raises(asyncio.CancelledError):
+                await scheduler
 
     # Assert
     assert executed == [operation]

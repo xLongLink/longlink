@@ -3,244 +3,218 @@ from typing import cast
 from contextlib import asynccontextmanager
 from src.utils.s3 import S3, Credentials
 from collections.abc import AsyncIterator
+from aiobotocore.stub import AioStubber
+from aiobotocore.session import get_session
 from botocore.exceptions import ClientError
+from types_aiobotocore_s3.client import S3Client
 
 pytestmark = pytest.mark.no_db
 
 
-def client_error(code: str) -> ClientError:
-    """Build one S3 error with the given service code."""
+@pytest.fixture
+async def s3(monkeypatch: pytest.MonkeyPatch) -> AsyncIterator[tuple[S3, AioStubber]]:
+    """Supply one local S3 client with validated responses and no network requests."""
 
-    return ClientError({"Error": {"Code": code, "Message": code}}, "TestOperation")
+    # Keep explicit dummy credentials and a loopback endpoint independent of host AWS settings.
+    session = get_session()
+    async with session.create_client(
+        "s3",
+        region_name="us-east-1",
+        endpoint_url="http://127.0.0.1:1",
+        aws_access_key_id="access",
+        aws_secret_access_key="secret",
+        aws_session_token="dummy",
+    ) as client:
+        storage = S3("http://127.0.0.1:1", Credentials("access", "secret"))
+        stubber = AioStubber(client)
 
+        # Replace only the transport lifetime; production operations and paginators remain real.
+        @asynccontextmanager
+        async def stubbed_client(self: S3) -> AsyncIterator[S3Client]:
+            """Yield the client owned by this test's fixture."""
 
-class FakePaginator:
-    """Yield configured listing pages without contacting S3."""
+            yield cast(S3Client, client)
 
-    def __init__(self, pages: list[dict[str, object]]) -> None:
-        """Store the pages returned for one listing operation."""
-
-        self._pages = pages
-
-    async def paginate(self, **_kwargs: object) -> AsyncIterator[dict[str, object]]:
-        """Yield each configured page in order."""
-
-        for page in self._pages:
-            yield page
-
-
-class FakeClient:
-    """Record S3 calls and serve configured paginator pages."""
-
-    def __init__(self) -> None:
-        """Initialize empty call records and paginator pages."""
-
-        self.paginators: dict[str, list[dict[str, object]]] = {}
-        self.aborted: list[tuple[str, str]] = []
-        self.deleted: list[list[dict[str, str]]] = []
-        self.buckets_created: list[str] = []
-        self.public_access_blocks: list[tuple[str, dict[str, bool]]] = []
-        self.create_error: ClientError | None = None
-        self.block_error: ClientError | None = None
-        self.paginator_error: ClientError | None = None
-
-    def get_paginator(self, name: str) -> FakePaginator:
-        """Return the configured pages for one listing operation."""
-
-        if self.paginator_error is not None:
-            raise self.paginator_error
-
-        return FakePaginator(self.paginators.get(name, []))
-
-    async def abort_multipart_upload(self, Bucket: str, Key: str, UploadId: str) -> None:
-        """Record one multipart upload abortion."""
-
-        self.aborted.append((Key, UploadId))
-
-    async def create_bucket(self, Bucket: str) -> None:
-        """Record bucket creation or raise the configured error."""
-
-        self.buckets_created.append(Bucket)
-        if self.create_error is not None:
-            raise self.create_error
-
-    async def delete_objects(self, Bucket: str, Delete: dict[str, object]) -> dict[str, object]:
-        """Record one batched object deletion without partial failures."""
-
-        objects = list(cast("list[dict[str, str]]", Delete["Objects"]))
-        self.deleted.append(objects)
-        return {}
-
-    async def put_public_access_block(self, Bucket: str, PublicAccessBlockConfiguration: dict[str, bool]) -> None:
-        """Record public-access protection or raise the configured error."""
-
-        # Record configuration attempts even when the service rejects them.
-        self.public_access_blocks.append((Bucket, PublicAccessBlockConfiguration))
-        if self.block_error is not None:
-            raise self.block_error
-
-
-def serve(client: FakeClient, monkeypatch: pytest.MonkeyPatch) -> None:
-    """Route S3 transport through one fake client."""
-
-    @asynccontextmanager
-    async def fake_client(self: S3) -> AsyncIterator[FakeClient]:
-        """Yield the fake S3 client."""
-
-        yield client
-
-    monkeypatch.setattr(S3, "client", fake_client)
-
-
-def make_s3() -> S3:
-    """Build one S3 client with dummy connection settings."""
-
-    return S3("https://s3.example.com", Credentials("access", "secret"))
+        monkeypatch.setattr(S3, "client", stubbed_client)
+        with stubber:
+            yield storage, stubber
 
 
 @pytest.mark.parametrize("creation_error_code", [None, "BucketAlreadyOwnedByYou"], ids=["new-bucket", "owned-bucket"])
-async def test_create_bucket_protects_new_and_existing_buckets(monkeypatch: pytest.MonkeyPatch, creation_error_code: str | None) -> None:
+async def test_create_bucket_protects_new_and_existing_buckets(s3: tuple[S3, AioStubber], creation_error_code: str | None) -> None:
     """Protect new and existing buckets with the same public-access configuration."""
 
     # Arrange
-    client = FakeClient()
-    client.create_error = client_error(creation_error_code) if creation_error_code is not None else None
-    serve(client, monkeypatch)
-    storage = make_s3()
+    storage, stubber = s3
+    if creation_error_code is None:
+        stubber.add_response("create_bucket", {}, {"Bucket": "org-bucket"})
+    else:
+        stubber.add_client_error("create_bucket", creation_error_code, expected_params={"Bucket": "org-bucket"})
+    stubber.add_response(
+        "put_public_access_block",
+        {},
+        {
+            "Bucket": "org-bucket",
+            "PublicAccessBlockConfiguration": {
+                "BlockPublicAcls": True,
+                "IgnorePublicAcls": True,
+                "BlockPublicPolicy": True,
+                "RestrictPublicBuckets": True,
+            },
+        },
+    )
 
     # Act
     await storage.create_bucket("org-bucket")
 
     # Assert
-    assert client.buckets_created == ["org-bucket"]
-    configuration = {
-        "BlockPublicAcls": True,
-        "IgnorePublicAcls": True,
-        "BlockPublicPolicy": True,
-        "RestrictPublicBuckets": True,
-    }
-    assert client.public_access_blocks == [("org-bucket", configuration)]
+    stubber.assert_no_pending_responses()
 
 
-async def test_create_bucket_propagates_public_access_block_errors(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_create_bucket_propagates_public_access_block_errors(s3: tuple[S3, AioStubber]) -> None:
     """Never swallow protection failures as tolerated bucket-creation errors."""
 
     # Arrange
-    client = FakeClient()
-    client.create_error = client_error("BucketAlreadyExists")
-    client.block_error = client_error("BucketAlreadyOwnedByYou")
-    serve(client, monkeypatch)
-    storage = make_s3()
+    storage, stubber = s3
+    stubber.add_client_error("create_bucket", "BucketAlreadyExists", expected_params={"Bucket": "org-bucket"})
+    stubber.add_client_error(
+        "put_public_access_block",
+        "BucketAlreadyOwnedByYou",
+        expected_params={
+            "Bucket": "org-bucket",
+            "PublicAccessBlockConfiguration": {
+                "BlockPublicAcls": True,
+                "IgnorePublicAcls": True,
+                "BlockPublicPolicy": True,
+                "RestrictPublicBuckets": True,
+            },
+        },
+    )
 
     # Act
     with pytest.raises(ClientError) as error:
         await storage.create_bucket("org-bucket")
 
     # Assert
-    assert error.value is client.block_error
-    assert client.buckets_created == ["org-bucket"]
-    assert client.public_access_blocks == [
-        ("org-bucket", {"BlockPublicAcls": True, "IgnorePublicAcls": True, "BlockPublicPolicy": True, "RestrictPublicBuckets": True})
-    ]
+    assert error.value.operation_name == "PutPublicAccessBlock"
+    assert error.value.response["Error"]["Code"] == "BucketAlreadyOwnedByYou"
+    stubber.assert_no_pending_responses()
 
 
-async def test_create_bucket_propagates_unexpected_creation_errors(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_create_bucket_propagates_unexpected_creation_errors(s3: tuple[S3, AioStubber]) -> None:
     """Surface unexpected creation failures without attempting public-access configuration."""
 
     # Arrange
-    client = FakeClient()
-    client.create_error = client_error("AccessDenied")
-    serve(client, monkeypatch)
+    storage, stubber = s3
+    stubber.add_client_error("create_bucket", "AccessDenied", expected_params={"Bucket": "org-bucket"})
 
     # Act
     with pytest.raises(ClientError) as error:
-        await make_s3().create_bucket("org-bucket")
+        await storage.create_bucket("org-bucket")
 
     # Assert
     assert error.value.response["Error"]["Code"] == "AccessDenied"
-    assert client.buckets_created == ["org-bucket"]
-    assert client.public_access_blocks == []
+    stubber.assert_no_pending_responses()
 
 
-@pytest.mark.parametrize(
-    ("error_code", "should_raise"),
-    [
-        pytest.param("NoSuchBucket", False, id="missing-bucket"),
-        pytest.param("AccessDenied", True, id="unexpected-error"),
-    ],
-)
-async def test_delete_prefix_tolerates_only_missing_bucket(monkeypatch: pytest.MonkeyPatch, error_code: str, should_raise: bool) -> None:
+DELETE_PREFIX_ERRORS = [
+    pytest.param("NoSuchBucket", False, id="missing-bucket"),
+    pytest.param("AccessDenied", True, id="unexpected-error"),
+]
+
+
+@pytest.mark.parametrize(("error_code", "should_raise"), DELETE_PREFIX_ERRORS)
+async def test_delete_prefix_tolerates_only_missing_bucket(s3: tuple[S3, AioStubber], error_code: str, should_raise: bool) -> None:
     """Treat cleanup of an already removed bucket as success and surface other failures."""
 
     # Arrange
-    client = FakeClient()
-    client.paginator_error = client_error(error_code)
-    serve(client, monkeypatch)
+    storage, stubber = s3
+    stubber.add_client_error("list_multipart_uploads", error_code, expected_params={"Bucket": "org-bucket", "Prefix": "solutions/abc/"})
 
     # Act
     if should_raise:
-        with pytest.raises(ClientError):
-            await make_s3().delete_prefix("org-bucket", "solutions/abc/")
+        with pytest.raises(ClientError) as error:
+            await storage.delete_prefix("org-bucket", "solutions/abc/")
+
+        # Assert the permission failure is not confused with a missing bucket.
+        assert error.value.response["Error"]["Code"] == "AccessDenied"
     else:
-        await make_s3().delete_prefix("org-bucket", "solutions/abc/")
+        await storage.delete_prefix("org-bucket", "solutions/abc/")
 
     # Assert
-    assert client.aborted == []
-    assert client.deleted == []
+    stubber.assert_no_pending_responses()
 
 
-async def test_delete_prefix_batches_thousand_identifiers(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_delete_prefix_batches_thousand_identifiers(s3: tuple[S3, AioStubber]) -> None:
     """Abort pending uploads and delete every version and marker in bounded batches."""
 
     # Arrange
-    client = FakeClient()
+    storage, stubber = s3
     versions = [{"Key": f"solutions/abc/{index}", "VersionId": f"v{index}"} for index in range(1001)]
     marker = {"Key": "solutions/abc/deleted", "VersionId": "marker-1"}
-    client.paginators["list_multipart_uploads"] = [{"Uploads": [{"Key": "solutions/abc/upload", "UploadId": "upload-1"}]}]
-    client.paginators["list_object_versions"] = [{"Versions": versions, "DeleteMarkers": [marker]}]
-    serve(client, monkeypatch)
+    stubber.add_response(
+        "list_multipart_uploads",
+        {"Uploads": [{"Key": "solutions/abc/upload", "UploadId": "upload-1"}]},
+        {"Bucket": "org-bucket", "Prefix": "solutions/abc/"},
+    )
+    stubber.add_response("abort_multipart_upload", {}, {"Bucket": "org-bucket", "Key": "solutions/abc/upload", "UploadId": "upload-1"})
+    stubber.add_response(
+        "list_object_versions",
+        {"Versions": versions, "DeleteMarkers": [marker]},
+        {"Bucket": "org-bucket", "Prefix": "solutions/abc/"},
+    )
+    stubber.add_response("delete_objects", {}, {"Bucket": "org-bucket", "Delete": {"Objects": versions[:1000], "Quiet": True}})
+    stubber.add_response("delete_objects", {}, {"Bucket": "org-bucket", "Delete": {"Objects": [versions[1000], marker], "Quiet": True}})
 
     # Act
-    await make_s3().delete_prefix("org-bucket", "solutions/abc/")
+    await storage.delete_prefix("org-bucket", "solutions/abc/")
 
     # Assert
-    assert client.aborted == [("solutions/abc/upload", "upload-1")]
-    assert client.deleted == [versions[:1000], [versions[1000], marker]]
+    stubber.assert_no_pending_responses()
 
 
-async def test_delete_prefix_raises_on_partial_failures(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_delete_prefix_raises_on_partial_failures(s3: tuple[S3, AioStubber]) -> None:
     """Report partial S3 deletions instead of returning success."""
 
     # Arrange
-    client = FakeClient()
-    client.paginators["list_object_versions"] = [{"Versions": [{"Key": "solutions/abc/file", "VersionId": "v1"}], "DeleteMarkers": []}]
-    serve(client, monkeypatch)
-
-    async def partial(self: FakeClient, Bucket: str, Delete: dict[str, object]) -> dict[str, object]:
-        """Simulate one partially failed batch deletion."""
-
-        return {"Errors": [{"Key": "solutions/abc/file", "Code": "AccessDenied"}]}
-
-    monkeypatch.setattr(FakeClient, "delete_objects", partial)
+    storage, stubber = s3
+    stubber.add_response("list_multipart_uploads", {}, {"Bucket": "org-bucket", "Prefix": "solutions/abc/"})
+    stubber.add_response(
+        "list_object_versions",
+        {"Versions": [{"Key": "solutions/abc/file", "VersionId": "v1"}], "DeleteMarkers": []},
+        {"Bucket": "org-bucket", "Prefix": "solutions/abc/"},
+    )
+    stubber.add_response(
+        "delete_objects",
+        {"Errors": [{"Key": "solutions/abc/file", "Code": "AccessDenied"}]},
+        {"Bucket": "org-bucket", "Delete": {"Objects": [{"Key": "solutions/abc/file", "VersionId": "v1"}], "Quiet": True}},
+    )
 
     # Act and assert
     with pytest.raises(RuntimeError, match="S3 failed to delete 1 objects"):
-        await make_s3().delete_prefix("org-bucket", "solutions/abc/")
+        await storage.delete_prefix("org-bucket", "solutions/abc/")
+    stubber.assert_no_pending_responses()
 
 
-async def test_usage_sums_all_listing_pages(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_usage_sums_all_listing_pages(s3: tuple[S3, AioStubber]) -> None:
     """Measure current object bytes across every listing page."""
 
     # Arrange
-    client = FakeClient()
-    client.paginators["list_objects_v2"] = [
-        {"Contents": [{"Size": 10}, {"Size": 20}]},
-        {"Contents": [{"Size": 5}]},
-    ]
-    serve(client, monkeypatch)
+    storage, stubber = s3
+    stubber.add_response(
+        "list_objects_v2",
+        {"Contents": [{"Size": 10}, {"Size": 20}], "IsTruncated": True, "NextContinuationToken": "next-page"},
+        {"Bucket": "org-bucket"},
+    )
+    stubber.add_response(
+        "list_objects_v2",
+        {"Contents": [{"Size": 5}], "IsTruncated": False},
+        {"Bucket": "org-bucket", "ContinuationToken": "next-page"},
+    )
 
     # Act
-    total = await make_s3().usage("org-bucket")
+    total = await storage.usage("org-bucket")
 
     # Assert
     assert total == 35
+    stubber.assert_no_pending_responses()

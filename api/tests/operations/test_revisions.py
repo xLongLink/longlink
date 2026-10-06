@@ -29,7 +29,9 @@ async def test_failed_update_recovery(users: tuple[User, User, User], monkeypatc
     owner = users[0]
     organization = await create_organization(owner)
     solution = await create_solution(
-        organization, secrets={"KEY": "old", "LONGLINK_ENV": "production", "LONGLINK_IDENTITY_SECRET": "stable"}
+        organization,
+        envs={"KEY": "old"},
+        runtime_secrets={"LONGLINK_ENV": "production", "LONGLINK_IDENTITY_SECRET": "stable"},
     )
     setup = await claim_operation()
     assert setup is not None
@@ -192,7 +194,9 @@ async def test_queued_deployments_keep_exact_targets(users: tuple[User, User, Us
 
     organization = await create_organization(users[0])
     solution = await create_solution(
-        organization, secrets={"KEY": "first", "LONGLINK_ENV": "production", "LONGLINK_IDENTITY_SECRET": "stable"}
+        organization,
+        envs={"KEY": "first"},
+        runtime_secrets={"LONGLINK_ENV": "production", "LONGLINK_IDENTITY_SECRET": "stable"},
     )
     setup = await claim_operation()
     assert setup is not None
