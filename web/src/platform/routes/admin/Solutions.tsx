@@ -21,13 +21,15 @@ export default function Solutions() {
     const [page, setPage] = useState(1);
     const [isDeleting, startDeletion] = useTransition();
     const [dialog, setDialog] = useState<
-        | { kind: 'metadata'; item: z.output<typeof zPageSolutionResponse>['items'][number] }
-        | { kind: 'deletion'; item: { id: string; name: string } }
-        | null
+        { kind: 'metadata'; id: string } | { kind: 'deletion'; item: { id: string; name: string } } | null
     >(null);
     const [solutions, invalidate] = useApi<z.output<typeof zPageSolutionResponse>>(
         `/api/v1/solutions?page=${page}&page_size=25`
     );
+
+    // Use current metadata and clear missing selections so returning to a page cannot reopen the dialog.
+    const metadata = dialog?.kind === 'metadata' ? solutions.items.find((item) => item.id === dialog.id) : undefined;
+    if (dialog?.kind === 'metadata' && !metadata) setDialog(null);
 
     return (
         <Stack gap={8}>
@@ -97,7 +99,7 @@ export default function Solutions() {
                                     icon={<Info />}
                                     size="sm"
                                     variant="ghost"
-                                    onClick={() => setDialog({ kind: 'metadata', item: row })}
+                                    onClick={() => setDialog({ kind: 'metadata', id: row.id })}
                                 />
                             ),
                         },
@@ -108,7 +110,7 @@ export default function Solutions() {
                     <Button label="Next" isDisabled={solutions.total <= page * 25} onClick={() => setPage(page + 1)} />
                 </Stack>
             </Stack>
-            {dialog?.kind === 'metadata' && (
+            {metadata && (
                 <Dialog
                     isOpen
                     onOpenChange={(open) => {
@@ -118,33 +120,33 @@ export default function Solutions() {
                     <DialogHeader title="Solution metadata" onOpenChange={() => setDialog(null)} />
                     <Stack gap={2}>
                         <Text>
-                            <b>Status</b> {dialog.item.status}
+                            <b>Status</b> {metadata.status}
                         </Text>
                         <Text>
-                            <b>Organization</b> {dialog.item.organization.name}
+                            <b>Organization</b> {metadata.organization.name}
                         </Text>
                         <Text>
-                            <b>Desired image</b> {dialog.item.image_desired}
+                            <b>Desired image</b> {metadata.image_desired}
                         </Text>
                         <Text>
-                            <b>Desired revision</b> {dialog.item.desired_revision_id ?? 'Not selected'}
+                            <b>Desired revision</b> {metadata.desired_revision_id ?? 'Not selected'}
                         </Text>
                         <Text>
-                            <b>Last deployed revision</b> {dialog.item.deployed_revision_id ?? 'Never deployed'}
+                            <b>Last deployed revision</b> {metadata.deployed_revision_id ?? 'Never deployed'}
                         </Text>
                         <Text>
-                            <b>ID</b> {dialog.item.id}
+                            <b>ID</b> {metadata.id}
                         </Text>
                         <Text>
-                            <b>Slug</b> {dialog.item.slug}
+                            <b>Slug</b> {metadata.slug}
                         </Text>
-                        {dialog.item.description && (
+                        {metadata.description && (
                             <Text>
-                                <b>Description</b> {dialog.item.description}
+                                <b>Description</b> {metadata.description}
                             </Text>
                         )}
                         <Text>
-                            <b>Created</b> {dialog.item.created_at}
+                            <b>Created</b> {metadata.created_at}
                         </Text>
                         <Stack direction="horizontal" justify="end">
                             <Button
@@ -153,7 +155,7 @@ export default function Solutions() {
                                 onClick={() =>
                                     setDialog({
                                         kind: 'deletion',
-                                        item: { id: dialog.item.id, name: dialog.item.name },
+                                        item: { id: metadata.id, name: metadata.name },
                                     })
                                 }
                             />

@@ -17,7 +17,7 @@ import { Table, proportional } from '@astryxdesign/core/Table';
 
 export type ViewReference = Pick<(typeof references)[number], 'introduction' | 'properties' | 'practices'>;
 export type ViewProperties = { name: string; properties: ViewReference['properties'] }[];
-export type ViewExample = { title: string; code: string; preview: ReactNode; description?: string };
+export type ViewExample = { title: string; code: string; preview: ReactNode };
 
 const tabs = [
     { value: 'examples', label: 'Examples' },

@@ -3,28 +3,6 @@
         "name": "Avatar",
         "url": "https://astryx.atmeta.com/components/Avatar",
         "introduction": "Uses local Waves fallbacks for rounded organization avatars and Glyphs for users.",
-        "anatomy": [
-            {
-                "name": "Photo",
-                "required": false,
-                "description": "The profile image, loaded from the src URL. Shown when available."
-            },
-            {
-                "name": "Initials",
-                "required": false,
-                "description": "The first letter, digit or emoji of the first and last words of the name; punctuation is skipped. Shown when no photo is available. A name with no letters, digits or emoji shows the default icon instead."
-            },
-            {
-                "name": "Default icon",
-                "required": false,
-                "description": "A generic person silhouette. Shown when there is no photo or name."
-            },
-            {
-                "name": "Status dot",
-                "required": false,
-                "description": "A small indicator in the bottom-right corner showing availability (online, away, busy). Each variant pairs colour with a distinct shape so status does not rely on colour alone."
-            }
-        ],
         "properties": [
             {
                 "name": "name",
@@ -72,18 +50,6 @@
         "name": "Badge",
         "url": "https://astryx.atmeta.com/components/Badge",
         "introduction": "Displays a count or enumerated state.",
-        "anatomy": [
-            {
-                "name": "Icon",
-                "required": false,
-                "description": "An optional leading icon that helps identify the badge type at a glance."
-            },
-            {
-                "name": "Label",
-                "required": true,
-                "description": "The text or number shown inside the badge."
-            }
-        ],
         "properties": [
             {
                 "name": "label",
@@ -151,28 +117,6 @@
         "name": "Button",
         "url": "https://astryx.atmeta.com/components/Button",
         "introduction": "Gives onClick automatic asynchronous loading and duplicate-click prevention.",
-        "anatomy": [
-            {
-                "name": "Icon",
-                "required": false,
-                "description": "A leading icon that reinforces the label, like a trash icon on a Delete button."
-            },
-            {
-                "name": "Label",
-                "required": true,
-                "description": "The visible text describing the action. Also used as the accessible name."
-            },
-            {
-                "name": "End content",
-                "required": false,
-                "description": "A trailing badge or icon after the label, like a notification count or dropdown arrow."
-            },
-            {
-                "name": "Spinner",
-                "required": false,
-                "description": "Replaces the icon during loading to show the action is in progress."
-            }
-        ],
         "properties": [
             {
                 "name": "label",
@@ -290,18 +234,6 @@
         "name": "ButtonGroup",
         "url": "https://astryx.atmeta.com/components/ButtonGroup",
         "introduction": "Groups related flat action buttons.",
-        "anatomy": [
-            {
-                "name": "Button",
-                "required": true,
-                "description": "One or more Button or IconButton children that form the connected group."
-            },
-            {
-                "name": "Divider",
-                "required": false,
-                "description": "A thin border between buttons, rendered automatically by the group."
-            }
-        ],
         "properties": [
             {
                 "name": "children",
@@ -377,28 +309,6 @@
         "name": "CheckboxInput",
         "url": "https://astryx.atmeta.com/components/CheckboxInput",
         "introduction": "Edits a boolean or indeterminate field.",
-        "anatomy": [
-            {
-                "name": "Checkbox",
-                "required": true,
-                "description": "The check box itself: unchecked, checked, or indeterminate."
-            },
-            {
-                "name": "Label",
-                "required": true,
-                "description": "Text describing what the checkbox controls. Always present for accessibility."
-            },
-            {
-                "name": "Description",
-                "required": false,
-                "description": "Helper text below the label with additional context."
-            },
-            {
-                "name": "Status message",
-                "required": false,
-                "description": "An error, warning, or success message below the checkbox."
-            }
-        ],
         "properties": [
             {
                 "name": "label",
@@ -500,33 +410,6 @@
         "name": "CodeBlock",
         "url": "https://astryx.atmeta.com/components/CodeBlock",
         "introduction": "Displays source code using standard copy and highlighting behavior.",
-        "anatomy": [
-            {
-                "name": "Header Bar",
-                "required": false,
-                "description": "Shows the title, language label, and copy button. Appears when any of these props are set."
-            },
-            {
-                "name": "Line Numbers",
-                "required": false,
-                "description": "Numbered gutter along the left edge. Enable with hasLineNumbers."
-            },
-            {
-                "name": "Code Body",
-                "required": true,
-                "description": "The syntax-highlighted code content."
-            },
-            {
-                "name": "Highlighted Lines",
-                "required": false,
-                "description": "Background accent on specific lines to draw attention."
-            },
-            {
-                "name": "Copy Button",
-                "required": false,
-                "description": "Copies the code string to the clipboard. Shown by default."
-            }
-        ],
         "properties": [
             {
                 "name": "code",
@@ -576,23 +459,6 @@
         "name": "Collapsible",
         "url": "https://astryx.atmeta.com/components/Collapsible",
         "introduction": "Shows or hides content using controlled or initially open state.",
-        "anatomy": [
-            {
-                "name": "Trigger",
-                "required": true,
-                "description": "The always-visible button that toggles the content. Shows a label and a chevron indicator."
-            },
-            {
-                "name": "Chevron",
-                "required": false,
-                "description": "Animated disclosure arrow. It follows the label by default; chevronPosition=\"start\" moves it ahead of the label, points inward when collapsed (mirrored under RTL), and turns down when expanded."
-            },
-            {
-                "name": "Content",
-                "required": false,
-                "description": "The area that hides or reveals when the trigger is clicked."
-            }
-        ],
         "properties": [
             {
                 "name": "children",
@@ -670,38 +536,6 @@
         "name": "DateInput",
         "url": "https://astryx.atmeta.com/components/DateInput",
         "introduction": "Selects a constrained date with standard month and week presentation.",
-        "anatomy": [
-            {
-                "name": "Label",
-                "required": true,
-                "description": "Text above the input describing what date is expected."
-            },
-            {
-                "name": "Text input",
-                "required": true,
-                "description": "A field where the user can type a date directly. Parses common formats like MM/DD/YYYY."
-            },
-            {
-                "name": "Calendar icon",
-                "required": true,
-                "description": "A button that opens the calendar popover for visual date picking."
-            },
-            {
-                "name": "Calendar popover",
-                "required": false,
-                "description": "A month grid that appears when the icon is clicked or the input is focused."
-            },
-            {
-                "name": "Clear button",
-                "required": false,
-                "description": "A × button that resets the date value. Shown when hasClear is true and a date is set."
-            },
-            {
-                "name": "Status message",
-                "required": false,
-                "description": "An error, warning, or success message below the input."
-            }
-        ],
         "properties": [
             {
                 "name": "label",
@@ -829,53 +663,6 @@
         "name": "DateRangeInput",
         "url": "https://astryx.atmeta.com/components/DateRangeInput",
         "introduction": "Selects a date range with two months and standard week presentation.",
-        "anatomy": [
-            {
-                "name": "Label",
-                "required": true,
-                "description": "Text above the trigger describing what date range is expected."
-            },
-            {
-                "name": "Field surface",
-                "required": true,
-                "description": "Bordered control containing the calendar toggle, range trigger, and end affordances."
-            },
-            {
-                "name": "Trigger button",
-                "required": true,
-                "description": "A button showing the formatted range or placeholder. Clicking opens the popover."
-            },
-            {
-                "name": "Calendar icon",
-                "required": true,
-                "description": "A trailing icon that also opens the popover."
-            },
-            {
-                "name": "Calendar popover",
-                "required": true,
-                "description": "A dual-month calendar grid with range selection and hover preview."
-            },
-            {
-                "name": "Preset sidebar",
-                "required": false,
-                "description": "A list of preset range options beside the calendar."
-            },
-            {
-                "name": "Preset button",
-                "required": false,
-                "description": "A quick-select action for one preset range, reflecting current and disabled states."
-            },
-            {
-                "name": "Clear button",
-                "required": false,
-                "description": "A × button that resets the range to null."
-            },
-            {
-                "name": "Status message",
-                "required": false,
-                "description": "An error, warning, or success message below the trigger."
-            }
-        ],
         "properties": [
             {
                 "name": "label",
@@ -1007,48 +794,6 @@
         "name": "DateTimeInput",
         "url": "https://astryx.atmeta.com/components/DateTimeInput",
         "introduction": "Selects a constrained date and time without custom picker presentation.",
-        "anatomy": [
-            {
-                "name": "Label",
-                "required": true,
-                "description": "Text above the input describing what datetime is expected."
-            },
-            {
-                "name": "Date input",
-                "required": true,
-                "description": "A typed date field with calendar popover on the fine-pointer Astryx surface, a real input type=date in native modes, or a read-only segment opening the Astryx touch sheet under presentation=\"adaptive-bottom-sheet\" on a coarse pointer."
-            },
-            {
-                "name": "Calendar icon",
-                "required": true,
-                "description": "A button that opens the active date surface: the platform picker, Astryx calendar popover, or Astryx touch sheet."
-            },
-            {
-                "name": "Date picker",
-                "required": false,
-                "description": "The browser/OS picker in native modes, an Astryx month-grid popover on a fine pointer, or the Date panel of the Astryx bottom sheet on a coarse pointer with presentation=\"adaptive-bottom-sheet\"."
-            },
-            {
-                "name": "Time input",
-                "required": true,
-                "description": "A real input type=time for the default minute-precision native mode, a text/combobox time field when seconds, custom increments, or preset options are requested, or a read-only segment opening accessible time wheels under presentation=\"adaptive-bottom-sheet\" on a coarse pointer."
-            },
-            {
-                "name": "Time options popover",
-                "required": false,
-                "description": "A list of preset times at the timeOptionInterval cadence. Setting the prop retains Astryx's text/combobox time field even when nativePicker otherwise selects native controls; the Astryx touch sheet uses wheels instead."
-            },
-            {
-                "name": "Clear button",
-                "required": false,
-                "description": "A × button that resets the datetime value."
-            },
-            {
-                "name": "Status message",
-                "required": false,
-                "description": "An error, warning, or success message below the inputs."
-            }
-        ],
         "properties": [
             {
                 "name": "label",
@@ -1182,28 +927,6 @@
         "name": "Dialog",
         "url": "https://astryx.atmeta.com/components/Dialog",
         "introduction": "Displays an accessible modal with an explicit purpose and controlled visibility.",
-        "anatomy": [
-            {
-                "name": "Header",
-                "required": true,
-                "description": "Title, optional subtitle, and close button. The title receives focus on open and labels the dialog via aria-labelledby."
-            },
-            {
-                "name": "Body",
-                "required": true,
-                "description": "The main content area: text, forms, lists, or any layout."
-            },
-            {
-                "name": "Footer",
-                "required": false,
-                "description": "Action buttons like Save/Cancel or Accept/Decline, aligned to the end."
-            },
-            {
-                "name": "Backdrop",
-                "required": true,
-                "description": "Semi-transparent overlay behind the dialog that blocks page interaction."
-            }
-        ],
         "properties": [
             {
                 "name": "children",
@@ -1267,23 +990,6 @@
         "name": "Divider",
         "url": "https://astryx.atmeta.com/components/Divider",
         "introduction": "Separates adjacent View content with the standard horizontal rule.",
-        "anatomy": [
-            {
-                "name": "Divider group",
-                "required": true,
-                "description": "Separator group that arranges one or two rules around an optional label."
-            },
-            {
-                "name": "Rule",
-                "required": true,
-                "description": "Painted line segment; a second segment renders when a label is present."
-            },
-            {
-                "name": "Label",
-                "required": false,
-                "description": "Optional content displayed between two rule segments."
-            }
-        ],
         "properties": [],
         "practices": [
             {
@@ -1300,93 +1006,6 @@
         "name": "DropdownMenu",
         "url": "https://astryx.atmeta.com/components/DropdownMenu",
         "introduction": "Opens an action menu using standard adaptive presentation and placement.",
-        "anatomy": [
-            {
-                "name": "Trigger button",
-                "required": true,
-                "description": "Button that opens and closes the selected menu presentation."
-            },
-            {
-                "name": "Trigger indicator icon",
-                "required": false,
-                "description": "Optional trailing chevron shown by a labeled trigger when hasChevron is enabled."
-            },
-            {
-                "name": "Pointer menu surface",
-                "required": false,
-                "description": "Anchored top-level or nested menu panel used by the pointer presentation."
-            },
-            {
-                "name": "Pointer action row",
-                "required": false,
-                "description": "Action, selectable option, or submenu trigger row in an anchored menu."
-            },
-            {
-                "name": "Icon-rendered item icon",
-                "required": false,
-                "description": "Optional semantic or component icon rendered through Icon at the start of an action row."
-            },
-            {
-                "name": "Caller-rendered item start content",
-                "required": false,
-                "description": "Optional arbitrary React content rendered directly at the start of an action row."
-            },
-            {
-                "name": "Checkbox indicator",
-                "required": false,
-                "description": "Decorative shared checkbox indicator for a checkbox action row."
-            },
-            {
-                "name": "Radio indicator",
-                "required": false,
-                "description": "Decorative shared radio indicator with an additional menu-owned target."
-            },
-            {
-                "name": "Pointer section heading",
-                "required": false,
-                "description": "Heading that labels a data-driven section in an anchored menu."
-            },
-            {
-                "name": "Pointer divider",
-                "required": false,
-                "description": "Divider between groups in an anchored menu."
-            },
-            {
-                "name": "Pointer submenu indicator icon",
-                "required": false,
-                "description": "Trailing chevron that identifies an action row as a nested flyout trigger."
-            },
-            {
-                "name": "Touch sheet frame",
-                "required": false,
-                "description": "BottomSheet panel, content area, handle, and optional scrim that host touch actions."
-            },
-            {
-                "name": "Touch menu surface",
-                "required": false,
-                "description": "Menu-owned content panel rendered inside the touch sheet frame."
-            },
-            {
-                "name": "Touch heading",
-                "required": false,
-                "description": "Current action-sheet title, updated when a nested action view is opened."
-            },
-            {
-                "name": "Touch action list",
-                "required": false,
-                "description": "Spacious List that groups actions in the touch presentation."
-            },
-            {
-                "name": "Touch action row",
-                "required": false,
-                "description": "ListItem button used for an action or drill-in entry in the touch presentation."
-            },
-            {
-                "name": "Touch divider",
-                "required": false,
-                "description": "Divider between action groups in the touch presentation."
-            }
-        ],
         "properties": [
             {
                 "name": "button",
@@ -1444,28 +1063,6 @@
         "name": "EmptyState",
         "url": "https://astryx.atmeta.com/components/EmptyState",
         "introduction": "Describes an empty View region without custom decorative slots.",
-        "anatomy": [
-            {
-                "name": "Icon",
-                "required": false,
-                "description": "A visual cue above the title that reinforces the context, like a search icon for no results."
-            },
-            {
-                "name": "Title",
-                "required": true,
-                "description": "Primary message explaining what is empty: \"No projects yet\" not \"No data\"."
-            },
-            {
-                "name": "Description",
-                "required": false,
-                "description": "Additional context explaining why it is empty or what the user can do."
-            },
-            {
-                "name": "Actions",
-                "required": false,
-                "description": "One or two buttons guiding the user to a next step, like \"Create project\" or \"Clear filters\"."
-            }
-        ],
         "properties": [
             {
                 "name": "title",
@@ -1507,53 +1104,6 @@
         "name": "FileInput",
         "url": "https://astryx.atmeta.com/components/FileInput",
         "introduction": "Selects files with explicit upload constraints; uploading remains a Solution operation.",
-        "anatomy": [
-            {
-                "name": "Label",
-                "required": true,
-                "description": "Text that identifies the field. Always rendered for accessibility even when visually hidden."
-            },
-            {
-                "name": "Description",
-                "required": false,
-                "description": "Helper text between the label and the drop zone explaining accepted formats or size limits."
-            },
-            {
-                "name": "Drop zone",
-                "required": true,
-                "description": "The clickable area for file selection. In dropzone mode, also accepts dragged files."
-            },
-            {
-                "name": "Upload icon",
-                "required": false,
-                "description": "An arrow icon in the drop zone hinting at the upload action."
-            },
-            {
-                "name": "Placeholder",
-                "required": false,
-                "description": "Hint text shown when no files are selected."
-            },
-            {
-                "name": "File name display",
-                "required": false,
-                "description": "Shows the name(s) of selected files."
-            },
-            {
-                "name": "Clear button",
-                "required": false,
-                "description": "A close button that removes selected files and returns focus to the input."
-            },
-            {
-                "name": "Spinner",
-                "required": false,
-                "description": "Loading indicator that appears during async upload actions."
-            },
-            {
-                "name": "Status message",
-                "required": false,
-                "description": "Validation feedback showing error, warning, or success with a message."
-            }
-        ],
         "properties": [
             {
                 "name": "label",
@@ -1673,18 +1223,6 @@
         "name": "Grid",
         "url": "https://astryx.atmeta.com/components/Grid",
         "introduction": "Arranges View content into a fixed number of columns.",
-        "anatomy": [
-            {
-                "name": "Grid container",
-                "required": true,
-                "description": "Two-dimensional layout container that arranges caller-supplied items in rows and columns."
-            },
-            {
-                "name": "Spanning item",
-                "required": false,
-                "description": "Optional GridSpan wrapper that changes one item's column or row participation."
-            }
-        ],
         "properties": [
             {
                 "name": "children",
@@ -1728,23 +1266,6 @@
         "name": "Heading",
         "url": "https://astryx.atmeta.com/components/Text",
         "introduction": "Displays a semantic View heading without a separate visual-level override.",
-        "anatomy": [
-            {
-                "name": "Text",
-                "required": true,
-                "description": "Polymorphic text element that renders the supplied content with themed typography."
-            },
-            {
-                "name": "Heading",
-                "required": false,
-                "description": "Referenced Heading member that renders the supplied content as a semantic h1–h6 element."
-            },
-            {
-                "name": "Truncation tooltip",
-                "required": false,
-                "description": "Tooltip-owned surface available only when Text or Heading is measured as truncated and truncation tooltips are enabled."
-            }
-        ],
         "properties": [
             {
                 "name": "children",
@@ -1782,13 +1303,6 @@
         "name": "Icon",
         "url": "https://astryx.atmeta.com/components/Icon",
         "introduction": "Icons are small visual symbols that represent actions, objects, or concepts. They improve scannability and reinforce meaning alongside text. Supports both direct SVG components and semantic icon names that adapt to the active theme.",
-        "anatomy": [
-            {
-                "name": "Glyph",
-                "required": true,
-                "description": "Visual symbol rendered for the selected icon."
-            }
-        ],
         "properties": [
             {
                 "name": "icon",
@@ -1870,7 +1384,6 @@
         "name": "IconButton",
         "url": "https://astryx.atmeta.com/components/IconButton",
         "introduction": "Runs a labeled icon action with automatic async feedback.",
-        "anatomy": [],
         "properties": [
             {
                 "name": "label",
@@ -1942,23 +1455,6 @@
         "name": "Link",
         "url": "https://astryx.atmeta.com/components/Link",
         "introduction": "Displays a destination without granting a View top-level browser navigation.",
-        "anatomy": [
-            {
-                "name": "Label",
-                "required": true,
-                "description": "The visible text of the link."
-            },
-            {
-                "name": "Right icon",
-                "required": false,
-                "description": "Icon placed after the label to indicate an action affordance."
-            },
-            {
-                "name": "Left icon",
-                "required": false,
-                "description": "Icon placed before the label to represent meaning."
-            }
-        ],
         "properties": [
             {
                 "name": "to",
@@ -1992,28 +1488,6 @@
         "name": "MetadataList",
         "url": "https://astryx.atmeta.com/components/MetadataList",
         "introduction": "Lists labeled values without configurable truncation or label geometry.",
-        "anatomy": [
-            {
-                "name": "Title",
-                "required": false,
-                "description": "Optional title for the metadata list."
-            },
-            {
-                "name": "Label",
-                "required": true,
-                "description": "The key label for each metadata entry."
-            },
-            {
-                "name": "Metadata",
-                "required": true,
-                "description": "The value displayed in various formats."
-            },
-            {
-                "name": "Disclosure",
-                "required": false,
-                "description": "Collapse/expand control for the list."
-            }
-        ],
         "properties": [
             {
                 "name": "children",
@@ -2049,38 +1523,6 @@
         "name": "MoreMenu",
         "url": "https://astryx.atmeta.com/components/MoreMenu",
         "introduction": "Opens additional actions without exposing popup geometry or presentation modes.",
-        "anatomy": [
-            {
-                "name": "Trigger button",
-                "required": true,
-                "description": "Icon-only Button that provides the visible overflow-menu entry point."
-            },
-            {
-                "name": "Icon-resolved trigger icon",
-                "required": false,
-                "description": "Default semantic three-dot artwork resolved from the active Icon registry."
-            },
-            {
-                "name": "Caller-rendered trigger content",
-                "required": false,
-                "description": "Arbitrary React content supplied directly as the trigger icon override."
-            },
-            {
-                "name": "Menu surface",
-                "required": true,
-                "description": "DropdownMenu panel that also carries MoreMenu’s current public target."
-            },
-            {
-                "name": "Pointer action row",
-                "required": false,
-                "description": "Action or nested-action trigger row rendered by DropdownMenu in the anchored presentation."
-            },
-            {
-                "name": "Touch action row",
-                "required": false,
-                "description": "ListItem button rendered by DropdownMenu in the BottomSheet presentation."
-            }
-        ],
         "properties": [
             {
                 "name": "items",
@@ -2132,98 +1574,6 @@
         "name": "MultiSelector",
         "url": "https://astryx.atmeta.com/components/MultiSelector",
         "introduction": "Selects multiple values using standard option and selected-value rendering.",
-        "anatomy": [
-            {
-                "name": "Field",
-                "required": false,
-                "description": "Standalone Field shell that provides the label and optional supporting content; omitted inside InputGroup."
-            },
-            {
-                "name": "Trigger",
-                "required": true,
-                "description": "Painted control that displays the current selection or placeholder and opens the selection surface when editable."
-            },
-            {
-                "name": "Icon-rendered start icon",
-                "required": false,
-                "description": "Optional leading semantic icon or icon component rendered through Icon."
-            },
-            {
-                "name": "Caller-rendered start content",
-                "required": false,
-                "description": "Optional arbitrary React content rendered directly at the start of the trigger."
-            },
-            {
-                "name": "Trigger clear button",
-                "required": false,
-                "description": "Shared clear action that removes every selected value when hasClear is enabled."
-            },
-            {
-                "name": "Status icon",
-                "required": false,
-                "description": "Status glyph shown in place of the disclosure indicator for attached or tooltip status."
-            },
-            {
-                "name": "Indicator icon",
-                "required": false,
-                "description": "Trailing chevron shown when status presentation does not replace it; reflects collapsed or expanded state."
-            },
-            {
-                "name": "Search row",
-                "required": false,
-                "description": "Panel header with a borderless search input and optional clear action."
-            },
-            {
-                "name": "Search icon",
-                "required": false,
-                "description": "Leading magnifier rendered through Icon inside the search row."
-            },
-            {
-                "name": "Search clear button",
-                "required": false,
-                "description": "Shared clear action shown in the search row while a query is present."
-            },
-            {
-                "name": "Option row",
-                "required": false,
-                "description": "Selectable row for an option or the optional select-all choice."
-            },
-            {
-                "name": "Option checkbox indicator",
-                "required": false,
-                "description": "CheckboxInput indicator that presents each row’s selected, unselected, or indeterminate state."
-            },
-            {
-                "name": "Option divider",
-                "required": false,
-                "description": "Divider supplied in the public options data to separate adjacent option groups."
-            },
-            {
-                "name": "Section heading",
-                "required": false,
-                "description": "Visible heading for a labeled group of option rows."
-            },
-            {
-                "name": "Empty state",
-                "required": false,
-                "description": "Message shown when the shared panel content has no options or no search matches."
-            },
-            {
-                "name": "Pointer popup",
-                "required": false,
-                "description": "Anchored painted surface that hosts the shared panel content for popover presentation."
-            },
-            {
-                "name": "Touch sheet heading",
-                "required": false,
-                "description": "Heading above the shared panel content in bottom-sheet presentation."
-            },
-            {
-                "name": "Touch sheet",
-                "required": false,
-                "description": "BottomSheet surface that hosts the same panel content for bottom-sheet presentation."
-            }
-        ],
         "properties": [
             {
                 "name": "label",
@@ -2359,33 +1709,6 @@
         "name": "NumberInput",
         "url": "https://astryx.atmeta.com/components/NumberInput",
         "introduction": "Edits a constrained number without wheel editing or custom value formatting.",
-        "anatomy": [
-            {
-                "name": "Label",
-                "required": true,
-                "description": "The label for the number input."
-            },
-            {
-                "name": "Description",
-                "required": false,
-                "description": "Additional description text below the label."
-            },
-            {
-                "name": "Icon",
-                "required": false,
-                "description": "An optional icon within the input."
-            },
-            {
-                "name": "Placeholder",
-                "required": false,
-                "description": "Placeholder text shown when the input is empty."
-            },
-            {
-                "name": "Number steppers",
-                "required": false,
-                "description": "Optional buttons that increment or decrement by the configured step."
-            }
-        ],
         "properties": [
             {
                 "name": "label",
@@ -2531,38 +1854,6 @@
         "name": "ProgressBar",
         "url": "https://astryx.atmeta.com/components/ProgressBar",
         "introduction": "Displays determinate or indeterminate progress with a semantic state.",
-        "anatomy": [
-            {
-                "name": "Progress bar",
-                "required": true,
-                "description": "Container arranging the label row and progress track."
-            },
-            {
-                "name": "Label",
-                "required": true,
-                "description": "Text naming the operation, optionally hidden visually while remaining accessible."
-            },
-            {
-                "name": "Value text",
-                "required": false,
-                "description": "Formatted determinate value shown beside the label when requested."
-            },
-            {
-                "name": "Track",
-                "required": true,
-                "description": "Remaining-progress rail that carries the progressbar semantics."
-            },
-            {
-                "name": "Fill",
-                "required": true,
-                "description": "Painted segment showing completed progress or indeterminate movement."
-            },
-            {
-                "name": "Mark",
-                "required": false,
-                "description": "Labeled target tick positioned on a determinate track."
-            }
-        ],
         "properties": [
             {
                 "name": "label",
@@ -2638,23 +1929,6 @@
         "name": "RadioList",
         "url": "https://astryx.atmeta.com/components/RadioList",
         "introduction": "Selects one of a small number of labeled values.",
-        "anatomy": [
-            {
-                "name": "Header",
-                "required": false,
-                "description": "Optional heading above the radio list."
-            },
-            {
-                "name": "Children",
-                "required": true,
-                "description": "The radio list items rendered as selectable options."
-            },
-            {
-                "name": "Label/Value",
-                "required": true,
-                "description": "The text label and associated value for each radio item."
-            }
-        ],
         "properties": [
             {
                 "name": "label",
@@ -2766,108 +2040,6 @@
         "name": "Selector",
         "url": "https://astryx.atmeta.com/components/Selector",
         "introduction": "Selects one value without custom option rendering or popup geometry.",
-        "anatomy": [
-            {
-                "name": "Field",
-                "required": false,
-                "description": "Standalone Field shell that provides the label and optional supporting content; omitted inside InputGroup."
-            },
-            {
-                "name": "Trigger",
-                "required": true,
-                "description": "Painted control that displays the current selection or placeholder and opens the selection surface when editable."
-            },
-            {
-                "name": "Icon-rendered start icon",
-                "required": false,
-                "description": "Optional leading semantic icon or icon component rendered through Icon."
-            },
-            {
-                "name": "Caller-rendered start content",
-                "required": false,
-                "description": "Optional arbitrary React content rendered directly at the start of the trigger."
-            },
-            {
-                "name": "Trigger clear button",
-                "required": false,
-                "description": "Shared clear action that removes the selected value when hasClear is enabled."
-            },
-            {
-                "name": "Status icon",
-                "required": false,
-                "description": "Status glyph shown in place of the disclosure indicator for attached or tooltip status."
-            },
-            {
-                "name": "Indicator icon",
-                "required": false,
-                "description": "Trailing chevron shown when status presentation does not replace it; reflects collapsed or expanded state."
-            },
-            {
-                "name": "Search row",
-                "required": false,
-                "description": "Panel header with a borderless search input and optional clear action."
-            },
-            {
-                "name": "Search icon",
-                "required": false,
-                "description": "Leading magnifier rendered through Icon inside the search row."
-            },
-            {
-                "name": "Search clear button",
-                "required": false,
-                "description": "Shared clear action shown in the search row while a query is present."
-            },
-            {
-                "name": "Option row",
-                "required": false,
-                "description": "Selectable row for one supplied option."
-            },
-            {
-                "name": "SelectorOption-rendered content",
-                "required": false,
-                "description": "Option content rendered with SelectorOption, either by the default renderer or by renderOption when it returns SelectorOption."
-            },
-            {
-                "name": "Bare caller-rendered option content",
-                "required": false,
-                "description": "Arbitrary content returned directly by renderOption without opting into SelectorOption."
-            },
-            {
-                "name": "Option selection indicator",
-                "required": false,
-                "description": "Resolved selection mark rendered for each option in its checked or unchecked state. Its layout space collapses when the resolved indicator draws nothing."
-            },
-            {
-                "name": "Option divider",
-                "required": false,
-                "description": "Divider supplied in the public options data to separate adjacent option groups."
-            },
-            {
-                "name": "Section heading",
-                "required": false,
-                "description": "Visible heading for a labeled group of option rows."
-            },
-            {
-                "name": "Empty state",
-                "required": false,
-                "description": "Message shown when the shared panel content has no options or no search matches."
-            },
-            {
-                "name": "Pointer popup",
-                "required": false,
-                "description": "Anchored painted surface that hosts the shared panel content for popover presentation."
-            },
-            {
-                "name": "Touch sheet heading",
-                "required": false,
-                "description": "Heading above the shared panel content in bottom-sheet presentation."
-            },
-            {
-                "name": "Touch sheet",
-                "required": false,
-                "description": "BottomSheet surface that hosts the same panel content for bottom-sheet presentation."
-            }
-        ],
         "properties": [
             {
                 "name": "label",
@@ -3009,68 +2181,6 @@
         "name": "Slider",
         "url": "https://astryx.atmeta.com/components/Slider",
         "introduction": "Edits a number or range using a standard horizontal slider.",
-        "anatomy": [
-            {
-                "name": "Label",
-                "required": true,
-                "description": "Text identifying the numeric setting controlled by the slider."
-            },
-            {
-                "name": "Description",
-                "required": false,
-                "description": "Helper text between the label and the slider control."
-            },
-            {
-                "name": "Slider",
-                "required": true,
-                "description": "Control row containing the track, thumb or thumbs, and optional text value."
-            },
-            {
-                "name": "Interactive control",
-                "required": true,
-                "description": "Pointer and keyboard interaction surface containing the rail, fill, marks, and thumbs."
-            },
-            {
-                "name": "Track",
-                "required": true,
-                "description": "Background rail representing the available numeric range."
-            },
-            {
-                "name": "Filled range",
-                "required": true,
-                "description": "Accent segment from the minimum to a single value, or between two range values."
-            },
-            {
-                "name": "Tick mark",
-                "required": false,
-                "description": "Position marker supplied through the marks collection."
-            },
-            {
-                "name": "Mark label",
-                "required": false,
-                "description": "Optional text displayed beside a tick mark."
-            },
-            {
-                "name": "Thumb",
-                "required": true,
-                "description": "Draggable value indicator; range mode renders a minimum and maximum thumb."
-            },
-            {
-                "name": "Value display",
-                "required": false,
-                "description": "Formatted current value shown beside the slider when valueDisplay is text."
-            },
-            {
-                "name": "Value tooltip",
-                "required": false,
-                "description": "Formatted current value shown in a tooltip when valueDisplay is tooltip."
-            },
-            {
-                "name": "Status message",
-                "required": false,
-                "description": "Error, warning, or success message below the slider."
-            }
-        ],
         "properties": [
             {
                 "name": "label",
@@ -3180,23 +2290,6 @@
         "name": "Stack",
         "url": "https://astryx.atmeta.com/components/Stack",
         "introduction": "Arranges View content using the LongLink spacing scale.",
-        "anatomy": [
-            {
-                "name": "Stack container",
-                "required": true,
-                "description": "Layout container that arranges content along one flex axis."
-            },
-            {
-                "name": "Item",
-                "required": false,
-                "description": "Optional StackItem wrapper that controls one item in the stack."
-            },
-            {
-                "name": "Content",
-                "required": false,
-                "description": "Caller-supplied content rendered by a Stack or StackItem."
-            }
-        ],
         "properties": [
             {
                 "name": "children",
@@ -3260,18 +2353,6 @@
         "name": "StatusDot",
         "url": "https://astryx.atmeta.com/components/StatusDot",
         "introduction": "Displays a labeled semantic status without custom indicator rendering.",
-        "anatomy": [
-            {
-                "name": "Dot",
-                "required": true,
-                "description": "Painted status dot that carries the selected semantic variant."
-            },
-            {
-                "name": "Status icon",
-                "required": false,
-                "description": "Optional caller-supplied icon rendered inside the dot."
-            }
-        ],
         "properties": [
             {
                 "name": "label",
@@ -3315,53 +2396,6 @@
         "name": "Stepper",
         "url": "https://astryx.atmeta.com/components/Stepper",
         "introduction": "Displays the current step using standard progress indicators.",
-        "anatomy": [
-            {
-                "name": "Stepper",
-                "required": true,
-                "description": "The ordered list holding the steps. Owns the orientation and the indicator placement the whole flow is laid out on."
-            },
-            {
-                "name": "Frame",
-                "required": true,
-                "description": "The layout frame that groups the ordered steps with the optional compact summary shown at narrow widths."
-            },
-            {
-                "name": "Compact summary",
-                "required": false,
-                "description": "The optional row a horizontal Stepper adds directly beneath the track once it is too narrow to label every step. horizontalOptions.collapsedVariant chooses a label with Previous/Next controls, the label alone, or no row for a bare progress track. The on-track layout keeps its indicators on the rail instead of repeating the active indicator beside the label. Every step keeps its name in the accessible sequence at any width."
-            },
-            {
-                "name": "Step",
-                "required": true,
-                "description": "One step in the flow, and the element carrying its status. Wraps the indicator, label, description, and the track segments belonging to it."
-            },
-            {
-                "name": "Progress bar",
-                "required": true,
-                "description": "A 4px segmented bar per step. Filled for completed and active steps. Advancing one step grows the fill along the track it just covered, so the movement reads as progress rather than a bar changing color. Every other change applies at once: going back, jumping forward by more than one step, mounting mid-flow, and any change at all under prefers-reduced-motion. Where a span is drawn by more than one segment (the on-track layouts split it between two steps, three when a content slot sits between them), the segments run in track order at one constant speed, so the fill reads as a single line growing rather than pieces lighting in turn."
-            },
-            {
-                "name": "Connector",
-                "required": false,
-                "description": "The track drawn between indicators in the on-track layouts. Each connector paints an unfilled line and, over it, the accent fill covering the progress made. How many pieces a connector is drawn from is an implementation detail of the layout, not a themeable part; use --step-connector-gap to hold the track off the indicator."
-            },
-            {
-                "name": "Indicator",
-                "required": false,
-                "description": "A numbered badge, a check, or any custom icon. Controlled via the indicator prop."
-            },
-            {
-                "name": "Label",
-                "required": true,
-                "description": "Text identifying the step."
-            },
-            {
-                "name": "Description",
-                "required": false,
-                "description": "Supporting text below the label with additional context."
-            }
-        ],
         "properties": [
             {
                 "name": "children",
@@ -3401,43 +2435,6 @@
         "name": "Switch",
         "url": "https://astryx.atmeta.com/components/Switch",
         "introduction": "Edits an on/off setting using one controlled change handler.",
-        "anatomy": [
-            {
-                "name": "Field",
-                "required": true,
-                "description": "Container arranging the switch, label, and feedback."
-            },
-            {
-                "name": "Track",
-                "required": true,
-                "description": "Pill-shaped surface that shows the off or on state."
-            },
-            {
-                "name": "Thumb",
-                "required": true,
-                "description": "Indicator that moves across the track when state changes."
-            },
-            {
-                "name": "Label",
-                "required": true,
-                "description": "Text identifying the setting controlled by the switch."
-            },
-            {
-                "name": "Description",
-                "required": false,
-                "description": "Helper text below the label."
-            },
-            {
-                "name": "Spinner",
-                "required": false,
-                "description": "Loading indicator shown inside the thumb while busy."
-            },
-            {
-                "name": "Status message",
-                "required": false,
-                "description": "Error, warning, or success message below the switch."
-            }
-        ],
         "properties": [
             {
                 "name": "label",
@@ -3529,88 +2526,6 @@
         "name": "Table",
         "url": "https://astryx.atmeta.com/components/Table",
         "introduction": "Displays data-driven rows without plugins or a second children-based table contract.",
-        "anatomy": [
-            {
-                "name": "Table",
-                "required": true,
-                "description": "Semantic table element that groups the table sections, rows, and cells."
-            },
-            {
-                "name": "Scroll region",
-                "required": true,
-                "description": "Outer region that scrolls horizontally, enters the keyboard order, and contains overscroll only while the columns overflow."
-            },
-            {
-                "name": "Header section",
-                "required": false,
-                "description": "Column-heading section generated when data-driven columns are present or supplied with TableHeader in children mode."
-            },
-            {
-                "name": "Column header cell",
-                "required": false,
-                "description": "Cell that identifies one column and may contain sorting or bulk-selection controls."
-            },
-            {
-                "name": "Sort control",
-                "required": false,
-                "description": "Button that wraps a sortable column label and changes that column's sort direction."
-            },
-            {
-                "name": "Sort indicator glyph",
-                "required": false,
-                "description": "Directional symbol rendered by Icon inside a Sort control."
-            },
-            {
-                "name": "Sort priority",
-                "required": false,
-                "description": "Number shown for a sorted column when multi-column sorting is active."
-            },
-            {
-                "name": "Selection control",
-                "required": false,
-                "description": "CheckboxInput rendered in the header and selectable body rows by the selection plugin."
-            },
-            {
-                "name": "Body section",
-                "required": true,
-                "description": "Section containing data rows or the current empty state; data-driven mode renders it automatically."
-            },
-            {
-                "name": "Row",
-                "required": false,
-                "description": "Repeated TableRow that groups cells in a standard header, body, or footer row."
-            },
-            {
-                "name": "Cell",
-                "required": false,
-                "description": "TableCell containing one value or caller-provided content in a standard body or footer row."
-            },
-            {
-                "name": "Default empty state",
-                "required": false,
-                "description": "Compact EmptyState shown for an empty data array unless it is replaced or disabled."
-            },
-            {
-                "name": "Expansion control",
-                "required": false,
-                "description": "Button in a leading cell that expands or collapses one expandable row."
-            },
-            {
-                "name": "Expansion glyph",
-                "required": false,
-                "description": "Directional symbol rendered by Icon inside an Expansion control."
-            },
-            {
-                "name": "Expanded detail panel",
-                "required": false,
-                "description": "Detail row and spanning cell rendered below an expanded row around caller-provided content."
-            },
-            {
-                "name": "Footer section",
-                "required": false,
-                "description": "Optional summary or totals section supplied with TableFooter in children mode."
-            }
-        ],
         "properties": [
             {
                 "name": "data",
@@ -3684,23 +2599,6 @@
         "name": "Text",
         "url": "https://astryx.atmeta.com/components/Text",
         "introduction": "Displays View text with a small set of semantic styles.",
-        "anatomy": [
-            {
-                "name": "Text",
-                "required": true,
-                "description": "Polymorphic text element that renders the supplied content with themed typography."
-            },
-            {
-                "name": "Heading",
-                "required": false,
-                "description": "Referenced Heading member that renders the supplied content as a semantic h1–h6 element."
-            },
-            {
-                "name": "Truncation tooltip",
-                "required": false,
-                "description": "Tooltip-owned surface available only when Text or Heading is measured as truncated and truncation tooltips are enabled."
-            }
-        ],
         "properties": [
             {
                 "name": "children",
@@ -3744,68 +2642,6 @@
         "name": "TextArea",
         "url": "https://astryx.atmeta.com/components/TextArea",
         "introduction": "Edits controlled multi-line text using standard field presentation.",
-        "anatomy": [
-            {
-                "name": "Label",
-                "required": true,
-                "description": "Text identifying the multi-line field."
-            },
-            {
-                "name": "Description",
-                "required": false,
-                "description": "Helper text between the label and the input."
-            },
-            {
-                "name": "Input container",
-                "required": true,
-                "description": "Painted boundary containing the text area and its overlays."
-            },
-            {
-                "name": "Text area",
-                "required": true,
-                "description": "Multi-line control that displays and edits the value."
-            },
-            {
-                "name": "Placeholder",
-                "required": false,
-                "description": "Hint text shown inside the empty text area."
-            },
-            {
-                "name": "Start icon",
-                "required": false,
-                "description": "Astryx Icon rendered at the start when startIcon is a semantic name or icon component."
-            },
-            {
-                "name": "Custom start content",
-                "required": false,
-                "description": "Caller-provided ReactNode rendered at the start instead of an Astryx Icon."
-            },
-            {
-                "name": "Spinner",
-                "required": false,
-                "description": "Loading indicator shown at the end of the input container."
-            },
-            {
-                "name": "Status icon",
-                "required": false,
-                "description": "Error, warning, or success icon shown inside the input."
-            },
-            {
-                "name": "Character counter",
-                "required": false,
-                "description": "Current and maximum character counts shown inside the input container."
-            },
-            {
-                "name": "Field status message",
-                "required": false,
-                "description": "Attached or detached error, warning, or success message associated with the field."
-            },
-            {
-                "name": "Tooltip status message",
-                "required": false,
-                "description": "Tooltip surface presenting the status message for the tooltip variant."
-            }
-        ],
         "properties": [
             {
                 "name": "label",
@@ -3945,43 +2781,6 @@
         "name": "TextInput",
         "url": "https://astryx.atmeta.com/components/TextInput",
         "introduction": "Edits controlled text without a second async change channel.",
-        "anatomy": [
-            {
-                "name": "Label",
-                "required": true,
-                "description": "Text that identifies the field. Always rendered for accessibility even when visually hidden."
-            },
-            {
-                "name": "Description",
-                "required": false,
-                "description": "Helper text between the label and the input that provides additional context or formatting hints."
-            },
-            {
-                "name": "Start icon",
-                "required": false,
-                "description": "A leading icon inside the input that hints at the expected content, like a magnifying glass for search."
-            },
-            {
-                "name": "Placeholder",
-                "required": false,
-                "description": "Hint text shown when the input is empty. Disappears on focus."
-            },
-            {
-                "name": "Clear button",
-                "required": false,
-                "description": "A trailing × button that resets the value and returns focus to the input."
-            },
-            {
-                "name": "Spinner",
-                "required": false,
-                "description": "Loading indicator that appears during async actions like server-side validation."
-            },
-            {
-                "name": "Status icon",
-                "required": false,
-                "description": "A trailing icon (error, warning, or success) that communicates validation state."
-            }
-        ],
         "properties": [
             {
                 "name": "label",
@@ -4133,33 +2932,6 @@
         "name": "TimeInput",
         "url": "https://astryx.atmeta.com/components/TimeInput",
         "introduction": "Selects a constrained time using the standard picker.",
-        "anatomy": [
-            {
-                "name": "Clock icon",
-                "required": false,
-                "description": "A leading clock icon that identifies the field and opens the browser/OS picker in native mode."
-            },
-            {
-                "name": "Time control",
-                "required": true,
-                "description": "A real input type=time in native modes, or Astryx's editable text field for fine pointers, presentation=\"text-input\", seconds, and custom increments."
-            },
-            {
-                "name": "Clear button",
-                "required": false,
-                "description": "A trailing button to reset the value, shown when hasClear is true and a value is set."
-            },
-            {
-                "name": "Status icon",
-                "required": false,
-                "description": "A trailing icon indicating error, warning, or success state."
-            },
-            {
-                "name": "Spinner",
-                "required": false,
-                "description": "Replaces trailing content during loading to show an async action is in progress."
-            }
-        ],
         "properties": [
             {
                 "name": "label",
@@ -4303,28 +3075,6 @@
         "name": "Timestamp",
         "url": "https://astryx.atmeta.com/components/Timestamp",
         "introduction": "Formats a date or timestamp using the standard date formats.",
-        "anatomy": [
-            {
-                "name": "Formatted text",
-                "required": true,
-                "description": "The rendered date, time, or relative label like \"2 hours ago\" or \"Mar 21, 2025\"."
-            },
-            {
-                "name": "Hover card",
-                "required": false,
-                "description": "A copyable hover card showing the full absolute date and time when the display is relative, or the rows configured via tooltipEntries. Its default single row carries the full absolute time."
-            },
-            {
-                "name": "Hover card row",
-                "required": false,
-                "description": "One row of the card: an optional label beside the instant rendered in one time zone and format. Rows opt into a copy button via isCopyable."
-            },
-            {
-                "name": "Copy button",
-                "required": true,
-                "description": "Per-row copy-to-clipboard button in the hover card; copies that row's formatted value."
-            }
-        ],
         "properties": [
             {
                 "name": "value",
