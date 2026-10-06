@@ -1,6 +1,5 @@
 import gzip
 import pytest
-from httpx2 import Response as HttpxResponse
 from fastapi import FastAPI
 from starlette.types import Send, Scope, Message, Receive
 from fastapi.responses import Response
@@ -22,14 +21,6 @@ def create_text_app(headers: dict[str, str], path: str = "/text", media_type: st
 
     app.add_middleware(FrontendMiddleware)
     return app
-
-
-def request_response(app: FastAPI, path: str, headers: dict[str, str]) -> HttpxResponse:
-    """Request one generated frontend response with a closed test client."""
-
-    # Ensure each response is fully consumed before closing the in-process client.
-    with TestClient(app) as client:
-        return client.get(path, headers=headers)
 
 
 @pytest.mark.parametrize(
@@ -63,9 +54,11 @@ def test_frontend_middleware_varies_eligible_text_representations(accept_encodin
 
     # Arrange
     app = create_text_app({"etag": '"text-v1"', "vary": "Origin"})
+    client = TestClient(app)
 
     # Act
-    response = request_response(app, "/text", {"accept-encoding": accept_encoding})
+    with client:
+        response = client.get("/text", headers={"accept-encoding": accept_encoding})
 
     # Assert
     assert response.status_code == 200
@@ -80,9 +73,11 @@ def test_frontend_middleware_preserves_identity_representation_for_range_request
 
     # Arrange
     app = create_text_app({"cache-control": "private", "etag": '"text-v1"'})
+    client = TestClient(app)
 
     # Act
-    response = request_response(app, "/text", {"accept-encoding": "gzip", "range": "bytes=0-99"})
+    with client:
+        response = client.get("/text", headers={"accept-encoding": "gzip", "range": "bytes=0-99"})
 
     # Assert
     assert "content-encoding" not in response.headers
@@ -95,9 +90,11 @@ def test_frontend_middleware_preserves_incompressible_asset_representation() -> 
 
     # Arrange
     app = create_text_app({"etag": '"image-v1"'}, path="/assets/logo.png", media_type="image/png")
+    client = TestClient(app)
 
     # Act
-    response = request_response(app, "/assets/logo.png", {"accept-encoding": "gzip"})
+    with client:
+        response = client.get("/assets/logo.png", headers={"accept-encoding": "gzip"})
 
     # Assert
     assert response.content == b"x" * 1000
@@ -123,9 +120,11 @@ def test_frontend_middleware_preserves_precompressed_text_representation() -> No
         )
 
     app.add_middleware(FrontendMiddleware)
+    client = TestClient(app)
 
     # Act
-    response = request_response(app, "/text", {"accept-encoding": "gzip"})
+    with client:
+        response = client.get("/text", headers={"accept-encoding": "gzip"})
 
     # Assert
     assert response.status_code == 200
@@ -195,9 +194,11 @@ def test_frontend_middleware_applies_default_cache_policy(
         return Response("content", media_type=media_type, status_code=status_code)
 
     app.add_middleware(FrontendMiddleware)
+    client = TestClient(app)
 
     # Act
-    response = request_response(app, path, {})
+    with client:
+        response = client.get(path, headers={})
 
     # Assert
     assert response.status_code == status_code

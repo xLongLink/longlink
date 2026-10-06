@@ -63,7 +63,7 @@ async def test_update_noop_preserves_source_and_patches(
 
     # Arrange
     organization = await create_organization(users[0])
-    solution = await create_solution(organization, secrets={"KEEP": "private-value", "DROP": "old-value"})
+    solution = await create_solution(organization, envs={"KEEP": "private-value", "DROP": "old-value"})
     url = f"/api/v1/solutions/{solution.id}/update"
     source = "ghcr.io/longlink/dashboard@sha256:test"
     resolved = LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:first"))
@@ -98,7 +98,7 @@ async def test_update_rejects_stale_revision(
 
     # Arrange
     organization = await create_organization(users[0])
-    solution = await create_solution(organization, secrets={"KEEP": "private-value", "DROP": "old-value"})
+    solution = await create_solution(organization, envs={"KEEP": "private-value", "DROP": "old-value"})
     url = f"/api/v1/solutions/{solution.id}/update"
     inspected: list[str] = []
 
@@ -161,7 +161,7 @@ async def test_update_check_exposes_names_without_secrets(
     solution = await create_solution(
         organization,
         image="ghcr.io/longlink/dashboard@sha256:first",
-        secrets={"KEEP": "private-value", "DROP": "old-value"},
+        envs={"KEEP": "private-value", "DROP": "old-value"},
     )
     url = f"/api/v1/solutions/{solution.id}/update"
     resolved = LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:first"))
@@ -193,7 +193,7 @@ async def test_update_enforces_idempotency_and_min_scale_bounds(
 
     # Arrange
     organization = await create_organization(users[0])
-    solution = await create_solution(organization, secrets={"KEEP": "private-value", "DROP": "old-value"})
+    solution = await create_solution(organization, envs={"KEEP": "private-value", "DROP": "old-value"})
     url = f"/api/v1/solutions/{solution.id}/update"
     resolved = LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:first"))
 
@@ -227,7 +227,7 @@ async def test_update_reresolves_moved_tag_and_enforces_required_envs(
 
     # Arrange
     organization = await create_organization(users[0])
-    solution = await create_solution(organization, secrets={"KEEP": "private-value", "DROP": "old-value"})
+    solution = await create_solution(organization, envs={"KEEP": "private-value", "DROP": "old-value"})
     url = f"/api/v1/solutions/{solution.id}/update"
     source = "ghcr.io/longlink/dashboard@sha256:test"
     resolved = LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:first"))
@@ -400,7 +400,7 @@ async def test_environment_patch_validates_merged_limits(
     """Apply limits to preserved plus new values and permit explicit removals."""
 
     organization = await create_organization(users[0])
-    solution = await create_solution(organization, secrets={f"KEY_{index}": "value" for index in range(100)})
+    solution = await create_solution(organization, envs={f"KEY_{index}": "value" for index in range(100)})
     image = Image("ghcr.io/longlink/dashboard@sha256:next")
 
     async def metadata(_image: Image) -> LongLinkMetadata:
@@ -420,7 +420,7 @@ async def test_environment_patch_validates_merged_limits(
         assert "KEY_0" not in current.desired_revision.envs
 
     # Individually valid patches must also respect the byte limit after merging retained values.
-    large = await create_solution(organization, name="large", secrets={f"KEY_{index}": "x" * 32768 for index in range(15)})
+    large = await create_solution(organization, name="large", envs={f"KEY_{index}": "x" * 32768 for index in range(15)})
     response = await clients[0].post(f"/api/v1/solutions/{large.id}/update", json={"envs": {"NEW": "x" * 32768}})
     assert response.status_code == 422
     assert "too large" in response.text
@@ -433,7 +433,7 @@ async def test_simultaneous_source_updates_create_only_one_revision(
 
     # Arrange
     organization = await create_organization(users[0])
-    solution = await create_solution(organization, secrets={"KEEP": "private-value"})
+    solution = await create_solution(organization, envs={"KEEP": "private-value"})
     barrier = asyncio.Barrier(2)
 
     async def metadata(_image: Image) -> LongLinkMetadata:

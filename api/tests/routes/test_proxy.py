@@ -20,34 +20,26 @@ from src.database.models.solutions import Solution
 from src.database.models.association import UserOrganization
 
 
-class FakeGatewayResponse(httpx2.Response):
-    """Represent an upstream HTTP response with observable cleanup."""
+class GatewayStream(httpx2.AsyncByteStream):
+    """Provide controllable upstream body streaming and observable cleanup."""
 
     def __init__(
         self,
-        status_code: int,
-        headers: dict[str, str],
         chunks: Sequence[bytes],
-        delay_seconds: float = 0.0,
         error: Exception | None = None,
         on_close: Callable[[], None] = lambda: None,
     ) -> None:
-        """Store the upstream status, headers, body chunks, and cleanup callback."""
+        """Store the upstream body chunks and cleanup callback."""
 
-        super().__init__(status_code, headers=headers)
-
+        # Configure only the external body stream, leaving response behavior to HTTPX.
         self._chunks = chunks
-        self._delay_seconds = delay_seconds
         self._error = error
         self.on_close = on_close
 
-    async def aiter_bytes(self, chunk_size: int | None = None) -> AsyncGenerator[bytes, None]:
-        """Stream the configured upstream body, optionally delayed or failed."""
+    async def __aiter__(self) -> AsyncGenerator[bytes, None]:
+        """Stream the configured upstream body, optionally failed."""
 
-        # Preserve lazy streaming so timeout and failure tests observe real cancellation.
-        if self._delay_seconds:
-            await asyncio.sleep(self._delay_seconds)
-
+        # Preserve lazy streaming so failure tests observe partial response bodies.
         for chunk in self._chunks:
             yield chunk
 
@@ -55,8 +47,9 @@ class FakeGatewayResponse(httpx2.Response):
             raise self._error
 
     async def aclose(self) -> None:
-        """Release the gateway response."""
+        """Record the gateway stream's release."""
 
+        # Observe cleanup through the real response's close lifecycle.
         self.on_close()
 
 
@@ -65,22 +58,27 @@ def make_upstream(
     headers: dict[str, str],
     body: bytes | Sequence[bytes] = b"",
     *,
-    delay_seconds: float = 0.0,
     error: Exception | None = None,
     on_close: Callable[[], None] = lambda: None,
-) -> FakeGatewayResponse:
-    """Build one fake upstream gateway response from status, headers, and body."""
+) -> httpx2.Response:
+    """Build a real upstream response with a controllable asynchronous body."""
 
     # Accept a single body for the common case without hiding the chunked stream.
     chunks = [body] if isinstance(body, bytes) else list(body)
 
-    return FakeGatewayResponse(status_code, headers, chunks, delay_seconds, error, on_close)
+    stream = GatewayStream(
+        chunks,
+        error=error,
+        on_close=on_close,
+    )
+
+    return httpx2.Response(status_code, headers=headers, stream=stream)
 
 
-def fake_gateway_request(response: FakeGatewayResponse) -> Callable[..., Awaitable[FakeGatewayResponse]]:
+def fake_gateway_request(response: httpx2.Response) -> Callable[..., Awaitable[httpx2.Response]]:
     """Return one gateway request handler that serves a fixed response."""
 
-    async def request(*_args: object, **_kwargs: object) -> FakeGatewayResponse:
+    async def request(*_args: object, **_kwargs: object) -> httpx2.Response:
         """Return the configured gateway response."""
 
         return response
@@ -538,29 +536,55 @@ async def test_solution_proxy_propagates_timed_out_response_stream(
 ) -> None:
     """Report and close a solution response that streams too slowly."""
 
-    # Arrange a running Solution and an upstream response that misses the stream deadline.
+    # Arrange
     solution, _infrastructure = await create_running_solution(users[0])
+    entered = asyncio.Event()
+    release = asyncio.Event()
+    cancellation: asyncio.CancelledError | None = None
     close_count = 0
 
-    def close() -> None:
-        """Record gateway resource cleanup."""
+    class BlockedStream(httpx2.AsyncByteStream):
+        """Suspend upstream iteration until the production deadline cancels it."""
 
-        nonlocal close_count
-        close_count += 1
+        async def __aiter__(self) -> AsyncGenerator[bytes, None]:
+            """Signal entry and record the cancellation that interrupts the body."""
 
-    gateway_response = make_upstream(
+            # Block without a sleep or a test-generated timeout error.
+            nonlocal cancellation
+            entered.set()
+            try:
+                await release.wait()
+            except asyncio.CancelledError as exc:
+                cancellation = exc
+                raise
+            yield b"late"
+
+        async def aclose(self) -> None:
+            """Record gateway resource cleanup."""
+
+            # Observe the real response's close lifecycle.
+            nonlocal close_count
+            close_count += 1
+
+    stream = BlockedStream()
+    gateway_response = httpx2.Response(
         200,
-        {"content-type": "text/plain"},
-        b"late",
-        delay_seconds=0.01,
-        on_close=close,
+        headers={"content-type": "text/plain"},
+        stream=stream,
     )
     monkeypatch.setattr(httpx2.AsyncHTTPTransport, "handle_async_request", fake_gateway_request(gateway_response))
     monkeypatch.setattr(proxy_routes, "PROXY_RESPONSE_TIMEOUT_SECONDS", 0.001)
 
-    # Act and assert
-    with pytest.raises(TimeoutError):
-        await clients[0].get(f"/api/v1/solutions/{solution.id}/proxy")
+    # Act: keep the watchdog outside the expected production timeout assertion.
+    async with asyncio.timeout(5):
+        with pytest.raises(TimeoutError) as timeout:
+            await clients[0].get(f"/api/v1/solutions/{solution.id}/proxy")
+
+    # Assert
+    assert entered.is_set()
+    assert not release.is_set()
+    assert isinstance(cancellation, asyncio.CancelledError)
+    assert timeout.value.__cause__ is cancellation
     assert close_count == 1
 
 
@@ -681,7 +705,7 @@ async def test_solution_proxy_allows_organization_read_members(
     solution, _infrastructure = await create_running_solution(owner)
     called = False
 
-    async def request(*_args: object, **_kwargs: object) -> FakeGatewayResponse:
+    async def request(*_args: object, **_kwargs: object) -> httpx2.Response:
         """Record the authorized gateway request."""
 
         nonlocal called

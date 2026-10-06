@@ -18,9 +18,13 @@ def test_installed_http_handler_preserves_bodyless_status_and_headers() -> None:
         raise HTTPException(status_code=204, headers={"x-operation-id": "operation-123"})
 
     install_error_handlers(app)
+    client = TestClient(
+        app,
+    )
 
     # Act
-    response = TestClient(app).delete("/resource")
+    with client:
+        response = client.delete("/resource")
 
     # Assert
     assert response.status_code == 204
@@ -41,9 +45,13 @@ def test_installed_http_handler_falls_back_for_blank_detail_and_preserves_header
         raise HTTPException(status_code=403, detail="   ", headers={"x-operation-id": "operation-123"})
 
     install_error_handlers(app)
+    client = TestClient(
+        app,
+    )
 
     # Act
-    response = TestClient(app).get("/resource")
+    with client:
+        response = client.get("/resource")
 
     # Assert
     assert response.status_code == 403
@@ -69,9 +77,13 @@ def test_installed_validation_handler_hides_submitted_values() -> None:
         return payload
 
     install_error_handlers(app)
+    client = TestClient(
+        app,
+    )
 
     # Act
-    response = TestClient(app).post("/orders", json={"quantity": "secret-value"})
+    with client:
+        response = client.post("/orders", json={"quantity": "secret-value"})
 
     # Assert
     assert response.status_code == 422
@@ -97,9 +109,13 @@ def test_installed_handlers_preserve_a_solution_owned_http_handler() -> None:
         raise HTTPException(status_code=418, detail="Custom response")
 
     install_error_handlers(app)
+    client = TestClient(
+        app,
+    )
 
     # Act
-    response = TestClient(app).get("/orders")
+    with client:
+        response = client.get("/orders")
 
     # Assert
     assert response.status_code == 418

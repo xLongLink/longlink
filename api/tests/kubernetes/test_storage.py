@@ -1,10 +1,7 @@
-import yaml
 import httpx2
 import pytest
-import subprocess
 from uuid import uuid4
 from types import SimpleNamespace
-from pathlib import Path
 from src.kubernetes import storage
 
 pytestmark = pytest.mark.no_db
@@ -111,30 +108,11 @@ async def test_storage_registration_checks_remote_tunnel(
     assert [request.url for request in requests] == [httpx2.URL("http://127.0.0.1:19000/health/ready")]
 
 
-def test_storage_proxy_denies_admin_routes_but_keeps_s3() -> None:
+def test_storage_proxy_denies_admin_routes_but_keeps_s3(rendered_chart: list[dict]) -> None:
     """Render the hardened TLS proxy with an admin deny before its S3 fallback."""
 
     # Check the chart's fixed storage proxy configuration.
-    root = Path(__file__).resolve().parents[3]
-    chart = root / "k8s" / "chart"
-    rendered = subprocess.run(
-        [
-            "helm",
-            "template",
-            "longlink-compute",
-            str(chart),
-            "--set",
-            "gateway.address=127.0.0.1",
-            "--set",
-            "storage.address=127.0.0.1",
-            "--set",
-            "gatewayAllowedSourceCidr=127.0.0.1/32",
-        ],
-        check=True,
-        capture_output=True,
-        text=True,
-    )
-    resources = list(yaml.safe_load_all(rendered.stdout))
+    resources = rendered_chart
     config = next(
         item["data"]["default.conf"]
         for item in resources

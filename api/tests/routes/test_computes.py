@@ -11,6 +11,7 @@ from src.database.models.computes import ComputeRegistry
 
 async def test_compute_registry_creation_does_not_queue_work(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    compute_runtime: None,
 ) -> None:
     """Register an inline-verified Compute without queuing work."""
 
@@ -83,7 +84,7 @@ async def test_compute_registry_rejects_exec_authentication_before_constructing_
 
 
 async def test_compute_registry_creation_rejects_failed_inline_verification(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient], monkeypatch: pytest.MonkeyPatch
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient], monkeypatch: pytest.MonkeyPatch, compute_runtime: None
 ) -> None:
     """Return 503 without persistence when inline verification fails."""
 

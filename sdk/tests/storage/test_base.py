@@ -9,33 +9,6 @@ from fsspec.implementations.dirfs import DirFileSystem
 from fsspec.implementations.local import LocalFileSystem
 from fsspec.implementations.memory import MemoryFileSystem
 
-PRODUCTION_SETTINGS = {
-    "LONGLINK_IDENTITY_SECRET": "identity-secret",
-    "LONGLINK_DATABASE_HOST": "db",
-    "LONGLINK_DATABASE_NAME": "longlink",
-    "LONGLINK_DATABASE_PORT": "5432",
-    "LONGLINK_DATABASE_SCHEMA": "solution",
-    "LONGLINK_DATABASE_PASSWORD": "secret",
-    "LONGLINK_DATABASE_USERNAME": "solution",
-    "LONGLINK_DATABASE_CERTIFICATE": "database-ca-pem",
-    "LONGLINK_STORAGE_ENDPOINT_URL": "http://storage.runtime.longlink.internal:19000",
-    "LONGLINK_STORAGE_PASSWORD": "secret@key",
-    "LONGLINK_STORAGE_REGION": "ch-gva-2",
-    "LONGLINK_STORAGE_USERNAME": "access/key",
-}
-
-
-def configure_production_environment(monkeypatch: pytest.MonkeyPatch, bucket: str, prefix: str) -> None:
-    """Configure the complete Platform storage contract for one test."""
-
-    # Provide the shared production settings before applying the storage scope.
-    monkeypatch.setenv("LONGLINK_ENV", "production")
-    for name, value in PRODUCTION_SETTINGS.items():
-        monkeypatch.setenv(name, value)
-    monkeypatch.setenv("LONGLINK_STORAGE_BUCKET", bucket)
-    monkeypatch.setenv("LONGLINK_STORAGE_PREFIX", prefix)
-
-
 UNSAFE_STORAGE_SCOPES = [
     ("acme", "../shared/", "Storage prefixes must be relative paths inside a bucket"),
     ("acme", "/shared/", "Storage prefixes must be relative paths inside a bucket"),
@@ -69,14 +42,14 @@ def test_storage_requires_safe_bucket_scope(monkeypatch: pytest.MonkeyPatch, buc
         storage_base.create_fs(settings)
 
 
-def test_production_storage_scopes_paths_to_configured_bucket_prefix(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_production_storage_scopes_paths_to_configured_bucket_prefix(production_settings: dict[str, str | int]) -> None:
     """Scope production storage paths to the configured prefix beneath its bucket."""
 
     # Configure production storage without replacing its lazily constructed S3 filesystem.
-    configure_production_environment(monkeypatch, "acme", "solutions/dashboard")
+    settings = Envs.model_validate(production_settings)
 
     # Act
-    scoped_filesystem = storage_base.create_fs(Envs())
+    scoped_filesystem = storage_base.create_fs(settings)
 
     # Assert
     assert isinstance(scoped_filesystem, DirFileSystem)
@@ -84,15 +57,14 @@ def test_production_storage_scopes_paths_to_configured_bucket_prefix(monkeypatch
     assert isinstance(scoped_filesystem.fs, S3FileSystem)
 
 
-def test_production_storage_passes_configured_ca_to_s3_client(monkeypatch: pytest.MonkeyPatch, ca_certificate: str) -> None:
+def test_production_storage_passes_configured_ca_to_s3_client(production_settings: dict[str, str | int], ca_certificate: str) -> None:
     """Use the Platform storage CA to verify the remote S3 endpoint."""
 
     # Arrange
-    configure_production_environment(monkeypatch, "acme", "solutions/dashboard")
-    monkeypatch.setenv("LONGLINK_STORAGE_CERTIFICATE", ca_certificate)
+    settings = Envs.model_validate(production_settings | {"STORAGE_CERTIFICATE": ca_certificate})
 
     # Act
-    filesystem = storage_base.create_fs(Envs())
+    filesystem = storage_base.create_fs(settings)
 
     # Assert
     assert isinstance(filesystem, DirFileSystem)
@@ -129,11 +101,11 @@ def test_nonproduction_storage_selects_local_filesystem(
 
 
 @pytest.mark.parametrize("name", ["DATABASE_HOST", "DATABASE_PASSWORD", "STORAGE_BUCKET", "STORAGE_PREFIX"])
+@pytest.mark.usefixtures("production_environment")
 def test_production_settings_reject_blank_required_values(monkeypatch: pytest.MonkeyPatch, name: str) -> None:
     """Reject blank values in the production runtime contract."""
 
     # Arrange
-    configure_production_environment(monkeypatch, "acme", "solutions/dashboard")
     monkeypatch.setenv(f"LONGLINK_{name}", "   ")
 
     # Act

@@ -334,7 +334,7 @@ async def test_solution_responses_do_not_expose_environment_secrets(
     # Persist one Solution with a value that must remain runtime-only.
     owner = users[0]
     organization = await create_organization(owner)
-    await create_solution(organization, secrets={"API_KEY": "runtime-secret"})
+    await create_solution(organization, envs={"API_KEY": "runtime-secret"})
 
     # Resolve update metadata at the external boundary without registry I/O.
     async def metadata(image: Image) -> LongLinkMetadata:

@@ -120,19 +120,16 @@ async def test_shared_migrations_use_postgresql_shared_schema(postgresql_url: UR
 
     # Verify both SDK-owned tables exist only in the shared schema.
     async with postgres_engine.begin() as connection:
-        table_locations = set(
-            (
-                await connection.execute(
-                    text(
-                        """
-                        SELECT table_schema, table_name
-                        FROM information_schema.tables
-                        WHERE table_name IN ('audit', 'alembic_version')
-                        """
-                    )
-                )
-            ).tuples()
+        result = await connection.execute(
+            text(
+                """
+                SELECT table_schema, table_name
+                FROM information_schema.tables
+                WHERE table_name IN ('audit', 'alembic_version')
+                """
+            )
         )
+        table_locations = set(result.tuples())
     assert table_locations == {("shared", "audit"), ("shared", "alembic_version")}
 
 

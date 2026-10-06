@@ -300,27 +300,15 @@ async def test_oauth_callback_rejects_provider_error_and_missing_code_without_ex
 async def test_oauth_callback_rejects_unresolved_identity_without_account_changes(
     client: AsyncClient,
     users: tuple[User, User, User],
-    monkeypatch: pytest.MonkeyPatch,
+    oauth_responses: dict[str, object],
     provider: oauth.OAuthProvider,
 ) -> None:
     """Reject a valid callback when the provider code exchange yields no verified identity."""
 
     # Arrange
+    oauth_responses[oauth.GOOGLE_TOKEN_URL if provider == "google" else oauth.GITHUB_TOKEN_URL] = {}
     credential = token.create_oauth_state_token(provider, "expected-state", "pkce-verifier")
     client.cookies.set("longlink_oauth", credential, domain="testserver.local", path="/api/v1/auth/oauth")
-
-    async def unresolved_identity(
-        _provider: oauth.OAuthProvider,
-        _code: str,
-        _verifier: str,
-    ) -> oauth.OAuthIdentity | None:
-        """Return no verified identity for a valid callback proof."""
-
-        assert _code == "provider-code"
-        assert _verifier == "pkce-verifier"
-        return None
-
-    monkeypatch.setattr("src.routes.v1.auth.oauth.identity", unresolved_identity)
 
     # Act
     response = await client.get(

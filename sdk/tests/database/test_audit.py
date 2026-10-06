@@ -54,6 +54,16 @@ async def test_audit_hook_persists_fields_and_leaves_deletes_hard(
         id: int | None = Field(default=None, primary_key=True)
         name: str
 
+    # Verify inherited audit columns, user foreign keys, and all three relationships.
+    table = SQLModel.metadata.tables[AuditLifecycleItem.__tablename__]
+    assert {"created_at", "updated_at", "deleted_at"} <= set(table.c.keys())
+    assert {foreign_key.target_fullname for foreign_key in table.c.created_id.foreign_keys} == {"audit.id"}
+    assert {foreign_key.target_fullname for foreign_key in table.c.updated_id.foreign_keys} == {"audit.id"}
+    assert {foreign_key.target_fullname for foreign_key in table.c.deleted_id.foreign_keys} == {"audit.id"}
+    assert hasattr(AuditLifecycleItem, "created_by")
+    assert hasattr(AuditLifecycleItem, "updated_by")
+    assert hasattr(AuditLifecycleItem, "deleted_by")
+
     # Supply one explicit timestamp for the caller-requested soft delete.
     soft_deleted_at = datetime(2026, 7, 14, 12, 0, tzinfo=UTC)
 

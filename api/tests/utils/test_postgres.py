@@ -61,48 +61,46 @@ async def test_postgres_creates_idempotent_runtime_schema_with_readonly_audit_ac
             async with sibling_engine.begin() as connection:
                 await connection.execute(text("CREATE TABLE sibling_items (id integer PRIMARY KEY, name text)"))
                 await connection.execute(text("INSERT INTO sibling_items (id, name) VALUES (1, 'Sibling')"))
-        finally:
-            await sibling_engine.dispose()
 
-        # Act
-        runtime_username = await adapter.solution_schema(organization_id, solution_id, runtime_password)
-        retried_runtime_username = await adapter.solution_schema(organization_id, solution_id, runtime_password)
-        runtime_engine = create_async_engine(url.set(username=runtime_username, password=runtime_password))
-        try:
-            async with runtime_engine.begin() as connection:
-                await connection.execute(text("CREATE TABLE runtime_items (id integer PRIMARY KEY, name text)"))
-                await connection.execute(text("INSERT INTO runtime_items (id, name) VALUES (1, 'Widget')"))
-                await connection.execute(text("UPDATE runtime_items SET name = 'Updated Widget' WHERE id = 1"))
-                runtime_name = await connection.scalar(text("SELECT name FROM runtime_items WHERE id = 1"))
-                result = await connection.execute(
-                    text("SELECT email FROM shared.audit WHERE id = :user_id"),
-                    {"user_id": active_user.id},
-                )
-                shared_email = result.scalar_one()
-
-            with pytest.raises(DBAPIError) as error:
+            # Act
+            runtime_username = await adapter.solution_schema(organization_id, solution_id, runtime_password)
+            retried_runtime_username = await adapter.solution_schema(organization_id, solution_id, runtime_password)
+            runtime_engine = create_async_engine(url.set(username=runtime_username, password=runtime_password))
+            try:
                 async with runtime_engine.begin() as connection:
-                    await connection.execute(
-                        text(
-                            """
-                            INSERT INTO shared.audit (id, name, email, avatar)
-                            VALUES (:id, 'Bad User', 'bad@example.com', '')
-                            """
-                        ),
-                        {"id": UUID("22222222-2222-2222-2222-222222222222")},
+                    await connection.execute(text("CREATE TABLE runtime_items (id integer PRIMARY KEY, name text)"))
+                    await connection.execute(text("INSERT INTO runtime_items (id, name) VALUES (1, 'Widget')"))
+                    await connection.execute(text("UPDATE runtime_items SET name = 'Updated Widget' WHERE id = 1"))
+                    runtime_name = await connection.scalar(text("SELECT name FROM runtime_items WHERE id = 1"))
+                    result = await connection.execute(
+                        text("SELECT email FROM shared.audit WHERE id = :user_id"),
+                        {"user_id": active_user.id},
                     )
+                    shared_email = result.scalar_one()
 
-            with pytest.raises(DBAPIError) as select_error:
-                async with runtime_engine.begin() as connection:
-                    await connection.execute(text(f'SELECT name FROM "{sibling_id.hex}".sibling_items WHERE id = 1'))
+                with pytest.raises(DBAPIError) as error:
+                    async with runtime_engine.begin() as connection:
+                        await connection.execute(
+                            text(
+                                """
+                                INSERT INTO shared.audit (id, name, email, avatar)
+                                VALUES (:id, 'Bad User', 'bad@example.com', '')
+                                """
+                            ),
+                            {"id": UUID("22222222-2222-2222-2222-222222222222")},
+                        )
 
-            with pytest.raises(DBAPIError) as update_error:
-                async with runtime_engine.begin() as connection:
-                    await connection.execute(text(f"UPDATE \"{sibling_id.hex}\".sibling_items SET name = 'Changed' WHERE id = 1"))
-        finally:
-            await runtime_engine.dispose()
+                with pytest.raises(DBAPIError) as select_error:
+                    async with runtime_engine.begin() as connection:
+                        await connection.execute(text(f'SELECT name FROM "{sibling_id.hex}".sibling_items WHERE id = 1'))
 
-        try:
+                with pytest.raises(DBAPIError) as update_error:
+                    async with runtime_engine.begin() as connection:
+                        await connection.execute(text(f"UPDATE \"{sibling_id.hex}\".sibling_items SET name = 'Changed' WHERE id = 1"))
+            finally:
+                await runtime_engine.dispose()
+
+            # Verify the rejected mutation through an independent sibling transaction.
             async with sibling_engine.begin() as connection:
                 sibling_name = await connection.scalar(text("SELECT name FROM sibling_items WHERE id = 1"))
         finally:

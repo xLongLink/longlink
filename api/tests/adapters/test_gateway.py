@@ -123,23 +123,38 @@ async def test_gateway_request_closes_client_when_send_is_cancelled(
 ) -> None:
     """Close partial acquisitions immediately when cancellation interrupts response creation."""
 
+    # Arrange a send that remains pending until its caller is cancelled.
+    entered = asyncio.Event()
+    pending = asyncio.Event()
+
     class Client(GatewayClient):
-        """Cancel request submission."""
+        """Suspend request submission before a response is acquired."""
 
         closed = request_scope.closed
 
         async def send(self, request: object, stream: bool) -> None:
-            """Cancel request submission."""
+            """Signal entry and wait for task cancellation."""
 
-            raise asyncio.CancelledError
+            entered.set()
+            await pending.wait()
 
     monkeypatch.setattr(proxy.httpx2, "AsyncClient", Client)
 
     # Failed acquisition cleans up before the caller releases runtime resources.
     async with asynccontextmanager(proxy.runtime_scope)() as runtime:
-        with pytest.raises(asyncio.CancelledError):
-            await proxy.proxy_solution_request(**request_scope.kwargs, runtime=runtime)
-        assert request_scope.closed == ["client"]
+        task = asyncio.create_task(proxy.proxy_solution_request(**request_scope.kwargs, runtime=runtime))
+        try:
+            await asyncio.wait_for(entered.wait(), timeout=1)
+            task.cancel()
+            async with asyncio.timeout(1):
+                with pytest.raises(asyncio.CancelledError):
+                    await task
+            assert request_scope.closed == ["client"]
+        finally:
+            # Always reap the request task, including failures before send is entered.
+            task.cancel()
+            async with asyncio.timeout(1):
+                await asyncio.gather(task, return_exceptions=True)
     assert request_scope.closed == ["client"]
 
 

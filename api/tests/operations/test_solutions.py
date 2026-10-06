@@ -161,7 +161,7 @@ async def test_solution_creation_applies_user_and_managed_environment_values(
     # Persist a Solution with a user-owned runtime value.
     owner = users[0]
     organization = await create_organization(owner)
-    solution = await create_solution(organization, secrets={"API_KEY": "runtime-secret"})
+    solution = await create_solution(organization, envs={"API_KEY": "runtime-secret"})
     captured: dict[str, dict[str, str]] = {}
     database_passwords: list[str] = []
     calls: list[str] = []
@@ -275,7 +275,7 @@ async def test_solution_creation_preserves_schema_failure_before_storage_authori
     # Arrange
     owner = users[0]
     organization = await create_organization(owner)
-    solution = await create_solution(organization, secrets={"API_KEY": "runtime-secret"})
+    solution = await create_solution(organization, envs={"API_KEY": "runtime-secret"})
     initial_secrets = dict(solution.secrets)
     initial_deployed_revision_id = solution.deployed_revision_id
     initial_desired_revision_id = solution.desired_revision_id
@@ -330,7 +330,7 @@ async def test_solution_creation_retry_reuses_persisted_runtime_secrets(
     organization = await create_organization(users[0])
     solution = await create_solution(
         organization,
-        secrets={"API_KEY": "runtime-secret"},
+        envs={"API_KEY": "runtime-secret"},
     )
     credentials = {
         "LONGLINK_ENV": "production",

@@ -1,141 +1,29 @@
 import ssl
 import pytest
 import asyncio
-from typing import ClassVar
-from sqlmodel import Field, SQLModel
-from sqlalchemy import text
+import sqlite3
+from typing import Literal
+from pathlib import Path
+from sqlmodel import SQLModel
+from sqlalchemy import text, event
+from sqlalchemy.exc import OperationalError
 from longlink.database import base as database_base
 from longlink.database import urls as database_urls
 from sqlalchemy.engine import URL, make_url
+from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 from longlink.utils.settings import Envs
-
-PRODUCTION_SETTINGS = {
-    "ENV": "production",
-    "IDENTITY_SECRET": "identity-secret",
-    "DATABASE_HOST": "db",
-    "DATABASE_NAME": "longlink",
-    "DATABASE_PORT": 5432,
-    "DATABASE_SCHEMA": "solution",
-    "DATABASE_CERTIFICATE": "database-ca-pem",
-    "DATABASE_PASSWORD": "secret",
-    "DATABASE_USERNAME": "solution",
-    "STORAGE_BUCKET": "organization",
-    "STORAGE_PREFIX": "solutions/solution",
-    "STORAGE_REGION": "region",
-    "STORAGE_PASSWORD": "secret",
-    "STORAGE_USERNAME": "key",
-    "STORAGE_ENDPOINT_URL": "https://storage.example.com",
-}
-
-
-class VerificationEngine:
-    """Provide a failing non-SQLite database verification boundary."""
-
-    url = make_url("postgresql+asyncpg://database")
-
-    def __init__(self, failure: Exception) -> None:
-        """Configure the connection outcome and cleanup observation."""
-
-        self.failure = failure
-        self.disposed = False
-
-    def connect(self) -> "VerificationEngine":
-        """Return the verification connection context."""
-
-        return self
-
-    async def __aenter__(self) -> None:
-        """Raise the configured connection failure."""
-
-        raise self.failure
-
-    async def __aexit__(self, *_args: object) -> None:
-        """Complete the verification connection context."""
-
-    async def dispose(self) -> None:
-        """Record release of the engine resources."""
-
-        self.disposed = True
-
-
-class SchemaEngine:
-    """Provide a failing SQLite schema initialization boundary."""
-
-    url = make_url("sqlite+aiosqlite:///:memory:")
-
-    def __init__(self, failure: Exception) -> None:
-        """Configure the schema failure and cleanup observation."""
-
-        self.failure = failure
-        self.disposed = False
-
-    def begin(self) -> "SchemaEngine":
-        """Return the schema transaction context."""
-
-        return self
-
-    async def __aenter__(self) -> "SchemaEngine":
-        """Yield the fake schema connection."""
-
-        return self
-
-    async def __aexit__(self, *_args: object) -> None:
-        """Complete the fake schema transaction."""
-
-    async def run_sync(self, _operation: object) -> None:
-        """Raise the configured schema initialization failure."""
-
-        raise self.failure
-
-    async def dispose(self) -> None:
-        """Record release of the engine resources."""
-
-        self.disposed = True
 
 
 @pytest.mark.parametrize("database_schema", ["solution-schema", "public; DROP SCHEMA shared", '"solution"'])
-def test_production_settings_reject_invalid_database_schema(database_schema: str) -> None:
+def test_production_settings_reject_invalid_database_schema(database_schema: str, production_settings: dict[str, str | int]) -> None:
     """Reject production database schemas that are not PostgreSQL identifiers."""
 
     # Arrange
-    settings = PRODUCTION_SETTINGS | {"DATABASE_SCHEMA": database_schema}
+    settings = production_settings | {"DATABASE_SCHEMA": database_schema}
 
     # Act and assert
     with pytest.raises(ValueError, match="DATABASE_SCHEMA must be a valid PostgreSQL identifier"):
         Envs.model_validate(settings)
-
-
-def test_user_table_adds_audit_soft_delete_and_user_relationships() -> None:
-    """Add audit timestamps, soft-delete fields, user foreign keys, and relationships."""
-
-    # Define an isolated mapped table with inherited audit fields.
-    class FeatureAuditItem(database_base.Audit, table=True):
-        """Temporary SDK table used to inspect inherited database fields."""
-
-        # Table metadata
-        __tablename__: ClassVar[str] = "feature_audit_items"
-
-        # Item fields
-        id: int | None = Field(default=None, primary_key=True)
-        name: str
-
-    # Inspect the inherited columns and their foreign-key targets.
-    table = SQLModel.metadata.tables[FeatureAuditItem.__tablename__]
-    try:
-        # Verify audit fields and user relationships are available to Solutions.
-        assert {"created_at", "updated_at", "deleted_at"} <= set(table.c.keys())
-        assert {
-            column_name: {foreign_key.target_fullname for foreign_key in table.c[column_name].foreign_keys}
-            for column_name in ("created_id", "updated_id", "deleted_id")
-        } == {
-            "created_id": {"audit.id"},
-            "updated_id": {"audit.id"},
-            "deleted_id": {"audit.id"},
-        }
-        assert all(hasattr(FeatureAuditItem, relationship) for relationship in ("created_by", "updated_by", "deleted_by"))
-    finally:
-        # Remove the temporary table from shared metadata.
-        SQLModel.metadata.remove(table)
 
 
 @pytest.mark.parametrize(
@@ -167,22 +55,22 @@ def test_connect_args_returns_driver_specific_settings(database_url: str, schema
 
 
 @pytest.mark.parametrize(
-    ("env", "expected_url", "expected_kwargs"),
+    ("environment", "expected_url", "expected_kwargs"),
     [
         pytest.param(
-            Envs(ENV="testing"),
+            "testing",
             make_url("sqlite+aiosqlite:///:memory:"),
             {"hide_parameters": True},
             id="testing",
         ),
         pytest.param(
-            Envs(ENV="development"),
+            "development",
             make_url("sqlite+aiosqlite:///./dev.db"),
             {"hide_parameters": True},
             id="development",
         ),
         pytest.param(
-            Envs.model_validate(PRODUCTION_SETTINGS),
+            "production",
             URL.create(
                 "postgresql+asyncpg",
                 username="solution",
@@ -202,48 +90,61 @@ def test_connect_args_returns_driver_specific_settings(database_url: str, schema
         ),
     ],
 )
-def test_create_engine_selects_database_url_and_options(
+async def test_create_engine_selects_database_url_and_options(
     monkeypatch: pytest.MonkeyPatch,
     ca_certificate: str,
-    env: Envs,
+    environment: Literal["testing", "development", "production"],
+    production_settings: dict[str, str | int],
     expected_url: URL,
     expected_kwargs: dict[str, object],
 ) -> None:
     """Use environment-specific database URLs and engine options."""
 
-    # Supply the real CA without changing the shared production settings.
-    if env.ENV == "production":
-        env = env.model_copy(update={"DATABASE_CERTIFICATE": ca_certificate})
+    # Arrange environment-specific inputs with a real production CA.
+    settings = production_settings | {"DATABASE_CERTIFICATE": ca_certificate} if environment == "production" else {"ENV": environment}
+    env = Envs.model_validate(settings)
 
-    # Capture engine settings without opening a database connection.
+    # Record settings while constructing a real engine without connecting.
     captured: dict[str, object] = {}
 
-    def fake_create_async_engine(database_url: URL, **kwargs: object) -> object:
-        """Capture async engine settings without opening a database connection."""
+    def record_create_async_engine(database_url: URL, **kwargs: object) -> AsyncEngine:
+        """Record async engine settings and forward them to SQLAlchemy."""
 
+        # Preserve the exact arguments accepted by the real engine factory.
         captured["database_url"] = database_url
         captured["kwargs"] = kwargs
-        return object()
+        return create_async_engine(database_url, **kwargs)
 
-    monkeypatch.setattr(database_base, "create_async_engine", fake_create_async_engine)
+    monkeypatch.setattr(database_base, "create_async_engine", record_create_async_engine)
 
-    # Create the environment-specific engine.
-    database_base.create_engine(env)
+    # Act
+    engine = database_base.create_engine(env)
 
-    # Verify the production TLS policy and CA separately from the remaining engine options.
-    if env.ENV == "production":
+    try:
+        # Assert the real engine uses the selected URL and preserve its forwarded options.
+        assert engine.url == expected_url
         engine_kwargs = captured["kwargs"]
         assert isinstance(engine_kwargs, dict)
-        connect_args = engine_kwargs["connect_args"]
-        assert isinstance(connect_args, dict)
-        certificate_context = connect_args.pop("ssl")
-        assert isinstance(certificate_context, ssl.SSLContext)
-        assert certificate_context.verify_mode == ssl.CERT_REQUIRED
-        assert certificate_context.check_hostname is True
-        assert ssl.PEM_cert_to_DER_cert(ca_certificate) in certificate_context.get_ca_certs(binary_form=True)
+        engine_kwargs = engine_kwargs.copy()
 
-    # Verify the selected URL and connection options.
-    assert captured == {"database_url": expected_url, "kwargs": expected_kwargs}
+        # Verify TLS separately, normalizing only a copy of the connection arguments.
+        if env.ENV == "production":
+            connect_args = engine_kwargs["connect_args"]
+            assert isinstance(connect_args, dict)
+            connect_args = connect_args.copy()
+            engine_kwargs["connect_args"] = connect_args
+            certificate_context = connect_args.pop("ssl")
+            assert isinstance(certificate_context, ssl.SSLContext)
+            assert certificate_context.verify_mode == ssl.CERT_REQUIRED
+            assert certificate_context.check_hostname is True
+            assert ssl.PEM_cert_to_DER_cert(ca_certificate) in certificate_context.get_ca_certs(binary_form=True)
+
+        # Verify the exact selected URL and remaining connection options.
+        assert captured["database_url"] == expected_url
+        assert engine_kwargs == expected_kwargs
+    finally:
+        # Release the real engine even when an assertion fails.
+        await engine.dispose()
 
 
 async def test_concurrent_sessions_initialize_one_engine(
@@ -286,31 +187,38 @@ async def test_concurrent_sessions_initialize_one_engine(
 
 async def test_session_retries_initialization_after_database_connection_failure(
     monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    production_settings: dict[str, str | int],
 ) -> None:
     """Retry session initialization after its initial connection fails."""
 
     # Arrange
-    engine = VerificationEngine(ConnectionError("database unavailable"))
-    database = database_base.Database(Envs.model_validate(PRODUCTION_SETTINGS))
+    engine = create_async_engine(URL.create("sqlite+aiosqlite", database=str(tmp_path)))
+    original_pool = engine.pool
+    database = database_base.Database(Envs.model_validate(production_settings))
     create_engine = database_base.create_engine
 
-    # Act and assert
-    with monkeypatch.context() as failing_engine:
-        failing_engine.setattr(database_base, "create_engine", lambda _env: engine)
-        with pytest.raises(ConnectionError, match="database unavailable"):
-            async with database.session():
-                pass
-
-    # Assert
-    assert engine.disposed
-
-    # Retry the production connection path against a real isolated SQLite engine.
     try:
+        # Act and assert
+        with monkeypatch.context() as failing_engine:
+            failing_engine.setattr(database_base, "create_engine", lambda _env: engine)
+            with pytest.raises(OperationalError, match="unable to open database file") as error:
+                async with database.session():
+                    pass
+
+        # Assert the real connection error survives cleanup and disposal replaces the pool.
+        assert isinstance(error.value.orig, sqlite3.OperationalError)
+        assert error.value.orig.args == ("unable to open database file",)
+        assert engine.pool is not original_pool
+
+        # Retry the production connection path against a real isolated SQLite engine.
         with monkeypatch.context() as retry_engine:
             retry_engine.setattr(database_base, "create_engine", lambda _env: create_engine(Envs(ENV="testing")))
             async with database.session() as database_session:
                 assert await database_session.scalar(text("SELECT 1")) == 1
     finally:
+        # Release both engines even if the disposal regression assertions fail.
+        await engine.dispose()
         await database.dispose()
 
 
@@ -320,12 +228,36 @@ async def test_session_disposes_sqlite_engine_after_schema_initialization_failur
     """Release SQLite resources when automatic schema creation fails."""
 
     # Arrange
-    engine = SchemaEngine(RuntimeError("schema unavailable"))
+    engine = database_base.create_engine(Envs(ENV="testing"))
+    original_pool = engine.pool
+    closed_connections: list[object] = []
+    failure = RuntimeError("schema unavailable")
+
+    def fail_schema_creation(_connection: object) -> None:
+        """Fail only schema creation inside the real SQLite transaction."""
+
+        # Preserve the exact initialization error for the caller.
+        raise failure
+
+    def record_connection_close(connection: object, _record: object) -> None:
+        """Observe SQLite connection release through SQLAlchemy's pool event."""
+
+        # Record real pool cleanup without replacing disposal.
+        closed_connections.append(connection)
+
+    event.listen(engine.sync_engine, "close", record_connection_close)
+    monkeypatch.setattr(SQLModel.metadata, "create_all", fail_schema_creation)
     monkeypatch.setattr(database_base, "create_engine", lambda _env: engine)
     database = database_base.Database(Envs(ENV="testing"))
 
-    # Act and assert
-    with pytest.raises(RuntimeError, match="schema unavailable"):
-        async with database.session():
-            pass
-    assert engine.disposed
+    try:
+        # Act and assert
+        with pytest.raises(RuntimeError, match="schema unavailable") as error:
+            async with database.session():
+                pass
+        assert error.value is failure
+        assert len(closed_connections) == 1
+        assert engine.pool is not original_pool
+    finally:
+        # Release resources even if the disposal regression assertions fail.
+        await engine.dispose()

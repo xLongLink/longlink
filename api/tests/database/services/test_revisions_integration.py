@@ -36,7 +36,7 @@ async def test_revision_ownership_constraints_and_cleanup(monkeypatch: pytest.Mo
                 session.add(owner)
                 await session.commit()
             organization = await create_organization(owner)
-            first = await create_solution(organization, secrets={"KEEP": "postgres-secret"})
+            first = await create_solution(organization, envs={"KEEP": "postgres-secret"})
             second = await create_solution(organization, name="other")
 
             # Competing HTTP commands inspect outside PostgreSQL locks, then serialize their snapshots.
@@ -65,9 +65,7 @@ async def test_revision_ownership_constraints_and_cleanup(monkeypatch: pytest.Mo
             async def point_revision_at_other_solution(session: AsyncSession, reference: str) -> None:
                 """Point one Solution reference at another Solution's revision."""
 
-                await session.execute(
-                    update(Solution).where(col(Solution.id) == first.id).values({reference: second.desired_revision_id})
-                )
+                await session.execute(update(Solution).where(col(Solution.id) == first.id).values({reference: second.desired_revision_id}))
                 await session.commit()
 
             for reference in ("desired_revision_id", "deployed_revision_id"):
