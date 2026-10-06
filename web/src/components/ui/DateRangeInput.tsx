@@ -28,7 +28,7 @@ export function DateRangeInput(
             size={size}
             placeholder={props.placeholder ?? 'Select date range'}
             hasClear={props.hasClear ?? true}
-            isLabelHidden={props.isLabelHidden ?? false}
+            isLabelHidden={false}
             isRequired={props.isRequired ?? false}
             isDisabled={props.isDisabled ?? false}
             numberOfMonths={2}

@@ -29,8 +29,6 @@ type CardProps = {
     maxWidth?: number | string;
     /** Minimum card height. */
     minHeight?: number | string;
-    /** HTML ID for linking to the card. */
-    id?: string;
     /** Makes the card and its descendants non-interactive. */
     inert?: boolean;
     /** Hides the card from assistive technologies. */

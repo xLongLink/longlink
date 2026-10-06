@@ -73,7 +73,6 @@ export default [
                     route('slider', './routes/docs/sdk/views/Slider.tsx'),
                     route('functions', './routes/docs/sdk/views/Functions.tsx'),
                     route('stack', './routes/docs/sdk/views/Stack.tsx'),
-                    route('status-dot', './routes/docs/sdk/views/StatusDot.tsx'),
                     route('stepper', './routes/docs/sdk/views/Stepper.tsx'),
                     route('switch', './routes/docs/sdk/views/Switch.tsx'),
                     route('table', './routes/docs/sdk/views/Table.tsx'),

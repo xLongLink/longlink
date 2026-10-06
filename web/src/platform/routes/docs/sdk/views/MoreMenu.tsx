@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import ViewLayout from './ViewLayout';
-import { Ellipsis } from 'lucide-react';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { MoreMenu } from '@/components/ui/MoreMenu';
@@ -36,7 +35,7 @@ export function MoreMenuExample() {
     return (
         <Stack gap={2}>
             <MoreMenu
-                icon={<Ellipsis aria-hidden="true" size={20} />}
+                icon="moreHorizontal"
                 items={[
                     { label: 'Edit', onClick: () => setAction('Editing order') },
                     { label: 'Delete', variant: 'destructive', onClick: () => setAction('Deleted') },

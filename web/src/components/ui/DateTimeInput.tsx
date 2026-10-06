@@ -28,7 +28,7 @@ export function DateTimeInput(
             hasClear={props.hasClear ?? false}
             hasSeconds={props.hasSeconds ?? false}
             hourFormat={props.hourFormat ?? '12h'}
-            isLabelHidden={props.isLabelHidden ?? false}
+            isLabelHidden={false}
             isRequired={props.isRequired ?? false}
             isDisabled={props.isDisabled ?? false}
             changeAction={undefined}

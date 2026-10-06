@@ -30,7 +30,7 @@ export function TimeInput(
             hasClear={props.hasClear ?? false}
             hourFormat={props.hourFormat ?? '12h'}
             increment={props.increment ?? 1}
-            isLabelHidden={props.isLabelHidden ?? false}
+            isLabelHidden={false}
             isRequired={props.isRequired ?? false}
             isDisabled={props.isDisabled ?? false}
             changeAction={undefined}

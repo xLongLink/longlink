@@ -61,7 +61,7 @@
             },
             {
                 "name": "icon",
-                "type": "ReactNode",
+                "type": "string",
                 "required": false,
                 "description": "Optional leading icon."
             },
@@ -168,7 +168,7 @@
             },
             {
                 "name": "icon",
-                "type": "ReactNode",
+                "type": "string",
                 "required": false,
                 "description": "Icon element rendered before the label text. An Astryx Icon with no explicit size defaults to sm for sm/md buttons and md for lg buttons."
             },
@@ -333,13 +333,6 @@
                 "description": "Description text displayed below the label."
             },
             {
-                "name": "isLabelHidden",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Whether to visually hide the label (still accessible to screen readers). Default: false."
-            },
-            {
                 "name": "isRequired",
                 "type": "boolean",
                 "required": false,
@@ -352,12 +345,6 @@
                 "required": false,
                 "default": "false",
                 "description": "Whether the checkbox is disabled. Default: false."
-            },
-            {
-                "name": "status",
-                "type": "{ type: \"success\" | \"warning\" | \"error\"; message?: string; }",
-                "required": false,
-                "description": "Status indicator. Displays a colored message box below the checkbox and sets aria-invalid for errors."
             },
             {
                 "name": "width",
@@ -399,10 +386,6 @@
             }
         ],
         "practices": [
-            {
-                "guidance": true,
-                "description": "Always provide a visible label so the user knows what they are toggling. Use isLabelHidden only when surrounding context makes it obvious."
-            },
             {
                 "guidance": true,
                 "description": "Add a description for choices that need extra context, like explaining what \"Share usage data\" actually shares."
@@ -569,13 +552,6 @@
                 "description": "Helper text displayed below the label."
             },
             {
-                "name": "isLabelHidden",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Visually hide the label. Default: false."
-            },
-            {
                 "name": "isRequired",
                 "type": "boolean",
                 "required": false,
@@ -588,12 +564,6 @@
                 "required": false,
                 "default": "false",
                 "description": "Disable the input and calendar. Default: false."
-            },
-            {
-                "name": "status",
-                "type": "{ type: \"success\" | \"warning\" | \"error\"; message?: string; }",
-                "required": false,
-                "description": "Status indicator object for error, warning, or success states with a message."
             },
             {
                 "name": "width",
@@ -702,13 +672,6 @@
                 "description": "Helper text displayed below the label."
             },
             {
-                "name": "isLabelHidden",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Visually hide the label. Default: false."
-            },
-            {
                 "name": "isRequired",
                 "type": "boolean",
                 "required": false,
@@ -721,12 +684,6 @@
                 "required": false,
                 "default": "false",
                 "description": "Disable the trigger and picker. Default: false."
-            },
-            {
-                "name": "status",
-                "type": "{ type: \"success\" | \"warning\" | \"error\"; message?: string; }",
-                "required": false,
-                "description": "Status indicator for error, warning, or success states."
             },
             {
                 "name": "width",
@@ -839,13 +796,6 @@
                 "description": "Helper text displayed below the label."
             },
             {
-                "name": "isLabelHidden",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Visually hide the label. Default: false."
-            },
-            {
                 "name": "isRequired",
                 "type": "boolean",
                 "required": false,
@@ -858,12 +808,6 @@
                 "required": false,
                 "default": "false",
                 "description": "Disable the input and picker. Default: false."
-            },
-            {
-                "name": "status",
-                "type": "{ type: \"success\" | \"warning\" | \"error\"; message?: string; }",
-                "required": false,
-                "description": "Status indicator object for error, warning, or success states with a message."
             },
             {
                 "name": "width",
@@ -1192,13 +1136,6 @@
                 "description": "Description text displayed between the label and input."
             },
             {
-                "name": "isLabelHidden",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Visually hides the label while keeping it accessible to screen readers. Default: false."
-            },
-            {
                 "name": "isRequired",
                 "type": "boolean",
                 "required": false,
@@ -1211,12 +1148,6 @@
                 "required": false,
                 "default": "false",
                 "description": "Disables the input, preventing interaction and dimming the element. Default: false."
-            },
-            {
-                "name": "status",
-                "type": "{ type: \"success\" | \"warning\" | \"error\"; message?: string; }",
-                "required": false,
-                "description": "Validation status: applies a colored border. If message is provided, displays a floating message below the input. Error type also sets aria-invalid."
             },
             {
                 "name": "width",
@@ -1444,7 +1375,7 @@
             },
             {
                 "name": "icon",
-                "type": "ReactNode",
+                "type": "string",
                 "required": true,
                 "description": "Icon element rendered inside the button. An Astryx Icon with no explicit size defaults to sm for sm/md buttons and md for lg buttons."
             },
@@ -1594,7 +1525,7 @@
             },
             {
                 "name": "icon",
-                "type": "ReactNode",
+                "type": "string",
                 "required": false,
                 "description": "Override the default three-dot icon. Accepts any ReactNode."
             },
@@ -1645,13 +1576,6 @@
                 "description": "Helper text displayed below the label."
             },
             {
-                "name": "isLabelHidden",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Visually hides the label while keeping it accessible. Default: false."
-            },
-            {
                 "name": "isRequired",
                 "type": "boolean",
                 "required": false,
@@ -1664,12 +1588,6 @@
                 "required": false,
                 "default": "false",
                 "description": "Disables the selector. Default: false."
-            },
-            {
-                "name": "status",
-                "type": "{ type: \"success\" | \"warning\" | \"error\"; message?: string; }",
-                "required": false,
-                "description": "Validation status with an optional message."
             },
             {
                 "name": "width",
@@ -1789,13 +1707,6 @@
                 "description": "Description text displayed between the label and input."
             },
             {
-                "name": "isLabelHidden",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Visually hide the label (still accessible to screen readers). Default: false."
-            },
-            {
                 "name": "isRequired",
                 "type": "boolean",
                 "required": false,
@@ -1808,12 +1719,6 @@
                 "required": false,
                 "default": "false",
                 "description": "Whether the input is disabled. Default: false."
-            },
-            {
-                "name": "status",
-                "type": "{ type: \"success\" | \"warning\" | \"error\"; message?: string; }",
-                "required": false,
-                "description": "Validation status with optional message."
             },
             {
                 "name": "width",
@@ -1927,7 +1832,7 @@
     {
         "name": "ProgressBar",
         "url": "https://astryx.atmeta.com/components/ProgressBar",
-        "introduction": "Displays determinate or indeterminate progress with a semantic state.",
+        "introduction": "Displays determinate progress with a semantic state.",
         "properties": [
             {
                 "name": "label",
@@ -1950,13 +1855,6 @@
                 "description": "Maximum value. Default: 100."
             },
             {
-                "name": "isLabelHidden",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Visually hide the label (remains accessible). Default: false."
-            },
-            {
                 "name": "hasValueLabel",
                 "type": "boolean",
                 "required": false,
@@ -1969,13 +1867,6 @@
                 "required": false,
                 "default": "'accent'",
                 "description": "Semantic color variant. Default: 'accent'."
-            },
-            {
-                "name": "isIndeterminate",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Animated loading indicator for unknown progress. Default: false."
             }
         ],
         "practices": [
@@ -2023,13 +1914,6 @@
                 "description": "Description text displayed below the label."
             },
             {
-                "name": "isLabelHidden",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Whether to visually hide the label. Default: false."
-            },
-            {
                 "name": "isRequired",
                 "type": "boolean",
                 "required": false,
@@ -2042,12 +1926,6 @@
                 "required": false,
                 "default": "false",
                 "description": "Whether all radio items are disabled. Default: false."
-            },
-            {
-                "name": "status",
-                "type": "{ type: \"success\" | \"warning\" | \"error\"; message?: string; }",
-                "required": false,
-                "description": "Status indicator ({ type, message })."
             },
             {
                 "name": "width",
@@ -2139,13 +2017,6 @@
                 "description": "Helper text displayed below the label."
             },
             {
-                "name": "isLabelHidden",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Visually hides the label while keeping it accessible. Default: false."
-            },
-            {
                 "name": "isRequired",
                 "type": "boolean",
                 "required": false,
@@ -2158,12 +2029,6 @@
                 "required": false,
                 "default": "false",
                 "description": "Disables the selector. Default: false."
-            },
-            {
-                "name": "status",
-                "type": "{ type: \"success\" | \"warning\" | \"error\"; message?: string; }",
-                "required": false,
-                "description": "Validation status with an optional message."
             },
             {
                 "name": "width",
@@ -2288,13 +2153,6 @@
                 "description": "Description text rendered below the label."
             },
             {
-                "name": "isLabelHidden",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Whether to visually hide the label. Default: false."
-            },
-            {
                 "name": "isRequired",
                 "type": "boolean",
                 "required": false,
@@ -2307,12 +2165,6 @@
                 "required": false,
                 "default": "false",
                 "description": "Whether the slider is disabled. Default: false."
-            },
-            {
-                "name": "status",
-                "type": "{ type: \"success\" | \"warning\" | \"error\"; message?: string; }",
-                "required": false,
-                "description": "Status indicator object (`{ type, message }`) for validation feedback."
             },
             {
                 "name": "width",
@@ -2408,7 +2260,7 @@
                 "type": "0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10",
                 "required": false,
                 "default": "3",
-                "description": "Spacing step (number literal): 0, 0.5, 1, 1.5, 2, 3, 4, 5, 6, 8, 10. Pass as a JSX number expression e.g. gap={4}, NOT a string like gap=\"4\". Default: 3."
+                "description": "Spacing between items. Default: 3."
             },
             {
                 "name": "padding",
@@ -2563,13 +2415,6 @@
                 "description": "Description text displayed below the label."
             },
             {
-                "name": "isLabelHidden",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Visually hides the label while keeping it accessible to screen readers. Default: false."
-            },
-            {
                 "name": "isRequired",
                 "type": "boolean",
                 "required": false,
@@ -2582,12 +2427,6 @@
                 "required": false,
                 "default": "false",
                 "description": "Whether the switch is disabled. Default: false."
-            },
-            {
-                "name": "status",
-                "type": "{ type: \"success\" | \"warning\" | \"error\"; message?: string; }",
-                "required": false,
-                "description": "Status indicator with type and message. Displays a colored message box below the switch and sets aria-invalid when type is \"error\"."
             },
             {
                 "name": "width",
@@ -2779,13 +2618,6 @@
                 "description": "Helper text displayed between the label and textarea."
             },
             {
-                "name": "isLabelHidden",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Visually hides the label while keeping it accessible to screen readers. Default: false."
-            },
-            {
                 "name": "isRequired",
                 "type": "boolean",
                 "required": false,
@@ -2798,12 +2630,6 @@
                 "required": false,
                 "default": "false",
                 "description": "Disables the textarea, preventing interaction. Default: false."
-            },
-            {
-                "name": "status",
-                "type": "{ type: \"success\" | \"warning\" | \"error\"; message?: string; }",
-                "required": false,
-                "description": "Status indicator that applies a colored border and icon. An optional message is displayed in a floating box below the textarea."
             },
             {
                 "name": "width",
@@ -2850,13 +2676,6 @@
                 "description": "Makes the textarea read-only: the value is shown at full opacity and still submits with the form, but cannot be edited. Unlike isDisabled, a read-only textarea is not dimmed and stays in the tab order. isDisabled takes precedence when both are set. Default: false."
             },
             {
-                "name": "hasSpellCheck",
-                "type": "boolean",
-                "required": false,
-                "default": "true",
-                "description": "Enables or disables browser spell checking. Default: true."
-            },
-            {
                 "name": "hasAutoFocus",
                 "type": "boolean",
                 "required": false,
@@ -2879,15 +2698,7 @@
         "practices": [
             {
                 "guidance": true,
-                "description": "Provide a visible label so users know what to enter. If the label must be hidden, set isLabelHidden with a descriptive label for screen readers."
-            },
-            {
-                "guidance": true,
                 "description": "Set maxLength with a character counter when there is a defined limit; it helps users stay within bounds before they submit."
-            },
-            {
-                "guidance": true,
-                "description": "Use the status prop to surface validation feedback inline: show success when input is valid, warning for soft limits, and error for hard failures."
             },
             {
                 "guidance": true,
@@ -2900,10 +2711,6 @@
             {
                 "guidance": false,
                 "description": "Don't rely solely on placeholder text to communicate the purpose of the field; placeholders disappear on focus and are not accessible labels."
-            },
-            {
-                "guidance": false,
-                "description": "Don't show a status message without also setting the status type; the colored border and icon are what draw the user's attention to the message."
             }
         ]
     },
@@ -2925,13 +2732,6 @@
                 "description": "Description text displayed between the label and input."
             },
             {
-                "name": "isLabelHidden",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Visually hides the label while keeping it accessible to screen readers. Default: false."
-            },
-            {
                 "name": "isRequired",
                 "type": "boolean",
                 "required": false,
@@ -2944,12 +2744,6 @@
                 "required": false,
                 "default": "false",
                 "description": "Disables the input, preventing interaction and dimming the element. Default: false."
-            },
-            {
-                "name": "status",
-                "type": "{ type: \"success\" | \"warning\" | \"error\"; message?: string; }",
-                "required": false,
-                "description": "Validation status: applies a colored border and status icon. If message is provided, displays a floating message below the input. Error type also sets aria-invalid."
             },
             {
                 "name": "width",
@@ -3042,10 +2836,6 @@
             },
             {
                 "guidance": true,
-                "description": "Use validation status with a message to explain what went wrong: \"Email must include @\" is better than just turning the border red."
-            },
-            {
-                "guidance": true,
                 "description": "Size the input to match the expected content length so users can gauge how much to type: small for zip codes, medium for names, large for URLs."
             },
             {
@@ -3084,13 +2874,6 @@
                 "description": "Description text displayed between the label and input."
             },
             {
-                "name": "isLabelHidden",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Visually hides the label while keeping it accessible to screen readers. Default: false."
-            },
-            {
                 "name": "isRequired",
                 "type": "boolean",
                 "required": false,
@@ -3103,12 +2886,6 @@
                 "required": false,
                 "default": "false",
                 "description": "Disables the input and suppresses interactions. Default: false."
-            },
-            {
-                "name": "status",
-                "type": "{ type: \"success\" | \"warning\" | \"error\"; message?: string; }",
-                "required": false,
-                "description": "Status indicator that colors the border and displays an icon. When a message is provided it is rendered below the input."
             },
             {
                 "name": "width",
@@ -3195,10 +2972,6 @@
             {
                 "guidance": true,
                 "description": "Provide a description or placeholder that hints at the expected format or purpose, like \"Business hours: 9 AM – 5 PM\"."
-            },
-            {
-                "guidance": true,
-                "description": "Use the status prop to surface validation errors inline: show a message like \"Time must be during business hours\" so users know exactly what to fix."
             },
             {
                 "guidance": true,

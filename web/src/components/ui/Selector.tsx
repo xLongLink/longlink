@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import type { FieldProps } from './types';
+import type { StoneIconName } from './Icon';
 import { useSize } from '@astryxdesign/core/SizeContext';
 import { Selector as AstryxSelector } from '@astryxdesign/core/Selector';
 
@@ -7,7 +8,7 @@ export type SelectorOptionData = {
     value: string;
     label?: string;
     description?: ReactNode;
-    icon?: ReactNode;
+    icon?: StoneIconName;
     disabled?: boolean;
 };
 export type SelectorOptionType =
@@ -40,7 +41,7 @@ export function Selector(props: SelectorProps) {
             placeholder={props.placeholder ?? 'Select...'}
             hasSearch={props.hasSearch ?? false}
             isReadOnly={props.isReadOnly ?? false}
-            isLabelHidden={props.isLabelHidden ?? false}
+            isLabelHidden={false}
             isRequired={props.isRequired ?? false}
             isDisabled={props.isDisabled ?? false}
             changeAction={undefined}

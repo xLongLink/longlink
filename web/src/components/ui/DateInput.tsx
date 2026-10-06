@@ -26,7 +26,7 @@ export function DateInput(
             size={size}
             placeholder={props.placeholder ?? 'Select a date'}
             hasClear={props.hasClear ?? false}
-            isLabelHidden={props.isLabelHidden ?? false}
+            isLabelHidden={false}
             isRequired={props.isRequired ?? false}
             isDisabled={props.isDisabled ?? false}
             numberOfMonths={1}

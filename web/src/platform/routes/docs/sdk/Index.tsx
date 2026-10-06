@@ -68,10 +68,10 @@ export default function DocsArticleRoute() {
                     Create a Solution
                 </Heading>
                 <Tabs hasDivider>
-                    <Tab label="Standalone" panelId="standalone-setup" value="standalone">
+                    <Tab label="Standalone" value="standalone">
                         <CodeBlock code="uvx --from longlink longlink init --folder ." language="bash" />
                     </Tab>
-                    <Tab label="GitHub" panelId="github-setup" value="github">
+                    <Tab label="GitHub" value="github">
                         <CodeBlock code="uvx --from longlink longlink init --folder . --ci github" language="bash" />
                     </Tab>
                 </Tabs>

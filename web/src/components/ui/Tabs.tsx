@@ -11,8 +11,6 @@ type TabProps = {
     label: string;
     /** Whether the tab is disabled. */
     isDisabled?: boolean;
-    /** Panel element ID; omitted values use an automatically generated ID. */
-    panelId?: string;
 };
 type TabsProps = {
     /** Tab elements defining labels and panel content. */
@@ -36,7 +34,7 @@ export function Tabs({ children, gap = 3, onChange, value: controlledValue, ...p
     );
     const activeTab = tabs.find((tab) => tab.props.value === (controlledValue ?? selection)) ?? tabs[0];
     if (!activeTab) return null;
-    const panelId = activeTab.props.panelId ?? `${instance}-${activeTab.props.value}`;
+    const panelId = `${instance}-${activeTab.props.value}`;
 
     // Link each tab to the one content panel owned by this Tabs instance.
     return (
@@ -55,13 +53,7 @@ export function Tabs({ children, gap = 3, onChange, value: controlledValue, ...p
                     const { children: _content, ...tabProps } = tab.props;
 
                     // Keep panel content out of the underlying tab button props.
-                    return (
-                        <AstryxTab
-                            {...tabProps}
-                            key={tab.props.value}
-                            panelId={tab.props.panelId ?? `${instance}-${tab.props.value}`}
-                        />
-                    );
+                    return <AstryxTab {...tabProps} key={tab.props.value} panelId={`${instance}-${tab.props.value}`} />;
                 })}
             </TabList>
             <Stack id={panelId} role="tabpanel" tabIndex={0} aria-label={activeTab.props.label} gap={gap}>
