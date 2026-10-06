@@ -16,8 +16,6 @@ from src.database.models.users import User
 from src.database.models.solutions import Revision, Solution
 from src.database.models.operations import Operation
 
-pytestmark = pytest.mark.usefixtures("database_runtime")
-
 
 @pytest.mark.parametrize(
     "failure", ["initial", "error", "timeout", "shutdown", "restoration", "deleted_during_rollout", "deleted_before_recovery"]

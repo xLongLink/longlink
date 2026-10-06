@@ -12,8 +12,6 @@ from src.database.models.users import User
 from src.database.models.solutions import Solution
 from src.database.models.organizations import Organization
 
-pytestmark = pytest.mark.usefixtures("database_runtime")
-
 
 def install_recording_delete(
     monkeypatch: pytest.MonkeyPatch,
@@ -71,6 +69,7 @@ def install_recording_delete(
     return calls
 
 
+@pytest.mark.usefixtures("database_runtime")
 async def test_reconcile_prepares_providers_namespace_and_publishes_organization(
     users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -121,6 +120,7 @@ async def test_reconcile_prepares_providers_namespace_and_publishes_organization
     assert refreshed.status == Status.running
 
 
+@pytest.mark.usefixtures("database_runtime")
 async def test_reconcile_rolls_back_publication_when_storage_fails(
     users: tuple[User, User, User],
     monkeypatch: pytest.MonkeyPatch,

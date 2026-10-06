@@ -884,22 +884,19 @@ async def test_password_reset_rejects_missing_reset_cookie(
 async def test_password_reset_verify_sets_secure_browser_only_cookie_in_production(
     client: AsyncClient,
     users: tuple[User, User, User],
-    captured_mail: list[tuple[str, str, str, str | None]],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Set a restricted secure reset cookie when production verifies reset proof."""
 
     # Arrange
     user = users[0]
-    forgot_response = await client.post("/api/v1/auth/forgot-password", json={"email": user.email})
-    reset_token = password_reset_token(captured_mail)
+    reset_token = token.create_password_reset_token(user)
     monkeypatch.setattr(env, "PUBLIC_URL", "https://platform.example")
 
     # Act
     response = await client.post("/api/v1/auth/reset-password/verify", json={"token": reset_token})
 
     # Assert
-    assert forgot_response.status_code == 202
     assert response.status_code == 204
     assert response.headers["cache-control"] == "no-store"
     cookie = response.headers["set-cookie"]
@@ -1052,9 +1049,19 @@ async def test_authenticated_logout_rejects_untrusted_origin(
     assert profile_response.status_code == 200
 
 
-@pytest.mark.parametrize("headers", [{"origin": "http://localhost:5173"}, {"origin": "http://127.0.0.1:5173"}])
+@pytest.mark.parametrize(
+    ("headers", "expected_secure"),
+    [
+        pytest.param({"origin": "http://localhost:5173"}, False, id="localhost"),
+        pytest.param({"origin": "http://127.0.0.1:5173"}, False, id="loopback"),
+        pytest.param({"origin": "https://platform.example"}, True, id="production"),
+    ],
+)
 async def test_authenticated_logout_clears_browser_session_for_trusted_origins(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient], headers: dict[str, str], monkeypatch: pytest.MonkeyPatch
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    headers: dict[str, str],
+    expected_secure: bool,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Clear browser sessions requested from the explicitly configured frontend origin."""
 
@@ -1073,27 +1080,8 @@ async def test_authenticated_logout_clears_browser_session_for_trusted_origins(
     assert "Max-Age=0" in response.headers["set-cookie"]
     assert "Path=/" in response.headers["set-cookie"]
     assert "SameSite=lax" in response.headers["set-cookie"]
+    assert ("Secure" in response.headers["set-cookie"]) is expected_secure
     assert profile_response.status_code == 401
-
-
-async def test_authenticated_logout_uses_secure_cookie_policy_in_production(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """Clear the browser session with the production cookie security attributes."""
-
-    # Arrange
-    monkeypatch.setattr(env, "PUBLIC_URL", "https://platform.example")
-
-    # Act
-    response = await clients[0].post("/api/v1/auth/logout", headers={"origin": "https://platform.example"})
-
-    # Assert
-    assert response.status_code == 204
-    cookie = response.headers["set-cookie"]
-    assert "longlink_auth=" in cookie
-    assert "Max-Age=0" in cookie
-    assert "Secure" in cookie
 
 
 async def test_password_login_sets_production_session_security_and_cache_attributes(

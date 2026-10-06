@@ -13,43 +13,21 @@ from src.database.models.invitations import OrganizationInvitation
 from src.database.models.organizations import Organization
 
 
-async def test_create_stores_canonical_invitation_email(
-    users: tuple[User, User, User],
-) -> None:
-    """Store a canonical invitation email address."""
+async def test_create_replaces_existing_invitation(users: tuple[User, User, User]) -> None:
+    """Replace an existing grant when the canonical email is invited again."""
 
     # Arrange
     owner = users[0]
     organization = await create_organization(owner)
-
-    # Act
     async with session_scope() as session:
         await organizations.create_invitation(
             session, organization.id, OrganizationInvitationCreate(email="Invited@EXAMPLE.COM", role=OrganizationRoles.write), owner.id
         )
         await session.commit()
-
-        invitation = await session.scalar(select(OrganizationInvitation).where(OrganizationInvitation.organization_id == organization.id))
-
-    # Assert
-    assert invitation is not None
-    assert invitation.email == "invited@example.com"
-    assert invitation.role == OrganizationRoles.write
-
-
-async def test_create_replaces_existing_invitation(users: tuple[User, User, User]) -> None:
-    """Replace an existing grant when an email is invited again."""
-
-    # Arrange
-    owner = users[0]
-    organization = await create_organization(owner)
-    async with session_scope() as session:
-        await organizations.create_invitation(
-            session, organization.id, OrganizationInvitationCreate(email="invited@example.com", role=OrganizationRoles.write), owner.id
-        )
-        await session.commit()
         invitation = await session.scalar(select(OrganizationInvitation).where(OrganizationInvitation.organization_id == organization.id))
         assert invitation is not None
+        assert invitation.email == "invited@example.com"
+        assert invitation.role == OrganizationRoles.write
         invitation_id = invitation.id
         original_created_at = datetime(2026, 1, 1, tzinfo=UTC)
         invitation.created_at = original_created_at

@@ -1,9 +1,7 @@
 import pytest
 from uuid import uuid4
 from conftest import DatabasePostgres
-from sqlmodel import col
 from factories import create_compute, fetch_operations, create_organization
-from sqlalchemy import update
 from src.errors import ConflictError, ForbiddenError, UnavailableError
 from longlink.shared import models as shared_models
 from src.models.roles import OrganizationRoles
@@ -70,7 +68,7 @@ async def test_sync_users_projects_active_organization_members(
     users: tuple[User, User, User],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Publish the Platform-authoritative member snapshot for a running Organization."""
+    """Publish the Platform-authoritative member snapshot for an Organization."""
 
     # Arrange
     organization = await create_organization(users[0])
@@ -82,11 +80,6 @@ async def test_sync_users_projects_active_organization_members(
         synchronized.append((conn, rows))
 
     monkeypatch.setattr(organizations.shared_audit, "sync", capture_sync)
-    async with session_scope() as session:
-        persisted = await session.get(Organization, organization.id)
-        assert persisted is not None
-        persisted.status = Status.running
-        await session.commit()
 
     # Act
     async with session_scope() as session:
@@ -271,7 +264,6 @@ async def test_soft_delete_tombstones_solutions_and_retains_memberships(users: t
     owner, member = users[0], users[1]
     organization = await create_organization(owner)
     async with session_scope() as session:
-        await session.execute(update(Organization).where(col(Organization.id) == organization.id).values(status=Status.running))
         solution = await solutions.create(
             session,
             organization.id,

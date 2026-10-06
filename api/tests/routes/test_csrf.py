@@ -216,18 +216,17 @@ async def test_authenticated_solution_creation_rejects_untrusted_origin_before_p
 async def test_authenticated_compute_creation_rejects_untrusted_origin_before_verification(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     monkeypatch: pytest.MonkeyPatch,
-    compute_runtime: None,
     origin: str | None,
 ) -> None:
-    """Reject cookie-authenticated Compute writes before gateway verification."""
+    """Reject cookie-authenticated Compute writes before infrastructure construction."""
 
     # Arrange
-    async def unexpected_verify(*_args: object, **_kwargs: object) -> None:
-        """Fail if an untrusted Compute write reaches gateway verification."""
+    def unexpected_kubernetes(*_args: object, **_kwargs: object) -> None:
+        """Fail if an untrusted Compute write reaches infrastructure construction."""
 
         raise AssertionError("untrusted Compute write must not verify infrastructure")
 
-    monkeypatch.setattr("src.routes.v1.computes.gateway.verify", unexpected_verify)
+    monkeypatch.setattr("src.routes.v1.computes.Kubernetes", unexpected_kubernetes)
     headers = untrusted_origin_headers(clients[0], origin)
 
     # Act

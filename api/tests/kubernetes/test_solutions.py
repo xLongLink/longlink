@@ -440,27 +440,55 @@ async def test_solution_apply_waits_for_route_after_deployment_readiness(monkeyp
     assert sleeps == [5, 5]
 
 
-async def test_solution_logs_returns_failed_migration_logs(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Return migration logs when no running Solution Pod is available."""
+@pytest.mark.parametrize(
+    ("phase", "component", "line", "log_kwargs", "expected"),
+    [
+        pytest.param(
+            "Failed",
+            "migration",
+            "migration failed",
+            {"tail_lines": 200},
+            ["Migration Pod migration-123 failed:", "migration failed"],
+            id="failed-migration",
+        ),
+        pytest.param(
+            "Running",
+            "solution",
+            "solution started",
+            {"tail_lines": 200, "container": "solution"},
+            ["solution started"],
+            id="running-solution",
+        ),
+    ],
+)
+async def test_solution_logs_returns_pod_output(
+    monkeypatch: pytest.MonkeyPatch,
+    phase: str,
+    component: str,
+    line: str,
+    log_kwargs: dict[str, object],
+    expected: list[str],
+) -> None:
+    """Return recent Pod output with the component-specific log options and context."""
 
     # Arrange
     class PodResource:
-        """Represent a failed migration Pod."""
+        """Represent the selected Solution or migration Pod."""
 
-        raw: ClassVar[dict[str, object]] = {"status": {"phase": "Failed"}}
-        metadata: ClassVar[dict[str, object]] = {"labels": {"longlink.io/component": "migration"}, "name": "migration-123"}
+        raw: ClassVar[dict[str, object]] = {"status": {"phase": phase}}
+        metadata: ClassVar[dict[str, object]] = {"labels": {"longlink.io/component": component}, "name": "migration-123"}
 
         @classmethod
         async def list(cls, **_kwargs: object):
-            """Yield the failed migration Pod."""
+            """Yield the configured Pod."""
 
             yield cls()
 
-        async def logs(self, *, tail_lines: int):
-            """Yield the recent migration output."""
+        async def logs(self, **kwargs: object):
+            """Verify the exact log options before yielding the configured output."""
 
-            assert tail_lines == 200
-            yield "migration failed"
+            assert kwargs == log_kwargs
+            yield line
 
     monkeypatch.setattr(solutions, "Pod", PodResource)
 
@@ -471,42 +499,7 @@ async def test_solution_logs_returns_failed_migration_logs(monkeypatch: pytest.M
     )
 
     # Assert
-    assert logs == ["Migration Pod migration-123 failed:", "migration failed"]
-
-
-async def test_solution_logs_returns_running_solution_pod_logs(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Return recent logs from a running Solution Pod before migration fallback."""
-
-    # Arrange
-    class PodResource:
-        """Represent a running Solution Pod."""
-
-        raw: ClassVar[dict[str, object]] = {"status": {"phase": "Running"}}
-        metadata: ClassVar[dict[str, object]] = {"labels": {"longlink.io/component": "solution"}}
-
-        @classmethod
-        async def list(cls, **_kwargs: object):
-            """Yield the running Solution Pod."""
-
-            yield cls()
-
-        async def logs(self, *, tail_lines: int, container: str):
-            """Yield recent Solution output."""
-
-            assert tail_lines == 200
-            assert container == "solution"
-            yield "solution started"
-
-    monkeypatch.setattr(solutions, "Pod", PodResource)
-
-    # Act
-    logs = await solutions.Solutions(kubernetes_client()).logs(
-        ORGANIZATION_ID,
-        UUID("00000000-0000-4000-8000-000000000001"),
-    )
-
-    # Assert
-    assert logs == ["solution started"]
+    assert logs == expected
 
 
 async def test_solution_logs_reports_completed_migration_when_solution_pod_is_unavailable(
@@ -607,8 +600,6 @@ async def test_solution_delete_removes_resources_before_waiting_for_pods(monkeyp
 
     # Arrange
     deleted: list[str] = []
-    resource_checks = 0
-    job_checks = 0
     pod_checks = 0
     sleeps: list[float] = []
 
@@ -624,7 +615,7 @@ async def test_solution_delete_removes_resources_before_waiting_for_pods(monkeyp
             return True
 
     class Resource:
-        """Expose a Solution resource until its initial cleanup poll."""
+        """Expose a Solution resource until its deletion request."""
 
         def __init__(self, kind: str) -> None:
             """Store the resource kind used to record deletion."""
@@ -638,9 +629,7 @@ async def test_solution_delete_removes_resources_before_waiting_for_pods(monkeyp
 
             assert namespace == COMPUTE_NAMESPACE
             assert field_selector == {"metadata.name": "solution-00000000-0000-4000-8000-000000000001"}
-            nonlocal resource_checks
-            resource_checks += 1
-            if resource_checks == 1:
+            if "Service" not in deleted:
                 yield cls("Service")
 
         async def delete(self) -> None:
@@ -649,7 +638,7 @@ async def test_solution_delete_removes_resources_before_waiting_for_pods(monkeyp
             deleted.append(self.kind)
 
     class JobResource:
-        """Expose one retained migration Job during the initial cleanup poll."""
+        """Expose the retained migration Job until its deletion request."""
 
         metadata: ClassVar[dict[str, object]] = {}
 
@@ -660,11 +649,9 @@ async def test_solution_delete_removes_resources_before_waiting_for_pods(monkeyp
 
         @classmethod
         async def list(cls, **_kwargs: object):
-            """Yield the retained migration Job only once."""
+            """Yield the migration Job while it has not been deleted."""
 
-            nonlocal job_checks
-            job_checks += 1
-            if job_checks == 1:
+            if "Job" not in deleted:
                 yield cls()
 
     class PodResource:
@@ -697,6 +684,7 @@ async def test_solution_delete_removes_resources_before_waiting_for_pods(monkeyp
             """Record polling without delaying the test."""
 
             sleeps.append(delay)
+            await asyncio.sleep(0)
 
     monkeypatch.setattr(solutions, "Namespace", NamespaceResource)
     monkeypatch.setattr(solutions, "KnativeServiceResource", Resource)
@@ -706,10 +694,14 @@ async def test_solution_delete_removes_resources_before_waiting_for_pods(monkeyp
     monkeypatch.setattr(solutions, "asyncio", Clock)
 
     # Act
-    await solutions.Solutions(kubernetes_client()).delete(
-        ORGANIZATION_ID,
-        UUID("00000000-0000-4000-8000-000000000001"),
+    client = solutions.Solutions(
+        kubernetes_client(),
     )
+    async with asyncio.timeout(5):
+        await client.delete(
+            ORGANIZATION_ID,
+            UUID("00000000-0000-4000-8000-000000000001"),
+        )
 
     # Assert
     assert deleted == ["Service", "Job", "Secret"]

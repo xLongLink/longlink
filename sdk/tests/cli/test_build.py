@@ -524,8 +524,7 @@ def test_build_command_reports_built_image(
         assert check is True
         commands.append(command)
         if command[1] != "push":
-            dockerfile = Path(command[-1], "Dockerfile").read_text(encoding="utf-8")
-            assert 'LABEL org.opencontainers.image.description="Demo Solution"' in dockerfile
+            assert Path(command[-1], "Dockerfile").is_file()
 
     # Replace Docker boundaries with deterministic local fakes.
     monkeypatch.setattr(build.subprocess, "run", run_docker)

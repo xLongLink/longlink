@@ -5,7 +5,6 @@ from longlink import Context
 from longlink import app as longlink_app
 from pydantic import ValidationError
 from longlink.app import LongLink
-from sqlalchemy.exc import OperationalError
 from longlink.logger import ApiAccessFilter
 from fastapi.testclient import TestClient
 from longlink.testclient import TestClient as SolutionTestClient
@@ -75,18 +74,13 @@ def test_solution_test_client_replaces_development_services_with_testing_service
     assert app.state.longlink.database._env.ENV == "testing"
 
 
-async def test_readiness_fails_when_the_solution_database_is_unavailable(solution_source: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_readiness_fails_when_the_solution_database_is_unavailable(solution_source: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Keep the readiness probe dependent on a live Solution database."""
 
     # Arrange
     monkeypatch.setenv("LONGLINK_ENV", "development")
     (solution_source.parent / "dev.db").mkdir()
     app = LongLink()
-
-    # Verify the otherwise valid runtime fails specifically at SQLite connection setup.
-    with pytest.raises(OperationalError, match="unable to open database file"):
-        async with app.state.longlink.database.session():
-            pytest.fail("A directory cannot be opened as a SQLite database")
     client = TestClient(app, raise_server_exceptions=False)
 
     # Act

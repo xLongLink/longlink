@@ -21,8 +21,6 @@ from src.database.models.users import User
 from src.database.models.solutions import Revision, Solution
 from src.database.models.organizations import Organization
 
-pytestmark = pytest.mark.usefixtures("database_runtime")
-
 
 async def create_deleted_solution(owner: User) -> tuple[Organization, Solution]:
     """Create one Solution tombstone with assigned infrastructure."""
@@ -37,6 +35,7 @@ async def create_deleted_solution(owner: User) -> tuple[Organization, Solution]:
     return organization, solution
 
 
+@pytest.mark.usefixtures("database_runtime")
 async def test_solution_delete_failure_stops_before_provider_credential_cleanup(
     users: tuple[User, User, User],
     monkeypatch: pytest.MonkeyPatch,
@@ -92,6 +91,7 @@ async def test_solution_delete_failure_stops_before_provider_credential_cleanup(
     assert retained.deleted_at is not None
 
 
+@pytest.mark.usefixtures("database_runtime")
 async def test_solution_delete_removes_provider_state_and_tombstone(
     users: tuple[User, User, User],
     monkeypatch: pytest.MonkeyPatch,
@@ -152,6 +152,7 @@ async def test_solution_delete_removes_provider_state_and_tombstone(
         assert await session.get(Solution, solution.id) is None
 
 
+@pytest.mark.usefixtures("database_runtime")
 async def test_solution_creation_applies_user_and_managed_environment_values(
     users: tuple[User, User, User],
     monkeypatch: pytest.MonkeyPatch,
@@ -266,6 +267,7 @@ async def test_solution_creation_applies_user_and_managed_environment_values(
         assert updated.deployed_revision_id == revision_id
 
 
+@pytest.mark.usefixtures("database_runtime")
 async def test_solution_creation_preserves_schema_failure_before_storage_authorization(
     users: tuple[User, User, User],
     monkeypatch: pytest.MonkeyPatch,
@@ -319,6 +321,7 @@ async def test_solution_creation_preserves_schema_failure_before_storage_authori
 
 
 @pytest.mark.parametrize("identity", [None, "persisted-secret"], ids=["missing-identity", "running-existing-identity"])
+@pytest.mark.usefixtures("database_runtime")
 async def test_solution_creation_retry_reuses_persisted_runtime_secrets(
     users: tuple[User, User, User],
     monkeypatch: pytest.MonkeyPatch,
@@ -460,6 +463,7 @@ async def test_solution_lifecycle_skips_missing_target_without_constructing_prov
     assert await operation(uuid4()) is None
 
 
+@pytest.mark.usefixtures("database_runtime")
 async def test_solution_creation_skips_deployment_when_deleted_before_credential_persistence(
     users: tuple[User, User, User],
     monkeypatch: pytest.MonkeyPatch,

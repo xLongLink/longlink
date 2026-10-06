@@ -20,8 +20,6 @@ from src.database.models.association import UserOrganization
 from src.database.models.invitations import OrganizationInvitation
 from src.database.models.organizations import Organization
 
-pytestmark = pytest.mark.usefixtures("database_runtime")
-
 
 async def test_create_organization_persists_desired_state_and_queues_creation(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
@@ -1197,6 +1195,7 @@ async def test_create_organization_invitation_returns_403_without_maintainer_acc
     assert captured_mail == []
 
 
+@pytest.mark.no_db
 async def test_get_organization_rejects_anonymous_without_membership_lookup(
     client: AsyncClient,
 ) -> None:

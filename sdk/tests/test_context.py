@@ -158,7 +158,7 @@ def test_context_middleware_treats_untrusted_identity_as_anonymous(secret: str, 
 
 
 def test_production_context_requires_signed_identity_except_for_probes() -> None:
-    """Reject direct anonymous Solution traffic while allowing Platform requests and Kubernetes probes."""
+    """Require signed HTTP identity, allow anonymous probes, and reject all WebSockets."""
 
     # Install the same production identity boundary used by the Solution application.
     app = FastAPI()
@@ -183,6 +183,7 @@ def test_production_context_requires_signed_identity_except_for_probes() -> None
 
         await socket.accept()
 
+    headers = identity_headers(UUID("00000000-0000-0000-0000-000000000001"))
     client = TestClient(app)
 
     # Direct gateway requests have no valid Platform assertion; proxy requests do.
@@ -191,49 +192,19 @@ def test_production_context_requires_signed_identity_except_for_probes() -> None
         assert anonymous.status_code == 401
         assert anonymous.json() == {"detail": "Authentication required"}
         assert client.get("/views.json", headers={"x-longlink-identity": "invalid-token"}).status_code == 401
-        authorized = client.get("/views.json", headers=identity_headers(UUID("00000000-0000-0000-0000-000000000001")))
+        authorized = client.get("/views.json", headers=headers)
         assert authorized.status_code == 200
         assert authorized.json() == {"authenticated": True}
         assert client.get("/health").status_code == 200
         assert client.get("/ready").status_code == 200
-        with pytest.raises(WebSocketDisconnect) as rejection, client.websocket_connect("/events"):
+
+        # Neither anonymous nor validly signed identity grants the unsupported transport.
+        with pytest.raises(WebSocketDisconnect) as anonymous_rejection, client.websocket_connect("/events"):
             pass
-        assert rejection.value.code == 1008
-
-
-def test_production_websocket_rejects_valid_signed_identity() -> None:
-    """Deny authenticated WebSockets that bypass the role-checked HTTP proxy."""
-
-    # Arrange
-    app = FastAPI()
-    context.install_context_middleware(app, IDENTITY_SECRET, require_identity=True)
-
-    @app.get("/identity")
-    async def get_identity() -> dict[str, bool]:
-        """Confirm the same signed assertion is accepted over HTTP."""
-
-        # Expose the identity verified by the real middleware.
-        return {"authenticated": audit.current_actor.get() is not None}
-
-    @app.websocket("/events")
-    async def events(socket: WebSocket) -> None:
-        """Accept the connection if the transport guard is bypassed."""
-
-        # Make an incorrectly permitted connection observable.
-        await socket.accept()
-
-    headers = identity_headers(UUID("00000000-0000-0000-0000-000000000001"))
-
-    # Act
-    with TestClient(app) as client:
-        response = client.get("/identity", headers=headers)
-        with pytest.raises(WebSocketDisconnect) as rejection, client.websocket_connect("/events", headers=headers):
+        assert anonymous_rejection.value.code == 1008
+        with pytest.raises(WebSocketDisconnect) as signed_rejection, client.websocket_connect("/events", headers=headers):
             pass
-
-    # Assert
-    assert response.status_code == 200
-    assert response.json() == {"authenticated": True}
-    assert rejection.value.code == 1008
+        assert signed_rejection.value.code == 1008
 
 
 async def test_context_middleware_isolates_concurrent_audit_identities() -> None:

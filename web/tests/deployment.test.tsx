@@ -72,8 +72,6 @@ describe('Solution source update dialog', () => {
                     invitations: [],
                 });
             }
-            if (path === `/api/v1/organizations/${organizationId}/storage`)
-                return Response.json({ space_used: 0, quota_bytes: 1 });
             if (path === `/api/v1/organizations/${organizationId}/solutions`) {
                 return Response.json([
                     {
