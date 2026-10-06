@@ -4,12 +4,14 @@ import { Grid } from '@astryxdesign/core/Grid';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
+import { Divider } from '@astryxdesign/core/Divider';
 import { Heading } from '@astryxdesign/core/Heading';
 import { Section } from '@astryxdesign/core/Section';
 import { Building2, UserRound, UsersRound } from 'lucide-react';
 
 /** Renders the public pricing page. */
 export default function Pricing() {
+    // Keep organization resource allowances separate from per-user pricing.
     return (
         <>
             <Seo
@@ -30,12 +32,12 @@ export default function Pricing() {
                                 Pricing
                             </Heading>
                             <Text as="p" className="text-lg sm:text-xl" color="secondary" textWrap="pretty">
-                                Plans for individuals and organizations
+                                Billed per Organization
                             </Text>
                         </Stack>
                         <Grid columns={{ minWidth: 280, max: 3, repeat: 'fit' }} gap={0} width="100%">
                             <Card className="-mb-px -mr-px rounded-none bg-transparent" minHeight={640}>
-                                <Stack gap={4}>
+                                <Stack gap={0}>
                                     <Stack className="pt-12" gap={2} align="center">
                                         <UserRound aria-hidden="true" className="text-accent" size={20} />
                                         <Stack gap={2} align="center">
@@ -50,21 +52,26 @@ export default function Pricing() {
                                         </Stack>
                                     </Stack>
 
-                                    <Stack
-                                        className="pt-12"
-                                        paddingInline={4}
-                                        direction="horizontal"
-                                        gap={2}
-                                        align="end"
-                                        hAlign="center"
-                                        width="100%"
-                                    >
-                                        <Button href="/login/" label="Try it now" variant="primary" />
+                                    <Divider className="my-10 w-1/3 self-center" />
+                                    <Stack gap={2} paddingInline={4}>
+                                        <Text as="p" color="secondary" justify="center">
+                                            Up to 5 users
+                                        </Text>
+                                        <Text as="p" color="secondary" justify="center">
+                                            100 MiB database storage
+                                        </Text>
+                                        <Text as="p" color="secondary" justify="center">
+                                            1 GiB file storage
+                                        </Text>
+                                    </Stack>
+                                    <Divider className="my-10 w-1/3 self-center" />
+                                    <Stack align="center">
+                                        <Button href="/login/" label="Get started" variant="primary" />
                                     </Stack>
                                 </Stack>
                             </Card>
                             <Card className="-mb-px -mr-px rounded-none bg-transparent" minHeight={640}>
-                                <Stack gap={4}>
+                                <Stack gap={0}>
                                     <Stack className="pt-12" gap={2} align="center">
                                         <UsersRound aria-hidden="true" className="text-accent" size={20} />
                                         <Stack gap={2} align="center">
@@ -79,23 +86,28 @@ export default function Pricing() {
                                         </Stack>
                                     </Stack>
 
-                                    <Stack
-                                        className="pt-12"
-                                        paddingInline={4}
-                                        direction="horizontal"
-                                        gap={2}
-                                        align="end"
-                                        hAlign="center"
-                                        width="100%"
-                                    >
-                                        <Text hasCapsize type="display-3" weight="semibold">
+                                    <Divider className="my-10 w-1/3 self-center" />
+                                    <Stack gap={2} paddingInline={4}>
+                                        <Text as="p" color="secondary" justify="center" weight="semibold">
+                                            CHF 5 per user per month
+                                        </Text>
+                                        <Text as="p" color="secondary" justify="center">
+                                            5 GiB database storage
+                                        </Text>
+                                        <Text as="p" color="secondary" justify="center">
+                                            25 GiB file storage
+                                        </Text>
+                                    </Stack>
+                                    <Divider className="my-10 w-1/3 self-center" />
+                                    <Stack align="center">
+                                        <Text as="p" color="secondary" justify="center">
                                             Coming soon
                                         </Text>
                                     </Stack>
                                 </Stack>
                             </Card>
                             <Card className="-mb-px -mr-px rounded-none bg-transparent" minHeight={640}>
-                                <Stack gap={4}>
+                                <Stack gap={0}>
                                     <Stack className="pt-12" gap={2} align="center">
                                         <Building2 aria-hidden="true" className="text-accent" size={20} />
                                         <Stack gap={2} align="center">
@@ -110,16 +122,21 @@ export default function Pricing() {
                                         </Stack>
                                     </Stack>
 
-                                    <Stack
-                                        className="pt-12"
-                                        paddingInline={4}
-                                        direction="horizontal"
-                                        gap={2}
-                                        align="end"
-                                        hAlign="center"
-                                        width="100%"
-                                    >
-                                        <Text hasCapsize type="display-3" weight="semibold">
+                                    <Divider className="my-10 w-1/3 self-center" />
+                                    <Stack gap={2} paddingInline={4}>
+                                        <Text as="p" color="secondary" justify="center" weight="semibold">
+                                            CHF 20 per user per month
+                                        </Text>
+                                        <Text as="p" color="secondary" justify="center">
+                                            25 GiB database storage
+                                        </Text>
+                                        <Text as="p" color="secondary" justify="center">
+                                            100 GiB file storage
+                                        </Text>
+                                    </Stack>
+                                    <Divider className="my-10 w-1/3 self-center" />
+                                    <Stack align="center">
+                                        <Text as="p" color="secondary" justify="center">
                                             Coming soon
                                         </Text>
                                     </Stack>
