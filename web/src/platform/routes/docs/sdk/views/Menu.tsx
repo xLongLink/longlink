@@ -9,12 +9,12 @@ const properties: ViewProperties = [
         properties: [
             {
                 name: 'children',
-                type: 'ViewNode',
+                type: 'ReactNode',
                 description: 'MenuSection elements defining navigation and content.',
             },
             {
                 name: 'gap',
-                type: 'Spacing',
+                type: '0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10',
                 description: 'Spacing between elements in the selected item’s content. Defaults to 3.',
             },
         ],
@@ -24,23 +24,17 @@ const properties: ViewProperties = [
         properties: [
             { name: 'title', type: 'string', required: true, description: 'Section heading in the navigation.' },
             { name: 'isHeaderHidden', type: 'boolean', description: 'Hides the section heading. Defaults to false.' },
-            { name: 'children', type: 'ViewNode', description: 'MenuItem elements or nested MenuSubSection groups.' },
+            { name: 'children', type: 'ReactNode', description: 'MenuItem elements or nested MenuSubSection groups.' },
         ],
     },
     {
         name: 'MenuItem',
         properties: [
             { name: 'label', type: 'string', required: true, description: 'Item label displayed in the navigation.' },
-            {
-                name: 'id',
-                type: 'string',
-                description:
-                    'Unique URL fragment for selection. Defaults to the lowercase label with spaces and punctuation replaced by hyphens.',
-            },
             { name: 'icon', type: 'string', description: 'Optional LongLink icon name displayed beside the label.' },
             {
                 name: 'children',
-                type: 'ViewNode',
+                type: 'ReactNode',
                 description: 'Content mounted beside the navigation when this item is selected.',
             },
         ],
@@ -62,7 +56,7 @@ export default function MenuPage() {
                     {
                         guidance: true,
                         description:
-                            'Use unique labels or explicit ids for items. Labels become URL fragments by default. Put nested items inside MenuSubSection.',
+                            'Use unique labels for items. Labels become URL fragments with spaces and punctuation replaced by hyphens. Put nested items inside MenuSubSection.',
                     },
                 ],
             }}

@@ -62,7 +62,7 @@ function SettingsPage({ user }: { user: z.output<typeof schemas.zUserSummary> })
             </Stack>
             <Menu>
                 <MenuSection title="Settings" isHeaderHidden>
-                    <MenuItem id="account" label="Account" icon="userRound">
+                    <MenuItem label="Account" icon="userRound">
                         <form action={saveAccount}>
                             <Stack gap={4}>
                                 <Heading level={2}>Account</Heading>
@@ -82,7 +82,7 @@ function SettingsPage({ user }: { user: z.output<typeof schemas.zUserSummary> })
                             </Stack>
                         </form>
                     </MenuItem>
-                    <MenuItem id="organizations" label="Organizations" icon="building2">
+                    <MenuItem label="Organizations" icon="building2">
                         <ApiBoundary>
                             <OrganizationSettings />
                         </ApiBoundary>

@@ -5,5 +5,16 @@ import { Switch as AstryxSwitch } from '@astryxdesign/core/Switch';
 export function Switch(
     props: FieldProps & { value: boolean; onChange?: (value: boolean) => void; htmlName?: string; size?: 'sm' | 'md' }
 ) {
-    return <AstryxSwitch {...props} changeAction={undefined} isLoading={false} />;
+    // Keep a visible, enabled switch without replacing its controlled value.
+    return (
+        <AstryxSwitch
+            {...props}
+            size={props.size ?? 'md'}
+            isLabelHidden={props.isLabelHidden ?? false}
+            isRequired={props.isRequired ?? false}
+            isDisabled={props.isDisabled ?? false}
+            changeAction={undefined}
+            isLoading={false}
+        />
+    );
 }

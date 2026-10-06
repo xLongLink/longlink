@@ -443,25 +443,39 @@ declare function FileInput(
 ): React.JSX.Element;
 
 /** @category Display */
-declare function FileViewer(props: { src: string; title: string }): React.JSX.Element;
+declare function FileViewer(props: {
+    /** Scoped Solution operation path returning the file to preview. */
+    src: string;
+    /** Accessible label for the preview trigger and file dialog. */
+    title: string;
+}): React.JSX.Element;
 
 /** @category Layouts */
 declare function Grid(props: { children?: ViewNode; columns?: number; gap?: Spacing }): React.JSX.Element;
 
 /** @category Layouts @group Grid */
-declare function GridSpan(props: { children?: ViewNode; columns?: number | 'full' }): React.JSX.Element;
+declare function GridSpan(props: {
+    /** Content rendered inside the grid item. */
+    children?: ViewNode;
+    /** Number of columns to occupy, or full to span the entire grid. */
+    columns?: number | 'full';
+}): React.JSX.Element;
 
 /** @category Layouts @group Stack */
 declare function StackItem(props: {
+    /** Content rendered inside the stack item. */
     children?: ViewNode;
     size?: 'static' | 'fill';
     isScrollable?: boolean;
+    /** Overrides this item's cross-axis alignment; omitted values inherit the parent alignment. */
     crossAlignSelf?: 'start' | 'center' | 'end' | 'stretch';
 }): React.JSX.Element;
 
 /** @category Layouts @group Card */
 type CardProps = {
-    padding?: Spacing;
+    /** Content rendered inside the card. */
+    children?: ViewNode;
+    padding?: 0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10;
     variant?:
         | 'default'
         | 'transparent'
@@ -476,21 +490,34 @@ type CardProps = {
         | 'red'
         | 'teal'
         | 'yellow';
+    /** Card width; numbers are pixels and strings are CSS sizes. */
     width?: number | string;
+    /** Card height; numbers are pixels and strings are CSS sizes. */
     height?: number | string;
+    /** Maximum card width. */
     maxWidth?: number | string;
+    /** Minimum card height. */
     minHeight?: number | string;
+    /** HTML ID for linking to the card. */
+    id?: string;
+    /** Makes the card and its descendants non-interactive. */
+    inert?: boolean;
+    /** Hides the card from assistive technologies. */
+    'aria-hidden'?: boolean | 'true' | 'false';
     label?: string;
+    /** Makes the card clickable and receives its activation event. */
     onClick?: (event: ViewMouseEvent) => void;
+    /** Makes the card a navigation target when no selection callback is supplied. */
     href?: string;
     target?: string;
     isDisabled?: boolean;
     isSelected?: boolean;
+    /** Makes the card selectable and receives its next selection state; takes priority over activation. */
     onChange?: (isSelected: boolean) => void;
 };
 
 /** @category Layouts */
-declare const Card: ViewComponent<CardProps>;
+declare function Card(props: CardProps): React.JSX.Element;
 
 /** @category Layouts */
 declare function Collapsible(props: {
@@ -550,8 +577,11 @@ declare function RadioList(
 
 /** @category Form @group RadioList */
 declare function RadioListItem(props: {
+    /** Visible label identifying this choice. */
     label: string;
+    /** Value passed to the surrounding RadioList when selected. */
     value: string;
+    /** Optional helper text explaining the choice. */
     description?: string;
     isDisabled?: boolean;
 }): React.JSX.Element;
@@ -567,28 +597,43 @@ declare function MoreMenu(props: {
 
 /** @category Layouts */
 declare function Menu(props: {
+    /** MenuSection elements defining navigation and content. */
     children?: ViewNode;
     gap?: 0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10;
 }): React.JSX.Element;
 
 /** @category Layouts @group Menu */
 declare function MenuSection(props: {
+    /** MenuItem elements or nested MenuSubSection groups. */
     children?: ViewNode;
+    /** Hides the section heading; visible by default. */
     isHeaderHidden?: boolean;
+    /** Section heading displayed in the navigation. */
     title: string;
 }): React.JSX.Element;
 
 /** @category Layouts @group Menu */
-declare function MenuItem(props: { children?: ViewNode; id?: string; icon?: string; label: string }): React.JSX.Element;
+declare function MenuItem(props: {
+    /** Content mounted beside the navigation while this item is selected. */
+    children?: ViewNode;
+    /** Optional LongLink icon name displayed beside the label. */
+    icon?: string;
+    /** Navigation label; its lowercase, hyphenated form identifies the item's URL fragment. */
+    label: string;
+}): React.JSX.Element;
 
 /** @category Layouts @group Menu */
-declare function MenuSubSection(props: { children?: ViewNode; icon?: string; label: string }): React.JSX.Element;
+declare function MenuSubSection(props: {
+    /** MenuItem elements nested inside this collapsible group. */
+    children?: ViewNode;
+    /** Optional LongLink icon name displayed beside the group label. */
+    icon?: string;
+    /** Label displayed on the collapsible navigation group. */
+    label: string;
+}): React.JSX.Element;
 
 /** @category Display */
-declare const Icon: ViewComponent<{
-    icon: string;
-    size: 'sm' | 'md' | 'lg';
-}>;
+declare function Icon(props: { icon: string; size: 'sm' | 'md' | 'lg' }): React.JSX.Element;
 
 /** @category Display */
 declare function CodeBlock(props: {
@@ -617,23 +662,36 @@ declare function Stepper(props: {
 }): React.JSX.Element;
 
 /** @category Layouts @group Stepper */
-declare function Step(props: { step: number; label: string }): React.JSX.Element;
+declare function Step(props: {
+    /** Zero-based index of this step in the process. */
+    step: number;
+    /** Visible label identifying the step. */
+    label: string;
+}): React.JSX.Element;
 
 /** @category Layouts */
 declare function Tabs(props: {
+    /** Tab elements defining labels and panel content. */
     children?: ViewNode;
     gap?: 0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10;
     hasDivider?: boolean;
+    /** Receives the selected Tab value; use with value to control selection. */
     onChange?: (value: string) => void;
+    /** Selected Tab value; omit for internal selection, initially choosing the first tab. */
     value?: string;
 }): React.JSX.Element;
 
 /** @category Layouts @group Tabs */
 declare function Tab(props: {
+    /** Panel content mounted only while this tab is selected. */
     children?: ViewNode;
+    /** Unique value identifying this tab. */
     value: string;
+    /** Visible tab label and accessible panel name. */
     label: string;
+    /** Whether the tab is disabled. */
     isDisabled?: boolean;
+    /** Panel element ID; omitted values use an automatically generated ID. */
     panelId?: string;
 }): React.JSX.Element;
 
@@ -641,7 +699,14 @@ declare function Tab(props: {
 declare function EmptyState(props: { title: string; isCompact?: boolean }): React.JSX.Element;
 
 /** @category Display */
-declare function Currency(props: { value: number; currency: string; locale?: string }): React.JSX.Element;
+declare function Currency(props: {
+    /** Amount to format in currency units. */
+    value: number;
+    /** ISO 4217 currency code, such as USD or CHF. */
+    currency: string;
+    /** Locale for formatting; omitted values use the viewer's locale. */
+    locale?: string;
+}): React.JSX.Element;
 
 /** @category Display */
 declare function Timestamp(props: {
@@ -659,7 +724,12 @@ declare function Timestamp(props: {
 }): React.JSX.Element;
 
 /** @category Display */
-declare function Divider(props: {}): React.JSX.Element;
+declare function Divider(props: {
+    label?: ViewNode;
+    variant?: 'subtle' | 'strong';
+    orientation?: 'horizontal' | 'vertical';
+    isFullBleed?: boolean;
+}): React.JSX.Element;
 
 /** @category Display */
 declare function MetadataList(props: {
@@ -669,7 +739,14 @@ declare function MetadataList(props: {
 }): React.JSX.Element;
 
 /** @category Display @group MetadataList */
-declare function MetadataListItem(props: { children?: ViewNode; label: string; icon?: ViewNode }): React.JSX.Element;
+declare function MetadataListItem(props: {
+    /** Value rendered beside the metadata label. */
+    children?: ViewNode;
+    /** Label identifying the metadata value. */
+    label: string;
+    /** Optional icon displayed beside the metadata label. */
+    icon?: ViewNode;
+}): React.JSX.Element;
 
 /** @category Display @group Table */
 type ColumnWidth = { type: 'proportional'; value: number; minWidth?: number } | { type: 'pixel'; value: number };

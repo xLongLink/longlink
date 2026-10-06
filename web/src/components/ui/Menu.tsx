@@ -9,14 +9,19 @@ import {
 } from '@astryxdesign/core/SideNav';
 
 type MenuSectionProps = {
+    /** MenuItem elements or nested MenuSubSection groups. */
     children?: ReactNode;
+    /** Hides the section heading; visible by default. */
     isHeaderHidden?: boolean;
+    /** Section heading displayed in the navigation. */
     title: string;
 };
 type MenuItemProps = {
+    /** Content mounted beside the navigation while this item is selected. */
     children?: ReactNode;
-    id?: string;
+    /** Optional LongLink icon name displayed beside the label. */
     icon?: StoneIconName;
+    /** Navigation label; its lowercase, hyphenated form identifies the item's URL fragment. */
     label: string;
 };
 type MenuEntry =
@@ -26,16 +31,13 @@ type MenuEntry =
 // Each runtime supplies its own fragment navigation without exposing a router to Views.
 export const MenuNavigationContext = createContext<{ hash: string; select: (id: string) => void } | null>(null);
 
-/** Uses an explicit item ID or the original label-derived fragment. */
+/** Derives each item's navigation fragment from its label. */
 function menuItemId(item: ReactElement<MenuItemProps>): string {
-    return (
-        item.props.id ??
-        item.props.label
-            .toLowerCase()
-            .trim()
-            .replace(/[^a-z0-9]+/g, '-')
-            .replace(/^-|-$/g, '')
-    );
+    return item.props.label
+        .toLowerCase()
+        .trim()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '');
 }
 
 /** Identifies a content-owning MenuItem without rendering its children. */
@@ -48,6 +50,7 @@ export function Menu({
     children,
     gap = 3,
 }: {
+    /** MenuSection elements defining navigation and content. */
     children?: ReactNode;
     gap?: 0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10;
 }) {
@@ -165,6 +168,13 @@ export function MenuItem(_props: MenuItemProps) {
 }
 
 /** Defines a collapsible group of MenuItems. */
-export function MenuSubSection(_props: { children?: ReactNode; icon?: StoneIconName; label: string }) {
+export function MenuSubSection(_props: {
+    /** MenuItem elements nested inside this collapsible group. */
+    children?: ReactNode;
+    /** Optional LongLink icon name displayed beside the group label. */
+    icon?: StoneIconName;
+    /** Label displayed on the collapsible navigation group. */
+    label: string;
+}) {
     return null;
 }

@@ -9,5 +9,6 @@ export function Dialog(props: {
     onOpenChange: (open: boolean) => void;
     purpose?: 'form' | 'info' | 'required';
 }) {
-    return <AstryxDialog {...props} children={props.children} />;
+    // Informational dialogs allow ordinary dismissal unless another purpose is supplied.
+    return <AstryxDialog {...props} children={props.children} purpose={props.purpose ?? 'info'} />;
 }

@@ -15,7 +15,14 @@ import { Collapsible } from '@astryxdesign/core/Collapsible';
 import { documentationLastUpdated } from '@/lib/documentation';
 import { Table, proportional } from '@astryxdesign/core/Table';
 
-export type ViewReference = Pick<(typeof references)[number], 'introduction' | 'properties' | 'practices'>;
+export type ViewReference = Pick<(typeof references)[number], 'introduction' | 'practices'> & {
+    properties: {
+        name: string;
+        type: string;
+        required?: boolean;
+        description: string;
+    }[];
+};
 export type ViewProperties = { name: string; properties: ViewReference['properties'] }[];
 export type ViewExample = { title: string; code: string; preview: ReactNode };
 
@@ -100,7 +107,16 @@ export default function ViewLayout({
                         code={
                             'members' in component && component.members
                                 ? `${name} [${component.category}]\n${component.members.map((member) => `- ${member.name}:\n  ${member.description}`).join('\n\n')}`
-                                : `${name} [${component.category}]\nProps and types\n${component.declaration}`
+                                : `${name} [${component.category}]\n${
+                                      ('properties' in component && component.properties
+                                          ? component.properties
+                                                .map(
+                                                    (prop) =>
+                                                        `- ${prop.name} (${prop.type}):\n  ${prop.description ?? ''}`
+                                                )
+                                                .join('\n\n')
+                                          : '') || 'No props.'
+                                  }`
                         }
                         language="plaintext"
                         hasLanguageLabel={false}

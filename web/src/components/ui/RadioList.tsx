@@ -13,10 +13,30 @@ export function RadioList(
         size?: 'sm' | 'md';
     }
 ) {
-    return <AstryxRadioList {...props} children={props.children} />;
+    // Keep radio choices vertical, visible, and enabled by default.
+    return (
+        <AstryxRadioList
+            {...props}
+            children={props.children}
+            orientation={props.orientation ?? 'vertical'}
+            size={props.size ?? 'md'}
+            isLabelHidden={props.isLabelHidden ?? false}
+            isRequired={props.isRequired ?? false}
+            isDisabled={props.isDisabled ?? false}
+        />
+    );
 }
 
 /** Defines one option using the surrounding RadioList's selection context. */
-export function RadioListItem(props: { label: string; value: string; description?: string; isDisabled?: boolean }) {
-    return <AstryxRadioListItem {...props} />;
+export function RadioListItem(props: {
+    /** Visible label identifying this choice. */
+    label: string;
+    /** Value passed to the surrounding RadioList when selected. */
+    value: string;
+    /** Optional helper text explaining the choice. */
+    description?: string;
+    isDisabled?: boolean;
+}) {
+    // Individual options remain selectable unless disabled.
+    return <AstryxRadioListItem {...props} isDisabled={props.isDisabled ?? false} />;
 }

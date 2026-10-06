@@ -1,4 +1,5 @@
 import type { FieldProps } from './types';
+import { useSize } from '@astryxdesign/core/SizeContext';
 import type { DateRange, ISODateString } from '@astryxdesign/core/Calendar';
 import { DateRangeInput as AstryxDateRangeInput } from '@astryxdesign/core/DateRangeInput';
 
@@ -17,9 +18,19 @@ export function DateRangeInput(
         hasClear?: boolean;
     }
 ) {
+    // Preserve inherited control sizing before applying the medium fallback.
+    const size = useSize(props.size, 'md');
+
+    // Allow clearing the controlled range while leaving date constraints to the Solution.
     return (
         <AstryxDateRangeInput
             {...props}
+            size={size}
+            placeholder={props.placeholder ?? 'Select date range'}
+            hasClear={props.hasClear ?? true}
+            isLabelHidden={props.isLabelHidden ?? false}
+            isRequired={props.isRequired ?? false}
+            isDisabled={props.isDisabled ?? false}
             numberOfMonths={2}
             weekStartsOn="sun"
             changeAction={undefined}

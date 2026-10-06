@@ -10,5 +10,6 @@ export function MoreMenu(props: {
     isDisabled?: boolean;
     onOpenChange?: (isOpen: boolean) => void;
 }) {
-    return <AstryxMoreMenu {...props} />;
+    // Keep the overflow trigger accessible and enabled without caller configuration.
+    return <AstryxMoreMenu {...props} label={props.label ?? 'More options'} isDisabled={props.isDisabled ?? false} />;
 }

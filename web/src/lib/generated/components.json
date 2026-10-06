@@ -6,33 +6,35 @@
         "properties": [
             {
                 "name": "name",
-                "type": "string | undefined",
+                "type": "string",
                 "required": false,
                 "description": "User name for initials and alt text."
             },
             {
                 "name": "shape",
-                "type": "\"circle\" | \"rounded\" | undefined",
+                "type": "\"circle\" | \"rounded\"",
                 "required": false,
-                "description": "Shape variant of the avatar. 'circle' (default) stays fully round. 'rounded' uses the element radius token so it matches UI corner rounding and can be set globally via theme. 'square' has no radius. Status dot positioning adapts automatically: 4-o'clock on circle, bottom-right corner on rounded/square."
+                "default": "'circle'",
+                "description": "Shape variant of the avatar. 'circle' (default) stays fully round. 'rounded' uses the element radius token so it matches UI corner rounding and can be set globally via theme. 'square' has no radius. Status dot positioning adapts automatically: 4-o'clock on circle, bottom-right corner on rounded/square. Default: 'circle'."
             },
             {
                 "name": "src",
-                "type": "string | null | undefined",
+                "type": "string | null",
                 "required": false,
                 "description": "Primary image source URL."
             },
             {
                 "name": "alt",
-                "type": "string | undefined",
+                "type": "string",
                 "required": false,
                 "description": "Alt text (falls back to name)."
             },
             {
                 "name": "size",
-                "type": "\"sm\" | \"md\" | \"lg\" | undefined",
+                "type": "\"sm\" | \"md\" | \"lg\"",
                 "required": false,
-                "description": "Avatar size. Use a named size ('xsm' 20px, 'sm' 24px, 'md' 36px, 'lg' 48px, 'xl' 128px) or a numeric pixel value. Avatar shares Icon's abbreviated scale, but its tiers are larger because avatars align with media rather than glyphs. Inside an AvatarGroup the group's size wins and this prop is ignored."
+                "default": "'md'",
+                "description": "Avatar size. Use a named size ('xsm' 20px, 'sm' 24px, 'md' 36px, 'lg' 48px, 'xl' 128px) or a numeric pixel value. Avatar shares Icon's abbreviated scale, but its tiers are larger because avatars align with media rather than glyphs. Inside an AvatarGroup the group's size wins and this prop is ignored. Default: 'md'."
             }
         ],
         "practices": [
@@ -53,21 +55,22 @@
         "properties": [
             {
                 "name": "label",
-                "type": "ViewNode",
+                "type": "ReactNode",
                 "required": false,
                 "description": "Badge text content. A badge is one line, so a label wider than the space available is cut with an ellipsis rather than escaping its container; a string or number label is also set as the badge's title so the full text stays reachable on hover."
             },
             {
                 "name": "icon",
-                "type": "ViewNode",
+                "type": "ReactNode",
                 "required": false,
                 "description": "Optional leading icon."
             },
             {
                 "name": "variant",
-                "type": "\"neutral\" | \"info\" | \"success\" | \"warning\" | \"error\" | \"blue\" | \"cyan\" | \"green\" | \"orange\" | \"pink\" | \"purple\" | \"red\" | \"teal\" | \"yellow\" | undefined",
+                "type": "\"neutral\" | \"info\" | \"success\" | \"warning\" | \"error\" | \"blue\" | \"cyan\" | \"green\" | \"orange\" | \"pink\" | \"purple\" | \"red\" | \"teal\" | \"yellow\"",
                 "required": false,
-                "description": "Visual style variant. Semantic variants (neutral, info, success, warning, error) use solid backgrounds. Non-semantic color variants use tinted backgrounds with colored text for categorization and tagging."
+                "default": "'neutral'",
+                "description": "Visual style variant. Semantic variants (neutral, info, success, warning, error) use solid backgrounds. Non-semantic color variants use tinted backgrounds with colored text for categorization and tagging. Default: 'neutral'."
             }
         ],
         "practices": [
@@ -126,79 +129,83 @@
             },
             {
                 "name": "variant",
-                "type": "\"primary\" | \"secondary\" | \"ghost\" | \"destructive\" | undefined",
+                "type": "\"primary\" | \"secondary\" | \"ghost\" | \"destructive\"",
                 "required": false,
-                "description": "Visual style variant."
+                "default": "'secondary'",
+                "description": "Visual style variant. Default: 'secondary'."
             },
             {
                 "name": "size",
-                "type": "\"sm\" | \"md\" | \"lg\" | undefined",
+                "type": "\"sm\" | \"md\" | \"lg\"",
                 "required": false,
-                "description": "Size variant."
+                "default": "'md'",
+                "description": "Size variant. Default: 'md'."
             },
             {
                 "name": "type",
-                "type": "\"button\" | \"submit\" | \"reset\" | undefined",
+                "type": "\"button\" | \"submit\" | \"reset\"",
                 "required": false,
-                "description": "HTML button type attribute."
+                "default": "'button'",
+                "description": "HTML button type attribute. Default: 'button'."
             },
             {
                 "name": "name",
-                "type": "string | undefined",
+                "type": "string",
                 "required": false,
                 "description": "HTML name attribute for form submission."
             },
             {
                 "name": "value",
-                "type": "string | number | readonly string[] | undefined",
+                "type": "string | number | readonly string[]",
                 "required": false,
                 "description": "HTML value attribute for form submission."
             },
             {
                 "name": "form",
-                "type": "string | undefined",
+                "type": "string",
                 "required": false,
                 "description": "Associates the button with a form element by ID."
             },
             {
                 "name": "icon",
-                "type": "ViewNode",
+                "type": "ReactNode",
                 "required": false,
                 "description": "Icon element rendered before the label text. An Astryx Icon with no explicit size defaults to sm for sm/md buttons and md for lg buttons."
             },
             {
                 "name": "endContent",
-                "type": "ViewNode",
+                "type": "ReactNode",
                 "required": false,
                 "description": "Trailing icon or badge rendered after the label. Ignored when isIconOnly is true. Color is inherited from the button variant."
             },
             {
                 "name": "tooltip",
-                "type": "string | undefined",
+                "type": "string",
                 "required": false,
                 "description": "Tooltip text shown on hover."
             },
             {
                 "name": "width",
-                "type": "string | number | undefined",
+                "type": "string | number",
                 "required": false,
                 "description": "Width of the button. Numbers are treated as pixels, strings are used as-is (e.g., '100%' for a full-width button). By default the button sizes to its content."
             },
             {
                 "name": "isDisabled",
-                "type": "boolean | undefined",
+                "type": "boolean",
                 "required": false,
-                "description": "Disables the button. When a tooltip is present, uses aria-disabled instead of native disabled so the button stays focusable."
+                "default": "false",
+                "description": "Disables the button. When a tooltip is present, uses aria-disabled instead of native disabled so the button stays focusable. Default: false."
             },
             {
                 "name": "href",
-                "type": "string | undefined",
+                "type": "string",
                 "required": false,
                 "description": "When provided, renders the button as a link element (<a> or custom link component). The destination follows the shared navigation rule described on the Link `href` prop."
             },
             {
                 "name": "onClick",
-                "type": "((event: ViewMouseEvent) => void | Promise<void>) | undefined",
+                "type": "(event: ViewMouseEvent) => void | Promise<void>",
                 "required": false,
                 "description": "Standard click handler (passed through from ButtonHTMLAttributes)."
             }
@@ -237,7 +244,7 @@
         "properties": [
             {
                 "name": "children",
-                "type": "ViewNode",
+                "type": "ReactNode",
                 "required": false,
                 "description": "Button or IconButton children."
             },
@@ -249,21 +256,24 @@
             },
             {
                 "name": "orientation",
-                "type": "\"horizontal\" | \"vertical\" | undefined",
+                "type": "\"horizontal\" | \"vertical\"",
                 "required": false,
-                "description": "Layout direction of the button group."
+                "default": "'horizontal'",
+                "description": "Layout direction of the button group. Default: 'horizontal'."
             },
             {
                 "name": "size",
-                "type": "\"sm\" | \"md\" | \"lg\" | undefined",
+                "type": "\"sm\" | \"md\" | \"lg\"",
                 "required": false,
-                "description": "Default size for buttons in the group. Individual buttons can override."
+                "default": "'md'",
+                "description": "Default size for buttons in the group. Individual buttons can override. Default: 'md'."
             },
             {
                 "name": "isDisabled",
-                "type": "boolean | undefined",
+                "type": "boolean",
                 "required": false,
-                "description": "Whether all buttons in the group are disabled."
+                "default": "false",
+                "description": "Whether all buttons in the group are disabled. Default: false."
             }
         ],
         "practices": [
@@ -318,37 +328,40 @@
             },
             {
                 "name": "description",
-                "type": "string | undefined",
+                "type": "string",
                 "required": false,
                 "description": "Description text displayed below the label."
             },
             {
                 "name": "isLabelHidden",
-                "type": "boolean | undefined",
+                "type": "boolean",
                 "required": false,
-                "description": "Whether to visually hide the label (still accessible to screen readers)."
+                "default": "false",
+                "description": "Whether to visually hide the label (still accessible to screen readers). Default: false."
             },
             {
                 "name": "isRequired",
-                "type": "boolean | undefined",
+                "type": "boolean",
                 "required": false,
-                "description": "Whether the checkbox is required. Mutually exclusive with isOptional."
+                "default": "false",
+                "description": "Whether the checkbox is required. Mutually exclusive with isOptional. Default: false."
             },
             {
                 "name": "isDisabled",
-                "type": "boolean | undefined",
+                "type": "boolean",
                 "required": false,
-                "description": "Whether the checkbox is disabled."
+                "default": "false",
+                "description": "Whether the checkbox is disabled. Default: false."
             },
             {
                 "name": "status",
-                "type": "{ type: \"success\" | \"warning\" | \"error\"; message?: string | undefined; } | undefined",
+                "type": "{ type: \"success\" | \"warning\" | \"error\"; message?: string; }",
                 "required": false,
                 "description": "Status indicator. Displays a colored message box below the checkbox and sets aria-invalid for errors."
             },
             {
                 "name": "width",
-                "type": "string | number | undefined",
+                "type": "string | number",
                 "required": false,
                 "description": "Width of the field (number = pixels, string used as-is, e.g. \"100%\"). Sizes the whole field (label, control, and status) so they stay aligned."
             },
@@ -360,27 +373,29 @@
             },
             {
                 "name": "onChange",
-                "type": "((value: boolean) => void) | undefined",
+                "type": "(value: boolean) => void",
                 "required": false,
                 "description": "Callback fired when the checkbox state changes."
             },
             {
                 "name": "isReadOnly",
-                "type": "boolean | undefined",
+                "type": "boolean",
                 "required": false,
-                "description": "Whether the checkbox is read-only. Displays the current state at full opacity but prevents interaction. Unlike `isDisabled`, read-only checkboxes are not visually dimmed."
+                "default": "false",
+                "description": "Whether the checkbox is read-only. Displays the current state at full opacity but prevents interaction. Unlike `isDisabled`, read-only checkboxes are not visually dimmed. Default: false."
             },
             {
                 "name": "htmlName",
-                "type": "string | undefined",
+                "type": "string",
                 "required": false,
                 "description": "The HTML name attribute for the underlying checkbox input, useful for form submissions (submits \"on\" when checked)."
             },
             {
                 "name": "size",
-                "type": "\"sm\" | \"md\" | undefined",
+                "type": "\"sm\" | \"md\"",
                 "required": false,
-                "description": "The size of the checkbox. sm for compact layouts, md for default."
+                "default": "'md'",
+                "description": "The size of the checkbox. sm for compact layouts, md for default. Default: 'md'."
             }
         ],
         "practices": [
@@ -419,21 +434,23 @@
             },
             {
                 "name": "language",
-                "type": "string | undefined",
+                "type": "string",
                 "required": false,
-                "description": "Language for syntax highlighting. Use \"plaintext\" to disable."
+                "default": "'plaintext'",
+                "description": "Language for syntax highlighting. Use \"plaintext\" to disable. Default: 'plaintext'."
             },
             {
                 "name": "title",
-                "type": "string | undefined",
+                "type": "string",
                 "required": false,
                 "description": "Filename or label shown in the header bar."
             },
             {
                 "name": "isWrapped",
-                "type": "boolean | undefined",
+                "type": "boolean",
                 "required": false,
-                "description": "Wrap long lines instead of enabling horizontal scroll."
+                "default": "false",
+                "description": "Wrap long lines instead of enabling horizontal scroll. Default: false."
             }
         ],
         "practices": [
@@ -462,37 +479,39 @@
         "properties": [
             {
                 "name": "children",
-                "type": "ViewNode",
+                "type": "ReactNode",
                 "required": false,
                 "description": "Content that collapses and expands."
             },
             {
                 "name": "trigger",
-                "type": "ViewNode",
+                "type": "ReactNode",
                 "required": true,
                 "description": "Content shown in the trigger area (always visible)."
             },
             {
                 "name": "defaultIsOpen",
-                "type": "boolean | undefined",
+                "type": "boolean",
                 "required": false,
-                "description": "Default open state (uncontrolled)."
+                "default": "true",
+                "description": "Default open state (uncontrolled). Default: true."
             },
             {
                 "name": "isOpen",
-                "type": "boolean | undefined",
+                "type": "boolean",
                 "required": false,
                 "description": "Controlled open state."
             },
             {
                 "name": "isDisabled",
-                "type": "boolean | undefined",
+                "type": "boolean",
                 "required": false,
-                "description": "Disable the item so its trigger can't be toggled (dimmed, aria-disabled, and out of the tab order). Doesn't collapse an already-open item."
+                "default": "false",
+                "description": "Disable the item so its trigger can't be toggled (dimmed, aria-disabled, and out of the tab order). Doesn't collapse an already-open item. Default: false."
             },
             {
                 "name": "onOpenChange",
-                "type": "((isOpen: boolean) => void) | undefined",
+                "type": "(isOpen: boolean) => void",
                 "required": false,
                 "description": "Callback invoked when the open state changes."
             }
@@ -545,87 +564,93 @@
             },
             {
                 "name": "description",
-                "type": "string | undefined",
+                "type": "string",
                 "required": false,
                 "description": "Helper text displayed below the label."
             },
             {
                 "name": "isLabelHidden",
-                "type": "boolean | undefined",
+                "type": "boolean",
                 "required": false,
-                "description": "Visually hide the label."
+                "default": "false",
+                "description": "Visually hide the label. Default: false."
             },
             {
                 "name": "isRequired",
-                "type": "boolean | undefined",
+                "type": "boolean",
                 "required": false,
-                "description": "Mark the field as required."
+                "default": "false",
+                "description": "Mark the field as required. Default: false."
             },
             {
                 "name": "isDisabled",
-                "type": "boolean | undefined",
+                "type": "boolean",
                 "required": false,
-                "description": "Disable the input and calendar."
+                "default": "false",
+                "description": "Disable the input and calendar. Default: false."
             },
             {
                 "name": "status",
-                "type": "{ type: \"success\" | \"warning\" | \"error\"; message?: string | undefined; } | undefined",
+                "type": "{ type: \"success\" | \"warning\" | \"error\"; message?: string; }",
                 "required": false,
                 "description": "Status indicator object for error, warning, or success states with a message."
             },
             {
                 "name": "width",
-                "type": "string | number | undefined",
+                "type": "string | number",
                 "required": false,
                 "description": "Width of the field (number = pixels, string used as-is, e.g. \"100%\"). Sizes the whole field (label, control, and status) so they stay aligned."
             },
             {
                 "name": "value",
-                "type": "`${number}${number}${number}${number}-${number}${number}-${number}${number}` | undefined",
+                "type": "`${number}${number}${number}${number}-${number}${number}-${number}${number}`",
                 "required": false,
                 "description": "Selected date in YYYY-MM-DD format."
             },
             {
                 "name": "onChange",
-                "type": "((value: `${number}${number}${number}${number}-${number}${number}-${number}${number}` | undefined) => void) | undefined",
+                "type": "(value: `${number}${number}${number}${number}-${number}${number}-${number}${number}` | undefined) => void",
                 "required": false,
                 "description": "Callback invoked when the selected date changes."
             },
             {
                 "name": "min",
-                "type": "`${number}${number}${number}${number}-${number}${number}-${number}${number}` | undefined",
+                "type": "`${number}${number}${number}${number}-${number}${number}-${number}${number}`",
                 "required": false,
                 "description": "Minimum selectable date (YYYY-MM-DD)."
             },
             {
                 "name": "max",
-                "type": "`${number}${number}${number}${number}-${number}${number}-${number}${number}` | undefined",
+                "type": "`${number}${number}${number}${number}-${number}${number}-${number}${number}`",
                 "required": false,
                 "description": "Maximum selectable date (YYYY-MM-DD)."
             },
             {
                 "name": "dateConstraints",
-                "type": "readonly ((date: Date) => boolean)[] | undefined",
+                "type": "readonly ((date: Date) => boolean)[]",
                 "required": false,
                 "description": "Array of custom constraint functions that disable specific dates."
             },
             {
                 "name": "placeholder",
-                "type": "string | undefined",
+                "type": "string",
                 "required": false,
-                "description": "Placeholder text shown in the text input."
+                "default": "'Select a date'",
+                "description": "Placeholder text shown in the text input. Default: 'Select a date'."
             },
             {
                 "name": "hasClear",
-                "type": "boolean | undefined",
+                "type": "boolean",
                 "required": false,
-                "description": "Shows a clear (×) button when a date value is set. Clicking it clears the value and returns focus to the input."
+                "default": "false",
+                "description": "Shows a clear (×) button when a date value is set. Clicking it clears the value and returns focus to the input. Default: false."
             },
             {
                 "name": "size",
-                "type": "\"sm\" | \"md\" | \"lg\" | undefined",
+                "type": "\"sm\" | \"md\" | \"lg\"",
                 "required": false,
-                "description": "Size of the input control."
+                "default": "'md'",
+                "description": "Size of the input control. Default: 'md'."
             }
         ],
         "practices": [
@@ -672,37 +697,40 @@
             },
             {
                 "name": "description",
-                "type": "string | undefined",
+                "type": "string",
                 "required": false,
                 "description": "Helper text displayed below the label."
             },
             {
                 "name": "isLabelHidden",
-                "type": "boolean | undefined",
+                "type": "boolean",
                 "required": false,
-                "description": "Visually hide the label."
+                "default": "false",
+                "description": "Visually hide the label. Default: false."
             },
             {
                 "name": "isRequired",
-                "type": "boolean | undefined",
+                "type": "boolean",
                 "required": false,
-                "description": "Mark the field as required."
+                "default": "false",
+                "description": "Mark the field as required. Default: false."
             },
             {
                 "name": "isDisabled",
-                "type": "boolean | undefined",
+                "type": "boolean",
                 "required": false,
-                "description": "Disable the trigger and picker."
+                "default": "false",
+                "description": "Disable the trigger and picker. Default: false."
             },
             {
                 "name": "status",
-                "type": "{ type: \"success\" | \"warning\" | \"error\"; message?: string | undefined; } | undefined",
+                "type": "{ type: \"success\" | \"warning\" | \"error\"; message?: string; }",
                 "required": false,
                 "description": "Status indicator for error, warning, or success states."
             },
             {
                 "name": "width",
-                "type": "string | number | undefined",
+                "type": "string | number",
                 "required": false,
                 "description": "Width of the field (number = pixels, string used as-is, e.g. \"100%\"). Sizes the whole field (label, control, and status) so they stay aligned."
             },
@@ -720,51 +748,54 @@
             },
             {
                 "name": "min",
-                "type": "`${number}${number}${number}${number}-${number}${number}-${number}${number}` | undefined",
+                "type": "`${number}${number}${number}${number}-${number}${number}-${number}${number}`",
                 "required": false,
                 "description": "Minimum selectable date. `ISODateString` is a template literal type (`\\`${number}${number}${number}${number}-${number}${number}-${number}${number}\\``). Pass a string literal like `\"2026-01-28\"`, not a runtime string variable. Import it from `@astryxdesign/core/Calendar` or use `as ISODateString` if computing the value dynamically."
             },
             {
                 "name": "max",
-                "type": "`${number}${number}${number}${number}-${number}${number}-${number}${number}` | undefined",
+                "type": "`${number}${number}${number}${number}-${number}${number}-${number}${number}`",
                 "required": false,
                 "description": "Maximum selectable date. Same template literal type as `min`: use a YYYY-MM-DD string literal or cast with `as ISODateString`."
             },
             {
                 "name": "dateConstraints",
-                "type": "readonly ((date: Date) => boolean)[] | undefined",
+                "type": "readonly ((date: Date) => boolean)[]",
                 "required": false,
                 "description": "Custom constraint functions to disable specific dates."
             },
             {
                 "name": "minRangeSpan",
-                "type": "number | undefined",
+                "type": "number",
                 "required": false,
                 "description": "Minimum days a selected range must span, counting both endpoints (`2` forbids a single-day range). Once a start is picked, days closer than this are disabled. Clicking the start again commits a one-day range when allowed, or cancels the in-progress selection when the minimum is longer. Defaults to 1 (same-day start and end allowed)."
             },
             {
                 "name": "maxRangeSpan",
-                "type": "number | undefined",
+                "type": "number",
                 "required": false,
                 "description": "Maximum days a selected range may span, counting both endpoints (`7` = a 7-day window, start + 6). Once a start is picked, days beyond this distance are disabled so the range cannot stretch past the cap. Rolling window relative to the start; for fixed calendar bounds use `min`/`max`. Constrains selection only; it never rewrites a `value` already wider than the cap (flag that with `status`)."
             },
             {
                 "name": "placeholder",
-                "type": "string | undefined",
+                "type": "string",
                 "required": false,
-                "description": "Placeholder text when no range is selected."
+                "default": "'Select date range'",
+                "description": "Placeholder text when no range is selected. Default: 'Select date range'."
             },
             {
                 "name": "size",
-                "type": "\"sm\" | \"md\" | \"lg\" | undefined",
+                "type": "\"sm\" | \"md\" | \"lg\"",
                 "required": false,
-                "description": "Size of the trigger."
+                "default": "'md'",
+                "description": "Size of the trigger. Default: 'md'."
             },
             {
                 "name": "hasClear",
-                "type": "boolean | undefined",
+                "type": "boolean",
                 "required": false,
-                "description": "Shows a clear button when a range is selected."
+                "default": "true",
+                "description": "Shows a clear button when a range is selected. Default: true."
             }
         ],
         "practices": [
@@ -803,43 +834,46 @@
             },
             {
                 "name": "description",
-                "type": "string | undefined",
+                "type": "string",
                 "required": false,
                 "description": "Helper text displayed below the label."
             },
             {
                 "name": "isLabelHidden",
-                "type": "boolean | undefined",
+                "type": "boolean",
                 "required": false,
-                "description": "Visually hide the label."
+                "default": "false",
+                "description": "Visually hide the label. Default: false."
             },
             {
                 "name": "isRequired",
-                "type": "boolean | undefined",
+                "type": "boolean",
                 "required": false,
-                "description": "Mark the field as required."
+                "default": "false",
+                "description": "Mark the field as required. Default: false."
             },
             {
                 "name": "isDisabled",
-                "type": "boolean | undefined",
+                "type": "boolean",
                 "required": false,
-                "description": "Disable the input and picker."
+                "default": "false",
+                "description": "Disable the input and picker. Default: false."
             },
             {
                 "name": "status",
-                "type": "{ type: \"success\" | \"warning\" | \"error\"; message?: string | undefined; } | undefined",
+                "type": "{ type: \"success\" | \"warning\" | \"error\"; message?: string; }",
                 "required": false,
                 "description": "Status indicator object for error, warning, or success states with a message."
             },
             {
                 "name": "width",
-                "type": "string | number | undefined",
+                "type": "string | number",
                 "required": false,
                 "description": "Width of the field (number = pixels, string used as-is, e.g. \"100%\"). Sizes the whole field (label, control, and status) so they stay aligned."
             },
             {
                 "name": "value",
-                "type": "ISODateTimeString | undefined",
+                "type": "ISODateTimeString",
                 "required": false,
                 "description": "Selected datetime in ISO 8601 format (YYYY-MM-DDTHH:MM or YYYY-MM-DDTHH:MM:SS)."
             },
@@ -851,45 +885,50 @@
             },
             {
                 "name": "min",
-                "type": "ISODateTimeString | undefined",
+                "type": "ISODateTimeString",
                 "required": false,
                 "description": "Minimum selectable datetime. Constrains both date and time selection."
             },
             {
                 "name": "max",
-                "type": "ISODateTimeString | undefined",
+                "type": "ISODateTimeString",
                 "required": false,
                 "description": "Maximum selectable datetime. Constrains both date and time selection."
             },
             {
                 "name": "placeholder",
-                "type": "string | undefined",
+                "type": "string",
                 "required": false,
-                "description": "Placeholder text shown in the date portion when no date is selected."
+                "default": "'Select a date'",
+                "description": "Placeholder text shown in the date portion when no date is selected. Default: 'Select a date'."
             },
             {
                 "name": "hasClear",
-                "type": "boolean | undefined",
+                "type": "boolean",
                 "required": false,
-                "description": "Shows a clear button when a datetime value is set."
+                "default": "false",
+                "description": "Shows a clear button when a datetime value is set. Default: false."
             },
             {
                 "name": "hasSeconds",
-                "type": "boolean | undefined",
+                "type": "boolean",
                 "required": false,
-                "description": "Include seconds in the time portion. Keeps Astryx's time field even when nativePicker selects native surfaces, because iOS has no seconds wheel."
+                "default": "false",
+                "description": "Include seconds in the time portion. Keeps Astryx's time field even when nativePicker selects native surfaces, because iOS has no seconds wheel. Default: false."
             },
             {
                 "name": "hourFormat",
-                "type": "\"12h\" | \"24h\" | undefined",
+                "type": "\"12h\" | \"24h\"",
                 "required": false,
-                "description": "Hour display format. '12h' shows AM/PM; '24h' uses 24-hour notation."
+                "default": "'12h'",
+                "description": "Hour display format. '12h' shows AM/PM; '24h' uses 24-hour notation. Default: '12h'."
             },
             {
                 "name": "size",
-                "type": "\"sm\" | \"md\" | \"lg\" | undefined",
+                "type": "\"sm\" | \"md\" | \"lg\"",
                 "required": false,
-                "description": "Size of the input control."
+                "default": "'md'",
+                "description": "Size of the input control. Default: 'md'."
             }
         ],
         "practices": [
@@ -930,7 +969,7 @@
         "properties": [
             {
                 "name": "children",
-                "type": "ViewNode",
+                "type": "ReactNode",
                 "required": false,
                 "description": "Dialog content."
             },
@@ -954,9 +993,10 @@
             },
             {
                 "name": "purpose",
-                "type": "\"info\" | \"form\" | \"required\" | undefined",
+                "type": "\"info\" | \"form\" | \"required\"",
                 "required": false,
-                "description": "Controls dismissal behavior: required disables Escape and backdrop click; form disables backdrop click after interaction; info allows both."
+                "default": "'info'",
+                "description": "Controls dismissal behavior: required disables Escape and backdrop click; form disables backdrop click after interaction; info allows both. Default: 'info'."
             }
         ],
         "practices": [
@@ -989,12 +1029,44 @@
     {
         "name": "Divider",
         "url": "https://astryx.atmeta.com/components/Divider",
-        "introduction": "Separates adjacent View content with the standard horizontal rule.",
-        "properties": [],
+        "introduction": "Separates View content with an optional label and configurable line presentation.",
+        "properties": [
+            {
+                "name": "label",
+                "type": "ReactNode",
+                "required": false,
+                "description": "Optional label centered on the divider."
+            },
+            {
+                "name": "variant",
+                "type": "\"subtle\" | \"strong\"",
+                "required": false,
+                "default": "'subtle'",
+                "description": "Visual weight of the divider line. Default: 'subtle'."
+            },
+            {
+                "name": "orientation",
+                "type": "\"horizontal\" | \"vertical\"",
+                "required": false,
+                "default": "'horizontal'",
+                "description": "Orientation of the divider. Default: 'horizontal'."
+            },
+            {
+                "name": "isFullBleed",
+                "type": "boolean",
+                "required": false,
+                "default": "false",
+                "description": "Extend the divider to container edges with negative margins. Default: false."
+            }
+        ],
         "practices": [
             {
                 "guidance": true,
                 "description": "Use subtle dividers between related content sections and strong dividers for high-contrast boundaries."
+            },
+            {
+                "guidance": true,
+                "description": "Add a label to the divider when sections need a visible category heading."
             },
             {
                 "guidance": false,
@@ -1009,9 +1081,10 @@
         "properties": [
             {
                 "name": "button",
-                "type": "{ label: string; variant?: \"primary\" | \"secondary\" | \"ghost\" | \"destructive\" | undefined; size?: \"sm\" | \"md\" | \"lg\" | undefined; isDisabled?: boolean | undefined; } | undefined",
+                "type": "{ label: string; variant?: \"primary\" | \"secondary\" | \"ghost\" | \"destructive\"; size?: \"sm\" | \"md\" | \"lg\"; isDisabled?: boolean; }",
                 "required": false,
-                "description": "Props for the trigger button (Button props except onClick)."
+                "default": "{ label: 'Menu', variant: 'secondary', size: 'md', isDisabled: false }",
+                "description": "Props for the trigger button (Button props except onClick). Default: { label: 'Menu', variant: 'secondary', size: 'md', isDisabled: false }."
             },
             {
                 "name": "items",
@@ -1021,13 +1094,13 @@
             },
             {
                 "name": "isMenuOpen",
-                "type": "boolean | undefined",
+                "type": "boolean",
                 "required": false,
                 "description": "Controlled open state for the menu. Mounting with true renders the menu open without moving focus into it; focus moves to the first item only when the menu opens after mount."
             },
             {
                 "name": "onOpenChange",
-                "type": "((isOpen: boolean) => void) | undefined",
+                "type": "(isOpen: boolean) => void",
                 "required": false,
                 "description": "Callback fired when the open state changes."
             }
@@ -1072,9 +1145,10 @@
             },
             {
                 "name": "isCompact",
-                "type": "boolean | undefined",
+                "type": "boolean",
                 "required": false,
-                "description": "Enables the compact variant with reduced spacing for constrained content areas."
+                "default": "false",
+                "description": "Enables the compact variant with reduced spacing for constrained content areas. Default: false."
             }
         ],
         "practices": [
@@ -1113,37 +1187,40 @@
             },
             {
                 "name": "description",
-                "type": "string | undefined",
+                "type": "string",
                 "required": false,
                 "description": "Description text displayed between the label and input."
             },
             {
                 "name": "isLabelHidden",
-                "type": "boolean | undefined",
+                "type": "boolean",
                 "required": false,
-                "description": "Visually hides the label while keeping it accessible to screen readers."
+                "default": "false",
+                "description": "Visually hides the label while keeping it accessible to screen readers. Default: false."
             },
             {
                 "name": "isRequired",
-                "type": "boolean | undefined",
+                "type": "boolean",
                 "required": false,
-                "description": "Displays a \"Required\" indicator next to the label and adds a screen-reader-only \"Required\" description to the trigger (assistive tech does not reliably announce aria-required on the trigger). Mutually exclusive with isOptional."
+                "default": "false",
+                "description": "Displays a \"Required\" indicator next to the label and adds a screen-reader-only \"Required\" description to the trigger (assistive tech does not reliably announce aria-required on the trigger). Mutually exclusive with isOptional. Default: false."
             },
             {
                 "name": "isDisabled",
-                "type": "boolean | undefined",
+                "type": "boolean",
                 "required": false,
-                "description": "Disables the input, preventing interaction and dimming the element."
+                "default": "false",
+                "description": "Disables the input, preventing interaction and dimming the element. Default: false."
             },
             {
                 "name": "status",
-                "type": "{ type: \"success\" | \"warning\" | \"error\"; message?: string | undefined; } | undefined",
+                "type": "{ type: \"success\" | \"warning\" | \"error\"; message?: string; }",
                 "required": false,
                 "description": "Validation status: applies a colored border. If message is provided, displays a floating message below the input. Error type also sets aria-invalid."
             },
             {
                 "name": "width",
-                "type": "string | number | undefined",
+                "type": "string | number",
                 "required": false,
                 "description": "Width of the field (number = pixels, string used as-is, e.g. \"100%\"). Sizes the whole field (label, control, and status) so they stay aligned."
             },
@@ -1161,39 +1238,42 @@
             },
             {
                 "name": "accept",
-                "type": "string | undefined",
+                "type": "string",
                 "required": false,
                 "description": "Accepted file types. Uses the HTML accept attribute format (e.g. \"image/*\", \".pdf,.doc\")."
             },
             {
                 "name": "isMultiple",
-                "type": "boolean | undefined",
+                "type": "boolean",
                 "required": false,
-                "description": "Whether multiple files can be selected. When true, value and onChange use File[] instead of File."
+                "default": "false",
+                "description": "Whether multiple files can be selected. When true, value and onChange use File[] instead of File. Default: false."
             },
             {
                 "name": "maxSize",
-                "type": "number | undefined",
+                "type": "number",
                 "required": false,
                 "description": "Maximum file size in bytes. Files exceeding this are rejected with an error status."
             },
             {
                 "name": "maxFiles",
-                "type": "number | undefined",
+                "type": "number",
                 "required": false,
                 "description": "Maximum number of files (only applies when isMultiple is true)."
             },
             {
                 "name": "placeholder",
-                "type": "string | undefined",
+                "type": "string",
                 "required": false,
-                "description": "Placeholder text shown when no file is selected."
+                "default": "(props.isMultiple ? 'Choose files' : 'Choose file')",
+                "description": "Placeholder text shown when no file is selected. Default: (props.isMultiple ? 'Choose files' : 'Choose file')."
             },
             {
                 "name": "mode",
-                "type": "\"input\" | \"dropzone\" | undefined",
+                "type": "\"input\" | \"dropzone\"",
                 "required": false,
-                "description": "Visual mode. 'input' is a compact inline style; 'dropzone' is a larger area with drag-and-drop support."
+                "default": "'input'",
+                "description": "Visual mode. 'input' is a compact inline style; 'dropzone' is a larger area with drag-and-drop support. Default: 'input'."
             }
         ],
         "practices": [
@@ -1226,21 +1306,23 @@
         "properties": [
             {
                 "name": "children",
-                "type": "ViewNode",
+                "type": "ReactNode",
                 "required": false,
                 "description": "Grid content."
             },
             {
                 "name": "columns",
-                "type": "number | undefined",
+                "type": "number",
                 "required": false,
-                "description": "Column configuration. Use a number for fixed columns (e.g. `columns={3}`). Use an object for responsive columns: `minWidth` sets the minimum column width in px, `repeat` controls track behavior (`\"fill\"` preserves empty tracks for consistent widths, `\"fit\"` collapses empty tracks so items stretch; defaults to `\"fill\"`), and `max` caps the maximum number of columns."
+                "default": "1",
+                "description": "Column configuration. Use a number for fixed columns (e.g. `columns={3}`). Use an object for responsive columns: `minWidth` sets the minimum column width in px, `repeat` controls track behavior (`\"fill\"` preserves empty tracks for consistent widths, `\"fit\"` collapses empty tracks so items stretch; defaults to `\"fill\"`), and `max` caps the maximum number of columns. Default: 1."
             },
             {
                 "name": "gap",
-                "type": "Spacing | undefined",
+                "type": "0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10",
                 "required": false,
-                "description": "Spacing between all items."
+                "default": "3",
+                "description": "Spacing between all items. Default: 3."
             }
         ],
         "practices": [
@@ -1269,15 +1351,16 @@
         "properties": [
             {
                 "name": "children",
-                "type": "ViewNode",
+                "type": "ReactNode",
                 "required": false,
                 "description": "Heading content."
             },
             {
                 "name": "level",
-                "type": "1 | 2 | 3 | 4 | 5 | 6 | undefined",
+                "type": "1 | 2 | 3 | 4 | 5 | 6",
                 "required": false,
-                "description": "Heading level. Determines the semantic HTML element (h1-h6) and the visual styling from the theme (unless `type` is set)."
+                "default": "2",
+                "description": "Heading level. Determines the semantic HTML element (h1-h6) and the visual styling from the theme (unless `type` is set). Default: 2."
             }
         ],
         "practices": [
@@ -1302,35 +1385,19 @@
     {
         "name": "Icon",
         "url": "https://astryx.atmeta.com/components/Icon",
-        "introduction": "Icons are small visual symbols that represent actions, objects, or concepts. They improve scannability and reinforce meaning alongside text. Supports both direct SVG components and semantic icon names that adapt to the active theme.",
+        "introduction": "Renders a registered Lucide icon at the requested Astryx size.",
         "properties": [
             {
                 "name": "icon",
-                "type": "IconName | ComponentType<SVGProps>",
+                "type": "string",
                 "required": true,
                 "description": "Semantic icon name or SVG component. Valid semantic names: close, chevronDown, chevronLeft, chevronRight, chevronsLeft, chevronsRight, check, success, error, warning, info, calendar, clock, externalLink, menu, moreHorizontal, search, arrowUp, arrowDown, arrowsUpDown, funnel, eyeSlash, viewColumns, copy, checkDouble, wrench, stop, microphone. For any icon not in this list, pass an SVG component directly (e.g. import from lucide-react or @heroicons/react). Note: this prop is called `icon`, not `name`."
             },
             {
-                "name": "color",
-                "type": "'primary' | 'secondary' | 'tertiary' | 'disabled' | 'accent' | 'success' | 'error' | 'warning' | 'inherit'",
-                "default": "'inherit'",
-                "description": "Color variant mapped to Astryx icon color tokens."
-            },
-            {
                 "name": "size",
-                "type": "'xsm' | 'sm' | 'md' | 'lg'",
-                "default": "Contextual; otherwise 'md'",
+                "type": "\"sm\" | \"md\" | \"lg\"",
+                "required": true,
                 "description": "Icon size. An explicit value wins. When omitted, Icon uses the nearest default supplied by an owning Astryx component for its icon slot, then falls back to md when no contextual default exists."
-            },
-            {
-                "name": "label",
-                "type": "string",
-                "description": "Accessible name for a MEANINGFUL, standalone icon (a status glyph or icon-only indicator with no adjacent text). Setting it exposes the icon to screen readers as role=\"img\" with this text as the accessible name (aria-label) and removes the default aria-hidden. Omit it (default) for decorative icons and the icon stays hidden from assistive tech (aria-hidden=\"true\"). This is the accessible-name / alt-text prop for icons: one prop instead of manually setting aria-label + role + aria-hidden. An empty string is treated as decorative. Do not set it when an interactive parent (Button, IconButton, link) already names the control."
-            },
-            {
-                "name": "xstyle",
-                "type": "StyleXStyles",
-                "description": "StyleX styles for customization (color, size, opacity). Folded into the icon's own stylex.props() call so it composes with the base color/size styles. Must be a stylex.create() value, not an inline style object like style={{}}."
             }
         ],
         "practices": [
@@ -1341,18 +1408,6 @@
             {
                 "guidance": true,
                 "description": "Override icons through the theme, not globally: defineTheme({icons: {close: <XMarkIcon />}}) scopes the swap to the active <Theme>, and extends shallow-merges it into derived themes. registerIcons() mutates a process-wide registry and warns in dev, so keep it for app bootstrap rather than making it a library's theming seam."
-            },
-            {
-                "guidance": true,
-                "description": "Pair icons with text labels for accessibility; icon-only elements need an accessible label."
-            },
-            {
-                "guidance": true,
-                "description": "For a meaningful standalone icon (no adjacent text), give it an accessible name via the `label` prop: it sets role=\"img\" + aria-label and unhides the icon."
-            },
-            {
-                "guidance": true,
-                "description": "Use color tokens for icon colors, not hardcoded hex values."
             },
             {
                 "guidance": true,
@@ -1369,10 +1424,6 @@
             {
                 "guidance": false,
                 "description": "Mix icon styles (e.g. outline and filled) within the same context."
-            },
-            {
-                "guidance": false,
-                "description": "Render raw SVG elements; always wrap in Icon for consistent sizing and color."
             },
             {
                 "guidance": false,
@@ -1393,37 +1444,40 @@
             },
             {
                 "name": "icon",
-                "type": "ViewNode",
+                "type": "ReactNode",
                 "required": true,
                 "description": "Icon element rendered inside the button. An Astryx Icon with no explicit size defaults to sm for sm/md buttons and md for lg buttons."
             },
             {
                 "name": "variant",
-                "type": "\"primary\" | \"secondary\" | \"ghost\" | \"destructive\" | undefined",
+                "type": "\"primary\" | \"secondary\" | \"ghost\" | \"destructive\"",
                 "required": false,
-                "description": "Visual style variant."
+                "default": "'secondary'",
+                "description": "Visual style variant. Default: 'secondary'."
             },
             {
                 "name": "size",
-                "type": "\"sm\" | \"md\" | \"lg\" | undefined",
+                "type": "\"sm\" | \"md\" | \"lg\"",
                 "required": false,
-                "description": "Size variant."
+                "default": "'md'",
+                "description": "Size variant. Default: 'md'."
             },
             {
                 "name": "tooltip",
-                "type": "string | undefined",
+                "type": "string",
                 "required": false,
                 "description": "Tooltip text shown on hover."
             },
             {
                 "name": "isDisabled",
-                "type": "boolean | undefined",
+                "type": "boolean",
                 "required": false,
-                "description": "Disables the button."
+                "default": "false",
+                "description": "Disables the button. Default: false."
             },
             {
                 "name": "onClick",
-                "type": "((event: ViewMouseEvent) => void | Promise<void>) | undefined",
+                "type": "(event: ViewMouseEvent) => void | Promise<void>",
                 "required": false,
                 "description": "Standard click handler."
             }
@@ -1464,7 +1518,7 @@
             },
             {
                 "name": "children",
-                "type": "ViewNode",
+                "type": "ReactNode",
                 "required": false,
                 "description": "Link content"
             }
@@ -1491,19 +1545,20 @@
         "properties": [
             {
                 "name": "children",
-                "type": "ViewNode",
+                "type": "ReactNode",
                 "required": false,
                 "description": "Metadata items (MetadataListItem components)."
             },
             {
                 "name": "columns",
-                "type": "number | \"multi\" | \"single\" | undefined",
+                "type": "number | \"multi\" | \"single\"",
                 "required": false,
-                "description": "Column layout mode."
+                "default": "'single'",
+                "description": "Column layout mode. Default: 'single'."
             },
             {
                 "name": "title",
-                "type": "ViewNode",
+                "type": "ReactNode",
                 "required": false,
                 "description": "Optional title or heading above the list."
             }
@@ -1532,25 +1587,27 @@
             },
             {
                 "name": "label",
-                "type": "string | undefined",
+                "type": "string",
                 "required": false,
-                "description": "Accessible label for the trigger button (aria-label) and tooltip text."
+                "default": "'More options'",
+                "description": "Accessible label for the trigger button (aria-label) and tooltip text. Default: 'More options'."
             },
             {
                 "name": "icon",
-                "type": "ViewNode",
+                "type": "ReactNode",
                 "required": false,
                 "description": "Override the default three-dot icon. Accepts any ReactNode."
             },
             {
                 "name": "isDisabled",
-                "type": "boolean | undefined",
+                "type": "boolean",
                 "required": false,
-                "description": "Whether the menu trigger is disabled."
+                "default": "false",
+                "description": "Whether the menu trigger is disabled. Default: false."
             },
             {
                 "name": "onOpenChange",
-                "type": "((isOpen: boolean) => void) | undefined",
+                "type": "(isOpen: boolean) => void",
                 "required": false,
                 "description": "Callback fired when the menu opens or closes."
             }
@@ -1583,37 +1640,40 @@
             },
             {
                 "name": "description",
-                "type": "string | undefined",
+                "type": "string",
                 "required": false,
                 "description": "Helper text displayed below the label."
             },
             {
                 "name": "isLabelHidden",
-                "type": "boolean | undefined",
+                "type": "boolean",
                 "required": false,
-                "description": "Visually hides the label while keeping it accessible."
+                "default": "false",
+                "description": "Visually hides the label while keeping it accessible. Default: false."
             },
             {
                 "name": "isRequired",
-                "type": "boolean | undefined",
+                "type": "boolean",
                 "required": false,
-                "description": "Marks the field as required."
+                "default": "false",
+                "description": "Marks the field as required. Default: false."
             },
             {
                 "name": "isDisabled",
-                "type": "boolean | undefined",
+                "type": "boolean",
                 "required": false,
-                "description": "Disables the selector."
+                "default": "false",
+                "description": "Disables the selector. Default: false."
             },
             {
                 "name": "status",
-                "type": "{ type: \"success\" | \"warning\" | \"error\"; message?: string | undefined; } | undefined",
+                "type": "{ type: \"success\" | \"warning\" | \"error\"; message?: string; }",
                 "required": false,
                 "description": "Validation status with an optional message."
             },
             {
                 "name": "width",
-                "type": "string | number | undefined",
+                "type": "string | number",
                 "required": false,
                 "description": "Width of the field (number = pixels, string used as-is, e.g. \"100%\"). Sizes the whole field (label, control, and status) so they stay aligned."
             },
@@ -1637,45 +1697,51 @@
             },
             {
                 "name": "placeholder",
-                "type": "string | undefined",
+                "type": "string",
                 "required": false,
-                "description": "Placeholder text shown when no value is selected."
+                "default": "'Select...'",
+                "description": "Placeholder text shown when no value is selected. Default: 'Select...'."
             },
             {
                 "name": "size",
-                "type": "\"sm\" | \"md\" | \"lg\" | undefined",
+                "type": "\"sm\" | \"md\" | \"lg\"",
                 "required": false,
-                "description": "Size variant for the selector."
+                "default": "'md'",
+                "description": "Size variant for the selector. Default: 'md'."
             },
             {
                 "name": "hasSelectAll",
-                "type": "boolean | undefined",
+                "type": "boolean",
                 "required": false,
-                "description": "Whether to show a select-all checkbox."
+                "default": "false",
+                "description": "Whether to show a select-all checkbox. Default: false."
             },
             {
                 "name": "hasSearch",
-                "type": "boolean | undefined",
+                "type": "boolean",
                 "required": false,
-                "description": "Whether to show a search input for filtering options. As the user types, the match count (or \"No results found\") is announced to screen readers via a polite live region. The search field has built-in affordances: a leading magnifier icon and, once a query is typed, a trailing clear (✕) button that resets the query and returns focus to the input."
+                "default": "false",
+                "description": "Whether to show a search input for filtering options. As the user types, the match count (or \"No results found\") is announced to screen readers via a polite live region. The search field has built-in affordances: a leading magnifier icon and, once a query is typed, a trailing clear (✕) button that resets the query and returns focus to the input. Default: false."
             },
             {
                 "name": "isReadOnly",
-                "type": "boolean | undefined",
+                "type": "boolean",
                 "required": false,
-                "description": "Makes the selector read-only: the selected values stay visible, focusable, and included in form submission, and retain their combobox identity with aria-readonly. The selection surface, clear action, and disclosure indicator are removed. Unlike isDisabled, the control is not dimmed. isDisabled takes precedence when both are set."
+                "default": "false",
+                "description": "Makes the selector read-only: the selected values stay visible, focusable, and included in form submission, and retain their combobox identity with aria-readonly. The selection surface, clear action, and disclosure indicator are removed. Unlike isDisabled, the control is not dimmed. isDisabled takes precedence when both are set. Default: false."
             },
             {
                 "name": "htmlName",
-                "type": "string | undefined",
+                "type": "string",
                 "required": false,
                 "description": "The HTML name attribute for form submissions. Renders one hidden input per selected value, like a native multi-select."
             },
             {
                 "name": "hasClear",
-                "type": "boolean | undefined",
+                "type": "boolean",
                 "required": false,
-                "description": "Shows a clear button when values are selected."
+                "default": "false",
+                "description": "Shows a clear button when values are selected. Default: false."
             }
         ],
         "practices": [
@@ -1718,111 +1784,119 @@
             },
             {
                 "name": "description",
-                "type": "string | undefined",
+                "type": "string",
                 "required": false,
                 "description": "Description text displayed between the label and input."
             },
             {
                 "name": "isLabelHidden",
-                "type": "boolean | undefined",
+                "type": "boolean",
                 "required": false,
-                "description": "Visually hide the label (still accessible to screen readers)."
+                "default": "false",
+                "description": "Visually hide the label (still accessible to screen readers). Default: false."
             },
             {
                 "name": "isRequired",
-                "type": "boolean | undefined",
+                "type": "boolean",
                 "required": false,
-                "description": "Whether the field is required (mutually exclusive with isOptional)."
+                "default": "false",
+                "description": "Whether the field is required (mutually exclusive with isOptional). Default: false."
             },
             {
                 "name": "isDisabled",
-                "type": "boolean | undefined",
+                "type": "boolean",
                 "required": false,
-                "description": "Whether the input is disabled."
+                "default": "false",
+                "description": "Whether the input is disabled. Default: false."
             },
             {
                 "name": "status",
-                "type": "{ type: \"success\" | \"warning\" | \"error\"; message?: string | undefined; } | undefined",
+                "type": "{ type: \"success\" | \"warning\" | \"error\"; message?: string; }",
                 "required": false,
                 "description": "Validation status with optional message."
             },
             {
                 "name": "width",
-                "type": "string | number | undefined",
+                "type": "string | number",
                 "required": false,
                 "description": "Width of the field (number = pixels, string used as-is, e.g. \"100%\"). Sizes the whole field (label, control, and status) so they stay aligned."
             },
             {
                 "name": "value",
-                "type": "number | null | undefined",
+                "type": "number | null",
                 "required": true,
                 "description": "Current value of the input."
             },
             {
                 "name": "min",
-                "type": "number | null | undefined",
+                "type": "number | null",
                 "required": false,
                 "description": "Minimum value allowed. A smaller entry commits at this value on blur or Enter."
             },
             {
                 "name": "max",
-                "type": "number | null | undefined",
+                "type": "number | null",
                 "required": false,
                 "description": "Maximum value allowed. A larger entry commits at this value on blur or Enter."
             },
             {
                 "name": "step",
-                "type": "number | null | undefined",
+                "type": "number | null",
                 "required": false,
-                "description": "Step increment for the input."
+                "default": "1",
+                "description": "Step increment for the input. Default: 1."
             },
             {
                 "name": "placeholder",
-                "type": "string | undefined",
+                "type": "string",
                 "required": false,
                 "description": "Placeholder text."
             },
             {
                 "name": "size",
-                "type": "\"sm\" | \"md\" | \"lg\" | undefined",
+                "type": "\"sm\" | \"md\" | \"lg\"",
                 "required": false,
-                "description": "Size variant."
+                "default": "'md'",
+                "description": "Size variant. Default: 'md'."
             },
             {
                 "name": "isReadOnly",
-                "type": "boolean | undefined",
+                "type": "boolean",
                 "required": false,
-                "description": "Makes the input read-only: the value is shown at full opacity and still submits with the form, but cannot be edited. Unlike isDisabled, a read-only input is not dimmed and stays in the tab order. Stepping is off in every form while read-only: arrow keys, the wheel, and the number steppers. isDisabled takes precedence when both are set."
+                "default": "false",
+                "description": "Makes the input read-only: the value is shown at full opacity and still submits with the form, but cannot be edited. Unlike isDisabled, a read-only input is not dimmed and stays in the tab order. Stepping is off in every form while read-only: arrow keys, the wheel, and the number steppers. isDisabled takes precedence when both are set. Default: false."
             },
             {
                 "name": "units",
-                "type": "string | null | undefined",
+                "type": "string | null",
                 "required": false,
                 "description": "Units text to display at the end of the input (e.g., \"%\" or \"GB\")."
             },
             {
                 "name": "isIntegerOnly",
-                "type": "boolean | undefined",
+                "type": "boolean",
                 "required": false,
-                "description": "Only allow integer values (no floating point)."
+                "default": "false",
+                "description": "Only allow integer values (no floating point). Default: false."
             },
             {
                 "name": "htmlName",
-                "type": "string | undefined",
+                "type": "string",
                 "required": false,
                 "description": "HTML name attribute for form submissions."
             },
             {
                 "name": "autoComplete",
-                "type": "string | undefined",
+                "type": "string",
                 "required": false,
                 "description": "HTML autocomplete attribute."
             },
             {
                 "name": "hasClear",
-                "type": "boolean | undefined",
+                "type": "(false) | (true)",
                 "required": false,
-                "description": "Shows a clear (×) button when the input has a value. When true, the onChange callback also accepts null to signal the user cleared the input."
+                "default": "false",
+                "description": "Shows a clear (×) button when the input has a value. When true, the onChange callback also accepts null to signal the user cleared the input. Default: false."
             },
             {
                 "name": "onChange",
@@ -1863,39 +1937,45 @@
             },
             {
                 "name": "value",
-                "type": "number | undefined",
+                "type": "number",
                 "required": false,
-                "description": "Current value (ignored when indeterminate)."
+                "default": "0",
+                "description": "Current value (ignored when indeterminate). Default: 0."
             },
             {
                 "name": "max",
-                "type": "number | undefined",
+                "type": "number",
                 "required": false,
-                "description": "Maximum value."
+                "default": "100",
+                "description": "Maximum value. Default: 100."
             },
             {
                 "name": "isLabelHidden",
-                "type": "boolean | undefined",
+                "type": "boolean",
                 "required": false,
-                "description": "Visually hide the label (remains accessible)."
+                "default": "false",
+                "description": "Visually hide the label (remains accessible). Default: false."
             },
             {
                 "name": "hasValueLabel",
-                "type": "boolean | undefined",
+                "type": "boolean",
                 "required": false,
-                "description": "Show formatted value text (ignored when indeterminate)."
+                "default": "false",
+                "description": "Show formatted value text (ignored when indeterminate). Default: false."
             },
             {
                 "name": "variant",
-                "type": "\"neutral\" | \"success\" | \"warning\" | \"error\" | \"accent\" | undefined",
+                "type": "\"neutral\" | \"success\" | \"warning\" | \"error\" | \"accent\"",
                 "required": false,
-                "description": "Semantic color variant."
+                "default": "'accent'",
+                "description": "Semantic color variant. Default: 'accent'."
             },
             {
                 "name": "isIndeterminate",
-                "type": "boolean | undefined",
+                "type": "boolean",
                 "required": false,
-                "description": "Animated loading indicator for unknown progress."
+                "default": "false",
+                "description": "Animated loading indicator for unknown progress. Default: false."
             }
         ],
         "practices": [
@@ -1938,43 +2018,46 @@
             },
             {
                 "name": "description",
-                "type": "string | undefined",
+                "type": "string",
                 "required": false,
                 "description": "Description text displayed below the label."
             },
             {
                 "name": "isLabelHidden",
-                "type": "boolean | undefined",
+                "type": "boolean",
                 "required": false,
-                "description": "Whether to visually hide the label."
+                "default": "false",
+                "description": "Whether to visually hide the label. Default: false."
             },
             {
                 "name": "isRequired",
-                "type": "boolean | undefined",
+                "type": "boolean",
                 "required": false,
-                "description": "Whether the radio group is required."
+                "default": "false",
+                "description": "Whether the radio group is required. Default: false."
             },
             {
                 "name": "isDisabled",
-                "type": "boolean | undefined",
+                "type": "boolean",
                 "required": false,
-                "description": "Whether all radio items are disabled."
+                "default": "false",
+                "description": "Whether all radio items are disabled. Default: false."
             },
             {
                 "name": "status",
-                "type": "{ type: \"success\" | \"warning\" | \"error\"; message?: string | undefined; } | undefined",
+                "type": "{ type: \"success\" | \"warning\" | \"error\"; message?: string; }",
                 "required": false,
                 "description": "Status indicator ({ type, message })."
             },
             {
                 "name": "width",
-                "type": "string | number | undefined",
+                "type": "string | number",
                 "required": false,
                 "description": "Width of the field (number = pixels, string used as-is, e.g. \"100%\"). Sizes the whole field (label, control, and status) so they stay aligned."
             },
             {
                 "name": "children",
-                "type": "ViewNode",
+                "type": "ReactNode",
                 "required": false,
                 "description": "RadioListItem elements."
             },
@@ -1992,21 +2075,23 @@
             },
             {
                 "name": "orientation",
-                "type": "\"horizontal\" | \"vertical\" | undefined",
+                "type": "\"horizontal\" | \"vertical\"",
                 "required": false,
-                "description": "Layout direction of the radio items."
+                "default": "'vertical'",
+                "description": "Layout direction of the radio items. Default: 'vertical'."
             },
             {
                 "name": "htmlName",
-                "type": "string | undefined",
+                "type": "string",
                 "required": false,
                 "description": "The HTML name attribute shared by the radio inputs, useful for form submissions. When omitted, a unique internal name still groups the radios."
             },
             {
                 "name": "size",
-                "type": "\"sm\" | \"md\" | undefined",
+                "type": "\"sm\" | \"md\"",
                 "required": false,
-                "description": "Size of the radio controls."
+                "default": "'md'",
+                "description": "Size of the radio controls. Default: 'md'."
             }
         ],
         "practices": [
@@ -2049,37 +2134,40 @@
             },
             {
                 "name": "description",
-                "type": "string | undefined",
+                "type": "string",
                 "required": false,
                 "description": "Helper text displayed below the label."
             },
             {
                 "name": "isLabelHidden",
-                "type": "boolean | undefined",
+                "type": "boolean",
                 "required": false,
-                "description": "Visually hides the label while keeping it accessible."
+                "default": "false",
+                "description": "Visually hides the label while keeping it accessible. Default: false."
             },
             {
                 "name": "isRequired",
-                "type": "boolean | undefined",
+                "type": "boolean",
                 "required": false,
-                "description": "Marks the field as required."
+                "default": "false",
+                "description": "Marks the field as required. Default: false."
             },
             {
                 "name": "isDisabled",
-                "type": "boolean | undefined",
+                "type": "boolean",
                 "required": false,
-                "description": "Disables the selector."
+                "default": "false",
+                "description": "Disables the selector. Default: false."
             },
             {
                 "name": "status",
-                "type": "{ type: \"success\" | \"warning\" | \"error\"; message?: string | undefined; } | undefined",
+                "type": "{ type: \"success\" | \"warning\" | \"error\"; message?: string; }",
                 "required": false,
                 "description": "Validation status with an optional message."
             },
             {
                 "name": "width",
-                "type": "string | number | undefined",
+                "type": "string | number",
                 "required": false,
                 "description": "Width of the field (number = pixels, string used as-is, e.g. \"100%\"). Sizes the whole field (label, control, and status) so they stay aligned."
             },
@@ -2091,49 +2179,54 @@
             },
             {
                 "name": "hasSearch",
-                "type": "boolean | undefined",
+                "type": "boolean",
                 "required": false,
-                "description": "Whether to show a search input for filtering options. As the user types, the match count (or \"No results found\") is announced to screen readers via a polite live region. The search field has built-in affordances: a leading magnifier icon and, once a query is typed, a trailing clear (✕) button that resets the query and returns focus to the input."
+                "default": "false",
+                "description": "Whether to show a search input for filtering options. As the user types, the match count (or \"No results found\") is announced to screen readers via a polite live region. The search field has built-in affordances: a leading magnifier icon and, once a query is typed, a trailing clear (✕) button that resets the query and returns focus to the input. Default: false."
             },
             {
                 "name": "placeholder",
-                "type": "string | undefined",
+                "type": "string",
                 "required": false,
-                "description": "Placeholder text shown when no value is selected."
+                "default": "'Select...'",
+                "description": "Placeholder text shown when no value is selected. Default: 'Select...'."
             },
             {
                 "name": "size",
-                "type": "\"sm\" | \"md\" | \"lg\" | undefined",
+                "type": "\"sm\" | \"md\" | \"lg\"",
                 "required": false,
-                "description": "Size variant for the selector."
+                "default": "'md'",
+                "description": "Size variant for the selector. Default: 'md'."
             },
             {
                 "name": "isReadOnly",
-                "type": "boolean | undefined",
+                "type": "boolean",
                 "required": false,
-                "description": "Makes the selector read-only: the selected value stays visible, focusable, and included in form submission, and retains its combobox identity with aria-readonly. The selection surface, clear action, and disclosure indicator are removed. Unlike isDisabled, the control is not dimmed. isDisabled takes precedence when both are set."
+                "default": "false",
+                "description": "Makes the selector read-only: the selected value stays visible, focusable, and included in form submission, and retains its combobox identity with aria-readonly. The selection surface, clear action, and disclosure indicator are removed. Unlike isDisabled, the control is not dimmed. isDisabled takes precedence when both are set. Default: false."
             },
             {
                 "name": "htmlName",
-                "type": "string | undefined",
+                "type": "string",
                 "required": false,
                 "description": "The HTML name attribute for form submissions. Renders a hidden input carrying the selected value, like a native select."
             },
             {
                 "name": "hasClear",
-                "type": "boolean | undefined",
+                "type": "(false) | (true)",
                 "required": false,
-                "description": "Shows a clear (×) button when a value is selected. When true, onChange also accepts null to signal the user cleared the selection."
+                "default": "false",
+                "description": "Shows a clear (×) button when a value is selected. When true, onChange also accepts null to signal the user cleared the selection. Default: false."
             },
             {
                 "name": "value",
-                "type": "string | null | undefined",
+                "type": "(string) | (string | null)",
                 "required": false,
                 "description": "Currently selected value."
             },
             {
                 "name": "onChange",
-                "type": "((value: string) => void) | ((value: string | null) => void) | undefined",
+                "type": "((value: string) => void) | ((value: string | null) => void)",
                 "required": false,
                 "description": "Callback fired when the selection changes."
             }
@@ -2190,81 +2283,94 @@
             },
             {
                 "name": "description",
-                "type": "string | undefined",
+                "type": "string",
                 "required": false,
                 "description": "Description text rendered below the label."
             },
             {
                 "name": "isLabelHidden",
-                "type": "boolean | undefined",
+                "type": "boolean",
                 "required": false,
-                "description": "Whether to visually hide the label."
+                "default": "false",
+                "description": "Whether to visually hide the label. Default: false."
             },
             {
                 "name": "isRequired",
-                "type": "boolean | undefined",
+                "type": "boolean",
                 "required": false,
-                "description": "Whether the field is required."
+                "default": "false",
+                "description": "Whether the field is required. Default: false."
             },
             {
                 "name": "isDisabled",
-                "type": "boolean | undefined",
+                "type": "boolean",
                 "required": false,
-                "description": "Whether the slider is disabled."
+                "default": "false",
+                "description": "Whether the slider is disabled. Default: false."
             },
             {
                 "name": "status",
-                "type": "{ type: \"success\" | \"warning\" | \"error\"; message?: string | undefined; } | undefined",
+                "type": "{ type: \"success\" | \"warning\" | \"error\"; message?: string; }",
                 "required": false,
                 "description": "Status indicator object (`{ type, message }`) for validation feedback."
             },
             {
                 "name": "width",
-                "type": "string | number | undefined",
+                "type": "string | number",
                 "required": false,
                 "description": "Width of the field (number = pixels, string used as-is, e.g. \"100%\"). Sizes the whole field (label, control, and status) so they stay aligned."
             },
             {
                 "name": "min",
-                "type": "number | undefined",
+                "type": "number",
                 "required": false,
-                "description": "Minimum value."
+                "default": "0",
+                "description": "Minimum value. Default: 0."
             },
             {
                 "name": "max",
-                "type": "number | undefined",
+                "type": "number",
                 "required": false,
-                "description": "Maximum value."
+                "default": "100",
+                "description": "Maximum value. Default: 100."
             },
             {
                 "name": "step",
-                "type": "number | undefined",
+                "type": "number",
                 "required": false,
-                "description": "Step increment."
+                "default": "1",
+                "description": "Step increment. Default: 1."
             },
             {
                 "name": "htmlName",
-                "type": "string | undefined",
+                "type": "string",
                 "required": false,
                 "description": "The HTML name attribute for form submissions. Renders hidden inputs carrying the current value (two entries in range mode)."
             },
             {
                 "name": "value",
-                "type": "number | [number, number]",
+                "type": "(number) | ([number, number])",
                 "required": true,
                 "description": "Current value: a `number` for single thumb mode or `[number, number]` for range mode."
             },
             {
                 "name": "onChange",
-                "type": "((value: number) => void) | ((value: [number, number]) => void) | undefined",
+                "type": "((value: number) => void) | ((value: [number, number]) => void)",
                 "required": false,
                 "description": "Callback fired on value change during drag."
             },
             {
                 "name": "onChangeEnd",
-                "type": "((value: number) => void) | ((value: [number, number]) => void) | undefined",
+                "type": "((value: number) => void) | ((value: [number, number]) => void)",
                 "required": false,
                 "description": "Callback fired when drag ends."
+            },
+            {
+                "name": "minStepsBetweenThumbs",
+                "type": "number",
+                "required": false,
+                "default": "0",
+                "description": "Minimum number of steps between thumbs in range mode; prevents thumbs from overlapping. Default: 0."
             }
         ],
         "practices": [
@@ -2293,45 +2399,51 @@
         "properties": [
             {
                 "name": "children",
-                "type": "ViewNode",
+                "type": "ReactNode",
                 "required": false,
                 "description": "Stack content."
             },
             {
                 "name": "gap",
-                "type": "Spacing | undefined",
+                "type": "0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10",
                 "required": false,
-                "description": "Spacing step (number literal): 0, 0.5, 1, 1.5, 2, 3, 4, 5, 6, 8, 10. Pass as a JSX number expression e.g. gap={4}, NOT a string like gap=\"4\"."
+                "default": "3",
+                "description": "Spacing step (number literal): 0, 0.5, 1, 1.5, 2, 3, 4, 5, 6, 8, 10. Pass as a JSX number expression e.g. gap={4}, NOT a string like gap=\"4\". Default: 3."
             },
             {
                 "name": "padding",
-                "type": "Spacing | undefined",
+                "type": "0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10",
                 "required": false,
-                "description": "Inner padding on all sides, using the spacing scale. Pass as a JSX number expression e.g. padding={3}."
+                "default": "0",
+                "description": "Inner padding on all sides, using the spacing scale. Pass as a JSX number expression e.g. padding={3}. Default: 0."
             },
             {
                 "name": "direction",
-                "type": "\"horizontal\" | \"vertical\" | undefined",
+                "type": "\"horizontal\" | \"vertical\"",
                 "required": false,
-                "description": "Direction of the stack layout. 'horizontal' flows items left-to-right (like HStack), 'vertical' flows top-to-bottom (like VStack). Note: the value is 'horizontal', NOT 'row'."
+                "default": "'vertical'",
+                "description": "Direction of the stack layout. 'horizontal' flows items left-to-right (like HStack), 'vertical' flows top-to-bottom (like VStack). Note: the value is 'horizontal', NOT 'row'. Default: 'vertical'."
             },
             {
                 "name": "justify",
-                "type": "\"start\" | \"center\" | \"end\" | \"between\" | \"around\" | \"evenly\" | undefined",
+                "type": "\"start\" | \"center\" | \"end\" | \"between\" | \"around\" | \"evenly\"",
                 "required": false,
-                "description": "Main-axis alignment alias. Resolves to hAlign (horizontal) or vAlign (vertical). Note: use 'between', NOT 'space-between'."
+                "default": "'start'",
+                "description": "Main-axis alignment alias. Resolves to hAlign (horizontal) or vAlign (vertical). Note: use 'between', NOT 'space-between'. Default: 'start'."
             },
             {
                 "name": "align",
-                "type": "\"start\" | \"center\" | \"end\" | \"stretch\" | undefined",
+                "type": "\"start\" | \"center\" | \"end\" | \"stretch\"",
                 "required": false,
-                "description": "Cross-axis alignment alias. Mirrors CSS align-items."
+                "default": "'stretch'",
+                "description": "Cross-axis alignment alias. Mirrors CSS align-items. Default: 'stretch'."
             },
             {
                 "name": "wrap",
-                "type": "\"nowrap\" | \"wrap\" | \"wrap-reverse\" | undefined",
+                "type": "\"nowrap\" | \"wrap\" | \"wrap-reverse\"",
                 "required": false,
-                "description": "Flex wrap behavior."
+                "default": "'nowrap'",
+                "description": "Flex wrap behavior. Default: 'nowrap'."
             }
         ],
         "practices": [
@@ -2368,7 +2480,7 @@
             },
             {
                 "name": "tooltip",
-                "type": "string | undefined",
+                "type": "string",
                 "required": false,
                 "description": "Tooltip text shown on hover to explain the status meaning."
             }
@@ -2399,21 +2511,23 @@
         "properties": [
             {
                 "name": "children",
-                "type": "ViewNode",
+                "type": "ReactNode",
                 "required": false,
                 "description": "Step elements to render in the stepper."
             },
             {
                 "name": "activeStep",
-                "type": "number | undefined",
+                "type": "number",
                 "required": false,
-                "description": "Zero-based index of the currently active step. Steps before this index are marked as completed."
+                "default": "0",
+                "description": "Zero-based index of the currently active step. Steps before this index are marked as completed. Default: 0."
             },
             {
                 "name": "orientation",
-                "type": "\"horizontal\" | \"vertical\" | undefined",
+                "type": "\"horizontal\" | \"vertical\"",
                 "required": false,
-                "description": "Layout direction of the stepper."
+                "default": "'horizontal'",
+                "description": "Layout direction of the stepper. Default: 'horizontal'."
             }
         ],
         "practices": [
@@ -2444,37 +2558,40 @@
             },
             {
                 "name": "description",
-                "type": "string | undefined",
+                "type": "string",
                 "required": false,
                 "description": "Description text displayed below the label."
             },
             {
                 "name": "isLabelHidden",
-                "type": "boolean | undefined",
+                "type": "boolean",
                 "required": false,
-                "description": "Visually hides the label while keeping it accessible to screen readers."
+                "default": "false",
+                "description": "Visually hides the label while keeping it accessible to screen readers. Default: false."
             },
             {
                 "name": "isRequired",
-                "type": "boolean | undefined",
+                "type": "boolean",
                 "required": false,
-                "description": "Whether the switch is required. Mutually exclusive with isOptional."
+                "default": "false",
+                "description": "Whether the switch is required. Mutually exclusive with isOptional. Default: false."
             },
             {
                 "name": "isDisabled",
-                "type": "boolean | undefined",
+                "type": "boolean",
                 "required": false,
-                "description": "Whether the switch is disabled."
+                "default": "false",
+                "description": "Whether the switch is disabled. Default: false."
             },
             {
                 "name": "status",
-                "type": "{ type: \"success\" | \"warning\" | \"error\"; message?: string | undefined; } | undefined",
+                "type": "{ type: \"success\" | \"warning\" | \"error\"; message?: string; }",
                 "required": false,
                 "description": "Status indicator with type and message. Displays a colored message box below the switch and sets aria-invalid when type is \"error\"."
             },
             {
                 "name": "width",
-                "type": "string | number | undefined",
+                "type": "string | number",
                 "required": false,
                 "description": "Width of the field (number = pixels, string used as-is, e.g. \"100%\"). Sizes the whole field (label, control, and status) so they stay aligned."
             },
@@ -2486,21 +2603,22 @@
             },
             {
                 "name": "onChange",
-                "type": "((value: boolean) => void) | undefined",
+                "type": "(value: boolean) => void",
                 "required": false,
                 "description": "Callback fired when the switch state changes."
             },
             {
                 "name": "htmlName",
-                "type": "string | undefined",
+                "type": "string",
                 "required": false,
                 "description": "The HTML name attribute for the underlying checkbox input, useful for form submissions (submits \"on\" when the switch is on)."
             },
             {
                 "name": "size",
-                "type": "\"sm\" | \"md\" | undefined",
+                "type": "\"sm\" | \"md\"",
                 "required": false,
-                "description": "Size variant controlling track and thumb dimensions. sm (32x20px) matches sm checkbox/radio vertical rhythm; md (40x24px, default) matches md checkbox/radio vertical rhythm."
+                "default": "'md'",
+                "description": "Size variant controlling track and thumb dimensions. sm (32x20px) matches sm checkbox/radio vertical rhythm; md (40x24px, default) matches md checkbox/radio vertical rhythm. Default: 'md'."
             }
         ],
         "practices": [
@@ -2535,31 +2653,34 @@
             },
             {
                 "name": "idKey",
-                "type": "(keyof T & string) | ((row: T) => string | number) | undefined",
+                "type": "(keyof T & string) | ((row: T) => string | number)",
                 "required": false,
                 "description": "Row key for React reconciliation. Pass a property name string or a function. Falls back to row index if omitted."
             },
             {
                 "name": "density",
-                "type": "\"compact\" | \"balanced\" | \"spacious\" | undefined",
+                "type": "\"compact\" | \"balanced\" | \"spacious\"",
                 "required": false,
-                "description": "Row density controlling cell padding and font size."
+                "default": "'balanced'",
+                "description": "Row density controlling cell padding and font size. Default: 'balanced'."
             },
             {
                 "name": "hasHover",
-                "type": "boolean | undefined",
+                "type": "boolean",
                 "required": false,
-                "description": "Applies a hover highlight background to rows on pointer devices."
+                "default": "false",
+                "description": "Applies a hover highlight background to rows on pointer devices. Default: false."
             },
             {
                 "name": "isStriped",
-                "type": "boolean | undefined",
+                "type": "boolean",
                 "required": false,
-                "description": "Applies a background wash to even-numbered rows."
+                "default": "false",
+                "description": "Applies a background wash to even-numbered rows. Default: false."
             },
             {
                 "name": "columns",
-                "type": "{ key: string; header?: ViewNode; width?: ColumnWidth | undefined; align?: \"start\" | \"center\" | \"end\" | undefined; renderCell?: ((row: T) => ViewNode) | undefined; }[] | undefined",
+                "type": "{ key: string; header?: ReactNode; width?: ColumnWidth; align?: \"start\" | \"center\" | \"end\"; renderCell?: ((row: T) => ReactNode); }[]",
                 "required": false,
                 "description": "Column definitions: each column has {key, header, width?, align?, renderCell?}. The `header` field sets the column heading text. If omitted, columns are auto-generated from data object keys. The `width` field is typed as `ColumnWidth` (not a number); use `proportional(n)` or `pixel(n)` helpers imported from `@astryxdesign/core/Table`. Example: `width: pixel(120)` for 120px fixed, `width: proportional(1)` for flex distribution."
             }
@@ -2602,21 +2723,23 @@
         "properties": [
             {
                 "name": "children",
-                "type": "ViewNode",
+                "type": "ReactNode",
                 "required": false,
                 "description": "Text content."
             },
             {
                 "name": "color",
-                "type": "\"primary\" | \"secondary\" | undefined",
+                "type": "\"primary\" | \"secondary\"",
                 "required": false,
-                "description": "Text color. Defaults to 'secondary' for the 'supporting' type, 'primary' for all others. Themes may add custom colors."
+                "default": "(props.type === 'supporting' ? 'secondary' : 'primary')",
+                "description": "Text color. Defaults to 'secondary' for the 'supporting' type, 'primary' for all others. Themes may add custom colors. Default: (props.type === 'supporting' ? 'secondary' : 'primary')."
             },
             {
                 "name": "type",
-                "type": "\"body\" | \"large\" | \"label\" | \"supporting\" | \"code\" | undefined",
+                "type": "\"body\" | \"large\" | \"label\" | \"supporting\" | \"code\"",
                 "required": false,
-                "description": "Semantic text type. Determines size, weight, and line-height from the theme. 'inherit' takes all three from the surrounding text instead. Themes may add custom types. Note: this prop is called `type`, not `variant`."
+                "default": "'body'",
+                "description": "Semantic text type. Determines size, weight, and line-height from the theme. 'inherit' takes all three from the surrounding text instead. Themes may add custom types. Note: this prop is called `type`, not `variant`. Default: 'body'."
             }
         ],
         "practices": [
@@ -2651,37 +2774,40 @@
             },
             {
                 "name": "description",
-                "type": "string | undefined",
+                "type": "string",
                 "required": false,
                 "description": "Helper text displayed between the label and textarea."
             },
             {
                 "name": "isLabelHidden",
-                "type": "boolean | undefined",
+                "type": "boolean",
                 "required": false,
-                "description": "Visually hides the label while keeping it accessible to screen readers."
+                "default": "false",
+                "description": "Visually hides the label while keeping it accessible to screen readers. Default: false."
             },
             {
                 "name": "isRequired",
-                "type": "boolean | undefined",
+                "type": "boolean",
                 "required": false,
-                "description": "Displays a \"Required\" indicator next to the label and sets aria-required. Mutually exclusive with isOptional."
+                "default": "false",
+                "description": "Displays a \"Required\" indicator next to the label and sets aria-required. Mutually exclusive with isOptional. Default: false."
             },
             {
                 "name": "isDisabled",
-                "type": "boolean | undefined",
+                "type": "boolean",
                 "required": false,
-                "description": "Disables the textarea, preventing interaction."
+                "default": "false",
+                "description": "Disables the textarea, preventing interaction. Default: false."
             },
             {
                 "name": "status",
-                "type": "{ type: \"success\" | \"warning\" | \"error\"; message?: string | undefined; } | undefined",
+                "type": "{ type: \"success\" | \"warning\" | \"error\"; message?: string; }",
                 "required": false,
                 "description": "Status indicator that applies a colored border and icon. An optional message is displayed in a floating box below the textarea."
             },
             {
                 "name": "width",
-                "type": "string | number | undefined",
+                "type": "string | number",
                 "required": false,
                 "description": "Width of the field (number = pixels, string used as-is, e.g. \"100%\"). Sizes the whole field (label, control, and status) so they stay aligned."
             },
@@ -2693,55 +2819,59 @@
             },
             {
                 "name": "onChange",
-                "type": "((value: string) => void) | undefined",
+                "type": "(value: string) => void",
                 "required": false,
                 "description": "Callback fired when the textarea value changes."
             },
             {
                 "name": "placeholder",
-                "type": "string | undefined",
+                "type": "string",
                 "required": false,
                 "description": "Placeholder text shown when the textarea is empty."
             },
             {
                 "name": "rows",
-                "type": "number | undefined",
+                "type": "number",
                 "required": false,
-                "description": "Number of visible text rows."
+                "default": "3",
+                "description": "Number of visible text rows. Default: 3."
             },
             {
                 "name": "maxLength",
-                "type": "number | undefined",
+                "type": "number",
                 "required": false,
                 "description": "Maximum number of characters allowed, counted as user-perceived characters: an emoji or flag sequence counts as one. When set, a character counter (current/max) is displayed inside the input container, anchored to the bottom-right beneath the text. Does not enforce the limit natively; when exceeded the counter turns red and shows a warning icon (a non-color cue), and screen-reader users hear the remaining/over-limit count announced. Consumers validating the limit should count with characterCount (exported from the package) so enforcement matches the displayed count."
             },
             {
                 "name": "isReadOnly",
-                "type": "boolean | undefined",
+                "type": "boolean",
                 "required": false,
-                "description": "Makes the textarea read-only: the value is shown at full opacity and still submits with the form, but cannot be edited. Unlike isDisabled, a read-only textarea is not dimmed and stays in the tab order. isDisabled takes precedence when both are set."
+                "default": "false",
+                "description": "Makes the textarea read-only: the value is shown at full opacity and still submits with the form, but cannot be edited. Unlike isDisabled, a read-only textarea is not dimmed and stays in the tab order. isDisabled takes precedence when both are set. Default: false."
             },
             {
                 "name": "hasSpellCheck",
-                "type": "boolean | undefined",
+                "type": "boolean",
                 "required": false,
-                "description": "Enables or disables browser spell checking."
+                "default": "true",
+                "description": "Enables or disables browser spell checking. Default: true."
             },
             {
                 "name": "hasAutoFocus",
-                "type": "boolean | undefined",
+                "type": "boolean",
                 "required": false,
-                "description": "Automatically focuses the textarea on mount."
+                "default": "false",
+                "description": "Automatically focuses the textarea on mount. Default: false."
             },
             {
                 "name": "htmlName",
-                "type": "string | undefined",
+                "type": "string",
                 "required": false,
                 "description": "HTML name attribute for the textarea element, useful for form submissions."
             },
             {
                 "name": "autoComplete",
-                "type": "string | undefined",
+                "type": "string",
                 "required": false,
                 "description": "The native autocomplete attribute, forwarded to the textarea unchanged. Does not affect the controlled value."
             }
@@ -2790,37 +2920,40 @@
             },
             {
                 "name": "description",
-                "type": "string | undefined",
+                "type": "string",
                 "required": false,
                 "description": "Description text displayed between the label and input."
             },
             {
                 "name": "isLabelHidden",
-                "type": "boolean | undefined",
+                "type": "boolean",
                 "required": false,
-                "description": "Visually hides the label while keeping it accessible to screen readers."
+                "default": "false",
+                "description": "Visually hides the label while keeping it accessible to screen readers. Default: false."
             },
             {
                 "name": "isRequired",
-                "type": "boolean | undefined",
+                "type": "boolean",
                 "required": false,
-                "description": "Displays a \"Required\" indicator next to the label and sets aria-required. Mutually exclusive with isOptional."
+                "default": "false",
+                "description": "Displays a \"Required\" indicator next to the label and sets aria-required. Mutually exclusive with isOptional. Default: false."
             },
             {
                 "name": "isDisabled",
-                "type": "boolean | undefined",
+                "type": "boolean",
                 "required": false,
-                "description": "Disables the input, preventing interaction and dimming the element."
+                "default": "false",
+                "description": "Disables the input, preventing interaction and dimming the element. Default: false."
             },
             {
                 "name": "status",
-                "type": "{ type: \"success\" | \"warning\" | \"error\"; message?: string | undefined; } | undefined",
+                "type": "{ type: \"success\" | \"warning\" | \"error\"; message?: string; }",
                 "required": false,
                 "description": "Validation status: applies a colored border and status icon. If message is provided, displays a floating message below the input. Error type also sets aria-invalid."
             },
             {
                 "name": "width",
-                "type": "string | number | undefined",
+                "type": "string | number",
                 "required": false,
                 "description": "Width of the field (number = pixels, string used as-is, e.g. \"100%\"). Sizes the whole field (label, control, and status) so they stay aligned."
             },
@@ -2832,67 +2965,72 @@
             },
             {
                 "name": "onChange",
-                "type": "((value: string) => void) | undefined",
+                "type": "(value: string) => void",
                 "required": false,
                 "description": "Callback fired when the input value changes."
             },
             {
                 "name": "placeholder",
-                "type": "string | undefined",
+                "type": "string",
                 "required": false,
                 "description": "Placeholder text shown when the input is empty."
             },
             {
                 "name": "type",
-                "type": "\"text\" | \"password\" | \"email\" | undefined",
+                "type": "\"text\" | \"password\" | \"email\"",
                 "required": false,
-                "description": "The HTML input type."
+                "default": "'text'",
+                "description": "The HTML input type. Default: 'text'."
             },
             {
                 "name": "size",
-                "type": "\"sm\" | \"md\" | \"lg\" | undefined",
+                "type": "\"sm\" | \"md\" | \"lg\"",
                 "required": false,
-                "description": "Size variant of the input."
+                "default": "'md'",
+                "description": "Size variant of the input. Default: 'md'."
             },
             {
                 "name": "htmlName",
-                "type": "string | undefined",
+                "type": "string",
                 "required": false,
                 "description": "The HTML name attribute for the input, useful for form submissions."
             },
             {
                 "name": "autoComplete",
-                "type": "string | undefined",
+                "type": "string",
                 "required": false,
                 "description": "The native autocomplete attribute, forwarded to the input unchanged. Does not affect the controlled value."
             },
             {
                 "name": "isReadOnly",
-                "type": "boolean | undefined",
+                "type": "boolean",
                 "required": false,
-                "description": "Makes the input read-only: the value is shown at full opacity and still submits with the form, but cannot be edited. Unlike isDisabled, a read-only input is not dimmed and stays in the tab order. isDisabled takes precedence when both are set."
+                "default": "false",
+                "description": "Makes the input read-only: the value is shown at full opacity and still submits with the form, but cannot be edited. Unlike isDisabled, a read-only input is not dimmed and stays in the tab order. isDisabled takes precedence when both are set. Default: false."
             },
             {
                 "name": "hasClear",
-                "type": "boolean | undefined",
+                "type": "boolean",
                 "required": false,
-                "description": "Shows a clear (×) button when the input has a value. Clicking it clears the value and returns focus to the input."
+                "default": "false",
+                "description": "Shows a clear (×) button when the input has a value. Clicking it clears the value and returns focus to the input. Default: false."
             },
             {
                 "name": "hasAutoFocus",
-                "type": "boolean | undefined",
+                "type": "boolean",
                 "required": false,
-                "description": "Automatically focuses the input on mount."
+                "default": "false",
+                "description": "Automatically focuses the input on mount. Default: false."
             },
             {
                 "name": "startIcon",
-                "type": "ViewNode",
+                "type": "ReactNode",
                 "required": false,
                 "description": "SVG icon component displayed at the start of the input. See `astryx docs icons` for valid semantic names."
             },
             {
                 "name": "onEnter",
-                "type": "(() => void) | undefined",
+                "type": "() => void",
                 "required": false,
                 "description": "Callback fired when the user presses the Enter key. IME-safe: Enter used to commit a Japanese/Chinese/Korean conversion does not fire it."
             }
@@ -2941,99 +3079,108 @@
             },
             {
                 "name": "description",
-                "type": "string | undefined",
+                "type": "string",
                 "required": false,
                 "description": "Description text displayed between the label and input."
             },
             {
                 "name": "isLabelHidden",
-                "type": "boolean | undefined",
+                "type": "boolean",
                 "required": false,
-                "description": "Visually hides the label while keeping it accessible to screen readers."
+                "default": "false",
+                "description": "Visually hides the label while keeping it accessible to screen readers. Default: false."
             },
             {
                 "name": "isRequired",
-                "type": "boolean | undefined",
+                "type": "boolean",
                 "required": false,
-                "description": "Marks the field as required and sets aria-required. Mutually exclusive with isOptional."
+                "default": "false",
+                "description": "Marks the field as required and sets aria-required. Mutually exclusive with isOptional. Default: false."
             },
             {
                 "name": "isDisabled",
-                "type": "boolean | undefined",
+                "type": "boolean",
                 "required": false,
-                "description": "Disables the input and suppresses interactions."
+                "default": "false",
+                "description": "Disables the input and suppresses interactions. Default: false."
             },
             {
                 "name": "status",
-                "type": "{ type: \"success\" | \"warning\" | \"error\"; message?: string | undefined; } | undefined",
+                "type": "{ type: \"success\" | \"warning\" | \"error\"; message?: string; }",
                 "required": false,
                 "description": "Status indicator that colors the border and displays an icon. When a message is provided it is rendered below the input."
             },
             {
                 "name": "width",
-                "type": "string | number | undefined",
+                "type": "string | number",
                 "required": false,
                 "description": "Width of the field (number = pixels, string used as-is, e.g. \"100%\"). Sizes the whole field (label, control, and status) so they stay aligned."
             },
             {
                 "name": "value",
-                "type": "ISOTimeString | undefined",
+                "type": "ISOTimeString",
                 "required": false,
                 "description": "Controlled time value in ISO format (HH:MM or HH:MM:SS)."
             },
             {
                 "name": "onChange",
-                "type": "((value: ISOTimeString | undefined) => void) | undefined",
+                "type": "(value: ISOTimeString | undefined) => void",
                 "required": false,
                 "description": "Callback fired when the time changes. Receives undefined when the input is cleared."
             },
             {
                 "name": "min",
-                "type": "ISOTimeString | undefined",
+                "type": "ISOTimeString",
                 "required": false,
                 "description": "Minimum selectable time in ISO format. Values outside the range are rejected."
             },
             {
                 "name": "max",
-                "type": "ISOTimeString | undefined",
+                "type": "ISOTimeString",
                 "required": false,
                 "description": "Maximum selectable time in ISO format. Values outside the range are rejected."
             },
             {
                 "name": "hasSeconds",
-                "type": "boolean | undefined",
+                "type": "boolean",
                 "required": false,
-                "description": "Includes seconds in the time display and parsing."
+                "default": "false",
+                "description": "Includes seconds in the time display and parsing. Default: false."
             },
             {
                 "name": "hasClear",
-                "type": "boolean | undefined",
+                "type": "boolean",
                 "required": false,
-                "description": "Shows a clear button when a value is set and the input is not disabled."
+                "default": "false",
+                "description": "Shows a clear button when a value is set and the input is not disabled. Default: false."
             },
             {
                 "name": "hourFormat",
-                "type": "\"12h\" | \"24h\" | undefined",
+                "type": "\"12h\" | \"24h\"",
                 "required": false,
-                "description": "Controls the display format. '12h' shows AM/PM (e.g. '2:30 PM'); '24h' uses 24-hour notation (e.g. '14:30')."
+                "default": "'12h'",
+                "description": "Controls the display format. '12h' shows AM/PM (e.g. '2:30 PM'); '24h' uses 24-hour notation (e.g. '14:30'). Default: '12h'."
             },
             {
                 "name": "increment",
-                "type": "number | undefined",
+                "type": "number",
                 "required": false,
-                "description": "Number of minutes to add or subtract when the user presses the up or down arrow key."
+                "default": "1",
+                "description": "Number of minutes to add or subtract when the user presses the up or down arrow key. Default: 1."
             },
             {
                 "name": "placeholder",
-                "type": "string | undefined",
+                "type": "string",
                 "required": false,
-                "description": "Placeholder text shown when no time is selected. When the input is focused and empty, a format hint overrides this text."
+                "default": "'Select a time'",
+                "description": "Placeholder text shown when no time is selected. When the input is focused and empty, a format hint overrides this text. Default: 'Select a time'."
             },
             {
                 "name": "size",
-                "type": "\"sm\" | \"md\" | \"lg\" | undefined",
+                "type": "\"sm\" | \"md\" | \"lg\"",
                 "required": false,
-                "description": "Controls the height of the input element."
+                "default": "'md'",
+                "description": "Controls the height of the input element. Default: 'md'."
             }
         ],
         "practices": [
@@ -3084,9 +3231,10 @@
             },
             {
                 "name": "format",
-                "type": "\"date\" | \"date_long\" | \"date_weekday\" | \"date_time\" | \"time\" | \"relative\" | \"system_date\" | \"system_date_time\" | \"system_time\" | undefined",
+                "type": "\"date\" | \"date_long\" | \"date_weekday\" | \"date_time\" | \"time\" | \"relative\" | \"system_date\" | \"system_date_time\" | \"system_time\"",
                 "required": false,
-                "description": "Display format. 'relative' uses the locale's native long relative-time wording ('2 hours ago' in English), 'relative_short' uses its narrow pattern ('2h ago' in English) for compact surfaces, 'date' shows 'Mar 21, 2025', 'date_long' shows 'March 21, 2025', 'date_weekday' shows 'Wed, Mar 21, 2025', 'date_time' shows 'Mar 21, 2025, 2:51 PM', 'time' shows '2:51 PM', 'system_*' variants use ISO-style formatting, 'unix_seconds' shows the Unix time in whole seconds since the epoch (an absolute, zone-independent value), 'auto' switches from relative to date_time based on recency."
+                "default": "'date_time'",
+                "description": "Display format. 'relative' uses the locale's native long relative-time wording ('2 hours ago' in English), 'relative_short' uses its narrow pattern ('2h ago' in English) for compact surfaces, 'date' shows 'Mar 21, 2025', 'date_long' shows 'March 21, 2025', 'date_weekday' shows 'Wed, Mar 21, 2025', 'date_time' shows 'Mar 21, 2025, 2:51 PM', 'time' shows '2:51 PM', 'system_*' variants use ISO-style formatting, 'unix_seconds' shows the Unix time in whole seconds since the epoch (an absolute, zone-independent value), 'auto' switches from relative to date_time based on recency. Default: 'date_time'."
             }
         ],
         "practices": [

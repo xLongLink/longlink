@@ -1,4 +1,5 @@
 import type { FieldProps } from './types';
+import { useSize } from '@astryxdesign/core/SizeContext';
 import { NumberInput as AstryxNumberInput } from '@astryxdesign/core/NumberInput';
 
 type NumberInputProps = FieldProps & {
@@ -20,5 +21,21 @@ type NumberInputProps = FieldProps & {
 
 /** Edits a constrained number without wheel editing or custom value formatting. */
 export function NumberInput(props: NumberInputProps) {
-    return <AstryxNumberInput {...props} isWheelEnabled={false} />;
+    // Preserve inherited control sizing before applying the medium fallback.
+    const size = useSize(props.size, 'md');
+
+    // Keep number editing unconstrained unless bounds or integer-only behavior are requested.
+    return (
+        <AstryxNumberInput
+            {...props}
+            size={size}
+            step={props.step === undefined ? 1 : props.step}
+            isReadOnly={props.isReadOnly ?? false}
+            isIntegerOnly={props.isIntegerOnly ?? false}
+            isLabelHidden={props.isLabelHidden ?? false}
+            isRequired={props.isRequired ?? false}
+            isDisabled={props.isDisabled ?? false}
+            isWheelEnabled={false}
+        />
+    );
 }

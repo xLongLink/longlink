@@ -174,13 +174,13 @@ export default function OrganizationSettings() {
             </Stack>
             <Menu>
                 <MenuSection title="Settings" isHeaderHidden>
-                    <MenuItem id="organization" label="Organization" icon="building2">
+                    <MenuItem label="Organization" icon="building2">
                         <ApiBoundary key="storage">
                             <StorageSection base={base} />
                         </ApiBoundary>
                     </MenuItem>
                     <MenuSubSection label="People" icon="users">
-                        <MenuItem id="members" label="Members">
+                        <MenuItem label="Members">
                             <MembersSection
                                 base={base}
                                 members={details.members}
@@ -188,7 +188,7 @@ export default function OrganizationSettings() {
                                 invalidateDetails={invalidateDetails}
                             />
                         </MenuItem>
-                        <MenuItem id="invitations" label="Invitations">
+                        <MenuItem label="Invitations">
                             <InvitationsSection
                                 base={base}
                                 invitations={details.invitations}
@@ -197,7 +197,7 @@ export default function OrganizationSettings() {
                             />
                         </MenuItem>
                     </MenuSubSection>
-                    <MenuItem id="solutions" label="Solutions" icon="boxes">
+                    <MenuItem label="Solutions" icon="boxes">
                         <ApiBoundary key="solutions">
                             <SolutionsSection organization={membership.organization} canMaintain={canMaintain} />
                         </ApiBoundary>

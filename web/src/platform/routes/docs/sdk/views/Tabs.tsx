@@ -7,13 +7,17 @@ const properties: ViewProperties = [
     {
         name: 'Tabs',
         properties: [
-            { name: 'children', type: 'ViewNode', description: 'Tab elements defining labels and panel content.' },
+            { name: 'children', type: 'ReactNode', description: 'Tab elements defining labels and panel content.' },
             {
                 name: 'gap',
                 type: '0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10',
                 description: 'Spacing between the tab strip and panel, and within panel content. Defaults to 3.',
             },
-            { name: 'hasDivider', type: 'boolean', description: 'Shows a divider beneath the tab strip.' },
+            {
+                name: 'hasDivider',
+                type: 'boolean',
+                description: 'Shows a divider beneath the tab strip. Defaults to false.',
+            },
             {
                 name: 'value',
                 type: 'string',
@@ -38,7 +42,7 @@ const properties: ViewProperties = [
             },
             {
                 name: 'children',
-                type: 'ViewNode',
+                type: 'ReactNode',
                 description: 'Panel content mounted only while this tab is selected.',
             },
             { name: 'isDisabled', type: 'boolean', description: 'Prevents users from activating this tab.' },
