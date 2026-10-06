@@ -44,7 +44,6 @@ export default [
                     route('buttons', './routes/docs/sdk/views/Buttons.tsx'),
                     route('card', './routes/docs/sdk/views/Card.tsx'),
                     route('checkbox-input', './routes/docs/sdk/views/CheckboxInput.tsx'),
-                    route('code-block', './routes/docs/sdk/views/CodeBlock.tsx'),
                     route('collapsible', './routes/docs/sdk/views/Collapsible.tsx'),
                     route('currency', './routes/docs/sdk/views/Currency.tsx'),
                     route('date-input', './routes/docs/sdk/views/DateInput.tsx'),

@@ -25,7 +25,6 @@ import { SelectorExample } from './views/Selector';
 import { TextAreaExample } from './views/TextArea';
 import { Center } from '@astryxdesign/core/Center';
 import { Currency } from '@/components/ui/Currency';
-import { CodeBlockExample } from './views/CodeBlock';
 import { DateInputExample } from './views/DateInput';
 import { FileInputExample } from './views/FileInput';
 import { RadioListExample } from './views/RadioList';
@@ -77,7 +76,6 @@ const previews: Record<string, ReactNode> = {
     ButtonGroup: <ButtonGroupExample />,
     Card: <Card>Lorem ipsum dolor sit amet.</Card>,
     CheckboxInput: <CheckboxInputExample />,
-    CodeBlock: <CodeBlockExample />,
     Collapsible: <CollapsibleExample />,
     Currency: <Currency value={1275.5} currency="CHF" />,
     DateInput: <DateInputExample />,
