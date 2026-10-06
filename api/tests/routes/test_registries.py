@@ -1,7 +1,9 @@
 import pytest
 from httpx2 import AsyncClient
 from factories import create_compute, create_organization
+from src.database.session import session_scope
 from src.database.models.users import User
+from src.database.models.computes import ComputeRegistry
 
 
 @pytest.mark.parametrize(
@@ -42,32 +44,36 @@ async def test_platform_user_cannot_delete_compute_registry(clients: tuple[Async
 
 
 async def test_compute_list_returns_ordered_page_and_total(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient], compute_runtime: None
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
 ) -> None:
     """Return an ordered registry page without credentials."""
 
     # Arrange
-    payload = {
-        "gateway_url": "https://gateway.example",
-        "database_storage_class": "local-path",
-        "storage_endpoint": "https://storage.example",
-        "kubeconfig": {
-            "clusters": [{"name": "cluster", "cluster": {}}],
-            "contexts": [{"name": "context", "context": {"cluster": "cluster", "user": "user"}}],
-            "current-context": "context",
-            "users": [{"name": "user", "user": {}}],
-        },
-    }
     expected_item = {
         "gateway_url": "https://gateway.example:443",
         "database_storage_class": "local-path",
         "storage_endpoint": "https://storage.example:443",
     }
-    beta_response = await clients[0].post("/api/v1/computes", json=payload | {"name": "Beta Registry"})
-    alpha_response = await clients[0].post("/api/v1/computes", json=payload | {"name": "Alpha Registry"})
-    assert alpha_response.status_code == 201
-    assert beta_response.status_code == 201
-    beta_id = beta_response.json()["id"]
+    beta = ComputeRegistry(
+        name="Beta Registry",
+        cluster_uid="beta-cluster",
+        kubeconfig={"apiVersion": "v1", "clusters": []},
+        storage_access_key="controller",
+        storage_secret_key="controller-secret",
+        **expected_item,
+    )
+    alpha = ComputeRegistry(
+        name="Alpha Registry",
+        cluster_uid="alpha-cluster",
+        kubeconfig={"apiVersion": "v1", "clusters": []},
+        storage_access_key="controller",
+        storage_secret_key="controller-secret",
+        **expected_item,
+    )
+    async with session_scope() as session:
+        session.add_all([beta, alpha])
+        await session.commit()
+    beta_id = str(beta.id)
 
     # Act
     response = await clients[0].get("/api/v1/computes?page=2&page_size=1")

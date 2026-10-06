@@ -87,13 +87,11 @@ describe('SolutionRuntime', () => {
 
     it('rejects an external manifest view path before fetching the view', async () => {
         // Arrange
-        const fetchRequest = vi.fn(async (input: RequestInfo | URL) => {
-            const url = input instanceof Request ? input.url : String(input);
-
+        const fetchRequest = vi.fn((url: string) => {
             if (url.endsWith('/views.json')) return Response.json([view('https://example.com/view.jsx', '/home')]);
             throw new Error('View fetch must not occur');
         });
-        vi.stubGlobal('fetch', fetchRequest);
+        stubFetch(fetchRequest);
 
         // Act
         const output = await renderRuntime('/home');
