@@ -1,3 +1,4 @@
+import { Icon, type StoneIconName } from './Icon';
 import type { MouseEvent, ReactNode } from 'react';
 import { useSize } from '@astryxdesign/core/SizeContext';
 import { Button as AstryxButton } from '@astryxdesign/core/Button';
@@ -10,7 +11,7 @@ type ButtonProps = {
     name?: string;
     value?: string | number | readonly string[];
     form?: string;
-    icon?: ReactNode;
+    icon?: StoneIconName;
     endContent?: ReactNode;
     tooltip?: string;
     width?: number | string;
@@ -28,6 +29,7 @@ export function Button({ onClick, ...props }: ButtonProps) {
     return (
         <AstryxButton
             {...props}
+            icon={props.icon ? <Icon icon={props.icon} size={size} /> : undefined}
             variant={props.variant ?? 'secondary'}
             size={size}
             type={props.type ?? 'button'}

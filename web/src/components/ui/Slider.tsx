@@ -25,7 +25,7 @@ export function Slider(props: SliderProps) {
             min={props.min ?? 0}
             max={props.max ?? 100}
             step={props.step ?? 1}
-            isLabelHidden={props.isLabelHidden ?? false}
+            isLabelHidden={false}
             isRequired={props.isRequired ?? false}
             isDisabled={props.isDisabled ?? false}
         />

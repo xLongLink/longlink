@@ -20,7 +20,7 @@ export function RadioList(
             children={props.children}
             orientation={props.orientation ?? 'vertical'}
             size={props.size ?? 'md'}
-            isLabelHidden={props.isLabelHidden ?? false}
+            isLabelHidden={false}
             isRequired={props.isRequired ?? false}
             isDisabled={props.isDisabled ?? false}
         />

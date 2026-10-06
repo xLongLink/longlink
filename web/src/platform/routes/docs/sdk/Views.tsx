@@ -29,7 +29,6 @@ import { CodeBlockExample } from './views/CodeBlock';
 import { DateInputExample } from './views/DateInput';
 import { FileInputExample } from './views/FileInput';
 import { RadioListExample } from './views/RadioList';
-import { StatusDotExample } from './views/StatusDot';
 import { TextInputExample } from './views/TextInput';
 import { TimeInputExample } from './views/TimeInput';
 import { TimestampExample } from './views/Timestamp';
@@ -118,7 +117,6 @@ const previews: Record<string, ReactNode> = {
     Selector: <SelectorExample />,
     Slider: <SliderExample />,
     Stack: <StackExample />,
-    StatusDot: <StatusDotExample />,
     Stepper: <StepperExample orientation="vertical" />,
     Switch: <SwitchExample />,
     Table: <TableExample />,

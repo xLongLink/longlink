@@ -32,7 +32,7 @@ export function NumberInput(props: NumberInputProps) {
             step={props.step === undefined ? 1 : props.step}
             isReadOnly={props.isReadOnly ?? false}
             isIntegerOnly={props.isIntegerOnly ?? false}
-            isLabelHidden={props.isLabelHidden ?? false}
+            isLabelHidden={false}
             isRequired={props.isRequired ?? false}
             isDisabled={props.isDisabled ?? false}
             isWheelEnabled={false}

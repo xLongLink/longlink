@@ -17,7 +17,7 @@ export function CheckboxInput(
             {...props}
             size={props.size ?? 'md'}
             isReadOnly={props.isReadOnly ?? false}
-            isLabelHidden={props.isLabelHidden ?? false}
+            isLabelHidden={false}
             isRequired={props.isRequired ?? false}
             isDisabled={props.isDisabled ?? false}
             changeAction={undefined}

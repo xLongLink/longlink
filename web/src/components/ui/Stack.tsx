@@ -4,6 +4,7 @@ import { Stack as AstryxStack, StackItem as AstryxStackItem } from '@astryxdesig
 
 type StackProps = {
     children?: ReactNode;
+    /** Spacing between items. */
     gap?: Spacing;
     padding?: Spacing;
     direction?: 'horizontal' | 'vertical';

@@ -1,4 +1,3 @@
-import { X } from 'lucide-react';
 import { useState } from 'react';
 import ViewLayout from './ViewLayout';
 import { Text } from '@astryxdesign/core/Text';
@@ -19,7 +18,7 @@ export default function IconButtonPage() {
   return (
     <IconButton
       label="Refresh"
-      icon={<Icon icon="refresh" size="sm" />}
+      icon="refresh"
       onClick={async () => {
         await request('/api/refresh', { method: 'POST' });
       }}
@@ -39,13 +38,7 @@ export function IconButtonExample() {
     // Report the close action without dismissing the documentation.
     return (
         <Stack gap={2}>
-            <IconButton
-                icon={<X aria-hidden="true" size={20} />}
-                label="Close"
-                size="sm"
-                tooltip="Close"
-                onClick={() => setAction('Closed')}
-            />
+            <IconButton icon="close" label="Close" size="sm" tooltip="Close" onClick={() => setAction('Closed')} />
             {action && <Text role="status">{action}</Text>}
         </Stack>
     );

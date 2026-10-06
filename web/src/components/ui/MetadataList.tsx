@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { Icon, type StoneIconName } from './Icon';
 import {
     MetadataList as AstryxMetadataList,
     MetadataListItem as AstryxMetadataListItem,
@@ -21,7 +22,14 @@ export function MetadataListItem(props: {
     /** Label identifying the metadata value. */
     label: string;
     /** Optional icon displayed beside the metadata label. */
-    icon?: ReactNode;
+    icon?: StoneIconName;
 }) {
-    return <AstryxMetadataListItem {...props} children={props.children} />;
+    // Resolve the registered icon name without changing the metadata content.
+    return (
+        <AstryxMetadataListItem
+            {...props}
+            icon={props.icon ? <Icon icon={props.icon} size="sm" /> : undefined}
+            children={props.children}
+        />
+    );
 }

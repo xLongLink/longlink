@@ -18,7 +18,7 @@ type ButtonProps = {
     name?: string;
     value?: string | number | readonly string[];
     form?: string;
-    icon?: ViewNode;
+    icon?: string;
     endContent?: ViewNode;
     tooltip?: string;
     width?: number | string;
@@ -31,7 +31,7 @@ type ButtonProps = {
 type DropdownMenuItemData = {
     id?: string;
     label: ViewNode;
-    icon?: ViewNode;
+    icon?: string;
     description?: ViewNode;
     endContent?: ViewNode;
     variant?: 'default' | 'destructive';
@@ -135,6 +135,7 @@ declare function useApi<T = unknown>(path: string): readonly [T, () => Promise<v
 /** @category Layouts */
 declare function Stack(props: {
     children?: ViewNode;
+    /** Spacing between items. */
     gap?: Spacing;
     padding?: Spacing;
     direction?: 'horizontal' | 'vertical';
@@ -181,7 +182,7 @@ declare function DropdownMenu(props: {
 /** @category Action */
 declare function IconButton(props: {
     label: string;
-    icon: ViewNode;
+    icon: string;
     variant?: 'primary' | 'secondary' | 'ghost' | 'destructive';
     size?: 'sm' | 'md' | 'lg';
     tooltip?: string;
@@ -195,7 +196,7 @@ declare function Link(props: { to: string; children?: ViewNode }): React.JSX.Ele
 /** @category Display */
 declare function Badge(props: {
     label?: ViewNode;
-    icon?: ViewNode;
+    icon?: string;
     variant?:
         | 'neutral'
         | 'info'
@@ -242,10 +243,8 @@ declare function Dialog(props: {
 type FieldProps = {
     label: string;
     description?: string;
-    isLabelHidden?: boolean;
     isRequired?: boolean;
     isDisabled?: boolean;
-    status?: { type: 'warning' | 'error' | 'success'; message?: string };
     width?: number | string;
 };
 
@@ -350,7 +349,6 @@ declare function TextArea(
         rows?: number;
         maxLength?: number;
         isReadOnly?: boolean;
-        hasSpellCheck?: boolean;
         hasAutoFocus?: boolean;
         htmlName?: string;
         autoComplete?: string;
@@ -382,7 +380,7 @@ type SelectorOptionData = {
     value: string;
     label?: string;
     description?: ViewNode;
-    icon?: ViewNode;
+    icon?: string;
     disabled?: boolean;
 };
 
@@ -498,8 +496,6 @@ type CardProps = {
     maxWidth?: number | string;
     /** Minimum card height. */
     minHeight?: number | string;
-    /** HTML ID for linking to the card. */
-    id?: string;
     /** Makes the card and its descendants non-interactive. */
     inert?: boolean;
     /** Hides the card from assistive technologies. */
@@ -590,7 +586,7 @@ declare function RadioListItem(props: {
 declare function MoreMenu(props: {
     items: DropdownMenuOption[];
     label?: string;
-    icon?: ViewNode;
+    icon?: string;
     isDisabled?: boolean;
     onOpenChange?: (isOpen: boolean) => void;
 }): React.JSX.Element;
@@ -648,10 +644,8 @@ declare function ProgressBar(props: {
     label: string;
     value?: number;
     max?: number;
-    isLabelHidden?: boolean;
     hasValueLabel?: boolean;
     variant?: 'accent' | 'success' | 'warning' | 'error' | 'neutral';
-    isIndeterminate?: boolean;
 }): React.JSX.Element;
 
 /** @category Layouts */
@@ -691,8 +685,6 @@ declare function Tab(props: {
     label: string;
     /** Whether the tab is disabled. */
     isDisabled?: boolean;
-    /** Panel element ID; omitted values use an automatically generated ID. */
-    panelId?: string;
 }): React.JSX.Element;
 
 /** @category Display */
@@ -745,7 +737,7 @@ declare function MetadataListItem(props: {
     /** Label identifying the metadata value. */
     label: string;
     /** Optional icon displayed beside the metadata label. */
-    icon?: ViewNode;
+    icon?: string;
 }): React.JSX.Element;
 
 /** @category Display @group Table */

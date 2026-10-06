@@ -1,4 +1,15 @@
-import { DropdownMenu as AstryxDropdownMenu, type DropdownMenuOption } from '@astryxdesign/core/DropdownMenu';
+import type { StoneIconName } from './Icon';
+import type * as DropdownMenus from '@astryxdesign/core/DropdownMenu';
+import { DropdownMenu as AstryxDropdownMenu } from '@astryxdesign/core/DropdownMenu';
+
+export type DropdownMenuItemData = Omit<DropdownMenus.DropdownMenuItemData, 'icon' | 'items'> & {
+    icon?: StoneIconName;
+    items?: DropdownMenuOption[];
+};
+export type DropdownMenuOption =
+    | DropdownMenuItemData
+    | { type: 'divider' }
+    | { type: 'section'; id?: string; title?: string; items: DropdownMenuItemData[] };
 
 /** Opens an action menu using standard adaptive presentation and placement. */
 export function DropdownMenu(props: {

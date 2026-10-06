@@ -46,11 +46,6 @@ const properties: ViewProperties = [
                 description: 'Panel content mounted only while this tab is selected.',
             },
             { name: 'isDisabled', type: 'boolean', description: 'Prevents users from activating this tab.' },
-            {
-                name: 'panelId',
-                type: 'string',
-                description: 'Panel element ID linked to the tab button. Defaults to an automatically generated ID.',
-            },
         ],
     },
 ];

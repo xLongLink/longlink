@@ -9,7 +9,20 @@ export default function FileViewerPage() {
             name="FileViewer"
             reference={{
                 introduction: 'FileViewer opens an image attachment preview through the scoped Solution API.',
-                properties: [],
+                properties: [
+                    {
+                        name: 'src',
+                        type: 'string',
+                        required: true,
+                        description: 'Scoped Solution operation path returning the image to preview.',
+                    },
+                    {
+                        name: 'title',
+                        type: 'string',
+                        required: true,
+                        description: 'Accessible label for the preview trigger and image.',
+                    },
+                ],
                 practices: [
                     {
                         guidance: true,

@@ -21,7 +21,7 @@ export function FileInput(
             isMultiple={props.isMultiple ?? false}
             mode={props.mode ?? 'input'}
             placeholder={props.placeholder ?? (props.isMultiple ? 'Choose files' : 'Choose file')}
-            isLabelHidden={props.isLabelHidden ?? false}
+            isLabelHidden={false}
             isRequired={props.isRequired ?? false}
             isDisabled={props.isDisabled ?? false}
             changeAction={undefined}

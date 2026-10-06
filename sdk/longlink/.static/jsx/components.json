@@ -41,7 +41,7 @@
     {
         "name": "Badge",
         "category": "Display",
-        "declaration": "declare function Badge(props: {\n    label?: ViewNode;\n    icon?: ViewNode;\n    variant?:\n        | 'neutral'\n        | 'info'\n        | 'success'\n        | 'warning'\n        | 'error'\n        | 'blue'\n        | 'cyan'\n        | 'green'\n        | 'orange'\n        | 'pink'\n        | 'purple'\n        | 'red'\n        | 'teal'\n        | 'yellow';\n}): React.JSX.Element;",
+        "declaration": "declare function Badge(props: {\n    label?: ViewNode;\n    icon?: string;\n    variant?:\n        | 'neutral'\n        | 'info'\n        | 'success'\n        | 'warning'\n        | 'error'\n        | 'blue'\n        | 'cyan'\n        | 'green'\n        | 'orange'\n        | 'pink'\n        | 'purple'\n        | 'red'\n        | 'teal'\n        | 'yellow';\n}): React.JSX.Element;",
         "properties": [
             {
                 "name": "label",
@@ -51,7 +51,7 @@
             },
             {
                 "name": "icon",
-                "type": "ReactNode",
+                "type": "string",
                 "required": false,
                 "description": "Optional leading icon."
             },
@@ -67,7 +67,7 @@
     {
         "name": "Button",
         "category": "Action",
-        "declaration": "type ViewMouseEvent = Omit<MouseEvent, 'currentTarget'> & { currentTarget: HTMLElement; nativeEvent: MouseEvent };\n\ntype ButtonProps = {\n    label: string;\n    variant?: 'primary' | 'secondary' | 'ghost' | 'destructive';\n    size?: 'sm' | 'md' | 'lg';\n    type?: 'button' | 'submit' | 'reset';\n    name?: string;\n    value?: string | number | readonly string[];\n    form?: string;\n    icon?: ViewNode;\n    endContent?: ViewNode;\n    tooltip?: string;\n    width?: number | string;\n    isDisabled?: boolean;\n    href?: string;\n    onClick?: (event: ViewMouseEvent) => void | Promise<void>;\n};\n\ndeclare function Button(props: ButtonProps): React.JSX.Element;",
+        "declaration": "type ViewMouseEvent = Omit<MouseEvent, 'currentTarget'> & { currentTarget: HTMLElement; nativeEvent: MouseEvent };\n\ntype ButtonProps = {\n    label: string;\n    variant?: 'primary' | 'secondary' | 'ghost' | 'destructive';\n    size?: 'sm' | 'md' | 'lg';\n    type?: 'button' | 'submit' | 'reset';\n    name?: string;\n    value?: string | number | readonly string[];\n    form?: string;\n    icon?: string;\n    endContent?: ViewNode;\n    tooltip?: string;\n    width?: number | string;\n    isDisabled?: boolean;\n    href?: string;\n    onClick?: (event: ViewMouseEvent) => void | Promise<void>;\n};\n\ndeclare function Button(props: ButtonProps): React.JSX.Element;",
         "properties": [
             {
                 "name": "label",
@@ -116,7 +116,7 @@
             },
             {
                 "name": "icon",
-                "type": "ReactNode",
+                "type": "string",
                 "required": false,
                 "description": "Icon element rendered before the label text. An Astryx Icon with no explicit size defaults to sm for sm/md buttons and md for lg buttons."
             },
@@ -202,7 +202,7 @@
     {
         "name": "Card",
         "category": "Layouts",
-        "declaration": "type CardProps = {\n    /** Content rendered inside the card. */\n    children?: ViewNode;\n    padding?: 0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10;\n    variant?:\n        | 'default'\n        | 'transparent'\n        | 'muted'\n        | 'blue'\n        | 'cyan'\n        | 'gray'\n        | 'green'\n        | 'orange'\n        | 'pink'\n        | 'purple'\n        | 'red'\n        | 'teal'\n        | 'yellow';\n    /** Card width; numbers are pixels and strings are CSS sizes. */\n    width?: number | string;\n    /** Card height; numbers are pixels and strings are CSS sizes. */\n    height?: number | string;\n    /** Maximum card width. */\n    maxWidth?: number | string;\n    /** Minimum card height. */\n    minHeight?: number | string;\n    /** HTML ID for linking to the card. */\n    id?: string;\n    /** Makes the card and its descendants non-interactive. */\n    inert?: boolean;\n    /** Hides the card from assistive technologies. */\n    'aria-hidden'?: boolean | 'true' | 'false';\n    label?: string;\n    /** Makes the card clickable and receives its activation event. */\n    onClick?: (event: ViewMouseEvent) => void;\n    /** Makes the card a navigation target when no selection callback is supplied. */\n    href?: string;\n    target?: string;\n    isDisabled?: boolean;\n    isSelected?: boolean;\n    /** Makes the card selectable and receives its next selection state; takes priority over activation. */\n    onChange?: (isSelected: boolean) => void;\n};\n\ndeclare function Card(props: CardProps): React.JSX.Element;",
+        "declaration": "type CardProps = {\n    /** Content rendered inside the card. */\n    children?: ViewNode;\n    padding?: 0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10;\n    variant?:\n        | 'default'\n        | 'transparent'\n        | 'muted'\n        | 'blue'\n        | 'cyan'\n        | 'gray'\n        | 'green'\n        | 'orange'\n        | 'pink'\n        | 'purple'\n        | 'red'\n        | 'teal'\n        | 'yellow';\n    /** Card width; numbers are pixels and strings are CSS sizes. */\n    width?: number | string;\n    /** Card height; numbers are pixels and strings are CSS sizes. */\n    height?: number | string;\n    /** Maximum card width. */\n    maxWidth?: number | string;\n    /** Minimum card height. */\n    minHeight?: number | string;\n    /** Makes the card and its descendants non-interactive. */\n    inert?: boolean;\n    /** Hides the card from assistive technologies. */\n    'aria-hidden'?: boolean | 'true' | 'false';\n    label?: string;\n    /** Makes the card clickable and receives its activation event. */\n    onClick?: (event: ViewMouseEvent) => void;\n    /** Makes the card a navigation target when no selection callback is supplied. */\n    href?: string;\n    target?: string;\n    isDisabled?: boolean;\n    isSelected?: boolean;\n    /** Makes the card selectable and receives its next selection state; takes priority over activation. */\n    onChange?: (isSelected: boolean) => void;\n};\n\ndeclare function Card(props: CardProps): React.JSX.Element;",
         "properties": [
             {
                 "name": "children",
@@ -247,12 +247,6 @@
                 "type": "string | number",
                 "required": false,
                 "description": "Minimum card height."
-            },
-            {
-                "name": "id",
-                "type": "string",
-                "required": false,
-                "description": "HTML ID for linking to the card."
             },
             {
                 "name": "inert",
@@ -332,13 +326,6 @@
                 "description": "Description text displayed below the label."
             },
             {
-                "name": "isLabelHidden",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Whether to visually hide the label (still accessible to screen readers). Default: false."
-            },
-            {
                 "name": "isRequired",
                 "type": "boolean",
                 "required": false,
@@ -351,12 +338,6 @@
                 "required": false,
                 "default": "false",
                 "description": "Whether the checkbox is disabled. Default: false."
-            },
-            {
-                "name": "status",
-                "type": "{ type: \"success\" | \"warning\" | \"error\"; message?: string; }",
-                "required": false,
-                "description": "Status indicator. Displays a colored message box below the checkbox and sets aria-invalid for errors."
             },
             {
                 "name": "width",
@@ -519,13 +500,6 @@
                 "description": "Helper text displayed below the label."
             },
             {
-                "name": "isLabelHidden",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Visually hide the label. Default: false."
-            },
-            {
                 "name": "isRequired",
                 "type": "boolean",
                 "required": false,
@@ -538,12 +512,6 @@
                 "required": false,
                 "default": "false",
                 "description": "Disable the input and calendar. Default: false."
-            },
-            {
-                "name": "status",
-                "type": "{ type: \"success\" | \"warning\" | \"error\"; message?: string; }",
-                "required": false,
-                "description": "Status indicator object for error, warning, or success states with a message."
             },
             {
                 "name": "width",
@@ -622,13 +590,6 @@
                 "description": "Helper text displayed below the label."
             },
             {
-                "name": "isLabelHidden",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Visually hide the label. Default: false."
-            },
-            {
                 "name": "isRequired",
                 "type": "boolean",
                 "required": false,
@@ -641,12 +602,6 @@
                 "required": false,
                 "default": "false",
                 "description": "Disable the trigger and picker. Default: false."
-            },
-            {
-                "name": "status",
-                "type": "{ type: \"success\" | \"warning\" | \"error\"; message?: string; }",
-                "required": false,
-                "description": "Status indicator for error, warning, or success states."
             },
             {
                 "name": "width",
@@ -737,13 +692,6 @@
                 "description": "Helper text displayed below the label."
             },
             {
-                "name": "isLabelHidden",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Visually hide the label. Default: false."
-            },
-            {
                 "name": "isRequired",
                 "type": "boolean",
                 "required": false,
@@ -756,12 +704,6 @@
                 "required": false,
                 "default": "false",
                 "description": "Disable the input and picker. Default: false."
-            },
-            {
-                "name": "status",
-                "type": "{ type: \"success\" | \"warning\" | \"error\"; message?: string; }",
-                "required": false,
-                "description": "Status indicator object for error, warning, or success states with a message."
             },
             {
                 "name": "width",
@@ -905,7 +847,7 @@
     {
         "name": "DropdownMenu",
         "category": "Action",
-        "declaration": "type DropdownMenuItemData = {\n    id?: string;\n    label: ViewNode;\n    icon?: ViewNode;\n    description?: ViewNode;\n    endContent?: ViewNode;\n    variant?: 'default' | 'destructive';\n    isDisabled?: boolean;\n    hasCloseOnSelect?: boolean;\n    onClick?: () => void;\n    items?: DropdownMenuOption[];\n};\n\ntype DropdownMenuOption =\n    | DropdownMenuItemData\n    | { type: 'divider' }\n    | {\n          type: 'section';\n          id?: string;\n          title?: string;\n          items: DropdownMenuItemData[];\n      };\n\ndeclare function DropdownMenu(props: {\n    button?: {\n        label: string;\n        variant?: 'primary' | 'secondary' | 'ghost' | 'destructive';\n        size?: 'sm' | 'md' | 'lg';\n        isDisabled?: boolean;\n    };\n    items: DropdownMenuOption[];\n    isMenuOpen?: boolean;\n    onOpenChange?: (isOpen: boolean) => void;\n}): React.JSX.Element;",
+        "declaration": "type DropdownMenuItemData = {\n    id?: string;\n    label: ViewNode;\n    icon?: string;\n    description?: ViewNode;\n    endContent?: ViewNode;\n    variant?: 'default' | 'destructive';\n    isDisabled?: boolean;\n    hasCloseOnSelect?: boolean;\n    onClick?: () => void;\n    items?: DropdownMenuOption[];\n};\n\ntype DropdownMenuOption =\n    | DropdownMenuItemData\n    | { type: 'divider' }\n    | {\n          type: 'section';\n          id?: string;\n          title?: string;\n          items: DropdownMenuItemData[];\n      };\n\ndeclare function DropdownMenu(props: {\n    button?: {\n        label: string;\n        variant?: 'primary' | 'secondary' | 'ghost' | 'destructive';\n        size?: 'sm' | 'md' | 'lg';\n        isDisabled?: boolean;\n    };\n    items: DropdownMenuOption[];\n    isMenuOpen?: boolean;\n    onOpenChange?: (isOpen: boolean) => void;\n}): React.JSX.Element;",
         "properties": [
             {
                 "name": "button",
@@ -972,13 +914,6 @@
                 "description": "Description text displayed between the label and input."
             },
             {
-                "name": "isLabelHidden",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Visually hides the label while keeping it accessible to screen readers. Default: false."
-            },
-            {
                 "name": "isRequired",
                 "type": "boolean",
                 "required": false,
@@ -991,12 +926,6 @@
                 "required": false,
                 "default": "false",
                 "description": "Disables the input, preventing interaction and dimming the element. Default: false."
-            },
-            {
-                "name": "status",
-                "type": "{ type: \"success\" | \"warning\" | \"error\"; message?: string; }",
-                "required": false,
-                "description": "Validation status: applies a colored border. If message is provided, displays a floating message below the input. Error type also sets aria-invalid."
             },
             {
                 "name": "width",
@@ -1200,7 +1129,7 @@
     {
         "name": "IconButton",
         "category": "Action",
-        "declaration": "declare function IconButton(props: {\n    label: string;\n    icon: ViewNode;\n    variant?: 'primary' | 'secondary' | 'ghost' | 'destructive';\n    size?: 'sm' | 'md' | 'lg';\n    tooltip?: string;\n    isDisabled?: boolean;\n    onClick?: (event: ViewMouseEvent) => void | Promise<void>;\n}): React.JSX.Element;",
+        "declaration": "declare function IconButton(props: {\n    label: string;\n    icon: string;\n    variant?: 'primary' | 'secondary' | 'ghost' | 'destructive';\n    size?: 'sm' | 'md' | 'lg';\n    tooltip?: string;\n    isDisabled?: boolean;\n    onClick?: (event: ViewMouseEvent) => void | Promise<void>;\n}): React.JSX.Element;",
         "properties": [
             {
                 "name": "label",
@@ -1210,7 +1139,7 @@
             },
             {
                 "name": "icon",
-                "type": "ReactNode",
+                "type": "string",
                 "required": true,
                 "description": "Icon element rendered inside the button. An Astryx Icon with no explicit size defaults to sm for sm/md buttons and md for lg buttons."
             },
@@ -1345,7 +1274,7 @@
     {
         "name": "MetadataList",
         "category": "Display",
-        "declaration": "declare function MetadataList(props: {\n    children?: ViewNode;\n    columns?: 'multi' | 'single' | number;\n    title?: ViewNode;\n}): React.JSX.Element;\n\ndeclare function MetadataListItem(props: {\n    /** Value rendered beside the metadata label. */\n    children?: ViewNode;\n    /** Label identifying the metadata value. */\n    label: string;\n    /** Optional icon displayed beside the metadata label. */\n    icon?: ViewNode;\n}): React.JSX.Element;",
+        "declaration": "declare function MetadataList(props: {\n    children?: ViewNode;\n    columns?: 'multi' | 'single' | number;\n    title?: ViewNode;\n}): React.JSX.Element;\n\ndeclare function MetadataListItem(props: {\n    /** Value rendered beside the metadata label. */\n    children?: ViewNode;\n    /** Label identifying the metadata value. */\n    label: string;\n    /** Optional icon displayed beside the metadata label. */\n    icon?: string;\n}): React.JSX.Element;",
         "properties": [
             {
                 "name": "children",
@@ -1380,7 +1309,7 @@
             },
             {
                 "name": "MetadataListItem.icon",
-                "type": "ReactNode",
+                "type": "string",
                 "required": false,
                 "description": "Optional icon displayed beside the metadata label."
             }
@@ -1389,7 +1318,7 @@
     {
         "name": "MoreMenu",
         "category": "Action",
-        "declaration": "declare function MoreMenu(props: {\n    items: DropdownMenuOption[];\n    label?: string;\n    icon?: ViewNode;\n    isDisabled?: boolean;\n    onOpenChange?: (isOpen: boolean) => void;\n}): React.JSX.Element;",
+        "declaration": "declare function MoreMenu(props: {\n    items: DropdownMenuOption[];\n    label?: string;\n    icon?: string;\n    isDisabled?: boolean;\n    onOpenChange?: (isOpen: boolean) => void;\n}): React.JSX.Element;",
         "properties": [
             {
                 "name": "items",
@@ -1406,7 +1335,7 @@
             },
             {
                 "name": "icon",
-                "type": "ReactNode",
+                "type": "string",
                 "required": false,
                 "description": "Override the default three-dot icon. Accepts any ReactNode."
             },
@@ -1443,13 +1372,6 @@
                 "description": "Helper text displayed below the label."
             },
             {
-                "name": "isLabelHidden",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Visually hides the label while keeping it accessible. Default: false."
-            },
-            {
                 "name": "isRequired",
                 "type": "boolean",
                 "required": false,
@@ -1462,12 +1384,6 @@
                 "required": false,
                 "default": "false",
                 "description": "Disables the selector. Default: false."
-            },
-            {
-                "name": "status",
-                "type": "{ type: \"success\" | \"warning\" | \"error\"; message?: string; }",
-                "required": false,
-                "description": "Validation status with an optional message."
             },
             {
                 "name": "width",
@@ -1561,13 +1477,6 @@
                 "description": "Description text displayed between the label and input."
             },
             {
-                "name": "isLabelHidden",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Visually hide the label (still accessible to screen readers). Default: false."
-            },
-            {
                 "name": "isRequired",
                 "type": "boolean",
                 "required": false,
@@ -1580,12 +1489,6 @@
                 "required": false,
                 "default": "false",
                 "description": "Whether the input is disabled. Default: false."
-            },
-            {
-                "name": "status",
-                "type": "{ type: \"success\" | \"warning\" | \"error\"; message?: string; }",
-                "required": false,
-                "description": "Validation status with optional message."
             },
             {
                 "name": "width",
@@ -1681,7 +1584,7 @@
     {
         "name": "ProgressBar",
         "category": "Display",
-        "declaration": "declare function ProgressBar(props: {\n    label: string;\n    value?: number;\n    max?: number;\n    isLabelHidden?: boolean;\n    hasValueLabel?: boolean;\n    variant?: 'accent' | 'success' | 'warning' | 'error' | 'neutral';\n    isIndeterminate?: boolean;\n}): React.JSX.Element;",
+        "declaration": "declare function ProgressBar(props: {\n    label: string;\n    value?: number;\n    max?: number;\n    hasValueLabel?: boolean;\n    variant?: 'accent' | 'success' | 'warning' | 'error' | 'neutral';\n}): React.JSX.Element;",
         "properties": [
             {
                 "name": "label",
@@ -1704,13 +1607,6 @@
                 "description": "Maximum value. Default: 100."
             },
             {
-                "name": "isLabelHidden",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Visually hide the label (remains accessible). Default: false."
-            },
-            {
                 "name": "hasValueLabel",
                 "type": "boolean",
                 "required": false,
@@ -1723,13 +1619,6 @@
                 "required": false,
                 "default": "'accent'",
                 "description": "Semantic color variant. Default: 'accent'."
-            },
-            {
-                "name": "isIndeterminate",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Animated loading indicator for unknown progress. Default: false."
             }
         ]
     },
@@ -1751,13 +1640,6 @@
                 "description": "Description text displayed below the label."
             },
             {
-                "name": "isLabelHidden",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Whether to visually hide the label. Default: false."
-            },
-            {
                 "name": "isRequired",
                 "type": "boolean",
                 "required": false,
@@ -1770,12 +1652,6 @@
                 "required": false,
                 "default": "false",
                 "description": "Whether all radio items are disabled. Default: false."
-            },
-            {
-                "name": "status",
-                "type": "{ type: \"success\" | \"warning\" | \"error\"; message?: string; }",
-                "required": false,
-                "description": "Status indicator ({ type, message })."
             },
             {
                 "name": "width",
@@ -1851,7 +1727,7 @@
     {
         "name": "Selector",
         "category": "Form",
-        "declaration": "type SelectorOptionData = {\n    value: string;\n    label?: string;\n    description?: ViewNode;\n    icon?: ViewNode;\n    disabled?: boolean;\n};\n\ntype SelectorOptionType =\n    | string\n    | SelectorOptionData\n    | { type: 'divider' }\n    | {\n          type: 'section';\n          title?: string;\n          options: SelectorOptionData[];\n      };\n\ndeclare function Selector(\n    props: FieldProps & {\n        options: SelectorOptionType[];\n        hasSearch?: boolean;\n        placeholder?: string;\n        size?: 'sm' | 'md' | 'lg';\n        isReadOnly?: boolean;\n        htmlName?: string;\n    } & (\n            | { hasClear?: false; value?: string; onChange?: (value: string) => void }\n            | { hasClear: true; value: string | null; onChange?: (value: string | null) => void }\n        ),\n): React.JSX.Element;",
+        "declaration": "type SelectorOptionData = {\n    value: string;\n    label?: string;\n    description?: ViewNode;\n    icon?: string;\n    disabled?: boolean;\n};\n\ntype SelectorOptionType =\n    | string\n    | SelectorOptionData\n    | { type: 'divider' }\n    | {\n          type: 'section';\n          title?: string;\n          options: SelectorOptionData[];\n      };\n\ndeclare function Selector(\n    props: FieldProps & {\n        options: SelectorOptionType[];\n        hasSearch?: boolean;\n        placeholder?: string;\n        size?: 'sm' | 'md' | 'lg';\n        isReadOnly?: boolean;\n        htmlName?: string;\n    } & (\n            | { hasClear?: false; value?: string; onChange?: (value: string) => void }\n            | { hasClear: true; value: string | null; onChange?: (value: string | null) => void }\n        ),\n): React.JSX.Element;",
         "properties": [
             {
                 "name": "label",
@@ -1866,13 +1742,6 @@
                 "description": "Helper text displayed below the label."
             },
             {
-                "name": "isLabelHidden",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Visually hides the label while keeping it accessible. Default: false."
-            },
-            {
                 "name": "isRequired",
                 "type": "boolean",
                 "required": false,
@@ -1885,12 +1754,6 @@
                 "required": false,
                 "default": "false",
                 "description": "Disables the selector. Default: false."
-            },
-            {
-                "name": "status",
-                "type": "{ type: \"success\" | \"warning\" | \"error\"; message?: string; }",
-                "required": false,
-                "description": "Validation status with an optional message."
             },
             {
                 "name": "width",
@@ -1977,13 +1840,6 @@
                 "description": "Description text rendered below the label."
             },
             {
-                "name": "isLabelHidden",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Whether to visually hide the label. Default: false."
-            },
-            {
                 "name": "isRequired",
                 "type": "boolean",
                 "required": false,
@@ -1996,12 +1852,6 @@
                 "required": false,
                 "default": "false",
                 "description": "Whether the slider is disabled. Default: false."
-            },
-            {
-                "name": "status",
-                "type": "{ type: \"success\" | \"warning\" | \"error\"; message?: string; }",
-                "required": false,
-                "description": "Status indicator object (`{ type, message }`) for validation feedback."
             },
             {
                 "name": "width",
@@ -2066,7 +1916,7 @@
     {
         "name": "Stack",
         "category": "Layouts",
-        "declaration": "declare function Stack(props: {\n    children?: ViewNode;\n    gap?: Spacing;\n    padding?: Spacing;\n    direction?: 'horizontal' | 'vertical';\n    justify?: 'start' | 'center' | 'end' | 'between' | 'around' | 'evenly';\n    align?: 'start' | 'center' | 'end' | 'stretch';\n    wrap?: 'nowrap' | 'wrap' | 'wrap-reverse';\n}): React.JSX.Element;\n\ndeclare function StackItem(props: {\n    /** Content rendered inside the stack item. */\n    children?: ViewNode;\n    size?: 'static' | 'fill';\n    isScrollable?: boolean;\n    /** Overrides this item's cross-axis alignment; omitted values inherit the parent alignment. */\n    crossAlignSelf?: 'start' | 'center' | 'end' | 'stretch';\n}): React.JSX.Element;",
+        "declaration": "declare function Stack(props: {\n    children?: ViewNode;\n    /** Spacing between items. */\n    gap?: Spacing;\n    padding?: Spacing;\n    direction?: 'horizontal' | 'vertical';\n    justify?: 'start' | 'center' | 'end' | 'between' | 'around' | 'evenly';\n    align?: 'start' | 'center' | 'end' | 'stretch';\n    wrap?: 'nowrap' | 'wrap' | 'wrap-reverse';\n}): React.JSX.Element;\n\ndeclare function StackItem(props: {\n    /** Content rendered inside the stack item. */\n    children?: ViewNode;\n    size?: 'static' | 'fill';\n    isScrollable?: boolean;\n    /** Overrides this item's cross-axis alignment; omitted values inherit the parent alignment. */\n    crossAlignSelf?: 'start' | 'center' | 'end' | 'stretch';\n}): React.JSX.Element;",
         "properties": [
             {
                 "name": "children",
@@ -2079,7 +1929,7 @@
                 "type": "0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10",
                 "required": false,
                 "default": "3",
-                "description": "Spacing step (number literal): 0, 0.5, 1, 1.5, 2, 3, 4, 5, 6, 8, 10. Pass as a JSX number expression e.g. gap={4}, NOT a string like gap=\"4\". Default: 3."
+                "description": "Spacing between items. Default: 3."
             },
             {
                 "name": "padding",
@@ -2226,13 +2076,6 @@
                 "description": "Description text displayed below the label."
             },
             {
-                "name": "isLabelHidden",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Visually hides the label while keeping it accessible to screen readers. Default: false."
-            },
-            {
                 "name": "isRequired",
                 "type": "boolean",
                 "required": false,
@@ -2245,12 +2088,6 @@
                 "required": false,
                 "default": "false",
                 "description": "Whether the switch is disabled. Default: false."
-            },
-            {
-                "name": "status",
-                "type": "{ type: \"success\" | \"warning\" | \"error\"; message?: string; }",
-                "required": false,
-                "description": "Status indicator with type and message. Displays a colored message box below the switch and sets aria-invalid when type is \"error\"."
             },
             {
                 "name": "width",
@@ -2334,7 +2171,7 @@
     {
         "name": "Tabs",
         "category": "Layouts",
-        "declaration": "declare function Tabs(props: {\n    /** Tab elements defining labels and panel content. */\n    children?: ViewNode;\n    gap?: 0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10;\n    hasDivider?: boolean;\n    /** Receives the selected Tab value; use with value to control selection. */\n    onChange?: (value: string) => void;\n    /** Selected Tab value; omit for internal selection, initially choosing the first tab. */\n    value?: string;\n}): React.JSX.Element;\n\ndeclare function Tab(props: {\n    /** Panel content mounted only while this tab is selected. */\n    children?: ViewNode;\n    /** Unique value identifying this tab. */\n    value: string;\n    /** Visible tab label and accessible panel name. */\n    label: string;\n    /** Whether the tab is disabled. */\n    isDisabled?: boolean;\n    /** Panel element ID; omitted values use an automatically generated ID. */\n    panelId?: string;\n}): React.JSX.Element;",
+        "declaration": "declare function Tabs(props: {\n    /** Tab elements defining labels and panel content. */\n    children?: ViewNode;\n    gap?: 0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10;\n    hasDivider?: boolean;\n    /** Receives the selected Tab value; use with value to control selection. */\n    onChange?: (value: string) => void;\n    /** Selected Tab value; omit for internal selection, initially choosing the first tab. */\n    value?: string;\n}): React.JSX.Element;\n\ndeclare function Tab(props: {\n    /** Panel content mounted only while this tab is selected. */\n    children?: ViewNode;\n    /** Unique value identifying this tab. */\n    value: string;\n    /** Visible tab label and accessible panel name. */\n    label: string;\n    /** Whether the tab is disabled. */\n    isDisabled?: boolean;\n}): React.JSX.Element;",
         "properties": [
             {
                 "name": "children",
@@ -2391,12 +2228,6 @@
                 "type": "boolean",
                 "required": false,
                 "description": "Whether the tab is disabled."
-            },
-            {
-                "name": "Tab.panelId",
-                "type": "string",
-                "required": false,
-                "description": "Panel element ID; omitted values use an automatically generated ID."
             }
         ]
     },
@@ -2430,7 +2261,7 @@
     {
         "name": "TextArea",
         "category": "Form",
-        "declaration": "declare function TextArea(\n    props: FieldProps & {\n        value: string;\n        onChange?: (value: string) => void;\n        placeholder?: string;\n        rows?: number;\n        maxLength?: number;\n        isReadOnly?: boolean;\n        hasSpellCheck?: boolean;\n        hasAutoFocus?: boolean;\n        htmlName?: string;\n        autoComplete?: string;\n    },\n): React.JSX.Element;",
+        "declaration": "declare function TextArea(\n    props: FieldProps & {\n        value: string;\n        onChange?: (value: string) => void;\n        placeholder?: string;\n        rows?: number;\n        maxLength?: number;\n        isReadOnly?: boolean;\n        hasAutoFocus?: boolean;\n        htmlName?: string;\n        autoComplete?: string;\n    },\n): React.JSX.Element;",
         "properties": [
             {
                 "name": "label",
@@ -2445,13 +2276,6 @@
                 "description": "Helper text displayed between the label and textarea."
             },
             {
-                "name": "isLabelHidden",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Visually hides the label while keeping it accessible to screen readers. Default: false."
-            },
-            {
                 "name": "isRequired",
                 "type": "boolean",
                 "required": false,
@@ -2464,12 +2288,6 @@
                 "required": false,
                 "default": "false",
                 "description": "Disables the textarea, preventing interaction. Default: false."
-            },
-            {
-                "name": "status",
-                "type": "{ type: \"success\" | \"warning\" | \"error\"; message?: string; }",
-                "required": false,
-                "description": "Status indicator that applies a colored border and icon. An optional message is displayed in a floating box below the textarea."
             },
             {
                 "name": "width",
@@ -2516,13 +2334,6 @@
                 "description": "Makes the textarea read-only: the value is shown at full opacity and still submits with the form, but cannot be edited. Unlike isDisabled, a read-only textarea is not dimmed and stays in the tab order. isDisabled takes precedence when both are set. Default: false."
             },
             {
-                "name": "hasSpellCheck",
-                "type": "boolean",
-                "required": false,
-                "default": "true",
-                "description": "Enables or disables browser spell checking. Default: true."
-            },
-            {
                 "name": "hasAutoFocus",
                 "type": "boolean",
                 "required": false,
@@ -2561,13 +2372,6 @@
                 "description": "Description text displayed between the label and input."
             },
             {
-                "name": "isLabelHidden",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Visually hides the label while keeping it accessible to screen readers. Default: false."
-            },
-            {
                 "name": "isRequired",
                 "type": "boolean",
                 "required": false,
@@ -2580,12 +2384,6 @@
                 "required": false,
                 "default": "false",
                 "description": "Disables the input, preventing interaction and dimming the element. Default: false."
-            },
-            {
-                "name": "status",
-                "type": "{ type: \"success\" | \"warning\" | \"error\"; message?: string; }",
-                "required": false,
-                "description": "Validation status: applies a colored border and status icon. If message is provided, displays a floating message below the input. Error type also sets aria-invalid."
             },
             {
                 "name": "width",
@@ -2690,13 +2488,6 @@
                 "description": "Description text displayed between the label and input."
             },
             {
-                "name": "isLabelHidden",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Visually hides the label while keeping it accessible to screen readers. Default: false."
-            },
-            {
                 "name": "isRequired",
                 "type": "boolean",
                 "required": false,
@@ -2709,12 +2500,6 @@
                 "required": false,
                 "default": "false",
                 "description": "Disables the input and suppresses interactions. Default: false."
-            },
-            {
-                "name": "status",
-                "type": "{ type: \"success\" | \"warning\" | \"error\"; message?: string; }",
-                "required": false,
-                "description": "Status indicator that colors the border and displays an icon. When a message is provided it is rendered below the input."
             },
             {
                 "name": "width",

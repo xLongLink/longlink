@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react';
 import { Code } from '@astryxdesign/core/Code';
-import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { useSearchParams } from 'react-router';
 import { Badge } from '@astryxdesign/core/Badge';
@@ -11,7 +10,6 @@ import references from '@/lib/generated/components.json';
 import { componentDocumentation } from '@/platform/docs';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { Tab, TabList } from '@astryxdesign/core/TabList';
-import { Collapsible } from '@astryxdesign/core/Collapsible';
 import { documentationLastUpdated } from '@/lib/documentation';
 import { Table, proportional } from '@astryxdesign/core/Table';
 
@@ -82,16 +80,9 @@ export default function ViewLayout({
     return (
         <Article page={article}>
             <Stack gap={5}>
-                <Stack gap={0}>
-                    <Heading id="introduction" level={1}>
-                        {component.label}
-                    </Heading>
-                    {upstream && (
-                        <Link href={upstream.url} hasUnderline>
-                            Astryx documentation
-                        </Link>
-                    )}
-                </Stack>
+                <Heading id="introduction" level={1}>
+                    {component.label}
+                </Heading>
                 <Text as="p">
                     {reference?.introduction ?? `${name} is supplied by the isolated LongLink renderer.`}
                 </Text>
@@ -102,27 +93,6 @@ export default function ViewLayout({
                     hasLanguageLabel={false}
                     isWrapped
                 />
-                <Collapsible key={name} trigger="Command output" defaultIsOpen={false} chevronPosition="start">
-                    <CodeBlock
-                        code={
-                            'members' in component && component.members
-                                ? `${name} [${component.category}]\n${component.members.map((member) => `- ${member.name}:\n  ${member.description}`).join('\n\n')}`
-                                : `${name} [${component.category}]\n${
-                                      ('properties' in component && component.properties
-                                          ? component.properties
-                                                .map(
-                                                    (prop) =>
-                                                        `- ${prop.name} (${prop.type}):\n  ${prop.description ?? ''}`
-                                                )
-                                                .join('\n\n')
-                                          : '') || 'No props.'
-                                  }`
-                        }
-                        language="plaintext"
-                        hasLanguageLabel={false}
-                        isWrapped
-                    />
-                </Collapsible>
                 {runtime ? (
                     (children ?? (
                         <Stack id="reference">
@@ -179,10 +149,7 @@ export default function ViewLayout({
                                         </Stack>
                                     ))}
                                     {upstream && !examples.length && (
-                                        <Text as="p">
-                                            Astryx does not publish standalone examples for this component. See its
-                                            documentation link above.
-                                        </Text>
+                                        <Text as="p">No standalone examples are available for this component.</Text>
                                     )}
                                 </>
                             )}
@@ -204,17 +171,6 @@ export default function ViewLayout({
                                                             <Stack direction="horizontal" align="center" gap={2}>
                                                                 <Text>{property.name}</Text>
                                                                 <Code className="text-sm">{property.type}</Code>
-                                                                {property.required && (
-                                                                    <Badge
-                                                                        variant="blue"
-                                                                        className="h-4 shrink-0 px-1"
-                                                                        label={
-                                                                            <Text size="xsm" color="inherit">
-                                                                                Required
-                                                                            </Text>
-                                                                        }
-                                                                    />
-                                                                )}
                                                             </Stack>
                                                             <Text type="supporting">{property.description}</Text>
                                                         </Stack>

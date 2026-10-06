@@ -31,7 +31,7 @@ export function MultiSelector(
             hasSearch={props.hasSearch ?? false}
             hasClear={props.hasClear ?? false}
             isReadOnly={props.isReadOnly ?? false}
-            isLabelHidden={props.isLabelHidden ?? false}
+            isLabelHidden={false}
             isRequired={props.isRequired ?? false}
             isDisabled={props.isDisabled ?? false}
             changeAction={undefined}

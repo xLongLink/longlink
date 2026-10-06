@@ -32,7 +32,7 @@ export function TextInput(props: TextInputProps) {
             isReadOnly={props.isReadOnly ?? false}
             hasClear={props.hasClear ?? false}
             hasAutoFocus={props.hasAutoFocus ?? false}
-            isLabelHidden={props.isLabelHidden ?? false}
+            isLabelHidden={false}
             isRequired={props.isRequired ?? false}
             isDisabled={props.isDisabled ?? false}
             changeAction={undefined}
