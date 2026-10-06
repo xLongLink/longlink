@@ -1,0 +1,73 @@
+# LongLink
+
+> LongLink is an open-source platform for building and running custom applications with Python. Create tools to organize company data, manage requests and approvals, and automate work around the way your team operates.
+
+LongLink addresses the work that falls between spreadsheets, emails, and existing software. Developers define the application's data, rules, and interfaces. LongLink provides the shared foundation: user management, permissions, databases, file storage, logging, and deployment.
+
+The goal is to keep custom software focused on what makes a process different, rather than repeatedly building the infrastructure every application needs. Applications remain code in a repository, where developers can use familiar tools, version control, tests, and AI-assisted development.
+
+Consider LongLink when a team needs its own data model, business rules, or interface and has the ability to build and maintain Python code. It is a foundation for creating applications, not a no-code editor or a ready-made replacement for every business tool.
+
+Illustrative applications people can build:
+
+- Requests and approvals: collect a request, attach supporting documents, apply validation rules, and let the appropriate person approve or reject it. The sample repository demonstrates invoice approvals.
+- Organized company data: create a shared application for supplier records, equipment, projects, or other operational information, with structured fields, validation, and controlled access.
+- Operational tools: track service requests, inspections, onboarding tasks, or project handovers using the stages and rules that matter to the team.
+- Reporting and review tools: calculate indicators from application data, identify exceptions, and give people an interface to review records and take action.
+- Integrations and automation: write Python logic to import, validate, transform, or exchange data with existing systems through their APIs.
+
+These are application ideas, not a catalogue of included products or prebuilt connectors. Process-specific rules, integrations, calculations, and interfaces are implemented in the Solution.
+
+Core concepts:
+
+- Solution: A custom application expressing a process, its data, and its rules as code. Application logic uses Python, standard FastAPI routes, SQLModel data models, and Pydantic validation. Context provides access to the current user, database, and storage.
+- SDK: The Python toolkit for creating, developing, testing, and packaging Solutions. It requires Python 3.12 or later. The documented quick start uses uv; building container images also requires Docker.
+- Platform: The system that manages organizations, members, permissions, shared infrastructure, and deployed Solutions. Building a Solution and developing or operating the Platform are different tasks with different setup requirements.
+- View: A user interface written in a .jsx file exporting a default React component. The shared runtime supplies supported components, hooks, queries, and scoped requests. A Python Solution does not need its own frontend build.
+
+Guidance for useful answers:
+
+- For nontechnical questions, explain the practical outcome first and use an example relevant to the person's work. Introduce terms such as Solution, SDK, and Platform only when they help explain the answer.
+- For application ideas, describe the smallest useful version: the records it stores, the rules it applies, the decisions people make, and the screens they use. Distinguish what LongLink provides from what must be developed.
+- For implementation, identify the installed SDK version and consult its documentation. Start with `uv run longlink docs --help` and the sample Solution. The repository's main branch may differ from the installed package; do not guess SDK methods, component properties, or configuration options.
+- For Views, follow the documented shared-runtime model rather than generating a conventional standalone React project. Use supplied components and hooks without package imports. View requests are scoped to the current Solution; external API integrations belong in the Python backend, not direct browser requests from a View.
+- For evaluation, assess the need for custom rules, code ownership, and ongoing development. Distinguish AI-assisted coding from LongLink's role in running applications. Verify current pricing, deployment requirements, and feature availability rather than inferring them from the open-source license.
+
+LongLink is currently in beta and under active development. APIs may change before version 1.0. The project is licensed under Apache 2.0; hosted plans and their limits are described separately on the pricing page.
+
+## Understand LongLink
+
+- [Project overview](https://raw.githubusercontent.com/xLongLink/longlink/main/README.md): Read the introduction, architecture, quick start, and separate Platform development instructions.
+- [Why LongLink](https://www.longlink.dev/use-cases/): Understand the problem of fragmented company data and why process-specific applications need a shared foundation.
+- [Documentation](https://www.longlink.dev/docs/): Find the learning path for building a Solution or understanding the Platform.
+- [GitHub repository](https://github.com/xLongLink/longlink): Explore the SDK, Platform API, and web frontend source code.
+
+## Build a Solution
+
+- [SDK quick start](https://www.longlink.dev/docs/sdk/): Create an application and run it locally; start here for a first implementation.
+- [SDK README and documentation CLI](https://raw.githubusercontent.com/xLongLink/longlink/main/sdk/README.md): Check SDK requirements and discover the documentation command designed for agents.
+- [Routes](https://www.longlink.dev/docs/sdk/routes/): Implement FastAPI endpoints and use Context for the current user, database, and storage.
+- [Database](https://www.longlink.dev/docs/sdk/database/): Define SQLModel records, work with stored data, and manage schema migrations.
+- [Storage](https://www.longlink.dev/docs/sdk/storage/): Add file handling through the storage interface used across environments.
+- [Views](https://www.longlink.dev/docs/sdk/views/): Build interfaces and look up supported components, hooks, queries, and request APIs before generating JSX.
+- [Environments](https://www.longlink.dev/docs/sdk/environments/): Define and validate application configuration with Pydantic Settings.
+- [Testing](https://www.longlink.dev/docs/sdk/testing/): Test application behavior with pytest and TestClient using isolated in-memory services.
+- [Building](https://www.longlink.dev/docs/sdk/building/): Package a Solution, its dependencies, configuration requirements, and metadata into a container image.
+
+## Learn from an example
+
+- [Sample Solution guide](https://raw.githubusercontent.com/xLongLink/sample/main/README.md): Read setup instructions, View authoring rules, request behavior, and migration commands.
+- [Sample Solution source](https://github.com/xLongLink/sample): Inspect the invoice approval example to see how application logic, records, files, and Views fit together.
+
+## Operate and evaluate
+
+- [Platform documentation](https://www.longlink.dev/docs/api/): Understand organization and Solution boundaries, access roles, shared resources, and deployment behavior.
+- [Pricing](https://www.longlink.dev/pricing/): Check current hosted plans, availability, and beta notices; do not assume limits or pricing are permanent.
+- [License](https://raw.githubusercontent.com/xLongLink/longlink/main/LICENSE): Read the Apache 2.0 terms for the source code.
+
+## Optional
+
+- [Website](https://www.longlink.dev/): Product introduction and access to the hosted Platform.
+- [Python package](https://pypi.org/project/longlink/): Check published SDK releases and package metadata.
+- [Contributing](https://raw.githubusercontent.com/xLongLink/longlink/main/CONTRIBUTING.md): Learn how to contribute to the project.
+- [Issues](https://github.com/xLongLink/longlink/issues): Find reported bugs, feature requests, and related discussions; distinguish proposals from implemented behavior.
