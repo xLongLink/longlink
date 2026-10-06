@@ -3,7 +3,6 @@ import { Code } from '@astryxdesign/core/Code';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { useSearchParams } from 'react-router';
-import { Tabs, Tab } from '@/components/ui/Tabs';
 import { Badge } from '@astryxdesign/core/Badge';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Heading } from '@astryxdesign/core/Heading';
@@ -11,6 +10,7 @@ import { Article } from '@/components/layouts/Article';
 import references from '@/lib/generated/components.json';
 import { componentDocumentation } from '@/platform/docs';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
+import { Tab, TabList } from '@astryxdesign/core/TabList';
 import { Collapsible } from '@astryxdesign/core/Collapsible';
 import { documentationLastUpdated } from '@/lib/documentation';
 import { Table, proportional } from '@astryxdesign/core/Table';
@@ -119,114 +119,125 @@ export default function ViewLayout({
                         </Stack>
                     ))
                 ) : (
-                    <Tabs
-                        value={activeTab.value}
-                        onChange={(value) => {
-                            // Preserve other query parameters while making each tab linkable.
-                            const params = new URLSearchParams(searchParams);
-                            params.set('tab', value);
-                            setSearchParams(params, { preventScrollReset: true });
-                        }}
-                        gap={5}
-                        hasDivider
-                    >
-                        {tabs.map((tab) => (
-                            <Tab key={tab.value} value={tab.value} label={tab.label} panelId={`component-${tab.value}`}>
-                                {tab.value === 'examples' && (
-                                    <>
-                                        {examples.map((example) => (
-                                            <Stack key={example.title} gap={3}>
-                                                <Stack
-                                                    padding={4}
-                                                    className="overflow-auto rounded-lg border border-border"
-                                                    aria-label={`${example.title} preview`}
-                                                >
-                                                    {example.preview}
-                                                </Stack>
-                                                <CodeBlock
-                                                    code={example.code}
-                                                    language="jsx"
-                                                    hasLanguageLabel={false}
-                                                />
+                    <Stack gap={5}>
+                        <TabList
+                            role="tablist"
+                            value={activeTab.value}
+                            onChange={(value) => {
+                                // Preserve other query parameters while making each tab linkable.
+                                const params = new URLSearchParams(searchParams);
+                                params.set('tab', value);
+                                setSearchParams(params, { preventScrollReset: true });
+                            }}
+                            hasDivider
+                        >
+                            {tabs.map((tab) => (
+                                <Tab
+                                    key={tab.value}
+                                    value={tab.value}
+                                    label={tab.label}
+                                    panelId={`component-${tab.value}`}
+                                />
+                            ))}
+                        </TabList>
+                        {/* Mount only the URL-selected panel, without parsing Solution View JSX markers. */}
+                        <Stack
+                            id={`component-${activeTab.value}`}
+                            role="tabpanel"
+                            tabIndex={0}
+                            aria-label={activeTab.label}
+                            gap={5}
+                        >
+                            {activeTab.value === 'examples' && (
+                                <>
+                                    {examples.map((example) => (
+                                        <Stack key={example.title} gap={3}>
+                                            <Stack
+                                                padding={4}
+                                                className="overflow-auto rounded-lg border border-border"
+                                                aria-label={`${example.title} preview`}
+                                            >
+                                                {example.preview}
                                             </Stack>
-                                        ))}
-                                        {upstream && !examples.length && (
-                                            <Text as="p">
-                                                Astryx does not publish standalone examples for this component. See its
-                                                documentation link above.
-                                            </Text>
-                                        )}
-                                    </>
-                                )}
-                                {tab.value === 'properties' &&
-                                    propertyGroups.map((group) => (
-                                        <Stack key={group.name} gap={3}>
-                                            {group.name && <Heading level={2}>{group.name}</Heading>}
-                                            <Table
-                                                data={group.properties}
-                                                idKey="name"
-                                                density="compact"
-                                                columns={[
-                                                    {
-                                                        key: 'name',
-                                                        header: 'Property',
-                                                        width: proportional(1),
-                                                        renderCell: (property) => (
-                                                            <Stack gap={0}>
-                                                                <Stack direction="horizontal" align="center" gap={2}>
-                                                                    <Text>{property.name}</Text>
-                                                                    <Code className="text-sm">{property.type}</Code>
-                                                                    {property.required && (
-                                                                        <Badge
-                                                                            variant="blue"
-                                                                            className="h-4 shrink-0 px-1"
-                                                                            label={
-                                                                                <Text size="xsm" color="inherit">
-                                                                                    Required
-                                                                                </Text>
-                                                                            }
-                                                                        />
-                                                                    )}
-                                                                </Stack>
-                                                                <Text type="supporting">{property.description}</Text>
-                                                            </Stack>
-                                                        ),
-                                                    },
-                                                ]}
-                                            />
+                                            <CodeBlock code={example.code} language="jsx" hasLanguageLabel={false} />
                                         </Stack>
                                     ))}
-                                {tab.value === 'best-practices' && reference && reference.practices.length > 0 && (
-                                    <Table
-                                        data={reference.practices}
-                                        idKey="description"
-                                        density="compact"
-                                        columns={[
-                                            {
-                                                key: 'guidance',
-                                                header: 'Guidance',
-                                                width: proportional(1),
-                                                renderCell: (practice) => (
-                                                    <Badge
-                                                        label={practice.guidance ? 'Do' : 'Don’t'}
-                                                        variant={practice.guidance ? 'green' : 'red'}
-                                                    />
-                                                ),
-                                            },
-                                            {
-                                                key: 'description',
-                                                header: 'Description',
-                                                width: proportional(4),
-                                                renderCell: (practice) => (
-                                                    <Text type="supporting">{practice.description}</Text>
-                                                ),
-                                            },
-                                        ]}
-                                    />
-                                )}
-                            </Tab>
-                        ))}
-                    </Tabs>
+                                    {upstream && !examples.length && (
+                                        <Text as="p">
+                                            Astryx does not publish standalone examples for this component. See its
+                                            documentation link above.
+                                        </Text>
+                                    )}
+                                </>
+                            )}
+                            {activeTab.value === 'properties' &&
+                                propertyGroups.map((group) => (
+                                    <Stack key={group.name} gap={3}>
+                                        {group.name && <Heading level={2}>{group.name}</Heading>}
+                                        <Table
+                                            data={group.properties}
+                                            idKey="name"
+                                            density="compact"
+                                            columns={[
+                                                {
+                                                    key: 'name',
+                                                    header: 'Property',
+                                                    width: proportional(1),
+                                                    renderCell: (property) => (
+                                                        <Stack gap={0}>
+                                                            <Stack direction="horizontal" align="center" gap={2}>
+                                                                <Text>{property.name}</Text>
+                                                                <Code className="text-sm">{property.type}</Code>
+                                                                {property.required && (
+                                                                    <Badge
+                                                                        variant="blue"
+                                                                        className="h-4 shrink-0 px-1"
+                                                                        label={
+                                                                            <Text size="xsm" color="inherit">
+                                                                                Required
+                                                                            </Text>
+                                                                        }
+                                                                    />
+                                                                )}
+                                                            </Stack>
+                                                            <Text type="supporting">{property.description}</Text>
+                                                        </Stack>
+                                                    ),
+                                                },
+                                            ]}
+                                        />
+                                    </Stack>
+                                ))}
+                            {activeTab.value === 'best-practices' && reference && reference.practices.length > 0 && (
+                                <Table
+                                    data={reference.practices}
+                                    idKey="description"
+                                    density="compact"
+                                    columns={[
+                                        {
+                                            key: 'guidance',
+                                            header: 'Guidance',
+                                            width: proportional(1),
+                                            renderCell: (practice) => (
+                                                <Badge
+                                                    label={practice.guidance ? 'Do' : 'Don’t'}
+                                                    variant={practice.guidance ? 'green' : 'red'}
+                                                />
+                                            ),
+                                        },
+                                        {
+                                            key: 'description',
+                                            header: 'Description',
+                                            width: proportional(4),
+                                            renderCell: (practice) => (
+                                                <Text type="supporting">{practice.description}</Text>
+                                            ),
+                                        },
+                                    ]}
+                                />
+                            )}
+                        </Stack>
+                    </Stack>
                 )}
             </Stack>
         </Article>
