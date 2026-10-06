@@ -91,7 +91,6 @@ async def test_solution_delete_failure_stops_before_provider_credential_cleanup(
     assert retained.deleted_at is not None
 
 
-@pytest.mark.usefixtures("database_runtime")
 async def test_solution_delete_removes_provider_state_and_tombstone(
     users: tuple[User, User, User],
     monkeypatch: pytest.MonkeyPatch,

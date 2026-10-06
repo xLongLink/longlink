@@ -206,8 +206,7 @@ def test_view_catalog_orders_paths_and_redirects_to_first_static_view(solution_s
 def test_invalid_view_fails_during_registration(solution_source: Path) -> None:
     """Reject empty JSX source before registering any View routes."""
 
-    # Arrange: Discover the valid view before the invalid catalog entry.
-    (solution_source / "views" / "valid.jsx").write_text("export default function Valid() { return <Text>Valid</Text>; }", encoding="utf-8")
+    # Arrange: Create a View with empty JSX source.
     (solution_source / "views" / "z-broken.jsx").write_text(" ", encoding="utf-8")
 
     # Act and assert

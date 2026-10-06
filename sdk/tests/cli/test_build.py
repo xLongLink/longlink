@@ -193,7 +193,6 @@ def test_build_solution_generates_docker_artifacts_from_project_metadata(
         "from pydantic import BaseModel\n\nclass Env(BaseModel):\n    API_KEY: str\n",
         encoding="utf-8",
     )
-    chdir_project.joinpath(".gitignore").write_text(".env\n*.db\n", encoding="utf-8")
     chdir_project.joinpath(".env").write_text("SECRET=value\n", encoding="utf-8")
     chdir_project.joinpath("dev.db").write_text("local database", encoding="utf-8")
     chdir_project.joinpath(".pytest_cache").mkdir()
