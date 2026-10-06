@@ -11,9 +11,9 @@ const article = {
     toc: [
         { id: 'storage', label: 'Storage', level: 1 },
         { id: 'example', label: 'Example', level: 2 },
-        { id: 'assets', label: 'Assets', level: 2 },
+        { id: 'file-responses', label: 'Previews and downloads', level: 2 },
     ],
-    lastUpdated: '2026-09-24',
+    lastUpdated: '2026-10-06',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/docs/sdk/Storage.tsx',
     title: 'Storage | LongLink Documentation',
 };
@@ -50,6 +50,36 @@ export default function DocsArticleRoute() {
 async def write_report(ctx: Context) -> None:
     with ctx.storage.open("reports/example.txt", "wb") as f:
         f.write(b"hello")`}
+                    language="python"
+                />
+                <Heading id="file-responses" level={2}>
+                    Previews and downloads
+                </Heading>
+                <Text as="p">
+                    Use <Code>ctx.file()</Code> to preview a file in the browser, or <Code>ctx.download()</Code> to
+                    download it.
+                </Text>
+                <CodeBlock
+                    code={`from fastapi import APIRouter, Response
+from longlink import Context
+
+router = APIRouter()
+
+
+@router.get("/reports/preview")
+async def preview_report(ctx: Context) -> Response:
+    """Serve a stored report for browser preview."""
+
+    # Return an inline response with a friendly display name.
+    return ctx.file("reports/latest.pdf", filename="report.pdf")
+
+
+@router.get("/reports/download")
+async def download_report(ctx: Context) -> Response:
+    """Serve a stored report as a download."""
+
+    # Use the storage path's basename as the download filename.
+    return ctx.download("reports/latest.pdf")`}
                     language="python"
                 />
             </Stack>

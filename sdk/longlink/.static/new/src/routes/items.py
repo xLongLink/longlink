@@ -1,14 +1,10 @@
-import mimetypes
 from uuid import uuid4
 from fastapi import Query, APIRouter, UploadFile, HTTPException
 from pathlib import PurePosixPath
 from longlink import Context
 from sqlmodel import select
 from sqlalchemy import func
-from urllib.parse import quote
-from collections.abc import Iterator, Sequence
 from src.models.items import Item, ItemStatus
-from fastapi.responses import StreamingResponse
 from src.schemas.items import (
     ItemPage,
     ItemRead,
@@ -16,6 +12,7 @@ from src.schemas.items import (
     ItemStatusUpdate,
     ItemAttachmentRead,
 )
+from longlink.responses import FileResponse
 
 router = APIRouter(prefix="/api")
 
@@ -125,7 +122,7 @@ async def item_attachments_get_endpoint(
 @router.get("/items/{item_id}/attachments/{attachment_id}")
 async def item_attachment_download_endpoint(
     item_id: int, attachment_id: str, ctx: Context
-) -> StreamingResponse:
+) -> FileResponse:
     """Stream one stored attachment for inline browser preview."""
 
     # Retrieve the item and translate a missing record into an API error.
@@ -146,28 +143,8 @@ async def item_attachment_download_endpoint(
     # Derive the display name from the generated storage id.
     display_name = safe_id.split("-", 1)[-1] or safe_id
 
-    # Fall back to a generic binary type when the extension is unknown.
-    media_type = mimetypes.guess_type(display_name)[0] or "application/octet-stream"
-
-    def content() -> Iterator[bytes]:
-        """Yield stored bytes and release the file on completion."""
-
-        # Open the stored object for the response lifetime.
-        with ctx.storage.open(storage_path, "rb") as stored_file:
-            # Stream the download through LongLink storage in every runtime environment.
-            while chunk := stored_file.read(1024 * 1024):
-                yield chunk
-
     # Display the file inline so PDFs and images open in the browser.
-    safe_name = display_name.replace('"', "")
-
-    disposition = (
-        f"inline; filename=\"{safe_name}\"; filename*=UTF-8''{quote(display_name)}"
-    )
-
-    return StreamingResponse(
-        content(), media_type=media_type, headers={"content-disposition": disposition}
-    )
+    return ctx.file(storage_path, filename=display_name)
 
 
 @router.post("/items/{item_id}/attachments", response_model=ItemAttachmentRead)

@@ -8,6 +8,7 @@ from fsspec.spec import AbstractFileSystem
 from collections.abc import Callable, Awaitable, AsyncGenerator
 from starlette.types import Send, Scope, ASGIApp, Receive
 from longlink.database import audit
+from longlink.responses import FileResponse
 from starlette.responses import Response, JSONResponse
 from longlink.shared.models import User
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -20,6 +21,18 @@ class _ContextData:
     user: User
     storage: AbstractFileSystem
     database: AsyncSession
+
+    def file(self, path: str, *, filename: str | None = None, media_type: str | None = None) -> FileResponse:
+        """Serve a stored file for browser preview, using its basename by default."""
+
+        # Bind the request filesystem while leaving access checks to the Solution route.
+        return FileResponse(self.storage, path, filename=filename, media_type=media_type)
+
+    def download(self, path: str, *, filename: str | None = None, media_type: str | None = None) -> FileResponse:
+        """Serve a stored file as a download, using its basename by default."""
+
+        # Use the same streaming lifecycle with an explicit attachment disposition.
+        return FileResponse(self.storage, path, filename=filename, media_type=media_type, content_disposition_type="attachment")
 
 
 async def _data(request: Request) -> AsyncGenerator[_ContextData, None]:
