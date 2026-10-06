@@ -97,7 +97,11 @@ export default function ViewLayout({
                 />
                 <Collapsible key={name} trigger="Command output" defaultIsOpen={false} chevronPosition="start">
                     <CodeBlock
-                        code={`${name} [${component.category}]\nProps and types\n${component.declaration}`}
+                        code={
+                            'members' in component && component.members
+                                ? `${name} [${component.category}]\n${component.members.map((member) => `- ${member.name}:\n  ${member.description}`).join('\n\n')}`
+                                : `${name} [${component.category}]\nProps and types\n${component.declaration}`
+                        }
                         language="plaintext"
                         hasLanguageLabel={false}
                         isWrapped

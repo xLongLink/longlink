@@ -70,33 +70,50 @@ declare namespace React {
     }
 }
 
-/** @category Runtime @group React */
-declare function createElement(type: unknown, props: unknown, ...children: ViewNode[]): React.JSX.Element;
-
-/** Groups JSX children without a DOM wrapper. @category Runtime @group React */
+/** Groups JSX children without a DOM wrapper. @category Runtime @group Functions */
 declare const Fragment: ViewComponent<{
     key?: string | number;
 }>;
 
-/** @category Runtime @group React */
+/**
+ * Returns the current state and a setter. Pass a value or an initializer function; updates can use the previous state.
+ * @category Runtime
+ * @group Hooks
+ */
 declare function useState<T = undefined>(initial?: T | (() => T)): [T, (value: T | ((previous: T) => T)) => void];
 
-/** @category Runtime @group React */
+/**
+ * Synchronizes with external systems after rendering. Return a cleanup function to release timers or subscriptions. Include every reactive value used by the effect in its dependencies.
+ * @category Runtime
+ * @group Hooks
+ */
 declare function useEffect(effect: () => void | (() => void), dependencies?: readonly unknown[]): void;
 
-/** @category Runtime @group React */
+/**
+ * Caches a calculated value until its dependencies change. Use it for expensive calculations, not required application state.
+ * @category Runtime
+ * @group Hooks
+ */
 declare function useMemo<T>(factory: () => T, dependencies: readonly unknown[]): T;
 
-/** @category Runtime @group React */
+/**
+ * Returns a stable object with a mutable current property. Changing current does not trigger a render.
+ * @category Runtime
+ * @group Hooks
+ */
 declare function useRef<T>(initial: T): { current: T };
 
-/** @category Runtime @group Solution API */
+/**
+ * Navigates within the current Solution using a scoped path.
+ * @category Runtime
+ * @group Functions
+ */
 declare function navigate(path: string): void;
 
 /**
- * Requests a Solution operation; successful writes automatically refresh cached View data.
+ * Requests a Solution operation and returns its data. Options support the HTTP method, JSON, form data, and binary responses. Successful writes automatically refresh cached View data.
  * @category Runtime
- * @group Solution API
+ * @group Functions
  */
 declare function request<T = unknown>(
     path: string,
@@ -109,9 +126,9 @@ declare function request<T = unknown>(
 ): Promise<T>;
 
 /**
- * Returns data and an awaitable path-scoped invalidator; the renderer handles initial loading, errors, and retry.
+ * Returns Solution data and an awaitable invalidator scoped to the full request path. The renderer handles initial loading, errors, and retry.
  * @category Runtime
- * @group Solution API
+ * @group Hooks
  */
 declare function useApi<T = unknown>(path: string): readonly [T, () => Promise<void>];
 

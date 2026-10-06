@@ -170,6 +170,20 @@ const declarations = document.statements.flatMap((statement) => {
             name: group?.trim() ?? name,
             category,
             declaration: statement.getText(document),
+            ...(category === 'Runtime' && ts.isFunctionDeclaration(declaration)
+                ? {
+                      members: [
+                          {
+                              name: `${name}(${declaration.parameters.map((parameter) => parameter.name.getText(document)).join(', ')})`,
+                              description:
+                                  statement.jsDoc
+                                      ?.map((comment) => comment.comment)
+                                      .filter((comment) => typeof comment === 'string')
+                                      .join(' ') ?? '',
+                          },
+                      ],
+                  }
+                : {}),
         },
     ];
 });
@@ -182,6 +196,7 @@ for (const entry of declarations) {
         if (existing.category !== entry.category)
             throw new Error(`Conflicting documentation categories: ${entry.name}`);
         existing.declaration += `\n\n${entry.declaration}`;
+        if (entry.members) (existing.members ??= []).push(...entry.members);
     } else {
         groups.set(entry.name, entry);
     }

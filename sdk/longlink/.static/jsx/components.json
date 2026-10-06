@@ -90,6 +90,21 @@
         "declaration": "declare function FileViewer(props: { src: string; title: string }): React.JSX.Element;"
     },
     {
+        "name": "Functions",
+        "category": "Runtime",
+        "declaration": "declare const Fragment: ViewComponent<{\n    key?: string | number;\n}>;\n\ndeclare function navigate(path: string): void;\n\ndeclare function request<T = unknown>(\n    path: string,\n    options?: {\n        method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';\n        json?: unknown;\n        form?: [string, string | Blob][];\n        binary?: boolean;\n    },\n): Promise<T>;",
+        "members": [
+            {
+                "name": "navigate(path)",
+                "description": "Navigates within the current Solution using a scoped path."
+            },
+            {
+                "name": "request(path, options)",
+                "description": "Requests a Solution operation and returns its data. Options support the HTTP method, JSON, form data, and binary responses. Successful writes automatically refresh cached View data."
+            }
+        ]
+    },
+    {
         "name": "Grid",
         "category": "Layouts",
         "declaration": "declare function Grid(props: { children?: ViewNode; columns?: number; gap?: Spacing }): React.JSX.Element;\n\ndeclare function GridSpan(props: { children?: ViewNode; columns?: number | 'full' }): React.JSX.Element;"
@@ -98,6 +113,33 @@
         "name": "Heading",
         "category": "Display",
         "declaration": "declare function Heading(props: { children?: ViewNode; level?: 1 | 2 | 3 | 4 | 5 | 6 }): React.JSX.Element;"
+    },
+    {
+        "name": "Hooks",
+        "category": "Runtime",
+        "declaration": "declare function useState<T = undefined>(initial?: T | (() => T)): [T, (value: T | ((previous: T) => T)) => void];\n\ndeclare function useEffect(effect: () => void | (() => void), dependencies?: readonly unknown[]): void;\n\ndeclare function useMemo<T>(factory: () => T, dependencies: readonly unknown[]): T;\n\ndeclare function useRef<T>(initial: T): { current: T };\n\ndeclare function useApi<T = unknown>(path: string): readonly [T, () => Promise<void>];",
+        "members": [
+            {
+                "name": "useState(initial)",
+                "description": "Returns the current state and a setter. Pass a value or an initializer function; updates can use the previous state."
+            },
+            {
+                "name": "useEffect(effect, dependencies)",
+                "description": "Synchronizes with external systems after rendering. Return a cleanup function to release timers or subscriptions. Include every reactive value used by the effect in its dependencies."
+            },
+            {
+                "name": "useMemo(factory, dependencies)",
+                "description": "Caches a calculated value until its dependencies change. Use it for expensive calculations, not required application state."
+            },
+            {
+                "name": "useRef(initial)",
+                "description": "Returns a stable object with a mutable current property. Changing current does not trigger a render."
+            },
+            {
+                "name": "useApi(path)",
+                "description": "Returns Solution data and an awaitable invalidator scoped to the full request path. The renderer handles initial loading, errors, and retry."
+            }
+        ]
     },
     {
         "name": "Icon",
@@ -150,11 +192,6 @@
         "declaration": "declare function RadioList(\n    props: FieldProps & {\n        children?: ViewNode;\n        value: string;\n        onChange: (value: string) => void;\n        orientation?: 'vertical' | 'horizontal';\n        htmlName?: string;\n        size?: 'sm' | 'md';\n    },\n): React.JSX.Element;\n\ndeclare function RadioListItem(props: {\n    label: string;\n    value: string;\n    description?: string;\n    isDisabled?: boolean;\n}): React.JSX.Element;"
     },
     {
-        "name": "React",
-        "category": "Runtime",
-        "declaration": "declare function createElement(type: unknown, props: unknown, ...children: ViewNode[]): React.JSX.Element;\n\ndeclare const Fragment: ViewComponent<{\n    key?: string | number;\n}>;\n\ndeclare function useState<T = undefined>(initial?: T | (() => T)): [T, (value: T | ((previous: T) => T)) => void];\n\ndeclare function useEffect(effect: () => void | (() => void), dependencies?: readonly unknown[]): void;\n\ndeclare function useMemo<T>(factory: () => T, dependencies: readonly unknown[]): T;\n\ndeclare function useRef<T>(initial: T): { current: T };"
-    },
-    {
         "name": "Selector",
         "category": "Form",
         "declaration": "type SelectorOptionData = {\n    value: string;\n    label?: string;\n    description?: ViewNode;\n    icon?: ViewNode;\n    disabled?: boolean;\n};\n\ntype SelectorOptionType =\n    | string\n    | SelectorOptionData\n    | { type: 'divider' }\n    | {\n          type: 'section';\n          title?: string;\n          options: SelectorOptionData[];\n      };\n\ndeclare function Selector(\n    props: FieldProps & {\n        options: SelectorOptionType[];\n        hasSearch?: boolean;\n        placeholder?: string;\n        size?: 'sm' | 'md' | 'lg';\n        isReadOnly?: boolean;\n        htmlName?: string;\n    } & (\n            | { hasClear?: false; value?: string; onChange?: (value: string) => void }\n            | { hasClear: true; value: string | null; onChange?: (value: string | null) => void }\n        ),\n): React.JSX.Element;"
@@ -163,11 +200,6 @@
         "name": "Slider",
         "category": "Form",
         "declaration": "declare function Slider(\n    props: FieldProps & {\n        min?: number;\n        max?: number;\n        step?: number;\n        htmlName?: string;\n    } & (\n            | { value: number; onChange?: (value: number) => void; onChangeEnd?: (value: number) => void }\n            | {\n                  value: [number, number];\n                  onChange?: (value: [number, number]) => void;\n                  onChangeEnd?: (value: [number, number]) => void;\n                  minStepsBetweenThumbs?: number;\n              }\n        ),\n): React.JSX.Element;"
-    },
-    {
-        "name": "Solution API",
-        "category": "Runtime",
-        "declaration": "declare function navigate(path: string): void;\n\ndeclare function request<T = unknown>(\n    path: string,\n    options?: {\n        method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';\n        json?: unknown;\n        form?: [string, string | Blob][];\n        binary?: boolean;\n    },\n): Promise<T>;\n\ndeclare function useApi<T = unknown>(path: string): readonly [T, () => Promise<void>];"
     },
     {
         "name": "Stack",

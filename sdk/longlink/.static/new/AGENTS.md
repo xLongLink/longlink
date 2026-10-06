@@ -34,7 +34,7 @@ You are working on a LongLink Solution project.
 
 - `longlink dev` generates SDK-owned `frontend.d.ts` in the project root for editor hints. DON'T edit or commit this generated file.
 - A View is a `.jsx` file that exports one default React component. The Solution does not need a frontend build.
-- The isolated renderer supplies React hooks, `Fragment`, `createElement`, LongLink UI components, `request`, `navigate`, and `useApi`. DON'T import packages.
+- The isolated renderer supplies React hooks, `Fragment`, LongLink UI components, `request`, `navigate`, and `useApi`. DON'T import packages.
 - Route parameters are passed to the default View function as props: `export default function Item({ params })`.
 - For `[item].jsx`, DO read the URL segment with `params.item`.
 - DO use `@param {ViewProps} props` in JSDoc for editor hints.
