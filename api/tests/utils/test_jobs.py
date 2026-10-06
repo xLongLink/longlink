@@ -1,5 +1,6 @@
 import pytest
 import asyncio
+import pytest_asyncio
 from uuid import UUID
 from datetime import UTC, datetime, timedelta
 from factories import claim_operation, queue_operation, fetch_operations
@@ -111,6 +112,19 @@ async def test_finish_transition_preserves_cancellation_when_terminal_persistenc
         await transition
 
 
+@pytest_asyncio.fixture
+async def operation() -> Operation:
+    """Provide one persisted Operation with its active worker claim."""
+
+    # Arrange the same committed queue and claim prerequisites for execution tests.
+    queued = await queue_operation(target_id=UUID("22222222-2222-2222-2222-222222222222"))
+    claimed = await claim_operation()
+    assert claimed is not None
+    assert claimed.id == queued.id
+    assert claimed.status == OperationStatus.active
+    return claimed
+
+
 HANDLER_FAILURES = [
     pytest.param(ForbiddenError("workload deployment failed"), "workload deployment failed", id="service-error"),
     pytest.param(RuntimeError("provider unavailable"), "RuntimeError: provider unavailable", id="unexpected-error"),
@@ -119,17 +133,11 @@ HANDLER_FAILURES = [
 
 @pytest.mark.parametrize(("failure", "expected_reason"), HANDLER_FAILURES)
 async def test_execute_persists_handler_failure(
-    monkeypatch: pytest.MonkeyPatch, failure: ForbiddenError | RuntimeError, expected_reason: str
+    monkeypatch: pytest.MonkeyPatch, operation: Operation, failure: ForbiddenError | RuntimeError, expected_reason: str
 ) -> None:
     """Persist a handler failure as the one claimed Operation's terminal outcome."""
 
     # Arrange
-    queued = await queue_operation(target_id=UUID("22222222-2222-2222-2222-222222222222"))
-    operation = await claim_operation()
-    assert operation is not None
-    assert operation.id == queued.id
-    assert operation.status == OperationStatus.active
-
     async def failing_handler(target_id: UUID) -> None:
         """Raise one expected terminal failure."""
 
@@ -155,15 +163,10 @@ async def test_execute_persists_handler_failure(
     assert persisted.lease_expires_at is None
 
 
-async def test_execute_fails_operation_when_handler_times_out(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_execute_fails_operation_when_handler_times_out(monkeypatch: pytest.MonkeyPatch, operation: Operation) -> None:
     """Cancel a stalled handler and persist its terminal timeout failure."""
 
     # Arrange
-    queued = await queue_operation(target_id=UUID("22222222-2222-2222-2222-222222222222"))
-    operation = await claim_operation()
-    assert operation is not None
-    assert operation.id == queued.id
-    assert operation.status == OperationStatus.active
     cancelled = asyncio.Event()
     monkeypatch.setattr(operation_worker.env, "OPERATION_TIMEOUT_SECONDS", 0.01)
 
@@ -197,16 +200,10 @@ async def test_execute_fails_operation_when_handler_times_out(monkeypatch: pytes
     assert persisted.lease_expires_at is None
 
 
-async def test_execute_releases_operation_when_handler_is_cancelled(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_execute_releases_operation_when_handler_is_cancelled(monkeypatch: pytest.MonkeyPatch, operation: Operation) -> None:
     """Release an interrupted Operation before propagating handler cancellation."""
 
     # Arrange
-    queued = await queue_operation(target_id=UUID("22222222-2222-2222-2222-222222222222"))
-    operation = await claim_operation()
-    assert operation is not None
-    assert operation.id == queued.id
-    assert operation.status == OperationStatus.active
-
     async def cancelled_handler(_target_id: UUID) -> None:
         """Model worker shutdown while the handler is executing."""
 
@@ -250,16 +247,10 @@ async def test_execute_rejects_operation_without_a_live_worker_lease(lease_expir
         await operation_worker.execute(operation)
 
 
-async def test_execute_rejects_lost_terminal_operation_lock(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_execute_rejects_lost_terminal_operation_lock(monkeypatch: pytest.MonkeyPatch, operation: Operation) -> None:
     """Reject a terminal outcome that could not release the claimed operation lock."""
 
     # Arrange
-    queued = await queue_operation(target_id=UUID("22222222-2222-2222-2222-222222222222"))
-    operation = await claim_operation()
-    assert operation is not None
-    assert operation.id == queued.id
-    assert operation.status == OperationStatus.active
-
     async def complete_handler(target_id: UUID) -> None:
         """Complete successfully after another transaction releases the worker lease."""
 

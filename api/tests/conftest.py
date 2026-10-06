@@ -40,6 +40,7 @@ os.environ.pop("GOOGLE_OAUTH_CLIENT_SECRET", None)
 from src.utils import mail, token
 from src.database import session
 from src.utils.s3 import Credentials
+from src.kubernetes import storage
 from src.environments import env
 from src.database.models import registry
 from src.database.models.users import User
@@ -91,11 +92,8 @@ class StorageKubernetes:
     async def apply(self, organization: UUID, *, quota_bytes: int) -> None:
         """Accept provisioning."""
 
-    @staticmethod
-    def bucket_name(organization: UUID) -> str:
-        """Return the deterministic bucket name for an organization bucket."""
-
-        return organization.hex
+    # Keep pure bucket naming identical to production while replacing external I/O.
+    bucket_name = staticmethod(storage.Storage.bucket_name)
 
     async def service_account(self, organization: UUID, solution: UUID) -> Credentials:
         """Return stable scoped credentials."""

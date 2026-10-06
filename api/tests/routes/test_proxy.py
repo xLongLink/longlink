@@ -399,6 +399,7 @@ async def test_solution_proxy_sanitizes_html_upstream_error(
     assert "x-debug" not in response.headers
 
 
+@pytest.mark.no_db
 async def test_solution_proxy_rejects_anonymous_without_gateway_access(
     client: AsyncClient,
     monkeypatch: pytest.MonkeyPatch,
@@ -417,26 +418,29 @@ async def test_solution_proxy_rejects_anonymous_without_gateway_access(
 
 
 @pytest.mark.parametrize(
-    "body",
+    ("body", "stream_error"),
     [
-        pytest.param(b'{"detail":"   "}', id="whitespace-detail"),
-        pytest.param(b'{"detail":123}', id="non-string-detail"),
-        pytest.param(b"[1,2]", id="non-object-payload"),
-        pytest.param(b"not-json", id="invalid-json"),
+        pytest.param(b'{"detail":"   "}', None, id="whitespace-detail"),
+        pytest.param(b'{"detail":123}', None, id="non-string-detail"),
+        pytest.param(b"[1,2]", None, id="non-object-payload"),
+        pytest.param(b"not-json", None, id="invalid-json"),
+        pytest.param(b'{"detail":"' + b"x" * (64 * 1024) + b'"}', None, id="oversized"),
+        pytest.param([b'{"detail":"partial'], RecursionError("stream aborted"), id="aborted"),
     ],
 )
 async def test_solution_proxy_replaces_nonpublic_upstream_error_detail(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
     monkeypatch: pytest.MonkeyPatch,
-    body: bytes,
+    body: bytes | list[bytes],
+    stream_error: Exception | None,
 ) -> None:
-    """Replace non-public upstream error details with the safe fallback."""
+    """Replace non-public and unusable upstream errors with the safe fallback."""
 
     # Arrange
     solution, _ = await create_running_solution(users[0])
 
-    gateway_response = make_upstream(502, {"content-type": "application/json"}, body)
+    gateway_response = make_upstream(502, {"content-type": "application/json"}, body, error=stream_error)
     monkeypatch.setattr(httpx2.AsyncHTTPTransport, "handle_async_request", fake_gateway_request(gateway_response))
 
     # Act
@@ -1069,33 +1073,3 @@ async def test_solution_proxy_forwards_error_negotiation_headers(
     assert response.headers["allow"] == "GET, POST"
     assert "set-cookie" not in response.headers
     assert response.headers.get("content-length") in (None, str(len(response.content)))
-
-
-@pytest.mark.parametrize(
-    ("body", "stream_error"),
-    [
-        pytest.param(b'{"detail":"' + b"x" * (64 * 1024) + b'"}', None, id="oversized"),
-        pytest.param([b'{"detail":"partial'], RecursionError("stream aborted"), id="aborted"),
-    ],
-)
-async def test_solution_proxy_replaces_unusable_upstream_error(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-    users: tuple[User, User, User],
-    monkeypatch: pytest.MonkeyPatch,
-    body: bytes | list[bytes],
-    stream_error: Exception | None,
-) -> None:
-    """Replace oversized and interrupted upstream errors with the public fallback."""
-
-    # Arrange
-    solution, _ = await create_running_solution(users[0])
-
-    gateway_response = make_upstream(502, {"content-type": "application/json"}, body, error=stream_error)
-    monkeypatch.setattr(httpx2.AsyncHTTPTransport, "handle_async_request", fake_gateway_request(gateway_response))
-
-    # Act
-    response = await clients[0].get(f"/api/v1/solutions/{solution.id}/proxy")
-
-    # Assert
-    assert response.status_code == 502
-    assert response.json() == {"detail": "The Solution could not complete the request. Please try again later."}

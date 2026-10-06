@@ -1,9 +1,7 @@
 // @vitest-environment happy-dom
-import { act } from 'react';
+import { act, Suspense } from 'react';
 import { webcrypto } from 'node:crypto';
 import { createRoot } from 'react-dom/client';
-import { ApiErrorContext } from '@/lib/errors';
-import { ApiBoundary } from '@/components/ApiBoundary';
 import { SolutionRuntime } from '@/components/Solution';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
@@ -224,32 +222,30 @@ describe('SolutionRuntime', () => {
 
         await act(async () => {
             mountedRoot.render(
-                <ApiErrorContext value={() => {}}>
-                    <QueryClientProvider client={client}>
-                        <MemoryRouter initialEntries={[initialPath]}>
-                            <ApiBoundary>
-                                <Routes>
-                                    <Route
-                                        element={
-                                            <SolutionRuntime viewsUrl={viewsUrl}>
-                                                {({ content, tabs, title }) => (
-                                                    <>
-                                                        <Location
-                                                            tabs={tabs.map((tab) => tab.href).join(',')}
-                                                            title={title}
-                                                        />
-                                                        {content}
-                                                    </>
-                                                )}
-                                            </SolutionRuntime>
-                                        }
-                                        path="*"
-                                    />
-                                </Routes>
-                            </ApiBoundary>
-                        </MemoryRouter>
-                    </QueryClientProvider>
-                </ApiErrorContext>
+                <QueryClientProvider client={client}>
+                    <MemoryRouter initialEntries={[initialPath]}>
+                        <Suspense fallback={null}>
+                            <Routes>
+                                <Route
+                                    element={
+                                        <SolutionRuntime viewsUrl={viewsUrl}>
+                                            {({ content, tabs, title }) => (
+                                                <>
+                                                    <Location
+                                                        tabs={tabs.map((tab) => tab.href).join(',')}
+                                                        title={title}
+                                                    />
+                                                    {content}
+                                                </>
+                                            )}
+                                        </SolutionRuntime>
+                                    }
+                                    path="*"
+                                />
+                            </Routes>
+                        </Suspense>
+                    </MemoryRouter>
+                </QueryClientProvider>
             );
         });
 
