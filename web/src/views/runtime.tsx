@@ -9,6 +9,7 @@ import { Banner } from '@astryxdesign/core/Banner';
 import { Spinner } from '@astryxdesign/core/Spinner';
 import { ErrorBoundary } from 'react-error-boundary';
 import { LayerProvider } from '@astryxdesign/core/Layer';
+import { FormRequestContext } from '@/components/ui/Form';
 import { LinkNavigationContext } from '@/components/ui/Link';
 import { MenuNavigationContext } from '@/components/ui/Menu';
 import { FileRequestContext } from '@/components/ui/FileViewer';
@@ -59,7 +60,9 @@ function MenuNavigationProvider({ children }: { children: React.ReactNode }) {
             }}
         >
             <LinkNavigationContext value={navigate}>
-                <FileRequestContext value={requestImage}>{children}</FileRequestContext>
+                <FileRequestContext value={requestImage}>
+                    <FormRequestContext value={request}>{children}</FormRequestContext>
+                </FileRequestContext>
             </LinkNavigationContext>
         </MenuNavigationContext>
     );

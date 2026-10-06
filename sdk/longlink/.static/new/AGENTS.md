@@ -49,6 +49,11 @@ You are working on a LongLink Solution project.
 - When that exact path needs revalidation, DO call `await invalidate()`.
 - The renderer handles initial loading, errors, and retry. Cache keys come from the full path, including query parameters.
 - Successful writes through `request()` automatically refresh cached data within the isolated View. Explicit invalidation is not needed.
+- For simple forms, DO use `<Form action="/api/..." method="post">`, named fields, and `<Button type="submit">` instead of draft state.
+- `name` includes themed controls in form submissions. DO use `defaultValue` or `defaultChecked` for initial values; use `value`/`onChange` only when reactive state is needed.
+- DO use `required`, `disabled`, and `readOnly` props for named fields. Named fields retain themed Astryx controls; use `value` and `onChange` when reactive state is needed.
+- Form submissions preserve native semantics: strings, repeated names, omitted unchecked checkboxes, and files. DO receive schemas as `Annotated[Schema, fastapi.Form()]` in Python routes.
+- Form handles validation, pending submissions, and request errors. `onSuccess` can close a dialog or navigate. Successful writes refresh cached data without resetting entered values.
 - For multiple resources, DO use separate `useApi` calls.
 - DO mount a component that uses `useApi` only when its resource is needed.
 - Cached data remains visible if a background refresh fails.

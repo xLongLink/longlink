@@ -1,5 +1,5 @@
-import { useState } from 'react';
 import ViewLayout from './ViewLayout';
+import FormPreview from './FormPreview';
 import { Slider } from '@/components/ui/Slider';
 
 /** Documents Slider in LongLink Views. */
@@ -10,19 +10,24 @@ export default function SliderPage() {
             name="Slider"
             examples={[
                 {
-                    title: 'Slider',
-                    preview: <SliderExample />,
-                    code: `function Example() {
-  const [value, setValue] = useState(60);
-
+                    title: 'Progress form',
+                    preview: (
+                        <FormPreview>
+                            <SliderExample />
+                        </FormPreview>
+                    ),
+                    code: `/** Submits progress without keeping a separate draft value. */
+export default function ProgressForm() {
   return (
-    <Slider
-      label="Progress"
-      value={value}
-      onChange={setValue}
-      min={0}
-      max={100}
-    />
+    <Form action="/api/example" method="post">
+      <Stack gap={3}>
+        <Slider name="progress" label="Progress" defaultValue={60} min={0} max={100} step={1} />
+        <Stack direction="horizontal" gap={2}>
+          <Button type="submit" label="Submit" variant="primary" />
+          <Button type="reset" label="Reset" />
+        </Stack>
+      </Stack>
+    </Form>
   );
 }`,
                 },
@@ -31,10 +36,8 @@ export default function SliderPage() {
     );
 }
 
-/** Keeps slider progress local to this example. */
+/** Shows a named slider whose value is included in native form data. */
 export function SliderExample() {
-    const [value, setValue] = useState(60);
-
-    // Retain pointer and keyboard changes to the progress value.
-    return <Slider label="Progress" value={value} width="100%" onChange={setValue} />;
+    // Restore the initial progress with the same reset button as other form fields.
+    return <Slider name="progress" label="Progress" defaultValue={60} min={0} max={100} step={1} />;
 }

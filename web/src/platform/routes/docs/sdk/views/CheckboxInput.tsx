@@ -1,5 +1,5 @@
-import { useState } from 'react';
 import ViewLayout from './ViewLayout';
+import FormPreview from './FormPreview';
 import { CheckboxInput } from '@/components/ui/CheckboxInput';
 
 /** Documents CheckboxInput in LongLink Views. */
@@ -10,12 +10,25 @@ export default function CheckboxInputPage() {
             name="CheckboxInput"
             examples={[
                 {
-                    title: 'CheckboxInput',
-                    preview: <CheckboxInputExample />,
-                    code: `function Example() {
-  const [value, setValue] = useState(false);
-
-  return <CheckboxInput label="Approved" value={value} onChange={setValue} />;
+                    title: 'Approval form',
+                    preview: (
+                        <FormPreview>
+                            <CheckboxInputExample />
+                        </FormPreview>
+                    ),
+                    code: `/** Submits approval only when the checkbox is checked. */
+export default function ApprovalForm() {
+  return (
+    <Form action="/api/example" method="post">
+      <Stack gap={3}>
+        <CheckboxInput name="approved" label="Approved" defaultChecked />
+        <Stack direction="horizontal" gap={2}>
+          <Button type="submit" label="Submit" variant="primary" />
+          <Button type="reset" label="Reset" />
+        </Stack>
+      </Stack>
+    </Form>
+  );
 }`,
                 },
             ]}
@@ -23,10 +36,8 @@ export default function CheckboxInputPage() {
     );
 }
 
-/** Keeps checkbox selection local to this example. */
+/** Shows a named checkbox whose unchecked value is omitted from submissions. */
 export function CheckboxInputExample() {
-    const [value, setValue] = useState(true);
-
-    // Update the selected state as the checkbox is toggled.
-    return <CheckboxInput label="Approved" size="sm" value={value} onChange={setValue} />;
+    // Restore the initial checked state with native form reset behavior.
+    return <CheckboxInput name="approved" label="Approved" defaultChecked />;
 }

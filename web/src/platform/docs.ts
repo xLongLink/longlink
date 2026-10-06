@@ -22,10 +22,7 @@ type DocumentationPage = {
 
 // Derive website route identity from names without storing it in the SDK documentation catalog.
 export const componentDocumentation = componentCatalog
-    .filter(
-        (component) =>
-            component.name !== 'ButtonGroup' && component.name !== 'StatusDot' && component.name !== 'CodeBlock'
-    )
+    .filter((component) => !['ButtonGroup', 'StatusDot', 'CodeBlock', 'DateRangeInput'].includes(component.name))
     .map((component) => ({
         ...component,
         declaration:

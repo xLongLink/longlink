@@ -1,5 +1,5 @@
-import { useState } from 'react';
 import ViewLayout from './ViewLayout';
+import FormPreview from './FormPreview';
 import { RadioList, RadioListItem } from '@/components/ui/RadioList';
 
 /** Documents RadioList in LongLink Views. */
@@ -10,16 +10,27 @@ export default function RadioListPage() {
             name="RadioList"
             examples={[
                 {
-                    title: 'RadioList',
-                    preview: <RadioListExample />,
-                    code: `function Example() {
-  const [value, setValue] = useState('team');
-
+                    title: 'Plan form',
+                    preview: (
+                        <FormPreview>
+                            <RadioListExample />
+                        </FormPreview>
+                    ),
+                    code: `/** Submits one plan from a native radio group. */
+export default function PlanForm() {
   return (
-    <RadioList label="Plan" value={value} onChange={setValue}>
-      <RadioListItem label="Solo" value="solo" />
-      <RadioListItem label="Team" value="team" />
-    </RadioList>
+    <Form action="/api/example" method="post">
+      <Stack gap={3}>
+        <RadioList name="plan" label="Plan" defaultValue="team" orientation="horizontal" required>
+          <RadioListItem label="Solo" value="solo" />
+          <RadioListItem label="Team" value="team" />
+        </RadioList>
+        <Stack direction="horizontal" gap={2}>
+          <Button type="submit" label="Submit" variant="primary" />
+          <Button type="reset" label="Reset" />
+        </Stack>
+      </Stack>
+    </Form>
   );
 }`,
                 },
@@ -28,13 +39,11 @@ export default function RadioListPage() {
     );
 }
 
-/** Keeps the chosen plan local to this example. */
+/** Shows a named radio group with one initial selection. */
 export function RadioListExample() {
-    const [value, setValue] = useState('team');
-
-    // Allow exactly one plan to remain selected.
+    // Let the group manage selection while the form collects only the checked value.
     return (
-        <RadioList label="Plan" orientation="horizontal" size="sm" value={value} onChange={setValue}>
+        <RadioList name="plan" label="Plan" defaultValue="team" orientation="horizontal" required>
             <RadioListItem label="Solo" value="solo" />
             <RadioListItem label="Team" value="team" />
         </RadioList>

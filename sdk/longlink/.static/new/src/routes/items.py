@@ -1,5 +1,6 @@
 from uuid import uuid4
-from fastapi import Query, APIRouter, UploadFile, HTTPException
+from typing import Annotated
+from fastapi import Form, Query, APIRouter, UploadFile, HTTPException
 from pathlib import PurePosixPath
 from longlink import Context
 from sqlmodel import select
@@ -38,8 +39,10 @@ async def items_get_endpoint(
 
 
 @router.post("/items", response_model=ItemRead)
-async def items_post_endpoint(payload: ItemCreate, ctx: Context) -> Item:
-    """Create a catalog item."""
+async def items_post_endpoint(
+    payload: Annotated[ItemCreate, Form()], ctx: Context
+) -> Item:
+    """Validate submitted form fields and create a catalog item."""
 
     # Persist the item so it includes its generated id.
     item = Item(

@@ -1,5 +1,5 @@
-import { useState } from 'react';
 import ViewLayout from './ViewLayout';
+import FormPreview from './FormPreview';
 import { TextInput } from '@/components/ui/TextInput';
 
 /** Documents TextInput in LongLink Views. */
@@ -10,13 +10,24 @@ export default function TextInputPage() {
             name="TextInput"
             examples={[
                 {
-                    title: 'TextInput',
-                    preview: <TextInputExample />,
-                    code: `function Example() {
-  const [value, setValue] = useState('');
-
+                    title: 'Name form',
+                    preview: (
+                        <FormPreview>
+                            <TextInputExample />
+                        </FormPreview>
+                    ),
+                    code: `/** Submits a name without draft state. */
+export default function NameForm() {
   return (
-    <TextInput label="Name" value={value} onChange={setValue} isRequired />
+    <Form action="/api/example" method="post">
+      <Stack gap={3}>
+        <TextInput name="name" label="Name" defaultValue="New order" required />
+        <Stack direction="horizontal" gap={2}>
+          <Button type="submit" label="Submit" variant="primary" />
+          <Button type="reset" label="Reset" />
+        </Stack>
+      </Stack>
+    </Form>
   );
 }`,
                 },
@@ -25,10 +36,8 @@ export default function TextInputPage() {
     );
 }
 
-/** Keeps name edits local to this example. */
+/** Shows a themed name field with a resettable initial value. */
 export function TextInputExample() {
-    const [value, setValue] = useState('New order');
-
-    // Retain the user's edits to the sample name.
-    return <TextInput label="Name" size="sm" value={value} width="100%" onChange={setValue} />;
+    // Let the themed control own editing, required validation, and reset behavior.
+    return <TextInput name="name" label="Name" defaultValue="New order" required />;
 }

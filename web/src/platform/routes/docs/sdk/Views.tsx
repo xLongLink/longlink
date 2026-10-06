@@ -4,6 +4,7 @@ import { IconExample } from './views/Icon';
 import { LinkExample } from './views/Link';
 import { TextExample } from './views/Text';
 import { Card } from '@/components/ui/Card';
+import { Form } from '@/components/ui/Form';
 import { BadgeExample } from './views/Badge';
 import { StackExample } from './views/Stack';
 import { TableExample } from './views/Table';
@@ -46,10 +47,8 @@ import { DropdownMenuExample } from './views/DropdownMenu';
 import { MetadataListExample } from './views/MetadataList';
 import { Blockquote } from '@astryxdesign/core/Blockquote';
 import { CheckboxInputExample } from './views/CheckboxInput';
-import { DateTimeInputExample } from './views/DateTimeInput';
 import { MultiSelectorExample } from './views/MultiSelector';
 import { documentationCategories } from '@/lib/documentation';
-import { DateRangeInputExample } from './views/DateRangeInput';
 import { ButtonExample, ButtonGroupExample } from './views/Buttons';
 import { SideNav, SideNavItem, SideNavSection } from '@astryxdesign/core/SideNav';
 
@@ -79,14 +78,17 @@ const previews: Record<string, ReactNode> = {
     Collapsible: <CollapsibleExample />,
     Currency: <Currency value={1275.5} currency="CHF" />,
     DateInput: <DateInputExample />,
-    DateRangeInput: <DateRangeInputExample />,
-    DateTimeInput: <DateTimeInputExample />,
     Dialog: <DialogExample />,
     Divider: <DividerExample />,
     DropdownMenu: <DropdownMenuExample />,
     EmptyState: <EmptyStateExample />,
     FileInput: <FileInputExample />,
     FileViewer: <FileViewerExample />,
+    Form: (
+        <Form action="/api/items">
+            <TextInputExample />
+        </Form>
+    ),
     Grid: <GridExample />,
     // Keep article section spacing out of the centered heading thumbnail.
     Heading: (
@@ -180,14 +182,32 @@ export default function Item({ params }) {
                             {componentDocumentation
                                 .filter((component) => component.category === category)
                                 .map((component) => (
-                                    <Stack key={component.slug} className="relative" gap={2}>
-                                        <Card aria-hidden="true" inert padding={3} variant="muted">
-                                            <Center className="h-40 scale-90" width="100%">
-                                                {component.category === 'Runtime' ? (
-                                                    <Code>{component.name}</Code>
-                                                ) : (
-                                                    (previews[component.name] ?? <Code>{`<${component.name} />`}</Code>)
-                                                )}
+                                    <Stack key={component.slug} className="relative min-w-0" gap={2}>
+                                        <Card
+                                            aria-hidden="true"
+                                            inert
+                                            padding={3}
+                                            variant="muted"
+                                            width="100%"
+                                            maxWidth="100%"
+                                        >
+                                            {/* Constrain artwork before scaling so intrinsic control sizes cannot widen the card. */}
+                                            <Center className="h-40 min-w-0 overflow-hidden" width="100%">
+                                                <Stack
+                                                    className="min-w-0 scale-90 [&>*]:min-w-0 [&>*]:max-w-full"
+                                                    width="100%"
+                                                    maxWidth="100%"
+                                                    align={component.category === 'Form' ? 'stretch' : 'center'}
+                                                    gap={0}
+                                                >
+                                                    {component.category === 'Runtime' ? (
+                                                        <Code>{component.name}</Code>
+                                                    ) : (
+                                                        (previews[component.name] ?? (
+                                                            <Code>{`<${component.name} />`}</Code>
+                                                        ))
+                                                    )}
+                                                </Stack>
                                             </Center>
                                         </Card>
                                         <Text type="supporting">

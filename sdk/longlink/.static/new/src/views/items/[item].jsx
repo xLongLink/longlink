@@ -5,7 +5,6 @@
 export default function Invoice({ params }) {
     const [status, setStatus] = useState();
     const [open, setOpen] = useState(false);
-    const [file, setFile] = useState(null);
 
     // Read required data; shared boundaries handle initial loading and failures.
     const [item] = useApi(`/api/items/${params.item}`);
@@ -30,26 +29,16 @@ export default function Invoice({ params }) {
                         </Text>
                     </Stack>
                 </Stack>
-                <Button label="Upload document" clickAction={() => setOpen(true)} />
+                <Button label="Upload document" onClick={() => setOpen(true)} />
             </Stack>
             <Dialog aria-label="Upload Invoice Document" isOpen={open} onOpenChange={setOpen} purpose="form">
-                <Stack gap={3}>
-                    <Heading level={2}>Upload Invoice Document</Heading>
-                    <FileInput label="Invoice document" value={file} onChange={setFile} />
-                    <Button
-                        label="Upload document"
-                        variant="primary"
-                        isDisabled={!file}
-                        clickAction={async () => {
-                            await request(`/api/items/${params.item}/attachments`, {
-                                method: 'POST',
-                                form: [['file', file]],
-                            });
-                            setOpen(false);
-                            setFile(null);
-                        }}
-                    />
-                </Stack>
+                <Form action={`/api/items/${params.item}/attachments`} method="post" onSuccess={() => setOpen(false)}>
+                    <Stack gap={3}>
+                        <Heading level={2}>Upload Invoice Document</Heading>
+                        <FileInput name="file" label="Invoice document" required />
+                        <Button label="Upload document" variant="primary" type="submit" />
+                    </Stack>
+                </Form>
             </Dialog>
             <Divider />
             <Grid columns={3} gap={8}>
@@ -88,7 +77,7 @@ export default function Invoice({ params }) {
                         <Button
                             label="Save status"
                             variant="primary"
-                            clickAction={async () => {
+                            onClick={async () => {
                                 await request(`/api/items/${params.item}/status`, {
                                     method: 'PATCH',
                                     json: { status },

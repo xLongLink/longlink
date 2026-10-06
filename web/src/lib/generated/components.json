@@ -198,6 +198,12 @@
                 "description": "Disables the button. When a tooltip is present, uses aria-disabled instead of native disabled so the button stays focusable. Default: false."
             },
             {
+                "name": "disabled",
+                "type": "boolean",
+                "required": false,
+                "description": "The disabled prop."
+            },
+            {
                 "name": "href",
                 "type": "string",
                 "required": false,
@@ -333,6 +339,30 @@
                 "description": "Description text displayed below the label."
             },
             {
+                "name": "name",
+                "type": "string",
+                "required": false,
+                "description": "Includes the themed control's value under this form submission name."
+            },
+            {
+                "name": "required",
+                "type": "boolean",
+                "required": false,
+                "description": "Requires a value before native form submission."
+            },
+            {
+                "name": "disabled",
+                "type": "boolean",
+                "required": false,
+                "description": "Prevents interaction and excludes the field from submission."
+            },
+            {
+                "name": "readOnly",
+                "type": "boolean",
+                "required": false,
+                "description": "Retains submitted values while preventing editing where supported."
+            },
+            {
                 "name": "isRequired",
                 "type": "boolean",
                 "required": false,
@@ -355,8 +385,20 @@
             {
                 "name": "value",
                 "type": "boolean | \"indeterminate\"",
-                "required": true,
+                "required": false,
                 "description": "Whether the checkbox is checked, unchecked, or indeterminate."
+            },
+            {
+                "name": "checked",
+                "type": "boolean",
+                "required": false,
+                "description": "The checked prop."
+            },
+            {
+                "name": "defaultChecked",
+                "type": "boolean",
+                "required": false,
+                "description": "The defaultChecked prop."
             },
             {
                 "name": "onChange",
@@ -375,7 +417,8 @@
                 "name": "htmlName",
                 "type": "string",
                 "required": false,
-                "description": "The HTML name attribute for the underlying checkbox input, useful for form submissions (submits \"on\" when checked)."
+                "default": "props.htmlName",
+                "description": "The HTML name attribute for the underlying checkbox input, useful for form submissions (submits \"on\" when checked). Default: props.htmlName."
             },
             {
                 "name": "size",
@@ -552,6 +595,30 @@
                 "description": "Helper text displayed below the label."
             },
             {
+                "name": "name",
+                "type": "string",
+                "required": false,
+                "description": "Includes the themed control's value under this form submission name."
+            },
+            {
+                "name": "required",
+                "type": "boolean",
+                "required": false,
+                "description": "Requires a value before native form submission."
+            },
+            {
+                "name": "disabled",
+                "type": "boolean",
+                "required": false,
+                "description": "Prevents interaction and excludes the field from submission."
+            },
+            {
+                "name": "readOnly",
+                "type": "boolean",
+                "required": false,
+                "description": "Retains submitted values while preventing editing where supported."
+            },
+            {
                 "name": "isRequired",
                 "type": "boolean",
                 "required": false,
@@ -578,6 +645,12 @@
                 "description": "Selected date in YYYY-MM-DD format."
             },
             {
+                "name": "defaultValue",
+                "type": "`${number}${number}${number}${number}-${number}${number}-${number}${number}`",
+                "required": false,
+                "description": "The defaultValue prop."
+            },
+            {
                 "name": "onChange",
                 "type": "(value: `${number}${number}${number}${number}-${number}${number}-${number}${number}` | undefined) => void",
                 "required": false,
@@ -599,7 +672,7 @@
                 "name": "dateConstraints",
                 "type": "readonly ((date: Date) => boolean)[]",
                 "required": false,
-                "description": "Array of custom constraint functions that disable specific dates."
+                "description": "Additional constraints applied to the themed calendar picker."
             },
             {
                 "name": "placeholder",
@@ -672,6 +745,30 @@
                 "description": "Helper text displayed below the label."
             },
             {
+                "name": "name",
+                "type": "string",
+                "required": false,
+                "description": "Includes the themed control's value under this form submission name."
+            },
+            {
+                "name": "required",
+                "type": "boolean",
+                "required": false,
+                "description": "Requires a value before native form submission."
+            },
+            {
+                "name": "disabled",
+                "type": "boolean",
+                "required": false,
+                "description": "Prevents interaction and excludes the field from submission."
+            },
+            {
+                "name": "readOnly",
+                "type": "boolean",
+                "required": false,
+                "description": "Retains submitted values while preventing editing where supported."
+            },
+            {
                 "name": "isRequired",
                 "type": "boolean",
                 "required": false,
@@ -694,13 +791,19 @@
             {
                 "name": "value",
                 "type": "DateRange | null",
-                "required": true,
+                "required": false,
                 "description": "Selected date range or null. Import the `DateRange` type from `@astryxdesign/core/DateRangeInput`; it is `{start: ISODateString, end: ISODateString}`. Do NOT redeclare your own DateRange type; use the exported one so TypeScript structurally matches."
+            },
+            {
+                "name": "defaultValue",
+                "type": "DateRange",
+                "required": false,
+                "description": "The defaultValue prop."
             },
             {
                 "name": "onChange",
                 "type": "(value: DateRange | null) => void",
-                "required": true,
+                "required": false,
                 "description": "Callback when the range changes. Called with null on clear."
             },
             {
@@ -719,19 +822,19 @@
                 "name": "dateConstraints",
                 "type": "readonly ((date: Date) => boolean)[]",
                 "required": false,
-                "description": "Custom constraint functions to disable specific dates."
+                "description": "Additional constraints applied to the themed calendar picker."
             },
             {
                 "name": "minRangeSpan",
                 "type": "number",
                 "required": false,
-                "description": "Minimum days a selected range must span, counting both endpoints (`2` forbids a single-day range). Once a start is picked, days closer than this are disabled. Clicking the start again commits a one-day range when allowed, or cancels the in-progress selection when the minimum is longer. Defaults to 1 (same-day start and end allowed)."
+                "description": "Minimum selectable range span."
             },
             {
                 "name": "maxRangeSpan",
                 "type": "number",
                 "required": false,
-                "description": "Maximum days a selected range may span, counting both endpoints (`7` = a 7-day window, start + 6). Once a start is picked, days beyond this distance are disabled so the range cannot stretch past the cap. Rolling window relative to the start; for fixed calendar bounds use `min`/`max`. Constrains selection only; it never rewrites a `value` already wider than the cap (flag that with `status`)."
+                "description": "Maximum selectable range span."
             },
             {
                 "name": "placeholder",
@@ -775,134 +878,6 @@
             {
                 "guidance": false,
                 "description": "Hide the label without surrounding context that makes the purpose obvious."
-            }
-        ]
-    },
-    {
-        "name": "DateTimeInput",
-        "url": "https://astryx.atmeta.com/components/DateTimeInput",
-        "introduction": "Selects a constrained date and time without custom picker presentation.",
-        "properties": [
-            {
-                "name": "label",
-                "type": "string",
-                "required": true,
-                "description": "Label text."
-            },
-            {
-                "name": "description",
-                "type": "string",
-                "required": false,
-                "description": "Helper text displayed below the label."
-            },
-            {
-                "name": "isRequired",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Mark the field as required. Default: false."
-            },
-            {
-                "name": "isDisabled",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Disable the input and picker. Default: false."
-            },
-            {
-                "name": "width",
-                "type": "string | number",
-                "required": false,
-                "description": "Width of the field (number = pixels, string used as-is, e.g. \"100%\"). Sizes the whole field (label, control, and status) so they stay aligned."
-            },
-            {
-                "name": "value",
-                "type": "ISODateTimeString",
-                "required": false,
-                "description": "Selected datetime in ISO 8601 format (YYYY-MM-DDTHH:MM or YYYY-MM-DDTHH:MM:SS)."
-            },
-            {
-                "name": "onChange",
-                "type": "(value: ISODateTimeString | undefined) => void",
-                "required": true,
-                "description": "Callback invoked when the selected datetime changes."
-            },
-            {
-                "name": "min",
-                "type": "ISODateTimeString",
-                "required": false,
-                "description": "Minimum selectable datetime. Constrains both date and time selection."
-            },
-            {
-                "name": "max",
-                "type": "ISODateTimeString",
-                "required": false,
-                "description": "Maximum selectable datetime. Constrains both date and time selection."
-            },
-            {
-                "name": "placeholder",
-                "type": "string",
-                "required": false,
-                "default": "'Select a date'",
-                "description": "Placeholder text shown in the date portion when no date is selected. Default: 'Select a date'."
-            },
-            {
-                "name": "hasClear",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Shows a clear button when a datetime value is set. Default: false."
-            },
-            {
-                "name": "hasSeconds",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Include seconds in the time portion. Keeps Astryx's time field even when nativePicker selects native surfaces, because iOS has no seconds wheel. Default: false."
-            },
-            {
-                "name": "hourFormat",
-                "type": "\"12h\" | \"24h\"",
-                "required": false,
-                "default": "'12h'",
-                "description": "Hour display format. '12h' shows AM/PM; '24h' uses 24-hour notation. Default: '12h'."
-            },
-            {
-                "name": "size",
-                "type": "\"sm\" | \"md\" | \"lg\"",
-                "required": false,
-                "default": "'md'",
-                "description": "Size of the input control. Default: 'md'."
-            }
-        ],
-        "practices": [
-            {
-                "guidance": true,
-                "description": "Provide clear labels and descriptions so users understand what datetime is expected."
-            },
-            {
-                "guidance": true,
-                "description": "Use min and max to restrict selectable datetimes to valid ranges."
-            },
-            {
-                "guidance": true,
-                "description": "Use hasClear when the datetime is optional so the user can reset it."
-            },
-            {
-                "guidance": true,
-                "description": "Choose the hour format (12h or 24h) that matches your audience's locale."
-            },
-            {
-                "guidance": false,
-                "description": "Use DateTimeInput when only a date is needed; use DateInput instead."
-            },
-            {
-                "guidance": false,
-                "description": "Use DateTimeInput when only a time is needed; use TimeInput instead."
-            },
-            {
-                "guidance": false,
-                "description": "Hide the label without surrounding context that makes the field purpose obvious."
             }
         ]
     },
@@ -1136,6 +1111,30 @@
                 "description": "Description text displayed between the label and input."
             },
             {
+                "name": "name",
+                "type": "string",
+                "required": false,
+                "description": "Includes the themed control's value under this form submission name."
+            },
+            {
+                "name": "required",
+                "type": "boolean",
+                "required": false,
+                "description": "Requires a value before native form submission."
+            },
+            {
+                "name": "disabled",
+                "type": "boolean",
+                "required": false,
+                "description": "Prevents interaction and excludes the field from submission."
+            },
+            {
+                "name": "readOnly",
+                "type": "boolean",
+                "required": false,
+                "description": "Retains submitted values while preventing editing where supported."
+            },
+            {
                 "name": "isRequired",
                 "type": "boolean",
                 "required": false,
@@ -1158,13 +1157,13 @@
             {
                 "name": "value",
                 "type": "File | File[] | null",
-                "required": true,
+                "required": false,
                 "description": "Currently selected file(s). Controlled component."
             },
             {
                 "name": "onChange",
                 "type": "(value: File | File[] | null) => void",
-                "required": true,
+                "required": false,
                 "description": "Callback fired when files are selected or removed."
             },
             {
@@ -1179,6 +1178,12 @@
                 "required": false,
                 "default": "false",
                 "description": "Whether multiple files can be selected. When true, value and onChange use File[] instead of File. Default: false."
+            },
+            {
+                "name": "multiple",
+                "type": "boolean",
+                "required": false,
+                "description": "The multiple prop."
             },
             {
                 "name": "maxSize",
@@ -1196,8 +1201,8 @@
                 "name": "placeholder",
                 "type": "string",
                 "required": false,
-                "default": "(props.isMultiple ? 'Choose files' : 'Choose file')",
-                "description": "Placeholder text shown when no file is selected. Default: (props.isMultiple ? 'Choose files' : 'Choose file')."
+                "default": "(multiple ? 'Choose files' : 'Choose file')",
+                "description": "Placeholder text shown when no file is selected. Default: (multiple ? 'Choose files' : 'Choose file')."
             },
             {
                 "name": "mode",
@@ -1576,6 +1581,30 @@
                 "description": "Helper text displayed below the label."
             },
             {
+                "name": "name",
+                "type": "string",
+                "required": false,
+                "description": "Includes the themed control's value under this form submission name."
+            },
+            {
+                "name": "required",
+                "type": "boolean",
+                "required": false,
+                "description": "Requires a value before native form submission."
+            },
+            {
+                "name": "disabled",
+                "type": "boolean",
+                "required": false,
+                "description": "Prevents interaction and excludes the field from submission."
+            },
+            {
+                "name": "readOnly",
+                "type": "boolean",
+                "required": false,
+                "description": "Retains submitted values while preventing editing where supported."
+            },
+            {
                 "name": "isRequired",
                 "type": "boolean",
                 "required": false,
@@ -1604,13 +1633,19 @@
             {
                 "name": "value",
                 "type": "string[]",
-                "required": true,
+                "required": false,
                 "description": "Currently selected values."
+            },
+            {
+                "name": "defaultValue",
+                "type": "string[]",
+                "required": false,
+                "description": "The defaultValue prop."
             },
             {
                 "name": "onChange",
                 "type": "(value: string[]) => void",
-                "required": true,
+                "required": false,
                 "description": "Callback fired when the selection changes."
             },
             {
@@ -1652,7 +1687,8 @@
                 "name": "htmlName",
                 "type": "string",
                 "required": false,
-                "description": "The HTML name attribute for form submissions. Renders one hidden input per selected value, like a native multi-select."
+                "default": "props.htmlName",
+                "description": "The HTML name attribute for form submissions. Renders one hidden input per selected value, like a native multi-select. Default: props.htmlName."
             },
             {
                 "name": "hasClear",
@@ -1707,6 +1743,30 @@
                 "description": "Description text displayed between the label and input."
             },
             {
+                "name": "name",
+                "type": "string",
+                "required": false,
+                "description": "Includes the themed control's value under this form submission name."
+            },
+            {
+                "name": "required",
+                "type": "boolean",
+                "required": false,
+                "description": "Requires a value before native form submission."
+            },
+            {
+                "name": "disabled",
+                "type": "boolean",
+                "required": false,
+                "description": "Prevents interaction and excludes the field from submission."
+            },
+            {
+                "name": "readOnly",
+                "type": "boolean",
+                "required": false,
+                "description": "Retains submitted values while preventing editing where supported."
+            },
+            {
                 "name": "isRequired",
                 "type": "boolean",
                 "required": false,
@@ -1729,8 +1789,14 @@
             {
                 "name": "value",
                 "type": "number | null",
-                "required": true,
+                "required": false,
                 "description": "Current value of the input."
+            },
+            {
+                "name": "defaultValue",
+                "type": "number",
+                "required": false,
+                "description": "The defaultValue prop."
             },
             {
                 "name": "min",
@@ -1788,7 +1854,8 @@
                 "name": "htmlName",
                 "type": "string",
                 "required": false,
-                "description": "HTML name attribute for form submissions."
+                "default": "props.htmlName",
+                "description": "HTML name attribute for form submissions. Default: props.htmlName."
             },
             {
                 "name": "autoComplete",
@@ -1806,7 +1873,7 @@
             {
                 "name": "onChange",
                 "type": "((value: number) => void) | ((value: number | null) => void)",
-                "required": true,
+                "required": false,
                 "description": "Callback fired when a valid text edit commits on blur or Enter, or when a step or clear control changes the value."
             }
         ],
@@ -1914,6 +1981,30 @@
                 "description": "Description text displayed below the label."
             },
             {
+                "name": "name",
+                "type": "string",
+                "required": false,
+                "description": "Includes the themed control's value under this form submission name."
+            },
+            {
+                "name": "required",
+                "type": "boolean",
+                "required": false,
+                "description": "Requires a value before native form submission."
+            },
+            {
+                "name": "disabled",
+                "type": "boolean",
+                "required": false,
+                "description": "Prevents interaction and excludes the field from submission."
+            },
+            {
+                "name": "readOnly",
+                "type": "boolean",
+                "required": false,
+                "description": "Retains submitted values while preventing editing where supported."
+            },
+            {
                 "name": "isRequired",
                 "type": "boolean",
                 "required": false,
@@ -1942,13 +2033,19 @@
             {
                 "name": "value",
                 "type": "string",
-                "required": true,
+                "required": false,
                 "description": "The currently selected value."
+            },
+            {
+                "name": "defaultValue",
+                "type": "string",
+                "required": false,
+                "description": "The defaultValue prop."
             },
             {
                 "name": "onChange",
                 "type": "(value: string) => void",
-                "required": true,
+                "required": false,
                 "description": "Callback fired when the selected value changes."
             },
             {
@@ -1962,7 +2059,8 @@
                 "name": "htmlName",
                 "type": "string",
                 "required": false,
-                "description": "The HTML name attribute shared by the radio inputs, useful for form submissions. When omitted, a unique internal name still groups the radios."
+                "default": "props.htmlName",
+                "description": "The HTML name attribute shared by the radio inputs, useful for form submissions. When omitted, a unique internal name still groups the radios. Default: props.htmlName."
             },
             {
                 "name": "size",
@@ -2017,6 +2115,30 @@
                 "description": "Helper text displayed below the label."
             },
             {
+                "name": "name",
+                "type": "string",
+                "required": false,
+                "description": "Includes the themed control's value under this form submission name."
+            },
+            {
+                "name": "required",
+                "type": "boolean",
+                "required": false,
+                "description": "Requires a value before native form submission."
+            },
+            {
+                "name": "disabled",
+                "type": "boolean",
+                "required": false,
+                "description": "Prevents interaction and excludes the field from submission."
+            },
+            {
+                "name": "readOnly",
+                "type": "boolean",
+                "required": false,
+                "description": "Retains submitted values while preventing editing where supported."
+            },
+            {
                 "name": "isRequired",
                 "type": "boolean",
                 "required": false,
@@ -2041,6 +2163,12 @@
                 "type": "SelectorOptionType[]",
                 "required": true,
                 "description": "Array of items: strings, objects with value/label/description/icon/disabled, dividers ({type: \"divider\"}), or sections ({type: \"section\", title, options})."
+            },
+            {
+                "name": "defaultValue",
+                "type": "string",
+                "required": false,
+                "description": "The defaultValue prop."
             },
             {
                 "name": "hasSearch",
@@ -2074,7 +2202,8 @@
                 "name": "htmlName",
                 "type": "string",
                 "required": false,
-                "description": "The HTML name attribute for form submissions. Renders a hidden input carrying the selected value, like a native select."
+                "default": "props.htmlName",
+                "description": "The HTML name attribute for form submissions. Renders a hidden input carrying the selected value, like a native select. Default: props.htmlName."
             },
             {
                 "name": "hasClear",
@@ -2153,6 +2282,30 @@
                 "description": "Description text rendered below the label."
             },
             {
+                "name": "name",
+                "type": "string",
+                "required": false,
+                "description": "Includes the themed control's value under this form submission name."
+            },
+            {
+                "name": "required",
+                "type": "boolean",
+                "required": false,
+                "description": "Requires a value before native form submission."
+            },
+            {
+                "name": "disabled",
+                "type": "boolean",
+                "required": false,
+                "description": "Prevents interaction and excludes the field from submission."
+            },
+            {
+                "name": "readOnly",
+                "type": "boolean",
+                "required": false,
+                "description": "Retains submitted values while preventing editing where supported."
+            },
+            {
                 "name": "isRequired",
                 "type": "boolean",
                 "required": false,
@@ -2197,13 +2350,20 @@
                 "name": "htmlName",
                 "type": "string",
                 "required": false,
-                "description": "The HTML name attribute for form submissions. Renders hidden inputs carrying the current value (two entries in range mode)."
+                "default": "props.htmlName",
+                "description": "The HTML name attribute for form submissions. Renders hidden inputs carrying the current value (two entries in range mode). Default: props.htmlName."
             },
             {
                 "name": "value",
                 "type": "(number) | ([number, number])",
-                "required": true,
+                "required": false,
                 "description": "Current value: a `number` for single thumb mode or `[number, number]` for range mode."
+            },
+            {
+                "name": "defaultValue",
+                "type": "(number) | ([number, number])",
+                "required": false,
+                "description": "The defaultValue prop."
             },
             {
                 "name": "onChange",
@@ -2415,6 +2575,30 @@
                 "description": "Description text displayed below the label."
             },
             {
+                "name": "name",
+                "type": "string",
+                "required": false,
+                "description": "Includes the themed control's value under this form submission name."
+            },
+            {
+                "name": "required",
+                "type": "boolean",
+                "required": false,
+                "description": "Requires a value before native form submission."
+            },
+            {
+                "name": "disabled",
+                "type": "boolean",
+                "required": false,
+                "description": "Prevents interaction and excludes the field from submission."
+            },
+            {
+                "name": "readOnly",
+                "type": "boolean",
+                "required": false,
+                "description": "Retains submitted values while preventing editing where supported."
+            },
+            {
                 "name": "isRequired",
                 "type": "boolean",
                 "required": false,
@@ -2437,8 +2621,20 @@
             {
                 "name": "value",
                 "type": "boolean",
-                "required": true,
+                "required": false,
                 "description": "Whether the switch is on or off."
+            },
+            {
+                "name": "checked",
+                "type": "boolean",
+                "required": false,
+                "description": "The checked prop."
+            },
+            {
+                "name": "defaultChecked",
+                "type": "boolean",
+                "required": false,
+                "description": "The defaultChecked prop."
             },
             {
                 "name": "onChange",
@@ -2450,7 +2646,8 @@
                 "name": "htmlName",
                 "type": "string",
                 "required": false,
-                "description": "The HTML name attribute for the underlying checkbox input, useful for form submissions (submits \"on\" when the switch is on)."
+                "default": "props.htmlName",
+                "description": "The HTML name attribute for the underlying checkbox input, useful for form submissions (submits \"on\" when the switch is on). Default: props.htmlName."
             },
             {
                 "name": "size",
@@ -2603,7 +2800,7 @@
     {
         "name": "TextArea",
         "url": "https://astryx.atmeta.com/components/TextArea",
-        "introduction": "Edits controlled multi-line text using standard field presentation.",
+        "introduction": "Edits themed multi-line text with native form serialization.",
         "properties": [
             {
                 "name": "label",
@@ -2616,6 +2813,30 @@
                 "type": "string",
                 "required": false,
                 "description": "Helper text displayed between the label and textarea."
+            },
+            {
+                "name": "name",
+                "type": "string",
+                "required": false,
+                "description": "Includes the themed control's value under this form submission name."
+            },
+            {
+                "name": "required",
+                "type": "boolean",
+                "required": false,
+                "description": "Requires a value before native form submission."
+            },
+            {
+                "name": "disabled",
+                "type": "boolean",
+                "required": false,
+                "description": "Prevents interaction and excludes the field from submission."
+            },
+            {
+                "name": "readOnly",
+                "type": "boolean",
+                "required": false,
+                "description": "Retains submitted values while preventing editing where supported."
             },
             {
                 "name": "isRequired",
@@ -2640,8 +2861,14 @@
             {
                 "name": "value",
                 "type": "string",
-                "required": true,
+                "required": false,
                 "description": "Current value of the textarea."
+            },
+            {
+                "name": "defaultValue",
+                "type": "string",
+                "required": false,
+                "description": "The defaultValue prop."
             },
             {
                 "name": "onChange",
@@ -2686,7 +2913,8 @@
                 "name": "htmlName",
                 "type": "string",
                 "required": false,
-                "description": "HTML name attribute for the textarea element, useful for form submissions."
+                "default": "props.htmlName",
+                "description": "HTML name attribute for the textarea element, useful for form submissions. Default: props.htmlName."
             },
             {
                 "name": "autoComplete",
@@ -2717,7 +2945,7 @@
     {
         "name": "TextInput",
         "url": "https://astryx.atmeta.com/components/TextInput",
-        "introduction": "Edits controlled text without a second async change channel.",
+        "introduction": "Edits themed text with optional local state and native form serialization.",
         "properties": [
             {
                 "name": "label",
@@ -2730,6 +2958,30 @@
                 "type": "string",
                 "required": false,
                 "description": "Description text displayed between the label and input."
+            },
+            {
+                "name": "name",
+                "type": "string",
+                "required": false,
+                "description": "Includes the themed control's value under this form submission name."
+            },
+            {
+                "name": "required",
+                "type": "boolean",
+                "required": false,
+                "description": "Requires a value before native form submission."
+            },
+            {
+                "name": "disabled",
+                "type": "boolean",
+                "required": false,
+                "description": "Prevents interaction and excludes the field from submission."
+            },
+            {
+                "name": "readOnly",
+                "type": "boolean",
+                "required": false,
+                "description": "Retains submitted values while preventing editing where supported."
             },
             {
                 "name": "isRequired",
@@ -2754,8 +3006,14 @@
             {
                 "name": "value",
                 "type": "string",
-                "required": true,
+                "required": false,
                 "description": "Current value of the input."
+            },
+            {
+                "name": "defaultValue",
+                "type": "string",
+                "required": false,
+                "description": "The defaultValue prop."
             },
             {
                 "name": "onChange",
@@ -2787,7 +3045,8 @@
                 "name": "htmlName",
                 "type": "string",
                 "required": false,
-                "description": "The HTML name attribute for the input, useful for form submissions."
+                "default": "props.htmlName",
+                "description": "The HTML name attribute for the input, useful for form submissions. Default: props.htmlName."
             },
             {
                 "name": "autoComplete",
@@ -2874,6 +3133,30 @@
                 "description": "Description text displayed between the label and input."
             },
             {
+                "name": "name",
+                "type": "string",
+                "required": false,
+                "description": "Includes the themed control's value under this form submission name."
+            },
+            {
+                "name": "required",
+                "type": "boolean",
+                "required": false,
+                "description": "Requires a value before native form submission."
+            },
+            {
+                "name": "disabled",
+                "type": "boolean",
+                "required": false,
+                "description": "Prevents interaction and excludes the field from submission."
+            },
+            {
+                "name": "readOnly",
+                "type": "boolean",
+                "required": false,
+                "description": "Retains submitted values while preventing editing where supported."
+            },
+            {
                 "name": "isRequired",
                 "type": "boolean",
                 "required": false,
@@ -2898,6 +3181,12 @@
                 "type": "ISOTimeString",
                 "required": false,
                 "description": "Controlled time value in ISO format (HH:MM or HH:MM:SS)."
+            },
+            {
+                "name": "defaultValue",
+                "type": "ISOTimeString",
+                "required": false,
+                "description": "The defaultValue prop."
             },
             {
                 "name": "onChange",

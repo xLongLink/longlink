@@ -16,6 +16,7 @@ type ButtonProps = {
     tooltip?: string;
     width?: number | string;
     isDisabled?: boolean;
+    disabled?: boolean;
     href?: string;
     onClick?: (event: MouseEvent<HTMLButtonElement>) => void | Promise<void>;
 };
@@ -33,7 +34,7 @@ export function Button({ onClick, ...props }: ButtonProps) {
             variant={props.variant ?? 'secondary'}
             size={size}
             type={props.type ?? 'button'}
-            isDisabled={props.isDisabled ?? false}
+            isDisabled={props.disabled ?? props.isDisabled ?? false}
             children={undefined}
             isIconOnly={false}
             target={undefined}

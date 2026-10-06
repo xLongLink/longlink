@@ -67,7 +67,7 @@
     {
         "name": "Button",
         "category": "Action",
-        "declaration": "type ViewMouseEvent = Omit<MouseEvent, 'currentTarget'> & { currentTarget: HTMLElement; nativeEvent: MouseEvent };\n\ntype ButtonProps = {\n    label: string;\n    variant?: 'primary' | 'secondary' | 'ghost' | 'destructive';\n    size?: 'sm' | 'md' | 'lg';\n    type?: 'button' | 'submit' | 'reset';\n    name?: string;\n    value?: string | number | readonly string[];\n    form?: string;\n    icon?: string;\n    endContent?: ViewNode;\n    tooltip?: string;\n    width?: number | string;\n    isDisabled?: boolean;\n    href?: string;\n    onClick?: (event: ViewMouseEvent) => void | Promise<void>;\n};\n\ndeclare function Button(props: ButtonProps): React.JSX.Element;",
+        "declaration": "type ViewMouseEvent = Omit<MouseEvent, 'currentTarget'> & { currentTarget: HTMLElement; nativeEvent: MouseEvent };\n\ntype ButtonProps = {\n    label: string;\n    variant?: 'primary' | 'secondary' | 'ghost' | 'destructive';\n    size?: 'sm' | 'md' | 'lg';\n    type?: 'button' | 'submit' | 'reset';\n    name?: string;\n    value?: string | number | readonly string[];\n    form?: string;\n    icon?: string;\n    endContent?: ViewNode;\n    tooltip?: string;\n    width?: number | string;\n    isDisabled?: boolean;\n    disabled?: boolean;\n    href?: string;\n    onClick?: (event: ViewMouseEvent) => void | Promise<void>;\n};\n\ndeclare function Button(props: ButtonProps): React.JSX.Element;",
         "properties": [
             {
                 "name": "label",
@@ -144,6 +144,12 @@
                 "required": false,
                 "default": "false",
                 "description": "Disables the button. When a tooltip is present, uses aria-disabled instead of native disabled so the button stays focusable. Default: false."
+            },
+            {
+                "name": "disabled",
+                "type": "boolean",
+                "required": false,
+                "description": "The disabled prop."
             },
             {
                 "name": "href",
@@ -311,7 +317,7 @@
     {
         "name": "CheckboxInput",
         "category": "Form",
-        "declaration": "declare function CheckboxInput(\n    props: FieldProps & {\n        value: boolean | 'indeterminate';\n        onChange?: (value: boolean) => void;\n        isReadOnly?: boolean;\n        htmlName?: string;\n        size?: 'sm' | 'md';\n    },\n): React.JSX.Element;",
+        "declaration": "declare function CheckboxInput(\n    props: FieldProps & {\n        value?: boolean | 'indeterminate';\n        checked?: boolean;\n        defaultChecked?: boolean;\n        onChange?: (value: boolean) => void;\n        isReadOnly?: boolean;\n        htmlName?: string;\n        size?: 'sm' | 'md';\n    },\n): React.JSX.Element;",
         "properties": [
             {
                 "name": "label",
@@ -324,6 +330,30 @@
                 "type": "string",
                 "required": false,
                 "description": "Description text displayed below the label."
+            },
+            {
+                "name": "name",
+                "type": "string",
+                "required": false,
+                "description": "Includes the themed control's value under this form submission name."
+            },
+            {
+                "name": "required",
+                "type": "boolean",
+                "required": false,
+                "description": "Requires a value before native form submission."
+            },
+            {
+                "name": "disabled",
+                "type": "boolean",
+                "required": false,
+                "description": "Prevents interaction and excludes the field from submission."
+            },
+            {
+                "name": "readOnly",
+                "type": "boolean",
+                "required": false,
+                "description": "Retains submitted values while preventing editing where supported."
             },
             {
                 "name": "isRequired",
@@ -348,8 +378,20 @@
             {
                 "name": "value",
                 "type": "boolean | \"indeterminate\"",
-                "required": true,
+                "required": false,
                 "description": "Whether the checkbox is checked, unchecked, or indeterminate."
+            },
+            {
+                "name": "checked",
+                "type": "boolean",
+                "required": false,
+                "description": "The checked prop."
+            },
+            {
+                "name": "defaultChecked",
+                "type": "boolean",
+                "required": false,
+                "description": "The defaultChecked prop."
             },
             {
                 "name": "onChange",
@@ -368,7 +410,8 @@
                 "name": "htmlName",
                 "type": "string",
                 "required": false,
-                "description": "The HTML name attribute for the underlying checkbox input, useful for form submissions (submits \"on\" when checked)."
+                "default": "props.htmlName",
+                "description": "The HTML name attribute for the underlying checkbox input, useful for form submissions (submits \"on\" when checked). Default: props.htmlName."
             },
             {
                 "name": "size",
@@ -485,7 +528,7 @@
     {
         "name": "DateInput",
         "category": "Form",
-        "declaration": "type ISODateString = `${number}${number}${number}${number}-${number}${number}-${number}${number}`;\n\ntype DateInputProps = FieldProps & {\n    value?: ISODateString;\n    onChange?: (value: ISODateString | undefined) => void;\n    min?: ISODateString;\n    max?: ISODateString;\n    dateConstraints?: readonly ((date: Date) => boolean)[];\n    placeholder?: string;\n    hasClear?: boolean;\n    size?: 'sm' | 'md' | 'lg';\n};\n\ndeclare function DateInput(props: DateInputProps): React.JSX.Element;",
+        "declaration": "type ISODateString = `${number}${number}${number}${number}-${number}${number}-${number}${number}`;\n\ntype DateInputProps = FieldProps & {\n    value?: ISODateString;\n    defaultValue?: ISODateString;\n    onChange?: (value: ISODateString | undefined) => void;\n    min?: ISODateString;\n    max?: ISODateString;\n    /** Additional constraints applied to the themed calendar picker. */\n    dateConstraints?: readonly ((date: Date) => boolean)[];\n    placeholder?: string;\n    hasClear?: boolean;\n    size?: 'sm' | 'md' | 'lg';\n};\n\ndeclare function DateInput(props: DateInputProps): React.JSX.Element;",
         "properties": [
             {
                 "name": "label",
@@ -498,6 +541,30 @@
                 "type": "string",
                 "required": false,
                 "description": "Helper text displayed below the label."
+            },
+            {
+                "name": "name",
+                "type": "string",
+                "required": false,
+                "description": "Includes the themed control's value under this form submission name."
+            },
+            {
+                "name": "required",
+                "type": "boolean",
+                "required": false,
+                "description": "Requires a value before native form submission."
+            },
+            {
+                "name": "disabled",
+                "type": "boolean",
+                "required": false,
+                "description": "Prevents interaction and excludes the field from submission."
+            },
+            {
+                "name": "readOnly",
+                "type": "boolean",
+                "required": false,
+                "description": "Retains submitted values while preventing editing where supported."
             },
             {
                 "name": "isRequired",
@@ -526,6 +593,12 @@
                 "description": "Selected date in YYYY-MM-DD format."
             },
             {
+                "name": "defaultValue",
+                "type": "`${number}${number}${number}${number}-${number}${number}-${number}${number}`",
+                "required": false,
+                "description": "The defaultValue prop."
+            },
+            {
                 "name": "onChange",
                 "type": "(value: `${number}${number}${number}${number}-${number}${number}-${number}${number}` | undefined) => void",
                 "required": false,
@@ -547,7 +620,7 @@
                 "name": "dateConstraints",
                 "type": "readonly ((date: Date) => boolean)[]",
                 "required": false,
-                "description": "Array of custom constraint functions that disable specific dates."
+                "description": "Additional constraints applied to the themed calendar picker."
             },
             {
                 "name": "placeholder",
@@ -575,7 +648,7 @@
     {
         "name": "DateRangeInput",
         "category": "Form",
-        "declaration": "type DateRange = { start: ISODateString; end: ISODateString };\n\ndeclare function DateRangeInput(\n    props: FieldProps & {\n        value: DateRange | null;\n        onChange: (value: DateRange | null) => void;\n        min?: ISODateString;\n        max?: ISODateString;\n        dateConstraints?: readonly ((date: Date) => boolean)[];\n        minRangeSpan?: number;\n        maxRangeSpan?: number;\n        placeholder?: string;\n        size?: 'sm' | 'md' | 'lg';\n        hasClear?: boolean;\n    },\n): React.JSX.Element;",
+        "declaration": "type DateRange = { start: ISODateString; end: ISODateString };\n\ndeclare function DateRangeInput(\n    props: FieldProps & {\n        value?: DateRange | null;\n        defaultValue?: DateRange;\n        onChange?: (value: DateRange | null) => void;\n        min?: ISODateString;\n        max?: ISODateString;\n        /** Additional constraints applied to the themed calendar picker. */\n        dateConstraints?: readonly ((date: Date) => boolean)[];\n        /** Minimum selectable range span. */\n        minRangeSpan?: number;\n        /** Maximum selectable range span. */\n        maxRangeSpan?: number;\n        placeholder?: string;\n        size?: 'sm' | 'md' | 'lg';\n        hasClear?: boolean;\n    },\n): React.JSX.Element;",
         "properties": [
             {
                 "name": "label",
@@ -588,6 +661,30 @@
                 "type": "string",
                 "required": false,
                 "description": "Helper text displayed below the label."
+            },
+            {
+                "name": "name",
+                "type": "string",
+                "required": false,
+                "description": "Includes the themed control's value under this form submission name."
+            },
+            {
+                "name": "required",
+                "type": "boolean",
+                "required": false,
+                "description": "Requires a value before native form submission."
+            },
+            {
+                "name": "disabled",
+                "type": "boolean",
+                "required": false,
+                "description": "Prevents interaction and excludes the field from submission."
+            },
+            {
+                "name": "readOnly",
+                "type": "boolean",
+                "required": false,
+                "description": "Retains submitted values while preventing editing where supported."
             },
             {
                 "name": "isRequired",
@@ -612,13 +709,19 @@
             {
                 "name": "value",
                 "type": "DateRange | null",
-                "required": true,
+                "required": false,
                 "description": "Selected date range or null. Import the `DateRange` type from `@astryxdesign/core/DateRangeInput`; it is `{start: ISODateString, end: ISODateString}`. Do NOT redeclare your own DateRange type; use the exported one so TypeScript structurally matches."
+            },
+            {
+                "name": "defaultValue",
+                "type": "DateRange",
+                "required": false,
+                "description": "The defaultValue prop."
             },
             {
                 "name": "onChange",
                 "type": "(value: DateRange | null) => void",
-                "required": true,
+                "required": false,
                 "description": "Callback when the range changes. Called with null on clear."
             },
             {
@@ -637,19 +740,19 @@
                 "name": "dateConstraints",
                 "type": "readonly ((date: Date) => boolean)[]",
                 "required": false,
-                "description": "Custom constraint functions to disable specific dates."
+                "description": "Additional constraints applied to the themed calendar picker."
             },
             {
                 "name": "minRangeSpan",
                 "type": "number",
                 "required": false,
-                "description": "Minimum days a selected range must span, counting both endpoints (`2` forbids a single-day range). Once a start is picked, days closer than this are disabled. Clicking the start again commits a one-day range when allowed, or cancels the in-progress selection when the minimum is longer. Defaults to 1 (same-day start and end allowed)."
+                "description": "Minimum selectable range span."
             },
             {
                 "name": "maxRangeSpan",
                 "type": "number",
                 "required": false,
-                "description": "Maximum days a selected range may span, counting both endpoints (`7` = a 7-day window, start + 6). Once a start is picked, days beyond this distance are disabled so the range cannot stretch past the cap. Rolling window relative to the start; for fixed calendar bounds use `min`/`max`. Constrains selection only; it never rewrites a `value` already wider than the cap (flag that with `status`)."
+                "description": "Maximum selectable range span."
             },
             {
                 "name": "placeholder",
@@ -671,104 +774,6 @@
                 "required": false,
                 "default": "true",
                 "description": "Shows a clear button when a range is selected. Default: true."
-            }
-        ]
-    },
-    {
-        "name": "DateTimeInput",
-        "category": "Form",
-        "declaration": "type ISODateTimeString = string & { readonly __brand: 'ISODateTimeString' };\n\ndeclare function DateTimeInput(\n    props: FieldProps & {\n        value?: ISODateTimeString;\n        onChange: (value: ISODateTimeString | undefined) => void;\n        min?: ISODateTimeString;\n        max?: ISODateTimeString;\n        placeholder?: string;\n        hasClear?: boolean;\n        hasSeconds?: boolean;\n        hourFormat?: '12h' | '24h';\n        size?: 'sm' | 'md' | 'lg';\n    },\n): React.JSX.Element;",
-        "properties": [
-            {
-                "name": "label",
-                "type": "string",
-                "required": true,
-                "description": "Label text."
-            },
-            {
-                "name": "description",
-                "type": "string",
-                "required": false,
-                "description": "Helper text displayed below the label."
-            },
-            {
-                "name": "isRequired",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Mark the field as required. Default: false."
-            },
-            {
-                "name": "isDisabled",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Disable the input and picker. Default: false."
-            },
-            {
-                "name": "width",
-                "type": "string | number",
-                "required": false,
-                "description": "Width of the field (number = pixels, string used as-is, e.g. \"100%\"). Sizes the whole field (label, control, and status) so they stay aligned."
-            },
-            {
-                "name": "value",
-                "type": "ISODateTimeString",
-                "required": false,
-                "description": "Selected datetime in ISO 8601 format (YYYY-MM-DDTHH:MM or YYYY-MM-DDTHH:MM:SS)."
-            },
-            {
-                "name": "onChange",
-                "type": "(value: ISODateTimeString | undefined) => void",
-                "required": true,
-                "description": "Callback invoked when the selected datetime changes."
-            },
-            {
-                "name": "min",
-                "type": "ISODateTimeString",
-                "required": false,
-                "description": "Minimum selectable datetime. Constrains both date and time selection."
-            },
-            {
-                "name": "max",
-                "type": "ISODateTimeString",
-                "required": false,
-                "description": "Maximum selectable datetime. Constrains both date and time selection."
-            },
-            {
-                "name": "placeholder",
-                "type": "string",
-                "required": false,
-                "default": "'Select a date'",
-                "description": "Placeholder text shown in the date portion when no date is selected. Default: 'Select a date'."
-            },
-            {
-                "name": "hasClear",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Shows a clear button when a datetime value is set. Default: false."
-            },
-            {
-                "name": "hasSeconds",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Include seconds in the time portion. Keeps Astryx's time field even when nativePicker selects native surfaces, because iOS has no seconds wheel. Default: false."
-            },
-            {
-                "name": "hourFormat",
-                "type": "\"12h\" | \"24h\"",
-                "required": false,
-                "default": "'12h'",
-                "description": "Hour display format. '12h' shows AM/PM; '24h' uses 24-hour notation. Default: '12h'."
-            },
-            {
-                "name": "size",
-                "type": "\"sm\" | \"md\" | \"lg\"",
-                "required": false,
-                "default": "'md'",
-                "description": "Size of the input control. Default: 'md'."
             }
         ]
     },
@@ -899,7 +904,7 @@
     {
         "name": "FileInput",
         "category": "Form",
-        "declaration": "declare function FileInput(\n    props: FieldProps & {\n        value: File | File[] | null;\n        onChange: (value: File | File[] | null) => void;\n        accept?: string;\n        isMultiple?: boolean;\n        maxSize?: number;\n        maxFiles?: number;\n        placeholder?: string;\n        mode?: 'input' | 'dropzone';\n    },\n): React.JSX.Element;",
+        "declaration": "declare function FileInput(\n    props: FieldProps & {\n        value?: File | File[] | null;\n        onChange?: (value: File | File[] | null) => void;\n        accept?: string;\n        isMultiple?: boolean;\n        multiple?: boolean;\n        maxSize?: number;\n        maxFiles?: number;\n        placeholder?: string;\n        mode?: 'input' | 'dropzone';\n    },\n): React.JSX.Element;",
         "properties": [
             {
                 "name": "label",
@@ -912,6 +917,30 @@
                 "type": "string",
                 "required": false,
                 "description": "Description text displayed between the label and input."
+            },
+            {
+                "name": "name",
+                "type": "string",
+                "required": false,
+                "description": "Includes the themed control's value under this form submission name."
+            },
+            {
+                "name": "required",
+                "type": "boolean",
+                "required": false,
+                "description": "Requires a value before native form submission."
+            },
+            {
+                "name": "disabled",
+                "type": "boolean",
+                "required": false,
+                "description": "Prevents interaction and excludes the field from submission."
+            },
+            {
+                "name": "readOnly",
+                "type": "boolean",
+                "required": false,
+                "description": "Retains submitted values while preventing editing where supported."
             },
             {
                 "name": "isRequired",
@@ -936,13 +965,13 @@
             {
                 "name": "value",
                 "type": "File | File[] | null",
-                "required": true,
+                "required": false,
                 "description": "Currently selected file(s). Controlled component."
             },
             {
                 "name": "onChange",
                 "type": "(value: File | File[] | null) => void",
-                "required": true,
+                "required": false,
                 "description": "Callback fired when files are selected or removed."
             },
             {
@@ -957,6 +986,12 @@
                 "required": false,
                 "default": "false",
                 "description": "Whether multiple files can be selected. When true, value and onChange use File[] instead of File. Default: false."
+            },
+            {
+                "name": "multiple",
+                "type": "boolean",
+                "required": false,
+                "description": "The multiple prop."
             },
             {
                 "name": "maxSize",
@@ -974,8 +1009,8 @@
                 "name": "placeholder",
                 "type": "string",
                 "required": false,
-                "default": "(props.isMultiple ? 'Choose files' : 'Choose file')",
-                "description": "Placeholder text shown when no file is selected. Default: (props.isMultiple ? 'Choose files' : 'Choose file')."
+                "default": "(multiple ? 'Choose files' : 'Choose file')",
+                "description": "Placeholder text shown when no file is selected. Default: (multiple ? 'Choose files' : 'Choose file')."
             },
             {
                 "name": "mode",
@@ -1002,6 +1037,43 @@
                 "type": "string",
                 "required": true,
                 "description": "Accessible label for the preview trigger and file dialog."
+            }
+        ]
+    },
+    {
+        "name": "Form",
+        "category": "Form",
+        "declaration": "declare function Form(props: {\n    /** Named controls, ordinary HTML fields, and layout components. */\n    children?: ViewNode;\n    /** Solution-relative API path; external URLs are not supported. */\n    action: string;\n    /** Only POST is supported; defaults to post. Use request() for other methods. */\n    method?: 'post';\n    /** Native form ID for associating external submit or reset buttons. */\n    id?: string;\n    /** Runs after a successful write and automatic cached-data refresh. */\n    onSuccess?: (data: unknown) => void | Promise<void>;\n}): React.JSX.Element;",
+        "properties": [
+            {
+                "name": "children",
+                "type": "ReactNode",
+                "required": false,
+                "description": "Named controls, ordinary HTML fields, and layout components."
+            },
+            {
+                "name": "action",
+                "type": "string",
+                "required": true,
+                "description": "Solution-relative API path; external URLs are not supported."
+            },
+            {
+                "name": "method",
+                "type": "\"post\"",
+                "required": false,
+                "description": "Only POST is supported; defaults to post. Use request() for other methods."
+            },
+            {
+                "name": "id",
+                "type": "string",
+                "required": false,
+                "description": "Native form ID for associating external submit or reset buttons."
+            },
+            {
+                "name": "onSuccess",
+                "type": "(data: unknown) => void | Promise<void>",
+                "required": false,
+                "description": "Runs after a successful write and automatic cached-data refresh."
             }
         ]
     },
@@ -1357,7 +1429,7 @@
     {
         "name": "MultiSelector",
         "category": "Form",
-        "declaration": "declare function MultiSelector(\n    props: FieldProps & {\n        options: SelectorOptionType[];\n        value: string[];\n        onChange: (value: string[]) => void;\n        placeholder?: string;\n        size?: 'sm' | 'md' | 'lg';\n        hasSelectAll?: boolean;\n        hasSearch?: boolean;\n        isReadOnly?: boolean;\n        htmlName?: string;\n        hasClear?: boolean;\n    },\n): React.JSX.Element;",
+        "declaration": "declare function MultiSelector(\n    props: FieldProps & {\n        options: SelectorOptionType[];\n        value?: string[];\n        defaultValue?: string[];\n        onChange?: (value: string[]) => void;\n        placeholder?: string;\n        size?: 'sm' | 'md' | 'lg';\n        hasSelectAll?: boolean;\n        hasSearch?: boolean;\n        isReadOnly?: boolean;\n        htmlName?: string;\n        hasClear?: boolean;\n    },\n): React.JSX.Element;",
         "properties": [
             {
                 "name": "label",
@@ -1370,6 +1442,30 @@
                 "type": "string",
                 "required": false,
                 "description": "Helper text displayed below the label."
+            },
+            {
+                "name": "name",
+                "type": "string",
+                "required": false,
+                "description": "Includes the themed control's value under this form submission name."
+            },
+            {
+                "name": "required",
+                "type": "boolean",
+                "required": false,
+                "description": "Requires a value before native form submission."
+            },
+            {
+                "name": "disabled",
+                "type": "boolean",
+                "required": false,
+                "description": "Prevents interaction and excludes the field from submission."
+            },
+            {
+                "name": "readOnly",
+                "type": "boolean",
+                "required": false,
+                "description": "Retains submitted values while preventing editing where supported."
             },
             {
                 "name": "isRequired",
@@ -1400,13 +1496,19 @@
             {
                 "name": "value",
                 "type": "string[]",
-                "required": true,
+                "required": false,
                 "description": "Currently selected values."
+            },
+            {
+                "name": "defaultValue",
+                "type": "string[]",
+                "required": false,
+                "description": "The defaultValue prop."
             },
             {
                 "name": "onChange",
                 "type": "(value: string[]) => void",
-                "required": true,
+                "required": false,
                 "description": "Callback fired when the selection changes."
             },
             {
@@ -1448,7 +1550,8 @@
                 "name": "htmlName",
                 "type": "string",
                 "required": false,
-                "description": "The HTML name attribute for form submissions. Renders one hidden input per selected value, like a native multi-select."
+                "default": "props.htmlName",
+                "description": "The HTML name attribute for form submissions. Renders one hidden input per selected value, like a native multi-select. Default: props.htmlName."
             },
             {
                 "name": "hasClear",
@@ -1462,7 +1565,7 @@
     {
         "name": "NumberInput",
         "category": "Form",
-        "declaration": "declare function NumberInput(\n    props: FieldProps & {\n        value: number | null | undefined;\n        min?: number | null;\n        max?: number | null;\n        step?: number | null;\n        placeholder?: string;\n        size?: 'sm' | 'md' | 'lg';\n        isReadOnly?: boolean;\n        units?: string | null;\n        isIntegerOnly?: boolean;\n        htmlName?: string;\n        autoComplete?: string;\n    } & (\n            | { hasClear?: false; onChange: (value: number) => void }\n            | { hasClear: true; onChange: (value: number | null) => void }\n        ),\n): React.JSX.Element;",
+        "declaration": "declare function NumberInput(\n    props: FieldProps & {\n        value?: number | null;\n        defaultValue?: number;\n        min?: number | null;\n        max?: number | null;\n        step?: number | null;\n        placeholder?: string;\n        size?: 'sm' | 'md' | 'lg';\n        isReadOnly?: boolean;\n        units?: string | null;\n        isIntegerOnly?: boolean;\n        htmlName?: string;\n        autoComplete?: string;\n    } & (\n            | { hasClear?: false; onChange?: (value: number) => void }\n            | { hasClear: true; onChange?: (value: number | null) => void }\n        ),\n): React.JSX.Element;",
         "properties": [
             {
                 "name": "label",
@@ -1475,6 +1578,30 @@
                 "type": "string",
                 "required": false,
                 "description": "Description text displayed between the label and input."
+            },
+            {
+                "name": "name",
+                "type": "string",
+                "required": false,
+                "description": "Includes the themed control's value under this form submission name."
+            },
+            {
+                "name": "required",
+                "type": "boolean",
+                "required": false,
+                "description": "Requires a value before native form submission."
+            },
+            {
+                "name": "disabled",
+                "type": "boolean",
+                "required": false,
+                "description": "Prevents interaction and excludes the field from submission."
+            },
+            {
+                "name": "readOnly",
+                "type": "boolean",
+                "required": false,
+                "description": "Retains submitted values while preventing editing where supported."
             },
             {
                 "name": "isRequired",
@@ -1499,8 +1626,14 @@
             {
                 "name": "value",
                 "type": "number | null",
-                "required": true,
+                "required": false,
                 "description": "Current value of the input."
+            },
+            {
+                "name": "defaultValue",
+                "type": "number",
+                "required": false,
+                "description": "The defaultValue prop."
             },
             {
                 "name": "min",
@@ -1558,7 +1691,8 @@
                 "name": "htmlName",
                 "type": "string",
                 "required": false,
-                "description": "HTML name attribute for form submissions."
+                "default": "props.htmlName",
+                "description": "HTML name attribute for form submissions. Default: props.htmlName."
             },
             {
                 "name": "autoComplete",
@@ -1576,7 +1710,7 @@
             {
                 "name": "onChange",
                 "type": "((value: number) => void) | ((value: number | null) => void)",
-                "required": true,
+                "required": false,
                 "description": "Callback fired when a valid text edit commits on blur or Enter, or when a step or clear control changes the value."
             }
         ]
@@ -1625,7 +1759,7 @@
     {
         "name": "RadioList",
         "category": "Form",
-        "declaration": "declare function RadioList(\n    props: FieldProps & {\n        children?: ViewNode;\n        value: string;\n        onChange: (value: string) => void;\n        orientation?: 'vertical' | 'horizontal';\n        htmlName?: string;\n        size?: 'sm' | 'md';\n    },\n): React.JSX.Element;\n\ndeclare function RadioListItem(props: {\n    /** Visible label identifying this choice. */\n    label: string;\n    /** Value passed to the surrounding RadioList when selected. */\n    value: string;\n    /** Optional helper text explaining the choice. */\n    description?: string;\n    isDisabled?: boolean;\n}): React.JSX.Element;",
+        "declaration": "declare function RadioList(\n    props: FieldProps & {\n        children?: ViewNode;\n        value?: string;\n        defaultValue?: string;\n        onChange?: (value: string) => void;\n        orientation?: 'vertical' | 'horizontal';\n        htmlName?: string;\n        size?: 'sm' | 'md';\n    },\n): React.JSX.Element;\n\ndeclare function RadioListItem(props: {\n    /** Visible label identifying this choice. */\n    label: string;\n    /** Value passed to the surrounding RadioList when selected. */\n    value: string;\n    /** Optional helper text explaining the choice. */\n    description?: string;\n    isDisabled?: boolean;\n}): React.JSX.Element;",
         "properties": [
             {
                 "name": "label",
@@ -1638,6 +1772,30 @@
                 "type": "string",
                 "required": false,
                 "description": "Description text displayed below the label."
+            },
+            {
+                "name": "name",
+                "type": "string",
+                "required": false,
+                "description": "Includes the themed control's value under this form submission name."
+            },
+            {
+                "name": "required",
+                "type": "boolean",
+                "required": false,
+                "description": "Requires a value before native form submission."
+            },
+            {
+                "name": "disabled",
+                "type": "boolean",
+                "required": false,
+                "description": "Prevents interaction and excludes the field from submission."
+            },
+            {
+                "name": "readOnly",
+                "type": "boolean",
+                "required": false,
+                "description": "Retains submitted values while preventing editing where supported."
             },
             {
                 "name": "isRequired",
@@ -1668,13 +1826,19 @@
             {
                 "name": "value",
                 "type": "string",
-                "required": true,
+                "required": false,
                 "description": "The currently selected value."
+            },
+            {
+                "name": "defaultValue",
+                "type": "string",
+                "required": false,
+                "description": "The defaultValue prop."
             },
             {
                 "name": "onChange",
                 "type": "(value: string) => void",
-                "required": true,
+                "required": false,
                 "description": "Callback fired when the selected value changes."
             },
             {
@@ -1688,7 +1852,8 @@
                 "name": "htmlName",
                 "type": "string",
                 "required": false,
-                "description": "The HTML name attribute shared by the radio inputs, useful for form submissions. When omitted, a unique internal name still groups the radios."
+                "default": "props.htmlName",
+                "description": "The HTML name attribute shared by the radio inputs, useful for form submissions. When omitted, a unique internal name still groups the radios. Default: props.htmlName."
             },
             {
                 "name": "size",
@@ -1727,7 +1892,7 @@
     {
         "name": "Selector",
         "category": "Form",
-        "declaration": "type SelectorOptionData = {\n    value: string;\n    label?: string;\n    description?: ViewNode;\n    icon?: string;\n    disabled?: boolean;\n};\n\ntype SelectorOptionType =\n    | string\n    | SelectorOptionData\n    | { type: 'divider' }\n    | {\n          type: 'section';\n          title?: string;\n          options: SelectorOptionData[];\n      };\n\ndeclare function Selector(\n    props: FieldProps & {\n        options: SelectorOptionType[];\n        hasSearch?: boolean;\n        placeholder?: string;\n        size?: 'sm' | 'md' | 'lg';\n        isReadOnly?: boolean;\n        htmlName?: string;\n    } & (\n            | { hasClear?: false; value?: string; onChange?: (value: string) => void }\n            | { hasClear: true; value: string | null; onChange?: (value: string | null) => void }\n        ),\n): React.JSX.Element;",
+        "declaration": "type SelectorOptionData = {\n    value: string;\n    label?: string;\n    description?: ViewNode;\n    icon?: string;\n    disabled?: boolean;\n};\n\ntype SelectorOptionType =\n    | string\n    | SelectorOptionData\n    | { type: 'divider' }\n    | {\n          type: 'section';\n          title?: string;\n          options: SelectorOptionData[];\n      };\n\ndeclare function Selector(\n    props: FieldProps & {\n        options: SelectorOptionType[];\n        defaultValue?: string;\n        hasSearch?: boolean;\n        placeholder?: string;\n        size?: 'sm' | 'md' | 'lg';\n        isReadOnly?: boolean;\n        htmlName?: string;\n    } & (\n            | { hasClear?: false; value?: string; onChange?: (value: string) => void }\n            | { hasClear: true; value?: string | null; onChange?: (value: string | null) => void }\n        ),\n): React.JSX.Element;",
         "properties": [
             {
                 "name": "label",
@@ -1740,6 +1905,30 @@
                 "type": "string",
                 "required": false,
                 "description": "Helper text displayed below the label."
+            },
+            {
+                "name": "name",
+                "type": "string",
+                "required": false,
+                "description": "Includes the themed control's value under this form submission name."
+            },
+            {
+                "name": "required",
+                "type": "boolean",
+                "required": false,
+                "description": "Requires a value before native form submission."
+            },
+            {
+                "name": "disabled",
+                "type": "boolean",
+                "required": false,
+                "description": "Prevents interaction and excludes the field from submission."
+            },
+            {
+                "name": "readOnly",
+                "type": "boolean",
+                "required": false,
+                "description": "Retains submitted values while preventing editing where supported."
             },
             {
                 "name": "isRequired",
@@ -1766,6 +1955,12 @@
                 "type": "SelectorOptionType[]",
                 "required": true,
                 "description": "Array of items: strings, objects with value/label/description/icon/disabled, dividers ({type: \"divider\"}), or sections ({type: \"section\", title, options})."
+            },
+            {
+                "name": "defaultValue",
+                "type": "string",
+                "required": false,
+                "description": "The defaultValue prop."
             },
             {
                 "name": "hasSearch",
@@ -1799,7 +1994,8 @@
                 "name": "htmlName",
                 "type": "string",
                 "required": false,
-                "description": "The HTML name attribute for form submissions. Renders a hidden input carrying the selected value, like a native select."
+                "default": "props.htmlName",
+                "description": "The HTML name attribute for form submissions. Renders a hidden input carrying the selected value, like a native select. Default: props.htmlName."
             },
             {
                 "name": "hasClear",
@@ -1825,7 +2021,7 @@
     {
         "name": "Slider",
         "category": "Form",
-        "declaration": "declare function Slider(\n    props: FieldProps & {\n        min?: number;\n        max?: number;\n        step?: number;\n        htmlName?: string;\n    } & (\n            | { value: number; onChange?: (value: number) => void; onChangeEnd?: (value: number) => void }\n            | {\n                  value: [number, number];\n                  onChange?: (value: [number, number]) => void;\n                  onChangeEnd?: (value: [number, number]) => void;\n                  minStepsBetweenThumbs?: number;\n              }\n        ),\n): React.JSX.Element;",
+        "declaration": "declare function Slider(\n    props: FieldProps & {\n        min?: number;\n        max?: number;\n        step?: number;\n        htmlName?: string;\n    } & (\n            | {\n                  value?: number;\n                  defaultValue?: number;\n                  onChange?: (value: number) => void;\n                  onChangeEnd?: (value: number) => void;\n              }\n            | {\n                  value?: [number, number];\n                  defaultValue?: [number, number];\n                  onChange?: (value: [number, number]) => void;\n                  onChangeEnd?: (value: [number, number]) => void;\n                  minStepsBetweenThumbs?: number;\n              }\n        ),\n): React.JSX.Element;",
         "properties": [
             {
                 "name": "label",
@@ -1838,6 +2034,30 @@
                 "type": "string",
                 "required": false,
                 "description": "Description text rendered below the label."
+            },
+            {
+                "name": "name",
+                "type": "string",
+                "required": false,
+                "description": "Includes the themed control's value under this form submission name."
+            },
+            {
+                "name": "required",
+                "type": "boolean",
+                "required": false,
+                "description": "Requires a value before native form submission."
+            },
+            {
+                "name": "disabled",
+                "type": "boolean",
+                "required": false,
+                "description": "Prevents interaction and excludes the field from submission."
+            },
+            {
+                "name": "readOnly",
+                "type": "boolean",
+                "required": false,
+                "description": "Retains submitted values while preventing editing where supported."
             },
             {
                 "name": "isRequired",
@@ -1884,13 +2104,20 @@
                 "name": "htmlName",
                 "type": "string",
                 "required": false,
-                "description": "The HTML name attribute for form submissions. Renders hidden inputs carrying the current value (two entries in range mode)."
+                "default": "props.htmlName",
+                "description": "The HTML name attribute for form submissions. Renders hidden inputs carrying the current value (two entries in range mode). Default: props.htmlName."
             },
             {
                 "name": "value",
                 "type": "(number) | ([number, number])",
-                "required": true,
+                "required": false,
                 "description": "Current value: a `number` for single thumb mode or `[number, number]` for range mode."
+            },
+            {
+                "name": "defaultValue",
+                "type": "(number) | ([number, number])",
+                "required": false,
+                "description": "The defaultValue prop."
             },
             {
                 "name": "onChange",
@@ -2061,7 +2288,7 @@
     {
         "name": "Switch",
         "category": "Form",
-        "declaration": "declare function Switch(\n    props: FieldProps & { value: boolean; onChange?: (value: boolean) => void; htmlName?: string; size?: 'sm' | 'md' },\n): React.JSX.Element;",
+        "declaration": "declare function Switch(\n    props: FieldProps & {\n        value?: boolean;\n        checked?: boolean;\n        defaultChecked?: boolean;\n        onChange?: (value: boolean) => void;\n        htmlName?: string;\n        size?: 'sm' | 'md';\n    },\n): React.JSX.Element;",
         "properties": [
             {
                 "name": "label",
@@ -2074,6 +2301,30 @@
                 "type": "string",
                 "required": false,
                 "description": "Description text displayed below the label."
+            },
+            {
+                "name": "name",
+                "type": "string",
+                "required": false,
+                "description": "Includes the themed control's value under this form submission name."
+            },
+            {
+                "name": "required",
+                "type": "boolean",
+                "required": false,
+                "description": "Requires a value before native form submission."
+            },
+            {
+                "name": "disabled",
+                "type": "boolean",
+                "required": false,
+                "description": "Prevents interaction and excludes the field from submission."
+            },
+            {
+                "name": "readOnly",
+                "type": "boolean",
+                "required": false,
+                "description": "Retains submitted values while preventing editing where supported."
             },
             {
                 "name": "isRequired",
@@ -2098,8 +2349,20 @@
             {
                 "name": "value",
                 "type": "boolean",
-                "required": true,
+                "required": false,
                 "description": "Whether the switch is on or off."
+            },
+            {
+                "name": "checked",
+                "type": "boolean",
+                "required": false,
+                "description": "The checked prop."
+            },
+            {
+                "name": "defaultChecked",
+                "type": "boolean",
+                "required": false,
+                "description": "The defaultChecked prop."
             },
             {
                 "name": "onChange",
@@ -2111,7 +2374,8 @@
                 "name": "htmlName",
                 "type": "string",
                 "required": false,
-                "description": "The HTML name attribute for the underlying checkbox input, useful for form submissions (submits \"on\" when the switch is on)."
+                "default": "props.htmlName",
+                "description": "The HTML name attribute for the underlying checkbox input, useful for form submissions (submits \"on\" when the switch is on). Default: props.htmlName."
             },
             {
                 "name": "size",
@@ -2261,7 +2525,7 @@
     {
         "name": "TextArea",
         "category": "Form",
-        "declaration": "declare function TextArea(\n    props: FieldProps & {\n        value: string;\n        onChange?: (value: string) => void;\n        placeholder?: string;\n        rows?: number;\n        maxLength?: number;\n        isReadOnly?: boolean;\n        hasAutoFocus?: boolean;\n        htmlName?: string;\n        autoComplete?: string;\n    },\n): React.JSX.Element;",
+        "declaration": "declare function TextArea(\n    props: FieldProps & {\n        value?: string;\n        defaultValue?: string;\n        onChange?: (value: string) => void;\n        placeholder?: string;\n        rows?: number;\n        maxLength?: number;\n        isReadOnly?: boolean;\n        hasAutoFocus?: boolean;\n        htmlName?: string;\n        autoComplete?: string;\n    },\n): React.JSX.Element;",
         "properties": [
             {
                 "name": "label",
@@ -2274,6 +2538,30 @@
                 "type": "string",
                 "required": false,
                 "description": "Helper text displayed between the label and textarea."
+            },
+            {
+                "name": "name",
+                "type": "string",
+                "required": false,
+                "description": "Includes the themed control's value under this form submission name."
+            },
+            {
+                "name": "required",
+                "type": "boolean",
+                "required": false,
+                "description": "Requires a value before native form submission."
+            },
+            {
+                "name": "disabled",
+                "type": "boolean",
+                "required": false,
+                "description": "Prevents interaction and excludes the field from submission."
+            },
+            {
+                "name": "readOnly",
+                "type": "boolean",
+                "required": false,
+                "description": "Retains submitted values while preventing editing where supported."
             },
             {
                 "name": "isRequired",
@@ -2298,8 +2586,14 @@
             {
                 "name": "value",
                 "type": "string",
-                "required": true,
+                "required": false,
                 "description": "Current value of the textarea."
+            },
+            {
+                "name": "defaultValue",
+                "type": "string",
+                "required": false,
+                "description": "The defaultValue prop."
             },
             {
                 "name": "onChange",
@@ -2344,7 +2638,8 @@
                 "name": "htmlName",
                 "type": "string",
                 "required": false,
-                "description": "HTML name attribute for the textarea element, useful for form submissions."
+                "default": "props.htmlName",
+                "description": "HTML name attribute for the textarea element, useful for form submissions. Default: props.htmlName."
             },
             {
                 "name": "autoComplete",
@@ -2357,7 +2652,7 @@
     {
         "name": "TextInput",
         "category": "Form",
-        "declaration": "declare function TextInput(\n    props: FieldProps & {\n        value: string;\n        onChange?: (value: string) => void;\n        placeholder?: string;\n        type?: 'text' | 'password' | 'email';\n        size?: 'sm' | 'md' | 'lg';\n        htmlName?: string;\n        autoComplete?: string;\n        isReadOnly?: boolean;\n        hasClear?: boolean;\n        hasAutoFocus?: boolean;\n        startIcon?: ViewNode;\n        onEnter?: () => void;\n    },\n): React.JSX.Element;",
+        "declaration": "declare function TextInput(\n    props: FieldProps & {\n        value?: string;\n        defaultValue?: string;\n        onChange?: (value: string) => void;\n        placeholder?: string;\n        type?: 'text' | 'password' | 'email';\n        size?: 'sm' | 'md' | 'lg';\n        htmlName?: string;\n        autoComplete?: string;\n        isReadOnly?: boolean;\n        hasClear?: boolean;\n        hasAutoFocus?: boolean;\n        startIcon?: ViewNode;\n        onEnter?: () => void;\n    },\n): React.JSX.Element;",
         "properties": [
             {
                 "name": "label",
@@ -2370,6 +2665,30 @@
                 "type": "string",
                 "required": false,
                 "description": "Description text displayed between the label and input."
+            },
+            {
+                "name": "name",
+                "type": "string",
+                "required": false,
+                "description": "Includes the themed control's value under this form submission name."
+            },
+            {
+                "name": "required",
+                "type": "boolean",
+                "required": false,
+                "description": "Requires a value before native form submission."
+            },
+            {
+                "name": "disabled",
+                "type": "boolean",
+                "required": false,
+                "description": "Prevents interaction and excludes the field from submission."
+            },
+            {
+                "name": "readOnly",
+                "type": "boolean",
+                "required": false,
+                "description": "Retains submitted values while preventing editing where supported."
             },
             {
                 "name": "isRequired",
@@ -2394,8 +2713,14 @@
             {
                 "name": "value",
                 "type": "string",
-                "required": true,
+                "required": false,
                 "description": "Current value of the input."
+            },
+            {
+                "name": "defaultValue",
+                "type": "string",
+                "required": false,
+                "description": "The defaultValue prop."
             },
             {
                 "name": "onChange",
@@ -2427,7 +2752,8 @@
                 "name": "htmlName",
                 "type": "string",
                 "required": false,
-                "description": "The HTML name attribute for the input, useful for form submissions."
+                "default": "props.htmlName",
+                "description": "The HTML name attribute for the input, useful for form submissions. Default: props.htmlName."
             },
             {
                 "name": "autoComplete",
@@ -2473,7 +2799,7 @@
     {
         "name": "TimeInput",
         "category": "Form",
-        "declaration": "type ISOTimeString = string & { readonly __brand: 'ISOTimeString' };\n\ndeclare function TimeInput(\n    props: FieldProps & {\n        value?: ISOTimeString;\n        onChange?: (value: ISOTimeString | undefined) => void;\n        min?: ISOTimeString;\n        max?: ISOTimeString;\n        hasSeconds?: boolean;\n        hasClear?: boolean;\n        hourFormat?: '12h' | '24h';\n        increment?: number;\n        placeholder?: string;\n        size?: 'sm' | 'md' | 'lg';\n    },\n): React.JSX.Element;",
+        "declaration": "type ISOTimeString = string & { readonly __brand: 'ISOTimeString' };\n\ndeclare function TimeInput(\n    props: FieldProps & {\n        value?: ISOTimeString;\n        defaultValue?: ISOTimeString;\n        onChange?: (value: ISOTimeString | undefined) => void;\n        min?: ISOTimeString;\n        max?: ISOTimeString;\n        hasSeconds?: boolean;\n        hasClear?: boolean;\n        hourFormat?: '12h' | '24h';\n        increment?: number;\n        placeholder?: string;\n        size?: 'sm' | 'md' | 'lg';\n    },\n): React.JSX.Element;",
         "properties": [
             {
                 "name": "label",
@@ -2486,6 +2812,30 @@
                 "type": "string",
                 "required": false,
                 "description": "Description text displayed between the label and input."
+            },
+            {
+                "name": "name",
+                "type": "string",
+                "required": false,
+                "description": "Includes the themed control's value under this form submission name."
+            },
+            {
+                "name": "required",
+                "type": "boolean",
+                "required": false,
+                "description": "Requires a value before native form submission."
+            },
+            {
+                "name": "disabled",
+                "type": "boolean",
+                "required": false,
+                "description": "Prevents interaction and excludes the field from submission."
+            },
+            {
+                "name": "readOnly",
+                "type": "boolean",
+                "required": false,
+                "description": "Retains submitted values while preventing editing where supported."
             },
             {
                 "name": "isRequired",
@@ -2512,6 +2862,12 @@
                 "type": "ISOTimeString",
                 "required": false,
                 "description": "Controlled time value in ISO format (HH:MM or HH:MM:SS)."
+            },
+            {
+                "name": "defaultValue",
+                "type": "ISOTimeString",
+                "required": false,
+                "description": "The defaultValue prop."
             },
             {
                 "name": "onChange",

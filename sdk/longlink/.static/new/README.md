@@ -49,6 +49,19 @@ are not available. External resources are blocked. Image attachment previews
 use the bridge; PDFs and other active document previews are intentionally not
 supported in the sandbox.
 
+For simple forms, use `<Form action="/api/..." method="post">` with named fields
+and a `<Button type="submit">`. `name` preserves the themed Astryx controls, while
+`defaultValue`, `defaultChecked`, `required`, `disabled`, and `readOnly` work without
+draft state. Use controlled values only when the interface needs reactive state.
+
+`Form` validates before submitting, prevents duplicate requests, and displays
+request errors. Submitted fields follow HTML semantics: strings, repeated names,
+omitted unchecked checkboxes, and files. Receive schemas in Python routes as
+`Annotated[Schema, fastapi.Form()]`; `python-multipart` is already a project dependency.
+Successful writes refresh cached data without resetting the form. Use `onSuccess`
+to close a dialog or navigate, or a reset button to restore defaults. The sample
+invoice Views demonstrate both creation and file-upload forms.
+
 Read required data with `const [items, invalidate] = useApi('/api/items')`. Call
 `await invalidate()` to mark that exact path stale and refresh its active reads.
 The shared renderer

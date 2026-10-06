@@ -1,3 +1,5 @@
+import { useValue } from './value';
+import { FormField } from './FormField';
 import type { FieldProps } from './types';
 import type { SelectorOptionType } from './Selector';
 import { useSize } from '@astryxdesign/core/SizeContext';
@@ -7,8 +9,9 @@ import { MultiSelector as AstryxMultiSelector } from '@astryxdesign/core/MultiSe
 export function MultiSelector(
     props: FieldProps & {
         options: SelectorOptionType[];
-        value: string[];
-        onChange: (value: string[]) => void;
+        value?: string[];
+        defaultValue?: string[];
+        onChange?: (value: string[]) => void;
         placeholder?: string;
         size?: 'sm' | 'md' | 'lg';
         hasSelectAll?: boolean;
@@ -21,21 +24,30 @@ export function MultiSelector(
     // Preserve inherited control sizing before applying the medium fallback.
     const size = useSize(props.size, 'md');
 
+    // Astryx's hidden carriers already preserve repeated names and the themed option picker.
+    const { defaultValue, ...control } = props;
+    const field = useValue(props.value, defaultValue ?? [], props.onChange);
+
     // Start with a plain multi-select; extra controls remain opt-in.
     return (
-        <AstryxMultiSelector
-            {...props}
-            size={size}
-            placeholder={props.placeholder ?? 'Select...'}
-            hasSelectAll={props.hasSelectAll ?? false}
-            hasSearch={props.hasSearch ?? false}
-            hasClear={props.hasClear ?? false}
-            isReadOnly={props.isReadOnly ?? false}
-            isLabelHidden={false}
-            isRequired={props.isRequired ?? false}
-            isDisabled={props.isDisabled ?? false}
-            changeAction={undefined}
-            isLoading={false}
-        />
+        <FormField {...props} fieldRef={field.ref} values={field.value}>
+            <AstryxMultiSelector
+                {...control}
+                value={field.value}
+                onChange={field.onChange}
+                htmlName={props.name ?? props.htmlName}
+                size={size}
+                placeholder={props.placeholder ?? 'Select...'}
+                hasSelectAll={props.hasSelectAll ?? false}
+                hasSearch={props.hasSearch ?? false}
+                hasClear={props.hasClear ?? false}
+                isReadOnly={props.readOnly ?? props.isReadOnly ?? false}
+                isLabelHidden={false}
+                isRequired={props.required ?? props.isRequired ?? false}
+                isDisabled={props.disabled ?? props.isDisabled ?? false}
+                changeAction={undefined}
+                isLoading={false}
+            />
+        </FormField>
     );
 }
