@@ -353,7 +353,7 @@ async function componentDetail(name) {
 }
 
 for (const entry of components) {
-    if (entry.category === 'Runtime' || ['Card', 'Currency', 'FileViewer', 'Menu', 'Tabs'].includes(entry.name))
+    if (entry.category === 'Runtime' || ['Card', 'Currency', 'FileViewer', 'Form', 'Menu', 'Tabs'].includes(entry.name))
         continue;
     const detail = await componentDetail(entry.name);
     const parentName = detail.subComponentOf ?? detail.parentDoc;

@@ -1,5 +1,5 @@
-import { useState } from 'react';
 import ViewLayout from './ViewLayout';
+import FormPreview from './FormPreview';
 import { NumberInput } from '@/components/ui/NumberInput';
 
 /** Documents NumberInput in LongLink Views. */
@@ -10,19 +10,24 @@ export default function NumberInputPage() {
             name="NumberInput"
             examples={[
                 {
-                    title: 'NumberInput',
-                    preview: <NumberInputExample />,
-                    code: `function Example() {
-  const [value, setValue] = useState(1);
-
+                    title: 'Quantity form',
+                    preview: (
+                        <FormPreview>
+                            <NumberInputExample />
+                        </FormPreview>
+                    ),
+                    code: `/** Submits a bounded integer quantity as a form field. */
+export default function QuantityForm() {
   return (
-    <NumberInput
-      label="Quantity"
-      value={value}
-      onChange={setValue}
-      min={1}
-      step={1}
-    />
+    <Form action="/api/example" method="post">
+      <Stack gap={3}>
+        <NumberInput name="quantity" label="Quantity" defaultValue={3} min={1} max={100} step={1} required />
+        <Stack direction="horizontal" gap={2}>
+          <Button type="submit" label="Submit" variant="primary" />
+          <Button type="reset" label="Reset" />
+        </Stack>
+      </Stack>
+    </Form>
   );
 }`,
                 },
@@ -31,12 +36,8 @@ export default function NumberInputPage() {
     );
 }
 
-/** Keeps quantity edits local to this example. */
+/** Shows a themed integer quantity field with constrained bounds. */
 export function NumberInputExample() {
-    const [value, setValue] = useState(3);
-
-    // Retain a quantity within the input's minimum constraint.
-    return (
-        <NumberInput label="Quantity" min={1} size="sm" units="qty" value={value} width="100%" onChange={setValue} />
-    );
+    // Invalid quantities cannot submit; valid values retain HTML string serialization.
+    return <NumberInput name="quantity" label="Quantity" defaultValue={3} min={1} max={100} step={1} required />;
 }

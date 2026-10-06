@@ -35,6 +35,38 @@ Check [LongLink Documentation](https://www.longlink.dev/docs/sdk/) or use the `c
 longlink docs --help
 ```
 
+### HTML-style forms
+
+Use named fields instead of maintaining draft state:
+
+```jsx
+/** Creates an item through the Solution request bridge. */
+export default function CreateItem() {
+    return (
+        <Form action="/api/items" method="post">
+            <Stack gap={3}>
+                <TextInput name="name" label="Name" required />
+                <NumberInput name="price" label="Price" min={0} defaultValue={0} required />
+                <Button type="submit" label="Create" />
+            </Stack>
+        </Form>
+    );
+}
+```
+
+`name` keeps the themed Astryx control and includes its value in form submissions.
+Use `defaultValue` or `defaultChecked` for initial values, or `value` and `onChange`
+when the interface needs reactive state. Ordinary HTML inputs also work inside `Form`.
+
+Receive the fields with `payload: Annotated[ItemCreate, fastapi.Form()]` in your Python
+route (`Annotated` comes from `typing`; install `python-multipart`). Form validation
+provides immediate feedback; the backend schema validates and parses submitted strings.
+Repeated names and files are preserved, and unchecked checkboxes are omitted.
+
+`Form` prevents duplicate submissions and displays request errors. Successful writes
+refresh cached View data but do not reset the form. Use `onSuccess` to close a dialog
+or navigate, or a reset button to restore defaults.
+
 <br/>
 
 ## Development

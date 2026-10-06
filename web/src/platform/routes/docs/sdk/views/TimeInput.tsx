@@ -1,6 +1,6 @@
 import ViewLayout from './ViewLayout';
+import FormPreview from './FormPreview';
 import { TimeInput } from '@/components/ui/TimeInput';
-import { useState, type ComponentProps } from 'react';
 
 /** Documents TimeInput in LongLink Views. */
 export default function TimeInputPage() {
@@ -10,12 +10,25 @@ export default function TimeInputPage() {
             name="TimeInput"
             examples={[
                 {
-                    title: 'TimeInput',
-                    preview: <TimeInputExample />,
-                    code: `function Example() {
-  const [value, setValue] = useState();
-
-  return <TimeInput label="Start time" value={value} onChange={setValue} />;
+                    title: 'Start time form',
+                    preview: (
+                        <FormPreview>
+                            <TimeInputExample />
+                        </FormPreview>
+                    ),
+                    code: `/** Submits a local time using the themed time picker. */
+export default function StartTimeForm() {
+  return (
+    <Form action="/api/example" method="post">
+      <Stack gap={3}>
+        <TimeInput name="start_time" label="Start time" required />
+        <Stack direction="horizontal" gap={2}>
+          <Button type="submit" label="Submit" variant="primary" />
+          <Button type="reset" label="Reset" />
+        </Stack>
+      </Stack>
+    </Form>
+  );
 }`,
                 },
             ]}
@@ -23,19 +36,8 @@ export default function TimeInputPage() {
     );
 }
 
-/** Keeps the selected time local to this example. */
+/** Shows a required themed time picker without a draft value. */
 export function TimeInputExample() {
-    const [value, setValue] = useState<ComponentProps<typeof TimeInput>['value']>();
-
-    // Retain edited times without sending a request.
-    return (
-        <TimeInput
-            label="Start time"
-            value={value}
-            placeholder="Select a time"
-            onChange={setValue}
-            size="sm"
-            width="100%"
-        />
-    );
+    // Form validation requires a time before submission.
+    return <TimeInput name="start_time" label="Start time" required />;
 }

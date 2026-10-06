@@ -1,6 +1,6 @@
 import ViewLayout from './ViewLayout';
+import FormPreview from './FormPreview';
 import { FileInput } from '@/components/ui/FileInput';
-import { useState, type ComponentProps } from 'react';
 
 /** Documents FileInput in LongLink Views. */
 export default function FileInputPage() {
@@ -10,19 +10,32 @@ export default function FileInputPage() {
             name="FileInput"
             examples={[
                 {
-                    title: 'FileInput',
-                    preview: <FileInputExample />,
-                    code: `function Example() {
-  const [value, setValue] = useState(null);
-
+                    title: 'Attachments form',
+                    preview: (
+                        <FormPreview>
+                            <FileInputExample />
+                        </FormPreview>
+                    ),
+                    code: `/** Submits multiple attachments with their original filenames. */
+export default function AttachmentsForm() {
   return (
-    <FileInput
-      label="Attachment"
-      value={value}
-      onChange={setValue}
-      accept=".pdf"
-      maxSize={5 * 1024 * 1024}
-    />
+    <Form action="/api/example" method="post">
+      <Stack gap={3}>
+        <FileInput
+          name="attachments"
+          label="Attachments"
+          accept=".pdf"
+          multiple
+          maxSize={512 * 1024}
+          maxFiles={3}
+          required
+        />
+        <Stack direction="horizontal" gap={2}>
+          <Button type="submit" label="Submit" variant="primary" />
+          <Button type="reset" label="Reset" />
+        </Stack>
+      </Stack>
+    </Form>
   );
 }`,
                 },
@@ -31,12 +44,18 @@ export default function FileInputPage() {
     );
 }
 
-/** Keeps selected files local without uploading them. */
+/** Shows themed multiple-file selection with local submission metadata. */
 export function FileInputExample() {
-    const [value, setValue] = useState<ComponentProps<typeof FileInput>['value']>(null);
-
-    // Allow selecting and clearing a PDF attachment in the demo.
+    // Keep file objects intact; the preview displays filenames and sizes rather than uploading content.
     return (
-        <FileInput accept=".pdf" label="Attachment" placeholder="File" value={value} width="100%" onChange={setValue} />
+        <FileInput
+            name="attachments"
+            label="Attachments"
+            accept=".pdf"
+            multiple
+            maxSize={512 * 1024}
+            maxFiles={3}
+            required
+        />
     );
 }

@@ -23,6 +23,7 @@ type ButtonProps = {
     tooltip?: string;
     width?: number | string;
     isDisabled?: boolean;
+    disabled?: boolean;
     href?: string;
     onClick?: (event: ViewMouseEvent) => void | Promise<void>;
 };
@@ -243,10 +244,32 @@ declare function Dialog(props: {
 type FieldProps = {
     label: string;
     description?: string;
+    /** Includes the themed control's value under this form submission name. */
+    name?: string;
+    /** Requires a value before native form submission. */
+    required?: boolean;
+    /** Prevents interaction and excludes the field from submission. */
+    disabled?: boolean;
+    /** Retains submitted values while preventing editing where supported. */
+    readOnly?: boolean;
     isRequired?: boolean;
     isDisabled?: boolean;
     width?: number | string;
 };
+
+/** Submits named themed fields and ordinary HTML inputs to a Solution API endpoint. @category Form */
+declare function Form(props: {
+    /** Named controls, ordinary HTML fields, and layout components. */
+    children?: ViewNode;
+    /** Solution-relative API path; external URLs are not supported. */
+    action: string;
+    /** Only POST is supported; defaults to post. Use request() for other methods. */
+    method?: 'post';
+    /** Native form ID for associating external submit or reset buttons. */
+    id?: string;
+    /** Runs after a successful write and automatic cached-data refresh. */
+    onSuccess?: (data: unknown) => void | Promise<void>;
+}): React.JSX.Element;
 
 /** @category Form @group DateInput */
 type ISODateString = `${number}${number}${number}${number}-${number}${number}-${number}${number}`;
@@ -254,9 +277,11 @@ type ISODateString = `${number}${number}${number}${number}-${number}${number}-${
 /** @category Form @group DateInput */
 type DateInputProps = FieldProps & {
     value?: ISODateString;
+    defaultValue?: ISODateString;
     onChange?: (value: ISODateString | undefined) => void;
     min?: ISODateString;
     max?: ISODateString;
+    /** Additional constraints applied to the themed calendar picker. */
     dateConstraints?: readonly ((date: Date) => boolean)[];
     placeholder?: string;
     hasClear?: boolean;
@@ -272,34 +297,20 @@ type DateRange = { start: ISODateString; end: ISODateString };
 /** @category Form */
 declare function DateRangeInput(
     props: FieldProps & {
-        value: DateRange | null;
-        onChange: (value: DateRange | null) => void;
+        value?: DateRange | null;
+        defaultValue?: DateRange;
+        onChange?: (value: DateRange | null) => void;
         min?: ISODateString;
         max?: ISODateString;
+        /** Additional constraints applied to the themed calendar picker. */
         dateConstraints?: readonly ((date: Date) => boolean)[];
+        /** Minimum selectable range span. */
         minRangeSpan?: number;
+        /** Maximum selectable range span. */
         maxRangeSpan?: number;
         placeholder?: string;
         size?: 'sm' | 'md' | 'lg';
         hasClear?: boolean;
-    },
-): React.JSX.Element;
-
-/** @category Form @group DateTimeInput */
-type ISODateTimeString = string & { readonly __brand: 'ISODateTimeString' };
-
-/** @category Form */
-declare function DateTimeInput(
-    props: FieldProps & {
-        value?: ISODateTimeString;
-        onChange: (value: ISODateTimeString | undefined) => void;
-        min?: ISODateTimeString;
-        max?: ISODateTimeString;
-        placeholder?: string;
-        hasClear?: boolean;
-        hasSeconds?: boolean;
-        hourFormat?: '12h' | '24h';
-        size?: 'sm' | 'md' | 'lg';
     },
 ): React.JSX.Element;
 
@@ -310,6 +321,7 @@ type ISOTimeString = string & { readonly __brand: 'ISOTimeString' };
 declare function TimeInput(
     props: FieldProps & {
         value?: ISOTimeString;
+        defaultValue?: ISOTimeString;
         onChange?: (value: ISOTimeString | undefined) => void;
         min?: ISOTimeString;
         max?: ISOTimeString;
@@ -325,7 +337,8 @@ declare function TimeInput(
 /** @category Form */
 declare function TextInput(
     props: FieldProps & {
-        value: string;
+        value?: string;
+        defaultValue?: string;
         onChange?: (value: string) => void;
         placeholder?: string;
         type?: 'text' | 'password' | 'email';
@@ -343,7 +356,8 @@ declare function TextInput(
 /** @category Form */
 declare function TextArea(
     props: FieldProps & {
-        value: string;
+        value?: string;
+        defaultValue?: string;
         onChange?: (value: string) => void;
         placeholder?: string;
         rows?: number;
@@ -358,7 +372,8 @@ declare function TextArea(
 /** @category Form */
 declare function NumberInput(
     props: FieldProps & {
-        value: number | null | undefined;
+        value?: number | null;
+        defaultValue?: number;
         min?: number | null;
         max?: number | null;
         step?: number | null;
@@ -370,8 +385,8 @@ declare function NumberInput(
         htmlName?: string;
         autoComplete?: string;
     } & (
-            | { hasClear?: false; onChange: (value: number) => void }
-            | { hasClear: true; onChange: (value: number | null) => void }
+            | { hasClear?: false; onChange?: (value: number) => void }
+            | { hasClear: true; onChange?: (value: number | null) => void }
         ),
 ): React.JSX.Element;
 
@@ -399,8 +414,9 @@ type SelectorOptionType =
 declare function MultiSelector(
     props: FieldProps & {
         options: SelectorOptionType[];
-        value: string[];
-        onChange: (value: string[]) => void;
+        value?: string[];
+        defaultValue?: string[];
+        onChange?: (value: string[]) => void;
         placeholder?: string;
         size?: 'sm' | 'md' | 'lg';
         hasSelectAll?: boolean;
@@ -415,6 +431,7 @@ declare function MultiSelector(
 declare function Selector(
     props: FieldProps & {
         options: SelectorOptionType[];
+        defaultValue?: string;
         hasSearch?: boolean;
         placeholder?: string;
         size?: 'sm' | 'md' | 'lg';
@@ -422,17 +439,18 @@ declare function Selector(
         htmlName?: string;
     } & (
             | { hasClear?: false; value?: string; onChange?: (value: string) => void }
-            | { hasClear: true; value: string | null; onChange?: (value: string | null) => void }
+            | { hasClear: true; value?: string | null; onChange?: (value: string | null) => void }
         ),
 ): React.JSX.Element;
 
 /** @category Form */
 declare function FileInput(
     props: FieldProps & {
-        value: File | File[] | null;
-        onChange: (value: File | File[] | null) => void;
+        value?: File | File[] | null;
+        onChange?: (value: File | File[] | null) => void;
         accept?: string;
         isMultiple?: boolean;
+        multiple?: boolean;
         maxSize?: number;
         maxFiles?: number;
         placeholder?: string;
@@ -528,7 +546,9 @@ declare function Collapsible(props: {
 /** @category Form */
 declare function CheckboxInput(
     props: FieldProps & {
-        value: boolean | 'indeterminate';
+        value?: boolean | 'indeterminate';
+        checked?: boolean;
+        defaultChecked?: boolean;
         onChange?: (value: boolean) => void;
         isReadOnly?: boolean;
         htmlName?: string;
@@ -538,7 +558,14 @@ declare function CheckboxInput(
 
 /** @category Form */
 declare function Switch(
-    props: FieldProps & { value: boolean; onChange?: (value: boolean) => void; htmlName?: string; size?: 'sm' | 'md' },
+    props: FieldProps & {
+        value?: boolean;
+        checked?: boolean;
+        defaultChecked?: boolean;
+        onChange?: (value: boolean) => void;
+        htmlName?: string;
+        size?: 'sm' | 'md';
+    },
 ): React.JSX.Element;
 
 /** @category Form */
@@ -549,9 +576,15 @@ declare function Slider(
         step?: number;
         htmlName?: string;
     } & (
-            | { value: number; onChange?: (value: number) => void; onChangeEnd?: (value: number) => void }
             | {
-                  value: [number, number];
+                  value?: number;
+                  defaultValue?: number;
+                  onChange?: (value: number) => void;
+                  onChangeEnd?: (value: number) => void;
+              }
+            | {
+                  value?: [number, number];
+                  defaultValue?: [number, number];
                   onChange?: (value: [number, number]) => void;
                   onChangeEnd?: (value: [number, number]) => void;
                   minStepsBetweenThumbs?: number;
@@ -563,8 +596,9 @@ declare function Slider(
 declare function RadioList(
     props: FieldProps & {
         children?: ViewNode;
-        value: string;
-        onChange: (value: string) => void;
+        value?: string;
+        defaultValue?: string;
+        onChange?: (value: string) => void;
         orientation?: 'vertical' | 'horizontal';
         htmlName?: string;
         size?: 'sm' | 'md';

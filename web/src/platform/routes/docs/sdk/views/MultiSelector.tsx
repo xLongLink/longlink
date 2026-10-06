@@ -1,5 +1,5 @@
-import { useState } from 'react';
 import ViewLayout from './ViewLayout';
+import FormPreview from './FormPreview';
 import { MultiSelector } from '@/components/ui/MultiSelector';
 
 /** Documents MultiSelector in LongLink Views. */
@@ -10,19 +10,30 @@ export default function MultiSelectorPage() {
             name="MultiSelector"
             examples={[
                 {
-                    title: 'MultiSelector',
-                    preview: <MultiSelectorExample />,
-                    code: `function Example() {
-  const [value, setValue] = useState(['design']);
-
+                    title: 'Teams form',
+                    preview: (
+                        <FormPreview>
+                            <MultiSelectorExample />
+                        </FormPreview>
+                    ),
+                    code: `/** Submits selected teams as repeated form entries. */
+export default function TeamsForm() {
   return (
-    <MultiSelector
-      label="Teams"
-      options={['design', 'engineering']}
-      value={value}
-      onChange={setValue}
-      hasSearch
-    />
+    <Form action="/api/example" method="post">
+      <Stack gap={3}>
+        <MultiSelector
+          name="teams"
+          label="Teams"
+          options={['design', 'engineering', 'support']}
+          defaultValue={['design', 'engineering']}
+          required
+        />
+        <Stack direction="horizontal" gap={2}>
+          <Button type="submit" label="Submit" variant="primary" />
+          <Button type="reset" label="Reset" />
+        </Stack>
+      </Stack>
+    </Form>
   );
 }`,
                 },
@@ -31,22 +42,16 @@ export default function MultiSelectorPage() {
     );
 }
 
-/** Keeps multiple team selections local to this example. */
+/** Shows a themed multiple selector without collapsing repeated submission names. */
 export function MultiSelectorExample() {
-    const [value, setValue] = useState(['design']);
-
-    // Allow teams to be selected and removed independently.
+    // Start with two teams so submission visibly demonstrates repeated entries.
     return (
         <MultiSelector
+            name="teams"
             label="Teams"
-            options={[
-                { value: 'design', label: 'Design' },
-                { value: 'engineering', label: 'Engineering' },
-            ]}
-            value={value}
-            onChange={setValue}
-            size="sm"
-            width="100%"
+            options={['design', 'engineering', 'support']}
+            defaultValue={['design', 'engineering']}
+            required
         />
     );
 }

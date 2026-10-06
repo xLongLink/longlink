@@ -1,0 +1,97 @@
+import { Icon } from './Icon';
+import { Stack } from './Stack';
+import type { ReactNode } from 'react';
+import { Banner } from '@astryxdesign/core/Banner';
+import { createContext, use, useRef, useState } from 'react';
+
+export const FormRequestContext = createContext<
+    | ((
+          path: string,
+          options: {
+              method: 'POST';
+              form: [string, string | Blob][];
+          }
+      ) => Promise<unknown>)
+    | null
+>(null);
+
+/** Submits named native fields through the Solution bridge without navigating or resetting the form. */
+export function Form(props: {
+    /** Named controls, ordinary HTML fields, and layout components. */
+    children?: ReactNode;
+    /** Solution-relative API path; external URLs are not supported. */
+    action: string;
+    /** Only POST is supported; defaults to post. Use request() for other methods. */
+    method?: 'post';
+    /** Native form ID for associating external submit or reset buttons. */
+    id?: string;
+    /** Runs after a successful write and automatic cached-data refresh. */
+    onSuccess?: (data: unknown) => void | Promise<void>;
+}) {
+    // Obtain the request capability from the isolated runtime, never from global state.
+    const request = use(FormRequestContext);
+    const pending = useRef(false);
+    const [submitting, setSubmitting] = useState(false);
+    const [error, setError] = useState<string>();
+
+    /** Runs the asynchronous request after the native submit event has been intercepted. */
+    async function submit(form: HTMLFormElement, submitter: HTMLElement | null) {
+        // Guard synchronously so repeated submits cannot race a React state update.
+        if (pending.current) return;
+        pending.current = true;
+
+        // Serialize before disabling fields, preserving repeated names, files, and the submitter.
+        try {
+            const data = new FormData(form, submitter);
+            setSubmitting(true);
+            setError(undefined);
+
+            // Route all writes through the same validated transport as explicit request calls.
+            if (!request) throw new Error('Forms require the Solution runtime');
+            if (props.method !== undefined && props.method !== 'post') {
+                throw new Error('Forms support method="post"');
+            }
+            const result = await request(props.action, { method: 'POST', form: [...data.entries()] });
+            await props.onSuccess?.(result);
+        } catch (failure) {
+            setError(failure instanceof Error ? failure.message : 'Form submission failed');
+        } finally {
+            pending.current = false;
+            setSubmitting(false);
+        }
+    }
+
+    // Use a real form so Enter, reset buttons, and browser constraint validation stay native.
+    return (
+        <form
+            id={props.id}
+            method="post"
+            aria-busy={submitting || undefined}
+            onReset={(event) => {
+                // Clear feedback after a native reset, unless another handler cancels it.
+                const form = event.currentTarget;
+                const nativeEvent = event.nativeEvent;
+                queueMicrotask(() => {
+                    if (nativeEvent.defaultPrevented) return;
+                    for (const control of form.elements) {
+                        if (control instanceof HTMLInputElement) control.setCustomValidity('');
+                    }
+                    setError(undefined);
+                });
+            }}
+            onSubmit={(event) => {
+                // Themed fields may reject a submission before this handler runs.
+                if (event.defaultPrevented) return;
+                event.preventDefault();
+                void submit(event.currentTarget, event.nativeEvent.submitter);
+            }}
+        >
+            <Stack gap={3}>
+                <fieldset disabled={submitting} className="m-0 min-w-0 border-0 p-0">
+                    {props.children}
+                </fieldset>
+                {error && <Banner status="error" title={error} icon={<Icon icon="error" size="md" />} />}
+            </Stack>
+        </form>
+    );
+}
