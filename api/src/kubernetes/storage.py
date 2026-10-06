@@ -56,14 +56,11 @@ class Storage:
         return s3.Credentials(access_key, secret_key)
 
     async def verify(self) -> None:
-        """Verify configured controller credentials can access RustFS without changing it."""
+        """Verify public S3 credentials, then readiness through the Kubernetes tunnel."""
 
         # List buckets through the bound controller connection to prove credential validity.
         async with self._storage.client() as client:
             await client.list_buckets()
-
-    async def verify_admin(self) -> None:
-        """Confirm the Kubernetes tunnel reaches a ready RustFS Pod."""
 
         # kr8s starts the remote port-forward only when a request enters its local listener.
         port = await self._cluster.forward_storage()

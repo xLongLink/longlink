@@ -2,7 +2,9 @@ import httpx2
 import pytest
 from uuid import uuid4
 from types import SimpleNamespace
+from contextlib import asynccontextmanager
 from src.kubernetes import storage
+from collections.abc import AsyncIterator
 
 pytestmark = pytest.mark.no_db
 
@@ -78,7 +80,38 @@ async def test_storage_registration_checks_remote_tunnel(
     storage_compute: SimpleNamespace,
     storage_cluster: object,
 ) -> None:
-    """Exercise the tunneled HTTP connection before accepting a Compute."""
+    """Verify public S3 credentials before exercising the tunneled readiness connection."""
+
+    # Replace only the S3 transport boundary, retaining the real connection and TLS configuration.
+    observations: list[str] = []
+
+    class Buckets:
+        """Expose the read-only S3 credential check."""
+
+        async def list_buckets(self) -> None:
+            """Record successful public credential verification."""
+
+            observations.append("credentials")
+
+    class Session:
+        """Observe the real S3 client's public endpoint and transport lifetime."""
+
+        @asynccontextmanager
+        async def client(self, service: str, **kwargs: object) -> AsyncIterator[Buckets]:
+            """Require TLS verification and release the S3 client before readiness."""
+
+            # Preserve public endpoint, credential, and TLS checks at the external boundary.
+            assert service == "s3"
+            assert kwargs["endpoint_url"] == storage_compute.storage_endpoint
+            assert kwargs["aws_access_key_id"] == storage_compute.storage_access_key
+            assert kwargs["aws_secret_access_key"] == storage_compute.storage_secret_key
+            assert kwargs["verify"] is True
+            try:
+                yield Buckets()
+            finally:
+                observations.append("closed")
+
+    monkeypatch.setattr(storage.s3.aioboto3, "Session", Session)
 
     # kr8s opens its remote connection only after the first local HTTP request.
     requests: list[httpx2.Request] = []
@@ -86,6 +119,7 @@ async def test_storage_registration_checks_remote_tunnel(
     def respond(request: httpx2.Request) -> httpx2.Response:
         """Return the RustFS readiness response over the substituted transport."""
 
+        assert observations == ["credentials", "closed"]
         requests.append(request)
         return httpx2.Response(status)
 
@@ -95,16 +129,19 @@ async def test_storage_registration_checks_remote_tunnel(
     def local_client(**kwargs: object) -> httpx2.AsyncClient:
         """Exercise real HTTP request handling without opening a cluster connection."""
 
+        assert kwargs["trust_env"] is False
+        assert kwargs["timeout"] == 5.0
+        assert kwargs["follow_redirects"] is False
         return client(transport=transport, **kwargs)
 
     monkeypatch.setattr(storage.httpx2, "AsyncClient", local_client)
     target = storage.Storage(storage_compute, storage_cluster)  # type: ignore[arg-type]
 
     if status == 200:
-        await target.verify_admin()
+        await target.verify()
     else:
         with pytest.raises(httpx2.HTTPStatusError):
-            await target.verify_admin()
+            await target.verify()
     assert [request.url for request in requests] == [httpx2.URL("http://127.0.0.1:19000/health/ready")]
 
 

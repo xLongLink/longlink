@@ -1,7 +1,7 @@
 import re
 from uuid import UUID
 from datetime import datetime
-from pydantic import Field, BaseModel, ConfigDict, computed_field, field_validator
+from pydantic import Field, BaseModel, ConfigDict, field_validator
 from src.models.types import Image, MinScale
 from src.models.metadata import LongLinkMetadata
 from src.models.statuses import Status
@@ -97,14 +97,6 @@ class SolutionPatch(BaseModel):
         return envs
 
 
-def image_digest(image: str) -> str:
-    """Abbreviate digest references while preserving tag-only images."""
-
-    # Preserve the first twelve digest characters used by the release comparison.
-    match = re.search(r"@(sha256:[a-f0-9]{12})[a-f0-9]*$", image)
-    return match[1] if match else image
-
-
 class SolutionUpdateCheck(BaseModel):
     """Expose a candidate and configured names, never environment values."""
 
@@ -114,20 +106,6 @@ class SolutionUpdateCheck(BaseModel):
     current_image: str = Field(description="Immutable image of the desired revision used for this update check.")
     configured_envs: list[str]
     metadata: LongLinkMetadata
-
-    @computed_field
-    @property
-    def image_digest(self) -> str:
-        """Present the candidate image for release comparison."""
-
-        return image_digest(self.metadata.image)
-
-    @computed_field
-    @property
-    def current_image_digest(self) -> str:
-        """Present the current image for release comparison."""
-
-        return image_digest(self.current_image)
 
 
 class SolutionResponse(BaseModel):
@@ -157,11 +135,3 @@ class SolutionResponse(BaseModel):
 
     # Audit
     created_at: datetime
-
-    @computed_field
-    @property
-    def image_reference(self) -> str:
-        """Present the desired image with an abbreviated digest for table cells."""
-
-        # Keep the image path and final four characters of long digests.
-        return re.sub(r"@sha256:[a-f0-9]{5,}([a-f0-9]{4})$", r"@sha25...\1", self.image_desired)

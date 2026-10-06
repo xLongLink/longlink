@@ -1,27 +1,18 @@
 import { adminPages } from './navigation';
+import { comparisonPages, useCasePages } from './usecases';
 import { index, layout, prefix, route, type RouteConfig } from '@react-router/dev/routes';
 
 export default [
     layout('./layouts/Page.tsx', [index('./routes/Index.tsx'), route('pricing', './routes/Pricing.tsx')]),
     layout('./layouts/UseCases.tsx', [
         ...prefix('use-cases', [
-            index('./routes/usecases/Introduction.tsx'),
-            route('approvals-and-decisions', './routes/usecases/Approvals.tsx'),
-            route('operations', './routes/usecases/Operations.tsx'),
-            route('compliance-and-quality', './routes/usecases/Compliance.tsx'),
-            route('cases-and-projects', './routes/usecases/Cases.tsx'),
+            ...useCasePages.map(({ path, module }) =>
+                path === '/use-cases' ? index(module) : route(path.slice('/use-cases/'.length), module)
+            ),
             route('*', '../components/layouts/NotFound.tsx', { id: 'use-cases-not-found' }),
         ]),
         ...prefix('compare', [
-            route('longlink-vs-retool', './routes/compare/Retool.tsx'),
-            route('longlink-vs-lovable', './routes/compare/Lovable.tsx'),
-            route('longlink-vs-windmill', './routes/compare/Windmill.tsx'),
-            route('longlink-vs-microsoft-power-apps', './routes/compare/PowerApps.tsx'),
-            route('longlink-vs-replit', './routes/compare/Replit.tsx'),
-            route('longlink-vs-appsmith', './routes/compare/Appsmith.tsx'),
-            route('longlink-vs-superblocks', './routes/compare/Superblocks.tsx'),
-            route('longlink-vs-fastapi', './routes/compare/FastAPI.tsx'),
-            route('longlink-vs-reflex', './routes/compare/Reflex.tsx'),
+            ...comparisonPages.map(({ path, module }) => route(path.slice('/compare/'.length), module)),
             route('*', '../components/layouts/NotFound.tsx', { id: 'compare-not-found' }),
         ]),
     ]),

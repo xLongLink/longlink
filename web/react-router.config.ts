@@ -3,6 +3,7 @@ import { siteUrl } from './src/site';
 import type { Config } from '@react-router/dev/config';
 import { documentationPaths } from './src/platform/docs';
 import { mkdir, rename, rm, writeFile } from 'node:fs/promises';
+import { comparisonPaths, useCasePaths } from './src/platform/usecases';
 
 const requestedMode = import.meta.env.MODE;
 
@@ -16,20 +17,8 @@ const publicPagePaths = [
     '/',
     '/login',
     '/pricing',
-    '/use-cases',
-    '/use-cases/approvals-and-decisions',
-    '/use-cases/operations',
-    '/use-cases/compliance-and-quality',
-    '/use-cases/cases-and-projects',
-    '/compare/longlink-vs-retool',
-    '/compare/longlink-vs-lovable',
-    '/compare/longlink-vs-windmill',
-    '/compare/longlink-vs-microsoft-power-apps',
-    '/compare/longlink-vs-replit',
-    '/compare/longlink-vs-appsmith',
-    '/compare/longlink-vs-superblocks',
-    '/compare/longlink-vs-fastapi',
-    '/compare/longlink-vs-reflex',
+    ...useCasePaths,
+    ...comparisonPaths,
     '/terms',
     '/impressum',
     '/privacy',

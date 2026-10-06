@@ -40,6 +40,12 @@ type DeploymentReviewProps = {
     onClose: () => void;
 };
 
+/** Abbreviates digest references for release comparison while preserving tag-only images. */
+function imageDigest(image: string) {
+    // Keep the first twelve digest characters without changing authoritative image values.
+    return image.match(/@(sha256:[a-f0-9]{12})[a-f0-9]*$/)?.[1] ?? image;
+}
+
 /** Owns the deployment draft and submission for a freshly checked candidate. */
 function DeploymentReview({ update, invalidate, onClose }: DeploymentReviewProps) {
     const [envs, setEnvs] = useState<Record<string, string>>({});
@@ -94,10 +100,10 @@ function DeploymentReview({ update, invalidate, onClose }: DeploymentReviewProps
                 <Stack gap={3}>
                     <Stack direction="horizontal" gap={2} align="center" wrap="wrap">
                         <Text type="supporting" color="secondary">
-                            Current {update.candidate.current_image_digest}
+                            Current {imageDigest(update.candidate.current_image)}
                         </Text>
                         <Text type="supporting" color="primary">
-                            New {update.candidate.image_digest}
+                            New {imageDigest(update.candidate.metadata.image)}
                         </Text>
                     </Stack>
                     {(update.candidate.metadata.environments ?? []).map((environment) => {
@@ -154,9 +160,7 @@ export default function OrganizationSettings() {
     const membership = useResolvedOrganizationMembership();
     const base = `/api/v1/organizations/${membership.organization.id}`;
 
-    // Share organization identity and access data across settings sections.
-    const [details, invalidateDetails] = useApi<z.output<typeof schemas.zOrganizationDetails>>(base);
-
+    // Share the layout-resolved identity and permissions without loading inactive sections.
     const canMaintain = ['maintain', 'admin', 'owner'].includes(membership.role);
     const canAdminister = ['admin', 'owner'].includes(membership.role);
 
@@ -164,10 +168,10 @@ export default function OrganizationSettings() {
         <Stack gap={8}>
             <NoIndex title="Organization Settings | LongLink" />
             <Stack direction="horizontal" gap={3} align="center">
-                <Avatar shape="rounded" name={details.organization.name} />
+                <Avatar shape="rounded" name={membership.organization.name} />
                 <Stack gap={0}>
                     <Heading level={4} accessibilityLevel={1}>
-                        {details.organization.name}
+                        {membership.organization.name}
                     </Heading>
                     <Text type="supporting">Organization</Text>
                 </Stack>
@@ -181,20 +185,14 @@ export default function OrganizationSettings() {
                     </MenuItem>
                     <MenuSubSection label="People" icon="users">
                         <MenuItem label="Members">
-                            <MembersSection
-                                base={base}
-                                members={details.members}
-                                canAdminister={canAdminister}
-                                invalidateDetails={invalidateDetails}
-                            />
+                            <ApiBoundary key="members">
+                                <MembersSection base={base} canAdminister={canAdminister} />
+                            </ApiBoundary>
                         </MenuItem>
                         <MenuItem label="Invitations">
-                            <InvitationsSection
-                                base={base}
-                                invitations={details.invitations}
-                                canMaintain={canMaintain}
-                                invalidateDetails={invalidateDetails}
-                            />
+                            <ApiBoundary key="invitations">
+                                <InvitationsSection base={base} canMaintain={canMaintain} />
+                            </ApiBoundary>
                         </MenuItem>
                     </MenuSubSection>
                     <MenuItem label="Solutions" icon="boxes">
@@ -209,18 +207,11 @@ export default function OrganizationSettings() {
 }
 
 /** Owns role-change confirmation only while the members section is active. */
-function MembersSection({
-    base,
-    members,
-    canAdminister,
-    invalidateDetails,
-}: {
-    base: string;
-    members: z.output<typeof schemas.zOrganizationDetails>['members'];
-    canAdminister: boolean;
-    invalidateDetails: () => Promise<void>;
-}) {
+function MembersSection({ base, canAdminister }: { base: string; canAdminister: boolean }) {
     const [member, setMember] = useState<{ id: string; name: string; role: string } | null>(null);
+
+    // Load and invalidate People data only while the members section is active.
+    const [{ members }, invalidateDetails] = useApi<z.output<typeof schemas.zOrganizationDetails>>(base);
 
     return (
         <>
@@ -319,19 +310,12 @@ function MembersSection({
 }
 
 /** Owns invitation drafts and actions only while their section is active. */
-function InvitationsSection({
-    base,
-    invitations,
-    canMaintain,
-    invalidateDetails,
-}: {
-    base: string;
-    invitations: z.output<typeof schemas.zOrganizationDetails>['invitations'];
-    canMaintain: boolean;
-    invalidateDetails: () => Promise<void>;
-}) {
+function InvitationsSection({ base, canMaintain }: { base: string; canMaintain: boolean }) {
     const [invitation, setInvitation] = useState({ email: '', role: 'write' });
     const [inviting, setInviting] = useState(false);
+
+    // Load and invalidate People data only while the invitations section is active.
+    const [{ invitations }, invalidateDetails] = useApi<z.output<typeof schemas.zOrganizationDetails>>(base);
 
     /** Sends the validated invitation and refreshes organization access. */
     async function inviteMember() {
@@ -445,7 +429,7 @@ function SolutionsSection({
     organization,
     canMaintain,
 }: {
-    organization: z.output<typeof schemas.zOrganizationDetails>['organization'];
+    organization: z.output<typeof schemas.zUserOrganizationMembership>['organization'];
     canMaintain: boolean;
 }) {
     const [creating, setCreating] = useState(false);

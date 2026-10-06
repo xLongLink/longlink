@@ -84,10 +84,7 @@ class StorageKubernetes:
         return Credentials("controller", "controller-secret")
 
     async def verify(self) -> None:
-        """Accept read-only shared storage verification."""
-
-    async def verify_admin(self) -> None:
-        """Accept readiness verification on the private admin tunnel."""
+        """Accept public S3 and private tunnel readiness verification."""
 
     async def apply(self, organization: UUID, *, quota_bytes: int) -> None:
         """Accept provisioning."""

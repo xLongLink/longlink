@@ -83,7 +83,9 @@ export default function Solutions() {
                             width: proportional(2),
                             renderCell: (row) => (
                                 <Stack align="start">
-                                    <Text>{row.image_reference}</Text>
+                                    <Text>
+                                        {row.image_desired.replace(/@sha256:[a-f0-9]{5,}([a-f0-9]{4})$/, '@sha25...$1')}
+                                    </Text>
                                     <Text type="supporting">Revision: {row.desired_revision_id ?? 'Not selected'}</Text>
                                 </Stack>
                             ),
