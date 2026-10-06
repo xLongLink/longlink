@@ -115,11 +115,11 @@ describe('Solution source update dialog', () => {
 
         await vi.waitFor(async () => {
             await act(async () => {});
-            expect(moreMenu()).not.toBeNull();
+            expect(moreMenu()).toBeDefined();
         });
-        await act(async () => moreMenu()?.click());
+        await act(async () => moreMenu().click());
         await act(async () => vi.waitFor(() => expect(menuItem('Update')).toBeDefined()));
-        await act(async () => menuItem('Update')?.click());
+        await act(async () => menuItem('Update').click());
         await act(async () => vi.waitFor(() => expect(button('Update solution').disabled).toBe(false)));
         expect(document.body.textContent).toContain('Current sha256:aaaaaaaaaaaa');
         expect(document.body.textContent).toContain('New sha256:bbbbbbbbbbbb');
@@ -145,13 +145,17 @@ describe('Solution source update dialog', () => {
 
     /** Return the solution overflow-menu trigger. */
     function moreMenu() {
-        return document.querySelector<HTMLButtonElement>('button[aria-label="More options"]');
+        const found = document.querySelector<HTMLButtonElement>('button[aria-label="More options"]');
+        if (!found) throw new Error('Solution overflow-menu trigger not found');
+        return found;
     }
 
     /** Return the named overflow-menu item. */
     function menuItem(label: string) {
-        return [...document.querySelectorAll<HTMLElement>('[role="menuitem"]')].find(
+        const found = [...document.querySelectorAll<HTMLElement>('[role="menuitem"]')].find(
             (item) => item.textContent === label
         );
+        if (!found) throw new Error(`Menu item not found: ${label}`);
+        return found;
     }
 });

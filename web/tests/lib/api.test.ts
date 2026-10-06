@@ -6,9 +6,6 @@ afterEach(() => {
     vi.unstubAllGlobals();
 });
 
-// Single owner for the unusable-detail fallback message.
-const FALLBACK_MESSAGE = 'The server could not complete the request. Please try again.';
-
 /** Stub the fetch transport with a JSON response. */
 function stubJsonFetch(payload: unknown, status: number): void {
     vi.stubGlobal('fetch', async () => Response.json(payload, { status }));
@@ -32,19 +29,27 @@ describe('api error mapping', () => {
     });
 
     it.each([
-        { payload: { detail: '   ' }, status: 422 },
-        { payload: {}, status: 500 },
-        { payload: { detail: 123 }, status: 422 },
-    ])('falls back when the detail is unusable: $payload', async ({ payload, status }) => {
+        { name: 'blank detail', response: () => Response.json({ detail: '   ' }, { status: 422 }), status: 422 },
+        { name: 'missing detail', response: () => Response.json({}, { status: 500 }), status: 500 },
+        { name: 'non-string detail', response: () => Response.json({ detail: 123 }, { status: 422 }), status: 422 },
+        {
+            name: 'non-JSON body',
+            response: () => new Response('boom', { headers: { 'Content-Type': 'text/plain' }, status: 500 }),
+            status: 500,
+        },
+    ])('falls back for a $name', async ({ response, status }) => {
         // Arrange
-        stubJsonFetch(payload, status);
+        vi.stubGlobal('fetch', async () => response());
 
         // Act
         const request = api.get('https://api.example/organizations');
 
         // Assert
         await expect(request).rejects.toBeInstanceOf(ApiError);
-        await expect(request).rejects.toMatchObject({ message: FALLBACK_MESSAGE, status });
+        await expect(request).rejects.toMatchObject({
+            message: 'The server could not complete the request. Please try again.',
+            status,
+        });
     });
 
     it('passes network failures through without mapping', async () => {
@@ -59,20 +64,5 @@ describe('api error mapping', () => {
 
         // Assert
         await expect(request).rejects.toBe(networkError);
-    });
-
-    it('falls back when a failure body is not JSON', async () => {
-        // Arrange
-        vi.stubGlobal(
-            'fetch',
-            async () => new Response('boom', { headers: { 'Content-Type': 'text/plain' }, status: 500 })
-        );
-
-        // Act
-        const request = api.get('https://api.example/organizations');
-
-        // Assert
-        await expect(request).rejects.toBeInstanceOf(ApiError);
-        await expect(request).rejects.toMatchObject({ message: FALLBACK_MESSAGE, status: 500 });
     });
 });
