@@ -77,9 +77,10 @@ export default {
     async buildEnd({ reactRouterConfig }) {
         const clientDirectory = path.join(reactRouterConfig.buildDirectory, 'client');
 
-        // Solutions do not publish Platform images.
+        // Solutions do not publish Platform images or the public agent guide.
         if (isSolution) {
             await rm(path.join(clientDirectory, 'images'), { force: true, recursive: true });
+            await rm(path.join(clientDirectory, 'llms.txt'), { force: true });
         } else {
             // Generate crawler configuration from the same inventory used for prerendering.
             const urls = publicPagePaths
