@@ -16,5 +16,19 @@ type TextAreaProps = FieldProps & {
 
 /** Edits controlled multi-line text using standard field presentation. */
 export function TextArea(props: TextAreaProps) {
-    return <AstryxTextArea {...props} changeAction={undefined} isLoading={false} />;
+    // Default to three editable rows with spell checking and no focus stealing.
+    return (
+        <AstryxTextArea
+            {...props}
+            rows={props.rows ?? 3}
+            isReadOnly={props.isReadOnly ?? false}
+            hasSpellCheck={props.hasSpellCheck ?? true}
+            hasAutoFocus={props.hasAutoFocus ?? false}
+            isLabelHidden={props.isLabelHidden ?? false}
+            isRequired={props.isRequired ?? false}
+            isDisabled={props.isDisabled ?? false}
+            changeAction={undefined}
+            isLoading={false}
+        />
+    );
 }

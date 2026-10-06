@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import type { FieldProps } from './types';
+import { useSize } from '@astryxdesign/core/SizeContext';
 import { Selector as AstryxSelector } from '@astryxdesign/core/Selector';
 
 export type SelectorOptionData = {
@@ -28,5 +29,22 @@ type SelectorProps = FieldProps & {
 
 /** Selects one value without custom option rendering or popup geometry. */
 export function Selector(props: SelectorProps) {
-    return <AstryxSelector {...props} changeAction={undefined} isLoading={false} />;
+    // Preserve inherited control sizing before applying the medium fallback.
+    const size = useSize(props.size, 'md');
+
+    // Default presentation without overriding the clearable-value callback contract.
+    return (
+        <AstryxSelector
+            {...props}
+            size={size}
+            placeholder={props.placeholder ?? 'Select...'}
+            hasSearch={props.hasSearch ?? false}
+            isReadOnly={props.isReadOnly ?? false}
+            isLabelHidden={props.isLabelHidden ?? false}
+            isRequired={props.isRequired ?? false}
+            isDisabled={props.isDisabled ?? false}
+            changeAction={undefined}
+            isLoading={false}
+        />
+    );
 }

@@ -35,7 +35,11 @@ def test_docs_command_resolves_a_component_name_case_insensitively() -> None:
     # Assert
     assert result.exit_code == 0
     assert "Button [Action]" in result.output
-    assert "Props and types" in result.output
+    assert "- label (string):\n  Accessible label." in result.output
+    assert (
+        '- variant ("primary" | "secondary" | "ghost" | "destructive"):\n  Visual style variant. Default: \'secondary\'.' in result.output
+    )
+    assert "undefined" not in result.output
     assert "onClick" in result.output
     assert "Example" not in result.output
 

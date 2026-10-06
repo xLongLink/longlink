@@ -21,5 +21,6 @@ export function Badge(props: {
         | 'teal'
         | 'yellow';
 }) {
-    return <AstryxBadge {...props} label={props.label} />;
+    // Use a neutral state unless the caller chooses a semantic variant.
+    return <AstryxBadge {...props} label={props.label} variant={props.variant ?? 'neutral'} />;
 }

@@ -15,7 +15,17 @@ type StackProps = {
 /** Arranges View content using the LongLink spacing scale. */
 export function Stack(props: StackProps) {
     // Leave structural sizing and advanced styling outside the View contract.
-    return <AstryxStack {...props} />;
+    return (
+        <AstryxStack
+            {...props}
+            gap={props.gap ?? 3}
+            padding={props.padding ?? 0}
+            direction={props.direction ?? 'vertical'}
+            justify={props.justify ?? 'start'}
+            align={props.align ?? 'stretch'}
+            wrap={props.wrap ?? 'nowrap'}
+        />
+    );
 }
 
 /** Controls how one item participates in its surrounding Stack. */
@@ -25,5 +35,6 @@ export function StackItem(props: {
     isScrollable?: boolean;
     crossAlignSelf?: 'start' | 'center' | 'end' | 'stretch';
 }) {
-    return <AstryxStackItem {...props} />;
+    // Preserve natural sizing and visible overflow unless explicitly overridden.
+    return <AstryxStackItem {...props} size={props.size ?? 'static'} isScrollable={props.isScrollable ?? false} />;
 }

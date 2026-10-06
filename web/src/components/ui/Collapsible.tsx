@@ -10,5 +10,12 @@ export function Collapsible(props: {
     isDisabled?: boolean;
     onOpenChange?: (isOpen: boolean) => void;
 }) {
-    return <AstryxCollapsible {...props} />;
+    // Default the uncontrolled state without overriding controlled visibility.
+    return (
+        <AstryxCollapsible
+            {...props}
+            defaultIsOpen={props.defaultIsOpen ?? true}
+            isDisabled={props.isDisabled ?? false}
+        />
+    );
 }

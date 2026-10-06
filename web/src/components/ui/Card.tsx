@@ -39,10 +39,12 @@ type CardProps = {
 /** Infers the Astryx card from one shared set of props, giving selection priority over activation. */
 export function Card({
     label = 'Card',
+    padding = 4,
+    variant = 'default',
     onClick,
     href,
-    target,
-    isDisabled,
+    target = '_self',
+    isDisabled = false,
     isSelected = false,
     onChange,
     ...props
@@ -52,6 +54,8 @@ export function Card({
         return (
             <SelectableCard
                 {...props}
+                padding={padding}
+                variant={variant}
                 label={label}
                 isSelected={isSelected}
                 onChange={onChange}
@@ -65,6 +69,8 @@ export function Card({
         return (
             <ClickableCard
                 {...props}
+                padding={padding}
+                variant={variant}
                 label={label}
                 onClick={onClick}
                 href={href}
@@ -75,5 +81,5 @@ export function Card({
     }
 
     // Keep content-only cards non-interactive.
-    return <AstryxCard {...props} />;
+    return <AstryxCard {...props} padding={padding} variant={variant} />;
 }

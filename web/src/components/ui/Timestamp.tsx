@@ -14,5 +14,6 @@ export function Timestamp(props: {
         | 'system_date_time'
         | 'system_time';
 }) {
-    return <AstryxTimestamp {...props} />;
+    // Use a stable absolute date and time unless another format is requested.
+    return <AstryxTimestamp {...props} format={props.format ?? 'date_time'} />;
 }

@@ -10,7 +10,15 @@ export function Stepper({
     activeStep?: number;
     orientation?: 'horizontal' | 'vertical';
 }) {
-    return <AstryxStepper {...props} children={props.children} activeStep={activeStep} />;
+    // Show horizontal progress unless a vertical flow is requested.
+    return (
+        <AstryxStepper
+            {...props}
+            children={props.children}
+            activeStep={activeStep}
+            orientation={props.orientation ?? 'horizontal'}
+        />
+    );
 }
 
 /** Defines the label and index of a step. */

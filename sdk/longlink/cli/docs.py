@@ -12,6 +12,16 @@ class MemberDoc(BaseModel):
     description: str
 
 
+class PropertyDoc(BaseModel):
+    """Describe one public component prop from the generated declarations."""
+
+    # Property contract.
+    name: str
+    type: str
+    required: bool
+    description: str = ""
+
+
 class ComponentDoc(BaseModel):
     """Read the CLI fields from the shared generated JSX documentation catalog."""
 
@@ -19,6 +29,7 @@ class ComponentDoc(BaseModel):
     name: str
     members: list[MemberDoc] = Field(default_factory=list)
     category: str
+    properties: list[PropertyDoc] = Field(default_factory=list)
     declaration: str
 
 
@@ -47,7 +58,10 @@ def docs_command(component: str | None = None, category: str | None = None) -> N
                 f"{entry.name} [{entry.category}]\n" + "\n\n".join(f"- {member.name}:\n  {member.description}" for member in entry.members)
             )
         else:
-            typer.echo(f"{entry.name} [{entry.category}]\nProps and types\n{entry.declaration}")
+            typer.echo(
+                f"{entry.name} [{entry.category}]\n"
+                + ("\n\n".join(f"- {prop.name} ({prop.type}):\n  {prop.description}" for prop in entry.properties) or "No props.")
+            )
         return
 
     # Explain the execution boundary before listing the JSX APIs that are actually available.

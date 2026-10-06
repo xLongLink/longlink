@@ -29,6 +29,7 @@ export function Tabs({ children, gap = 3, onChange, value: controlledValue, ...p
         <Stack gap={gap}>
             <TabList
                 {...props}
+                hasDivider={props.hasDivider ?? false}
                 role="tablist"
                 value={activeTab.props.value}
                 onChange={(value) => {

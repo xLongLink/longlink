@@ -14,5 +14,18 @@ export function FileInput(
         mode?: 'input' | 'dropzone';
     }
 ) {
-    return <AstryxFileInput {...props} changeAction={undefined} isLoading={false} />;
+    // Default to a single-file field without imposing arbitrary file-size or format limits.
+    return (
+        <AstryxFileInput
+            {...props}
+            isMultiple={props.isMultiple ?? false}
+            mode={props.mode ?? 'input'}
+            placeholder={props.placeholder ?? (props.isMultiple ? 'Choose files' : 'Choose file')}
+            isLabelHidden={props.isLabelHidden ?? false}
+            isRequired={props.isRequired ?? false}
+            isDisabled={props.isDisabled ?? false}
+            changeAction={undefined}
+            isLoading={false}
+        />
+    );
 }

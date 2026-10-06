@@ -18,5 +18,16 @@ type SliderProps = FieldProps & {
 
 /** Edits a number or range using a standard horizontal slider. */
 export function Slider(props: SliderProps) {
-    return <AstryxSlider {...props} />;
+    // Use a percentage-scale slider unless the Solution supplies its own range.
+    return (
+        <AstryxSlider
+            {...props}
+            min={props.min ?? 0}
+            max={props.max ?? 100}
+            step={props.step ?? 1}
+            isLabelHidden={props.isLabelHidden ?? false}
+            isRequired={props.isRequired ?? false}
+            isDisabled={props.isDisabled ?? false}
+        />
+    );
 }

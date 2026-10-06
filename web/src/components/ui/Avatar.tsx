@@ -24,6 +24,7 @@ export function Avatar({ shape = 'circle', src, name, ...props }: AvatarProps) {
     return (
         <AstryxAvatar
             {...props}
+            size={props.size ?? 'md'}
             name={name}
             shape={shape}
             src={src?.trim() || undefined}

@@ -12,5 +12,11 @@ export function DropdownMenu(props: {
     isMenuOpen?: boolean;
     onOpenChange?: (isOpen: boolean) => void;
 }) {
-    return <AstryxDropdownMenu {...props} />;
+    // Supply an accessible trigger while preserving uncontrolled menu state.
+    return (
+        <AstryxDropdownMenu
+            {...props}
+            button={props.button ?? { label: 'Menu', variant: 'secondary', size: 'md', isDisabled: false }}
+        />
+    );
 }

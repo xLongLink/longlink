@@ -10,7 +10,8 @@ export function MetadataList(props: {
     columns?: 'multi' | 'single' | number;
     title?: ReactNode;
 }) {
-    return <AstryxMetadataList {...props} children={props.children} />;
+    // Keep labeled values in one readable column by default.
+    return <AstryxMetadataList {...props} children={props.children} columns={props.columns ?? 'single'} />;
 }
 
 /** Displays one labeled value inside a MetadataList. */

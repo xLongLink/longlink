@@ -13,7 +13,11 @@ const properties: ViewProperties = [
                 type: '0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10',
                 description: 'Spacing between the tab strip and panel, and within panel content. Defaults to 3.',
             },
-            { name: 'hasDivider', type: 'boolean', description: 'Shows a divider beneath the tab strip.' },
+            {
+                name: 'hasDivider',
+                type: 'boolean',
+                description: 'Shows a divider beneath the tab strip. Defaults to false.',
+            },
             {
                 name: 'value',
                 type: 'string',

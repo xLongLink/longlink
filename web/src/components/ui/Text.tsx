@@ -7,5 +7,13 @@ export function Text(props: {
     color?: 'primary' | 'secondary';
     type?: 'body' | 'large' | 'label' | 'supporting' | 'code';
 }) {
-    return <AstryxText {...props} children={props.children} />;
+    // Preserve semantic supporting-text color while defaulting to body copy.
+    return (
+        <AstryxText
+            {...props}
+            children={props.children}
+            type={props.type ?? 'body'}
+            color={props.color ?? (props.type === 'supporting' ? 'secondary' : 'primary')}
+        />
+    );
 }
