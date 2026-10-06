@@ -6,7 +6,7 @@ import hashlib
 from src import auth
 from main import app
 from httpx2 import AsyncClient
-from conftest import TEST_PASSWORD, create_client
+from conftest import TEST_PASSWORD, UNTRUSTED_ORIGINS, create_client, assert_origin_rejected, untrusted_origin_headers
 from datetime import UTC, datetime, timedelta
 from sqlmodel import col, select
 from factories import create_organization
@@ -636,6 +636,47 @@ async def test_registration_verification_is_stateless(
     assert "Secure" in cookie
 
 
+@pytest.mark.parametrize("origin", UNTRUSTED_ORIGINS)
+async def test_registration_completion_rejects_untrusted_origin_without_account_creation(
+    client: AsyncClient,
+    captured_mail: list[tuple[str, str, str, str | None]],
+    origin: str | None,
+) -> None:
+    """Reject anonymous registration proof from untrusted origins without creating an account."""
+
+    # Arrange
+    email = "registered@example.com"
+    completion_payload = {"name": "Registered User", "password": TEST_PASSWORD}
+    register_response, verify_response, verification_token = await register_and_verify(client, captured_mail, email)
+    assert register_response.status_code == 202
+    assert verify_response.status_code == 200
+    assert verify_response.json() == {"email": email}
+    assert client.cookies.get("longlink_registration") == verification_token
+    assert client.cookies.get("longlink_auth") is None
+    headers = untrusted_origin_headers(client, origin)
+
+    # Act
+    response = await client.post("/api/v1/auth/register/complete", json=completion_payload, headers=headers)
+
+    # Assert
+    assert_origin_rejected(response)
+    assert client.cookies.get("longlink_auth") is None
+    async with session_scope() as session:
+        result = await session.execute(select(User).where(col(User.email) == email))
+        registered_user = result.scalar_one_or_none()
+    assert registered_user is None
+    assert client.cookies.get("longlink_registration") == verification_token
+
+    # Prove the same registration proof remains valid for a trusted origin.
+    trusted_response = await client.post(
+        "/api/v1/auth/register/complete",
+        json=completion_payload,
+        headers={"Origin": env.PUBLIC_URL},
+    )
+    assert trusted_response.status_code == 201
+    assert trusted_response.json()["email"] == email
+
+
 async def test_registration_completion_creates_authenticated_account(
     client: AsyncClient, captured_mail: list[tuple[str, str, str, str | None]]
 ) -> None:
@@ -891,6 +932,59 @@ async def test_password_reset_rejects_missing_reset_cookie(
     assert reset_response.json() == {"detail": "This password reset link is invalid or has expired. Please request a new one."}
     assert "set-cookie" not in reset_response.headers
     assert login_response.status_code == 204
+
+
+@pytest.mark.parametrize("origin", UNTRUSTED_ORIGINS)
+async def test_password_reset_rejects_untrusted_origin_without_password_mutation(
+    client: AsyncClient,
+    users: tuple[User, User, User],
+    captured_mail: list[tuple[str, str, str, str | None]],
+    origin: str | None,
+) -> None:
+    """Reject anonymous reset proof from untrusted origins without replacing the password."""
+
+    # Arrange
+    user = users[0]
+    forgot_response = await client.post("/api/v1/auth/forgot-password", json={"email": user.email})
+    assert forgot_response.status_code == 202
+    reset_token = password_reset_token(captured_mail)
+    verify_response = await client.post("/api/v1/auth/reset-password/verify", json={"token": reset_token})
+    assert verify_response.status_code == 204
+    assert client.cookies.get("longlink_password_reset") == reset_token
+    assert client.cookies.get("longlink_auth") is None
+    async with session_scope() as session:
+        original_user = await session.get(User, user.id)
+    assert original_user is not None
+    original_password = original_user.password
+    headers = untrusted_origin_headers(client, origin)
+
+    # Act
+    response = await client.post(
+        "/api/v1/auth/reset-password",
+        json={"password": "replacement-password"},
+        headers=headers,
+    )
+
+    # Assert
+    assert_origin_rejected(response)
+    assert client.cookies.get("longlink_auth") is None
+    async with session_scope() as session:
+        unchanged_user = await session.get(User, user.id)
+    assert unchanged_user is not None
+    assert unchanged_user.password == original_password
+    assert client.cookies.get("longlink_password_reset") == reset_token
+
+    # Prove the same reset proof remains valid and commits the replacement password.
+    trusted_response = await client.post(
+        "/api/v1/auth/reset-password",
+        json={"password": "replacement-password"},
+        headers={"Origin": env.PUBLIC_URL},
+    )
+    assert trusted_response.status_code == 204
+    async with session_scope() as session:
+        reset_user = await session.get(User, user.id)
+    assert reset_user is not None
+    assert reset_user.password != original_password
 
 
 async def test_password_reset_verify_sets_secure_browser_only_cookie_in_production(
@@ -1190,12 +1284,18 @@ async def test_expired_browser_session_is_rejected_at_http(
 
 async def test_wrong_audience_browser_session_is_rejected_at_http(
     client: AsyncClient,
+    users: tuple[User, User, User],
 ) -> None:
-    """Reject a valid registration token presented as a browser session."""
+    """Reject valid password-reset proof presented as the same user's browser session."""
 
     # Arrange
-    registration_token = token.create_registration_token("other-purpose@example.com")
-    client.cookies.set("longlink_auth", registration_token, domain="testserver.local", path="/")
+    user = users[1]
+    client.cookies.set("longlink_auth", token.create_auth_token(user), domain="testserver.local", path="/")
+    profile_response = await client.get("/api/v1/me")
+    assert profile_response.status_code == 200
+    assert profile_response.json()["id"] == str(user.id)
+    reset_token = token.create_password_reset_token(user)
+    client.cookies.set("longlink_auth", reset_token, domain="testserver.local", path="/")
 
     # Act
     response = await client.get("/api/v1/me")

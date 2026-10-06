@@ -152,6 +152,54 @@ async def test_solution_delete_removes_provider_state_and_tombstone(
         assert await session.get(Solution, solution.id) is None
 
 
+async def test_solution_delete_retains_tombstone_when_object_cleanup_fails(
+    users: tuple[User, User, User],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Retain the cleanup target and revision references when its objects cannot be removed."""
+
+    # Arrange
+    _, solution = await create_deleted_solution(users[0])
+
+    class Kubernetes(OperationKubernetes):
+        """Accept workload deletion without contacting Kubernetes."""
+
+        async def delete(self, *_args: object) -> None:
+            """Complete workload deletion before later provider cleanup."""
+
+    class Postgres(DatabasePostgres):
+        """Accept schema cleanup without contacting PostgreSQL."""
+
+        async def delete_solution_schema(self, *_args: object) -> None:
+            """Complete schema deletion before object storage cleanup."""
+
+    class Storage(StorageKubernetes):
+        """Fail only the final external object cleanup step."""
+
+        async def delete_prefix(self, organization: UUID, prefix: str) -> None:
+            """Report an object cleanup failure after successful credential revocation."""
+
+            # Leave a retryable cleanup target when the external object store fails.
+            raise RuntimeError("Object storage cleanup failed")
+
+    monkeypatch.setattr(solution_operations, "Kubernetes", Kubernetes)
+    monkeypatch.setattr(solution_operations, "Storage", Storage)
+    monkeypatch.setattr(solution_operations.databases.postgres, "Postgres", Postgres)
+
+    # Act
+    with pytest.raises(RuntimeError, match="^Object storage cleanup failed$"):
+        await solution_operations.delete(solution.id)
+
+    # Assert
+    async with session_scope() as session:
+        retained = await session.get(Solution, solution.id)
+        assert retained is not None
+        assert retained.deleted_at is not None
+        assert retained.desired_revision_id == solution.desired_revision_id
+        assert retained.deployed_revision_id == solution.deployed_revision_id
+        assert await session.get(Revision, solution.desired_revision_id) is not None
+
+
 async def test_solution_creation_applies_user_and_managed_environment_values(
     users: tuple[User, User, User],
     monkeypatch: pytest.MonkeyPatch,
@@ -460,15 +508,18 @@ async def test_solution_lifecycle_skips_missing_target_without_constructing_prov
     assert await operation(uuid4()) is None
 
 
+@pytest.mark.parametrize("tombstone", [False, True], ids=["removed", "tombstoned"])
 async def test_solution_creation_skips_deployment_when_deleted_before_credential_persistence(
     users: tuple[User, User, User],
     monkeypatch: pytest.MonkeyPatch,
+    tombstone: bool,
 ) -> None:
     """Do not deploy credentials after the solution is deleted concurrently."""
 
     # Arrange
     organization = await create_organization(users[0])
     solution = await create_solution(organization)
+    original_secrets = dict(solution.secrets)
 
     class Postgres(DatabasePostgres):
         """Delete the solution after its schema credentials are generated."""
@@ -476,15 +527,28 @@ async def test_solution_creation_skips_deployment_when_deleted_before_credential
         async def solution_schema(self, *_args: object) -> str:
             """Delete the target before its runtime credentials are persisted."""
 
+            # Commit the concurrent deletion while deployment is waiting on its provider boundary.
             async with session_scope() as session:
                 persisted = await session.get(Solution, solution.id)
                 assert persisted is not None
-                await session.delete(persisted)
+                if tombstone:
+                    await solutions.delete(session, solution.id, users[0].id)
+                else:
+                    await session.delete(persisted)
                 await session.commit()
             return "solution"
 
+    class Kubernetes(OperationKubernetes):
+        """Expose a valid workload boundary that must remain unused after deletion."""
+
+        async def apply(self, *_args: object, **_kwargs: object) -> None:
+            """Reject attempts to deploy a concurrently deleted Solution."""
+
+            # A deleted target must return before acquiring a workload capability.
+            raise AssertionError("Deleted Solution must not be deployed")
+
     monkeypatch.setattr(solution_operations.databases.postgres, "Postgres", Postgres)
-    monkeypatch.setattr(solution_operations, "Kubernetes", DatabaseKubernetes)
+    monkeypatch.setattr(solution_operations, "Kubernetes", Kubernetes)
     monkeypatch.setattr(solution_operations, "Storage", StorageKubernetes)
 
     # Act
@@ -492,3 +556,13 @@ async def test_solution_creation_skips_deployment_when_deleted_before_credential
 
     # Assert
     assert result is None
+    async with session_scope() as session:
+        persisted = await session.get(Solution, solution.id)
+    if tombstone:
+        assert persisted is not None
+        assert persisted.deleted_at is not None
+        assert persisted.secrets == original_secrets
+        assert persisted.desired_revision_id == solution.desired_revision_id
+        assert persisted.deployed_revision_id == solution.deployed_revision_id
+    else:
+        assert persisted is None

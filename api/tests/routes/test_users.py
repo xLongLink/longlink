@@ -89,6 +89,28 @@ async def test_list_users_returns_administrator_page_and_total(
     assert users[0].password not in response.text
 
 
+async def test_list_users_rejects_authenticated_non_administrators(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient], users: tuple[User, User, User]
+) -> None:
+    """Keep the populated user directory private from authenticated ordinary users."""
+
+    # Arrange
+    assert not users[1].administrator
+    profile = await clients[1].get("/api/v1/me")
+    assert profile.status_code == 200
+    assert profile.json()["id"] == str(users[1].id)
+    directory = await clients[0].get("/api/v1/users")
+    assert directory.status_code == 200
+    assert str(users[1].id) in {user["id"] for user in directory.json()["items"]}
+
+    # Act
+    response = await clients[1].get("/api/v1/users")
+
+    # Assert
+    assert response.status_code == 403
+    assert response.json() == {"detail": "Permission required"}
+
+
 @pytest.mark.no_db
 async def test_list_users_rejects_anonymous_requests(client: AsyncClient) -> None:
     """Require authentication before exposing user summaries."""

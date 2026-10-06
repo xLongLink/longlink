@@ -82,6 +82,10 @@ def test_production_storage_scopes_paths_to_configured_bucket_prefix(monkeypatch
     assert isinstance(scoped_filesystem, DirFileSystem)
     assert scoped_filesystem.path == "acme/solutions/dashboard"
     assert isinstance(scoped_filesystem.fs, S3FileSystem)
+    assert scoped_filesystem.fs.key == PRODUCTION_SETTINGS["LONGLINK_STORAGE_USERNAME"]
+    assert scoped_filesystem.fs.secret == PRODUCTION_SETTINGS["LONGLINK_STORAGE_PASSWORD"]
+    assert scoped_filesystem.fs.endpoint_url == PRODUCTION_SETTINGS["LONGLINK_STORAGE_ENDPOINT_URL"]
+    assert scoped_filesystem.fs.client_kwargs["region_name"] == PRODUCTION_SETTINGS["LONGLINK_STORAGE_REGION"]
 
 
 def test_production_storage_passes_configured_ca_to_s3_client(monkeypatch: pytest.MonkeyPatch, ca_certificate: str) -> None:

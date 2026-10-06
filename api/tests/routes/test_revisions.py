@@ -4,13 +4,14 @@ from uuid import UUID, uuid4
 from httpx2 import AsyncClient
 from datetime import UTC, datetime
 from sqlmodel import col
-from factories import create_solution, create_organization
+from factories import create_solution, fetch_operations, create_organization, assert_no_new_operations
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from src.models.roles import OrganizationRoles
 from src.models.types import Image
 from src.models.metadata import LongLinkMetadata, EnvironmentMetadata
 from src.database.session import session_scope
+from src.models.operations import OperationKind
 from src.database.models.users import User
 from src.database.models.solutions import Revision, Solution
 from src.database.models.association import UserOrganization
@@ -220,6 +221,59 @@ async def test_update_enforces_idempotency_and_min_scale_bounds(
         assert await session.scalar(select(func.count()).select_from(Revision).where(col(Revision.solution_id) == solution.id)) == 3
 
 
+async def test_update_retries_identical_failed_revision_with_new_deployment(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient], users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Append and queue an identical release only when its desired revision has failed."""
+
+    # Arrange
+    image = Image("ghcr.io/longlink/dashboard@sha256:retry")
+    organization = await create_organization(users[0])
+    solution = await create_solution(organization, image=image, secrets={"KEEP": "private-value"})
+    snapshot_fields = {"image", "source", "envs", "min_scale", "idle_seconds"}
+    async with session_scope() as session:
+        revision = await session.get(Revision, solution.desired_revision_id)
+        assert revision is not None
+        revision.failed = True
+        await session.commit()
+        original_snapshot = revision.model_dump(include=snapshot_fields)
+    previous_operation_ids = {operation.id for operation in await fetch_operations()}
+
+    async def metadata(source: Image) -> LongLinkMetadata:
+        """Resolve the same immutable image without contacting a registry."""
+
+        # Keep image resolution identical so failure state alone permits the retry.
+        assert source == image
+        return LongLinkMetadata(image=image)
+
+    monkeypatch.setattr("src.routes.v1.solutions.images.metadata", metadata)
+
+    # Act
+    response = await clients[0].post(f"/api/v1/solutions/{solution.id}/update", json={})
+
+    # Assert
+    assert response.status_code == 204
+    assert response.content == b""
+    async with session_scope() as session:
+        current = await session.get(Solution, solution.id)
+        assert current is not None
+        assert current.desired_revision_id != solution.desired_revision_id
+        retried = await session.get(Revision, current.desired_revision_id)
+        original = await session.get(Revision, solution.desired_revision_id)
+        assert retried is not None
+        assert original is not None
+        assert not retried.failed
+        assert original.failed
+        assert retried.model_dump(include=snapshot_fields) == original_snapshot
+        assert original.model_dump(include=snapshot_fields) == original_snapshot
+        revision_count = await session.scalar(select(func.count()).select_from(Revision).where(col(Revision.solution_id) == solution.id))
+        assert revision_count == 2
+    operations = await fetch_operations()
+    new_operations = [operation for operation in operations if operation.id not in previous_operation_ids]
+    assert len(operations) == len(previous_operation_ids) + 1
+    assert [(operation.kind, operation.target_id) for operation in new_operations] == [(OperationKind.solution_deploy, retried.id)]
+
+
 async def test_update_reresolves_moved_tag_and_enforces_required_envs(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient], users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -256,19 +310,39 @@ async def test_update_reresolves_moved_tag_and_enforces_required_envs(
         image=Image("ghcr.io/longlink/dashboard@sha256:final"),
         environments=[EnvironmentMetadata(name="NEW", required=True), EnvironmentMetadata(name="KEEP", required=True)],
     )
+    snapshot_fields = {"image", "source", "envs", "min_scale", "idle_seconds", "failed"}
+    async with session_scope() as session:
+        current = await session.get(Solution, solution.id)
+        assert current is not None
+        desired_revision_id = current.desired_revision_id
+        desired_snapshot = current.desired_revision.model_dump(include=snapshot_fields)
+        result = await session.execute(select(Revision.id).where(col(Revision.solution_id) == solution.id))
+        revision_ids = set(result.scalars().all())
+    previous_operations = await fetch_operations()
 
     # Act
     missing = await clients[0].post(url, json={})
     invalid = await clients[0].post(url, json={"envs": {"LONGLINK_KEY": "private-value"}})
     keep_removed = await clients[0].post(url, json={"envs": {"NEW": "new-value", "KEEP": None}})
-    success = await clients[0].post(url, json={"envs": {"NEW": "new-value", "DROP": None}})
 
     # Assert
     assert missing.status_code == 422
-    assert "NEW" in missing.text
+    assert missing.json() == {"detail": "Solution environment does not satisfy required image variables: NEW"}
     assert invalid.status_code == 422
     assert "private-value" not in invalid.text
     assert keep_removed.status_code == 422
+    assert keep_removed.json() == {"detail": "Solution environment does not satisfy required image variables: KEEP"}
+    async with session_scope() as session:
+        current = await session.get(Solution, solution.id)
+        assert current is not None
+        assert current.desired_revision_id == desired_revision_id
+        assert current.desired_revision.model_dump(include=snapshot_fields) == desired_snapshot
+        result = await session.execute(select(Revision.id).where(col(Revision.solution_id) == solution.id))
+        assert set(result.scalars().all()) == revision_ids
+    await assert_no_new_operations(previous_operations)
+
+    # A valid patch still creates the intended snapshot after the rejected commands.
+    success = await clients[0].post(url, json={"envs": {"NEW": "new-value", "DROP": None}})
     assert success.status_code == 204
     async with session_scope() as session:
         current = await session.get(Solution, solution.id)
@@ -357,6 +431,52 @@ async def test_update_check_allows_maintainer_without_registry_oracle(
     # Assert
     assert response.status_code == 200
     assert response.json()["configured_envs"] == []
+
+
+@pytest.mark.parametrize("method", ["GET", "POST"])
+async def test_release_inspection_revalidates_concurrent_permission_changes(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient], users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch, method: str
+) -> None:
+    """Reject a maintainer demoted during registry inspection without persisting release changes."""
+
+    # Arrange
+    organization = await create_organization(users[0])
+    solution = await create_solution(organization)
+    async with session_scope() as session:
+        session.add(UserOrganization(user_id=users[1].id, organization_id=organization.id, role=OrganizationRoles.maintain))
+        await session.commit()
+        revision_count = await session.scalar(select(func.count()).select_from(Revision).where(col(Revision.solution_id) == solution.id))
+    previous_operations = await fetch_operations()
+
+    async def metadata(_image: Image) -> LongLinkMetadata:
+        """Commit a real membership demotion while the request waits for external metadata."""
+
+        # Arrange the concurrent permission change in an independent transaction.
+        async with session_scope() as session:
+            membership = await session.get(UserOrganization, (users[1].id, organization.id))
+            assert membership is not None
+            assert membership.role == OrganizationRoles.maintain
+            membership.role = OrganizationRoles.read
+            await session.commit()
+        return LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:new"))
+
+    monkeypatch.setattr("src.routes.v1.solutions.images.metadata", metadata)
+
+    # Act
+    response = await clients[1].request(method, f"/api/v1/solutions/{solution.id}/update", json={})
+
+    # Assert
+    assert response.status_code == 403
+    assert response.json() == {"detail": "Permission required"}
+    async with session_scope() as session:
+        current = await session.get(Solution, solution.id)
+        assert current is not None
+        assert current.desired_revision_id == solution.desired_revision_id
+        current_revision_count = await session.scalar(
+            select(func.count()).select_from(Revision).where(col(Revision.solution_id) == solution.id)
+        )
+        assert current_revision_count == revision_count
+    await assert_no_new_operations(previous_operations)
 
 
 @pytest.mark.parametrize("method", ["GET", "POST"])

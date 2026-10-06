@@ -52,29 +52,64 @@ def test_longlink_solution_serves_runtime_routes_and_frontend(monkeypatch: pytes
 
 @pytest.mark.usefixtures("solution_source")
 def test_solution_test_client_replaces_development_services_with_testing_services(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Select in-memory services and the testing user for an existing development app."""
+    """Replace only the selected app's services and keep its user updates isolated."""
 
     # Arrange
     monkeypatch.setenv("LONGLINK_ENV", "development")
     app = LongLink()
+    development_app = LongLink()
+    development_services = development_app.state.longlink
+    development_database = development_services.database
+    development_storage = development_services.storage
     assert "file" in app.state.longlink.storage.protocol
 
     @app.get("/api/me", response_model=str)
-    async def testing_user(value: Context) -> str:
-        """Return the user selected by the testing client."""
+    @development_app.get("/api/me", response_model=str)
+    async def current_user(value: Context) -> str:
+        """Return the user selected by this app's request context."""
 
+        return value.user.name
+
+    @app.patch("/api/me", response_model=str)
+    async def rename_user(value: Context) -> str:
+        """Commit a local user update through the real request database."""
+
+        # Persist the change so a subsequent request reads an independent session.
+        value.user.name = "Updated testing user"
+        value.database.add(value.user)
+        await value.database.commit()
         return value.user.name
 
     # Act
     client = SolutionTestClient(app)
-    with client:
+    development_client = TestClient(development_app)
+    with client, development_client:
         user_response = client.get("/api/me")
+        development_user_response = development_client.get("/api/me")
+
+        # Assert each app resolves its own seeded user before changing either database.
+        assert user_response.status_code == 200
+        assert user_response.json() == "Testing user"
+        assert development_user_response.status_code == 200
+        assert development_user_response.json() == "Development user"
+
+        # Act: Commit an update in the converted app and read both users in fresh requests.
+        update_response = client.patch("/api/me")
+        updated_user_response = client.get("/api/me")
+        unchanged_user_response = development_client.get("/api/me")
 
     # Assert
-    assert user_response.status_code == 200
-    assert user_response.json() == "Testing user"
+    assert update_response.status_code == 200
+    assert update_response.json() == "Updated testing user"
+    assert updated_user_response.status_code == 200
+    assert updated_user_response.json() == "Updated testing user"
+    assert unchanged_user_response.status_code == 200
+    assert unchanged_user_response.json() == "Development user"
     assert app.state.longlink.storage.protocol == "memory"
     assert app.state.longlink.database._env.ENV == "testing"
+    assert development_app.state.longlink is development_services
+    assert development_app.state.longlink.database is development_database
+    assert development_app.state.longlink.storage is development_storage
 
 
 @pytest.mark.usefixtures("solution_source")

@@ -369,24 +369,44 @@ async def test_delete_organization_requires_owner_or_platform_admin(
     # Arrange
     platform_admin, org_admin = users[0], users[1]
     owned_organization = await create_organization(platform_admin)
+    solution = await create_solution(owned_organization)
     admin_owned_organization = await create_organization(org_admin, name="globex")
+    audit_fields = {"updated_at", "deleted_at", "updated_id", "deleted_id"}
     async with session_scope() as session:
         session.add(UserOrganization(user_id=org_admin.id, organization_id=owned_organization.id, role=OrganizationRoles.admin))
         await session.commit()
+        protected_organization = await session.get(Organization, owned_organization.id)
+        protected_solution = await session.get(Solution, solution.id)
+        assert protected_organization is not None
+        assert protected_solution is not None
+        assert protected_organization.deleted_at is None
+        assert protected_solution.deleted_at is None
+        organization_audit = protected_organization.model_dump(include=audit_fields)
+        solution_audit = protected_solution.model_dump(include=audit_fields)
+    previous_operations = await fetch_operations()
 
     # Act
     non_owner_response = await clients[1].delete(f"/api/v1/organizations/{owned_organization.id}")
-    platform_admin_response = await clients[0].delete(f"/api/v1/organizations/{admin_owned_organization.id}")
 
     # Assert
     assert non_owner_response.status_code == 403
     assert non_owner_response.json() == {"detail": "Permission required"}
-    assert platform_admin_response.status_code == 202
     async with session_scope() as session:
         protected_organization = await session.get(Organization, owned_organization.id)
+        protected_solution = await session.get(Solution, solution.id)
+        assert protected_organization is not None
+        assert protected_solution is not None
+        assert protected_organization.model_dump(include=audit_fields) == organization_audit
+        assert protected_solution.model_dump(include=audit_fields) == solution_audit
+    await assert_no_new_operations(previous_operations)
+
+    # Act
+    platform_admin_response = await clients[0].delete(f"/api/v1/organizations/{admin_owned_organization.id}")
+
+    # Assert
+    assert platform_admin_response.status_code == 202
+    async with session_scope() as session:
         deleted_organization = await session.get(Organization, admin_owned_organization.id)
-    assert protected_organization is not None
-    assert protected_organization.deleted_at is None
     assert deleted_organization is not None
     assert deleted_organization.deleted_at is not None
 
@@ -886,15 +906,16 @@ async def test_create_organization_invitation_rejects_role_above_caller(
     assert captured_mail == []
 
 
-async def test_update_organization_member_changes_role(
+async def test_update_organization_member_changes_only_requested_tenant_membership(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
 ) -> None:
-    """Allow organization owners to change member roles."""
+    """Change one member role without altering that user's membership in another tenant."""
 
     # Arrange
     owner, member = users[0], users[1]
     organization = await create_organization(owner)
+    other_organization = await create_organization(users[2], name="other")
     async with session_scope() as session:
         persisted = await session.get(Organization, organization.id)
         assert persisted is not None
@@ -906,7 +927,15 @@ async def test_update_organization_member_changes_role(
                 role=OrganizationRoles.write,
             )
         )
+        session.add(UserOrganization(user_id=member.id, organization_id=other_organization.id, role=OrganizationRoles.read))
         await session.commit()
+
+    # Record the other tenant's committed membership before the requested change.
+    async with session_scope() as session:
+        other_membership = await session.get(UserOrganization, (member.id, other_organization.id))
+        assert other_membership is not None
+        assert other_membership.role == OrganizationRoles.read
+        other_updated_at = other_membership.updated_at
 
     client = clients[0]
 
@@ -923,6 +952,10 @@ async def test_update_organization_member_changes_role(
         persisted = await session.get(Organization, organization.id)
         assert persisted is not None
         assert persisted.database_state == DatabaseState.available
+        other_membership = await session.get(UserOrganization, (member.id, other_organization.id))
+        assert other_membership is not None
+        assert other_membership.role == OrganizationRoles.read
+        assert other_membership.updated_at == other_updated_at
     updated_member = next(membership for membership in updated_members if membership.user.id == member.id)
     assert updated_member.role == OrganizationRoles.admin
 
