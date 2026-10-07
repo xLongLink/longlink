@@ -31,12 +31,6 @@ def verified_location(pem: str | None) -> Iterator[str | None]:
         yield filename
 
 
-def path_style_options() -> dict[str, str]:
-    """Return S3 path-style addressing shared by every platform object-storage client."""
-
-    return {"addressing_style": "path"}
-
-
 class Session(AIOHTTPSession):
     """Require hostname checks as well as CA checks on asynchronous S3 connections."""
 

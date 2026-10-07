@@ -47,7 +47,7 @@ class S3:
 
             # Bound path-style requests through the operator-configured endpoint.
             config = AioConfig(
-                s3=tls.path_style_options(),
+                s3={"addressing_style": "path"},
                 connect_timeout=10,
                 read_timeout=30,
                 http_session_cls=tls.Session,

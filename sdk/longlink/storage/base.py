@@ -35,7 +35,7 @@ def create_fs(settings: Envs) -> AbstractFileSystem:
                 key=settings.STORAGE_USERNAME,
                 secret=settings.STORAGE_PASSWORD,
                 client_kwargs={"region_name": settings.STORAGE_REGION, **({"verify": certificate} if certificate is not None else {})},
-                config_kwargs={"s3": tls.path_style_options(), "http_session_cls": tls.Session},
+                config_kwargs={"s3": {"addressing_style": "path"}, "http_session_cls": tls.Session},
                 skip_instance_cache=True,
             )
             if certificate is not None:
