@@ -33,7 +33,7 @@ export default function Organizations() {
     if (dialog?.kind === 'metadata' && !metadata) setDialog(null);
 
     return (
-        <Stack gap={8}>
+        <Stack gap={4}>
             <NoIndex title="Organizations | LongLink" />
             <Heading level={1}>Organizations</Heading>
             <Stack gap={1}>

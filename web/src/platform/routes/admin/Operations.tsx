@@ -32,7 +32,7 @@ export default function Operations() {
     if (metadataId !== null && !metadata) setMetadataId(null);
 
     return (
-        <Stack gap={8}>
+        <Stack gap={4}>
             <NoIndex title="Operations | LongLink" />
             <Heading level={1}>Operations</Heading>
             <Stack gap={1}>

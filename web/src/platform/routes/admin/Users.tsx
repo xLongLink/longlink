@@ -18,7 +18,7 @@ export default function Users() {
     const [users] = useApi<z.output<typeof zPageAdminUserSummary>>(`/api/v1/users?page=${page}&page_size=25`);
 
     return (
-        <Stack gap={8}>
+        <Stack gap={4}>
             <NoIndex title="Users | LongLink" />
             <Heading level={1}>Users</Heading>
             <Stack gap={1}>

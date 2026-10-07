@@ -31,7 +31,7 @@ export default function Organization() {
         <>
             <NoIndex title="Organization Solutions | LongLink" />
             <Stack
-                gap={8}
+                gap={solutions.length === 0 ? 8 : 4}
                 justify={solutions.length === 0 ? 'center' : undefined}
                 minHeight={
                     solutions.length === 0
@@ -40,7 +40,7 @@ export default function Organization() {
                 }
             >
                 {solutions.length > 0 && (
-                    <Stack direction="horizontal" justify="between" align="center" wrap="wrap">
+                    <Stack direction="horizontal" justify="between" align="center" wrap="wrap" className="min-h-12">
                         <Heading level={1}>Solutions</Heading>
                         {canCreate && <Button label="New Solution" onClick={() => setCreating(true)} />}
                     </Stack>

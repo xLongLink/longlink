@@ -123,7 +123,7 @@ export default function CreateSolution({
                                         />
                                     ) : stage.step === 1 ? (
                                         <img
-                                            src="/images/58c6ed15-8fb2-4140-be50-507f1393b2da.png"
+                                            src="/images/nametag.png"
                                             alt=""
                                             className="size-20 object-contain"
                                             width={1448}

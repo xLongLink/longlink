@@ -32,7 +32,7 @@ export default function Solutions() {
     if (dialog?.kind === 'metadata' && !metadata) setDialog(null);
 
     return (
-        <Stack gap={8}>
+        <Stack gap={4}>
             <NoIndex title="Solutions | LongLink" />
             <Heading level={1}>Solutions</Heading>
             <Stack gap={1}>

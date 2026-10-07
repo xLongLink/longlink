@@ -1,6 +1,5 @@
 import { api } from '@/lib/api';
 import { useState } from 'react';
-import { Building2 } from 'lucide-react';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
@@ -72,13 +71,22 @@ export default function CreateOrganization({
                                 <form action={createOrganization}>
                                     <Stack gap={10}>
                                         <Stack gap={2} align="center">
-                                            <Building2 className="size-10 text-secondary" aria-hidden="true" />
-                                            <Heading level={2} justify="center">
-                                                New organization
-                                            </Heading>
-                                            <Text as="p" color="secondary" justify="center">
-                                                A place for your workflows and data
-                                            </Text>
+                                            <img
+                                                src="/images/organization.png"
+                                                alt=""
+                                                className="size-20 object-contain"
+                                                width={1254}
+                                                height={1254}
+                                                decoding="async"
+                                            />
+                                            <Stack gap={0}>
+                                                <Heading level={2} justify="center">
+                                                    New organization
+                                                </Heading>
+                                                <Text as="p" color="secondary" justify="center">
+                                                    A place for your workflows and data
+                                                </Text>
+                                            </Stack>
                                         </Stack>
                                         {/* Let the subtitle size the column, then stretch the controls to match. */}
                                         <Stack gap={4} width={0} className="min-w-full">
