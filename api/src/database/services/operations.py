@@ -16,9 +16,29 @@ from src.database.models.organizations import Organization
 async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Sequence[dict[str, object]], int]:
     """Return one newest-first page of platform operations."""
 
+    # Resolve names by operation kind while retaining missing and tombstoned targets.
+    resource_name = case(
+        (
+            col(Operation.kind).in_([OperationKind.organization_create, OperationKind.organization_delete]),
+            select(col(Organization.name)).where(col(Organization.id) == col(Operation.target_id)).correlate(Operation).scalar_subquery(),
+        ),
+        (
+            col(Operation.kind) == OperationKind.solution_delete,
+            select(col(Solution.name)).where(col(Solution.id) == col(Operation.target_id)).correlate(Operation).scalar_subquery(),
+        ),
+        (
+            col(Operation.kind) == OperationKind.solution_deploy,
+            select(col(Solution.name))
+            .join(Revision, col(Revision.solution_id) == col(Solution.id))
+            .where(col(Revision.id) == col(Operation.target_id))
+            .correlate(Operation)
+            .scalar_subquery(),
+        ),
+    )
+
     # Load only fields needed by the operation response and its derived status.
     statement = (
-        select(Operation)
+        select(Operation, resource_name)
         .options(
             load_only(
                 Operation.id,
@@ -34,42 +54,8 @@ async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Seq
         .offset(pagination.offset)
         .limit(pagination.page_size)
     )
-    result = await session.scalars(statement)
+    result = await session.execute(statement)
     operations = result.all()
-
-    # Group targets by their concrete resource table.
-    organization_target_ids = {
-        operation.target_id
-        for operation in operations
-        if operation.kind in {OperationKind.organization_create, OperationKind.organization_delete}
-    }
-    solution_target_ids = {operation.target_id for operation in operations if operation.kind == OperationKind.solution_delete}
-
-    # Load compact resource details for each target type.
-    resource_names: dict[tuple[OperationKind, UUID], str] = {}
-
-    if organization_target_ids:
-        result = await session.execute(
-            select(col(Organization.id), col(Organization.name)).where(col(Organization.id).in_(organization_target_ids))
-        )
-        for resource_id, name in result:
-            resource_names[(OperationKind.organization_create, resource_id)] = name
-            resource_names[(OperationKind.organization_delete, resource_id)] = name
-
-    if solution_target_ids:
-        result = await session.execute(select(col(Solution.id), col(Solution.name)).where(col(Solution.id).in_(solution_target_ids)))
-        for resource_id, name in result:
-            resource_names[(OperationKind.solution_delete, resource_id)] = name
-
-    revision_ids = {operation.target_id for operation in operations if operation.kind == OperationKind.solution_deploy}
-    if revision_ids:
-        result = await session.execute(
-            select(col(Revision.id), col(Solution.name))
-            .join(Solution, col(Solution.id) == col(Revision.solution_id))
-            .where(col(Revision.id).in_(revision_ids))
-        )
-        for revision_id, name in result:
-            resource_names[(OperationKind.solution_deploy, revision_id)] = name
 
     # Enrich operation data while leaving response validation to the route.
     items: list[dict[str, object]] = [
@@ -77,13 +63,13 @@ async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Seq
             "id": operation.id,
             "kind": operation.kind,
             "target_id": operation.target_id,
-            "resource_name": resource_names.get((operation.kind, operation.target_id)),
+            "resource_name": resource_name,
             "status": operation.status,
             "failed": operation.failed,
             "created_at": operation.created_at,
             "finished_at": operation.finished_at,
         }
-        for operation in operations
+        for operation, resource_name in operations
     ]
 
     # Count all operation history rows.

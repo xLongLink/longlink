@@ -97,7 +97,7 @@ async def test_storage_registration_checks_remote_tunnel(
         """Observe the real S3 client's public endpoint and transport lifetime."""
 
         @asynccontextmanager
-        async def client(self, service: str, **kwargs: object) -> AsyncIterator[Buckets]:
+        async def create_client(self, service: str, **kwargs: object) -> AsyncIterator[Buckets]:
             """Require TLS verification and release the S3 client before readiness."""
 
             # Preserve public endpoint, credential, and TLS checks at the external boundary.
@@ -111,7 +111,7 @@ async def test_storage_registration_checks_remote_tunnel(
             finally:
                 observations.append("closed")
 
-    monkeypatch.setattr(storage.s3.aioboto3, "Session", Session)
+    monkeypatch.setattr(storage.s3.aiobotocore.session, "get_session", Session)
 
     # kr8s opens its remote connection only after the first local HTTP request.
     requests: list[httpx2.Request] = []
