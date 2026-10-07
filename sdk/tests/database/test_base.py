@@ -81,6 +81,7 @@ def test_connect_args_returns_driver_specific_settings(database_url: str, schema
             ),
             {
                 "hide_parameters": True,
+                "pool_size": 1,
                 "pool_pre_ping": True,
                 "pool_recycle": 20,
                 "pool_use_lifo": True,
