@@ -1,4 +1,4 @@
-import aioboto3
+import aiobotocore.session
 from typing import TYPE_CHECKING, cast
 from itertools import chain, batched
 from contextlib import asynccontextmanager
@@ -52,8 +52,8 @@ class S3:
                 read_timeout=30,
                 http_session_cls=tls.Session,
             )
-            session = aioboto3.Session()
-            async with session.client(
+            session = aiobotocore.session.get_session()
+            async with session.create_client(
                 "s3",
                 endpoint_url=self._endpoint,
                 region_name="us-east-1",
