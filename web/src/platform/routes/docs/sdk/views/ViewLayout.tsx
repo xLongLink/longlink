@@ -14,21 +14,11 @@ import { Seo, articleRouteLabels } from '@/components/Seo';
 import { PathBreadcrumb } from '@/components/breadcrumb/Path';
 import { documentationLastUpdated } from '@/lib/documentation';
 import { Table, proportional } from '@astryxdesign/core/Table';
-import { componentDocumentation, documentationPaths } from '@/platform/docs';
 import { ArticleFooter, ArticleOutline } from '@/platform/components/Article';
+import { componentCatalog, componentDocumentation, documentationPaths } from '@/platform/docs';
 
-export type ViewProperties = {
-    name: string;
-    properties: {
-        name: string;
-        type: string;
-        required?: boolean;
-        description: string;
-    }[];
-}[];
-export type ViewReference = Pick<(typeof references)[number], 'introduction' | 'practices'> & {
-    properties?: ViewProperties[number]['properties'];
-};
+type ViewProperty = NonNullable<(typeof componentCatalog)[number]['properties']>[number];
+export type ViewReference = Pick<(typeof references)[number], 'introduction' | 'practices'>;
 export type ViewExample = { title: string; code: string; preview: ReactNode };
 
 const tabs = [
@@ -42,14 +32,12 @@ export default function ViewLayout({
     name,
     reference: authoredReference,
     examples = [],
-    properties,
     children,
     toc,
 }: {
     name: string;
     reference?: ViewReference;
     examples?: ViewExample[];
-    properties?: ViewProperties;
     children?: ReactNode;
     toc?: { id: string; label: string; level: number }[];
 }) {
@@ -63,15 +51,27 @@ export default function ViewLayout({
     const activeTab = tabs.find((tab) => tab.value === searchParams.get('tab')) ?? tabs[0];
     const runtime = component.category === 'Runtime';
 
-    // Authored tables take precedence; generated tables omit grouped subcomponent rows.
-    const componentProperties =
-        authoredReference?.properties ??
-        component.properties
-            ?.filter((property) => !property.name.includes('.'))
-            .map((property) => ({ ...property, description: property.description ?? '' })) ??
-        [];
-    const propertyGroups =
-        properties ?? (componentProperties.length ? [{ name: '', properties: componentProperties }] : []);
+    // Keep every property table generated, including grouped JSX children and the Buttons companion.
+    const entries =
+        name === 'Button'
+            ? [component, ...componentCatalog.filter((entry) => entry.name === 'ButtonGroup')]
+            : [component];
+    const groups = new Map<string, ViewProperty[]>();
+    for (const entry of entries) {
+        for (const property of entry.properties ?? []) {
+            const separator = property.name.indexOf('.');
+            const group = separator < 0 ? entry.name : property.name.slice(0, separator);
+            const row = {
+                ...property,
+                name: separator < 0 ? property.name : property.name.slice(separator + 1),
+                description: property.description ?? '',
+            };
+            const properties = groups.get(group);
+            if (properties) properties.push(row);
+            else groups.set(group, [row]);
+        }
+    }
+    const propertyGroups = [...groups].map(([name, properties]) => ({ name, properties }));
 
     // Preserve the existing documentation shell, region sizes, and table of contents.
     const article = {

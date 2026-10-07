@@ -6,20 +6,15 @@ import { CheckboxInput as AstryxCheckboxInput } from '@astryxdesign/core/Checkbo
 export function CheckboxInput(
     props: FieldProps & {
         value?: boolean | 'indeterminate';
-        checked?: boolean;
         defaultChecked?: boolean;
         onChange?: (value: boolean) => void;
-        isReadOnly?: boolean;
-        htmlName?: string;
         size?: 'sm' | 'md';
     }
 ) {
     // Astryx's underlying checkbox retains omission semantics and native validation.
-    const { defaultChecked, checked, ...control } = props;
-    const field = useValue<boolean | 'indeterminate', HTMLInputElement>(
-        checked ?? props.value,
-        defaultChecked ?? false,
-        (value) => props.onChange?.(value === true)
+    const { defaultChecked, ...control } = props;
+    const field = useValue<boolean | 'indeterminate', HTMLInputElement>(props.value, defaultChecked ?? false, (value) =>
+        props.onChange?.(value === true)
     );
 
     // Keep the field visible, enabled, and editable unless explicitly configured otherwise.
@@ -27,12 +22,12 @@ export function CheckboxInput(
         <AstryxCheckboxInput
             {...control}
             {...field}
-            htmlName={props.name ?? props.htmlName}
+            htmlName={props.name}
             size={props.size ?? 'md'}
-            isReadOnly={props.readOnly ?? props.isReadOnly ?? false}
+            isReadOnly={false}
             isLabelHidden={false}
-            isRequired={props.required ?? props.isRequired ?? false}
-            isDisabled={props.disabled ?? props.isDisabled ?? false}
+            isRequired={props.required ?? false}
+            isDisabled={props.disabled ?? false}
             changeAction={undefined}
             isLoading={false}
         />

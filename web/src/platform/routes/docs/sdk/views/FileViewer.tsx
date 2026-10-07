@@ -1,33 +1,21 @@
+import * as host from '@/views/host';
 import ViewLayout from './ViewLayout';
 import { FileViewer, FileRequestContext } from '@/components/ui/FileViewer';
 
-/** Documents image previews through the scoped Solution API. */
+/** Documents image previews and attachment downloads through the scoped Solution API. */
 export default function FileViewerPage() {
     // Render image preview guidance and an authored example.
     return (
         <ViewLayout
             name="FileViewer"
             reference={{
-                introduction: 'FileViewer opens an image attachment preview through the scoped Solution API.',
-                properties: [
-                    {
-                        name: 'src',
-                        type: 'string',
-                        required: true,
-                        description: 'Scoped Solution operation path returning the image to preview.',
-                    },
-                    {
-                        name: 'title',
-                        type: 'string',
-                        required: true,
-                        description: 'Accessible label for the preview trigger and image.',
-                    },
-                ],
+                introduction:
+                    'FileViewer previews images and downloads attachments through the scoped Solution API. Other documents, including PDFs, are downloaded rather than executed inside the View.',
                 practices: [
                     {
                         guidance: true,
                         description:
-                            'Use a descriptive title and an image endpoint in your Solution. Other file types cannot be previewed.',
+                            'Set title to the attachment filename and src to its Solution endpoint. Downloads and previews are bounded to 2,000,000 bytes. Unsupported image types use the download action.',
                     },
                 ],
             }}
@@ -36,7 +24,7 @@ export default function FileViewerPage() {
                     title: 'FileViewer',
                     preview: <FileViewerExample />,
                     code: `function Example() {
-  return <FileViewer src="/api/items/123/image" title="View image" />;
+  return <FileViewer src="/api/items/123/image" title="invoice.png" />;
 }`,
                 },
             ]}
@@ -56,8 +44,20 @@ async function requestPreviewImage() {
 export function FileViewerExample() {
     // Scope the sample request capability to this example.
     return (
-        <FileRequestContext.Provider value={requestPreviewImage}>
-            <FileViewer src="/api/items/123/image" title="View image" />
-        </FileRequestContext.Provider>
+        <FileRequestContext
+            value={{
+                preview: requestPreviewImage,
+                download: async (_path, filename) => {
+                    // The native example can only download this fixed public documentation asset.
+                    await host.download(
+                        '/',
+                        { type: 'download', id: 0, path: '/images/introducing-longlink.png', filename },
+                        new AbortController().signal
+                    );
+                },
+            }}
+        >
+            <FileViewer src="/api/items/123/image" title="invoice.png" />
+        </FileRequestContext>
     );
 }

@@ -104,8 +104,8 @@ export default function Invoices() {
                 ]}
             />
             <Stack direction="horizontal" gap={2} justify="between">
-                <Button label="Previous" isDisabled={page === 1} onClick={() => setPage(page - 1)} />
-                <Button label="Next" isDisabled={invoices.total <= page * 8} onClick={() => setPage(page + 1)} />
+                <Button label="Previous" disabled={page === 1} onClick={() => setPage(page - 1)} />
+                <Button label="Next" disabled={invoices.total <= page * 8} onClick={() => setPage(page + 1)} />
             </Stack>
         </Stack>
     );

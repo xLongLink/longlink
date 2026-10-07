@@ -1,3 +1,5 @@
+import { useContext } from 'react';
+import { LinkNavigationContext } from './Link';
 import type { MouseEvent, ReactNode } from 'react';
 import { Card as AstryxCard } from '@astryxdesign/core/Card';
 import { ClickableCard } from '@astryxdesign/core/ClickableCard';
@@ -41,7 +43,7 @@ type CardProps = {
     onClick?: (event: MouseEvent<HTMLElement>) => void;
     /** Makes the card a navigation target when no selection callback is supplied. */
     href?: string;
-    /** Link target, such as _blank. */
+    /** Native link target; isolated Views always navigate in the host's current Solution. */
     target?: string;
     /** Disables activation of an interactive card. */
     isDisabled?: boolean;
@@ -64,6 +66,8 @@ export function Card({
     onChange,
     ...props
 }: CardProps) {
+    const navigate = useContext(LinkNavigationContext);
+
     // Use Astryx's controlled selection behavior whenever a selection callback is supplied.
     if (onChange !== undefined) {
         return (
@@ -87,9 +91,20 @@ export function Card({
                 padding={padding}
                 variant={variant}
                 label={label}
-                onClick={onClick}
-                href={href}
-                target={target}
+                onClick={
+                    onClick || (navigate && href)
+                        ? (event) => {
+                              // Keep nested controls independent and let surface actions cancel navigation.
+                              onClick?.(event);
+                              if (navigate && href && !event.defaultPrevented) {
+                                  event.preventDefault();
+                                  navigate(href);
+                              }
+                          }
+                        : undefined
+                }
+                href={navigate ? undefined : href}
+                target={navigate ? undefined : target}
                 isDisabled={isDisabled}
             />
         );

@@ -37,10 +37,15 @@ export const viewsSchema = z.array(viewSchema).superRefine((views, context) => {
     const routes = new Set<string>();
 
     for (const [index, view] of views.entries()) {
+        const routeKey = view.route
+            .split('/')
+            .map((segment) => (segment.startsWith(':') ? ':' : segment.toLowerCase()))
+            .join('/');
+
         // Require each route to resolve one unambiguous View.
-        if (routes.has(view.route)) {
+        if (routes.has(routeKey)) {
             context.addIssue({ code: 'custom', message: 'Routes must be unique', path: [index, 'route'] });
         }
-        routes.add(view.route);
+        routes.add(routeKey);
     }
 });

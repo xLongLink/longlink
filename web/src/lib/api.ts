@@ -27,10 +27,34 @@ export const api = ky.create({
                     const payload: unknown = error.data;
                     const detail =
                         payload !== null && typeof payload === 'object' && 'detail' in payload ? payload.detail : null;
-                    const message =
+                    let message =
                         typeof detail === 'string' && detail.trim() !== ''
                             ? detail
                             : 'The server could not complete the request. Please try again.';
+
+                    // Report validation locations and messages, never submitted values or error context.
+                    if (error.response.status === 422 && Array.isArray(detail)) {
+                        const messages = detail.slice(0, 5).flatMap((issue: unknown) => {
+                            if (
+                                issue === null ||
+                                typeof issue !== 'object' ||
+                                !('msg' in issue) ||
+                                typeof issue.msg !== 'string'
+                            )
+                                return [];
+                            const location =
+                                'loc' in issue && Array.isArray(issue.loc)
+                                    ? issue.loc
+                                          .filter(
+                                              (part: unknown) => typeof part === 'string' || typeof part === 'number'
+                                          )
+                                          .slice(1)
+                                          .join('.')
+                                    : '';
+                            return [location ? `${location}: ${issue.msg}` : issue.msg];
+                        });
+                        if (messages.length > 0) message = messages.join('; ');
+                    }
 
                     return new ApiError(message, error.response.status, request.url);
                 }

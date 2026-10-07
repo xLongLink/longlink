@@ -51,9 +51,12 @@ You are working on a LongLink Solution project.
 - Successful writes through `request()` automatically refresh cached data within the isolated View. Explicit invalidation is not needed.
 - For simple forms, DO use `<Form action="/api/..." method="post">`, named fields, and `<Button type="submit">` instead of draft state.
 - `name` includes themed controls in form submissions. DO use `defaultValue` or `defaultChecked` for initial values; use `value`/`onChange` only when reactive state is needed.
-- DO use `required`, `disabled`, and `readOnly` props for named fields. Named fields retain themed Astryx controls; use `value` and `onChange` when reactive state is needed.
+- DO use `name`, `required`, `disabled`, `value`, and `multiple` rather than Astryx field aliases. `readOnly` is not supported. Named fields retain themed Astryx controls; use `value` and `onChange` when reactive state is needed.
 - Form submissions preserve native semantics: strings, repeated names, omitted unchecked checkboxes, and files. DO receive schemas as `Annotated[Schema, fastapi.Form()]` in Python routes.
 - Form handles validation, pending submissions, and request errors. `onSuccess` can close a dialog or navigate. Successful writes refresh cached data without resetting entered values.
+- Views own a viewport-sized scroll region. Dialogs and pickers are modal only within the View, not over the Platform navigation.
+- Requests and responses are limited to 2,000,000 bytes, with at most 32 form entries and 8 pending operations. Keep uploads below the limit including field names and other values.
+- DO use `FileViewer` for image previews and attachment downloads. Set `title` to the attachment filename. PDFs and other documents download without executing inside the View.
 - For multiple resources, DO use separate `useApi` calls.
 - DO mount a component that uses `useApi` only when its resource is needed.
 - Cached data remains visible if a background refresh fails.

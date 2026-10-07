@@ -9,7 +9,6 @@ export function FileInput(
         value?: File | File[] | null;
         onChange?: (value: File | File[] | null) => void;
         accept?: string;
-        isMultiple?: boolean;
         multiple?: boolean;
         maxSize?: number;
         maxFiles?: number;
@@ -21,7 +20,7 @@ export function FileInput(
     const { name, required, ...control } = props;
     const field = useValue(props.value, null, props.onChange);
     const files = field.value === null ? [] : Array.isArray(field.value) ? field.value : [field.value];
-    const multiple = props.multiple ?? props.isMultiple ?? false;
+    const multiple = props.multiple ?? false;
 
     // Default to a single-file field without imposing arbitrary file-size or format limits.
     return (
@@ -34,8 +33,8 @@ export function FileInput(
                 mode={props.mode ?? 'input'}
                 placeholder={props.placeholder ?? (multiple ? 'Choose files' : 'Choose file')}
                 isLabelHidden={false}
-                isRequired={required ?? props.isRequired ?? false}
-                isDisabled={(props.disabled ?? props.isDisabled ?? false) || props.readOnly}
+                isRequired={required ?? false}
+                isDisabled={props.disabled ?? false}
                 changeAction={undefined}
                 isLoading={false}
             />

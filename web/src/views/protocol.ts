@@ -3,7 +3,6 @@ import { z } from 'zod';
 export const MAX_SOURCE_SIZE = 1_000_000;
 export const MAX_MESSAGE_SIZE = 2_000_000;
 export const MAX_PENDING_REQUESTS = 8;
-export const MAX_VIEW_HEIGHT = 100_000;
 // Allow the Platform's 120-second Solution proxy timeout to finish, including cold starts.
 export const REQUEST_TIMEOUT = 130_000;
 export const parametersSchema = z.record(z.string(), z.string());
@@ -32,21 +31,42 @@ export const requestSchema = z
         }
     });
 
+export const downloadSchema = z
+    .object({
+        type: z.literal('download'),
+        id: z.number().int().nonnegative(),
+        path: z.string().min(1).max(4096),
+        filename: z
+            .string()
+            .min(1)
+            .max(256)
+            .regex(/^[^/\\\p{Cc}]+$/u),
+    })
+    .strict();
+
 export const commandSchema = z.discriminatedUnion('type', [
     requestSchema,
     z.object({ type: z.literal('navigate'), path: z.string().min(1).max(4096) }).strict(),
-    z.object({ type: z.literal('resize'), height: z.number().int().min(1).max(MAX_VIEW_HEIGHT) }).strict(),
+    downloadSchema,
 ]);
 
 export type RequestCommand = z.output<typeof requestSchema>;
-export type ViewReply = { id: number; ok: true; data: unknown } | { id: number; ok: false; error: string };
+export type DownloadCommand = z.output<typeof downloadSchema>;
+export type ViewReply =
+    | { id: number; ok: true; data: unknown }
+    | { id: number; ok: false; error: string; status?: number };
 
 /** Bounds bridge payloads before allowing them to consume host resources. */
 export function messageSize(command: RequestCommand): number {
+    // Count UTF-8 bytes consistently with the SDK source and host response limits.
+    const encoder = new TextEncoder();
     return (
-        JSON.stringify(command.json ?? null).length +
+        encoder.encode(JSON.stringify(command.json ?? null)).byteLength +
         (command.form ?? []).reduce(
-            (size, [name, value]) => size + name.length + (typeof value === 'string' ? value.length : value.size),
+            (size, [name, value]) =>
+                size +
+                encoder.encode(name).byteLength +
+                (typeof value === 'string' ? encoder.encode(value).byteLength : value.size),
             0
         )
     );
