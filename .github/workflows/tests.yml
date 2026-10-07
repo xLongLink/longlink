@@ -205,10 +205,10 @@ jobs:
               working-directory: web
               run: vp run typecheck
 
-    # Verify the complete Compute installation on a fresh local Kubernetes cluster.
+    # Verify Compute installation and removal on a fresh local Kubernetes cluster.
     compute-tests:
         runs-on: ubuntu-24.04
-        timeout-minutes: 35
+        timeout-minutes: 55
 
         steps:
             - name: Checkout repository
@@ -277,11 +277,39 @@ jobs:
                   kubectl wait --namespace default --for=condition=Ready --timeout=5m service.serving.knative.dev/compute-smoke
                   curl --fail --silent --show-error --cacert "$RUNNER_TEMP/gateway.crt" --header 'Host: compute-smoke.default.svc.cluster.local' https://127.0.0.1:8443/
 
+            - name: Uninstall Compute package
+              run: |
+                  set -euo pipefail
+
+                  # Arrange: remove the test workload while its controller can clear finalizers.
+                  kubectl delete --filename k8s/chart/tests/knative-service.yaml --wait=true --timeout=5m
+                  kubectl get namespace rustfs cnpg-system knative-serving kourier-system
+                  kubectl get crd --output name | grep -E '\.(postgresql\.cnpg\.io|serving\.knative\.dev|internal\.knative\.dev)$' > "$RUNNER_TEMP/compute-retained-crds"
+                  test -s "$RUNNER_TEMP/compute-retained-crds"
+
+                  # Act: exercise Helm uninstall before deleting the disposable cluster.
+                  helm uninstall longlink-compute --namespace longlink-system --wait=legacy --timeout 15m --debug
+
+                  # Assert: chart-owned namespaces and release records are gone, but shared CRDs remain.
+                  kubectl wait --for=delete --timeout=5m namespace/rustfs namespace/cnpg-system namespace/knative-serving namespace/kourier-system
+                  release_configmap=$(kubectl get configmap compute-release --namespace longlink-system --ignore-not-found --output name)
+                  test -z "$release_configmap"
+                  releases=$(helm list --namespace longlink-system --filter '^longlink-compute$' --short)
+                  test -z "$releases"
+                  release_secrets=$(kubectl get secret --namespace longlink-system --selector owner=helm,name=longlink-compute --output name)
+                  test -z "$release_secrets"
+                  xargs kubectl get < "$RUNNER_TEMP/compute-retained-crds"
+
             - name: Collect Compute diagnostics
               if: failure()
               run: |
                   kubectl get all --all-namespaces --output wide || true
                   kubectl get events --all-namespaces --sort-by=.lastTimestamp || true
+                  kubectl get namespaces --output yaml || true
+                  kubectl get pvc --all-namespaces --output wide || true
+                  kubectl get pv --output wide || true
+                  kubectl get crd || true
+                  helm list --namespace longlink-system || true
                   kubectl describe deployment --namespace knative-serving controller webhook net-kourier-controller || true
                   kubectl describe deployment --namespace kourier-system 3scale-kourier-gateway || true
                   kubectl describe deployment --namespace cnpg-system cnpg-controller-manager || true
