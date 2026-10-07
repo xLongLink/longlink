@@ -37,10 +37,10 @@ export default function Legal() {
                         </SideNavSection>
                         <SideNavSection title="Branding">
                             <SideNavItem
-                                href="/branding/logo"
+                                href="/branding/assets"
                                 icon={<Image aria-hidden size={16} />}
-                                isSelected={pagePath === '/branding/logo'}
-                                label="Logo"
+                                isSelected={pagePath === '/branding/assets'}
+                                label="Brand assets"
                             />
                             <SideNavItem
                                 href="/branding/values"

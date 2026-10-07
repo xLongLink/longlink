@@ -137,13 +137,12 @@ export function Article({ children, page }: { children: ReactNode; page: Article
                                     className={`article-content space-y-7${isGuide ? ' documentation-content [--font-family-heading:var(--font-family-handwritten)] [&_.astryx-heading]:uppercase' : ''}${pagePath.startsWith('/docs') ? ' [&_.astryx-heading]:tracking-wide' : ''}`}
                                 >
                                     {children}
-                                    <Stack as="footer" gap={3}>
+                                    <Stack as="footer" gap={3} paddingBlockStart={8}>
                                         {currentPage >= 0 ? (
                                             <Stack
                                                 aria-label="Article page navigation"
                                                 direction="horizontal"
                                                 hAlign="between"
-                                                paddingBlockStart={8}
                                                 width="100%"
                                             >
                                                 <Button

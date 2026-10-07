@@ -6,6 +6,7 @@ import { buildBreadcrumbs } from '@/components/breadcrumb/text';
 export const articleRouteLabels: Record<string, string> = {
     'approvals-and-decisions': 'Approvals & decisions',
     api: 'Platform',
+    assets: 'Brand assets',
     'cases-and-projects': 'Cases & projects',
     'compliance-and-quality': 'Compliance & quality',
     compare: 'Compare',
