@@ -50,11 +50,11 @@ export default function CreateOrganization({
                         <LayoutPanel width="50%" padding={0} className="hidden bg-muted md:flex">
                             <Stack width="100%" height="100%" align="center" justify="center" padding={6}>
                                 <img
-                                    src="/images/cases-and-projects.png"
-                                    alt="A case or project follows a path through tasks, collaboration, reviews, and completion."
+                                    src="/images/organization-city.png"
+                                    alt="Hand-drawn city skyline reflected in water."
                                     className="h-full w-full object-contain"
-                                    width={1448}
-                                    height={1086}
+                                    width={941}
+                                    height={1672}
                                     decoding="async"
                                 />
                             </Stack>
