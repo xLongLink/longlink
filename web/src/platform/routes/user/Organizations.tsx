@@ -1,6 +1,5 @@
 import type { z } from 'zod';
 import { useState } from 'react';
-import { Building2 } from 'lucide-react';
 import { NoIndex } from '@/components/Seo';
 import { useApi } from '@/lib/hooks/use-api';
 import { Link } from '@astryxdesign/core/Link';
@@ -12,6 +11,7 @@ import { Heading } from '@astryxdesign/core/Heading';
 import CreateOrganization from './CreateOrganization';
 import { ApiBoundary } from '@/components/ApiBoundary';
 import { PageContainer } from '@/components/PageContainer';
+import { Building2, ExternalLink, Plus } from 'lucide-react';
 import { Table, proportional } from '@astryxdesign/core/Table';
 import type * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 
@@ -55,7 +55,7 @@ function OrganizationList() {
                 {memberships.length === 0 ? (
                     <Stack gap={6} align="center">
                         <Building2 className="size-10 text-secondary" aria-hidden="true" />
-                        <Stack gap={2}>
+                        <Stack gap={0}>
                             <Heading level={1} justify="center">
                                 Your Organizations
                             </Heading>
@@ -64,8 +64,20 @@ function OrganizationList() {
                             </Text>
                         </Stack>
                         <Stack direction="horizontal" gap={3} justify="center" wrap="wrap">
-                            <Button label="Create organization" variant="primary" onClick={() => setCreating(true)} />
-                            <Button label="Read the docs" variant="secondary" href="/docs/" />
+                            <Button
+                                label="Read the docs"
+                                variant="secondary"
+                                href="/docs/"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                endContent={<ExternalLink className="size-4" aria-hidden="true" />}
+                            />
+                            <Button
+                                label="Create organization"
+                                variant="primary"
+                                icon={<Plus className="size-4" aria-hidden="true" />}
+                                onClick={() => setCreating(true)}
+                            />
                         </Stack>
                     </Stack>
                 ) : (
