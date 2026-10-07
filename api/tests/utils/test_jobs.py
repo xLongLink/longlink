@@ -6,10 +6,9 @@ from datetime import UTC, datetime, timedelta
 from factories import claim_operation, queue_operation, fetch_operations
 from functools import partial
 from src.utils import jobs as operation_worker
-from contextlib import asynccontextmanager
 from src.errors import ForbiddenError
-from collections.abc import AsyncIterator
 from src.models.operations import OperationKind, OperationStatus
+from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.operations import Operation
 
 
@@ -21,20 +20,6 @@ def leased_operation() -> Operation:
         target_id=UUID("22222222-2222-2222-2222-222222222222"),
         lease_expires_at=datetime.now(UTC) + timedelta(minutes=1),
     )
-
-
-class SchedulerSession:
-    """Provide the scheduler transaction boundary."""
-
-    async def commit(self) -> None:
-        """Commit a scheduler transaction."""
-
-
-@asynccontextmanager
-async def fake_scheduler_session_scope() -> AsyncIterator[SchedulerSession]:
-    """Yield a disposable scheduler session."""
-
-    yield SchedulerSession()
 
 
 @pytest.mark.no_db
@@ -81,7 +66,7 @@ async def test_execute_finishes_terminal_transition_when_cancelled(monkeypatch: 
 
 
 @pytest.mark.no_db
-async def test_finish_transition_preserves_cancellation_when_terminal_persistence_fails(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_finish_transition_preserves_cancellation_when_terminal_persistence_fails() -> None:
     """Propagate cancellation when its protected terminal transition also fails."""
 
     # Arrange
@@ -96,12 +81,8 @@ async def test_finish_transition_preserves_cancellation_when_terminal_persistenc
         await release.wait()
         raise RuntimeError("database unavailable")
 
-    monkeypatch.setattr(operation_worker.operations, "fail", fail)
-
     # Act
-    transition = asyncio.create_task(
-        operation_worker._finish_transition(partial(operation_worker.operations.fail, reason="Operation cancelled"), UUID(int=1))
-    )
+    transition = asyncio.create_task(operation_worker._finish_transition(partial(fail, reason="Operation cancelled"), UUID(int=1)))
     await started.wait()
     transition.cancel()
     await asyncio.sleep(0)
@@ -285,7 +266,6 @@ SCHEDULER_FAILURES = [
 ]
 
 
-@pytest.mark.no_db
 @pytest.mark.parametrize(("polling_failure", "execution_failure"), SCHEDULER_FAILURES)
 async def test_scheduler_recovers_from_worker_failures(
     monkeypatch: pytest.MonkeyPatch,
@@ -300,7 +280,7 @@ async def test_scheduler_recovers_from_worker_failures(
     executed: list[Operation] = []
     idle = asyncio.Event()
 
-    async def claim(_session: SchedulerSession) -> Operation | None:
+    async def claim(_session: AsyncSession) -> Operation | None:
         """Raise once when configured, then return queued Operations."""
 
         result = next(claims)
@@ -318,7 +298,6 @@ async def test_scheduler_recovers_from_worker_failures(
             raise execution_failure
         return claimed
 
-    monkeypatch.setattr(operation_worker, "session_scope", fake_scheduler_session_scope)
     monkeypatch.setattr(operation_worker.operations, "claim", claim)
     monkeypatch.setattr(operation_worker, "execute", execute)
 

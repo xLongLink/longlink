@@ -104,10 +104,12 @@ describe('Solution source update dialog', () => {
 
         await vi.waitFor(async () => {
             await act(async () => {});
-            expect(moreMenu()).toBeDefined();
+            moreMenu();
         });
         await act(async () => moreMenu().click());
-        await act(async () => vi.waitFor(() => expect(menuItem('Update')).toBeDefined()));
+        await act(async () => {
+            await vi.waitFor(() => menuItem('Update'));
+        });
         await act(async () => menuItem('Update').click());
         await act(async () => vi.waitFor(() => expect(button('Update solution').disabled).toBe(false)));
         expect(document.body.textContent).toContain('Current sha256:aaaaaaaaaaaa');

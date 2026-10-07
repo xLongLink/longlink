@@ -1,6 +1,7 @@
 import pytest
+from uuid import UUID
 from httpx2 import AsyncClient
-from factories import create_compute, create_organization
+from factories import create_compute, fetch_operations, create_organization
 from src.database.session import session_scope
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
@@ -83,34 +84,49 @@ async def test_compute_list_returns_ordered_page_and_total(
     assert response.json() == {"items": [{"id": beta_id, "name": "Beta Registry"} | expected_item], "total": 2}
 
 
+@pytest.mark.parametrize("overrides", [{}, {"database_storage_class": "local-path"}], ids=["discovered", "explicit"])
 async def test_compute_registry_creation_redacts_credentials_and_rejects_duplicate_name(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     compute_runtime: None,
+    overrides: dict[str, str],
 ) -> None:
-    """Create a Compute registry without exposing credentials and reject a duplicate name."""
+    """Persist an inline-verified Compute without credentials in responses or queued work."""
 
     # Arrange
     payload = {
         "name": "Ephemeral Compute",
         "storage_endpoint": "https://storage.example",
         "gateway_url": "https://gateway.example",
-        "database_storage_class": "local-path",
         "kubeconfig": {
             "clusters": [{"name": "cluster", "cluster": {}}],
             "contexts": [{"name": "context", "context": {"cluster": "cluster", "user": "user"}}],
             "current-context": "context",
             "users": [{"name": "user", "user": {"token": "compute-credential-must-not-leak"}}],
         },
-    }
+    } | overrides
 
+    # Act
     create_response = await clients[0].post("/api/v1/computes", json=payload)
-    duplicate_response = await clients[0].post("/api/v1/computes", json=payload)
     created = create_response.json()
 
+    # Assert
     assert create_response.status_code == 201
     assert created["name"] == payload["name"]
+    assert created["database_storage_class"] == "local-path"
     assert "kubeconfig" not in created
     assert "compute-credential-must-not-leak" not in create_response.text
+    async with session_scope() as session:
+        registry = await session.get(ComputeRegistry, UUID(created["id"]))
+    assert registry is not None
+    assert registry.cluster_uid
+    assert registry.gateway_certificate == "gateway-certificate"
+    assert registry.storage_certificate == "storage-certificate"
+    assert registry.storage_access_key == "controller"
+    assert registry.storage_secret_key == "controller-secret"
+    assert await fetch_operations() == []
+
+    # Reject a duplicate after checking the successful registration's persisted outcome.
+    duplicate_response = await clients[0].post("/api/v1/computes", json=payload)
     assert duplicate_response.status_code == 409
     assert duplicate_response.json() == {"detail": "Compute registry already exists"}
 

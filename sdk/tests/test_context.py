@@ -42,14 +42,6 @@ class RequestDatabase:
             self.session_closed = True
 
 
-@pytest.fixture
-def request_database() -> RequestDatabase:
-    """Provide a fresh request database boundary for each test."""
-
-    # Share only the boundary implementation, never its mutable state.
-    return RequestDatabase()
-
-
 def identity_headers(user_id: UUID) -> dict[str, str]:
     """Build one current Platform identity assertion for context tests."""
 
@@ -68,11 +60,11 @@ def identity_headers(user_id: UUID) -> dict[str, str]:
 def test_data_resolves_request_services(
     identity: UUID | None,
     user: object | None,
-    request_database: RequestDatabase,
 ) -> None:
     """Yield request services only when an identity resolves to a user."""
 
     # Arrange
+    request_database = RequestDatabase()
     storage = object()
     request_database.user = user
     app = FastAPI()
@@ -101,10 +93,11 @@ def test_data_resolves_request_services(
     assert request_database.session_closed
 
 
-def test_data_closes_database_session_when_endpoint_fails(request_database: RequestDatabase) -> None:
+def test_data_closes_database_session_when_endpoint_fails() -> None:
     """Close the request database session when a dependent endpoint raises."""
 
     # Arrange
+    request_database = RequestDatabase()
     app = FastAPI()
     app.state.longlink = SimpleNamespace(storage=object(), database=request_database)
     context.install_context_middleware(app, IDENTITY_SECRET)
