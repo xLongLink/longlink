@@ -28,7 +28,7 @@
         "routes": "react-router routes"
     },
     "dependencies": {
-        "@astryxdesign/core": "0.6.4",
+        "@astryxdesign/core": "0.6.5",
         "@dicebear/core": "^10.7.0",
         "@dicebear/styles": "^10.6.0",
         "@fontsource/kalam": "^5.3.0",
