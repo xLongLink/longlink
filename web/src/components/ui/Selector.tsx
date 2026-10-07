@@ -24,8 +24,6 @@ type SelectorProps = FieldProps & {
     hasSearch?: boolean;
     placeholder?: string;
     size?: 'sm' | 'md' | 'lg';
-    isReadOnly?: boolean;
-    htmlName?: string;
 } & (
         | { hasClear?: false; value?: string; onChange?: (value: string) => void }
         | { hasClear: true; value?: string | null; onChange?: (value: string | null) => void }
@@ -60,13 +58,13 @@ export function Selector(props: SelectorProps) {
                           onChange: field.onChange,
                       })}
                 size={size}
-                htmlName={props.name ?? props.htmlName}
+                htmlName={props.name}
                 placeholder={props.placeholder ?? 'Select...'}
                 hasSearch={props.hasSearch ?? false}
-                isReadOnly={props.readOnly ?? props.isReadOnly ?? false}
+                isReadOnly={false}
                 isLabelHidden={false}
-                isRequired={props.required ?? props.isRequired ?? false}
-                isDisabled={props.disabled ?? props.isDisabled ?? false}
+                isRequired={props.required ?? false}
+                isDisabled={props.disabled ?? false}
                 changeAction={undefined}
                 isLoading={false}
             />

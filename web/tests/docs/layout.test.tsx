@@ -34,7 +34,7 @@ describe('shared View documentation layout', () => {
     });
 
     it.each([
-        { tab: 'properties', label: 'label', description: 'Accessible action label' },
+        { tab: 'properties', label: 'label', description: 'Visible button text and accessible label.' },
         { tab: 'best-practices', label: 'Do', description: 'Use a descriptive label' },
     ])('renders the URL-selected $tab panel', async ({ tab, label, description }) => {
         // Select a reference tab directly through its public URL.
@@ -91,7 +91,7 @@ describe('shared View documentation layout', () => {
         root = mountedRoot;
         vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
 
-        // Authored data keeps assertions independent of generated upstream prose.
+        // Authored guidance remains separate from the generated public property contract.
         await act(async () => {
             mountedRoot.render(
                 <MemoryRouter initialEntries={[`/docs/sdk/views/buttons/${query}`]}>
@@ -100,14 +100,6 @@ describe('shared View documentation layout', () => {
                         name="Button"
                         reference={{
                             introduction: 'An authored action reference.',
-                            properties: [
-                                {
-                                    name: 'label',
-                                    type: 'string',
-                                    required: true,
-                                    description: 'Accessible action label',
-                                },
-                            ],
                             practices: [{ guidance: true, description: 'Use a descriptive label' }],
                         }}
                         examples={[

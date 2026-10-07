@@ -1,8 +1,9 @@
-import { api } from '@/lib/api';
 import * as host from '@/views/host';
+import { api, ApiError } from '@/lib/api';
 import { useNavigate } from 'react-router';
 import { PageError } from '@/components/Utils';
 import { resolveNavigationUrl } from '@/lib/url';
+import { Stack } from '@astryxdesign/core/Stack';
 import { useEffect, useRef, useState } from 'react';
 import { useSuspenseQuery } from '@tanstack/react-query';
 import {
@@ -31,9 +32,9 @@ export function JsxView({
 }) {
     const frame = useRef<HTMLIFrameElement>(null);
     const navigate = useNavigate();
-    const [document, setDocument] = useState<string>();
-    const [bootstrapFailed, setBootstrapFailed] = useState(false);
-    const [height, setHeight] = useState(1);
+    const [bootstrapState, setBootstrapState] = useState<
+        { status: 'preparing' } | { status: 'prepared'; document: string } | { status: 'failed' }
+    >({ status: 'preparing' });
     const parameters = JSON.stringify(params);
     const { data: kernel } = useSuspenseQuery({
         queryKey: ['view-runtime'],
@@ -70,7 +71,7 @@ export function JsxView({
         function fail(): void {
             if (controller.signal.aborted) return;
             dispose();
-            setBootstrapFailed(true);
+            setBootstrapState({ status: 'failed' });
         }
 
         /** Connects one trusted bootstrap instance; subsequent window messages have no capabilities. */
@@ -99,11 +100,6 @@ export function JsxView({
             const parsed = commandSchema.safeParse(event.data);
             if (!parsed.success || controller.signal.aborted) return;
             const command = parsed.data;
-            // Accept only bounded content dimensions over the existing private channel.
-            if (command.type === 'resize') {
-                setHeight(command.height);
-                return;
-            }
             if (command.type === 'navigate') {
                 try {
                     host.requestUrl(navigationBaseUrl, command.path);
@@ -116,19 +112,29 @@ export function JsxView({
             }
             if (pending.has(command.id)) return;
             if (pending.size >= MAX_PENDING_REQUESTS) {
-                channel.port1.postMessage({ id: command.id, ok: false, error: 'Too many pending requests' });
+                channel.port1.postMessage({
+                    id: command.id,
+                    ok: false,
+                    error: 'Too many pending requests',
+                    status: 429,
+                });
                 return;
             }
             pending.add(command.id);
 
             // The frame chooses a Solution-relative operation, never credentials, headers, or fetch options.
             try {
-                if (messageSize(command) > MAX_MESSAGE_SIZE) throw new Error('Solution request is too large');
-                const data = await host.request(requestBaseUrl, command, controller.signal);
+                if (command.type === 'request' && messageSize(command) > MAX_MESSAGE_SIZE) {
+                    throw new ApiError('Solution request is too large', 413);
+                }
+                const data =
+                    command.type === 'download'
+                        ? await host.download(requestBaseUrl, command, controller.signal)
+                        : await host.request(requestBaseUrl, command, controller.signal);
                 if (!controller.signal.aborted) channel.port1.postMessage({ id: command.id, ok: true, data });
-            } catch {
+            } catch (error) {
                 if (!controller.signal.aborted)
-                    channel.port1.postMessage({ id: command.id, ok: false, error: 'Solution request failed' });
+                    channel.port1.postMessage({ id: command.id, ok: false, ...host.requestError(error) });
             } finally {
                 pending.delete(command.id);
             }
@@ -147,8 +153,11 @@ export function JsxView({
             if (!controller.signal.aborted) {
                 // A blocked bootstrap script must surface an error instead of leaving a blank frame.
                 handshakeTimer = setTimeout(fail, BOOTSTRAP_TIMEOUT_MS);
-                setDocument(
-                    `<!doctype html><html><head><meta http-equiv="Content-Security-Policy" content="${policy}"><meta name="referrer" content="no-referrer"><style>${styles.replace(/<\/style/gi, '<\\/style')}</style></head><body class="bg-transparent text-primary"><main id="view" class="flow-root"></main><script>${code}</script></body></html>`
+                const document = `<!doctype html><html class="h-full"><head><meta http-equiv="Content-Security-Policy" content="${policy}"><meta name="referrer" content="no-referrer"><style>${styles.replace(/<\/style/gi, '<\\/style')}</style></head><body class="h-full overflow-hidden bg-transparent text-primary"><main id="view" class="h-full"></main><script>${code}</script></body></html>`;
+
+                // Keep startup failure latched until the route owner mounts a fresh View.
+                setBootstrapState((current) =>
+                    current.status === 'failed' ? current : { status: 'prepared', document }
                 );
             }
         }
@@ -158,19 +167,21 @@ export function JsxView({
         return dispose;
     }, [source, parameters, requestBaseUrl, navigationBaseUrl, navigate, kernel]);
 
-    if (bootstrapFailed)
+    if (bootstrapState.status === 'failed')
         return (
             <PageError title="Unable to load this View" description="The isolated View runtime could not be loaded." />
         );
     return (
-        <iframe
-            ref={frame}
-            title="Solution View"
-            sandbox="allow-scripts"
-            referrerPolicy="no-referrer"
-            srcDoc={document}
-            height={height}
-            className="block w-full border-0 bg-transparent"
-        />
+        // The View owns one viewport and scroll region; overlays no longer depend on normal-flow content height.
+        <Stack height="calc(100dvh - var(--_app-shell-header-height, 0px) - var(--spacing-8))" gap={0}>
+            <iframe
+                ref={frame}
+                title="Solution View"
+                sandbox="allow-scripts"
+                referrerPolicy="no-referrer"
+                srcDoc={bootstrapState.status === 'prepared' ? bootstrapState.document : undefined}
+                className="block h-full min-h-0 w-full flex-1 border-0 bg-transparent"
+            />
+        </Stack>
     );
 }

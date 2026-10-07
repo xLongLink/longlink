@@ -20,6 +20,34 @@ const editor = ts.createSourceFile(input, source, ts.ScriptTarget.Latest, true);
 const replacements = [];
 const introductions = new Map();
 const propertyDefaults = new Map();
+
+// Generate the finite public icon contract from the same Lucide registry used by the runtime.
+const icons = ts.createSourceFile(
+    'Icon.tsx',
+    await readFile(path.join(root, 'src/components/ui/Icon.tsx'), 'utf8'),
+    ts.ScriptTarget.Latest,
+    true,
+    ts.ScriptKind.TSX,
+);
+const registry = icons.statements
+    .filter(ts.isVariableStatement)
+    .flatMap((statement) => [...statement.declarationList.declarations])
+    .find((declaration) => declaration.name.getText(icons) === 'stoneIconComponents');
+const iconObject =
+    registry?.initializer && ts.isSatisfiesExpression(registry.initializer)
+        ? registry.initializer.expression
+        : registry?.initializer;
+if (!iconObject || !ts.isObjectLiteralExpression(iconObject)) throw new Error('Missing LongLink icon registry');
+const editorIcons = editor.statements.find(
+    (statement) => ts.isTypeAliasDeclaration(statement) && statement.name.text === 'StoneIconName',
+);
+if (!editorIcons) throw new Error('Missing editor icon type');
+replacements.push({
+    start: editorIcons.type.getStart(editor),
+    end: editorIcons.type.end,
+    text: iconObject.properties.map((property) => JSON.stringify(property.name.getText(icons))).join(' | '),
+});
+
 for (const binding of bindings.statements) {
     if (!ts.isExportDeclaration(binding) || !binding.moduleSpecifier || !ts.isNamedExports(binding.exportClause))
         continue;
@@ -93,7 +121,6 @@ for (const binding of bindings.statements) {
             props = aliases.get(props.typeName.getText(wrapper));
         const propText = (props?.getText(wrapper) ?? '{}')
             .replaceAll('ReactNode', 'ViewNode')
-            .replaceAll('StoneIconName', 'string')
             .replace(/MouseEvent<(HTMLButtonElement|HTMLElement)>/g, 'ViewMouseEvent');
         const generics = implementation.typeParameters?.length
             ? `<${implementation.typeParameters.map((type) => type.getText(wrapper)).join(', ')}>`
@@ -165,6 +192,9 @@ const publicProps = new Map();
 const spacing = document.statements.find(
     (statement) => ts.isTypeAliasDeclaration(statement) && statement.name.text === 'Spacing',
 );
+const iconType = document.statements.find(
+    (statement) => ts.isTypeAliasDeclaration(statement) && statement.name.text === 'StoneIconName',
+);
 
 /** Hides omission from prop choices while preserving empty values in callback contracts. */
 function documentedType(type) {
@@ -178,6 +208,7 @@ function documentedType(type) {
                 if (ts.isTypeReferenceNode(node) && ts.isIdentifier(node.typeName)) {
                     if (node.typeName.text === 'ViewNode') return ts.factory.createTypeReferenceNode('ReactNode');
                     if (node.typeName.text === 'Spacing') return spacing.type;
+                    if (node.typeName.text === 'StoneIconName') return iconType.type;
                 }
 
                 // Omission is not a prop choice, but callbacks can genuinely emit an empty value.
@@ -408,16 +439,15 @@ for (const entry of components) {
         property.default ??= referenceProperty?.default;
         if (property.default !== undefined && property.default !== '-')
             property.description = `${property.description ?? `The ${property.name} prop.`} Default: ${property.default}.`;
-        if (referenceProperty) referenceProperty.description = property.description;
     }
 }
 
-// Keep website-only reference content out of the SDK's declaration catalog.
+// Publish property contracts only in the SDK catalog and website-only guidance separately.
 const outputs = [
     { filename: input, text: source },
     {
         filename: path.resolve(root, 'src/lib/generated/components.json'),
-        data: references,
+        data: references.map(({ properties, ...reference }) => reference),
     },
     {
         filename: path.resolve(root, '../sdk/longlink/.static/jsx/components.json'),

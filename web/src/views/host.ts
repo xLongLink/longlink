@@ -1,7 +1,7 @@
-import { api } from '@/lib/api';
 import type { Options } from 'ky';
+import { api, ApiError } from '@/lib/api';
 import { resolveRequestUrl } from '@/lib/url';
-import { MAX_MESSAGE_SIZE, REQUEST_TIMEOUT, type RequestCommand } from './protocol';
+import { MAX_MESSAGE_SIZE, REQUEST_TIMEOUT, type RequestCommand, type DownloadCommand } from './protocol';
 
 /** Resolves a capability URL without permitting redirects or proxy-prefix traversal. */
 export function requestUrl(base: string, path: string): string {
@@ -42,7 +42,7 @@ export async function load(
             const chunk = await reader.read();
             if (chunk.done) break;
             size += chunk.value.byteLength;
-            if (size > limit) throw new Error('Solution response is too large');
+            if (size > limit) throw new ApiError('Solution response is too large', 413);
             chunks.push(chunk.value);
         }
     } catch (error) {
@@ -76,4 +76,44 @@ export async function request(base: string, command: RequestCommand, signal: Abo
     if (command.binary) return body;
     const text = await body.text();
     return text ? JSON.parse(text) : null;
+}
+
+/** Downloads bounded Solution bytes in the host without granting sandbox navigation or downloads. */
+export async function download(base: string, command: DownloadCommand, signal: AbortSignal): Promise<null> {
+    // Treat every download as inert attachment bytes, including HTML and SVG documents.
+    const body = await load(requestUrl(base, command.path), { signal });
+    signal.throwIfAborted();
+    const url = URL.createObjectURL(new Blob([body], { type: 'application/octet-stream' }));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = command.filename;
+
+    // Let the browser acquire the URL before releasing it, even if activation fails.
+    try {
+        document.body.append(link);
+        link.click();
+    } finally {
+        link.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 0);
+    }
+    return null;
+}
+
+/** Exposes bounded client-facing errors without transport URLs, stack traces, or server failures. */
+export function requestError(error: unknown): { error: string; status?: number } {
+    // Backend client errors contain actionable validation and permission feedback.
+    if (error instanceof ApiError) {
+        return {
+            error:
+                error.status < 500
+                    ? error.message.slice(0, 1024)
+                    : 'The server could not complete the request. Please try again.',
+            status: error.status,
+        };
+    }
+
+    // Explain supported transport failures without echoing arbitrary network diagnostics.
+    if (error instanceof SyntaxError) return { error: 'The Solution returned an invalid JSON response.' };
+    if (error instanceof Error && error.name === 'TimeoutError') return { error: 'Solution request timed out.' };
+    return { error: 'Solution request failed. Please try again.' };
 }

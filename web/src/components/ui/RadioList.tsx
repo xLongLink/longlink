@@ -11,7 +11,6 @@ export function RadioList(
         defaultValue?: string;
         onChange?: (value: string) => void;
         orientation?: 'vertical' | 'horizontal';
-        htmlName?: string;
         size?: 'sm' | 'md';
     }
 ) {
@@ -27,13 +26,13 @@ export function RadioList(
         <AstryxRadioList
             {...props}
             {...field}
-            htmlName={props.name ?? props.htmlName}
+            htmlName={props.name}
             children={props.children}
             orientation={props.orientation ?? 'vertical'}
             size={props.size ?? 'md'}
             isLabelHidden={false}
-            isRequired={props.required ?? props.isRequired ?? false}
-            isDisabled={props.disabled ?? props.isDisabled ?? false}
+            isRequired={props.required ?? false}
+            isDisabled={props.disabled ?? false}
         />
     );
 }

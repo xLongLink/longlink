@@ -46,19 +46,19 @@
         "react-router": "8.3.1",
         "sucrase": "^3.35.1",
         "tailwindcss": "^4.3.3",
-        "zod": "^4.5.4"
+        "zod": "^4.6.5"
     },
     "devDependencies": {
         "@astryxdesign/cli": "0.6.5",
         "@hey-api/openapi-ts": "0.99.0",
         "@react-router/dev": "8.4.0",
         "@testing-library/user-event": "14.6.7",
-        "@types/node": "^26.6.3",
+        "@types/node": "^26.6.4",
         "@types/react": "^19.3.0",
         "@types/react-dom": "^19.3.0",
-        "eslint-plugin-perfectionist": "^5.11.1",
+        "eslint-plugin-perfectionist": "^5.12.1",
         "happy-dom": "^20.14.5",
-        "prettier": "^3.9.8",
+        "prettier": "^3.9.9",
         "typescript": "5.9.3",
         "vite": "npm:@voidzero-dev/vite-plus-core@0.3.1",
         "vite-plus": "0.3.1",

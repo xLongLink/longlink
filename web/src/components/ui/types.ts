@@ -9,9 +9,5 @@ export type FieldProps = {
     required?: boolean;
     /** Prevents interaction and excludes the field from submission. */
     disabled?: boolean;
-    /** Retains submitted values while preventing editing where supported. */
-    readOnly?: boolean;
-    isRequired?: boolean;
-    isDisabled?: boolean;
     width?: number | string;
 };

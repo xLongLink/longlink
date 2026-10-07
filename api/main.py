@@ -90,7 +90,7 @@ async def prevent_cross_origin_authenticated_writes(
 app.exception_handler(errors.ServiceError)(errors.service_error_response)
 app.exception_handler(HTTPException)(solution_errors.http_error_response)
 app.exception_handler(RequestValidationError)(solution_errors.validation_error_response)
-app.add_exception_handler(Exception, errors.unexpected_error_response)
+app.add_exception_handler(Exception, solution_errors.unexpected_error_response)
 
 
 @app.middleware("http")

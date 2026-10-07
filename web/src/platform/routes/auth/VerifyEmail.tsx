@@ -1,7 +1,9 @@
 import { z } from 'zod';
 import { useState } from 'react';
+import { TextField } from './Field';
 import { AuthLayout } from './AuthLayout';
 import { api, ApiError } from '@/lib/api';
+import { useForm } from 'react-hook-form';
 import { NoIndex } from '@/components/Seo';
 import { useNavigate } from 'react-router';
 import { passwordSchema } from './validation';
@@ -11,11 +13,9 @@ import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
 import { Divider } from '@astryxdesign/core/Divider';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Controller, useForm } from 'react-hook-form';
 import { useQueryClient } from '@tanstack/react-query';
 import { clearSessionQueries } from '@/lib/react-query';
 import { WelcomeTitle } from '@/components/WelcomeTitle';
-import { TextInput } from '@astryxdesign/core/TextInput';
 import { useFragmentToken } from '@/lib/hooks/use-fragment-token';
 import { zEmailPayload, zUserSummary } from '@/lib/generated/platform-api-v1/zod.gen';
 import { useVerification, type VerificationRequest } from '@/lib/hooks/use-verification';
@@ -139,50 +139,22 @@ export default function VerifyEmail() {
             <Stack gap={4}>
                 <form action={() => form.handleSubmit(handleComplete)()}>
                     <Stack gap={3}>
-                        <Controller
+                        <TextField
                             control={form.control}
                             name="name"
-                            render={({ field, fieldState }) => (
-                                <TextInput
-                                    ref={field.ref}
-                                    autoComplete="name"
-                                    hasAutoFocus
-                                    htmlName={field.name}
-                                    isRequired
-                                    label="Name"
-                                    onBlur={field.onBlur}
-                                    onChange={field.onChange}
-                                    status={
-                                        fieldState.error
-                                            ? { type: 'error', message: fieldState.error.message }
-                                            : undefined
-                                    }
-                                    value={field.value}
-                                    width="100%"
-                                />
-                            )}
+                            autoComplete="name"
+                            hasAutoFocus
+                            isRequired
+                            label="Name"
+                            width="100%"
                         />
-                        <Controller
+                        <TextField
                             control={form.control}
                             name="password"
-                            render={({ field, fieldState }) => (
-                                <TextInput
-                                    ref={field.ref}
-                                    htmlName={field.name}
-                                    isRequired
-                                    label="Password"
-                                    onBlur={field.onBlur}
-                                    onChange={field.onChange}
-                                    status={
-                                        fieldState.error
-                                            ? { type: 'error', message: fieldState.error.message }
-                                            : undefined
-                                    }
-                                    value={field.value}
-                                    width="100%"
-                                    type="password"
-                                />
-                            )}
+                            isRequired
+                            label="Password"
+                            width="100%"
+                            type="password"
                         />
                         <Button label="Create account" type="submit" variant="primary" />
                     </Stack>

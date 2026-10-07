@@ -12,10 +12,8 @@ type NumberInputProps = FieldProps & {
     step?: number | null;
     placeholder?: string;
     size?: 'sm' | 'md' | 'lg';
-    isReadOnly?: boolean;
     units?: string | null;
     isIntegerOnly?: boolean;
-    htmlName?: string;
     autoComplete?: string;
 } & (
         | { hasClear?: false; onChange?: (value: number) => void }
@@ -54,14 +52,14 @@ export function NumberInput(props: NumberInputProps) {
                 {...control}
                 value={field.value}
                 onChange={field.onChange}
-                htmlName={props.name ?? props.htmlName}
+                htmlName={props.name}
                 size={size}
                 step={props.step === undefined ? 1 : props.step}
-                isReadOnly={props.readOnly ?? props.isReadOnly ?? false}
+                isReadOnly={false}
                 isIntegerOnly={props.isIntegerOnly ?? false}
                 isLabelHidden={false}
-                isRequired={props.required ?? props.isRequired ?? false}
-                isDisabled={props.disabled ?? props.isDisabled ?? false}
+                isRequired={props.required ?? false}
+                isDisabled={props.disabled ?? false}
                 isWheelEnabled={false}
             />
         </FormField>

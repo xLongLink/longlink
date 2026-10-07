@@ -41,7 +41,7 @@
     {
         "name": "Badge",
         "category": "Display",
-        "declaration": "declare function Badge(props: {\n    label?: ViewNode;\n    icon?: string;\n    variant?:\n        | 'neutral'\n        | 'info'\n        | 'success'\n        | 'warning'\n        | 'error'\n        | 'blue'\n        | 'cyan'\n        | 'green'\n        | 'orange'\n        | 'pink'\n        | 'purple'\n        | 'red'\n        | 'teal'\n        | 'yellow';\n}): React.JSX.Element;",
+        "declaration": "declare function Badge(props: {\n    label?: ViewNode;\n    icon?: StoneIconName;\n    variant?:\n        | 'neutral'\n        | 'info'\n        | 'success'\n        | 'warning'\n        | 'error'\n        | 'blue'\n        | 'cyan'\n        | 'green'\n        | 'orange'\n        | 'pink'\n        | 'purple'\n        | 'red'\n        | 'teal'\n        | 'yellow';\n}): React.JSX.Element;",
         "properties": [
             {
                 "name": "label",
@@ -51,13 +51,13 @@
             },
             {
                 "name": "icon",
-                "type": "string",
+                "type": "'close' | 'chevronDown' | 'chevronLeft' | 'chevronRight' | 'chevronsLeft' | 'chevronsRight' | 'check' | 'success' | 'error' | 'warning' | 'info' | 'calendar' | 'clock' | 'externalLink' | 'menu' | 'moreHorizontal' | 'refresh' | 'search' | 'arrowUp' | 'arrowDown' | 'arrowsUpDown' | 'boxes' | 'building2' | 'database' | 'funnel' | 'eyeSlash' | 'viewColumns' | 'copy' | 'checkDouble' | 'wrench' | 'stop' | 'microphone' | 'logs' | 'trash' | 'hardDrive' | 'userRound' | 'users'",
                 "required": false,
                 "description": "Optional leading icon."
             },
             {
                 "name": "variant",
-                "type": "\"neutral\" | \"info\" | \"success\" | \"warning\" | \"error\" | \"blue\" | \"cyan\" | \"green\" | \"orange\" | \"pink\" | \"purple\" | \"red\" | \"teal\" | \"yellow\"",
+                "type": "\"success\" | \"error\" | \"warning\" | \"info\" | \"neutral\" | \"blue\" | \"cyan\" | \"green\" | \"orange\" | \"pink\" | \"purple\" | \"red\" | \"teal\" | \"yellow\"",
                 "required": false,
                 "default": "'neutral'",
                 "description": "Visual style variant. Semantic variants (neutral, info, success, warning, error) use solid backgrounds. Non-semantic color variants use tinted backgrounds with colored text for categorization and tagging. Default: 'neutral'."
@@ -67,13 +67,13 @@
     {
         "name": "Button",
         "category": "Action",
-        "declaration": "type ViewMouseEvent = Omit<MouseEvent, 'currentTarget'> & { currentTarget: HTMLElement; nativeEvent: MouseEvent };\n\ntype ButtonProps = {\n    label: string;\n    variant?: 'primary' | 'secondary' | 'ghost' | 'destructive';\n    size?: 'sm' | 'md' | 'lg';\n    type?: 'button' | 'submit' | 'reset';\n    name?: string;\n    value?: string | number | readonly string[];\n    form?: string;\n    icon?: string;\n    endContent?: ViewNode;\n    tooltip?: string;\n    width?: number | string;\n    isDisabled?: boolean;\n    disabled?: boolean;\n    href?: string;\n    onClick?: (event: ViewMouseEvent) => void | Promise<void>;\n};\n\ndeclare function Button(props: ButtonProps): React.JSX.Element;",
+        "declaration": "type ViewMouseEvent = Omit<MouseEvent, 'currentTarget'> & { currentTarget: HTMLElement; nativeEvent: MouseEvent };\n\ntype ButtonProps = {\n    /** Visible button text and accessible label. */\n    label: string;\n    variant?: 'primary' | 'secondary' | 'ghost' | 'destructive';\n    size?: 'sm' | 'md' | 'lg';\n    type?: 'button' | 'submit' | 'reset';\n    name?: string;\n    value?: string | number | readonly string[];\n    form?: string;\n    icon?: StoneIconName;\n    endContent?: ViewNode;\n    tooltip?: string;\n    width?: number | string;\n    disabled?: boolean;\n    /** Solution-relative destination; sandbox links navigate through the host. */\n    href?: string;\n    /** Runs an action with automatic async loading and duplicate-click prevention until its promise settles. */\n    onClick?: (event: ViewMouseEvent) => void | Promise<void>;\n};\n\ndeclare function Button(props: ButtonProps): React.JSX.Element;",
         "properties": [
             {
                 "name": "label",
                 "type": "string",
                 "required": true,
-                "description": "Accessible label. Rendered as visible text by default; used as aria-label when isIconOnly is true."
+                "description": "Visible button text and accessible label."
             },
             {
                 "name": "variant",
@@ -116,7 +116,7 @@
             },
             {
                 "name": "icon",
-                "type": "string",
+                "type": "'close' | 'chevronDown' | 'chevronLeft' | 'chevronRight' | 'chevronsLeft' | 'chevronsRight' | 'check' | 'success' | 'error' | 'warning' | 'info' | 'calendar' | 'clock' | 'externalLink' | 'menu' | 'moreHorizontal' | 'refresh' | 'search' | 'arrowUp' | 'arrowDown' | 'arrowsUpDown' | 'boxes' | 'building2' | 'database' | 'funnel' | 'eyeSlash' | 'viewColumns' | 'copy' | 'checkDouble' | 'wrench' | 'stop' | 'microphone' | 'logs' | 'trash' | 'hardDrive' | 'userRound' | 'users'",
                 "required": false,
                 "description": "Icon element rendered before the label text. An Astryx Icon with no explicit size defaults to sm for sm/md buttons and md for lg buttons."
             },
@@ -139,13 +139,6 @@
                 "description": "Width of the button. Numbers are treated as pixels, strings are used as-is (e.g., '100%' for a full-width button). By default the button sizes to its content, never grows past its container, and truncates its label with an ellipsis when a row is too narrow; icon-only buttons stay square."
             },
             {
-                "name": "isDisabled",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Disables the button. When a tooltip is present, uses aria-disabled instead of native disabled so the button stays focusable. Default: false."
-            },
-            {
                 "name": "disabled",
                 "type": "boolean",
                 "required": false,
@@ -155,13 +148,13 @@
                 "name": "href",
                 "type": "string",
                 "required": false,
-                "description": "When provided, renders the button as a link element (<a> or custom link component). The destination follows the shared navigation rule described on the Link `href` prop."
+                "description": "Solution-relative destination; sandbox links navigate through the host."
             },
             {
                 "name": "onClick",
                 "type": "(event: ViewMouseEvent) => void | Promise<void>",
                 "required": false,
-                "description": "Standard click handler (passed through from ButtonHTMLAttributes)."
+                "description": "Runs an action with automatic async loading and duplicate-click prevention until its promise settles."
             }
         ]
     },
@@ -208,7 +201,7 @@
     {
         "name": "Card",
         "category": "Layouts",
-        "declaration": "type CardProps = {\n    /** Content rendered inside the card. */\n    children?: ViewNode;\n    padding?: 0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10;\n    variant?:\n        | 'default'\n        | 'transparent'\n        | 'muted'\n        | 'blue'\n        | 'cyan'\n        | 'gray'\n        | 'green'\n        | 'orange'\n        | 'pink'\n        | 'purple'\n        | 'red'\n        | 'teal'\n        | 'yellow';\n    /** Card width; numbers are pixels and strings are CSS sizes. */\n    width?: number | string;\n    /** Card height; numbers are pixels and strings are CSS sizes. */\n    height?: number | string;\n    /** Maximum card width. */\n    maxWidth?: number | string;\n    /** Minimum card height. */\n    minHeight?: number | string;\n    /** Makes the card and its descendants non-interactive. */\n    inert?: boolean;\n    /** Hides the card from assistive technologies. */\n    'aria-hidden'?: boolean | 'true' | 'false';\n    label?: string;\n    /** Makes the card clickable and receives its activation event. */\n    onClick?: (event: ViewMouseEvent) => void;\n    /** Makes the card a navigation target when no selection callback is supplied. */\n    href?: string;\n    target?: string;\n    isDisabled?: boolean;\n    isSelected?: boolean;\n    /** Makes the card selectable and receives its next selection state; takes priority over activation. */\n    onChange?: (isSelected: boolean) => void;\n};\n\ndeclare function Card(props: CardProps): React.JSX.Element;",
+        "declaration": "type CardProps = {\n    /** Content rendered inside the card. */\n    children?: ViewNode;\n    /** Inner spacing using the theme spacing scale. */\n    padding?: 0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10;\n    /** Background color variant, independent of the interaction mode. */\n    variant?:\n        | 'default'\n        | 'transparent'\n        | 'muted'\n        | 'blue'\n        | 'cyan'\n        | 'gray'\n        | 'green'\n        | 'orange'\n        | 'pink'\n        | 'purple'\n        | 'red'\n        | 'teal'\n        | 'yellow';\n    /** Card width; numbers are pixels and strings are CSS sizes. */\n    width?: number | string;\n    /** Card height; numbers are pixels and strings are CSS sizes. */\n    height?: number | string;\n    /** Maximum card width. */\n    maxWidth?: number | string;\n    /** Minimum card height. */\n    minHeight?: number | string;\n    /** Makes the card and its descendants non-interactive. */\n    inert?: boolean;\n    /** Hides the card from assistive technologies. */\n    'aria-hidden'?: boolean | 'true' | 'false';\n    /** Accessible label for interactive cards; supply a descriptive label. */\n    label?: string;\n    /** Makes the card clickable when its surface is activated; nested controls act independently. */\n    onClick?: (event: ViewMouseEvent) => void;\n    /** Makes the card a navigation target when no selection callback is supplied. */\n    href?: string;\n    /** Native link target; isolated Views always navigate in the host's current Solution. */\n    target?: string;\n    /** Disables activation of an interactive card. */\n    isDisabled?: boolean;\n    /** Selection state; supply onChange to let users toggle it. */\n    isSelected?: boolean;\n    /** Makes the card selectable and receives its next selection state; takes priority over onClick and href. */\n    onChange?: (isSelected: boolean) => void;\n};\n\ndeclare function Card(props: CardProps): React.JSX.Element;",
         "properties": [
             {
                 "name": "children",
@@ -221,14 +214,14 @@
                 "type": "0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10",
                 "required": false,
                 "default": "4",
-                "description": "The padding prop. Default: 4."
+                "description": "Inner spacing using the theme spacing scale. Default: 4."
             },
             {
                 "name": "variant",
                 "type": "\"blue\" | \"cyan\" | \"green\" | \"orange\" | \"pink\" | \"purple\" | \"red\" | \"teal\" | \"yellow\" | \"default\" | \"transparent\" | \"muted\" | \"gray\"",
                 "required": false,
                 "default": "'default'",
-                "description": "The variant prop. Default: 'default'."
+                "description": "Background color variant, independent of the interaction mode. Default: 'default'."
             },
             {
                 "name": "width",
@@ -271,13 +264,13 @@
                 "type": "string",
                 "required": false,
                 "default": "'Card'",
-                "description": "The label prop. Default: 'Card'."
+                "description": "Accessible label for interactive cards; supply a descriptive label. Default: 'Card'."
             },
             {
                 "name": "onClick",
                 "type": "(event: ViewMouseEvent) => void",
                 "required": false,
-                "description": "Makes the card clickable and receives its activation event."
+                "description": "Makes the card clickable when its surface is activated; nested controls act independently."
             },
             {
                 "name": "href",
@@ -290,34 +283,34 @@
                 "type": "string",
                 "required": false,
                 "default": "'_self'",
-                "description": "The target prop. Default: '_self'."
+                "description": "Native link target; isolated Views always navigate in the host's current Solution. Default: '_self'."
             },
             {
                 "name": "isDisabled",
                 "type": "boolean",
                 "required": false,
                 "default": "false",
-                "description": "The isDisabled prop. Default: false."
+                "description": "Disables activation of an interactive card. Default: false."
             },
             {
                 "name": "isSelected",
                 "type": "boolean",
                 "required": false,
                 "default": "false",
-                "description": "The isSelected prop. Default: false."
+                "description": "Selection state; supply onChange to let users toggle it. Default: false."
             },
             {
                 "name": "onChange",
                 "type": "(isSelected: boolean) => void",
                 "required": false,
-                "description": "Makes the card selectable and receives its next selection state; takes priority over activation."
+                "description": "Makes the card selectable and receives its next selection state; takes priority over onClick and href."
             }
         ]
     },
     {
         "name": "CheckboxInput",
         "category": "Form",
-        "declaration": "declare function CheckboxInput(\n    props: FieldProps & {\n        value?: boolean | 'indeterminate';\n        checked?: boolean;\n        defaultChecked?: boolean;\n        onChange?: (value: boolean) => void;\n        isReadOnly?: boolean;\n        htmlName?: string;\n        size?: 'sm' | 'md';\n    },\n): React.JSX.Element;",
+        "declaration": "declare function CheckboxInput(\n    props: FieldProps & {\n        value?: boolean | 'indeterminate';\n        defaultChecked?: boolean;\n        onChange?: (value: boolean) => void;\n        size?: 'sm' | 'md';\n    },\n): React.JSX.Element;",
         "properties": [
             {
                 "name": "label",
@@ -350,26 +343,6 @@
                 "description": "Prevents interaction and excludes the field from submission."
             },
             {
-                "name": "readOnly",
-                "type": "boolean",
-                "required": false,
-                "description": "Retains submitted values while preventing editing where supported."
-            },
-            {
-                "name": "isRequired",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Whether the checkbox is required. Mutually exclusive with isOptional. Default: false."
-            },
-            {
-                "name": "isDisabled",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Whether the checkbox is disabled. Default: false."
-            },
-            {
                 "name": "width",
                 "type": "string | number",
                 "required": false,
@@ -382,12 +355,6 @@
                 "description": "Whether the checkbox is checked, unchecked, or indeterminate."
             },
             {
-                "name": "checked",
-                "type": "boolean",
-                "required": false,
-                "description": "The checked prop."
-            },
-            {
                 "name": "defaultChecked",
                 "type": "boolean",
                 "required": false,
@@ -398,20 +365,6 @@
                 "type": "(value: boolean) => void",
                 "required": false,
                 "description": "Callback fired when the checkbox state changes."
-            },
-            {
-                "name": "isReadOnly",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Whether the checkbox is read-only. Displays the current state at full opacity but prevents interaction. Unlike `isDisabled`, read-only checkboxes are not visually dimmed. Default: false."
-            },
-            {
-                "name": "htmlName",
-                "type": "string",
-                "required": false,
-                "default": "props.htmlName",
-                "description": "The HTML name attribute for the underlying checkbox input, useful for form submissions (submits \"on\" when checked). Default: props.htmlName."
             },
             {
                 "name": "size",
@@ -561,26 +514,6 @@
                 "description": "Prevents interaction and excludes the field from submission."
             },
             {
-                "name": "readOnly",
-                "type": "boolean",
-                "required": false,
-                "description": "Retains submitted values while preventing editing where supported."
-            },
-            {
-                "name": "isRequired",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Mark the field as required. Default: false."
-            },
-            {
-                "name": "isDisabled",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Disable the input and calendar. Default: false."
-            },
-            {
                 "name": "width",
                 "type": "string | number",
                 "required": false,
@@ -642,138 +575,6 @@
                 "required": false,
                 "default": "'md'",
                 "description": "Size of the input control. Default: 'md'."
-            }
-        ]
-    },
-    {
-        "name": "DateRangeInput",
-        "category": "Form",
-        "declaration": "type DateRange = { start: ISODateString; end: ISODateString };\n\ndeclare function DateRangeInput(\n    props: FieldProps & {\n        value?: DateRange | null;\n        defaultValue?: DateRange;\n        onChange?: (value: DateRange | null) => void;\n        min?: ISODateString;\n        max?: ISODateString;\n        /** Additional constraints applied to the themed calendar picker. */\n        dateConstraints?: readonly ((date: Date) => boolean)[];\n        /** Minimum selectable range span. */\n        minRangeSpan?: number;\n        /** Maximum selectable range span. */\n        maxRangeSpan?: number;\n        placeholder?: string;\n        size?: 'sm' | 'md' | 'lg';\n        hasClear?: boolean;\n    },\n): React.JSX.Element;",
-        "properties": [
-            {
-                "name": "label",
-                "type": "string",
-                "required": true,
-                "description": "Label text."
-            },
-            {
-                "name": "description",
-                "type": "string",
-                "required": false,
-                "description": "Helper text displayed below the label."
-            },
-            {
-                "name": "name",
-                "type": "string",
-                "required": false,
-                "description": "Includes the themed control's value under this form submission name."
-            },
-            {
-                "name": "required",
-                "type": "boolean",
-                "required": false,
-                "description": "Requires a value before native form submission."
-            },
-            {
-                "name": "disabled",
-                "type": "boolean",
-                "required": false,
-                "description": "Prevents interaction and excludes the field from submission."
-            },
-            {
-                "name": "readOnly",
-                "type": "boolean",
-                "required": false,
-                "description": "Retains submitted values while preventing editing where supported."
-            },
-            {
-                "name": "isRequired",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Mark the field as required. Default: false."
-            },
-            {
-                "name": "isDisabled",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Disable the trigger and picker. Default: false."
-            },
-            {
-                "name": "width",
-                "type": "string | number",
-                "required": false,
-                "description": "Width of the field (number = pixels, string used as-is, e.g. \"100%\"). Sizes the whole field (label, control, and status) so they stay aligned."
-            },
-            {
-                "name": "value",
-                "type": "DateRange | null",
-                "required": false,
-                "description": "Selected date range or null. Import the `DateRange` type from `@astryxdesign/core/DateRangeInput`; it is `{start: ISODateString, end: ISODateString}`. Do NOT redeclare your own DateRange type; use the exported one so TypeScript structurally matches."
-            },
-            {
-                "name": "defaultValue",
-                "type": "DateRange",
-                "required": false,
-                "description": "The defaultValue prop."
-            },
-            {
-                "name": "onChange",
-                "type": "(value: DateRange | null) => void",
-                "required": false,
-                "description": "Callback when the range changes. Called with null on clear."
-            },
-            {
-                "name": "min",
-                "type": "`${number}${number}${number}${number}-${number}${number}-${number}${number}`",
-                "required": false,
-                "description": "Minimum selectable date. `ISODateString` is a template literal type (`\\`${number}${number}${number}${number}-${number}${number}-${number}${number}\\``). Pass a string literal like `\"2026-01-28\"`, not a runtime string variable. Import it from `@astryxdesign/core/Calendar` or use `as ISODateString` if computing the value dynamically."
-            },
-            {
-                "name": "max",
-                "type": "`${number}${number}${number}${number}-${number}${number}-${number}${number}`",
-                "required": false,
-                "description": "Maximum selectable date. Same template literal type as `min`: use a YYYY-MM-DD string literal or cast with `as ISODateString`."
-            },
-            {
-                "name": "dateConstraints",
-                "type": "readonly ((date: Date) => boolean)[]",
-                "required": false,
-                "description": "Additional constraints applied to the themed calendar picker."
-            },
-            {
-                "name": "minRangeSpan",
-                "type": "number",
-                "required": false,
-                "description": "Minimum selectable range span."
-            },
-            {
-                "name": "maxRangeSpan",
-                "type": "number",
-                "required": false,
-                "description": "Maximum selectable range span."
-            },
-            {
-                "name": "placeholder",
-                "type": "string",
-                "required": false,
-                "default": "'Select date range'",
-                "description": "Placeholder text when no range is selected. Default: 'Select date range'."
-            },
-            {
-                "name": "size",
-                "type": "\"sm\" | \"md\" | \"lg\"",
-                "required": false,
-                "default": "'md'",
-                "description": "Size of the trigger. Default: 'md'."
-            },
-            {
-                "name": "hasClear",
-                "type": "boolean",
-                "required": false,
-                "default": "true",
-                "description": "Shows a clear button when a range is selected. Default: true."
             }
         ]
     },
@@ -852,7 +653,7 @@
     {
         "name": "DropdownMenu",
         "category": "Action",
-        "declaration": "type DropdownMenuItemData = {\n    id?: string;\n    label: ViewNode;\n    icon?: string;\n    description?: ViewNode;\n    endContent?: ViewNode;\n    variant?: 'default' | 'destructive';\n    isDisabled?: boolean;\n    hasCloseOnSelect?: boolean;\n    onClick?: () => void;\n    items?: DropdownMenuOption[];\n};\n\ntype DropdownMenuOption =\n    | DropdownMenuItemData\n    | { type: 'divider' }\n    | {\n          type: 'section';\n          id?: string;\n          title?: string;\n          items: DropdownMenuItemData[];\n      };\n\ndeclare function DropdownMenu(props: {\n    button?: {\n        label: string;\n        variant?: 'primary' | 'secondary' | 'ghost' | 'destructive';\n        size?: 'sm' | 'md' | 'lg';\n        isDisabled?: boolean;\n    };\n    items: DropdownMenuOption[];\n    isMenuOpen?: boolean;\n    onOpenChange?: (isOpen: boolean) => void;\n}): React.JSX.Element;",
+        "declaration": "type DropdownMenuItemData = {\n    id?: string;\n    label: ViewNode;\n    icon?: StoneIconName;\n    description?: ViewNode;\n    endContent?: ViewNode;\n    variant?: 'default' | 'destructive';\n    isDisabled?: boolean;\n    hasCloseOnSelect?: boolean;\n    onClick?: () => void;\n    items?: DropdownMenuOption[];\n};\n\ntype DropdownMenuOption =\n    | DropdownMenuItemData\n    | { type: 'divider' }\n    | {\n          type: 'section';\n          id?: string;\n          title?: string;\n          items: DropdownMenuItemData[];\n      };\n\ndeclare function DropdownMenu(props: {\n    button?: {\n        label: string;\n        variant?: 'primary' | 'secondary' | 'ghost' | 'destructive';\n        size?: 'sm' | 'md' | 'lg';\n        isDisabled?: boolean;\n    };\n    items: DropdownMenuOption[];\n    isMenuOpen?: boolean;\n    onOpenChange?: (isOpen: boolean) => void;\n}): React.JSX.Element;",
         "properties": [
             {
                 "name": "button",
@@ -904,7 +705,7 @@
     {
         "name": "FileInput",
         "category": "Form",
-        "declaration": "declare function FileInput(\n    props: FieldProps & {\n        value?: File | File[] | null;\n        onChange?: (value: File | File[] | null) => void;\n        accept?: string;\n        isMultiple?: boolean;\n        multiple?: boolean;\n        maxSize?: number;\n        maxFiles?: number;\n        placeholder?: string;\n        mode?: 'input' | 'dropzone';\n    },\n): React.JSX.Element;",
+        "declaration": "declare function FileInput(\n    props: FieldProps & {\n        value?: File | File[] | null;\n        onChange?: (value: File | File[] | null) => void;\n        accept?: string;\n        multiple?: boolean;\n        maxSize?: number;\n        maxFiles?: number;\n        placeholder?: string;\n        mode?: 'input' | 'dropzone';\n    },\n): React.JSX.Element;",
         "properties": [
             {
                 "name": "label",
@@ -937,26 +738,6 @@
                 "description": "Prevents interaction and excludes the field from submission."
             },
             {
-                "name": "readOnly",
-                "type": "boolean",
-                "required": false,
-                "description": "Retains submitted values while preventing editing where supported."
-            },
-            {
-                "name": "isRequired",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Displays a \"Required\" indicator next to the label and adds a screen-reader-only \"Required\" description to the trigger (assistive tech does not reliably announce aria-required on the trigger). Mutually exclusive with isOptional. Default: false."
-            },
-            {
-                "name": "isDisabled",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Disables the input, preventing interaction and dimming the element. Default: false."
-            },
-            {
                 "name": "width",
                 "type": "string | number",
                 "required": false,
@@ -979,13 +760,6 @@
                 "type": "string",
                 "required": false,
                 "description": "Accepted file types. Uses the HTML accept attribute format (e.g. \"image/*\", \".pdf,.doc\")."
-            },
-            {
-                "name": "isMultiple",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Whether multiple files can be selected. When true, value and onChange use File[] instead of File. Default: false."
             },
             {
                 "name": "multiple",
@@ -1024,7 +798,7 @@
     {
         "name": "FileViewer",
         "category": "Display",
-        "declaration": "declare function FileViewer(props: {\n    /** Scoped Solution operation path returning the file to preview. */\n    src: string;\n    /** Accessible label for the preview trigger and file dialog. */\n    title: string;\n}): React.JSX.Element;",
+        "declaration": "declare function FileViewer(props: {\n    /** Scoped Solution operation path returning the file to preview. */\n    src: string;\n    /** Attachment name used for accessible action labels and the downloaded filename. */\n    title: string;\n}): React.JSX.Element;",
         "properties": [
             {
                 "name": "src",
@@ -1036,7 +810,7 @@
                 "name": "title",
                 "type": "string",
                 "required": true,
-                "description": "Accessible label for the preview trigger and file dialog."
+                "description": "Attachment name used for accessible action labels and the downloaded filename."
             }
         ]
     },
@@ -1088,7 +862,7 @@
             },
             {
                 "name": "request(path, options)",
-                "description": "Requests a Solution operation and returns its data. Options support the HTTP method, JSON, form data, and binary responses. Successful writes automatically refresh cached View data."
+                "description": "Requests a Solution operation and returns its data. Options support the HTTP method, JSON, form data, and binary responses. Requests and responses are limited to 2,000,000 bytes, with at most 32 form entries and 8 pending operations. Successful writes automatically refresh cached View data. Failed HTTP requests reject with an Error containing an optional numeric status and a bounded client-facing message."
             }
         ]
     },
@@ -1182,11 +956,11 @@
     {
         "name": "Icon",
         "category": "Display",
-        "declaration": "declare function Icon(props: { icon: string; size: 'sm' | 'md' | 'lg' }): React.JSX.Element;",
+        "declaration": "declare function Icon(props: { icon: StoneIconName; size: 'sm' | 'md' | 'lg' }): React.JSX.Element;",
         "properties": [
             {
                 "name": "icon",
-                "type": "string",
+                "type": "'close' | 'chevronDown' | 'chevronLeft' | 'chevronRight' | 'chevronsLeft' | 'chevronsRight' | 'check' | 'success' | 'error' | 'warning' | 'info' | 'calendar' | 'clock' | 'externalLink' | 'menu' | 'moreHorizontal' | 'refresh' | 'search' | 'arrowUp' | 'arrowDown' | 'arrowsUpDown' | 'boxes' | 'building2' | 'database' | 'funnel' | 'eyeSlash' | 'viewColumns' | 'copy' | 'checkDouble' | 'wrench' | 'stop' | 'microphone' | 'logs' | 'trash' | 'hardDrive' | 'userRound' | 'users'",
                 "required": true,
                 "description": "Semantic icon name or SVG component. Valid semantic names: close, chevronDown, chevronLeft, chevronRight, chevronsLeft, chevronsRight, check, success, error, warning, info, calendar, clock, externalLink, menu, moreHorizontal, search, arrowUp, arrowDown, arrowsUpDown, funnel, eyeSlash, viewColumns, copy, checkDouble, wrench, stop, microphone. For any icon not in this list, pass an SVG component directly (e.g. import from lucide-react or @heroicons/react). Note: this prop is called `icon`, not `name`."
             },
@@ -1201,7 +975,7 @@
     {
         "name": "IconButton",
         "category": "Action",
-        "declaration": "declare function IconButton(props: {\n    label: string;\n    icon: string;\n    variant?: 'primary' | 'secondary' | 'ghost' | 'destructive';\n    size?: 'sm' | 'md' | 'lg';\n    tooltip?: string;\n    isDisabled?: boolean;\n    onClick?: (event: ViewMouseEvent) => void | Promise<void>;\n}): React.JSX.Element;",
+        "declaration": "declare function IconButton(props: {\n    label: string;\n    icon: StoneIconName;\n    variant?: 'primary' | 'secondary' | 'ghost' | 'destructive';\n    size?: 'sm' | 'md' | 'lg';\n    tooltip?: string;\n    isDisabled?: boolean;\n    onClick?: (event: ViewMouseEvent) => void | Promise<void>;\n}): React.JSX.Element;",
         "properties": [
             {
                 "name": "label",
@@ -1211,7 +985,7 @@
             },
             {
                 "name": "icon",
-                "type": "string",
+                "type": "'close' | 'chevronDown' | 'chevronLeft' | 'chevronRight' | 'chevronsLeft' | 'chevronsRight' | 'check' | 'success' | 'error' | 'warning' | 'info' | 'calendar' | 'clock' | 'externalLink' | 'menu' | 'moreHorizontal' | 'refresh' | 'search' | 'arrowUp' | 'arrowDown' | 'arrowsUpDown' | 'boxes' | 'building2' | 'database' | 'funnel' | 'eyeSlash' | 'viewColumns' | 'copy' | 'checkDouble' | 'wrench' | 'stop' | 'microphone' | 'logs' | 'trash' | 'hardDrive' | 'userRound' | 'users'",
                 "required": true,
                 "description": "Icon element rendered inside the button. An Astryx Icon with no explicit size defaults to sm for sm/md buttons and md for lg buttons."
             },
@@ -1272,7 +1046,7 @@
     {
         "name": "Menu",
         "category": "Layouts",
-        "declaration": "declare function Menu(props: {\n    /** MenuSection elements defining navigation and content. */\n    children?: ViewNode;\n    gap?: 0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10;\n}): React.JSX.Element;\n\ndeclare function MenuSection(props: {\n    /** MenuItem elements or nested MenuSubSection groups. */\n    children?: ViewNode;\n    /** Hides the section heading; visible by default. */\n    isHeaderHidden?: boolean;\n    /** Section heading displayed in the navigation. */\n    title: string;\n}): React.JSX.Element;\n\ndeclare function MenuItem(props: {\n    /** Content mounted beside the navigation while this item is selected. */\n    children?: ViewNode;\n    /** Optional LongLink icon name displayed beside the label. */\n    icon?: string;\n    /** Navigation label; its lowercase, hyphenated form identifies the item's URL fragment. */\n    label: string;\n}): React.JSX.Element;\n\ndeclare function MenuSubSection(props: {\n    /** MenuItem elements nested inside this collapsible group. */\n    children?: ViewNode;\n    /** Optional LongLink icon name displayed beside the group label. */\n    icon?: string;\n    /** Label displayed on the collapsible navigation group. */\n    label: string;\n}): React.JSX.Element;",
+        "declaration": "declare function Menu(props: {\n    /** MenuSection elements defining navigation and content. */\n    children?: ViewNode;\n    gap?: 0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10;\n}): React.JSX.Element;\n\ndeclare function MenuSection(props: {\n    /** MenuItem elements or nested MenuSubSection groups. */\n    children?: ViewNode;\n    /** Hides the section heading; visible by default. */\n    isHeaderHidden?: boolean;\n    /** Section heading displayed in the navigation. */\n    title: string;\n}): React.JSX.Element;\n\ndeclare function MenuItem(props: {\n    /** Content mounted beside the navigation while this item is selected. */\n    children?: ViewNode;\n    /** Optional LongLink icon name displayed beside the label. */\n    icon?: StoneIconName;\n    /** Navigation label; its lowercase, hyphenated form identifies the item's URL fragment. */\n    label: string;\n}): React.JSX.Element;\n\ndeclare function MenuSubSection(props: {\n    /** MenuItem elements nested inside this collapsible group. */\n    children?: ViewNode;\n    /** Optional LongLink icon name displayed beside the group label. */\n    icon?: StoneIconName;\n    /** Label displayed on the collapsible navigation group. */\n    label: string;\n}): React.JSX.Element;",
         "properties": [
             {
                 "name": "children",
@@ -1313,7 +1087,7 @@
             },
             {
                 "name": "MenuItem.icon",
-                "type": "string",
+                "type": "'close' | 'chevronDown' | 'chevronLeft' | 'chevronRight' | 'chevronsLeft' | 'chevronsRight' | 'check' | 'success' | 'error' | 'warning' | 'info' | 'calendar' | 'clock' | 'externalLink' | 'menu' | 'moreHorizontal' | 'refresh' | 'search' | 'arrowUp' | 'arrowDown' | 'arrowsUpDown' | 'boxes' | 'building2' | 'database' | 'funnel' | 'eyeSlash' | 'viewColumns' | 'copy' | 'checkDouble' | 'wrench' | 'stop' | 'microphone' | 'logs' | 'trash' | 'hardDrive' | 'userRound' | 'users'",
                 "required": false,
                 "description": "Optional LongLink icon name displayed beside the label."
             },
@@ -1331,7 +1105,7 @@
             },
             {
                 "name": "MenuSubSection.icon",
-                "type": "string",
+                "type": "'close' | 'chevronDown' | 'chevronLeft' | 'chevronRight' | 'chevronsLeft' | 'chevronsRight' | 'check' | 'success' | 'error' | 'warning' | 'info' | 'calendar' | 'clock' | 'externalLink' | 'menu' | 'moreHorizontal' | 'refresh' | 'search' | 'arrowUp' | 'arrowDown' | 'arrowsUpDown' | 'boxes' | 'building2' | 'database' | 'funnel' | 'eyeSlash' | 'viewColumns' | 'copy' | 'checkDouble' | 'wrench' | 'stop' | 'microphone' | 'logs' | 'trash' | 'hardDrive' | 'userRound' | 'users'",
                 "required": false,
                 "description": "Optional LongLink icon name displayed beside the group label."
             },
@@ -1346,7 +1120,7 @@
     {
         "name": "MetadataList",
         "category": "Display",
-        "declaration": "declare function MetadataList(props: {\n    children?: ViewNode;\n    columns?: 'multi' | 'single' | number;\n    title?: ViewNode;\n}): React.JSX.Element;\n\ndeclare function MetadataListItem(props: {\n    /** Value rendered beside the metadata label. */\n    children?: ViewNode;\n    /** Label identifying the metadata value. */\n    label: string;\n    /** Optional icon displayed beside the metadata label. */\n    icon?: string;\n}): React.JSX.Element;",
+        "declaration": "declare function MetadataList(props: {\n    children?: ViewNode;\n    columns?: 'multi' | 'single' | number;\n    title?: ViewNode;\n}): React.JSX.Element;\n\ndeclare function MetadataListItem(props: {\n    /** Value rendered beside the metadata label. */\n    children?: ViewNode;\n    /** Label identifying the metadata value. */\n    label: string;\n    /** Optional icon displayed beside the metadata label. */\n    icon?: StoneIconName;\n}): React.JSX.Element;",
         "properties": [
             {
                 "name": "children",
@@ -1381,7 +1155,7 @@
             },
             {
                 "name": "MetadataListItem.icon",
-                "type": "string",
+                "type": "'close' | 'chevronDown' | 'chevronLeft' | 'chevronRight' | 'chevronsLeft' | 'chevronsRight' | 'check' | 'success' | 'error' | 'warning' | 'info' | 'calendar' | 'clock' | 'externalLink' | 'menu' | 'moreHorizontal' | 'refresh' | 'search' | 'arrowUp' | 'arrowDown' | 'arrowsUpDown' | 'boxes' | 'building2' | 'database' | 'funnel' | 'eyeSlash' | 'viewColumns' | 'copy' | 'checkDouble' | 'wrench' | 'stop' | 'microphone' | 'logs' | 'trash' | 'hardDrive' | 'userRound' | 'users'",
                 "required": false,
                 "description": "Optional icon displayed beside the metadata label."
             }
@@ -1390,7 +1164,7 @@
     {
         "name": "MoreMenu",
         "category": "Action",
-        "declaration": "declare function MoreMenu(props: {\n    items: DropdownMenuOption[];\n    label?: string;\n    icon?: string;\n    isDisabled?: boolean;\n    onOpenChange?: (isOpen: boolean) => void;\n}): React.JSX.Element;",
+        "declaration": "declare function MoreMenu(props: {\n    items: DropdownMenuOption[];\n    label?: string;\n    icon?: StoneIconName;\n    isDisabled?: boolean;\n    onOpenChange?: (isOpen: boolean) => void;\n}): React.JSX.Element;",
         "properties": [
             {
                 "name": "items",
@@ -1407,7 +1181,7 @@
             },
             {
                 "name": "icon",
-                "type": "string",
+                "type": "'close' | 'chevronDown' | 'chevronLeft' | 'chevronRight' | 'chevronsLeft' | 'chevronsRight' | 'check' | 'success' | 'error' | 'warning' | 'info' | 'calendar' | 'clock' | 'externalLink' | 'menu' | 'moreHorizontal' | 'refresh' | 'search' | 'arrowUp' | 'arrowDown' | 'arrowsUpDown' | 'boxes' | 'building2' | 'database' | 'funnel' | 'eyeSlash' | 'viewColumns' | 'copy' | 'checkDouble' | 'wrench' | 'stop' | 'microphone' | 'logs' | 'trash' | 'hardDrive' | 'userRound' | 'users'",
                 "required": false,
                 "description": "Override the default three-dot icon. Accepts any ReactNode."
             },
@@ -1429,7 +1203,7 @@
     {
         "name": "MultiSelector",
         "category": "Form",
-        "declaration": "declare function MultiSelector(\n    props: FieldProps & {\n        options: SelectorOptionType[];\n        value?: string[];\n        defaultValue?: string[];\n        onChange?: (value: string[]) => void;\n        placeholder?: string;\n        size?: 'sm' | 'md' | 'lg';\n        hasSelectAll?: boolean;\n        hasSearch?: boolean;\n        isReadOnly?: boolean;\n        htmlName?: string;\n        hasClear?: boolean;\n    },\n): React.JSX.Element;",
+        "declaration": "declare function MultiSelector(\n    props: FieldProps & {\n        options: SelectorOptionType[];\n        value?: string[];\n        defaultValue?: string[];\n        onChange?: (value: string[]) => void;\n        placeholder?: string;\n        size?: 'sm' | 'md' | 'lg';\n        hasSelectAll?: boolean;\n        hasSearch?: boolean;\n        hasClear?: boolean;\n    },\n): React.JSX.Element;",
         "properties": [
             {
                 "name": "label",
@@ -1460,26 +1234,6 @@
                 "type": "boolean",
                 "required": false,
                 "description": "Prevents interaction and excludes the field from submission."
-            },
-            {
-                "name": "readOnly",
-                "type": "boolean",
-                "required": false,
-                "description": "Retains submitted values while preventing editing where supported."
-            },
-            {
-                "name": "isRequired",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Marks the field as required. Default: false."
-            },
-            {
-                "name": "isDisabled",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Disables the selector. Default: false."
             },
             {
                 "name": "width",
@@ -1540,20 +1294,6 @@
                 "description": "Whether to show a search input for filtering options. As the user types, the match count (or \"No results found\") is announced to screen readers via a polite live region. The search field has built-in affordances: a leading magnifier icon and, once a query is typed, a trailing clear (✕) button that resets the query and returns focus to the input. Default: false."
             },
             {
-                "name": "isReadOnly",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Makes the selector read-only: the selected values stay visible, focusable, and included in form submission, and retain their combobox identity with aria-readonly. The selection surface, clear action, and disclosure indicator are removed. Unlike isDisabled, the control is not dimmed. isDisabled takes precedence when both are set. Default: false."
-            },
-            {
-                "name": "htmlName",
-                "type": "string",
-                "required": false,
-                "default": "props.htmlName",
-                "description": "The HTML name attribute for form submissions. Renders one hidden input per selected value, like a native multi-select. Default: props.htmlName."
-            },
-            {
                 "name": "hasClear",
                 "type": "boolean",
                 "required": false,
@@ -1565,7 +1305,7 @@
     {
         "name": "NumberInput",
         "category": "Form",
-        "declaration": "declare function NumberInput(\n    props: FieldProps & {\n        value?: number | null;\n        defaultValue?: number;\n        min?: number | null;\n        max?: number | null;\n        step?: number | null;\n        placeholder?: string;\n        size?: 'sm' | 'md' | 'lg';\n        isReadOnly?: boolean;\n        units?: string | null;\n        isIntegerOnly?: boolean;\n        htmlName?: string;\n        autoComplete?: string;\n    } & (\n            | { hasClear?: false; onChange?: (value: number) => void }\n            | { hasClear: true; onChange?: (value: number | null) => void }\n        ),\n): React.JSX.Element;",
+        "declaration": "declare function NumberInput(\n    props: FieldProps & {\n        value?: number | null;\n        defaultValue?: number;\n        min?: number | null;\n        max?: number | null;\n        step?: number | null;\n        placeholder?: string;\n        size?: 'sm' | 'md' | 'lg';\n        units?: string | null;\n        isIntegerOnly?: boolean;\n        autoComplete?: string;\n    } & (\n            | { hasClear?: false; onChange?: (value: number) => void }\n            | { hasClear: true; onChange?: (value: number | null) => void }\n        ),\n): React.JSX.Element;",
         "properties": [
             {
                 "name": "label",
@@ -1596,26 +1336,6 @@
                 "type": "boolean",
                 "required": false,
                 "description": "Prevents interaction and excludes the field from submission."
-            },
-            {
-                "name": "readOnly",
-                "type": "boolean",
-                "required": false,
-                "description": "Retains submitted values while preventing editing where supported."
-            },
-            {
-                "name": "isRequired",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Whether the field is required (mutually exclusive with isOptional). Default: false."
-            },
-            {
-                "name": "isDisabled",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Whether the input is disabled. Default: false."
             },
             {
                 "name": "width",
@@ -1668,13 +1388,6 @@
                 "description": "Size variant. Default: 'md'."
             },
             {
-                "name": "isReadOnly",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Makes the input read-only: the value is shown at full opacity and still submits with the form, but cannot be edited. Unlike isDisabled, a read-only input is not dimmed and stays in the tab order. Stepping is off in every form while read-only: arrow keys, the wheel, and the number steppers. isDisabled takes precedence when both are set. Default: false."
-            },
-            {
                 "name": "units",
                 "type": "string | null",
                 "required": false,
@@ -1686,13 +1399,6 @@
                 "required": false,
                 "default": "false",
                 "description": "Only allow integer values (no floating point). Default: false."
-            },
-            {
-                "name": "htmlName",
-                "type": "string",
-                "required": false,
-                "default": "props.htmlName",
-                "description": "HTML name attribute for form submissions. Default: props.htmlName."
             },
             {
                 "name": "autoComplete",
@@ -1749,7 +1455,7 @@
             },
             {
                 "name": "variant",
-                "type": "\"neutral\" | \"success\" | \"warning\" | \"error\" | \"accent\"",
+                "type": "\"success\" | \"error\" | \"warning\" | \"neutral\" | \"accent\"",
                 "required": false,
                 "default": "'accent'",
                 "description": "Semantic color variant. Default: 'accent'."
@@ -1759,7 +1465,7 @@
     {
         "name": "RadioList",
         "category": "Form",
-        "declaration": "declare function RadioList(\n    props: FieldProps & {\n        children?: ViewNode;\n        value?: string;\n        defaultValue?: string;\n        onChange?: (value: string) => void;\n        orientation?: 'vertical' | 'horizontal';\n        htmlName?: string;\n        size?: 'sm' | 'md';\n    },\n): React.JSX.Element;\n\ndeclare function RadioListItem(props: {\n    /** Visible label identifying this choice. */\n    label: string;\n    /** Value passed to the surrounding RadioList when selected. */\n    value: string;\n    /** Optional helper text explaining the choice. */\n    description?: string;\n    isDisabled?: boolean;\n}): React.JSX.Element;",
+        "declaration": "declare function RadioList(\n    props: FieldProps & {\n        children?: ViewNode;\n        value?: string;\n        defaultValue?: string;\n        onChange?: (value: string) => void;\n        orientation?: 'vertical' | 'horizontal';\n        size?: 'sm' | 'md';\n    },\n): React.JSX.Element;\n\ndeclare function RadioListItem(props: {\n    /** Visible label identifying this choice. */\n    label: string;\n    /** Value passed to the surrounding RadioList when selected. */\n    value: string;\n    /** Optional helper text explaining the choice. */\n    description?: string;\n    isDisabled?: boolean;\n}): React.JSX.Element;",
         "properties": [
             {
                 "name": "label",
@@ -1790,26 +1496,6 @@
                 "type": "boolean",
                 "required": false,
                 "description": "Prevents interaction and excludes the field from submission."
-            },
-            {
-                "name": "readOnly",
-                "type": "boolean",
-                "required": false,
-                "description": "Retains submitted values while preventing editing where supported."
-            },
-            {
-                "name": "isRequired",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Whether the radio group is required. Default: false."
-            },
-            {
-                "name": "isDisabled",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Whether all radio items are disabled. Default: false."
             },
             {
                 "name": "width",
@@ -1849,13 +1535,6 @@
                 "description": "Layout direction of the radio items. Default: 'vertical'."
             },
             {
-                "name": "htmlName",
-                "type": "string",
-                "required": false,
-                "default": "props.htmlName",
-                "description": "The HTML name attribute shared by the radio inputs, useful for form submissions. When omitted, a unique internal name still groups the radios. Default: props.htmlName."
-            },
-            {
                 "name": "size",
                 "type": "\"sm\" | \"md\"",
                 "required": false,
@@ -1892,7 +1571,7 @@
     {
         "name": "Selector",
         "category": "Form",
-        "declaration": "type SelectorOptionData = {\n    value: string;\n    label?: string;\n    description?: ViewNode;\n    icon?: string;\n    disabled?: boolean;\n};\n\ntype SelectorOptionType =\n    | string\n    | SelectorOptionData\n    | { type: 'divider' }\n    | {\n          type: 'section';\n          title?: string;\n          options: SelectorOptionData[];\n      };\n\ndeclare function Selector(\n    props: FieldProps & {\n        options: SelectorOptionType[];\n        defaultValue?: string;\n        hasSearch?: boolean;\n        placeholder?: string;\n        size?: 'sm' | 'md' | 'lg';\n        isReadOnly?: boolean;\n        htmlName?: string;\n    } & (\n            | { hasClear?: false; value?: string; onChange?: (value: string) => void }\n            | { hasClear: true; value?: string | null; onChange?: (value: string | null) => void }\n        ),\n): React.JSX.Element;",
+        "declaration": "type SelectorOptionData = {\n    value: string;\n    label?: string;\n    description?: ViewNode;\n    icon?: StoneIconName;\n    disabled?: boolean;\n};\n\ntype SelectorOptionType =\n    | string\n    | SelectorOptionData\n    | { type: 'divider' }\n    | {\n          type: 'section';\n          title?: string;\n          options: SelectorOptionData[];\n      };\n\ndeclare function Selector(\n    props: FieldProps & {\n        options: SelectorOptionType[];\n        defaultValue?: string;\n        hasSearch?: boolean;\n        placeholder?: string;\n        size?: 'sm' | 'md' | 'lg';\n    } & (\n            | { hasClear?: false; value?: string; onChange?: (value: string) => void }\n            | { hasClear: true; value?: string | null; onChange?: (value: string | null) => void }\n        ),\n): React.JSX.Element;",
         "properties": [
             {
                 "name": "label",
@@ -1923,26 +1602,6 @@
                 "type": "boolean",
                 "required": false,
                 "description": "Prevents interaction and excludes the field from submission."
-            },
-            {
-                "name": "readOnly",
-                "type": "boolean",
-                "required": false,
-                "description": "Retains submitted values while preventing editing where supported."
-            },
-            {
-                "name": "isRequired",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Marks the field as required. Default: false."
-            },
-            {
-                "name": "isDisabled",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Disables the selector. Default: false."
             },
             {
                 "name": "width",
@@ -1984,20 +1643,6 @@
                 "description": "Size variant for the selector. Default: 'md'."
             },
             {
-                "name": "isReadOnly",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Makes the selector read-only: the selected value stays visible, focusable, and included in form submission, and retains its combobox identity with aria-readonly. The selection surface, clear action, and disclosure indicator are removed. Unlike isDisabled, the control is not dimmed. isDisabled takes precedence when both are set. Default: false."
-            },
-            {
-                "name": "htmlName",
-                "type": "string",
-                "required": false,
-                "default": "props.htmlName",
-                "description": "The HTML name attribute for form submissions. Renders a hidden input carrying the selected value, like a native select. Default: props.htmlName."
-            },
-            {
                 "name": "hasClear",
                 "type": "(false) | (true)",
                 "required": false,
@@ -2021,7 +1666,7 @@
     {
         "name": "Slider",
         "category": "Form",
-        "declaration": "declare function Slider(\n    props: FieldProps & {\n        min?: number;\n        max?: number;\n        step?: number;\n        htmlName?: string;\n    } & (\n            | {\n                  value?: number;\n                  defaultValue?: number;\n                  onChange?: (value: number) => void;\n                  onChangeEnd?: (value: number) => void;\n              }\n            | {\n                  value?: [number, number];\n                  defaultValue?: [number, number];\n                  onChange?: (value: [number, number]) => void;\n                  onChangeEnd?: (value: [number, number]) => void;\n                  minStepsBetweenThumbs?: number;\n              }\n        ),\n): React.JSX.Element;",
+        "declaration": "declare function Slider(\n    props: FieldProps & {\n        min?: number;\n        max?: number;\n        step?: number;\n    } & (\n            | {\n                  value?: number;\n                  defaultValue?: number;\n                  onChange?: (value: number) => void;\n                  onChangeEnd?: (value: number) => void;\n              }\n            | {\n                  value?: [number, number];\n                  defaultValue?: [number, number];\n                  onChange?: (value: [number, number]) => void;\n                  onChangeEnd?: (value: [number, number]) => void;\n                  minStepsBetweenThumbs?: number;\n              }\n        ),\n): React.JSX.Element;",
         "properties": [
             {
                 "name": "label",
@@ -2054,26 +1699,6 @@
                 "description": "Prevents interaction and excludes the field from submission."
             },
             {
-                "name": "readOnly",
-                "type": "boolean",
-                "required": false,
-                "description": "Retains submitted values while preventing editing where supported."
-            },
-            {
-                "name": "isRequired",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Whether the field is required. Default: false."
-            },
-            {
-                "name": "isDisabled",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Whether the slider is disabled. Default: false."
-            },
-            {
                 "name": "width",
                 "type": "string | number",
                 "required": false,
@@ -2099,13 +1724,6 @@
                 "required": false,
                 "default": "1",
                 "description": "Step increment. Default: 1."
-            },
-            {
-                "name": "htmlName",
-                "type": "string",
-                "required": false,
-                "default": "props.htmlName",
-                "description": "The HTML name attribute for form submissions. Renders hidden inputs carrying the current value (two entries in range mode). Default: props.htmlName."
             },
             {
                 "name": "value",
@@ -2234,7 +1852,7 @@
             },
             {
                 "name": "variant",
-                "type": "\"neutral\" | \"success\" | \"warning\" | \"error\" | \"accent\"",
+                "type": "\"success\" | \"error\" | \"warning\" | \"neutral\" | \"accent\"",
                 "required": true,
                 "description": "Semantic color variant."
             },
@@ -2288,7 +1906,7 @@
     {
         "name": "Switch",
         "category": "Form",
-        "declaration": "declare function Switch(\n    props: FieldProps & {\n        value?: boolean;\n        checked?: boolean;\n        defaultChecked?: boolean;\n        onChange?: (value: boolean) => void;\n        htmlName?: string;\n        size?: 'sm' | 'md';\n    },\n): React.JSX.Element;",
+        "declaration": "declare function Switch(\n    props: FieldProps & {\n        value?: boolean;\n        defaultChecked?: boolean;\n        onChange?: (value: boolean) => void;\n        size?: 'sm' | 'md';\n    },\n): React.JSX.Element;",
         "properties": [
             {
                 "name": "label",
@@ -2321,26 +1939,6 @@
                 "description": "Prevents interaction and excludes the field from submission."
             },
             {
-                "name": "readOnly",
-                "type": "boolean",
-                "required": false,
-                "description": "Retains submitted values while preventing editing where supported."
-            },
-            {
-                "name": "isRequired",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Whether the switch is required. Mutually exclusive with isOptional. Default: false."
-            },
-            {
-                "name": "isDisabled",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Whether the switch is disabled. Default: false."
-            },
-            {
                 "name": "width",
                 "type": "string | number",
                 "required": false,
@@ -2353,12 +1951,6 @@
                 "description": "Whether the switch is on or off."
             },
             {
-                "name": "checked",
-                "type": "boolean",
-                "required": false,
-                "description": "The checked prop."
-            },
-            {
                 "name": "defaultChecked",
                 "type": "boolean",
                 "required": false,
@@ -2369,13 +1961,6 @@
                 "type": "(value: boolean) => void",
                 "required": false,
                 "description": "Callback fired when the switch state changes."
-            },
-            {
-                "name": "htmlName",
-                "type": "string",
-                "required": false,
-                "default": "props.htmlName",
-                "description": "The HTML name attribute for the underlying checkbox input, useful for form submissions (submits \"on\" when the switch is on). Default: props.htmlName."
             },
             {
                 "name": "size",
@@ -2525,7 +2110,7 @@
     {
         "name": "TextArea",
         "category": "Form",
-        "declaration": "declare function TextArea(\n    props: FieldProps & {\n        value?: string;\n        defaultValue?: string;\n        onChange?: (value: string) => void;\n        placeholder?: string;\n        rows?: number;\n        maxLength?: number;\n        isReadOnly?: boolean;\n        hasAutoFocus?: boolean;\n        htmlName?: string;\n        autoComplete?: string;\n    },\n): React.JSX.Element;",
+        "declaration": "declare function TextArea(\n    props: FieldProps & {\n        value?: string;\n        defaultValue?: string;\n        onChange?: (value: string) => void;\n        placeholder?: string;\n        rows?: number;\n        maxLength?: number;\n        hasAutoFocus?: boolean;\n        autoComplete?: string;\n    },\n): React.JSX.Element;",
         "properties": [
             {
                 "name": "label",
@@ -2556,26 +2141,6 @@
                 "type": "boolean",
                 "required": false,
                 "description": "Prevents interaction and excludes the field from submission."
-            },
-            {
-                "name": "readOnly",
-                "type": "boolean",
-                "required": false,
-                "description": "Retains submitted values while preventing editing where supported."
-            },
-            {
-                "name": "isRequired",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Displays a \"Required\" indicator next to the label and sets aria-required. Mutually exclusive with isOptional. Default: false."
-            },
-            {
-                "name": "isDisabled",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Disables the textarea, preventing interaction. Default: false."
             },
             {
                 "name": "width",
@@ -2621,25 +2186,11 @@
                 "description": "Maximum number of characters allowed, counted as user-perceived characters: an emoji or flag sequence counts as one. When set, a character counter (current/max) is displayed inside the input container, anchored to the bottom-right beneath the text. Does not enforce the limit natively; when exceeded the counter turns red and shows a warning icon (a non-color cue), and screen-reader users hear the remaining/over-limit count announced. Consumers validating the limit should count with characterCount (exported from the package) so enforcement matches the displayed count."
             },
             {
-                "name": "isReadOnly",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Makes the textarea read-only: the value is shown at full opacity and still submits with the form, but cannot be edited. Unlike isDisabled, a read-only textarea is not dimmed and stays in the tab order. isDisabled takes precedence when both are set. Default: false."
-            },
-            {
                 "name": "hasAutoFocus",
                 "type": "boolean",
                 "required": false,
                 "default": "false",
                 "description": "Automatically focuses the textarea on mount. Default: false."
-            },
-            {
-                "name": "htmlName",
-                "type": "string",
-                "required": false,
-                "default": "props.htmlName",
-                "description": "HTML name attribute for the textarea element, useful for form submissions. Default: props.htmlName."
             },
             {
                 "name": "autoComplete",
@@ -2652,7 +2203,7 @@
     {
         "name": "TextInput",
         "category": "Form",
-        "declaration": "declare function TextInput(\n    props: FieldProps & {\n        value?: string;\n        defaultValue?: string;\n        onChange?: (value: string) => void;\n        placeholder?: string;\n        type?: 'text' | 'password' | 'email';\n        size?: 'sm' | 'md' | 'lg';\n        htmlName?: string;\n        autoComplete?: string;\n        isReadOnly?: boolean;\n        hasClear?: boolean;\n        hasAutoFocus?: boolean;\n        startIcon?: ViewNode;\n        onEnter?: () => void;\n    },\n): React.JSX.Element;",
+        "declaration": "declare function TextInput(\n    props: FieldProps & {\n        value?: string;\n        defaultValue?: string;\n        onChange?: (value: string) => void;\n        placeholder?: string;\n        type?: 'text' | 'password' | 'email';\n        size?: 'sm' | 'md' | 'lg';\n        autoComplete?: string;\n        hasClear?: boolean;\n        hasAutoFocus?: boolean;\n        startIcon?: ViewNode;\n        onEnter?: () => void;\n    },\n): React.JSX.Element;",
         "properties": [
             {
                 "name": "label",
@@ -2683,26 +2234,6 @@
                 "type": "boolean",
                 "required": false,
                 "description": "Prevents interaction and excludes the field from submission."
-            },
-            {
-                "name": "readOnly",
-                "type": "boolean",
-                "required": false,
-                "description": "Retains submitted values while preventing editing where supported."
-            },
-            {
-                "name": "isRequired",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Displays a \"Required\" indicator next to the label and sets aria-required. Mutually exclusive with isOptional. Default: false."
-            },
-            {
-                "name": "isDisabled",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Disables the input, preventing interaction and dimming the element. Default: false."
             },
             {
                 "name": "width",
@@ -2749,24 +2280,10 @@
                 "description": "Size variant of the input. Default: 'md'."
             },
             {
-                "name": "htmlName",
-                "type": "string",
-                "required": false,
-                "default": "props.htmlName",
-                "description": "The HTML name attribute for the input, useful for form submissions. Default: props.htmlName."
-            },
-            {
                 "name": "autoComplete",
                 "type": "string",
                 "required": false,
                 "description": "The native autocomplete attribute, forwarded to the input unchanged. Does not affect the controlled value."
-            },
-            {
-                "name": "isReadOnly",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Makes the input read-only: the value is shown at full opacity and still submits with the form, but cannot be edited. Unlike isDisabled, a read-only input is not dimmed and stays in the tab order. isDisabled takes precedence when both are set. Default: false."
             },
             {
                 "name": "hasClear",
@@ -2830,26 +2347,6 @@
                 "type": "boolean",
                 "required": false,
                 "description": "Prevents interaction and excludes the field from submission."
-            },
-            {
-                "name": "readOnly",
-                "type": "boolean",
-                "required": false,
-                "description": "Retains submitted values while preventing editing where supported."
-            },
-            {
-                "name": "isRequired",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Marks the field as required and sets aria-required. Mutually exclusive with isOptional. Default: false."
-            },
-            {
-                "name": "isDisabled",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Disables the input and suppresses interactions. Default: false."
             },
             {
                 "name": "width",

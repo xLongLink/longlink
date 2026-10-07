@@ -10,9 +10,7 @@ type TextAreaProps = FieldProps & {
     placeholder?: string;
     rows?: number;
     maxLength?: number;
-    isReadOnly?: boolean;
     hasAutoFocus?: boolean;
-    htmlName?: string;
     autoComplete?: string;
 };
 
@@ -29,14 +27,14 @@ export function TextArea(props: TextAreaProps) {
                 {...control}
                 value={field.value}
                 onChange={field.onChange}
-                htmlName={props.name ?? props.htmlName}
+                htmlName={props.name}
                 rows={props.rows ?? 3}
-                isReadOnly={props.readOnly ?? props.isReadOnly ?? false}
+                isReadOnly={false}
                 hasSpellCheck
                 hasAutoFocus={props.hasAutoFocus ?? false}
                 isLabelHidden={false}
-                isRequired={props.required ?? props.isRequired ?? false}
-                isDisabled={props.disabled ?? props.isDisabled ?? false}
+                isRequired={props.required ?? false}
+                isDisabled={props.disabled ?? false}
                 changeAction={undefined}
                 isLoading={false}
             />

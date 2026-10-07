@@ -1,3 +1,5 @@
+import { useContext } from 'react';
+import { LinkNavigationContext } from './Link';
 import type { MouseEvent, ReactNode } from 'react';
 import { Card as AstryxCard } from '@astryxdesign/core/Card';
 import { ClickableCard } from '@astryxdesign/core/ClickableCard';
@@ -6,7 +8,9 @@ import { SelectableCard } from '@astryxdesign/core/SelectableCard';
 type CardProps = {
     /** Content rendered inside the card. */
     children?: ReactNode;
+    /** Inner spacing using the theme spacing scale. */
     padding?: 0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10;
+    /** Background color variant, independent of the interaction mode. */
     variant?:
         | 'default'
         | 'transparent'
@@ -33,15 +37,19 @@ type CardProps = {
     inert?: boolean;
     /** Hides the card from assistive technologies. */
     'aria-hidden'?: boolean | 'true' | 'false';
+    /** Accessible label for interactive cards; supply a descriptive label. */
     label?: string;
-    /** Makes the card clickable and receives its activation event. */
+    /** Makes the card clickable when its surface is activated; nested controls act independently. */
     onClick?: (event: MouseEvent<HTMLElement>) => void;
     /** Makes the card a navigation target when no selection callback is supplied. */
     href?: string;
+    /** Native link target; isolated Views always navigate in the host's current Solution. */
     target?: string;
+    /** Disables activation of an interactive card. */
     isDisabled?: boolean;
+    /** Selection state; supply onChange to let users toggle it. */
     isSelected?: boolean;
-    /** Makes the card selectable and receives its next selection state; takes priority over activation. */
+    /** Makes the card selectable and receives its next selection state; takes priority over onClick and href. */
     onChange?: (isSelected: boolean) => void;
 };
 
@@ -58,6 +66,8 @@ export function Card({
     onChange,
     ...props
 }: CardProps) {
+    const navigate = useContext(LinkNavigationContext);
+
     // Use Astryx's controlled selection behavior whenever a selection callback is supplied.
     if (onChange !== undefined) {
         return (
@@ -81,9 +91,20 @@ export function Card({
                 padding={padding}
                 variant={variant}
                 label={label}
-                onClick={onClick}
-                href={href}
-                target={target}
+                onClick={
+                    onClick || (navigate && href)
+                        ? (event) => {
+                              // Keep nested controls independent and let surface actions cancel navigation.
+                              onClick?.(event);
+                              if (navigate && href && !event.defaultPrevented) {
+                                  event.preventDefault();
+                                  navigate(href);
+                              }
+                          }
+                        : undefined
+                }
+                href={navigate ? undefined : href}
+                target={navigate ? undefined : target}
                 isDisabled={isDisabled}
             />
         );

@@ -6,11 +6,52 @@ type ViewComponent<P> = (props: P & { children?: ViewNode }) => React.JSX.Elemen
 type ViewProps = { params: Readonly<Record<string, string>> };
 type Spacing = 0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10;
 
+/** Supported LongLink Lucide icon names, generated from the runtime registry. @ignore */
+type StoneIconName =
+    | 'close'
+    | 'chevronDown'
+    | 'chevronLeft'
+    | 'chevronRight'
+    | 'chevronsLeft'
+    | 'chevronsRight'
+    | 'check'
+    | 'success'
+    | 'error'
+    | 'warning'
+    | 'info'
+    | 'calendar'
+    | 'clock'
+    | 'externalLink'
+    | 'menu'
+    | 'moreHorizontal'
+    | 'refresh'
+    | 'search'
+    | 'arrowUp'
+    | 'arrowDown'
+    | 'arrowsUpDown'
+    | 'boxes'
+    | 'building2'
+    | 'database'
+    | 'funnel'
+    | 'eyeSlash'
+    | 'viewColumns'
+    | 'copy'
+    | 'checkDouble'
+    | 'wrench'
+    | 'stop'
+    | 'microphone'
+    | 'logs'
+    | 'trash'
+    | 'hardDrive'
+    | 'userRound'
+    | 'users';
+
 /** @category Action @group Button */
 type ViewMouseEvent = Omit<MouseEvent, 'currentTarget'> & { currentTarget: HTMLElement; nativeEvent: MouseEvent };
 
 /** @category Action @group Button */
 type ButtonProps = {
+    /** Visible button text and accessible label. */
     label: string;
     variant?: 'primary' | 'secondary' | 'ghost' | 'destructive';
     size?: 'sm' | 'md' | 'lg';
@@ -18,13 +59,14 @@ type ButtonProps = {
     name?: string;
     value?: string | number | readonly string[];
     form?: string;
-    icon?: string;
+    icon?: StoneIconName;
     endContent?: ViewNode;
     tooltip?: string;
     width?: number | string;
-    isDisabled?: boolean;
     disabled?: boolean;
+    /** Solution-relative destination; sandbox links navigate through the host. */
     href?: string;
+    /** Runs an action with automatic async loading and duplicate-click prevention until its promise settles. */
     onClick?: (event: ViewMouseEvent) => void | Promise<void>;
 };
 
@@ -32,7 +74,7 @@ type ButtonProps = {
 type DropdownMenuItemData = {
     id?: string;
     label: ViewNode;
-    icon?: string;
+    icon?: StoneIconName;
     description?: ViewNode;
     endContent?: ViewNode;
     variant?: 'default' | 'destructive';
@@ -112,7 +154,7 @@ declare function useRef<T>(initial: T): { current: T };
 declare function navigate(path: string): void;
 
 /**
- * Requests a Solution operation and returns its data. Options support the HTTP method, JSON, form data, and binary responses. Successful writes automatically refresh cached View data.
+ * Requests a Solution operation and returns its data. Options support the HTTP method, JSON, form data, and binary responses. Requests and responses are limited to 2,000,000 bytes, with at most 32 form entries and 8 pending operations. Successful writes automatically refresh cached View data. Failed HTTP requests reject with an Error containing an optional numeric status and a bounded client-facing message.
  * @category Runtime
  * @group Functions
  */
@@ -183,7 +225,7 @@ declare function DropdownMenu(props: {
 /** @category Action */
 declare function IconButton(props: {
     label: string;
-    icon: string;
+    icon: StoneIconName;
     variant?: 'primary' | 'secondary' | 'ghost' | 'destructive';
     size?: 'sm' | 'md' | 'lg';
     tooltip?: string;
@@ -197,7 +239,7 @@ declare function Link(props: { to: string; children?: ViewNode }): React.JSX.Ele
 /** @category Display */
 declare function Badge(props: {
     label?: ViewNode;
-    icon?: string;
+    icon?: StoneIconName;
     variant?:
         | 'neutral'
         | 'info'
@@ -250,10 +292,6 @@ type FieldProps = {
     required?: boolean;
     /** Prevents interaction and excludes the field from submission. */
     disabled?: boolean;
-    /** Retains submitted values while preventing editing where supported. */
-    readOnly?: boolean;
-    isRequired?: boolean;
-    isDisabled?: boolean;
     width?: number | string;
 };
 
@@ -291,29 +329,6 @@ type DateInputProps = FieldProps & {
 /** @category Form */
 declare function DateInput(props: DateInputProps): React.JSX.Element;
 
-/** @category Form @group DateRangeInput */
-type DateRange = { start: ISODateString; end: ISODateString };
-
-/** @category Form */
-declare function DateRangeInput(
-    props: FieldProps & {
-        value?: DateRange | null;
-        defaultValue?: DateRange;
-        onChange?: (value: DateRange | null) => void;
-        min?: ISODateString;
-        max?: ISODateString;
-        /** Additional constraints applied to the themed calendar picker. */
-        dateConstraints?: readonly ((date: Date) => boolean)[];
-        /** Minimum selectable range span. */
-        minRangeSpan?: number;
-        /** Maximum selectable range span. */
-        maxRangeSpan?: number;
-        placeholder?: string;
-        size?: 'sm' | 'md' | 'lg';
-        hasClear?: boolean;
-    },
-): React.JSX.Element;
-
 /** @category Form @group TimeInput */
 type ISOTimeString = string & { readonly __brand: 'ISOTimeString' };
 
@@ -343,9 +358,7 @@ declare function TextInput(
         placeholder?: string;
         type?: 'text' | 'password' | 'email';
         size?: 'sm' | 'md' | 'lg';
-        htmlName?: string;
         autoComplete?: string;
-        isReadOnly?: boolean;
         hasClear?: boolean;
         hasAutoFocus?: boolean;
         startIcon?: ViewNode;
@@ -362,9 +375,7 @@ declare function TextArea(
         placeholder?: string;
         rows?: number;
         maxLength?: number;
-        isReadOnly?: boolean;
         hasAutoFocus?: boolean;
-        htmlName?: string;
         autoComplete?: string;
     },
 ): React.JSX.Element;
@@ -379,10 +390,8 @@ declare function NumberInput(
         step?: number | null;
         placeholder?: string;
         size?: 'sm' | 'md' | 'lg';
-        isReadOnly?: boolean;
         units?: string | null;
         isIntegerOnly?: boolean;
-        htmlName?: string;
         autoComplete?: string;
     } & (
             | { hasClear?: false; onChange?: (value: number) => void }
@@ -395,7 +404,7 @@ type SelectorOptionData = {
     value: string;
     label?: string;
     description?: ViewNode;
-    icon?: string;
+    icon?: StoneIconName;
     disabled?: boolean;
 };
 
@@ -421,8 +430,6 @@ declare function MultiSelector(
         size?: 'sm' | 'md' | 'lg';
         hasSelectAll?: boolean;
         hasSearch?: boolean;
-        isReadOnly?: boolean;
-        htmlName?: string;
         hasClear?: boolean;
     },
 ): React.JSX.Element;
@@ -435,8 +442,6 @@ declare function Selector(
         hasSearch?: boolean;
         placeholder?: string;
         size?: 'sm' | 'md' | 'lg';
-        isReadOnly?: boolean;
-        htmlName?: string;
     } & (
             | { hasClear?: false; value?: string; onChange?: (value: string) => void }
             | { hasClear: true; value?: string | null; onChange?: (value: string | null) => void }
@@ -449,7 +454,6 @@ declare function FileInput(
         value?: File | File[] | null;
         onChange?: (value: File | File[] | null) => void;
         accept?: string;
-        isMultiple?: boolean;
         multiple?: boolean;
         maxSize?: number;
         maxFiles?: number;
@@ -462,7 +466,7 @@ declare function FileInput(
 declare function FileViewer(props: {
     /** Scoped Solution operation path returning the file to preview. */
     src: string;
-    /** Accessible label for the preview trigger and file dialog. */
+    /** Attachment name used for accessible action labels and the downloaded filename. */
     title: string;
 }): React.JSX.Element;
 
@@ -491,7 +495,9 @@ declare function StackItem(props: {
 type CardProps = {
     /** Content rendered inside the card. */
     children?: ViewNode;
+    /** Inner spacing using the theme spacing scale. */
     padding?: 0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10;
+    /** Background color variant, independent of the interaction mode. */
     variant?:
         | 'default'
         | 'transparent'
@@ -518,15 +524,19 @@ type CardProps = {
     inert?: boolean;
     /** Hides the card from assistive technologies. */
     'aria-hidden'?: boolean | 'true' | 'false';
+    /** Accessible label for interactive cards; supply a descriptive label. */
     label?: string;
-    /** Makes the card clickable and receives its activation event. */
+    /** Makes the card clickable when its surface is activated; nested controls act independently. */
     onClick?: (event: ViewMouseEvent) => void;
     /** Makes the card a navigation target when no selection callback is supplied. */
     href?: string;
+    /** Native link target; isolated Views always navigate in the host's current Solution. */
     target?: string;
+    /** Disables activation of an interactive card. */
     isDisabled?: boolean;
+    /** Selection state; supply onChange to let users toggle it. */
     isSelected?: boolean;
-    /** Makes the card selectable and receives its next selection state; takes priority over activation. */
+    /** Makes the card selectable and receives its next selection state; takes priority over onClick and href. */
     onChange?: (isSelected: boolean) => void;
 };
 
@@ -547,11 +557,8 @@ declare function Collapsible(props: {
 declare function CheckboxInput(
     props: FieldProps & {
         value?: boolean | 'indeterminate';
-        checked?: boolean;
         defaultChecked?: boolean;
         onChange?: (value: boolean) => void;
-        isReadOnly?: boolean;
-        htmlName?: string;
         size?: 'sm' | 'md';
     },
 ): React.JSX.Element;
@@ -560,10 +567,8 @@ declare function CheckboxInput(
 declare function Switch(
     props: FieldProps & {
         value?: boolean;
-        checked?: boolean;
         defaultChecked?: boolean;
         onChange?: (value: boolean) => void;
-        htmlName?: string;
         size?: 'sm' | 'md';
     },
 ): React.JSX.Element;
@@ -574,7 +579,6 @@ declare function Slider(
         min?: number;
         max?: number;
         step?: number;
-        htmlName?: string;
     } & (
             | {
                   value?: number;
@@ -600,7 +604,6 @@ declare function RadioList(
         defaultValue?: string;
         onChange?: (value: string) => void;
         orientation?: 'vertical' | 'horizontal';
-        htmlName?: string;
         size?: 'sm' | 'md';
     },
 ): React.JSX.Element;
@@ -620,7 +623,7 @@ declare function RadioListItem(props: {
 declare function MoreMenu(props: {
     items: DropdownMenuOption[];
     label?: string;
-    icon?: string;
+    icon?: StoneIconName;
     isDisabled?: boolean;
     onOpenChange?: (isOpen: boolean) => void;
 }): React.JSX.Element;
@@ -647,7 +650,7 @@ declare function MenuItem(props: {
     /** Content mounted beside the navigation while this item is selected. */
     children?: ViewNode;
     /** Optional LongLink icon name displayed beside the label. */
-    icon?: string;
+    icon?: StoneIconName;
     /** Navigation label; its lowercase, hyphenated form identifies the item's URL fragment. */
     label: string;
 }): React.JSX.Element;
@@ -657,13 +660,13 @@ declare function MenuSubSection(props: {
     /** MenuItem elements nested inside this collapsible group. */
     children?: ViewNode;
     /** Optional LongLink icon name displayed beside the group label. */
-    icon?: string;
+    icon?: StoneIconName;
     /** Label displayed on the collapsible navigation group. */
     label: string;
 }): React.JSX.Element;
 
 /** @category Display */
-declare function Icon(props: { icon: string; size: 'sm' | 'md' | 'lg' }): React.JSX.Element;
+declare function Icon(props: { icon: StoneIconName; size: 'sm' | 'md' | 'lg' }): React.JSX.Element;
 
 /** @category Display */
 declare function CodeBlock(props: {
@@ -771,7 +774,7 @@ declare function MetadataListItem(props: {
     /** Label identifying the metadata value. */
     label: string;
     /** Optional icon displayed beside the metadata label. */
-    icon?: string;
+    icon?: StoneIconName;
 }): React.JSX.Element;
 
 /** @category Display @group Table */

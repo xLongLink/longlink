@@ -16,8 +16,6 @@ export function MultiSelector(
         size?: 'sm' | 'md' | 'lg';
         hasSelectAll?: boolean;
         hasSearch?: boolean;
-        isReadOnly?: boolean;
-        htmlName?: string;
         hasClear?: boolean;
     }
 ) {
@@ -35,16 +33,16 @@ export function MultiSelector(
                 {...control}
                 value={field.value}
                 onChange={field.onChange}
-                htmlName={props.name ?? props.htmlName}
+                htmlName={props.name}
                 size={size}
                 placeholder={props.placeholder ?? 'Select...'}
                 hasSelectAll={props.hasSelectAll ?? false}
                 hasSearch={props.hasSearch ?? false}
                 hasClear={props.hasClear ?? false}
-                isReadOnly={props.readOnly ?? props.isReadOnly ?? false}
+                isReadOnly={false}
                 isLabelHidden={false}
-                isRequired={props.required ?? props.isRequired ?? false}
-                isDisabled={props.disabled ?? props.isDisabled ?? false}
+                isRequired={props.required ?? false}
+                isDisabled={props.disabled ?? false}
                 changeAction={undefined}
                 isLoading={false}
             />

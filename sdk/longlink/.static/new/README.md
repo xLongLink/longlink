@@ -51,7 +51,7 @@ supported in the sandbox.
 
 For simple forms, use `<Form action="/api/..." method="post">` with named fields
 and a `<Button type="submit">`. `name` preserves the themed Astryx controls, while
-`defaultValue`, `defaultChecked`, `required`, `disabled`, and `readOnly` work without
+`defaultValue`, `defaultChecked`, `required`, and `disabled` work without
 draft state. Use controlled values only when the interface needs reactive state.
 
 `Form` validates before submitting, prevents duplicate requests, and displays

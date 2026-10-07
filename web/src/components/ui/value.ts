@@ -1,10 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
 
-/** Adapts controls that require a value to optional local state with native form reset behavior. */
+/**
+ * Adapts controls to optional local state with native form reset behavior.
+ * Pass controlled explicitly when undefined is a valid caller-owned empty value.
+ */
 export function useValue<T, Element extends HTMLElement = HTMLDivElement>(
     value: T | undefined,
     defaultValue: T,
-    onChange?: (value: T) => void
+    onChange?: (value: T) => void,
+    controlled = value !== undefined
 ) {
     // Keep local state only when the caller does not own the value.
     const [local, setLocal] = useState(defaultValue);
@@ -13,7 +17,7 @@ export function useValue<T, Element extends HTMLElement = HTMLDivElement>(
     // Synchronize with the real form's reset event, respecting canceled resets.
     useEffect(() => {
         const form = ref.current?.closest('form');
-        if (!form || value !== undefined) return;
+        if (!form || controlled) return;
         const reset = (event: Event) => {
             queueMicrotask(() => {
                 if (!event.defaultPrevented) setLocal(defaultValue);
@@ -21,12 +25,12 @@ export function useValue<T, Element extends HTMLElement = HTMLDivElement>(
         };
         form.addEventListener('reset', reset);
         return () => form.removeEventListener('reset', reset);
-    }, [value, defaultValue]);
+    }, [controlled, defaultValue]);
 
     // Controlled callers receive changes without acquiring duplicate state.
     const change = (next: T) => {
-        if (value === undefined) setLocal(next);
+        if (!controlled) setLocal(next);
         onChange?.(next);
     };
-    return { ref, value: value === undefined ? local : value, onChange: change };
+    return { ref, value: controlled ? (value as T) : local, onChange: change };
 }
