@@ -3,40 +3,6 @@
         "name": "Avatar",
         "url": "https://astryx.atmeta.com/components/Avatar",
         "introduction": "Uses local Waves fallbacks for rounded organization avatars and Glyphs for users.",
-        "properties": [
-            {
-                "name": "name",
-                "type": "string",
-                "required": false,
-                "description": "User name for initials and alt text."
-            },
-            {
-                "name": "shape",
-                "type": "\"circle\" | \"rounded\"",
-                "required": false,
-                "default": "'circle'",
-                "description": "Shape variant of the avatar. 'circle' (default) stays fully round. 'rounded' uses the element radius token so it matches UI corner rounding and can be set globally via theme. 'square' has no radius. Status dot positioning adapts automatically: 4-o'clock on circle, bottom-right corner on rounded/square. Default: 'circle'."
-            },
-            {
-                "name": "src",
-                "type": "string | null",
-                "required": false,
-                "description": "Primary image source URL."
-            },
-            {
-                "name": "alt",
-                "type": "string",
-                "required": false,
-                "description": "Alt text (falls back to name)."
-            },
-            {
-                "name": "size",
-                "type": "\"sm\" | \"md\" | \"lg\"",
-                "required": false,
-                "default": "'md'",
-                "description": "Avatar size. Use a named size ('xsm' 20px, 'sm' 24px, 'md' 36px, 'lg' 48px, 'xl' 128px) or a numeric pixel value. Avatar shares Icon's abbreviated scale, but its tiers are larger because avatars align with media rather than glyphs. Inside an AvatarGroup the group's size wins and this prop is ignored. Default: 'md'."
-            }
-        ],
         "practices": [
             {
                 "guidance": true,
@@ -52,27 +18,6 @@
         "name": "Badge",
         "url": "https://astryx.atmeta.com/components/Badge",
         "introduction": "Displays a count or enumerated state.",
-        "properties": [
-            {
-                "name": "label",
-                "type": "ReactNode",
-                "required": false,
-                "description": "Badge text content. A badge is one line, so a label wider than the space available is cut with an ellipsis rather than escaping its container; a string or number label is also set as the badge's title so the full text stays reachable on hover."
-            },
-            {
-                "name": "icon",
-                "type": "string",
-                "required": false,
-                "description": "Optional leading icon."
-            },
-            {
-                "name": "variant",
-                "type": "\"neutral\" | \"info\" | \"success\" | \"warning\" | \"error\" | \"blue\" | \"cyan\" | \"green\" | \"orange\" | \"pink\" | \"purple\" | \"red\" | \"teal\" | \"yellow\"",
-                "required": false,
-                "default": "'neutral'",
-                "description": "Visual style variant. Semantic variants (neutral, info, success, warning, error) use solid backgrounds. Non-semantic color variants use tinted backgrounds with colored text for categorization and tagging. Default: 'neutral'."
-            }
-        ],
         "practices": [
             {
                 "guidance": true,
@@ -120,102 +65,6 @@
         "name": "Button",
         "url": "https://astryx.atmeta.com/components/Button",
         "introduction": "Gives onClick automatic asynchronous loading and duplicate-click prevention.",
-        "properties": [
-            {
-                "name": "label",
-                "type": "string",
-                "required": true,
-                "description": "Accessible label. Rendered as visible text by default; used as aria-label when isIconOnly is true."
-            },
-            {
-                "name": "variant",
-                "type": "\"primary\" | \"secondary\" | \"ghost\" | \"destructive\"",
-                "required": false,
-                "default": "'secondary'",
-                "description": "Visual style variant. Default: 'secondary'."
-            },
-            {
-                "name": "size",
-                "type": "\"sm\" | \"md\" | \"lg\"",
-                "required": false,
-                "default": "'md'",
-                "description": "Size variant. Default: 'md'."
-            },
-            {
-                "name": "type",
-                "type": "\"button\" | \"submit\" | \"reset\"",
-                "required": false,
-                "default": "'button'",
-                "description": "HTML button type attribute. Default: 'button'."
-            },
-            {
-                "name": "name",
-                "type": "string",
-                "required": false,
-                "description": "HTML name attribute for form submission."
-            },
-            {
-                "name": "value",
-                "type": "string | number | readonly string[]",
-                "required": false,
-                "description": "HTML value attribute for form submission."
-            },
-            {
-                "name": "form",
-                "type": "string",
-                "required": false,
-                "description": "Associates the button with a form element by ID."
-            },
-            {
-                "name": "icon",
-                "type": "string",
-                "required": false,
-                "description": "Icon element rendered before the label text. An Astryx Icon with no explicit size defaults to sm for sm/md buttons and md for lg buttons."
-            },
-            {
-                "name": "endContent",
-                "type": "ReactNode",
-                "required": false,
-                "description": "Trailing icon or badge rendered after the label. Ignored when isIconOnly is true. Color is inherited from the button variant."
-            },
-            {
-                "name": "tooltip",
-                "type": "string",
-                "required": false,
-                "description": "Tooltip text shown on hover."
-            },
-            {
-                "name": "width",
-                "type": "string | number",
-                "required": false,
-                "description": "Width of the button. Numbers are treated as pixels, strings are used as-is (e.g., '100%' for a full-width button). By default the button sizes to its content."
-            },
-            {
-                "name": "isDisabled",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Disables the button. When a tooltip is present, uses aria-disabled instead of native disabled so the button stays focusable. Default: false."
-            },
-            {
-                "name": "disabled",
-                "type": "boolean",
-                "required": false,
-                "description": "The disabled prop."
-            },
-            {
-                "name": "href",
-                "type": "string",
-                "required": false,
-                "description": "When provided, renders the button as a link element (<a> or custom link component). The destination follows the shared navigation rule described on the Link `href` prop."
-            },
-            {
-                "name": "onClick",
-                "type": "(event: ViewMouseEvent) => void | Promise<void>",
-                "required": false,
-                "description": "Standard click handler (passed through from ButtonHTMLAttributes)."
-            }
-        ],
         "practices": [
             {
                 "guidance": true,
@@ -247,41 +96,6 @@
         "name": "ButtonGroup",
         "url": "https://astryx.atmeta.com/components/ButtonGroup",
         "introduction": "Groups related flat action buttons.",
-        "properties": [
-            {
-                "name": "children",
-                "type": "ReactNode",
-                "required": false,
-                "description": "Button or IconButton children."
-            },
-            {
-                "name": "label",
-                "type": "string",
-                "required": true,
-                "description": "Accessible label for the group (aria-label)."
-            },
-            {
-                "name": "orientation",
-                "type": "\"horizontal\" | \"vertical\"",
-                "required": false,
-                "default": "'horizontal'",
-                "description": "Layout direction of the button group. Default: 'horizontal'."
-            },
-            {
-                "name": "size",
-                "type": "\"sm\" | \"md\" | \"lg\"",
-                "required": false,
-                "default": "'md'",
-                "description": "Default size for buttons in the group. Individual buttons can override. Default: 'md'."
-            },
-            {
-                "name": "isDisabled",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Whether all buttons in the group are disabled. Default: false."
-            }
-        ],
         "practices": [
             {
                 "guidance": true,
@@ -325,109 +139,6 @@
         "name": "CheckboxInput",
         "url": "https://astryx.atmeta.com/components/CheckboxInput",
         "introduction": "Edits a boolean or indeterminate field.",
-        "properties": [
-            {
-                "name": "label",
-                "type": "string",
-                "required": true,
-                "description": "Label text for the checkbox (always rendered for accessibility)."
-            },
-            {
-                "name": "description",
-                "type": "string",
-                "required": false,
-                "description": "Description text displayed below the label."
-            },
-            {
-                "name": "name",
-                "type": "string",
-                "required": false,
-                "description": "Includes the themed control's value under this form submission name."
-            },
-            {
-                "name": "required",
-                "type": "boolean",
-                "required": false,
-                "description": "Requires a value before native form submission."
-            },
-            {
-                "name": "disabled",
-                "type": "boolean",
-                "required": false,
-                "description": "Prevents interaction and excludes the field from submission."
-            },
-            {
-                "name": "readOnly",
-                "type": "boolean",
-                "required": false,
-                "description": "Retains submitted values while preventing editing where supported."
-            },
-            {
-                "name": "isRequired",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Whether the checkbox is required. Mutually exclusive with isOptional. Default: false."
-            },
-            {
-                "name": "isDisabled",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Whether the checkbox is disabled. Default: false."
-            },
-            {
-                "name": "width",
-                "type": "string | number",
-                "required": false,
-                "description": "Width of the field (number = pixels, string used as-is, e.g. \"100%\"). Sizes the whole field (label, control, and status) so they stay aligned."
-            },
-            {
-                "name": "value",
-                "type": "boolean | \"indeterminate\"",
-                "required": false,
-                "description": "Whether the checkbox is checked, unchecked, or indeterminate."
-            },
-            {
-                "name": "checked",
-                "type": "boolean",
-                "required": false,
-                "description": "The checked prop."
-            },
-            {
-                "name": "defaultChecked",
-                "type": "boolean",
-                "required": false,
-                "description": "The defaultChecked prop."
-            },
-            {
-                "name": "onChange",
-                "type": "(value: boolean) => void",
-                "required": false,
-                "description": "Callback fired when the checkbox state changes."
-            },
-            {
-                "name": "isReadOnly",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Whether the checkbox is read-only. Displays the current state at full opacity but prevents interaction. Unlike `isDisabled`, read-only checkboxes are not visually dimmed. Default: false."
-            },
-            {
-                "name": "htmlName",
-                "type": "string",
-                "required": false,
-                "default": "props.htmlName",
-                "description": "The HTML name attribute for the underlying checkbox input, useful for form submissions (submits \"on\" when checked). Default: props.htmlName."
-            },
-            {
-                "name": "size",
-                "type": "\"sm\" | \"md\"",
-                "required": false,
-                "default": "'md'",
-                "description": "The size of the checkbox. sm for compact layouts, md for default. Default: 'md'."
-            }
-        ],
         "practices": [
             {
                 "guidance": true,
@@ -451,34 +162,6 @@
         "name": "CodeBlock",
         "url": "https://astryx.atmeta.com/components/CodeBlock",
         "introduction": "Displays source code using standard copy and highlighting behavior.",
-        "properties": [
-            {
-                "name": "code",
-                "type": "string",
-                "required": true,
-                "description": "The code string to display."
-            },
-            {
-                "name": "language",
-                "type": "string",
-                "required": false,
-                "default": "'plaintext'",
-                "description": "Language for syntax highlighting. Use \"plaintext\" to disable. Default: 'plaintext'."
-            },
-            {
-                "name": "title",
-                "type": "string",
-                "required": false,
-                "description": "Filename or label shown in the header bar."
-            },
-            {
-                "name": "isWrapped",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Wrap long lines instead of enabling horizontal scroll. Default: false."
-            }
-        ],
         "practices": [
             {
                 "guidance": true,
@@ -502,46 +185,6 @@
         "name": "Collapsible",
         "url": "https://astryx.atmeta.com/components/Collapsible",
         "introduction": "Shows or hides content using controlled or initially open state.",
-        "properties": [
-            {
-                "name": "children",
-                "type": "ReactNode",
-                "required": false,
-                "description": "Content that collapses and expands."
-            },
-            {
-                "name": "trigger",
-                "type": "ReactNode",
-                "required": true,
-                "description": "Content shown in the trigger area (always visible)."
-            },
-            {
-                "name": "defaultIsOpen",
-                "type": "boolean",
-                "required": false,
-                "default": "true",
-                "description": "Default open state (uncontrolled). Default: true."
-            },
-            {
-                "name": "isOpen",
-                "type": "boolean",
-                "required": false,
-                "description": "Controlled open state."
-            },
-            {
-                "name": "isDisabled",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Disable the item so its trigger can't be toggled (dimmed, aria-disabled, and out of the tab order). Doesn't collapse an already-open item. Default: false."
-            },
-            {
-                "name": "onOpenChange",
-                "type": "(isOpen: boolean) => void",
-                "required": false,
-                "description": "Callback invoked when the open state changes."
-            }
-        ],
         "practices": [
             {
                 "guidance": true,
@@ -581,121 +224,6 @@
         "name": "DateInput",
         "url": "https://astryx.atmeta.com/components/DateInput",
         "introduction": "Selects a constrained date with standard month and week presentation.",
-        "properties": [
-            {
-                "name": "label",
-                "type": "string",
-                "required": true,
-                "description": "Label text."
-            },
-            {
-                "name": "description",
-                "type": "string",
-                "required": false,
-                "description": "Helper text displayed below the label."
-            },
-            {
-                "name": "name",
-                "type": "string",
-                "required": false,
-                "description": "Includes the themed control's value under this form submission name."
-            },
-            {
-                "name": "required",
-                "type": "boolean",
-                "required": false,
-                "description": "Requires a value before native form submission."
-            },
-            {
-                "name": "disabled",
-                "type": "boolean",
-                "required": false,
-                "description": "Prevents interaction and excludes the field from submission."
-            },
-            {
-                "name": "readOnly",
-                "type": "boolean",
-                "required": false,
-                "description": "Retains submitted values while preventing editing where supported."
-            },
-            {
-                "name": "isRequired",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Mark the field as required. Default: false."
-            },
-            {
-                "name": "isDisabled",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Disable the input and calendar. Default: false."
-            },
-            {
-                "name": "width",
-                "type": "string | number",
-                "required": false,
-                "description": "Width of the field (number = pixels, string used as-is, e.g. \"100%\"). Sizes the whole field (label, control, and status) so they stay aligned."
-            },
-            {
-                "name": "value",
-                "type": "`${number}${number}${number}${number}-${number}${number}-${number}${number}`",
-                "required": false,
-                "description": "Selected date in YYYY-MM-DD format."
-            },
-            {
-                "name": "defaultValue",
-                "type": "`${number}${number}${number}${number}-${number}${number}-${number}${number}`",
-                "required": false,
-                "description": "The defaultValue prop."
-            },
-            {
-                "name": "onChange",
-                "type": "(value: `${number}${number}${number}${number}-${number}${number}-${number}${number}` | undefined) => void",
-                "required": false,
-                "description": "Callback invoked when the selected date changes."
-            },
-            {
-                "name": "min",
-                "type": "`${number}${number}${number}${number}-${number}${number}-${number}${number}`",
-                "required": false,
-                "description": "Minimum selectable date (YYYY-MM-DD)."
-            },
-            {
-                "name": "max",
-                "type": "`${number}${number}${number}${number}-${number}${number}-${number}${number}`",
-                "required": false,
-                "description": "Maximum selectable date (YYYY-MM-DD)."
-            },
-            {
-                "name": "dateConstraints",
-                "type": "readonly ((date: Date) => boolean)[]",
-                "required": false,
-                "description": "Additional constraints applied to the themed calendar picker."
-            },
-            {
-                "name": "placeholder",
-                "type": "string",
-                "required": false,
-                "default": "'Select a date'",
-                "description": "Placeholder text shown in the text input. Default: 'Select a date'."
-            },
-            {
-                "name": "hasClear",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Shows a clear (×) button when a date value is set. Clicking it clears the value and returns focus to the input. Default: false."
-            },
-            {
-                "name": "size",
-                "type": "\"sm\" | \"md\" | \"lg\"",
-                "required": false,
-                "default": "'md'",
-                "description": "Size of the input control. Default: 'md'."
-            }
-        ],
         "practices": [
             {
                 "guidance": true,
@@ -731,39 +259,6 @@
         "name": "Dialog",
         "url": "https://astryx.atmeta.com/components/Dialog",
         "introduction": "Displays an accessible modal with an explicit purpose and controlled visibility.",
-        "properties": [
-            {
-                "name": "children",
-                "type": "ReactNode",
-                "required": false,
-                "description": "Dialog content."
-            },
-            {
-                "name": "aria-label",
-                "type": "string",
-                "required": true,
-                "description": "The aria-label prop."
-            },
-            {
-                "name": "isOpen",
-                "type": "boolean",
-                "required": true,
-                "description": "Whether the dialog is open."
-            },
-            {
-                "name": "onOpenChange",
-                "type": "(open: boolean) => void",
-                "required": true,
-                "description": "Callback when dialog visibility changes."
-            },
-            {
-                "name": "purpose",
-                "type": "\"info\" | \"form\" | \"required\"",
-                "required": false,
-                "default": "'info'",
-                "description": "Controls dismissal behavior: required disables Escape and backdrop click; form disables backdrop click after interaction; info allows both. Default: 'info'."
-            }
-        ],
         "practices": [
             {
                 "guidance": true,
@@ -795,35 +290,6 @@
         "name": "Divider",
         "url": "https://astryx.atmeta.com/components/Divider",
         "introduction": "Separates View content with an optional label and configurable line presentation.",
-        "properties": [
-            {
-                "name": "label",
-                "type": "ReactNode",
-                "required": false,
-                "description": "Optional label centered on the divider."
-            },
-            {
-                "name": "variant",
-                "type": "\"subtle\" | \"strong\"",
-                "required": false,
-                "default": "'subtle'",
-                "description": "Visual weight of the divider line. Default: 'subtle'."
-            },
-            {
-                "name": "orientation",
-                "type": "\"horizontal\" | \"vertical\"",
-                "required": false,
-                "default": "'horizontal'",
-                "description": "Orientation of the divider. Default: 'horizontal'."
-            },
-            {
-                "name": "isFullBleed",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Extend the divider to container edges with negative margins. Default: false."
-            }
-        ],
         "practices": [
             {
                 "guidance": true,
@@ -843,33 +309,6 @@
         "name": "DropdownMenu",
         "url": "https://astryx.atmeta.com/components/DropdownMenu",
         "introduction": "Opens an action menu using standard adaptive presentation and placement.",
-        "properties": [
-            {
-                "name": "button",
-                "type": "{ label: string; variant?: \"primary\" | \"secondary\" | \"ghost\" | \"destructive\"; size?: \"sm\" | \"md\" | \"lg\"; isDisabled?: boolean; }",
-                "required": false,
-                "default": "{ label: 'Menu', variant: 'secondary', size: 'md', isDisabled: false }",
-                "description": "Props for the trigger button (Button props except onClick). Default: { label: 'Menu', variant: 'secondary', size: 'md', isDisabled: false }."
-            },
-            {
-                "name": "items",
-                "type": "DropdownMenuOption[]",
-                "required": true,
-                "description": "Array of menu entries. Each entry is one of: an action item `{label, onClick?, icon?, description?, endContent?, isDisabled?, variant?, hasCloseOnSelect?, id?}` (variant `\"destructive\"` renders it in the error color; `endContent` holds trailing content such as a keyboard-shortcut hint; `id` is the row's stable React key, needed only when the array reorders or filters), a divider `{type: \"divider\"}`, or a section `{type: \"section\", title?, id?, items: [...action items]}`."
-            },
-            {
-                "name": "isMenuOpen",
-                "type": "boolean",
-                "required": false,
-                "description": "Controlled open state for the menu. Mounting with true renders the menu open without moving focus into it; focus moves to the first item only when the menu opens after mount."
-            },
-            {
-                "name": "onOpenChange",
-                "type": "(isOpen: boolean) => void",
-                "required": false,
-                "description": "Callback fired when the open state changes."
-            }
-        ],
         "practices": [
             {
                 "guidance": true,
@@ -901,21 +340,6 @@
         "name": "EmptyState",
         "url": "https://astryx.atmeta.com/components/EmptyState",
         "introduction": "Describes an empty View region without custom decorative slots.",
-        "properties": [
-            {
-                "name": "title",
-                "type": "string",
-                "required": true,
-                "description": "Primary message rendered as an <h3> heading inside the empty state."
-            },
-            {
-                "name": "isCompact",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Enables the compact variant with reduced spacing for constrained content areas. Default: false."
-            }
-        ],
         "practices": [
             {
                 "guidance": true,
@@ -943,121 +367,6 @@
         "name": "FileInput",
         "url": "https://astryx.atmeta.com/components/FileInput",
         "introduction": "Selects files with explicit upload constraints; uploading remains a Solution operation.",
-        "properties": [
-            {
-                "name": "label",
-                "type": "string",
-                "required": true,
-                "description": "Accessible label for the file input."
-            },
-            {
-                "name": "description",
-                "type": "string",
-                "required": false,
-                "description": "Description text displayed between the label and input."
-            },
-            {
-                "name": "name",
-                "type": "string",
-                "required": false,
-                "description": "Includes the themed control's value under this form submission name."
-            },
-            {
-                "name": "required",
-                "type": "boolean",
-                "required": false,
-                "description": "Requires a value before native form submission."
-            },
-            {
-                "name": "disabled",
-                "type": "boolean",
-                "required": false,
-                "description": "Prevents interaction and excludes the field from submission."
-            },
-            {
-                "name": "readOnly",
-                "type": "boolean",
-                "required": false,
-                "description": "Retains submitted values while preventing editing where supported."
-            },
-            {
-                "name": "isRequired",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Displays a \"Required\" indicator next to the label and adds a screen-reader-only \"Required\" description to the trigger (assistive tech does not reliably announce aria-required on the trigger). Mutually exclusive with isOptional. Default: false."
-            },
-            {
-                "name": "isDisabled",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Disables the input, preventing interaction and dimming the element. Default: false."
-            },
-            {
-                "name": "width",
-                "type": "string | number",
-                "required": false,
-                "description": "Width of the field (number = pixels, string used as-is, e.g. \"100%\"). Sizes the whole field (label, control, and status) so they stay aligned."
-            },
-            {
-                "name": "value",
-                "type": "File | File[] | null",
-                "required": false,
-                "description": "Currently selected file(s). Controlled component."
-            },
-            {
-                "name": "onChange",
-                "type": "(value: File | File[] | null) => void",
-                "required": false,
-                "description": "Callback fired when files are selected or removed."
-            },
-            {
-                "name": "accept",
-                "type": "string",
-                "required": false,
-                "description": "Accepted file types. Uses the HTML accept attribute format (e.g. \"image/*\", \".pdf,.doc\")."
-            },
-            {
-                "name": "isMultiple",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Whether multiple files can be selected. When true, value and onChange use File[] instead of File. Default: false."
-            },
-            {
-                "name": "multiple",
-                "type": "boolean",
-                "required": false,
-                "description": "The multiple prop."
-            },
-            {
-                "name": "maxSize",
-                "type": "number",
-                "required": false,
-                "description": "Maximum file size in bytes. Files exceeding this are rejected with an error status."
-            },
-            {
-                "name": "maxFiles",
-                "type": "number",
-                "required": false,
-                "description": "Maximum number of files (only applies when isMultiple is true)."
-            },
-            {
-                "name": "placeholder",
-                "type": "string",
-                "required": false,
-                "default": "(multiple ? 'Choose files' : 'Choose file')",
-                "description": "Placeholder text shown when no file is selected. Default: (multiple ? 'Choose files' : 'Choose file')."
-            },
-            {
-                "name": "mode",
-                "type": "\"input\" | \"dropzone\"",
-                "required": false,
-                "default": "'input'",
-                "description": "Visual mode. 'input' is a compact inline style; 'dropzone' is a larger area with drag-and-drop support. Default: 'input'."
-            }
-        ],
         "practices": [
             {
                 "guidance": true,
@@ -1085,28 +394,6 @@
         "name": "Grid",
         "url": "https://astryx.atmeta.com/components/Grid",
         "introduction": "Arranges View content into a fixed number of columns.",
-        "properties": [
-            {
-                "name": "children",
-                "type": "ReactNode",
-                "required": false,
-                "description": "Grid content."
-            },
-            {
-                "name": "columns",
-                "type": "number",
-                "required": false,
-                "default": "1",
-                "description": "Column configuration. Use a number for fixed columns (e.g. `columns={3}`). Use an object for responsive columns: `minWidth` sets the minimum column width in px, `repeat` controls track behavior (`\"fill\"` preserves empty tracks for consistent widths, `\"fit\"` collapses empty tracks so items stretch; defaults to `\"fill\"`), and `max` caps the maximum number of columns. Default: 1."
-            },
-            {
-                "name": "gap",
-                "type": "0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10",
-                "required": false,
-                "default": "3",
-                "description": "Spacing between all items. Default: 3."
-            }
-        ],
         "practices": [
             {
                 "guidance": true,
@@ -1130,21 +417,6 @@
         "name": "Heading",
         "url": "https://astryx.atmeta.com/components/Text",
         "introduction": "Displays a semantic View heading without a separate visual-level override.",
-        "properties": [
-            {
-                "name": "children",
-                "type": "ReactNode",
-                "required": false,
-                "description": "Heading content."
-            },
-            {
-                "name": "level",
-                "type": "1 | 2 | 3 | 4 | 5 | 6",
-                "required": false,
-                "default": "2",
-                "description": "Heading level. Determines the semantic HTML element (h1-h6) and the visual styling from the theme (unless `type` is set). Default: 2."
-            }
-        ],
         "practices": [
             {
                 "guidance": true,
@@ -1168,20 +440,6 @@
         "name": "Icon",
         "url": "https://astryx.atmeta.com/components/Icon",
         "introduction": "Renders a registered Lucide icon at the requested Astryx size.",
-        "properties": [
-            {
-                "name": "icon",
-                "type": "string",
-                "required": true,
-                "description": "Semantic icon name or SVG component. Valid semantic names: close, chevronDown, chevronLeft, chevronRight, chevronsLeft, chevronsRight, check, success, error, warning, info, calendar, clock, externalLink, menu, moreHorizontal, search, arrowUp, arrowDown, arrowsUpDown, funnel, eyeSlash, viewColumns, copy, checkDouble, wrench, stop, microphone. For any icon not in this list, pass an SVG component directly (e.g. import from lucide-react or @heroicons/react). Note: this prop is called `icon`, not `name`."
-            },
-            {
-                "name": "size",
-                "type": "\"sm\" | \"md\" | \"lg\"",
-                "required": true,
-                "description": "Icon size. An explicit value wins. When omitted, Icon uses the nearest default supplied by an owning Astryx component for its icon slot, then falls back to md when no contextual default exists."
-            }
-        ],
         "practices": [
             {
                 "guidance": true,
@@ -1217,53 +475,6 @@
         "name": "IconButton",
         "url": "https://astryx.atmeta.com/components/IconButton",
         "introduction": "Runs a labeled icon action with automatic async feedback.",
-        "properties": [
-            {
-                "name": "label",
-                "type": "string",
-                "required": true,
-                "description": "Accessible label. Used as aria-label (not rendered as visible text)."
-            },
-            {
-                "name": "icon",
-                "type": "string",
-                "required": true,
-                "description": "Icon element rendered inside the button. An Astryx Icon with no explicit size defaults to sm for sm/md buttons and md for lg buttons."
-            },
-            {
-                "name": "variant",
-                "type": "\"primary\" | \"secondary\" | \"ghost\" | \"destructive\"",
-                "required": false,
-                "default": "'secondary'",
-                "description": "Visual style variant. Default: 'secondary'."
-            },
-            {
-                "name": "size",
-                "type": "\"sm\" | \"md\" | \"lg\"",
-                "required": false,
-                "default": "'md'",
-                "description": "Size variant. Default: 'md'."
-            },
-            {
-                "name": "tooltip",
-                "type": "string",
-                "required": false,
-                "description": "Tooltip text shown on hover."
-            },
-            {
-                "name": "isDisabled",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Disables the button. Default: false."
-            },
-            {
-                "name": "onClick",
-                "type": "(event: ViewMouseEvent) => void | Promise<void>",
-                "required": false,
-                "description": "Standard click handler."
-            }
-        ],
         "practices": [
             {
                 "guidance": true,
@@ -1291,20 +502,6 @@
         "name": "Link",
         "url": "https://astryx.atmeta.com/components/Link",
         "introduction": "Displays a destination without granting a View top-level browser navigation.",
-        "properties": [
-            {
-                "name": "to",
-                "type": "string",
-                "required": true,
-                "description": "The to prop."
-            },
-            {
-                "name": "children",
-                "type": "ReactNode",
-                "required": false,
-                "description": "Link content"
-            }
-        ],
         "practices": [
             {
                 "guidance": true,
@@ -1324,27 +521,6 @@
         "name": "MetadataList",
         "url": "https://astryx.atmeta.com/components/MetadataList",
         "introduction": "Lists labeled values without configurable truncation or label geometry.",
-        "properties": [
-            {
-                "name": "children",
-                "type": "ReactNode",
-                "required": false,
-                "description": "Metadata items (MetadataListItem components)."
-            },
-            {
-                "name": "columns",
-                "type": "number | \"multi\" | \"single\"",
-                "required": false,
-                "default": "'single'",
-                "description": "Column layout mode. Default: 'single'."
-            },
-            {
-                "name": "title",
-                "type": "ReactNode",
-                "required": false,
-                "description": "Optional title or heading above the list."
-            }
-        ],
         "practices": [
             {
                 "guidance": false,
@@ -1360,40 +536,6 @@
         "name": "MoreMenu",
         "url": "https://astryx.atmeta.com/components/MoreMenu",
         "introduction": "Opens additional actions without exposing popup geometry or presentation modes.",
-        "properties": [
-            {
-                "name": "items",
-                "type": "DropdownMenuOption[]",
-                "required": true,
-                "description": "Menu items: data array of actions, dividers, and sections. Same type as DropdownMenu items prop."
-            },
-            {
-                "name": "label",
-                "type": "string",
-                "required": false,
-                "default": "'More options'",
-                "description": "Accessible label for the trigger button (aria-label) and tooltip text. Default: 'More options'."
-            },
-            {
-                "name": "icon",
-                "type": "string",
-                "required": false,
-                "description": "Override the default three-dot icon. Accepts any ReactNode."
-            },
-            {
-                "name": "isDisabled",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Whether the menu trigger is disabled. Default: false."
-            },
-            {
-                "name": "onOpenChange",
-                "type": "(isOpen: boolean) => void",
-                "required": false,
-                "description": "Callback fired when the menu opens or closes."
-            }
-        ],
         "practices": [
             {
                 "guidance": true,
@@ -1413,137 +555,6 @@
         "name": "MultiSelector",
         "url": "https://astryx.atmeta.com/components/MultiSelector",
         "introduction": "Selects multiple values using standard option and selected-value rendering.",
-        "properties": [
-            {
-                "name": "label",
-                "type": "string",
-                "required": true,
-                "description": "Label text for accessibility."
-            },
-            {
-                "name": "description",
-                "type": "string",
-                "required": false,
-                "description": "Helper text displayed below the label."
-            },
-            {
-                "name": "name",
-                "type": "string",
-                "required": false,
-                "description": "Includes the themed control's value under this form submission name."
-            },
-            {
-                "name": "required",
-                "type": "boolean",
-                "required": false,
-                "description": "Requires a value before native form submission."
-            },
-            {
-                "name": "disabled",
-                "type": "boolean",
-                "required": false,
-                "description": "Prevents interaction and excludes the field from submission."
-            },
-            {
-                "name": "readOnly",
-                "type": "boolean",
-                "required": false,
-                "description": "Retains submitted values while preventing editing where supported."
-            },
-            {
-                "name": "isRequired",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Marks the field as required. Default: false."
-            },
-            {
-                "name": "isDisabled",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Disables the selector. Default: false."
-            },
-            {
-                "name": "width",
-                "type": "string | number",
-                "required": false,
-                "description": "Width of the field (number = pixels, string used as-is, e.g. \"100%\"). Sizes the whole field (label, control, and status) so they stay aligned."
-            },
-            {
-                "name": "options",
-                "type": "SelectorOptionType[]",
-                "required": true,
-                "description": "Array of items: strings, objects with value/label/icon/disabled, dividers, or sections."
-            },
-            {
-                "name": "value",
-                "type": "string[]",
-                "required": false,
-                "description": "Currently selected values."
-            },
-            {
-                "name": "defaultValue",
-                "type": "string[]",
-                "required": false,
-                "description": "The defaultValue prop."
-            },
-            {
-                "name": "onChange",
-                "type": "(value: string[]) => void",
-                "required": false,
-                "description": "Callback fired when the selection changes."
-            },
-            {
-                "name": "placeholder",
-                "type": "string",
-                "required": false,
-                "default": "'Select...'",
-                "description": "Placeholder text shown when no value is selected. Default: 'Select...'."
-            },
-            {
-                "name": "size",
-                "type": "\"sm\" | \"md\" | \"lg\"",
-                "required": false,
-                "default": "'md'",
-                "description": "Size variant for the selector. Default: 'md'."
-            },
-            {
-                "name": "hasSelectAll",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Whether to show a select-all checkbox. Default: false."
-            },
-            {
-                "name": "hasSearch",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Whether to show a search input for filtering options. As the user types, the match count (or \"No results found\") is announced to screen readers via a polite live region. The search field has built-in affordances: a leading magnifier icon and, once a query is typed, a trailing clear (✕) button that resets the query and returns focus to the input. Default: false."
-            },
-            {
-                "name": "isReadOnly",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Makes the selector read-only: the selected values stay visible, focusable, and included in form submission, and retain their combobox identity with aria-readonly. The selection surface, clear action, and disclosure indicator are removed. Unlike isDisabled, the control is not dimmed. isDisabled takes precedence when both are set. Default: false."
-            },
-            {
-                "name": "htmlName",
-                "type": "string",
-                "required": false,
-                "default": "props.htmlName",
-                "description": "The HTML name attribute for form submissions. Renders one hidden input per selected value, like a native multi-select. Default: props.htmlName."
-            },
-            {
-                "name": "hasClear",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Shows a clear button when values are selected. Default: false."
-            }
-        ],
         "practices": [
             {
                 "guidance": true,
@@ -1575,154 +586,6 @@
         "name": "NumberInput",
         "url": "https://astryx.atmeta.com/components/NumberInput",
         "introduction": "Edits a constrained number without wheel editing or custom value formatting.",
-        "properties": [
-            {
-                "name": "label",
-                "type": "string",
-                "required": true,
-                "description": "Label text for the input (always rendered for accessibility)."
-            },
-            {
-                "name": "description",
-                "type": "string",
-                "required": false,
-                "description": "Description text displayed between the label and input."
-            },
-            {
-                "name": "name",
-                "type": "string",
-                "required": false,
-                "description": "Includes the themed control's value under this form submission name."
-            },
-            {
-                "name": "required",
-                "type": "boolean",
-                "required": false,
-                "description": "Requires a value before native form submission."
-            },
-            {
-                "name": "disabled",
-                "type": "boolean",
-                "required": false,
-                "description": "Prevents interaction and excludes the field from submission."
-            },
-            {
-                "name": "readOnly",
-                "type": "boolean",
-                "required": false,
-                "description": "Retains submitted values while preventing editing where supported."
-            },
-            {
-                "name": "isRequired",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Whether the field is required (mutually exclusive with isOptional). Default: false."
-            },
-            {
-                "name": "isDisabled",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Whether the input is disabled. Default: false."
-            },
-            {
-                "name": "width",
-                "type": "string | number",
-                "required": false,
-                "description": "Width of the field (number = pixels, string used as-is, e.g. \"100%\"). Sizes the whole field (label, control, and status) so they stay aligned."
-            },
-            {
-                "name": "value",
-                "type": "number | null",
-                "required": false,
-                "description": "Current value of the input."
-            },
-            {
-                "name": "defaultValue",
-                "type": "number",
-                "required": false,
-                "description": "The defaultValue prop."
-            },
-            {
-                "name": "min",
-                "type": "number | null",
-                "required": false,
-                "description": "Minimum value allowed. A smaller entry commits at this value on blur or Enter."
-            },
-            {
-                "name": "max",
-                "type": "number | null",
-                "required": false,
-                "description": "Maximum value allowed. A larger entry commits at this value on blur or Enter."
-            },
-            {
-                "name": "step",
-                "type": "number | null",
-                "required": false,
-                "default": "1",
-                "description": "Step increment for the input. Default: 1."
-            },
-            {
-                "name": "placeholder",
-                "type": "string",
-                "required": false,
-                "description": "Placeholder text."
-            },
-            {
-                "name": "size",
-                "type": "\"sm\" | \"md\" | \"lg\"",
-                "required": false,
-                "default": "'md'",
-                "description": "Size variant. Default: 'md'."
-            },
-            {
-                "name": "isReadOnly",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Makes the input read-only: the value is shown at full opacity and still submits with the form, but cannot be edited. Unlike isDisabled, a read-only input is not dimmed and stays in the tab order. Stepping is off in every form while read-only: arrow keys, the wheel, and the number steppers. isDisabled takes precedence when both are set. Default: false."
-            },
-            {
-                "name": "units",
-                "type": "string | null",
-                "required": false,
-                "description": "Units text to display at the end of the input (e.g., \"%\" or \"GB\")."
-            },
-            {
-                "name": "isIntegerOnly",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Only allow integer values (no floating point). Default: false."
-            },
-            {
-                "name": "htmlName",
-                "type": "string",
-                "required": false,
-                "default": "props.htmlName",
-                "description": "HTML name attribute for form submissions. Default: props.htmlName."
-            },
-            {
-                "name": "autoComplete",
-                "type": "string",
-                "required": false,
-                "description": "HTML autocomplete attribute."
-            },
-            {
-                "name": "hasClear",
-                "type": "(false) | (true)",
-                "required": false,
-                "default": "false",
-                "description": "Shows a clear (×) button when the input has a value. When true, the onChange callback also accepts null to signal the user cleared the input. Default: false."
-            },
-            {
-                "name": "onChange",
-                "type": "((value: number) => void) | ((value: number | null) => void)",
-                "required": false,
-                "description": "Callback fired when a valid text edit commits on blur or Enter, or when a step or clear control changes the value."
-            }
-        ],
         "practices": [
             {
                 "guidance": true,
@@ -1746,42 +609,6 @@
         "name": "ProgressBar",
         "url": "https://astryx.atmeta.com/components/ProgressBar",
         "introduction": "Displays determinate progress with a semantic state.",
-        "properties": [
-            {
-                "name": "label",
-                "type": "string",
-                "required": true,
-                "description": "accessible label"
-            },
-            {
-                "name": "value",
-                "type": "number",
-                "required": false,
-                "default": "0",
-                "description": "Current value (ignored when indeterminate). Default: 0."
-            },
-            {
-                "name": "max",
-                "type": "number",
-                "required": false,
-                "default": "100",
-                "description": "Maximum value. Default: 100."
-            },
-            {
-                "name": "hasValueLabel",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Show formatted value text (ignored when indeterminate). Default: false."
-            },
-            {
-                "name": "variant",
-                "type": "\"neutral\" | \"success\" | \"warning\" | \"error\" | \"accent\"",
-                "required": false,
-                "default": "'accent'",
-                "description": "Semantic color variant. Default: 'accent'."
-            }
-        ],
         "practices": [
             {
                 "guidance": true,
@@ -1813,109 +640,6 @@
         "name": "RadioList",
         "url": "https://astryx.atmeta.com/components/RadioList",
         "introduction": "Selects one of a small number of labeled values.",
-        "properties": [
-            {
-                "name": "label",
-                "type": "string",
-                "required": true,
-                "description": "Label text for the radio group (always rendered for accessibility)."
-            },
-            {
-                "name": "description",
-                "type": "string",
-                "required": false,
-                "description": "Description text displayed below the label."
-            },
-            {
-                "name": "name",
-                "type": "string",
-                "required": false,
-                "description": "Includes the themed control's value under this form submission name."
-            },
-            {
-                "name": "required",
-                "type": "boolean",
-                "required": false,
-                "description": "Requires a value before native form submission."
-            },
-            {
-                "name": "disabled",
-                "type": "boolean",
-                "required": false,
-                "description": "Prevents interaction and excludes the field from submission."
-            },
-            {
-                "name": "readOnly",
-                "type": "boolean",
-                "required": false,
-                "description": "Retains submitted values while preventing editing where supported."
-            },
-            {
-                "name": "isRequired",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Whether the radio group is required. Default: false."
-            },
-            {
-                "name": "isDisabled",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Whether all radio items are disabled. Default: false."
-            },
-            {
-                "name": "width",
-                "type": "string | number",
-                "required": false,
-                "description": "Width of the field (number = pixels, string used as-is, e.g. \"100%\"). Sizes the whole field (label, control, and status) so they stay aligned."
-            },
-            {
-                "name": "children",
-                "type": "ReactNode",
-                "required": false,
-                "description": "RadioListItem elements."
-            },
-            {
-                "name": "value",
-                "type": "string",
-                "required": false,
-                "description": "The currently selected value."
-            },
-            {
-                "name": "defaultValue",
-                "type": "string",
-                "required": false,
-                "description": "The defaultValue prop."
-            },
-            {
-                "name": "onChange",
-                "type": "(value: string) => void",
-                "required": false,
-                "description": "Callback fired when the selected value changes."
-            },
-            {
-                "name": "orientation",
-                "type": "\"horizontal\" | \"vertical\"",
-                "required": false,
-                "default": "'vertical'",
-                "description": "Layout direction of the radio items. Default: 'vertical'."
-            },
-            {
-                "name": "htmlName",
-                "type": "string",
-                "required": false,
-                "default": "props.htmlName",
-                "description": "The HTML name attribute shared by the radio inputs, useful for form submissions. When omitted, a unique internal name still groups the radios. Default: props.htmlName."
-            },
-            {
-                "name": "size",
-                "type": "\"sm\" | \"md\"",
-                "required": false,
-                "default": "'md'",
-                "description": "Size of the radio controls. Default: 'md'."
-            }
-        ],
         "practices": [
             {
                 "guidance": true,
@@ -1947,130 +671,6 @@
         "name": "Selector",
         "url": "https://astryx.atmeta.com/components/Selector",
         "introduction": "Selects one value without custom option rendering or popup geometry.",
-        "properties": [
-            {
-                "name": "label",
-                "type": "string",
-                "required": true,
-                "description": "Label text for accessibility."
-            },
-            {
-                "name": "description",
-                "type": "string",
-                "required": false,
-                "description": "Helper text displayed below the label."
-            },
-            {
-                "name": "name",
-                "type": "string",
-                "required": false,
-                "description": "Includes the themed control's value under this form submission name."
-            },
-            {
-                "name": "required",
-                "type": "boolean",
-                "required": false,
-                "description": "Requires a value before native form submission."
-            },
-            {
-                "name": "disabled",
-                "type": "boolean",
-                "required": false,
-                "description": "Prevents interaction and excludes the field from submission."
-            },
-            {
-                "name": "readOnly",
-                "type": "boolean",
-                "required": false,
-                "description": "Retains submitted values while preventing editing where supported."
-            },
-            {
-                "name": "isRequired",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Marks the field as required. Default: false."
-            },
-            {
-                "name": "isDisabled",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Disables the selector. Default: false."
-            },
-            {
-                "name": "width",
-                "type": "string | number",
-                "required": false,
-                "description": "Width of the field (number = pixels, string used as-is, e.g. \"100%\"). Sizes the whole field (label, control, and status) so they stay aligned."
-            },
-            {
-                "name": "options",
-                "type": "SelectorOptionType[]",
-                "required": true,
-                "description": "Array of items: strings, objects with value/label/description/icon/disabled, dividers ({type: \"divider\"}), or sections ({type: \"section\", title, options})."
-            },
-            {
-                "name": "defaultValue",
-                "type": "string",
-                "required": false,
-                "description": "The defaultValue prop."
-            },
-            {
-                "name": "hasSearch",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Whether to show a search input for filtering options. As the user types, the match count (or \"No results found\") is announced to screen readers via a polite live region. The search field has built-in affordances: a leading magnifier icon and, once a query is typed, a trailing clear (✕) button that resets the query and returns focus to the input. Default: false."
-            },
-            {
-                "name": "placeholder",
-                "type": "string",
-                "required": false,
-                "default": "'Select...'",
-                "description": "Placeholder text shown when no value is selected. Default: 'Select...'."
-            },
-            {
-                "name": "size",
-                "type": "\"sm\" | \"md\" | \"lg\"",
-                "required": false,
-                "default": "'md'",
-                "description": "Size variant for the selector. Default: 'md'."
-            },
-            {
-                "name": "isReadOnly",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Makes the selector read-only: the selected value stays visible, focusable, and included in form submission, and retains its combobox identity with aria-readonly. The selection surface, clear action, and disclosure indicator are removed. Unlike isDisabled, the control is not dimmed. isDisabled takes precedence when both are set. Default: false."
-            },
-            {
-                "name": "htmlName",
-                "type": "string",
-                "required": false,
-                "default": "props.htmlName",
-                "description": "The HTML name attribute for form submissions. Renders a hidden input carrying the selected value, like a native select. Default: props.htmlName."
-            },
-            {
-                "name": "hasClear",
-                "type": "(false) | (true)",
-                "required": false,
-                "default": "false",
-                "description": "Shows a clear (×) button when a value is selected. When true, onChange also accepts null to signal the user cleared the selection. Default: false."
-            },
-            {
-                "name": "value",
-                "type": "(string) | (string | null)",
-                "required": false,
-                "description": "Currently selected value."
-            },
-            {
-                "name": "onChange",
-                "type": "((value: string) => void) | ((value: string | null) => void)",
-                "required": false,
-                "description": "Callback fired when the selection changes."
-            }
-        ],
         "practices": [
             {
                 "guidance": true,
@@ -2114,123 +714,6 @@
         "name": "Slider",
         "url": "https://astryx.atmeta.com/components/Slider",
         "introduction": "Edits a number or range using a standard horizontal slider.",
-        "properties": [
-            {
-                "name": "label",
-                "type": "string",
-                "required": true,
-                "description": "Label text (always rendered for accessibility)."
-            },
-            {
-                "name": "description",
-                "type": "string",
-                "required": false,
-                "description": "Description text rendered below the label."
-            },
-            {
-                "name": "name",
-                "type": "string",
-                "required": false,
-                "description": "Includes the themed control's value under this form submission name."
-            },
-            {
-                "name": "required",
-                "type": "boolean",
-                "required": false,
-                "description": "Requires a value before native form submission."
-            },
-            {
-                "name": "disabled",
-                "type": "boolean",
-                "required": false,
-                "description": "Prevents interaction and excludes the field from submission."
-            },
-            {
-                "name": "readOnly",
-                "type": "boolean",
-                "required": false,
-                "description": "Retains submitted values while preventing editing where supported."
-            },
-            {
-                "name": "isRequired",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Whether the field is required. Default: false."
-            },
-            {
-                "name": "isDisabled",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Whether the slider is disabled. Default: false."
-            },
-            {
-                "name": "width",
-                "type": "string | number",
-                "required": false,
-                "description": "Width of the field (number = pixels, string used as-is, e.g. \"100%\"). Sizes the whole field (label, control, and status) so they stay aligned."
-            },
-            {
-                "name": "min",
-                "type": "number",
-                "required": false,
-                "default": "0",
-                "description": "Minimum value. Default: 0."
-            },
-            {
-                "name": "max",
-                "type": "number",
-                "required": false,
-                "default": "100",
-                "description": "Maximum value. Default: 100."
-            },
-            {
-                "name": "step",
-                "type": "number",
-                "required": false,
-                "default": "1",
-                "description": "Step increment. Default: 1."
-            },
-            {
-                "name": "htmlName",
-                "type": "string",
-                "required": false,
-                "default": "props.htmlName",
-                "description": "The HTML name attribute for form submissions. Renders hidden inputs carrying the current value (two entries in range mode). Default: props.htmlName."
-            },
-            {
-                "name": "value",
-                "type": "(number) | ([number, number])",
-                "required": false,
-                "description": "Current value: a `number` for single thumb mode or `[number, number]` for range mode."
-            },
-            {
-                "name": "defaultValue",
-                "type": "(number) | ([number, number])",
-                "required": false,
-                "description": "The defaultValue prop."
-            },
-            {
-                "name": "onChange",
-                "type": "((value: number) => void) | ((value: [number, number]) => void)",
-                "required": false,
-                "description": "Callback fired on value change during drag."
-            },
-            {
-                "name": "onChangeEnd",
-                "type": "((value: number) => void) | ((value: [number, number]) => void)",
-                "required": false,
-                "description": "Callback fired when drag ends."
-            },
-            {
-                "name": "minStepsBetweenThumbs",
-                "type": "number",
-                "required": false,
-                "default": "0",
-                "description": "Minimum number of steps between thumbs in range mode; prevents thumbs from overlapping. Default: 0."
-            }
-        ],
         "practices": [
             {
                 "guidance": true,
@@ -2254,56 +737,6 @@
         "name": "Stack",
         "url": "https://astryx.atmeta.com/components/Stack",
         "introduction": "Arranges View content using the LongLink spacing scale.",
-        "properties": [
-            {
-                "name": "children",
-                "type": "ReactNode",
-                "required": false,
-                "description": "Stack content."
-            },
-            {
-                "name": "gap",
-                "type": "0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10",
-                "required": false,
-                "default": "3",
-                "description": "Spacing between items. Default: 3."
-            },
-            {
-                "name": "padding",
-                "type": "0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10",
-                "required": false,
-                "default": "0",
-                "description": "Inner padding on all sides, using the spacing scale. Pass as a JSX number expression e.g. padding={3}. Default: 0."
-            },
-            {
-                "name": "direction",
-                "type": "\"horizontal\" | \"vertical\"",
-                "required": false,
-                "default": "'vertical'",
-                "description": "Direction of the stack layout. 'horizontal' flows items left-to-right (like HStack), 'vertical' flows top-to-bottom (like VStack). Note: the value is 'horizontal', NOT 'row'. Default: 'vertical'."
-            },
-            {
-                "name": "justify",
-                "type": "\"start\" | \"center\" | \"end\" | \"between\" | \"around\" | \"evenly\"",
-                "required": false,
-                "default": "'start'",
-                "description": "Main-axis alignment alias. Resolves to hAlign (horizontal) or vAlign (vertical). Note: use 'between', NOT 'space-between'. Default: 'start'."
-            },
-            {
-                "name": "align",
-                "type": "\"start\" | \"center\" | \"end\" | \"stretch\"",
-                "required": false,
-                "default": "'stretch'",
-                "description": "Cross-axis alignment alias. Mirrors CSS align-items. Default: 'stretch'."
-            },
-            {
-                "name": "wrap",
-                "type": "\"nowrap\" | \"wrap\" | \"wrap-reverse\"",
-                "required": false,
-                "default": "'nowrap'",
-                "description": "Flex wrap behavior. Default: 'nowrap'."
-            }
-        ],
         "practices": [
             {
                 "guidance": true,
@@ -2323,26 +756,6 @@
         "name": "StatusDot",
         "url": "https://astryx.atmeta.com/components/StatusDot",
         "introduction": "Displays a labeled semantic status without custom indicator rendering.",
-        "properties": [
-            {
-                "name": "label",
-                "type": "string",
-                "required": true,
-                "description": "Accessible label surfaced via aria-label."
-            },
-            {
-                "name": "variant",
-                "type": "\"neutral\" | \"success\" | \"warning\" | \"error\" | \"accent\"",
-                "required": true,
-                "description": "Semantic color variant."
-            },
-            {
-                "name": "tooltip",
-                "type": "string",
-                "required": false,
-                "description": "Tooltip text shown on hover to explain the status meaning."
-            }
-        ],
         "practices": [
             {
                 "guidance": true,
@@ -2366,28 +779,6 @@
         "name": "Stepper",
         "url": "https://astryx.atmeta.com/components/Stepper",
         "introduction": "Displays the current step using standard progress indicators.",
-        "properties": [
-            {
-                "name": "children",
-                "type": "ReactNode",
-                "required": false,
-                "description": "Step elements to render in the stepper."
-            },
-            {
-                "name": "activeStep",
-                "type": "number",
-                "required": false,
-                "default": "0",
-                "description": "Zero-based index of the currently active step. Steps before this index are marked as completed. Default: 0."
-            },
-            {
-                "name": "orientation",
-                "type": "\"horizontal\" | \"vertical\"",
-                "required": false,
-                "default": "'horizontal'",
-                "description": "Layout direction of the stepper. Default: 'horizontal'."
-            }
-        ],
         "practices": [
             {
                 "guidance": true,
@@ -2407,102 +798,6 @@
         "name": "Switch",
         "url": "https://astryx.atmeta.com/components/Switch",
         "introduction": "Edits an on/off setting using one controlled change handler.",
-        "properties": [
-            {
-                "name": "label",
-                "type": "string",
-                "required": true,
-                "description": "Label text for the switch (always rendered for accessibility)."
-            },
-            {
-                "name": "description",
-                "type": "string",
-                "required": false,
-                "description": "Description text displayed below the label."
-            },
-            {
-                "name": "name",
-                "type": "string",
-                "required": false,
-                "description": "Includes the themed control's value under this form submission name."
-            },
-            {
-                "name": "required",
-                "type": "boolean",
-                "required": false,
-                "description": "Requires a value before native form submission."
-            },
-            {
-                "name": "disabled",
-                "type": "boolean",
-                "required": false,
-                "description": "Prevents interaction and excludes the field from submission."
-            },
-            {
-                "name": "readOnly",
-                "type": "boolean",
-                "required": false,
-                "description": "Retains submitted values while preventing editing where supported."
-            },
-            {
-                "name": "isRequired",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Whether the switch is required. Mutually exclusive with isOptional. Default: false."
-            },
-            {
-                "name": "isDisabled",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Whether the switch is disabled. Default: false."
-            },
-            {
-                "name": "width",
-                "type": "string | number",
-                "required": false,
-                "description": "Width of the field (number = pixels, string used as-is, e.g. \"100%\"). Sizes the whole field (label, control, and status) so they stay aligned."
-            },
-            {
-                "name": "value",
-                "type": "boolean",
-                "required": false,
-                "description": "Whether the switch is on or off."
-            },
-            {
-                "name": "checked",
-                "type": "boolean",
-                "required": false,
-                "description": "The checked prop."
-            },
-            {
-                "name": "defaultChecked",
-                "type": "boolean",
-                "required": false,
-                "description": "The defaultChecked prop."
-            },
-            {
-                "name": "onChange",
-                "type": "(value: boolean) => void",
-                "required": false,
-                "description": "Callback fired when the switch state changes."
-            },
-            {
-                "name": "htmlName",
-                "type": "string",
-                "required": false,
-                "default": "props.htmlName",
-                "description": "The HTML name attribute for the underlying checkbox input, useful for form submissions (submits \"on\" when the switch is on). Default: props.htmlName."
-            },
-            {
-                "name": "size",
-                "type": "\"sm\" | \"md\"",
-                "required": false,
-                "default": "'md'",
-                "description": "Size variant controlling track and thumb dimensions. sm (32x20px) matches sm checkbox/radio vertical rhythm; md (40x24px, default) matches md checkbox/radio vertical rhythm. Default: 'md'."
-            }
-        ],
         "practices": [
             {
                 "guidance": true,
@@ -2526,47 +821,6 @@
         "name": "Table",
         "url": "https://astryx.atmeta.com/components/Table",
         "introduction": "Displays data-driven rows without plugins or a second children-based table contract.",
-        "properties": [
-            {
-                "name": "data",
-                "type": "T[]",
-                "required": true,
-                "description": "Array of data items to render as rows. T must extend Record<string, unknown> (use `interface MyRow extends Record<string, unknown>` for custom types)."
-            },
-            {
-                "name": "idKey",
-                "type": "(keyof T & string) | ((row: T) => string | number)",
-                "required": false,
-                "description": "Row key for React reconciliation. Pass a property name string or a function. Falls back to row index if omitted."
-            },
-            {
-                "name": "density",
-                "type": "\"compact\" | \"balanced\" | \"spacious\"",
-                "required": false,
-                "default": "'balanced'",
-                "description": "Row density controlling cell padding and font size. Default: 'balanced'."
-            },
-            {
-                "name": "hasHover",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Applies a hover highlight background to rows on pointer devices. Default: false."
-            },
-            {
-                "name": "isStriped",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Applies a background wash to even-numbered rows. Default: false."
-            },
-            {
-                "name": "columns",
-                "type": "{ key: string; header?: ReactNode; width?: ColumnWidth; align?: \"start\" | \"center\" | \"end\"; renderCell?: ((row: T) => ReactNode); }[]",
-                "required": false,
-                "description": "Column definitions: each column has {key, header, width?, align?, renderCell?}. The `header` field sets the column heading text. If omitted, columns are auto-generated from data object keys. The `width` field is typed as `ColumnWidth` (not a number); use `proportional(n)` or `pixel(n)` helpers imported from `@astryxdesign/core/Table`. Example: `width: pixel(120)` for 120px fixed, `width: proportional(1)` for flex distribution."
-            }
-        ],
         "practices": [
             {
                 "guidance": true,
@@ -2602,28 +856,6 @@
         "name": "Text",
         "url": "https://astryx.atmeta.com/components/Text",
         "introduction": "Displays View text with a small set of semantic styles.",
-        "properties": [
-            {
-                "name": "children",
-                "type": "ReactNode",
-                "required": false,
-                "description": "Text content."
-            },
-            {
-                "name": "color",
-                "type": "\"primary\" | \"secondary\"",
-                "required": false,
-                "default": "(props.type === 'supporting' ? 'secondary' : 'primary')",
-                "description": "Text color. Defaults to 'secondary' for the 'supporting' type, 'primary' for all others. Themes may add custom colors. Default: (props.type === 'supporting' ? 'secondary' : 'primary')."
-            },
-            {
-                "name": "type",
-                "type": "\"body\" | \"large\" | \"label\" | \"supporting\" | \"code\"",
-                "required": false,
-                "default": "'body'",
-                "description": "Semantic text type. Determines size, weight, and line-height from the theme. 'inherit' takes all three from the surrounding text instead. Themes may add custom types. Note: this prop is called `type`, not `variant`. Default: 'body'."
-            }
-        ],
         "practices": [
             {
                 "guidance": true,
@@ -2647,128 +879,6 @@
         "name": "TextArea",
         "url": "https://astryx.atmeta.com/components/TextArea",
         "introduction": "Edits themed multi-line text with native form serialization.",
-        "properties": [
-            {
-                "name": "label",
-                "type": "string",
-                "required": true,
-                "description": "Label text for the textarea. Always rendered for accessibility."
-            },
-            {
-                "name": "description",
-                "type": "string",
-                "required": false,
-                "description": "Helper text displayed between the label and textarea."
-            },
-            {
-                "name": "name",
-                "type": "string",
-                "required": false,
-                "description": "Includes the themed control's value under this form submission name."
-            },
-            {
-                "name": "required",
-                "type": "boolean",
-                "required": false,
-                "description": "Requires a value before native form submission."
-            },
-            {
-                "name": "disabled",
-                "type": "boolean",
-                "required": false,
-                "description": "Prevents interaction and excludes the field from submission."
-            },
-            {
-                "name": "readOnly",
-                "type": "boolean",
-                "required": false,
-                "description": "Retains submitted values while preventing editing where supported."
-            },
-            {
-                "name": "isRequired",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Displays a \"Required\" indicator next to the label and sets aria-required. Mutually exclusive with isOptional. Default: false."
-            },
-            {
-                "name": "isDisabled",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Disables the textarea, preventing interaction. Default: false."
-            },
-            {
-                "name": "width",
-                "type": "string | number",
-                "required": false,
-                "description": "Width of the field (number = pixels, string used as-is, e.g. \"100%\"). Sizes the whole field (label, control, and status) so they stay aligned."
-            },
-            {
-                "name": "value",
-                "type": "string",
-                "required": false,
-                "description": "Current value of the textarea."
-            },
-            {
-                "name": "defaultValue",
-                "type": "string",
-                "required": false,
-                "description": "The defaultValue prop."
-            },
-            {
-                "name": "onChange",
-                "type": "(value: string) => void",
-                "required": false,
-                "description": "Callback fired when the textarea value changes."
-            },
-            {
-                "name": "placeholder",
-                "type": "string",
-                "required": false,
-                "description": "Placeholder text shown when the textarea is empty."
-            },
-            {
-                "name": "rows",
-                "type": "number",
-                "required": false,
-                "default": "3",
-                "description": "Number of visible text rows. Default: 3."
-            },
-            {
-                "name": "maxLength",
-                "type": "number",
-                "required": false,
-                "description": "Maximum number of characters allowed, counted as user-perceived characters: an emoji or flag sequence counts as one. When set, a character counter (current/max) is displayed inside the input container, anchored to the bottom-right beneath the text. Does not enforce the limit natively; when exceeded the counter turns red and shows a warning icon (a non-color cue), and screen-reader users hear the remaining/over-limit count announced. Consumers validating the limit should count with characterCount (exported from the package) so enforcement matches the displayed count."
-            },
-            {
-                "name": "isReadOnly",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Makes the textarea read-only: the value is shown at full opacity and still submits with the form, but cannot be edited. Unlike isDisabled, a read-only textarea is not dimmed and stays in the tab order. isDisabled takes precedence when both are set. Default: false."
-            },
-            {
-                "name": "hasAutoFocus",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Automatically focuses the textarea on mount. Default: false."
-            },
-            {
-                "name": "htmlName",
-                "type": "string",
-                "required": false,
-                "default": "props.htmlName",
-                "description": "HTML name attribute for the textarea element, useful for form submissions. Default: props.htmlName."
-            },
-            {
-                "name": "autoComplete",
-                "type": "string",
-                "required": false,
-                "description": "The native autocomplete attribute, forwarded to the textarea unchanged. Does not affect the controlled value."
-            }
-        ],
         "practices": [
             {
                 "guidance": true,
@@ -2792,148 +902,6 @@
         "name": "TextInput",
         "url": "https://astryx.atmeta.com/components/TextInput",
         "introduction": "Edits themed text with optional local state and native form serialization.",
-        "properties": [
-            {
-                "name": "label",
-                "type": "string",
-                "required": true,
-                "description": "Label text for the input: always rendered for accessibility."
-            },
-            {
-                "name": "description",
-                "type": "string",
-                "required": false,
-                "description": "Description text displayed between the label and input."
-            },
-            {
-                "name": "name",
-                "type": "string",
-                "required": false,
-                "description": "Includes the themed control's value under this form submission name."
-            },
-            {
-                "name": "required",
-                "type": "boolean",
-                "required": false,
-                "description": "Requires a value before native form submission."
-            },
-            {
-                "name": "disabled",
-                "type": "boolean",
-                "required": false,
-                "description": "Prevents interaction and excludes the field from submission."
-            },
-            {
-                "name": "readOnly",
-                "type": "boolean",
-                "required": false,
-                "description": "Retains submitted values while preventing editing where supported."
-            },
-            {
-                "name": "isRequired",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Displays a \"Required\" indicator next to the label and sets aria-required. Mutually exclusive with isOptional. Default: false."
-            },
-            {
-                "name": "isDisabled",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Disables the input, preventing interaction and dimming the element. Default: false."
-            },
-            {
-                "name": "width",
-                "type": "string | number",
-                "required": false,
-                "description": "Width of the field (number = pixels, string used as-is, e.g. \"100%\"). Sizes the whole field (label, control, and status) so they stay aligned."
-            },
-            {
-                "name": "value",
-                "type": "string",
-                "required": false,
-                "description": "Current value of the input."
-            },
-            {
-                "name": "defaultValue",
-                "type": "string",
-                "required": false,
-                "description": "The defaultValue prop."
-            },
-            {
-                "name": "onChange",
-                "type": "(value: string) => void",
-                "required": false,
-                "description": "Callback fired when the input value changes."
-            },
-            {
-                "name": "placeholder",
-                "type": "string",
-                "required": false,
-                "description": "Placeholder text shown when the input is empty."
-            },
-            {
-                "name": "type",
-                "type": "\"text\" | \"password\" | \"email\"",
-                "required": false,
-                "default": "'text'",
-                "description": "The HTML input type. Default: 'text'."
-            },
-            {
-                "name": "size",
-                "type": "\"sm\" | \"md\" | \"lg\"",
-                "required": false,
-                "default": "'md'",
-                "description": "Size variant of the input. Default: 'md'."
-            },
-            {
-                "name": "htmlName",
-                "type": "string",
-                "required": false,
-                "default": "props.htmlName",
-                "description": "The HTML name attribute for the input, useful for form submissions. Default: props.htmlName."
-            },
-            {
-                "name": "autoComplete",
-                "type": "string",
-                "required": false,
-                "description": "The native autocomplete attribute, forwarded to the input unchanged. Does not affect the controlled value."
-            },
-            {
-                "name": "isReadOnly",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Makes the input read-only: the value is shown at full opacity and still submits with the form, but cannot be edited. Unlike isDisabled, a read-only input is not dimmed and stays in the tab order. isDisabled takes precedence when both are set. Default: false."
-            },
-            {
-                "name": "hasClear",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Shows a clear (×) button when the input has a value. Clicking it clears the value and returns focus to the input. Default: false."
-            },
-            {
-                "name": "hasAutoFocus",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Automatically focuses the input on mount. Default: false."
-            },
-            {
-                "name": "startIcon",
-                "type": "ReactNode",
-                "required": false,
-                "description": "SVG icon component displayed at the start of the input. See `astryx docs icons` for valid semantic names."
-            },
-            {
-                "name": "onEnter",
-                "type": "() => void",
-                "required": false,
-                "description": "Callback fired when the user presses the Enter key. IME-safe: Enter used to commit a Japanese/Chinese/Korean conversion does not fire it."
-            }
-        ],
         "practices": [
             {
                 "guidance": true,
@@ -2965,136 +933,6 @@
         "name": "TimeInput",
         "url": "https://astryx.atmeta.com/components/TimeInput",
         "introduction": "Selects a constrained time using the standard picker.",
-        "properties": [
-            {
-                "name": "label",
-                "type": "string",
-                "required": true,
-                "description": "Label text for the input (required for accessibility)."
-            },
-            {
-                "name": "description",
-                "type": "string",
-                "required": false,
-                "description": "Description text displayed between the label and input."
-            },
-            {
-                "name": "name",
-                "type": "string",
-                "required": false,
-                "description": "Includes the themed control's value under this form submission name."
-            },
-            {
-                "name": "required",
-                "type": "boolean",
-                "required": false,
-                "description": "Requires a value before native form submission."
-            },
-            {
-                "name": "disabled",
-                "type": "boolean",
-                "required": false,
-                "description": "Prevents interaction and excludes the field from submission."
-            },
-            {
-                "name": "readOnly",
-                "type": "boolean",
-                "required": false,
-                "description": "Retains submitted values while preventing editing where supported."
-            },
-            {
-                "name": "isRequired",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Marks the field as required and sets aria-required. Mutually exclusive with isOptional. Default: false."
-            },
-            {
-                "name": "isDisabled",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Disables the input and suppresses interactions. Default: false."
-            },
-            {
-                "name": "width",
-                "type": "string | number",
-                "required": false,
-                "description": "Width of the field (number = pixels, string used as-is, e.g. \"100%\"). Sizes the whole field (label, control, and status) so they stay aligned."
-            },
-            {
-                "name": "value",
-                "type": "ISOTimeString",
-                "required": false,
-                "description": "Controlled time value in ISO format (HH:MM or HH:MM:SS)."
-            },
-            {
-                "name": "defaultValue",
-                "type": "ISOTimeString",
-                "required": false,
-                "description": "The defaultValue prop."
-            },
-            {
-                "name": "onChange",
-                "type": "(value: ISOTimeString | undefined) => void",
-                "required": false,
-                "description": "Callback fired when the time changes. Receives undefined when the input is cleared."
-            },
-            {
-                "name": "min",
-                "type": "ISOTimeString",
-                "required": false,
-                "description": "Minimum selectable time in ISO format. Values outside the range are rejected."
-            },
-            {
-                "name": "max",
-                "type": "ISOTimeString",
-                "required": false,
-                "description": "Maximum selectable time in ISO format. Values outside the range are rejected."
-            },
-            {
-                "name": "hasSeconds",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Includes seconds in the time display and parsing. Default: false."
-            },
-            {
-                "name": "hasClear",
-                "type": "boolean",
-                "required": false,
-                "default": "false",
-                "description": "Shows a clear button when a value is set and the input is not disabled. Default: false."
-            },
-            {
-                "name": "hourFormat",
-                "type": "\"12h\" | \"24h\"",
-                "required": false,
-                "default": "'12h'",
-                "description": "Controls the display format. '12h' shows AM/PM (e.g. '2:30 PM'); '24h' uses 24-hour notation (e.g. '14:30'). Default: '12h'."
-            },
-            {
-                "name": "increment",
-                "type": "number",
-                "required": false,
-                "default": "1",
-                "description": "Number of minutes to add or subtract when the user presses the up or down arrow key. Default: 1."
-            },
-            {
-                "name": "placeholder",
-                "type": "string",
-                "required": false,
-                "default": "'Select a time'",
-                "description": "Placeholder text shown when no time is selected. When the input is focused and empty, a format hint overrides this text. Default: 'Select a time'."
-            },
-            {
-                "name": "size",
-                "type": "\"sm\" | \"md\" | \"lg\"",
-                "required": false,
-                "default": "'md'",
-                "description": "Controls the height of the input element. Default: 'md'."
-            }
-        ],
         "practices": [
             {
                 "guidance": true,
@@ -3130,21 +968,6 @@
         "name": "Timestamp",
         "url": "https://astryx.atmeta.com/components/Timestamp",
         "introduction": "Formats a date or timestamp using the standard date formats.",
-        "properties": [
-            {
-                "name": "value",
-                "type": "string | number",
-                "required": true,
-                "description": "The date/time to display. Accepts Unix timestamps (seconds) or ISO 8601 strings."
-            },
-            {
-                "name": "format",
-                "type": "\"date\" | \"date_long\" | \"date_weekday\" | \"date_time\" | \"time\" | \"relative\" | \"system_date\" | \"system_date_time\" | \"system_time\"",
-                "required": false,
-                "default": "'date_time'",
-                "description": "Display format. 'relative' uses the locale's native long relative-time wording ('2 hours ago' in English), 'relative_short' uses its narrow pattern ('2h ago' in English) for compact surfaces, 'date' shows 'Mar 21, 2025', 'date_long' shows 'March 21, 2025', 'date_weekday' shows 'Wed, Mar 21, 2025', 'date_time' shows 'Mar 21, 2025, 2:51 PM', 'time' shows '2:51 PM', 'system_*' variants use ISO-style formatting, 'unix_seconds' shows the Unix time in whole seconds since the epoch (an absolute, zone-independent value), 'auto' switches from relative to date_time based on recency. Default: 'date_time'."
-            }
-        ],
         "practices": [
             {
                 "guidance": true,

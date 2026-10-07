@@ -468,7 +468,9 @@ declare function StackItem(props: {
 type CardProps = {
     /** Content rendered inside the card. */
     children?: ViewNode;
+    /** Inner spacing using the theme spacing scale. */
     padding?: 0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10;
+    /** Background color variant, independent of the interaction mode. */
     variant?:
         | 'default'
         | 'transparent'
@@ -495,15 +497,19 @@ type CardProps = {
     inert?: boolean;
     /** Hides the card from assistive technologies. */
     'aria-hidden'?: boolean | 'true' | 'false';
+    /** Accessible label for interactive cards; supply a descriptive label. */
     label?: string;
-    /** Makes the card clickable and receives its activation event. */
+    /** Makes the card clickable when its surface is activated; nested controls act independently. */
     onClick?: (event: ViewMouseEvent) => void;
     /** Makes the card a navigation target when no selection callback is supplied. */
     href?: string;
+    /** Link target, such as _blank. */
     target?: string;
+    /** Disables activation of an interactive card. */
     isDisabled?: boolean;
+    /** Selection state; supply onChange to let users toggle it. */
     isSelected?: boolean;
-    /** Makes the card selectable and receives its next selection state; takes priority over activation. */
+    /** Makes the card selectable and receives its next selection state; takes priority over onClick and href. */
     onChange?: (isSelected: boolean) => void;
 };
 

@@ -82,7 +82,7 @@ export default [
         route('privacy', './routes/legal/Privacy.tsx'),
         route('impressum', './routes/legal/Impressum.tsx'),
         ...prefix('branding', [
-            route('logo', './routes/branding/Logo.tsx'),
+            route('assets', './routes/branding/Assets.tsx'),
             route('values', './routes/branding/Values.tsx'),
             route('comunication', './routes/branding/Communication.tsx'),
         ]),

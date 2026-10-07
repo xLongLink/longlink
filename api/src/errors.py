@@ -1,31 +1,12 @@
-import logging
-import traceback
 from fastapi import Request
 from pydantic import BaseModel
 from fastapi.responses import JSONResponse
-
-logger = logging.getLogger(__name__)
 
 
 class ErrorResponse(BaseModel):
     """Describe the public error contract without internal diagnostics."""
 
     detail: str
-
-
-async def unexpected_error_response(_request: Request, error: Exception) -> JSONResponse:
-    """Log unexpected failures server-side and return a safe public message."""
-
-    # Record the failure type and stack locations without exception values, SQL parameters, or submitted inputs.
-    stack = "\n".join(
-        f"  {frame.f_code.co_filename}:{lineno} in {frame.f_code.co_name}" for frame, lineno in traceback.walk_tb(error.__traceback__)
-    )
-    logger.error("Unhandled API error %s\n%s", type(error).__name__, stack)
-    return JSONResponse(
-        status_code=500,
-        content={"detail": "An unexpected error occurred. Please try again later."},
-        headers={"cache-control": "no-store"},
-    )
 
 
 async def service_error_response(_request: Request, error: "ServiceError") -> JSONResponse:

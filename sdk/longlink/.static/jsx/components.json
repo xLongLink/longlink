@@ -208,7 +208,7 @@
     {
         "name": "Card",
         "category": "Layouts",
-        "declaration": "type CardProps = {\n    /** Content rendered inside the card. */\n    children?: ViewNode;\n    padding?: 0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10;\n    variant?:\n        | 'default'\n        | 'transparent'\n        | 'muted'\n        | 'blue'\n        | 'cyan'\n        | 'gray'\n        | 'green'\n        | 'orange'\n        | 'pink'\n        | 'purple'\n        | 'red'\n        | 'teal'\n        | 'yellow';\n    /** Card width; numbers are pixels and strings are CSS sizes. */\n    width?: number | string;\n    /** Card height; numbers are pixels and strings are CSS sizes. */\n    height?: number | string;\n    /** Maximum card width. */\n    maxWidth?: number | string;\n    /** Minimum card height. */\n    minHeight?: number | string;\n    /** Makes the card and its descendants non-interactive. */\n    inert?: boolean;\n    /** Hides the card from assistive technologies. */\n    'aria-hidden'?: boolean | 'true' | 'false';\n    label?: string;\n    /** Makes the card clickable and receives its activation event. */\n    onClick?: (event: ViewMouseEvent) => void;\n    /** Makes the card a navigation target when no selection callback is supplied. */\n    href?: string;\n    target?: string;\n    isDisabled?: boolean;\n    isSelected?: boolean;\n    /** Makes the card selectable and receives its next selection state; takes priority over activation. */\n    onChange?: (isSelected: boolean) => void;\n};\n\ndeclare function Card(props: CardProps): React.JSX.Element;",
+        "declaration": "type CardProps = {\n    /** Content rendered inside the card. */\n    children?: ViewNode;\n    /** Inner spacing using the theme spacing scale. */\n    padding?: 0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10;\n    /** Background color variant, independent of the interaction mode. */\n    variant?:\n        | 'default'\n        | 'transparent'\n        | 'muted'\n        | 'blue'\n        | 'cyan'\n        | 'gray'\n        | 'green'\n        | 'orange'\n        | 'pink'\n        | 'purple'\n        | 'red'\n        | 'teal'\n        | 'yellow';\n    /** Card width; numbers are pixels and strings are CSS sizes. */\n    width?: number | string;\n    /** Card height; numbers are pixels and strings are CSS sizes. */\n    height?: number | string;\n    /** Maximum card width. */\n    maxWidth?: number | string;\n    /** Minimum card height. */\n    minHeight?: number | string;\n    /** Makes the card and its descendants non-interactive. */\n    inert?: boolean;\n    /** Hides the card from assistive technologies. */\n    'aria-hidden'?: boolean | 'true' | 'false';\n    /** Accessible label for interactive cards; supply a descriptive label. */\n    label?: string;\n    /** Makes the card clickable when its surface is activated; nested controls act independently. */\n    onClick?: (event: ViewMouseEvent) => void;\n    /** Makes the card a navigation target when no selection callback is supplied. */\n    href?: string;\n    /** Link target, such as _blank. */\n    target?: string;\n    /** Disables activation of an interactive card. */\n    isDisabled?: boolean;\n    /** Selection state; supply onChange to let users toggle it. */\n    isSelected?: boolean;\n    /** Makes the card selectable and receives its next selection state; takes priority over onClick and href. */\n    onChange?: (isSelected: boolean) => void;\n};\n\ndeclare function Card(props: CardProps): React.JSX.Element;",
         "properties": [
             {
                 "name": "children",
@@ -221,14 +221,14 @@
                 "type": "0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10",
                 "required": false,
                 "default": "4",
-                "description": "The padding prop. Default: 4."
+                "description": "Inner spacing using the theme spacing scale. Default: 4."
             },
             {
                 "name": "variant",
                 "type": "\"blue\" | \"cyan\" | \"green\" | \"orange\" | \"pink\" | \"purple\" | \"red\" | \"teal\" | \"yellow\" | \"default\" | \"transparent\" | \"muted\" | \"gray\"",
                 "required": false,
                 "default": "'default'",
-                "description": "The variant prop. Default: 'default'."
+                "description": "Background color variant, independent of the interaction mode. Default: 'default'."
             },
             {
                 "name": "width",
@@ -271,13 +271,13 @@
                 "type": "string",
                 "required": false,
                 "default": "'Card'",
-                "description": "The label prop. Default: 'Card'."
+                "description": "Accessible label for interactive cards; supply a descriptive label. Default: 'Card'."
             },
             {
                 "name": "onClick",
                 "type": "(event: ViewMouseEvent) => void",
                 "required": false,
-                "description": "Makes the card clickable and receives its activation event."
+                "description": "Makes the card clickable when its surface is activated; nested controls act independently."
             },
             {
                 "name": "href",
@@ -290,27 +290,27 @@
                 "type": "string",
                 "required": false,
                 "default": "'_self'",
-                "description": "The target prop. Default: '_self'."
+                "description": "Link target, such as _blank. Default: '_self'."
             },
             {
                 "name": "isDisabled",
                 "type": "boolean",
                 "required": false,
                 "default": "false",
-                "description": "The isDisabled prop. Default: false."
+                "description": "Disables activation of an interactive card. Default: false."
             },
             {
                 "name": "isSelected",
                 "type": "boolean",
                 "required": false,
                 "default": "false",
-                "description": "The isSelected prop. Default: false."
+                "description": "Selection state; supply onChange to let users toggle it. Default: false."
             },
             {
                 "name": "onChange",
                 "type": "(isSelected: boolean) => void",
                 "required": false,
-                "description": "Makes the card selectable and receives its next selection state; takes priority over activation."
+                "description": "Makes the card selectable and receives its next selection state; takes priority over onClick and href."
             }
         ]
     },
