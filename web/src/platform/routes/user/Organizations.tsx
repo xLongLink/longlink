@@ -6,12 +6,12 @@ import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Avatar } from '@/components/ui/Avatar';
 import { Stack } from '@astryxdesign/core/Stack';
+import { ExternalLink, Plus } from 'lucide-react';
 import { Button } from '@astryxdesign/core/Button';
 import { Heading } from '@astryxdesign/core/Heading';
 import CreateOrganization from './CreateOrganization';
 import { ApiBoundary } from '@/components/ApiBoundary';
 import { PageContainer } from '@/components/PageContainer';
-import { Building2, ExternalLink, Plus } from 'lucide-react';
 import { Table, proportional } from '@astryxdesign/core/Table';
 import type * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 
@@ -38,7 +38,7 @@ function OrganizationList() {
     return (
         <>
             <Stack
-                gap={8}
+                gap={memberships.length === 0 ? 8 : 4}
                 justify={memberships.length === 0 ? 'center' : undefined}
                 minHeight={
                     memberships.length === 0
@@ -47,14 +47,21 @@ function OrganizationList() {
                 }
             >
                 {memberships.length > 0 && (
-                    <Stack direction="horizontal" justify="between" align="center" wrap="wrap">
+                    <Stack direction="horizontal" justify="between" align="center" wrap="wrap" className="min-h-12">
                         <Heading level={1}>Organizations</Heading>
                         <Button label="Create Organization" onClick={() => setCreating(true)} />
                     </Stack>
                 )}
                 {memberships.length === 0 ? (
                     <Stack gap={6} align="center">
-                        <Building2 className="size-10 text-secondary" aria-hidden="true" />
+                        <img
+                            src="/images/organization.png"
+                            alt=""
+                            className="size-20 object-contain"
+                            width={1254}
+                            height={1254}
+                            decoding="async"
+                        />
                         <Stack gap={0}>
                             <Heading level={1} justify="center">
                                 Your Organizations

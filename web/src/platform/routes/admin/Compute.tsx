@@ -42,7 +42,7 @@ export default function Compute() {
     }
 
     return (
-        <Stack gap={8}>
+        <Stack gap={4}>
             <NoIndex title="Compute | LongLink" />
             <Stack direction="horizontal" justify="between" align="center" wrap="wrap">
                 <Heading level={1}>Compute</Heading>

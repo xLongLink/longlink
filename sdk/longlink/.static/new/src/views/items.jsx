@@ -5,7 +5,7 @@ export default function Invoices() {
     const [invoices] = useApi(`/api/items?page=${page}&page_size=8`);
 
     return (
-        <Stack gap={8}>
+        <Stack gap={4}>
             <Stack direction="horizontal" justify="between" align="center" wrap="wrap">
                 <Heading level={1}>Invoice approvals</Heading>
                 <Button label="New Invoice" onClick={() => setOpen(true)} />
