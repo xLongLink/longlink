@@ -1,9 +1,15 @@
+import { legalPaths } from '@/platform/legal';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
+import { Button } from '@astryxdesign/core/Button';
 import { Heading } from '@astryxdesign/core/Heading';
 import { Article } from '@/components/layouts/Article';
 import { List, ListItem } from '@astryxdesign/core/List';
+import { Seo, articleRouteLabels } from '@/components/Seo';
+import { PathBreadcrumb } from '@/components/breadcrumb/Path';
+import { BreadcrumbItem } from '@astryxdesign/core/Breadcrumbs';
+import { ArticleFooter, ArticleOutline } from '@/platform/components/Article';
 
 const article = {
     description: 'Read the LongLink privacy policy.',
@@ -58,9 +64,25 @@ const article = {
 /** Renders the privacy policy. */
 export default function Privacy() {
     return (
-        <Article page={article}>
-            <PrivacyContent />
-        </Article>
+        <>
+            <Seo description={article.description} hasBreadcrumbs title={article.title} />
+            <Article
+                header={
+                    <PathBreadcrumb
+                        className="min-w-0 overflow-hidden"
+                        labels={articleRouteLabels}
+                        root={<BreadcrumbItem href="/">Home</BreadcrumbItem>}
+                    />
+                }
+                headerAction={<Button href="/login/" label="Get Started" size="sm" variant="primary" />}
+                footer={
+                    <ArticleFooter lastUpdated={article.lastUpdated} editUrl={article.editUrl} paths={legalPaths} />
+                }
+                sidebar={article.toc.length ? <ArticleOutline items={article.toc} /> : undefined}
+            >
+                <PrivacyContent />
+            </Article>
+        </>
     );
 }
 

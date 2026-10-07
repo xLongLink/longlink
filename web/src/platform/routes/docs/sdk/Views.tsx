@@ -25,6 +25,7 @@ import { Link as RouterLink } from 'react-router';
 import { MoreMenuExample } from './views/MoreMenu';
 import { SelectorExample } from './views/Selector';
 import { TextAreaExample } from './views/TextArea';
+import { Button } from '@astryxdesign/core/Button';
 import { Center } from '@astryxdesign/core/Center';
 import { Currency } from '@/components/ui/Currency';
 import { DateInputExample } from './views/DateInput';
@@ -33,6 +34,7 @@ import { RadioListExample } from './views/RadioList';
 import { TextInputExample } from './views/TextInput';
 import { TimeInputExample } from './views/TimeInput';
 import { TimestampExample } from './views/Timestamp';
+import { documentationPaths } from '@/platform/docs';
 import { Heading } from '@astryxdesign/core/Heading';
 import { EmptyStateExample } from './views/EmptyState';
 import { FileViewerExample } from './views/FileViewer';
@@ -46,10 +48,13 @@ import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { Tab, TabList } from '@astryxdesign/core/TabList';
 import { DropdownMenuExample } from './views/DropdownMenu';
 import { MetadataListExample } from './views/MetadataList';
+import { Seo, articleRouteLabels } from '@/components/Seo';
 import { Blockquote } from '@astryxdesign/core/Blockquote';
 import { CheckboxInputExample } from './views/CheckboxInput';
 import { MultiSelectorExample } from './views/MultiSelector';
+import { PathBreadcrumb } from '@/components/breadcrumb/Path';
 import { documentationCategories } from '@/lib/documentation';
+import { ArticleFooter, ArticleOutline } from '@/platform/components/Article';
 import { SideNav, SideNavItem, SideNavSection } from '@astryxdesign/core/SideNav';
 
 const article = {
@@ -136,95 +141,110 @@ const previews: Record<string, ReactNode> = {
 /** Renders the native JSX catalog generated from the shared editor declarations. */
 export default function DocsArticleRoute() {
     return (
-        <Article page={article}>
-            <Stack gap={5}>
-                <Heading id="views" level={1}>
-                    Views
-                </Heading>
-                <Blockquote className="border-s-(--color-text-orange) text-(--color-text-orange)">
-                    <Stack gap={0}>
-                        <Text type="inherit">Beta notice: This page is being built.</Text>
-                        <Link color="inherit" href={article.editUrl} hasUnderline isExternalLink type="inherit">
-                            Edit on GitHub
-                        </Link>
-                    </Stack>
-                </Blockquote>
-                <Text as="p">
-                    Create each interface as a .jsx file exporting a default React component. LongLink supplies UI
-                    components, hooks such as useState() and useEffect(), fragments, queries, and scoped requests
-                    directly, without imports or a React. prefix. Your Python Solution needs no frontend build.
-                </Text>
-                <Stack as="aside" className="border-s border-accent ps-4" gap={0}>
-                    <Text weight="semibold">Why?</Text>
+        <>
+            <Seo description={article.description} hasBreadcrumbs title={article.title} />
+            <Article
+                className="documentation-content [--font-family-heading:var(--font-family-handwritten)] [&_.astryx-heading]:uppercase [&_.astryx-heading]:tracking-wide"
+                header={<PathBreadcrumb className="min-w-0 overflow-hidden" labels={articleRouteLabels} />}
+                headerAction={<Button href="/login/" label="Get Started" size="sm" variant="primary" />}
+                footer={
+                    <ArticleFooter
+                        lastUpdated={article.lastUpdated}
+                        editUrl={article.editUrl}
+                        paths={documentationPaths}
+                    />
+                }
+                sidebar={article.toc.length ? <ArticleOutline items={article.toc} /> : undefined}
+            >
+                <Stack gap={5}>
+                    <Heading id="views" level={1}>
+                        Views
+                    </Heading>
+                    <Blockquote className="border-s-(--color-text-orange) text-(--color-text-orange)">
+                        <Stack gap={0}>
+                            <Text type="inherit">Beta notice: This page is being built.</Text>
+                            <Link color="inherit" href={article.editUrl} hasUnderline isExternalLink type="inherit">
+                                Edit on GitHub
+                            </Link>
+                        </Stack>
+                    </Blockquote>
                     <Text as="p">
-                        Keeping the interface separate from the application logic makes each part easier to understand
-                        and maintain.
+                        Create each interface as a .jsx file exporting a default React component. LongLink supplies UI
+                        components, hooks such as useState() and useEffect(), fragments, queries, and scoped requests
+                        directly, without imports or a React. prefix. Your Python Solution needs no frontend build.
                     </Text>
-                </Stack>
-                <CodeBlock
-                    code={`/** @param {ViewProps} props */
+                    <Stack as="aside" className="border-s border-accent ps-4" gap={0}>
+                        <Text weight="semibold">Why?</Text>
+                        <Text as="p">
+                            Keeping the interface separate from the application logic makes each part easier to
+                            understand and maintain.
+                        </Text>
+                    </Stack>
+                    <CodeBlock
+                        code={`/** @param {ViewProps} props */
 export default function Item({ params }) {
   const [item] = useApi(\`/api/items/\${params.item}\`);
 
   return <Heading>{item.name}</Heading>;
 }`}
-                    language="jsx"
-                    title="items/[item].jsx"
-                    hasLanguageLabel={false}
-                />
-                {documentationCategories.map((category) => (
-                    <Stack key={category} gap={3}>
-                        <Heading id={category.toLowerCase().replace(/\W+/g, '-')} level={2}>
-                            {category}
-                        </Heading>
-                        <Grid columns={{ minWidth: 190, max: 3, repeat: 'fit' }} gap={4}>
-                            {componentDocumentation
-                                .filter((component) => component.category === category)
-                                .map((component) => (
-                                    <Stack key={component.slug} className="relative min-w-0" gap={2}>
-                                        <Card
-                                            aria-hidden="true"
-                                            inert
-                                            padding={3}
-                                            variant="muted"
-                                            width="100%"
-                                            maxWidth="100%"
-                                        >
-                                            {/* Constrain artwork before scaling so intrinsic control sizes cannot widen the card. */}
-                                            <Center className="h-40 min-w-0 overflow-hidden" width="100%">
-                                                <Stack
-                                                    className="min-w-0 scale-90 [&>*]:min-w-0 [&>*]:max-w-full"
-                                                    width="100%"
-                                                    maxWidth="100%"
-                                                    align={component.category === 'Form' ? 'stretch' : 'center'}
-                                                    gap={0}
-                                                >
-                                                    {component.category === 'Runtime' ? (
-                                                        <Code>{component.name}</Code>
-                                                    ) : (
-                                                        (previews[component.name] ?? (
-                                                            <Code>{`<${component.name} />`}</Code>
-                                                        ))
-                                                    )}
-                                                </Stack>
-                                            </Center>
-                                        </Card>
-                                        <Text type="supporting">
-                                            {component.category === 'Action' || component.category === 'Form'
-                                                ? component.label.replace(/([a-z])([A-Z])/g, '$1 $2')
-                                                : component.label}
-                                        </Text>
-                                        <RouterLink
-                                            aria-label={`Open ${component.label} documentation`}
-                                            className="absolute inset-0 z-10 rounded-lg focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-                                            to={`/docs/sdk/views/${component.slug}/`}
-                                        />
-                                    </Stack>
-                                ))}
-                        </Grid>
-                    </Stack>
-                ))}
-            </Stack>
-        </Article>
+                        language="jsx"
+                        title="items/[item].jsx"
+                        hasLanguageLabel={false}
+                    />
+                    {documentationCategories.map((category) => (
+                        <Stack key={category} gap={3}>
+                            <Heading id={category.toLowerCase().replace(/\W+/g, '-')} level={2}>
+                                {category}
+                            </Heading>
+                            <Grid columns={{ minWidth: 190, max: 3, repeat: 'fit' }} gap={4}>
+                                {componentDocumentation
+                                    .filter((component) => component.category === category)
+                                    .map((component) => (
+                                        <Stack key={component.slug} className="relative min-w-0" gap={2}>
+                                            <Card
+                                                aria-hidden="true"
+                                                inert
+                                                padding={3}
+                                                variant="muted"
+                                                width="100%"
+                                                maxWidth="100%"
+                                            >
+                                                {/* Constrain artwork before scaling so intrinsic control sizes cannot widen the card. */}
+                                                <Center className="h-40 min-w-0 overflow-hidden" width="100%">
+                                                    <Stack
+                                                        className="min-w-0 scale-90 [&>*]:min-w-0 [&>*]:max-w-full"
+                                                        width="100%"
+                                                        maxWidth="100%"
+                                                        align={component.category === 'Form' ? 'stretch' : 'center'}
+                                                        gap={0}
+                                                    >
+                                                        {component.category === 'Runtime' ? (
+                                                            <Code>{component.name}</Code>
+                                                        ) : (
+                                                            (previews[component.name] ?? (
+                                                                <Code>{`<${component.name} />`}</Code>
+                                                            ))
+                                                        )}
+                                                    </Stack>
+                                                </Center>
+                                            </Card>
+                                            <Text type="supporting">
+                                                {component.category === 'Action' || component.category === 'Form'
+                                                    ? component.label.replace(/([a-z])([A-Z])/g, '$1 $2')
+                                                    : component.label}
+                                            </Text>
+                                            <RouterLink
+                                                aria-label={`Open ${component.label} documentation`}
+                                                className="absolute inset-0 z-10 rounded-lg focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                                                to={`/docs/sdk/views/${component.slug}/`}
+                                            />
+                                        </Stack>
+                                    ))}
+                            </Grid>
+                        </Stack>
+                    ))}
+                </Stack>
+            </Article>
+        </>
     );
 }

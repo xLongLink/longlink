@@ -3,9 +3,14 @@ import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Tabs, Tab } from '@/components/ui/Tabs';
 import { Stack } from '@astryxdesign/core/Stack';
+import { Button } from '@astryxdesign/core/Button';
+import { documentationPaths } from '@/platform/docs';
 import { Heading } from '@astryxdesign/core/Heading';
 import { Article } from '@/components/layouts/Article';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
+import { Seo, articleRouteLabels } from '@/components/Seo';
+import { PathBreadcrumb } from '@/components/breadcrumb/Path';
+import { ArticleFooter, ArticleOutline } from '@/platform/components/Article';
 
 const article = {
     description: 'Build LongLink Solutions as standard Python and FastAPI services with the Solution SDK.',
@@ -21,78 +26,96 @@ const article = {
 
 export default function DocsArticleRoute() {
     return (
-        <Article page={article}>
-            <Stack gap={5}>
-                <Heading id="solution-sdk" level={1}>
-                    Business processes, defined as code
-                </Heading>
-                <Text as="p">
-                    Business processes evolve over time. Requirements change, exceptions happen, and the people involved
-                    may change. As information becomes fragmented, more time is spent finding data, reconstructing
-                    decisions, coordinating people, and correcting mistakes.
-                </Text>
-                <Stack
-                    className="handwritten-diagram"
-                    direction="horizontal"
-                    gap={6}
-                    hAlign="center"
-                    paddingBlock={6}
-                    vAlign="center"
-                    width="100%"
-                >
-                    <Text className="text-sm sm:text-xl md:text-2xl" hasCapsize type="display-3" weight="semibold">
-                        Problem
+        <>
+            <Seo description={article.description} hasBreadcrumbs title={article.title} />
+            <Article
+                className="documentation-content [--font-family-heading:var(--font-family-handwritten)] [&_.astryx-heading]:uppercase [&_.astryx-heading]:tracking-wide"
+                header={<PathBreadcrumb className="min-w-0 overflow-hidden" labels={articleRouteLabels} />}
+                headerAction={<Button href="/login/" label="Get Started" size="sm" variant="primary" />}
+                footer={
+                    <ArticleFooter
+                        lastUpdated={article.lastUpdated}
+                        editUrl={article.editUrl}
+                        paths={documentationPaths}
+                    />
+                }
+                sidebar={article.toc.length ? <ArticleOutline items={article.toc} /> : undefined}
+            >
+                <Stack gap={5}>
+                    <Heading id="solution-sdk" level={1}>
+                        Business processes, defined as code
+                    </Heading>
+                    <Text as="p">
+                        Business processes evolve over time. Requirements change, exceptions happen, and the people
+                        involved may change. As information becomes fragmented, more time is spent finding data,
+                        reconstructing decisions, coordinating people, and correcting mistakes.
                     </Text>
-                    <MoveRight aria-hidden className="text-secondary" size={32} />
-                    <Text className="text-sm sm:text-xl md:text-2xl" hasCapsize type="display-3" weight="semibold">
-                        Solution
+                    <Stack
+                        className="handwritten-diagram"
+                        direction="horizontal"
+                        gap={6}
+                        hAlign="center"
+                        paddingBlock={6}
+                        vAlign="center"
+                        width="100%"
+                    >
+                        <Text className="text-sm sm:text-xl md:text-2xl" hasCapsize type="display-3" weight="semibold">
+                            Problem
+                        </Text>
+                        <MoveRight aria-hidden className="text-secondary" size={32} />
+                        <Text className="text-sm sm:text-xl md:text-2xl" hasCapsize type="display-3" weight="semibold">
+                            Solution
+                        </Text>
+                    </Stack>
+                    <Text as="p">
+                        Build dedicated tools with established Python libraries: use{' '}
+                        <Link href="https://github.com/fastapi/fastapi" hasUnderline isExternalLink type="inherit">
+                            FastAPI
+                        </Link>{' '}
+                        for routes,{' '}
+                        <Link href="https://sqlmodel.tiangolo.com/" hasUnderline isExternalLink type="inherit">
+                            SQLModel
+                        </Link>{' '}
+                        for data, and{' '}
+                        <Link href="https://docs.pydantic.dev/latest/" hasUnderline isExternalLink type="inherit">
+                            Pydantic
+                        </Link>{' '}
+                        for validation. Define your processes, rules, and workflows in Python. Focus on the core logic
+                        while LongLink handles the infrastructure.
+                    </Text>
+                    <Heading id="create-a-solution" level={2}>
+                        Create a Solution
+                    </Heading>
+                    <Tabs hasDivider>
+                        <Tab label="Standalone" value="standalone">
+                            <CodeBlock code="uvx --from longlink longlink init --folder ." language="bash" />
+                        </Tab>
+                        <Tab label="GitHub" value="github">
+                            <CodeBlock
+                                code="uvx --from longlink longlink init --folder . --ci github"
+                                language="bash"
+                            />
+                        </Tab>
+                    </Tabs>
+                    <Stack as="aside" className="border-s border-accent ps-4" gap={0}>
+                        <Text weight="semibold">Example</Text>
+                        <Link href="https://github.com/xLongLink/sample" hasUnderline isExternalLink>
+                            LongLink sample repository
+                        </Link>
+                    </Stack>
+                    <Heading id="local-development" level={2}>
+                        Local Development
+                    </Heading>
+                    <CodeBlock code={'uv sync --group dev\nuv run longlink dev'} language="bash" />
+                    <Text as="p">
+                        Open{' '}
+                        <Link href="http://127.0.0.1:1707" hasUnderline isExternalLink type="inherit">
+                            http://127.0.0.1:1707
+                        </Link>{' '}
+                        to preview your Solution.
                     </Text>
                 </Stack>
-                <Text as="p">
-                    Build dedicated tools with established Python libraries: use{' '}
-                    <Link href="https://github.com/fastapi/fastapi" hasUnderline isExternalLink type="inherit">
-                        FastAPI
-                    </Link>{' '}
-                    for routes,{' '}
-                    <Link href="https://sqlmodel.tiangolo.com/" hasUnderline isExternalLink type="inherit">
-                        SQLModel
-                    </Link>{' '}
-                    for data, and{' '}
-                    <Link href="https://docs.pydantic.dev/latest/" hasUnderline isExternalLink type="inherit">
-                        Pydantic
-                    </Link>{' '}
-                    for validation. Define your processes, rules, and workflows in Python. Focus on the core logic while
-                    LongLink handles the infrastructure.
-                </Text>
-                <Heading id="create-a-solution" level={2}>
-                    Create a Solution
-                </Heading>
-                <Tabs hasDivider>
-                    <Tab label="Standalone" value="standalone">
-                        <CodeBlock code="uvx --from longlink longlink init --folder ." language="bash" />
-                    </Tab>
-                    <Tab label="GitHub" value="github">
-                        <CodeBlock code="uvx --from longlink longlink init --folder . --ci github" language="bash" />
-                    </Tab>
-                </Tabs>
-                <Stack as="aside" className="border-s border-accent ps-4" gap={0}>
-                    <Text weight="semibold">Example</Text>
-                    <Link href="https://github.com/xLongLink/sample" hasUnderline isExternalLink>
-                        LongLink sample repository
-                    </Link>
-                </Stack>
-                <Heading id="local-development" level={2}>
-                    Local Development
-                </Heading>
-                <CodeBlock code={'uv sync --group dev\nuv run longlink dev'} language="bash" />
-                <Text as="p">
-                    Open{' '}
-                    <Link href="http://127.0.0.1:1707" hasUnderline isExternalLink type="inherit">
-                        http://127.0.0.1:1707
-                    </Link>{' '}
-                    to preview your Solution.
-                </Text>
-            </Stack>
-        </Article>
+            </Article>
+        </>
     );
 }

@@ -1,9 +1,14 @@
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
+import { Button } from '@astryxdesign/core/Button';
 import { Heading } from '@astryxdesign/core/Heading';
 import { Article } from '@/components/layouts/Article';
+import { Seo, articleRouteLabels } from '@/components/Seo';
 import { Blockquote } from '@astryxdesign/core/Blockquote';
+import { PathBreadcrumb } from '@/components/breadcrumb/Path';
+import { BreadcrumbItem } from '@astryxdesign/core/Breadcrumbs';
+import { ArticleFooter, ArticleOutline } from '@/platform/components/Article';
 
 const article = {
     description: 'LongLink brand communication guidelines.',
@@ -17,20 +22,34 @@ const article = {
 export default function Communication() {
     // Reuse the article shell: 260px navigation, 720px prose, and 224px outline.
     return (
-        <Article page={article}>
-            <Stack gap={4}>
-                <Heading id="communication" level={1}>
-                    Communication
-                </Heading>
-                <Blockquote className="border-s-(--color-text-orange) text-(--color-text-orange)">
-                    <Stack gap={0}>
-                        <Text type="inherit">Beta notice: This page is being built.</Text>
-                        <Link color="inherit" href={article.editUrl} hasUnderline isExternalLink type="inherit">
-                            Edit on GitHub
-                        </Link>
-                    </Stack>
-                </Blockquote>
-            </Stack>
-        </Article>
+        <>
+            <Seo description={article.description} hasBreadcrumbs title={article.title} />
+            <Article
+                header={
+                    <PathBreadcrumb
+                        className="min-w-0 overflow-hidden"
+                        labels={articleRouteLabels}
+                        root={<BreadcrumbItem href="/">Home</BreadcrumbItem>}
+                    />
+                }
+                headerAction={<Button href="/login/" label="Get Started" size="sm" variant="primary" />}
+                footer={<ArticleFooter lastUpdated={article.lastUpdated} editUrl={article.editUrl} />}
+                sidebar={article.toc.length ? <ArticleOutline items={article.toc} /> : undefined}
+            >
+                <Stack gap={4}>
+                    <Heading id="communication" level={1}>
+                        Communication
+                    </Heading>
+                    <Blockquote className="border-s-(--color-text-orange) text-(--color-text-orange)">
+                        <Stack gap={0}>
+                            <Text type="inherit">Beta notice: This page is being built.</Text>
+                            <Link color="inherit" href={article.editUrl} hasUnderline isExternalLink type="inherit">
+                                Edit on GitHub
+                            </Link>
+                        </Stack>
+                    </Blockquote>
+                </Stack>
+            </Article>
+        </>
     );
 }
