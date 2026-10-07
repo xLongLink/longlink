@@ -13,15 +13,18 @@ import { Tab, TabList } from '@astryxdesign/core/TabList';
 import { documentationLastUpdated } from '@/lib/documentation';
 import { Table, proportional } from '@astryxdesign/core/Table';
 
-export type ViewReference = Pick<(typeof references)[number], 'introduction' | 'practices'> & {
+export type ViewProperties = {
+    name: string;
     properties: {
         name: string;
         type: string;
         required?: boolean;
         description: string;
     }[];
+}[];
+export type ViewReference = Pick<(typeof references)[number], 'introduction' | 'practices'> & {
+    properties?: ViewProperties[number]['properties'];
 };
-export type ViewProperties = { name: string; properties: ViewReference['properties'] }[];
 export type ViewExample = { title: string; code: string; preview: ReactNode };
 
 const tabs = [
@@ -55,8 +58,16 @@ export default function ViewLayout({
     const reference = authoredReference ?? upstream;
     const activeTab = tabs.find((tab) => tab.value === searchParams.get('tab')) ?? tabs[0];
     const runtime = component.category === 'Runtime';
+
+    // Authored tables take precedence; generated tables omit grouped subcomponent rows.
+    const componentProperties =
+        authoredReference?.properties ??
+        component.properties
+            ?.filter((property) => !property.name.includes('.'))
+            .map((property) => ({ ...property, description: property.description ?? '' })) ??
+        [];
     const propertyGroups =
-        properties ?? (reference?.properties.length ? [{ name: '', properties: reference.properties }] : []);
+        properties ?? (componentProperties.length ? [{ name: '', properties: componentProperties }] : []);
 
     // Preserve the existing documentation shell, region sizes, and table of contents.
     const article = {

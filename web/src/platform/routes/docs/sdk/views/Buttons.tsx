@@ -3,16 +3,21 @@ import ViewLayout from './ViewLayout';
 import { Text } from '@astryxdesign/core/Text';
 import { Button } from '@/components/ui/Button';
 import { Stack } from '@astryxdesign/core/Stack';
+import { componentCatalog } from '@/platform/docs';
 import references from '@/lib/generated/components.json';
 import { ButtonGroup } from '@/components/ui/ButtonGroup';
 
 // Preserve the narrower LongLink button contract rather than upstream-only props.
 const upstream = references.find((reference) => reference.name === 'Button');
 if (!upstream) throw new Error('Missing Button documentation reference');
+
+// Read Button props from the declaration catalog while preserving page-specific prose.
+const button = componentCatalog.find((entry) => entry.name === 'Button');
+if (!button?.properties) throw new Error('Missing Button documentation properties');
 const reference = {
     introduction:
         'Button triggers an action, submits a form, or opens a link. Buttons are flat. Use onClick for actions: loading feedback and duplicate-click prevention are automatic while an asynchronous handler is pending.',
-    properties: upstream.properties
+    properties: button.properties
         .filter(
             (property) =>
                 ![
@@ -37,17 +42,23 @@ const reference = {
                   }
                 : property.name === 'label'
                   ? { ...property, description: 'Visible button text and accessible label.' }
-                  : property
+                  : { ...property, description: property.description ?? '' }
         ),
     practices: upstream.practices.filter((practice) => !practice.description.includes('icon-only')),
 };
 
 // Keep the grouped button API available in the same reference page.
-const buttonGroup = references.find((entry) => entry.name === 'ButtonGroup');
-if (!buttonGroup) throw new Error('Missing ButtonGroup documentation reference');
+const buttonGroup = componentCatalog.find((entry) => entry.name === 'ButtonGroup');
+if (!buttonGroup?.properties) throw new Error('Missing ButtonGroup documentation properties');
 const properties = [
     { name: 'Button', properties: reference.properties },
-    { name: 'ButtonGroup', properties: buttonGroup.properties },
+    {
+        name: 'ButtonGroup',
+        properties: buttonGroup.properties.map((property) => ({
+            ...property,
+            description: property.description ?? '',
+        })),
+    },
 ];
 
 /** Documents buttons and grouped button actions in LongLink Views. */

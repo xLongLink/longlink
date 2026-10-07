@@ -408,16 +408,15 @@ for (const entry of components) {
         property.default ??= referenceProperty?.default;
         if (property.default !== undefined && property.default !== '-')
             property.description = `${property.description ?? `The ${property.name} prop.`} Default: ${property.default}.`;
-        if (referenceProperty) referenceProperty.description = property.description;
     }
 }
 
-// Keep website-only reference content out of the SDK's declaration catalog.
+// Publish property contracts only in the SDK catalog and website-only guidance separately.
 const outputs = [
     { filename: input, text: source },
     {
         filename: path.resolve(root, 'src/lib/generated/components.json'),
-        data: references,
+        data: references.map(({ properties, ...reference }) => reference),
     },
     {
         filename: path.resolve(root, '../sdk/longlink/.static/jsx/components.json'),

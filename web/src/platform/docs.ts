@@ -20,6 +20,9 @@ type DocumentationPage = {
     icon: LucideIcon;
 };
 
+// Keep companion components available without adding standalone navigation entries.
+export { componentCatalog };
+
 // Derive website route identity from names without storing it in the SDK documentation catalog.
 export const componentDocumentation = componentCatalog
     .filter((component) => !['ButtonGroup', 'StatusDot', 'CodeBlock', 'DateRangeInput'].includes(component.name))
