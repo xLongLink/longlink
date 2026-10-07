@@ -10,7 +10,6 @@ export default function CurrencyPage() {
             name="Currency"
             reference={{
                 introduction: 'Currency formats a numeric value with the browser’s locale-aware currency formatter.',
-                properties: [],
                 practices: [
                     {
                         guidance: true,

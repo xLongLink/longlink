@@ -6,7 +6,6 @@ type SliderProps = FieldProps & {
     min?: number;
     max?: number;
     step?: number;
-    htmlName?: string;
 } & (
         | {
               value?: number;
@@ -50,13 +49,13 @@ export function Slider(props: SliderProps) {
                       onChange: (value: number) => field.onChange(value),
                       onChangeEnd: props.onChangeEnd as ((value: number) => void) | undefined,
                   })}
-            htmlName={props.name ?? props.htmlName}
+            htmlName={props.name}
             min={props.min ?? 0}
             max={props.max ?? 100}
             step={props.step ?? 1}
             isLabelHidden={false}
-            isRequired={props.required ?? props.isRequired ?? false}
-            isDisabled={props.disabled ?? props.isDisabled ?? false}
+            isRequired={props.required ?? false}
+            isDisabled={props.disabled ?? false}
         />
     );
 }

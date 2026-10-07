@@ -10,6 +10,17 @@ export default function DialogPage() {
     return (
         <ViewLayout
             name="Dialog"
+            reference={{
+                introduction:
+                    'Dialog is modal within the isolated View viewport. It does not block the surrounding Platform navigation. Its content scrolls when it exceeds the available View height.',
+                practices: [
+                    {
+                        guidance: true,
+                        description:
+                            'Use purpose="form" for editing and keep the dialog focused on one task. Platform navigation remains available outside the View.',
+                    },
+                ],
+            }}
             examples={[
                 {
                     title: 'Dialog',

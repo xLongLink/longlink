@@ -13,6 +13,7 @@ import { FormRequestContext } from '@/components/ui/Form';
 import { LinkNavigationContext } from '@/components/ui/Link';
 import { MenuNavigationContext } from '@/components/ui/Menu';
 import { FileRequestContext } from '@/components/ui/FileViewer';
+import { Layout, LayoutContent } from '@astryxdesign/core/Layout';
 import { QueryClient, QueryClientProvider, QueryErrorResetBoundary, useSuspenseQuery } from '@tanstack/react-query';
 import {
     requestSchema,
@@ -20,9 +21,10 @@ import {
     messageSize,
     MAX_MESSAGE_SIZE,
     MAX_PENDING_REQUESTS,
-    MAX_VIEW_HEIGHT,
     REQUEST_TIMEOUT,
     type RequestCommand,
+    type DownloadCommand,
+    downloadSchema,
     type ViewReply,
 } from './protocol';
 import './theme.css';
@@ -34,6 +36,7 @@ declare global {
 }
 
 const session = window.__VIEW_SESSION__;
+const fileRequests = { preview: requestImage, download };
 
 /** Subscribes only to fragment changes inside this sandbox. */
 function subscribeToHash(notify: () => void): () => void {
@@ -60,7 +63,7 @@ function MenuNavigationProvider({ children }: { children: React.ReactNode }) {
             }}
         >
             <LinkNavigationContext value={navigate}>
-                <FileRequestContext value={requestImage}>
+                <FileRequestContext value={fileRequests}>
                     <FormRequestContext value={request}>{children}</FormRequestContext>
                 </FileRequestContext>
             </LinkNavigationContext>
@@ -83,8 +86,19 @@ async function request(
     const id = sequence++;
     const command = requestSchema.parse({ ...options, type: 'request', id, path, method: options.method ?? 'GET' });
     if (messageSize(command) > MAX_MESSAGE_SIZE) throw new Error('Solution request is too large');
+    const data = await exchange(command);
+
+    // Refresh active data and mark inactive resources stale only after the write succeeds.
+    if (command.method !== 'GET') await client.invalidateQueries();
+
+    return data;
+}
+
+/** Owns the pending slot, deadline, and channel transfer for each scoped operation. */
+async function exchange(command: RequestCommand | DownloadCommand): Promise<unknown> {
     if (pending.size >= MAX_PENDING_REQUESTS) throw new Error('Too many pending requests');
-    const data = await new Promise<unknown>((resolve, reject) => {
+    const { id } = command;
+    return new Promise<unknown>((resolve, reject) => {
         const timer = setTimeout(() => {
             pending.delete(id);
             reject(new Error('Solution request timed out'));
@@ -100,16 +114,17 @@ async function request(
             reject(error);
         }
     });
-
-    // Refresh active data and mark inactive resources stale only after the write succeeds.
-    if (command.method !== 'GET') await client.invalidateQueries();
-
-    return data;
 }
 
 /** Supplies a stable binary-request capability without exposing the general request API to image components. */
 function requestImage(path: string): Promise<unknown> {
     return request(path, { binary: true });
+}
+
+/** Asks the host to save a bounded attachment without opening a document inside the sandbox. */
+async function download(path: string, filename: string): Promise<void> {
+    const command = downloadSchema.parse({ type: 'download', id: sequence++, path, filename });
+    await exchange(command);
 }
 
 /** Requests navigation inside the host's Solution route prefix. */
@@ -146,7 +161,7 @@ function initialize(event: MessageEvent<unknown>): void {
         pending.delete(reply.data.id);
         clearTimeout(waiter.timer);
         if (reply.data.ok) waiter.resolve(reply.data.data);
-        else waiter.reject(new Error(reply.data.error));
+        else waiter.reject(Object.assign(new Error(reply.data.error), { status: reply.data.status }));
     };
     const mount = document.getElementById('view');
     if (!mount) {
@@ -155,21 +170,10 @@ function initialize(event: MessageEvent<unknown>): void {
     }
     const root = createRoot(mount);
 
-    // Measure the content root, not the viewport, so shorter Views can shrink again.
-    let height = 0;
-    const observer = new ResizeObserver(() => {
-        const nextHeight = Math.min(MAX_VIEW_HEIGHT, Math.max(1, Math.ceil(mount.getBoundingClientRect().height)));
-        if (nextHeight === height) return;
-        height = nextHeight;
-        port.postMessage({ type: 'resize', height });
-    });
-    observer.observe(mount);
-
     // Release all resources acquired by this initialized sandbox in one teardown.
     window.addEventListener(
         'pagehide',
         () => {
-            observer.disconnect();
             for (const waiter of pending.values()) {
                 clearTimeout(waiter.timer);
                 waiter.reject(new Error('View closed'));
@@ -220,32 +224,58 @@ function initialize(event: MessageEvent<unknown>): void {
                     <QueryClientProvider client={client}>
                         <QueryErrorResetBoundary>
                             {({ reset }) => (
-                                <ErrorBoundary
-                                    onReset={reset}
-                                    fallbackRender={({ resetErrorBoundary }) => (
-                                        <Banner
-                                            status="error"
-                                            title="View could not be loaded"
-                                            endContent={
-                                                <components.Button label="Retry" onClick={resetErrorBoundary} />
-                                            }
-                                        />
-                                    )}
-                                >
-                                    <React.Suspense fallback={<Spinner label="Loading View" />}>
-                                        <MenuNavigationProvider>
-                                            <View params={params} />
-                                        </MenuNavigationProvider>
-                                    </React.Suspense>
-                                </ErrorBoundary>
+                                <Layout height="fill">
+                                    <LayoutContent padding={0} label="Solution View" role="region">
+                                        <ErrorBoundary
+                                            onReset={reset}
+                                            fallbackRender={({ error, resetErrorBoundary }) => (
+                                                <Banner
+                                                    status="error"
+                                                    title="View could not be loaded"
+                                                    description={
+                                                        error instanceof Error
+                                                            ? error.message.slice(0, 1024)
+                                                            : 'An unexpected View error occurred.'
+                                                    }
+                                                    endContent={
+                                                        <components.Button label="Retry" onClick={resetErrorBoundary} />
+                                                    }
+                                                />
+                                            )}
+                                        >
+                                            <React.Suspense fallback={<Spinner label="Loading View" />}>
+                                                <MenuNavigationProvider>
+                                                    <View params={params} />
+                                                </MenuNavigationProvider>
+                                            </React.Suspense>
+                                        </ErrorBoundary>
+                                    </LayoutContent>
+                                </Layout>
                             )}
                         </QueryErrorResetBoundary>
                     </QueryClientProvider>
                 </LayerProvider>
             </Theme>
         );
-    } catch {
-        root.render(<p>View compilation failed. Export a default JSX component without package imports.</p>);
+    } catch (error) {
+        // Compilation diagnostics belong to the authored source, not privileged host state.
+        root.render(
+            <Theme theme={stoneTheme} mode="dark">
+                <Layout height="fill">
+                    <LayoutContent padding={0} label="Solution View" role="region">
+                        <Banner
+                            status="error"
+                            title="View compilation failed"
+                            description={
+                                error instanceof Error
+                                    ? error.message.slice(0, 1024)
+                                    : 'Export a default JSX component without package imports.'
+                            }
+                        />
+                    </LayoutContent>
+                </Layout>
+            </Theme>
+        );
     }
 }
 

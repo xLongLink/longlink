@@ -35,7 +35,13 @@ export default function Invoice({ params }) {
                 <Form action={`/api/items/${params.item}/attachments`} method="post" onSuccess={() => setOpen(false)}>
                     <Stack gap={3}>
                         <Heading level={2}>Upload Invoice Document</Heading>
-                        <FileInput name="file" label="Invoice document" required />
+                        <FileInput
+                            name="file"
+                            label="Invoice document"
+                            maxSize={1_900_000}
+                            description="Maximum 1.9 MB. Images can be previewed; other documents can be downloaded."
+                            required
+                        />
                         <Button label="Upload document" variant="primary" type="submit" />
                     </Stack>
                 </Form>
@@ -58,7 +64,12 @@ export default function Invoice({ params }) {
                                     />
                                 ),
                             },
-                            { key: 'size', header: 'Size', align: 'end', renderCell: (row) => `${row.size} B` },
+                            {
+                                key: 'size',
+                                header: 'Size',
+                                align: 'end',
+                                renderCell: (row) => `${row.size} B`,
+                            },
                         ]}
                     />
                 </GridSpan>

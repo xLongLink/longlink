@@ -17,7 +17,6 @@ export default function HooksPage() {
             reference={{
                 introduction:
                     'LongLink supplies these hooks directly in Views, without imports or a React. prefix. Call hooks at the top level of a component, never inside conditions or loops.',
-                properties: [],
                 practices: [],
             }}
             toc={[{ id: 'hooks', label: 'Hooks', level: 2 }]}

@@ -12,9 +12,7 @@ type TextInputProps = FieldProps & {
     placeholder?: string;
     type?: 'text' | 'password' | 'email';
     size?: 'sm' | 'md' | 'lg';
-    htmlName?: string;
     autoComplete?: string;
-    isReadOnly?: boolean;
     hasClear?: boolean;
     hasAutoFocus?: boolean;
     startIcon?: ReactNode;
@@ -37,15 +35,15 @@ export function TextInput(props: TextInputProps) {
                 {...control}
                 value={field.value}
                 onChange={field.onChange}
-                htmlName={props.name ?? props.htmlName}
+                htmlName={props.name}
                 type={props.type ?? 'text'}
                 size={size}
-                isReadOnly={props.readOnly ?? props.isReadOnly ?? false}
+                isReadOnly={false}
                 hasClear={props.hasClear ?? false}
                 hasAutoFocus={props.hasAutoFocus ?? false}
                 isLabelHidden={false}
-                isRequired={props.required ?? props.isRequired ?? false}
-                isDisabled={props.disabled ?? props.isDisabled ?? false}
+                isRequired={props.required ?? false}
+                isDisabled={props.disabled ?? false}
                 changeAction={undefined}
                 isLoading={false}
             />

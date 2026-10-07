@@ -25,7 +25,7 @@ export function DateInput(
 
     // Keep optional draft state inside the themed picker and synchronize native form resets.
     const { defaultValue, ...control } = props;
-    const field = useValue(props.value, defaultValue, props.onChange);
+    const field = useValue(props.value, defaultValue, props.onChange, Object.hasOwn(props, 'value'));
 
     // Start with an editable date field without inventing a selected date or constraints.
     return (
@@ -49,8 +49,8 @@ export function DateInput(
                 placeholder={props.placeholder ?? 'Select a date'}
                 hasClear={props.hasClear ?? false}
                 isLabelHidden={false}
-                isRequired={props.required ?? props.isRequired ?? false}
-                isDisabled={(props.disabled ?? props.isDisabled ?? false) || props.readOnly}
+                isRequired={props.required ?? false}
+                isDisabled={props.disabled ?? false}
                 numberOfMonths={1}
                 weekStartsOn="sun"
                 changeAction={undefined}

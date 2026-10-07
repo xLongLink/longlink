@@ -1,25 +1,23 @@
 import ViewLayout from './ViewLayout';
 import FormPreview from './FormPreview';
 import { TextInput } from '@/components/ui/TextInput';
-import { componentDocumentation } from '@/platform/docs';
 import { NumberInput } from '@/components/ui/NumberInput';
 
 /** Documents browser-native form authoring using a local, non-networked submission preview. */
 export default function FormPage() {
-    // Reuse generated prop signatures while keeping LongLink-specific guidance on this page.
-    const component = componentDocumentation.find((entry) => entry.name === 'Form');
+    // Keep LongLink-specific examples and guidance beside the generated field contract.
     return (
         <ViewLayout
             name="Form"
             reference={{
                 introduction:
                     'Form submits named fields to a Solution API without draft state, imports, or page navigation. Form validation runs before the request; Python schemas remain authoritative.',
-                properties:
-                    component?.properties?.map((property) => ({
-                        ...property,
-                        description: property.description ?? '',
-                    })) ?? [],
                 practices: [
+                    {
+                        guidance: true,
+                        description:
+                            'The bridge accepts at most 32 form entries and 2,000,000 bytes of values and field names. Keep file uploads below that total; the sample uses a 1.9 MB file limit.',
+                    },
                     {
                         guidance: true,
                         description:

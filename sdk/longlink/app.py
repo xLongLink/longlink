@@ -189,7 +189,7 @@ class LongLink(FastAPI):
 
             view_route = view_stem_route(path_without_suffix)
             relative_route = view_route.removeprefix("/")
-            route_key = "/".join(":" if segment.startswith(":") else segment for segment in relative_route.split("/"))
+            route_key = "/".join(":" if segment.startswith(":") else segment.lower() for segment in relative_route.split("/"))
 
             # View endpoints and browser routes must remain unique across all directories.
             if route_key in registered_route_keys:

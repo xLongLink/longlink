@@ -67,6 +67,21 @@ Repeated names and files are preserved, and unchecked checkboxes are omitted.
 refresh cached View data but do not reset the form. Use `onSuccess` to close a dialog
 or navigate, or a reset button to restore defaults.
 
+Use `name`, `required`, `disabled`, `value`, and `multiple` as the public field props.
+The former `htmlName`, `isRequired`, `isDisabled`, `checked`, `isMultiple`, and
+read-only aliases are no longer supported on fields (`isDisabled` is also removed
+from `Button`). Keep `defaultValue` and `defaultChecked` for uncontrolled defaults.
+Run `longlink dev` after upgrading to refresh editor declarations.
+
+Views have their own viewport-sized scroll region. Dialogs and pickers are modal
+within that View only; Platform navigation remains available. Button and Card
+destinations use the same Solution-scoped host navigation as Link.
+
+Requests and responses are limited to 2,000,000 bytes, with at most 32 form entries
+and 8 pending operations. The sample limits files to 1.9 MB to leave room for other
+fields. `FileViewer` previews images and provides a download action for all file
+types, including PDFs; use the attachment filename as its `title`.
+
 <br/>
 
 ## Development

@@ -17,7 +17,6 @@ export default function FunctionsPage() {
             reference={{
                 introduction:
                     'LongLink supplies these functions directly in Views, without imports. Requests and navigation are scoped to the current Solution.',
-                properties: [],
                 practices: [],
             }}
             toc={[{ id: 'functions', label: 'Functions', level: 2 }]}
