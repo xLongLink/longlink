@@ -54,7 +54,6 @@ async def connection(organization: Organization, cluster: Kubernetes) -> postgre
 class Lease:
     """Fence a renewable activity using its last committed expiry as an ownership token."""
 
-    id: UUID
     organization_id: UUID
     expires_at: datetime
     lost: bool = False
@@ -63,7 +62,7 @@ class Lease:
         """Check ownership after the caller locks the Organization."""
 
         # Expired workers cannot publish results or renew a replacement worker's lease.
-        row = await session.get(OrganizationActivity, self.id, populate_existing=True)
+        row = await session.get(OrganizationActivity, self.organization_id, populate_existing=True)
         return row is not None and row.expires_at == self.expires_at and row.expires_at > datetime.now(UTC)
 
     async def check(self) -> None:
@@ -98,7 +97,9 @@ class Lease:
                             raise RuntimeError("Organization activity lease was lost")
                         expires_at = datetime.now(UTC).replace(microsecond=0) + timedelta(seconds=LEASE_SECONDS)
                         await session.execute(
-                            update(OrganizationActivity).where(col(OrganizationActivity.id) == self.id).values(expires_at=expires_at)
+                            update(OrganizationActivity)
+                            .where(col(OrganizationActivity.id) == self.organization_id)
+                            .values(expires_at=expires_at)
                         )
                         self.expires_at = expires_at
                         await session.commit()
@@ -121,7 +122,7 @@ class Lease:
                 async with session_scope() as session:
                     organization = await lock(session, self.organization_id)
                     if organization is not None and await self.owned(session):
-                        await session.execute(delete(OrganizationActivity).where(col(OrganizationActivity.id) == self.id))
+                        await session.execute(delete(OrganizationActivity).where(col(OrganizationActivity.id) == self.organization_id))
                     await session.commit()
 
 
@@ -142,7 +143,7 @@ async def _claim(session: AsyncSession, organization_id: UUID) -> Lease | None:
     row.id = organization_id
     session.add(row)
     await session.flush()
-    return Lease(row.id, organization_id, row.expires_at)
+    return Lease(organization_id, row.expires_at)
 
 
 @contextlib.asynccontextmanager

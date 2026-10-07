@@ -24,6 +24,7 @@ async def test_owned_requires_matching_unexpired_row(
     organization = await create_organization(users[0], name="owned")
     persisted_expires_at = datetime.now(UTC).replace(microsecond=0) + timedelta(seconds=expiry_seconds)
     activity = OrganizationActivity(
+        id=organization.id,
         organization_id=organization.id,
         expires_at=persisted_expires_at,
     )
@@ -33,7 +34,6 @@ async def test_owned_requires_matching_unexpired_row(
         session.add(activity)
         await session.commit()
     lease = databases.Lease(
-        id=activity.id,
         organization_id=organization.id,
         expires_at=activity.expires_at + timedelta(seconds=lease_offset_seconds),
     )
@@ -51,7 +51,6 @@ async def test_owned_rejects_missing_row() -> None:
 
     # Arrange
     lease = databases.Lease(
-        id=uuid4(),
         organization_id=uuid4(),
         expires_at=datetime.now(UTC) + timedelta(seconds=180),
     )
