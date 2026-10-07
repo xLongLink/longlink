@@ -121,9 +121,7 @@ export default function Assets() {
                     </Heading>
                     <CodeBlock
                         code={`<style>
-    LongLink illustrations use a monochrome, hand-drawn sketch style. Uneven pencil-like outlines, cross-hatching, and chalk-like texture give them a human, intentionally imperfect feel. Simple visual metaphors connect people, business processes, and technology.
-
-    Use light strokes on dark backgrounds and dark strokes on light backgrounds. Keep backgrounds transparent, leave generous negative space, and keep the subject easy to recognize. Avoid bright colors, glossy effects, photorealism, and overly polished vector artwork.
+  Minimalist monochrome technical sketch matching the reference. Thin white pencil/chalk lines, slightly rough and grainy, with imperfect hand-drawn contours, sparse construction lines, and very light hatching. Simple geometric forms, strong silhouettes, lots of negative space. Fully transparent background. No color, text, gradients, shadows, photorealism, or dense detail.
 </style>`}
                         isWrapped
                         language="plaintext"
