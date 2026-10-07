@@ -291,29 +291,6 @@ type DateInputProps = FieldProps & {
 /** @category Form */
 declare function DateInput(props: DateInputProps): React.JSX.Element;
 
-/** @category Form @group DateRangeInput */
-type DateRange = { start: ISODateString; end: ISODateString };
-
-/** @category Form */
-declare function DateRangeInput(
-    props: FieldProps & {
-        value?: DateRange | null;
-        defaultValue?: DateRange;
-        onChange?: (value: DateRange | null) => void;
-        min?: ISODateString;
-        max?: ISODateString;
-        /** Additional constraints applied to the themed calendar picker. */
-        dateConstraints?: readonly ((date: Date) => boolean)[];
-        /** Minimum selectable range span. */
-        minRangeSpan?: number;
-        /** Maximum selectable range span. */
-        maxRangeSpan?: number;
-        placeholder?: string;
-        size?: 'sm' | 'md' | 'lg';
-        hasClear?: boolean;
-    },
-): React.JSX.Element;
-
 /** @category Form @group TimeInput */
 type ISOTimeString = string & { readonly __brand: 'ISOTimeString' };
 

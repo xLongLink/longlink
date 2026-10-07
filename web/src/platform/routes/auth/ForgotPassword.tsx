@@ -1,6 +1,8 @@
 import { api } from '@/lib/api';
 import { useState } from 'react';
+import { TextField } from './Field';
 import { AuthLayout } from './AuthLayout';
+import { useForm } from 'react-hook-form';
 import { NoIndex } from '@/components/Seo';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
@@ -8,8 +10,6 @@ import { Stack } from '@astryxdesign/core/Stack';
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Controller, useForm } from 'react-hook-form';
-import { TextInput } from '@astryxdesign/core/TextInput';
 import { emailPayloadSchema, type EmailPayload } from './validation';
 
 /** Requests a password reset email without disclosing whether an account exists. */
@@ -46,28 +46,14 @@ export default function ForgotPassword() {
                         }
                     >
                         <Stack gap={4}>
-                            <Controller
+                            <TextField
                                 control={form.control}
                                 name="email"
-                                render={({ field, fieldState }) => (
-                                    <TextInput
-                                        ref={field.ref}
-                                        autoComplete="email"
-                                        htmlName={field.name}
-                                        isRequired
-                                        label="Email"
-                                        onBlur={field.onBlur}
-                                        onChange={field.onChange}
-                                        status={
-                                            fieldState.error
-                                                ? { type: 'error', message: fieldState.error.message }
-                                                : undefined
-                                        }
-                                        type="email"
-                                        value={field.value}
-                                        width="100%"
-                                    />
-                                )}
+                                autoComplete="email"
+                                isRequired
+                                label="Email"
+                                type="email"
+                                width="100%"
                             />
                             <Button label="Send reset email" type="submit" variant="primary" />
                         </Stack>

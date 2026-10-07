@@ -31,8 +31,7 @@ export function Form(props: {
     // Obtain the request capability from the isolated runtime, never from global state.
     const request = use(FormRequestContext);
     const pending = useRef(false);
-    const [submitting, setSubmitting] = useState(false);
-    const [error, setError] = useState<string>();
+    const [submission, setSubmission] = useState<{ submitting: boolean; error?: string }>({ submitting: false });
 
     /** Runs the asynchronous request after the native submit event has been intercepted. */
     async function submit(form: HTMLFormElement, submitter: HTMLElement | null) {
@@ -43,8 +42,7 @@ export function Form(props: {
         // Serialize before disabling fields, preserving repeated names, files, and the submitter.
         try {
             const data = new FormData(form, submitter);
-            setSubmitting(true);
-            setError(undefined);
+            setSubmission({ submitting: true });
 
             // Route all writes through the same validated transport as explicit request calls.
             if (!request) throw new Error('Forms require the Solution runtime');
@@ -54,10 +52,13 @@ export function Form(props: {
             const result = await request(props.action, { method: 'POST', form: [...data.entries()] });
             await props.onSuccess?.(result);
         } catch (failure) {
-            setError(failure instanceof Error ? failure.message : 'Form submission failed');
+            setSubmission((current) => ({
+                ...current,
+                error: failure instanceof Error ? failure.message : 'Form submission failed',
+            }));
         } finally {
             pending.current = false;
-            setSubmitting(false);
+            setSubmission((current) => ({ ...current, submitting: false }));
         }
     }
 
@@ -66,7 +67,7 @@ export function Form(props: {
         <form
             id={props.id}
             method="post"
-            aria-busy={submitting || undefined}
+            aria-busy={submission.submitting || undefined}
             onReset={(event) => {
                 // Clear feedback after a native reset, unless another handler cancels it.
                 const form = event.currentTarget;
@@ -76,7 +77,7 @@ export function Form(props: {
                     for (const control of form.elements) {
                         if (control instanceof HTMLInputElement) control.setCustomValidity('');
                     }
-                    setError(undefined);
+                    setSubmission((current) => ({ ...current, error: undefined }));
                 });
             }}
             onSubmit={(event) => {
@@ -87,10 +88,12 @@ export function Form(props: {
             }}
         >
             <Stack gap={3}>
-                <fieldset disabled={submitting} className="m-0 min-w-0 border-0 p-0">
+                <fieldset disabled={submission.submitting} className="m-0 min-w-0 border-0 p-0">
                     {props.children}
                 </fieldset>
-                {error && <Banner status="error" title={error} icon={<Icon icon="error" size="md" />} />}
+                {submission.error && (
+                    <Banner status="error" title={submission.error} icon={<Icon icon="error" size="md" />} />
+                )}
             </Stack>
         </form>
     );
