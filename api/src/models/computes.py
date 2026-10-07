@@ -3,9 +3,6 @@ import yaml
 from uuid import UUID
 from typing import Annotated, cast
 from pydantic import Field, HttpUrl, BaseModel, ConfigDict, BeforeValidator, field_validator
-from urllib.parse import urlsplit
-
-HTTPS_PORT = 443
 
 
 def kubeconfig_mapping(value: object) -> dict[str, object]:
@@ -95,11 +92,7 @@ class ComputeRegistryCreate(BaseModel):
         if "://" not in value:
             value = f"https://{value}"
 
-        # Preserve explicit ports and select standard HTTPS when it is omitted.
-        source = urlsplit(value)
-        port = source.port if source.port is not None else HTTPS_PORT
-
-        # Keep proxy paths separate from the registered TLS endpoint.
+        # Use one URL parser for HTTPS origin validation and explicit or default ports.
         url = HttpUrl(value)
         if (
             url.scheme != "https"
@@ -110,7 +103,7 @@ class ComputeRegistryCreate(BaseModel):
             or url.fragment is not None
         ):
             raise ValueError("Endpoint must be an HTTPS origin without credentials, path, query, or fragment")
-        return f"https://{url.host}:{port}"
+        return f"https://{url.host}:{url.port}"
 
     # Metadata
     name: str = Field(min_length=1, max_length=128)
