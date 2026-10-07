@@ -8,7 +8,6 @@ import { Text } from '@astryxdesign/core/Text';
 import { Avatar } from '@/components/ui/Avatar';
 import { useState, useTransition } from 'react';
 import { Badge } from '@astryxdesign/core/Badge';
-import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
 import { Divider } from '@astryxdesign/core/Divider';
 import { Heading } from '@astryxdesign/core/Heading';
@@ -18,6 +17,7 @@ import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { Selector } from '@astryxdesign/core/Selector';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { TextInput } from '@astryxdesign/core/TextInput';
+import { Stack, StackItem } from '@astryxdesign/core/Stack';
 import { AlertDialog } from '@astryxdesign/core/AlertDialog';
 import { ProgressBar } from '@astryxdesign/core/ProgressBar';
 import { Table, proportional } from '@astryxdesign/core/Table';
@@ -554,15 +554,21 @@ function SolutionsSection({
             )}
             {logs && (
                 <Dialog
+                    aria-label="Pod logs"
                     isOpen
+                    purpose="info"
+                    width={960}
+                    maxHeight="calc(100dvh - var(--spacing-10) * 4)"
+                    padding={0}
                     onOpenChange={(open) => {
                         if (!open) setLogs(null);
                     }}
                 >
-                    <DialogHeader title="Pod logs" onOpenChange={() => setLogs(null)} />
-                    <ApiBoundary key={logs}>
-                        <SolutionLogs solutionId={logs} />
-                    </ApiBoundary>
+                    <Stack height="min(560px, calc(100dvh - var(--spacing-10) * 4))" paddingInline={8} paddingBlock={4}>
+                        <ApiBoundary key={logs}>
+                            <SolutionLogs solutionId={logs} onClose={() => setLogs(null)} />
+                        </ApiBoundary>
+                    </Stack>
                 </Dialog>
             )}
             {deletion && (
@@ -590,14 +596,34 @@ function SolutionsSection({
 }
 
 /** Loads pod logs only while their dialog is open. */
-function SolutionLogs({ solutionId }: { solutionId: string }) {
+function SolutionLogs({ solutionId, onClose }: { solutionId: string; onClose: () => void }) {
     const [logs, invalidate] = useApi<z.output<typeof schemas.zGetSolutionLogsApiV1SolutionsSolutionIdLogsGetResponse>>(
         `/api/v1/solutions/${solutionId}/logs`
     );
+
+    // Keep log scrolling inside CodeBlock while dismissal and refresh remain visible.
     return (
-        <Stack gap={3}>
-            <Button label="Refresh logs" clickAction={invalidate} />
-            <CodeBlock code={logs.join('\n')} hasLineNumbers isWrapped size="sm" />
+        <Stack gap={3} height="100%">
+            <StackItem size="fill">
+                <CodeBlock
+                    code={logs.join('\n')}
+                    hasLineNumbers
+                    isWrapped
+                    size="sm"
+                    width="100%"
+                    maxHeight="100%"
+                    className="h-full"
+                />
+            </StackItem>
+            <Stack direction="horizontal" gap={2} justify="between" wrap="wrap">
+                <Button label="Close" variant="ghost" onClick={onClose} />
+                <Button
+                    label="Refresh logs"
+                    variant="secondary"
+                    icon={<RefreshCw className="size-4" aria-hidden="true" />}
+                    clickAction={invalidate}
+                />
+            </Stack>
         </Stack>
     );
 }
