@@ -49,7 +49,7 @@
         "zod": "^4.5.4"
     },
     "devDependencies": {
-        "@astryxdesign/cli": "0.6.4",
+        "@astryxdesign/cli": "0.6.5",
         "@hey-api/openapi-ts": "0.99.0",
         "@react-router/dev": "8.4.0",
         "@testing-library/user-event": "14.6.7",
