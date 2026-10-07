@@ -18,7 +18,7 @@ spec:
         - Ingress
         - Egress
     egress:
-        # Only the shared RustFS TLS proxy is reachable for private S3 object storage.
+        # Allow the shared RustFS TLS proxy's Pod port after Service port 443 is translated.
         - to:
               - namespaceSelector:
                     matchLabels:
@@ -27,7 +27,7 @@ spec:
                     matchLabels:
                         app.kubernetes.io/name: longlink-storage
           ports:
-              - { protocol: TCP, port: 443 }
+              - { protocol: TCP, port: 8443 }
         # Preserve public SOS/S3 and HTTPS integrations without opening private or special-use networks.
         - to:
               - ipBlock:

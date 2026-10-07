@@ -32,6 +32,7 @@ async def test_organization_apply_creates_namespace_boundary_resources(monkeypat
     metadata = applied[1]["metadata"]
     assert isinstance(metadata, dict)
     assert metadata["namespace"] == "longlink-compute-00000000000040008000000000000001"
+    assert applied[1]["spec"]["egress"][0]["ports"] == [{"protocol": "TCP", "port": 8443}]
 
 
 async def test_organization_delete_waits_for_namespace_termination(monkeypatch: pytest.MonkeyPatch) -> None:

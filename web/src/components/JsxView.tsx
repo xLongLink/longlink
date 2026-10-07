@@ -177,7 +177,8 @@ export function JsxView({
             <iframe
                 ref={frame}
                 title="Solution View"
-                sandbox="allow-scripts"
+                // Allow native validation and submit events; CSP form-action blocks direct form navigation.
+                sandbox="allow-scripts allow-forms"
                 referrerPolicy="no-referrer"
                 srcDoc={bootstrapState.status === 'prepared' ? bootstrapState.document : undefined}
                 className="block h-full min-h-0 w-full flex-1 border-0 bg-transparent"
