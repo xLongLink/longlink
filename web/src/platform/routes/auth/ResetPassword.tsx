@@ -1,15 +1,15 @@
 import { z } from 'zod';
 import { useState } from 'react';
+import { TextField } from './Field';
 import { AuthLayout } from './AuthLayout';
 import { api, ApiError } from '@/lib/api';
+import { useForm } from 'react-hook-form';
 import { NoIndex } from '@/components/Seo';
 import { passwordSchema } from './validation';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Controller, useForm } from 'react-hook-form';
-import { TextInput } from '@astryxdesign/core/TextInput';
 import { useFragmentToken } from '@/lib/hooks/use-fragment-token';
 import { useVerification, type VerificationRequest } from '@/lib/hooks/use-verification';
 
@@ -105,27 +105,13 @@ export default function ResetPassword() {
                     }
                 >
                     <Stack gap={4}>
-                        <Controller
+                        <TextField
                             control={form.control}
                             name="password"
-                            render={({ field, fieldState }) => (
-                                <TextInput
-                                    ref={field.ref}
-                                    htmlName={field.name}
-                                    isRequired
-                                    label="New password"
-                                    onBlur={field.onBlur}
-                                    onChange={field.onChange}
-                                    status={
-                                        fieldState.error
-                                            ? { type: 'error', message: fieldState.error.message }
-                                            : undefined
-                                    }
-                                    value={field.value}
-                                    width="100%"
-                                    type="password"
-                                />
-                            )}
+                            isRequired
+                            label="New password"
+                            width="100%"
+                            type="password"
                         />
                         <Button label="Reset password" type="submit" variant="primary" />
                     </Stack>

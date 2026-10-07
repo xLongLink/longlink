@@ -1,4 +1,5 @@
 import { api } from '@/lib/api';
+import { TextField } from './Field';
 import { AuthLayout } from './AuthLayout';
 import { NoIndex } from '@/components/Seo';
 import { Link } from '@astryxdesign/core/Link';
@@ -6,11 +7,10 @@ import { useSearchParams } from 'react-router';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
 import { useToast } from '@astryxdesign/core/Toast';
+import { useForm, useWatch } from 'react-hook-form';
 import { Divider } from '@astryxdesign/core/Divider';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { WelcomeTitle } from '@/components/WelcomeTitle';
-import { TextInput } from '@astryxdesign/core/TextInput';
-import { Controller, useForm, useWatch } from 'react-hook-form';
 import { emailPayloadSchema, type EmailPayload } from './validation';
 
 /** Starts stateless account registration with an email verification link. */
@@ -38,28 +38,14 @@ export default function Register() {
                     }
                 >
                     <Stack gap={3}>
-                        <Controller
+                        <TextField
                             control={form.control}
                             name="email"
-                            render={({ field, fieldState }) => (
-                                <TextInput
-                                    ref={field.ref}
-                                    autoComplete="email"
-                                    htmlName={field.name}
-                                    isRequired
-                                    label="Email"
-                                    onBlur={field.onBlur}
-                                    onChange={field.onChange}
-                                    status={
-                                        fieldState.error
-                                            ? { type: 'error', message: fieldState.error.message }
-                                            : undefined
-                                    }
-                                    type="email"
-                                    value={field.value}
-                                    width="100%"
-                                />
-                            )}
+                            autoComplete="email"
+                            isRequired
+                            label="Email"
+                            type="email"
+                            width="100%"
                         />
                         <Button label="Send registration link" type="submit" variant="primary" />
                     </Stack>

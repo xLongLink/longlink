@@ -51,7 +51,7 @@ export function FormField({
             event.preventDefault();
         };
         const collect = (event: FormDataEvent) => {
-            if (!serialize || unavailable || fieldRef.current?.closest('fieldset:disabled')) return;
+            if (unavailable || fieldRef.current?.closest('fieldset:disabled')) return;
             for (const value of values) {
                 if (typeof value !== 'string') event.formData.append(name, value);
             }
@@ -61,12 +61,15 @@ export function FormField({
                 if (!event.defaultPrevented) setFailure(undefined);
             });
         };
+
+        // Only serialized binary values need a collector; strings use native controls or hidden carriers.
+        const collectFiles = serialize && values.some((value) => typeof value !== 'string');
         form.addEventListener('submit', validate, true);
-        form.addEventListener('formdata', collect);
+        if (collectFiles) form.addEventListener('formdata', collect);
         form.addEventListener('reset', reset);
         return () => {
             form.removeEventListener('submit', validate, true);
-            form.removeEventListener('formdata', collect);
+            if (collectFiles) form.removeEventListener('formdata', collect);
             form.removeEventListener('reset', reset);
         };
     }, [fieldRef, name, values, serialize, unavailable, error]);

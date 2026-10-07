@@ -105,16 +105,7 @@ export default function ViewLayout({
                     isWrapped
                 />
                 {runtime ? (
-                    (children ?? (
-                        <Stack id="reference">
-                            <CodeBlock
-                                code={component.declaration}
-                                language="typescript"
-                                title="Reference"
-                                hasLanguageLabel={false}
-                            />
-                        </Stack>
-                    ))
+                    children
                 ) : (
                     <Stack gap={5}>
                         <TabList

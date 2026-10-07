@@ -15,7 +15,6 @@ export { Divider } from '@/components/ui/Divider';
 export { Dialog } from '@/components/ui/Dialog';
 export { Form } from '@/components/ui/Form';
 export { DateInput } from '@/components/ui/DateInput';
-export { DateRangeInput } from '@/components/ui/DateRangeInput';
 export { MultiSelector } from '@/components/ui/MultiSelector';
 export { TimeInput } from '@/components/ui/TimeInput';
 export { TextInput } from '@/components/ui/TextInput';

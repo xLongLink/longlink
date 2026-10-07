@@ -256,33 +256,6 @@
         ]
     },
     {
-        "name": "DateRangeInput",
-        "url": "https://astryx.atmeta.com/components/DateRangeInput",
-        "introduction": "Selects a date range with two months and standard week presentation.",
-        "practices": [
-            {
-                "guidance": true,
-                "description": "Use min/max to constrain selectable dates to valid ranges."
-            },
-            {
-                "guidance": true,
-                "description": "Keep hasClear enabled (default) so users can reset the filter."
-            },
-            {
-                "guidance": true,
-                "description": "Provide clear labels and descriptions so users understand what the range controls."
-            },
-            {
-                "guidance": false,
-                "description": "Use DateRangeInput when only a single date is needed; use DateInput instead."
-            },
-            {
-                "guidance": false,
-                "description": "Hide the label without surrounding context that makes the purpose obvious."
-            }
-        ]
-    },
-    {
         "name": "Dialog",
         "url": "https://astryx.atmeta.com/components/Dialog",
         "introduction": "Displays an accessible modal with an explicit purpose and controlled visibility.",

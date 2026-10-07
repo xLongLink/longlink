@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { TextField } from './Field';
 import { AuthLayout } from './AuthLayout';
 import { api, ApiError } from '@/lib/api';
 import { useApiError } from '@/lib/errors';
@@ -9,14 +10,13 @@ import { Text } from '@astryxdesign/core/Text';
 import { Seo, NoIndex } from '@/components/Seo';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
+import { useForm, useWatch } from 'react-hook-form';
 import { Divider } from '@astryxdesign/core/Divider';
 import { useCurrentUser } from '@/lib/hooks/use-user';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { clearSessionQueries } from '@/lib/react-query';
-import { TextInput } from '@astryxdesign/core/TextInput';
 import { emailSchema, passwordSchema } from './validation';
 import { IconButton } from '@astryxdesign/core/IconButton';
-import { Controller, useForm, useWatch } from 'react-hook-form';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Navigate, useNavigate, useSearchParams } from 'react-router';
 import { zOAuthAvailability } from '@/lib/generated/platform-api-v1/zod.gen';
@@ -111,27 +111,13 @@ export default function Login() {
                         <Stack gap={2}>
                             <Stack gap={1}>
                                 <Text type="label">Email</Text>
-                                <Controller
+                                <TextField
                                     control={form.control}
                                     name="email"
-                                    render={({ field, fieldState }) => (
-                                        <TextInput
-                                            ref={field.ref}
-                                            htmlName={field.name}
-                                            isLabelHidden
-                                            label="Email"
-                                            onBlur={field.onBlur}
-                                            onChange={field.onChange}
-                                            status={
-                                                fieldState.error
-                                                    ? { type: 'error', message: fieldState.error.message }
-                                                    : undefined
-                                            }
-                                            type="email"
-                                            value={field.value}
-                                            width="100%"
-                                        />
-                                    )}
+                                    isLabelHidden
+                                    label="Email"
+                                    type="email"
+                                    width="100%"
                                 />
                             </Stack>
                             <Stack gap={1}>
@@ -141,44 +127,30 @@ export default function Login() {
                                         Forgot password?
                                     </Link>
                                 </Stack>
-                                <Controller
-                                    control={form.control}
-                                    name="password"
-                                    render={({ field, fieldState }) => (
-                                        <Stack className="relative">
-                                            <TextInput
-                                                ref={field.ref}
-                                                className="pr-10"
-                                                htmlName={field.name}
-                                                isLabelHidden
-                                                isRequired
-                                                label="Password"
-                                                onBlur={field.onBlur}
-                                                onChange={field.onChange}
-                                                status={
-                                                    fieldState.error
-                                                        ? { type: 'error', message: fieldState.error.message }
-                                                        : undefined
-                                                }
-                                                type={isPasswordVisible ? 'text' : 'password'}
-                                                value={field.value}
-                                                width="100%"
-                                            />
-                                            <IconButton
-                                                className="absolute right-0 top-0"
-                                                icon={isPasswordVisible ? <EyeOff /> : <Eye />}
-                                                label={isPasswordVisible ? 'Hide password' : 'Show password'}
-                                                onClick={() => {
-                                                    // Toggle visibility without changing the password value.
-                                                    setIsPasswordVisible((visible) => !visible);
-                                                }}
-                                                tooltip={isPasswordVisible ? 'Hide password' : 'Show password'}
-                                                type="button"
-                                                variant="ghost"
-                                            />
-                                        </Stack>
-                                    )}
-                                />
+                                <Stack className="relative">
+                                    <TextField
+                                        control={form.control}
+                                        name="password"
+                                        className="pr-10"
+                                        isLabelHidden
+                                        isRequired
+                                        label="Password"
+                                        type={isPasswordVisible ? 'text' : 'password'}
+                                        width="100%"
+                                    />
+                                    <IconButton
+                                        className="absolute right-0 top-0"
+                                        icon={isPasswordVisible ? <EyeOff /> : <Eye />}
+                                        label={isPasswordVisible ? 'Hide password' : 'Show password'}
+                                        onClick={() => {
+                                            // Toggle visibility without changing the password value.
+                                            setIsPasswordVisible((visible) => !visible);
+                                        }}
+                                        tooltip={isPasswordVisible ? 'Hide password' : 'Show password'}
+                                        type="button"
+                                        variant="ghost"
+                                    />
+                                </Stack>
                             </Stack>
                             <Button label="Sign In" type="submit" variant="primary" width="100%" />
                         </Stack>

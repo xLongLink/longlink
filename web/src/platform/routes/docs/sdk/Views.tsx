@@ -16,6 +16,7 @@ import { Code } from '@astryxdesign/core/Code';
 import { Grid } from '@astryxdesign/core/Grid';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
+import { ButtonExample } from './views/Buttons';
 import { DividerExample } from './views/Divider';
 import { HeadingExample } from './views/Heading';
 import { StepperExample } from './views/Stepper';
@@ -49,7 +50,6 @@ import { Blockquote } from '@astryxdesign/core/Blockquote';
 import { CheckboxInputExample } from './views/CheckboxInput';
 import { MultiSelectorExample } from './views/MultiSelector';
 import { documentationCategories } from '@/lib/documentation';
-import { ButtonExample, ButtonGroupExample } from './views/Buttons';
 import { SideNav, SideNavItem, SideNavSection } from '@astryxdesign/core/SideNav';
 
 const article = {
@@ -72,7 +72,6 @@ const previews: Record<string, ReactNode> = {
     Avatar: <AvatarExample />,
     Badge: <BadgeExample />,
     Button: <ButtonExample />,
-    ButtonGroup: <ButtonGroupExample />,
     Card: <Card>Lorem ipsum dolor sit amet.</Card>,
     CheckboxInput: <CheckboxInputExample />,
     Collapsible: <CollapsibleExample />,

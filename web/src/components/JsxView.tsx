@@ -31,8 +31,9 @@ export function JsxView({
 }) {
     const frame = useRef<HTMLIFrameElement>(null);
     const navigate = useNavigate();
-    const [document, setDocument] = useState<string>();
-    const [bootstrapFailed, setBootstrapFailed] = useState(false);
+    const [bootstrapState, setBootstrapState] = useState<
+        { status: 'preparing' } | { status: 'prepared'; document: string } | { status: 'failed' }
+    >({ status: 'preparing' });
     const [height, setHeight] = useState(1);
     const parameters = JSON.stringify(params);
     const { data: kernel } = useSuspenseQuery({
@@ -70,7 +71,7 @@ export function JsxView({
         function fail(): void {
             if (controller.signal.aborted) return;
             dispose();
-            setBootstrapFailed(true);
+            setBootstrapState({ status: 'failed' });
         }
 
         /** Connects one trusted bootstrap instance; subsequent window messages have no capabilities. */
@@ -147,8 +148,11 @@ export function JsxView({
             if (!controller.signal.aborted) {
                 // A blocked bootstrap script must surface an error instead of leaving a blank frame.
                 handshakeTimer = setTimeout(fail, BOOTSTRAP_TIMEOUT_MS);
-                setDocument(
-                    `<!doctype html><html><head><meta http-equiv="Content-Security-Policy" content="${policy}"><meta name="referrer" content="no-referrer"><style>${styles.replace(/<\/style/gi, '<\\/style')}</style></head><body class="bg-transparent text-primary"><main id="view" class="flow-root"></main><script>${code}</script></body></html>`
+                const document = `<!doctype html><html><head><meta http-equiv="Content-Security-Policy" content="${policy}"><meta name="referrer" content="no-referrer"><style>${styles.replace(/<\/style/gi, '<\\/style')}</style></head><body class="bg-transparent text-primary"><main id="view" class="flow-root"></main><script>${code}</script></body></html>`;
+
+                // Keep startup failure latched until the route owner mounts a fresh View.
+                setBootstrapState((current) =>
+                    current.status === 'failed' ? current : { status: 'prepared', document }
                 );
             }
         }
@@ -158,7 +162,7 @@ export function JsxView({
         return dispose;
     }, [source, parameters, requestBaseUrl, navigationBaseUrl, navigate, kernel]);
 
-    if (bootstrapFailed)
+    if (bootstrapState.status === 'failed')
         return (
             <PageError title="Unable to load this View" description="The isolated View runtime could not be loaded." />
         );
@@ -168,7 +172,7 @@ export function JsxView({
             title="Solution View"
             sandbox="allow-scripts"
             referrerPolicy="no-referrer"
-            srcDoc={document}
+            srcDoc={bootstrapState.status === 'prepared' ? bootstrapState.document : undefined}
             height={height}
             className="block w-full border-0 bg-transparent"
         />
