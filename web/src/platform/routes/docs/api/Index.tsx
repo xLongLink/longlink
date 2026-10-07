@@ -1,9 +1,14 @@
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
+import { Button } from '@astryxdesign/core/Button';
+import { documentationPaths } from '@/platform/docs';
 import { Heading } from '@astryxdesign/core/Heading';
 import { Article } from '@/components/layouts/Article';
+import { Seo, articleRouteLabels } from '@/components/Seo';
 import { Blockquote } from '@astryxdesign/core/Blockquote';
+import { PathBreadcrumb } from '@/components/breadcrumb/Path';
+import { ArticleFooter, ArticleOutline } from '@/platform/components/Article';
 import { ArrowUp, CheckCheck, CheckCircle, EyeOff, Wrench } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHeader, TableHeaderCell, TableRow } from '@astryxdesign/core/Table';
 
@@ -90,51 +95,66 @@ function RoleTable({ roles }: { roles: Readonly<typeof organizationRoles> }) {
 
 export default function DocsArticleRoute() {
     return (
-        <Article page={article}>
-            <Stack gap={5}>
-                <Heading id="platform" level={1}>
-                    Platform
-                </Heading>
-                <Blockquote className="border-s-(--color-text-orange) text-(--color-text-orange)">
-                    <Stack gap={0}>
-                        <Text type="inherit">Beta notice: This page is being built.</Text>
-                        <Link color="inherit" href={article.editUrl} hasUnderline isExternalLink type="inherit">
-                            Edit on GitHub
-                        </Link>
+        <>
+            <Seo description={article.description} hasBreadcrumbs title={article.title} />
+            <Article
+                className="documentation-content [--font-family-heading:var(--font-family-handwritten)] [&_.astryx-heading]:uppercase [&_.astryx-heading]:tracking-wide"
+                header={<PathBreadcrumb className="min-w-0 overflow-hidden" labels={articleRouteLabels} />}
+                headerAction={<Button href="/login/" label="Get Started" size="sm" variant="primary" />}
+                footer={
+                    <ArticleFooter
+                        lastUpdated={article.lastUpdated}
+                        editUrl={article.editUrl}
+                        paths={documentationPaths}
+                    />
+                }
+                sidebar={article.toc.length ? <ArticleOutline items={article.toc} /> : undefined}
+            >
+                <Stack gap={5}>
+                    <Heading id="platform" level={1}>
+                        Platform
+                    </Heading>
+                    <Blockquote className="border-s-(--color-text-orange) text-(--color-text-orange)">
+                        <Stack gap={0}>
+                            <Text type="inherit">Beta notice: This page is being built.</Text>
+                            <Link color="inherit" href={article.editUrl} hasUnderline isExternalLink type="inherit">
+                                Edit on GitHub
+                            </Link>
+                        </Stack>
+                    </Blockquote>
+                    <Text as="p">
+                        The Platform exists to keep an organization’s processes and data in a single place. This keeps
+                        both the work and the information organized: work is done locally, while the cloud provides
+                        validation and stores data in a consistent structure. This makes processes easier to review,
+                        manage, and improve over time.
+                    </Text>
+                    <Heading id="organizations" level={2}>
+                        Organizations
+                    </Heading>
+                    <Text as="p">
+                        The organization defines the boundary for work. It manages the members and Solutions that belong
+                        to it, keeping access and responsibilities clearly separated. Each organization gets its own
+                        dedicated PostgreSQL database, storage bucket (S3), and compute space.
+                    </Text>
+                    <Stack as="aside" className="border-s border-accent ps-4" gap={0}>
+                        <Text weight="semibold">User permissions</Text>
+                        <RoleTable roles={organizationRoles} />
                     </Stack>
-                </Blockquote>
-                <Text as="p">
-                    The Platform exists to keep an organization’s processes and data in a single place. This keeps both
-                    the work and the information organized: work is done locally, while the cloud provides validation
-                    and stores data in a consistent structure. This makes processes easier to review, manage, and
-                    improve over time.
-                </Text>
-                <Heading id="organizations" level={2}>
-                    Organizations
-                </Heading>
-                <Text as="p">
-                    The organization defines the boundary for work. It manages the members and Solutions that belong to
-                    it, keeping access and responsibilities clearly separated. Each organization gets its own dedicated
-                    PostgreSQL database, storage bucket (S3), and compute space.
-                </Text>
-                <Stack as="aside" className="border-s border-accent ps-4" gap={0}>
-                    <Text weight="semibold">User permissions</Text>
-                    <RoleTable roles={organizationRoles} />
+                    <Heading id="solutions" level={2}>
+                        Solutions
+                    </Heading>
+                    <Text as="p">
+                        Solutions belong to an organization and run as separate services. The Platform manages their
+                        deployment and operation. Each Solution gets its own schema in the organization’s PostgreSQL
+                        database and its own dedicated prefix in the storage bucket. When not in use, Solutions
+                        automatically scale to zero.
+                    </Text>
+                    <Stack as="aside" className="border-s border-accent ps-4" gap={0}>
+                        <Text weight="semibold">User permissions</Text>
+                        <RoleTable roles={solutionRoles} />
+                    </Stack>
                 </Stack>
-                <Heading id="solutions" level={2}>
-                    Solutions
-                </Heading>
-                <Text as="p">
-                    Solutions belong to an organization and run as separate services. The Platform manages their
-                    deployment and operation. Each Solution gets its own schema in the organization’s PostgreSQL
-                    database and its own dedicated prefix in the storage bucket. When not in use, Solutions
-                    automatically scale to zero.
-                </Text>
-                <Stack as="aside" className="border-s border-accent ps-4" gap={0}>
-                    <Text weight="semibold">User permissions</Text>
-                    <RoleTable roles={solutionRoles} />
-                </Stack>
-            </Stack>
-        </Article>
+            </Article>
+        </>
     );
 }
