@@ -22,7 +22,7 @@ const publicPagePaths = [
     '/terms',
     '/impressum',
     '/privacy',
-    '/branding/logo',
+    '/branding/assets',
     '/branding/values',
     '/branding/comunication',
     ...documentationPaths,
