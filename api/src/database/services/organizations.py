@@ -259,7 +259,7 @@ async def project_users(session: AsyncSession, organization_id: UUID, db: postgr
         await shared_audit.sync(conn, rows)
 
 
-async def _locked_membership(
+async def locked_membership(
     session: AsyncSession, user_id: UUID, organization_id: UUID, minimum_role: OrganizationRoles
 ) -> UserOrganization:
     """Refresh and authorize a membership after the caller has locked its Organization."""
@@ -291,7 +291,7 @@ async def update_member_role(
     organization = await session.get(Organization, organization_id, populate_existing=True, with_for_update=True)
     if organization is None or organization.deleted_at is not None:
         raise ForbiddenError("Access required")
-    caller_membership = await _locked_membership(session, user_id, organization_id, OrganizationRoles.admin)
+    caller_membership = await locked_membership(session, user_id, organization_id, OrganizationRoles.admin)
 
     # Lock the member role after locking the Organization and caller access.
     statement = (
@@ -425,7 +425,7 @@ async def create_invitation(
     organization = await session.get(Organization, organization_id, populate_existing=True, with_for_update=True)
     if organization is None or organization.deleted_at is not None:
         raise ForbiddenError("Access required")
-    membership = await _locked_membership(session, user_id, organization_id, OrganizationRoles.maintain)
+    membership = await locked_membership(session, user_id, organization_id, OrganizationRoles.maintain)
     if not roles.atleast(membership.role, payload.role):
         raise ForbiddenError("Invitation role permissions required")
 
@@ -478,7 +478,7 @@ async def revoke_invitation(session: AsyncSession, organization_id: UUID, invita
     organization = await session.get(Organization, organization_id, populate_existing=True, with_for_update=True)
     if organization is None or organization.deleted_at is not None:
         raise ForbiddenError("Access required")
-    membership = await _locked_membership(session, user_id, organization_id, OrganizationRoles.maintain)
+    membership = await locked_membership(session, user_id, organization_id, OrganizationRoles.maintain)
 
     # Resolve only an invitation belonging to the locked Organization.
     invitation = await session.get(OrganizationInvitation, invitation_id, with_for_update=True)

@@ -11,7 +11,7 @@ from src.models.roles import OrganizationRoles
 from src.models.types import Image, MinScale
 from src.models.metadata import LongLinkMetadata
 from src.models.solutions import SolutionCreate, validate_idle_seconds, validate_environment_variables
-from src.database.services import operations
+from src.database.services import operations, registries, organizations
 from src.models.operations import OperationKind
 from src.models.pagination import Pagination
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -50,6 +50,7 @@ async def create(
     metadata: LongLinkMetadata,
     *,
     user_id: UUID,
+    registry_connection_id: UUID | None = None,
 ) -> Solution:
     """Create an Organization-owned LongLink Solution."""
 
@@ -65,16 +66,7 @@ async def create(
         raise ConflictError("Organization is not available")
 
     # Revalidate the caller after locking the Organization so revoked access cannot use stale request state.
-    membership = await session.get(
-        UserOrganization,
-        (user_id, organization_id),
-        populate_existing=True,
-        with_for_update=True,
-    )
-    if membership is None:
-        raise ForbiddenError("Access required")
-    if not roles.atleast(membership.role, OrganizationRoles.maintain):
-        raise ForbiddenError("Permission required")
+    await organizations.locked_membership(session, user_id, organization_id, OrganizationRoles.maintain)
 
     # Serialize solution creation through the locked Organization to enforce the beta limit.
     solution_limit_result = await session.execute(
@@ -117,6 +109,7 @@ async def create(
         source=payload.image,
         min_scale=payload.min_scale,
         idle_seconds=payload.idle_seconds,
+        registry_connection_id=registry_connection_id,
     )
 
     return solution
@@ -165,11 +158,21 @@ async def deploy(
     source: Image,
     min_scale: MinScale | None = None,
     idle_seconds: int | None = None,
+    registry_connection_id: UUID | None = None,
 ) -> None:
     """Append a snapshot and queue its exact deployment target."""
 
     # Merge the patch into the serialized desired snapshot, not the last deployed release.
     current = await session.get(Revision, solution.desired_revision_id) if solution.desired_revision_id is not None else None
+
+    # Keep the registry connection immutable and serialize admission with connection deletion.
+    if current is not None:
+        registry_connection_id = current.registry_connection_id
+    if registry_connection_id is not None:
+        await registries.lock(session, solution.organization_id)
+        await registries.resolve(session, solution.organization_id, registry_connection_id, source)
+
+    # Apply explicit environment edits while preserving untouched secrets.
     merged = dict(current.envs) if current is not None else {}
     for name, value in envs.items():
         if value is None:
@@ -213,6 +216,7 @@ async def deploy(
         idle_seconds=idle_seconds,
         envs=merged,
         created_id=user_id,
+        registry_connection_id=registry_connection_id,
     )
     session.add(revision)
     await session.flush()

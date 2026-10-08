@@ -103,10 +103,17 @@ async def test_reconcile_prepares_providers_namespace_and_publishes_organization
 
         calls.append("users")
 
+    async def synchronize(client: object, organization_id: UUID) -> None:
+        """Record pull-secret reconciliation at the external-system boundary."""
+
+        assert organization_id == organization.id
+        calls.append("registries")
+
     monkeypatch.setattr(organization_operations.databases.postgres, "Postgres", Database)
     monkeypatch.setattr(organization_operations, "Kubernetes", OperationKubernetes)
     monkeypatch.setattr(organization_operations, "Storage", Storage)
     monkeypatch.setattr(organization_operations.organizations, "apply", apply)
+    monkeypatch.setattr(organization_operations.registries, "synchronize", synchronize)
     monkeypatch.setattr("src.database.services.organizations.shared_audit.sync", sync_users)
 
     # Reconcile and inspect the published state.
@@ -115,7 +122,7 @@ async def test_reconcile_prepares_providers_namespace_and_publishes_organization
         refreshed = await session.get(Organization, organization.id)
 
     # Every boundary completes before user projection and status publication.
-    assert calls == ["database", "users", "storage", "namespace"]
+    assert calls == ["database", "users", "storage", "namespace", "registries"]
     assert refreshed is not None
     assert refreshed.status == Status.running
 

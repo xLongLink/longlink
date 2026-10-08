@@ -6,7 +6,7 @@ from sqlalchemy import delete as sql_delete
 from sqlalchemy import update
 from src.logger import logger
 from src.kubernetes import namespace
-from src.operations import databases
+from src.operations import databases, registries
 from src.models.statuses import Status
 from src.database.session import session_scope
 from src.database.services import organizations
@@ -111,6 +111,8 @@ async def deploy(revision_id: UUID) -> None:
 
         # Apply the captured desired release so reconciliation repairs workload drift.
         logger.info("Applying Kubernetes workload for Solution %s", solution.id)
+        if revision.registry_connection_id is not None:
+            await registries.synchronize(cluster, organization.id)
         await cluster.solutions.apply(
             organization.id,
             solution.id,
@@ -120,6 +122,7 @@ async def deploy(revision_id: UUID) -> None:
             min_scale=revision.min_scale,
             idle_seconds=revision.idle_seconds,
             migrate=revision.deployed_at is None,
+            registry_connection_id=revision.registry_connection_id,
         )
 
     # Publish the applied release only after workload readiness.

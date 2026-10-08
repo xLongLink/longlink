@@ -42,7 +42,7 @@ def mock_image_metadata(monkeypatch: pytest.MonkeyPatch, metadata: LongLinkMetad
     # Share one fake for the registry boundary; callers pass only meaningful variants.
     resolved = metadata if metadata is not None else LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:test"))
 
-    async def inspect_image(_image: object) -> LongLinkMetadata:
+    async def inspect_image(_image: object, _connection: object | None = None) -> LongLinkMetadata:
         """Return the configured metadata response."""
 
         return resolved
@@ -208,7 +208,7 @@ async def test_create_app_rejects_invalid_image_metadata(
     # Arrange
     organization = await create_organization(users[0])
 
-    async def inspect_image(_image: Image) -> LongLinkMetadata | None:
+    async def inspect_image(_image: Image, _connection: object | None = None) -> LongLinkMetadata | None:
         """Return the configured metadata response."""
 
         return metadata
@@ -239,7 +239,7 @@ async def test_create_app_validates_payload_before_checking_organization_access(
     # Arrange
     organization_id = UUID(int=1)
 
-    async def unexpected_metadata(_image: Image) -> LongLinkMetadata:
+    async def unexpected_metadata(_image: Image, _connection: object | None = None) -> LongLinkMetadata:
         """Fail if invalid input reaches remote image inspection."""
 
         raise AssertionError("invalid solution payload must not inspect image metadata")
@@ -274,7 +274,7 @@ async def test_create_app_rejects_non_member_without_creating_state(
     previous_operations = await fetch_operations()
 
     # Prevent unauthorized requests from reaching the external registry boundary.
-    async def unexpected_metadata(_image: Image) -> LongLinkMetadata:
+    async def unexpected_metadata(_image: Image, _connection: object | None = None) -> LongLinkMetadata:
         """Fail if denied creation reaches remote image inspection."""
 
         raise AssertionError("denied solution creation must not inspect image metadata")
@@ -337,7 +337,7 @@ async def test_solution_responses_do_not_expose_environment_secrets(
     await create_solution(organization, envs={"API_KEY": "runtime-secret"})
 
     # Resolve update metadata at the external boundary without registry I/O.
-    async def metadata(image: Image) -> LongLinkMetadata:
+    async def metadata(image: Image, _connection: object | None = None) -> LongLinkMetadata:
         """Return deterministic metadata for the persisted test source."""
 
         return LongLinkMetadata(image=image)
@@ -385,7 +385,7 @@ async def test_create_app_returns_403_for_regular_member(
     await add_member(user=regular_member, organization=organization, role=OrganizationRoles.write)
     previous_operations = await fetch_operations()
 
-    async def unexpected_metadata(_image: Image) -> LongLinkMetadata:
+    async def unexpected_metadata(_image: Image, _connection: object | None = None) -> LongLinkMetadata:
         """Fail if denied creation reaches remote image inspection."""
 
         raise AssertionError("denied solution creation must not inspect image metadata")
@@ -693,7 +693,7 @@ async def test_create_solution_rejects_too_long_slug_without_queuing_work(
     organization = await create_organization(users[0])
     previous_operations = await fetch_operations()
 
-    async def inspect_image(_image: Image) -> LongLinkMetadata:
+    async def inspect_image(_image: Image, _connection: object | None = None) -> LongLinkMetadata:
         """Return valid immutable image metadata."""
 
         return LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:test"))

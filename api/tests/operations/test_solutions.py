@@ -204,6 +204,7 @@ async def test_solution_creation_applies_user_and_managed_environment_values(
             min_scale: int,
             idle_seconds: int = 60,
             migrate: bool,
+            registry_connection_id: UUID | None = None,
         ) -> None:
             """Capture the generated runtime environment."""
 
@@ -382,6 +383,7 @@ async def test_solution_creation_retry_reuses_persisted_runtime_secrets(
             min_scale: int,
             idle_seconds: int = 60,
             migrate: bool,
+            registry_connection_id: UUID | None = None,
         ) -> None:
             """Capture the persisted runtime environment."""
 

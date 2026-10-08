@@ -52,6 +52,7 @@ async def test_failed_update_recovery(users: tuple[User, User, User], monkeypatc
             min_scale: int,
             idle_seconds: int = 60,
             migrate: bool,
+            registry_connection_id: UUID | None = None,
         ) -> None:
             """Capture the exact snapshot and simulate rollout outcomes."""
 
@@ -226,6 +227,7 @@ async def test_queued_deployments_keep_exact_targets(users: tuple[User, User, Us
             min_scale: int,
             idle_seconds: int = 60,
             migrate: bool,
+            registry_connection_id: UUID | None = None,
         ) -> None:
             """Capture immutable image and environment pairs."""
 

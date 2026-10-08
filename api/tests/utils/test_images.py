@@ -486,7 +486,7 @@ async def test_registry_denial_is_explicit(monkeypatch: pytest.MonkeyPatch, stat
     """Distinguish denied anonymous registry access from absent metadata or an unchanged source."""
 
     mock_async_client(monkeypatch, lambda _request: httpx2.Response(status))
-    with pytest.raises(ForbiddenError, match="denied anonymous"):
+    with pytest.raises(ForbiddenError, match="denied image access"):
         await images.metadata(Image("ghcr.io/owner/private:latest"))
 
 

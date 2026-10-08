@@ -7,6 +7,7 @@ from src.logger import logger
 from collections.abc import Mapping
 from src.models.types import IMAGE_DIGEST_PATTERN, Image
 from src.models.metadata import LongLinkMetadata, EnvironmentMetadata
+from src.database.models.registries import RegistryConnection
 
 IMAGE_METADATA_MAX_BYTES = 1024 * 1024
 LABELS_ADAPTER = TypeAdapter(dict[str, str])
@@ -22,7 +23,7 @@ LOCAL_ORIGIN = "http://localhost:15000"
 def registry_base(registry: str) -> str | None:
     """Return the fixed origin for one supported image registry host."""
 
-    # Only the public release registry and the local development registry are supported.
+    # Only GHCR and the local development registry may receive image requests.
     if registry == "ghcr.io":
         return GHCR_ORIGIN
     if registry == "localhost:15000":
@@ -66,10 +67,11 @@ async def registry_json(
     headers: Mapping[str, str] | None = None,
     params: Mapping[str, str] | None = None,
     ghcr_blob: bool = False,
+    auth: httpx2.BasicAuth | None = None,
 ) -> tuple[object, httpx2.Headers] | None:
     """Fetch a successful, bounded JSON registry response with its headers."""
 
-    async with client.stream("GET", url, headers=headers, params=params, follow_redirects=False) as response:
+    async with client.stream("GET", url, headers=headers, params=params, auth=auth, follow_redirects=False) as response:
         # GHCR serves blobs through one fixed GitHub CDN; never forward the pull token.
         if ghcr_blob and response.status_code in (302, 307):
             destination = httpx2.URL(response.headers.get("Location", ""))
@@ -83,7 +85,7 @@ async def registry_json(
                 return await registry_json(client, str(destination))
             return None
         if response.status_code in (401, 403):
-            raise ForbiddenError("Registry denied anonymous image access")
+            raise ForbiddenError("Registry denied image access. Check package permissions and registry credentials.")
         if not response.is_success:
             return None
 
@@ -94,38 +96,42 @@ async def registry_json(
         return payload, response.headers
 
 
-async def metadata(image: Image) -> LongLinkMetadata | None:
+async def metadata(image: Image, connection: RegistryConnection | None = None) -> LongLinkMetadata | None:
     """Fetch LongLink metadata from a remote image via the OCI Distribution API."""
 
     # Only supported registry origins may receive image requests.
     base = registry_base(image.registry)
     if base is None:
         raise ForbiddenError("Image registry is not allowed")
+    if connection is not None and connection.host != image.registry:
+        raise ForbiddenError("Registry connection does not match the image host")
 
     async with httpx2.AsyncClient(follow_redirects=False, timeout=5.0, trust_env=False) as client:
         try:
             # Bound the whole lookup as well as individual network reads.
             async with asyncio.timeout(20):
-                return await inspect(client, image, base)
+                return await inspect(client, image, base, connection)
         except (httpx2.HTTPError, TimeoutError, TypeError, ValueError) as exc:
             logger.warning("Failed to inspect image metadata: %s", exc)
             return None
 
 
-async def required_metadata(image: Image) -> LongLinkMetadata:
+async def required_metadata(image: Image, connection: RegistryConnection | None = None) -> LongLinkMetadata:
     """Return image metadata or raise the stable missing-image response."""
 
     # Require declared metadata before callers mutate durable Solution state.
-    result = await metadata(image)
+    result = await metadata(image, connection)
     if result is None:
         raise NotFoundError("Image metadata not found")
     return result
 
 
-async def inspect(client: httpx2.AsyncClient, image: Image, base: str) -> LongLinkMetadata | None:
+async def inspect(
+    client: httpx2.AsyncClient, image: Image, base: str, connection: RegistryConnection | None = None
+) -> LongLinkMetadata | None:
     """Resolve one manifest or linux/amd64 index child and inspect its configuration."""
 
-    # Only the public release registry uses token authentication and CDN blob redirects.
+    # GHCR exchanges anonymous or explicit credentials for a repository-scoped pull token.
     is_ghcr = base == GHCR_ORIGIN
 
     headers = {"Accept": MANIFEST_ACCEPT}
@@ -134,6 +140,7 @@ async def inspect(client: httpx2.AsyncClient, image: Image, base: str) -> LongLi
             client,
             f"{GHCR_ORIGIN}/token",
             params={"service": "ghcr.io", "scope": f"repository:{image.repository}:pull"},
+            auth=httpx2.BasicAuth(connection.username, connection.credential) if connection is not None else None,
         )
         if token_result is None:
             return None

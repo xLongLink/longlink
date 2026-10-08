@@ -6,7 +6,7 @@ from sqlalchemy import select, update
 from src.errors import ForbiddenError
 from src.logger import logger
 from src.kubernetes import organizations
-from src.operations import databases
+from src.operations import databases, registries
 from src.models.statuses import Status
 from src.database.session import session_scope
 from src.kubernetes.client import Kubernetes
@@ -42,6 +42,7 @@ async def reconcile(organization_id: UUID) -> None:
         storage = Storage(compute, cluster)
         await storage.apply(organization.id, quota_bytes=organization.storage_quota_bytes)
         await organizations.apply(cluster, organization.id)
+        await registries.synchronize(cluster, organization.id)
 
     # Publish the Organization after its provider and Kubernetes boundaries are ready.
     logger.info("Publishing Organization %s", organization.id)
