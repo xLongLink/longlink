@@ -1,9 +1,9 @@
 import type { z } from 'zod';
 import { useState } from 'react';
 import { useParams } from 'react-router';
-import { NoIndex } from '@/components/Seo';
 import { useApi } from '@/lib/hooks/use-api';
 import CreateSolution from './CreateSolution';
+import { NoIndex } from '@/components/NoIndex';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Badge } from '@astryxdesign/core/Badge';

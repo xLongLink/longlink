@@ -1,8 +1,8 @@
-import { stoneTheme } from '@/theme';
 import { ApiErrorContext } from '@/lib/errors';
 import { Theme } from '@astryxdesign/core/theme';
 import { useState, type ReactNode } from 'react';
 import { useToast } from '@astryxdesign/core/Toast';
+import { stoneTheme } from '@/lib/generated/stone.js';
 import { createQueryRuntime } from '@/lib/react-query';
 import { LinkProvider } from '@astryxdesign/core/Link';
 import { LayerProvider } from '@astryxdesign/core/Layer';
