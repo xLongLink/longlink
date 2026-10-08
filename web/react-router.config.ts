@@ -1,9 +1,9 @@
 import path from 'node:path';
 import { siteUrl } from './src/site';
+import { useCasePaths } from './src/platform/usecases';
 import type { Config } from '@react-router/dev/config';
 import { documentationPaths } from './src/platform/docs';
 import { cp, mkdir, rename, rm, writeFile } from 'node:fs/promises';
-import { comparisonPaths, useCasePaths } from './src/platform/usecases';
 
 const requestedMode = import.meta.env.MODE;
 
@@ -19,7 +19,6 @@ const publicPagePaths = [
     '/login',
     '/pricing',
     ...useCasePaths,
-    ...comparisonPaths,
     '/terms',
     '/impressum',
     '/privacy',

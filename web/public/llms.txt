@@ -38,7 +38,7 @@ LongLink is currently in beta and under active development. APIs may change befo
 ## Understand LongLink
 
 - [Project overview](https://raw.githubusercontent.com/xLongLink/longlink/main/README.md): Read the introduction, architecture, quick start, and separate Platform development instructions.
-- [Why LongLink](https://www.longlink.dev/use-cases/): Understand the problem of fragmented company data and why process-specific applications need a shared foundation.
+- [Why LongLink](https://www.longlink.dev/docs/introduction/): Understand the problem of fragmented company data and why process-specific applications need a shared foundation.
 - [Documentation](https://www.longlink.dev/docs/): Find the learning path for building a Solution or understanding the Platform.
 - [GitHub repository](https://github.com/xLongLink/longlink): Explore the SDK, Platform API, and web frontend source code.
 
