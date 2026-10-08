@@ -497,6 +497,31 @@
                 "name": "purpose",
                 "type": "\"info\" | \"form\" | \"required\"",
                 "description": "Controls dismissal behavior: required disables Escape and backdrop click; form disables backdrop click after interaction; info allows both. Default: 'info'."
+            },
+            {
+                "name": "width",
+                "type": "string | number",
+                "description": "Preferred dialog width, clamped to the viewport. Default: 400."
+            },
+            {
+                "name": "height",
+                "type": "string | number",
+                "description": "Frame height; when set, short content is vertically centered while longer content scrolls."
+            },
+            {
+                "name": "maxHeight",
+                "type": "string | number",
+                "description": "Maximum dialog height within the View viewport. Default: '75dvh'."
+            },
+            {
+                "name": "padding",
+                "type": "0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10",
+                "description": "Content inset using the shared spacing scale. Default: 4."
+            },
+            {
+                "name": "contentWidth",
+                "type": "string | number",
+                "description": "Maximum width of the centered content column."
             }
         ]
     },

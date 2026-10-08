@@ -10,25 +10,40 @@ export default function Invoices() {
                 <Heading level={1}>Invoice approvals</Heading>
                 <Button label="New Invoice" onClick={() => setOpen(true)} />
             </Stack>
-            <Dialog aria-label="New Invoice" isOpen={open} onOpenChange={setOpen} purpose="form">
-                <Form action="/api/items" method="post" onSuccess={() => setOpen(false)}>
-                    <Stack gap={3}>
+            {/* Match Platform creation dialogs with a viewport-bounded frame and centered form column. */}
+            <Dialog
+                aria-label="New Invoice"
+                isOpen={open}
+                onOpenChange={setOpen}
+                purpose="form"
+                width={960}
+                height="min(560px, calc(100dvh - var(--spacing-10) * 4))"
+                maxHeight="calc(100dvh - var(--spacing-10) * 4)"
+                padding={8}
+                contentWidth={640}
+            >
+                <Stack gap={8}>
+                    <Stack align="center" gap={0}>
                         <Heading level={2}>New Invoice</Heading>
-                        <TextInput label="Invoice number" name="name" required />
-                        <NumberInput label="Amount (CHF)" name="price" defaultValue={0} min={0} required />
-                        <Selector
-                            label="Status"
-                            name="status"
-                            defaultValue="draft"
-                            options={[
-                                { value: 'draft', label: 'Draft' },
-                                { value: 'pending', label: 'Pending' },
-                                { value: 'approved', label: 'Approved' },
-                            ]}
-                        />
-                        <Button label="Create Invoice" variant="primary" type="submit" />
                     </Stack>
-                </Form>
+                    <Form action="/api/items" method="post" onSuccess={() => setOpen(false)}>
+                        <Stack gap={3}>
+                            <TextInput label="Invoice number" name="name" required />
+                            <NumberInput label="Amount (CHF)" name="price" defaultValue={0} min={0} required />
+                            <Selector
+                                label="Status"
+                                name="status"
+                                defaultValue="draft"
+                                options={[
+                                    { value: 'draft', label: 'Draft' },
+                                    { value: 'pending', label: 'Pending' },
+                                    { value: 'approved', label: 'Approved' },
+                                ]}
+                            />
+                            <Button label="Create Invoice" variant="primary" type="submit" />
+                        </Stack>
+                    </Form>
+                </Stack>
             </Dialog>
             <Table
                 data={invoices.items}
