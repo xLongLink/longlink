@@ -2,11 +2,15 @@ import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
+import { documentationPaths } from '@/platform/docs';
 import { Divider } from '@astryxdesign/core/Divider';
 import { Outline } from '@astryxdesign/core/Outline';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
+import { Article } from '@/components/layouts/Article';
 import { useLocation, useNavigate } from 'react-router';
-import { useEffect, useEffectEvent, type ComponentProps } from 'react';
+import { Seo, articleRouteLabels } from '@/components/Seo';
+import { PathBreadcrumb } from '@/components/breadcrumb/Path';
+import { useEffect, useEffectEvent, type ComponentProps, type ReactNode } from 'react';
 
 const dateFormatter = new Intl.DateTimeFormat('en-GB', {
     day: 'numeric',
@@ -14,6 +18,47 @@ const dateFormatter = new Intl.DateTimeFormat('en-GB', {
     year: 'numeric',
     timeZone: 'UTC',
 });
+
+type DocumentationArticleProps = {
+    article: {
+        title: string;
+        description: string;
+        lastUpdated: string;
+        editUrl: string;
+        toc: ComponentProps<typeof Outline>['items'];
+    };
+    children: ReactNode;
+    className?: string;
+};
+
+/** Publishes authored documentation within one shared metadata and navigation shell. */
+export function DocumentationArticle({
+    article,
+    children,
+    className = 'documentation-content [--font-family-heading:var(--font-family-handwritten)] [&_.astryx-heading]:uppercase [&_.astryx-heading]:tracking-wide',
+}: DocumentationArticleProps) {
+    // Preserve the 720px reading column, 224px outline, 64px header, and caller-owned typography.
+    return (
+        <>
+            <Seo description={article.description} hasBreadcrumbs title={article.title} />
+            <Article
+                className={className}
+                header={<PathBreadcrumb className="min-w-0 overflow-hidden" labels={articleRouteLabels} />}
+                headerAction={<Button href="/login/" label="Get Started" size="sm" variant="primary" />}
+                footer={
+                    <ArticleFooter
+                        lastUpdated={article.lastUpdated}
+                        editUrl={article.editUrl}
+                        paths={documentationPaths}
+                    />
+                }
+                sidebar={article.toc.length ? <ArticleOutline items={article.toc} /> : undefined}
+            >
+                {children}
+            </Article>
+        </>
+    );
+}
 
 /** Renders the Platform article's authored table of contents. */
 export function ArticleOutline({ items }: { items: ComponentProps<typeof Outline>['items'] }) {

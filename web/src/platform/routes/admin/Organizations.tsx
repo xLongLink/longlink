@@ -1,26 +1,25 @@
 import type { z } from 'zod';
 import { api } from '@/lib/api';
+import { useState } from 'react';
 import { Info } from 'lucide-react';
 import { useApi } from '@/lib/hooks/use-api';
 import { NoIndex } from '@/components/NoIndex';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Avatar } from '@/components/ui/Avatar';
-import { useState, useTransition } from 'react';
 import { Badge } from '@astryxdesign/core/Badge';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
 import { Heading } from '@astryxdesign/core/Heading';
 import { Pagination } from '@astryxdesign/core/Pagination';
-import { AlertDialog } from '@astryxdesign/core/AlertDialog';
 import { Table, proportional } from '@astryxdesign/core/Table';
+import { DeletionDialog } from '@/platform/components/Deletion';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import type { zPageOrganizationIdentity } from '@/lib/generated/platform-api-v1/zod.gen';
 
 /** Lists organizations and confirms administrator deletion. */
 export default function Organizations() {
     const [page, setPage] = useState(1);
-    const [isDeleting, startDeletion] = useTransition();
 
     const [dialog, setDialog] = useState<
         { kind: 'metadata'; id: string } | { kind: 'deletion'; item: { id: string; name: string } } | null
@@ -127,26 +126,23 @@ export default function Organizations() {
                     </Stack>
                 </Dialog>
             )}
-            {dialog?.kind === 'deletion' && (
-                <AlertDialog
-                    isOpen
-                    title="Delete organization"
-                    description={`Delete organization ${dialog.item.name}?`}
-                    actionLabel="Delete"
-                    isActionLoading={isDeleting}
-                    onOpenChange={(open) => {
-                        if (!open) setDialog(null);
-                    }}
-                    onAction={() =>
-                        startDeletion(async () => {
-                            // Refresh the list only after deletion succeeds.
-                            await api.delete(`/api/v1/organizations/${dialog.item.id}`);
-                            await invalidate();
-                            setDialog(null);
-                        })
-                    }
-                />
-            )}
+            <DeletionDialog
+                confirmation={
+                    dialog?.kind === 'deletion'
+                        ? {
+                              title: 'Delete organization',
+                              description: `Delete organization ${dialog.item.name}?`,
+                              onDelete: async () => {
+                                  // Refresh the list only after deletion succeeds.
+                                  await api.delete(`/api/v1/organizations/${dialog.item.id}`);
+                                  await invalidate();
+                                  setDialog(null);
+                              },
+                          }
+                        : null
+                }
+                onClose={() => setDialog(null)}
+            />
         </Stack>
     );
 }

@@ -1,8 +1,7 @@
 // @vitest-environment happy-dom
 import { act } from 'react';
-import { RootProvider } from '@/providers';
+import PlatformRoot from '@/platform/root';
 import { createRoot } from 'react-dom/client';
-import { ApiBoundary } from '@/components/ApiBoundary';
 import Settings from '@/platform/routes/orgs/Settings';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -95,17 +94,15 @@ describe('Solution source update dialog', () => {
         await act(async () =>
             mountedRoot.render(
                 <MemoryRouter initialEntries={['/orgs/development/settings#solutions']}>
-                    <RootProvider>
-                        <ApiBoundary>
-                            <Routes>
-                                <Route element={<AuthenticatedLayout />}>
-                                    <Route path="/orgs/:organization" element={<OrganizationLayout />}>
-                                        <Route path="settings" element={<Settings />} />
-                                    </Route>
+                    <Routes>
+                        <Route element={<PlatformRoot />}>
+                            <Route element={<AuthenticatedLayout />}>
+                                <Route path="/orgs/:organization" element={<OrganizationLayout />}>
+                                    <Route path="settings" element={<Settings />} />
                                 </Route>
-                            </Routes>
-                        </ApiBoundary>
-                    </RootProvider>
+                            </Route>
+                        </Route>
+                    </Routes>
                 </MemoryRouter>
             )
         );

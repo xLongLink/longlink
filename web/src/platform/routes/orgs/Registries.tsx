@@ -1,16 +1,16 @@
 import type { z } from 'zod';
 import { api } from '@/lib/api';
+import { useState } from 'react';
 import { useApi } from '@/lib/hooks/use-api';
 import { Text } from '@astryxdesign/core/Text';
-import { useState, useTransition } from 'react';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
 import { Dialog } from '@astryxdesign/core/Dialog';
 import { Divider } from '@astryxdesign/core/Divider';
 import { Heading } from '@astryxdesign/core/Heading';
 import { TextInput } from '@astryxdesign/core/TextInput';
-import { AlertDialog } from '@astryxdesign/core/AlertDialog';
 import { Table, proportional } from '@astryxdesign/core/Table';
+import { DeletionDialog } from '@/platform/components/Deletion';
 import { Layout, LayoutContent } from '@astryxdesign/core/Layout';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 
@@ -22,7 +22,6 @@ type RegistryAction = { kind: 'create' } | { kind: 'delete'; connection: Registr
 export default function Registries({ base, canMaintain }: { base: string; canMaintain: boolean }) {
     const [connections, invalidate] = useApi<Registry[]>(`${base}/registries`);
     const [action, setAction] = useState<RegistryAction | null>(null);
-    const [isDeleting, startDeletion] = useTransition();
 
     // Retain the settings shell's 260px navigation and show dense, edge-to-edge rows.
     return (
@@ -72,26 +71,23 @@ export default function Registries({ base, canMaintain }: { base: string; canMai
             {action?.kind === 'create' && (
                 <RegistryForm base={base} invalidate={invalidate} onClose={() => setAction(null)} />
             )}
-            {action?.kind === 'delete' && (
-                <AlertDialog
-                    isOpen
-                    title="Delete registry"
-                    description={`Delete ${action.connection.username} (${action.connection.host})? Connections used by retained Solution revisions cannot be deleted.`}
-                    actionLabel="Delete"
-                    isActionLoading={isDeleting}
-                    onOpenChange={(open) => {
-                        if (!open) setAction(null);
-                    }}
-                    onAction={() =>
-                        startDeletion(async () => {
-                            // Remove the connection only after server dependency checks succeed.
-                            await api.delete(`${base}/registries/${action.connection.id}`);
-                            await invalidate();
-                            setAction(null);
-                        })
-                    }
-                />
-            )}
+            <DeletionDialog
+                confirmation={
+                    action?.kind === 'delete'
+                        ? {
+                              title: 'Delete registry',
+                              description: `Delete ${action.connection.username} (${action.connection.host})? Connections used by retained Solution revisions cannot be deleted.`,
+                              onDelete: async () => {
+                                  // Remove the connection only after server dependency checks succeed.
+                                  await api.delete(`${base}/registries/${action.connection.id}`);
+                                  await invalidate();
+                                  setAction(null);
+                              },
+                          }
+                        : null
+                }
+                onClose={() => setAction(null)}
+            />
         </>
     );
 }

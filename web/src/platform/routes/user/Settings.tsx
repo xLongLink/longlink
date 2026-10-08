@@ -1,11 +1,11 @@
 import type { z } from 'zod';
 import { api } from '@/lib/api';
+import { useState } from 'react';
 import { useApi } from '@/lib/hooks/use-api';
 import { NoIndex } from '@/components/NoIndex';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Avatar } from '@/components/ui/Avatar';
-import { useState, useTransition } from 'react';
 import { Badge } from '@astryxdesign/core/Badge';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
@@ -17,8 +17,8 @@ import { useQueryClient } from '@tanstack/react-query';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { PageContainer } from '@/components/PageContainer';
 import { useAuthenticatedUser } from '@/lib/hooks/use-user';
-import { AlertDialog } from '@astryxdesign/core/AlertDialog';
 import { Table, proportional } from '@astryxdesign/core/Table';
+import { DeletionDialog } from '@/platform/components/Deletion';
 import { Menu, MenuSection, MenuItem } from '@/components/ui/Menu';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 
@@ -96,7 +96,6 @@ function SettingsPage({ user }: { user: z.output<typeof schemas.zUserSummary> })
 /** Owns organization management independently of account editing. */
 function OrganizationSettings() {
     const [creating, setCreating] = useState(false);
-    const [isDeleting, startDeletion] = useTransition();
     const [deletion, setDeletion] = useState<{ id: string; name: string } | null>(null);
 
     const [memberships, invalidate] =
@@ -151,26 +150,23 @@ function OrganizationSettings() {
                         },
                     ]}
                 />
-                {deletion && (
-                    <AlertDialog
-                        isOpen
-                        title="Delete organization"
-                        description={`Delete ${deletion.name} from your account?`}
-                        actionLabel="Delete"
-                        isActionLoading={isDeleting}
-                        onOpenChange={(open) => {
-                            if (!open) setDeletion(null);
-                        }}
-                        onAction={() =>
-                            startDeletion(async () => {
-                                // Refresh memberships only after deletion succeeds.
-                                await api.delete(`/api/v1/organizations/${deletion.id}`);
-                                await invalidate();
-                                setDeletion(null);
-                            })
-                        }
-                    />
-                )}
+                <DeletionDialog
+                    confirmation={
+                        deletion
+                            ? {
+                                  title: 'Delete organization',
+                                  description: `Delete ${deletion.name} from your account?`,
+                                  onDelete: async () => {
+                                      // Refresh memberships only after deletion succeeds.
+                                      await api.delete(`/api/v1/organizations/${deletion.id}`);
+                                      await invalidate();
+                                      setDeletion(null);
+                                  },
+                              }
+                            : null
+                    }
+                    onClose={() => setDeletion(null)}
+                />
             </Stack>
             <CreateOrganization isOpen={creating} onOpenChange={setCreating} invalidate={invalidate} />
         </>
