@@ -8,10 +8,11 @@ import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router';
 import { useEffect, useEffectEvent, type ComponentProps } from 'react';
 
-const dateFormatter = new Intl.DateTimeFormat(undefined, {
+const dateFormatter = new Intl.DateTimeFormat('en-GB', {
     day: 'numeric',
-    month: 'numeric',
+    month: 'short',
     year: 'numeric',
+    timeZone: 'UTC',
 });
 
 /** Renders the Platform article's authored table of contents. */
@@ -31,10 +32,12 @@ export function ArticleOutline({ items }: { items: ComponentProps<typeof Outline
 export function ArticleFooter({
     lastUpdated,
     editUrl,
+    editLabel = 'Edit this page',
     paths = [],
 }: {
     lastUpdated: string;
     editUrl?: string;
+    editLabel?: string;
     paths?: readonly string[];
 }) {
     // Resolve adjacent pages only within the caller's reading order.
@@ -56,10 +59,10 @@ export function ArticleFooter({
             return;
         }
 
-        // Leave text-entry controls available for their native cursor behavior.
+        // Leave text-entry controls and sliders available for their native arrow-key behavior.
         if (
             event.target instanceof HTMLElement &&
-            event.target.closest('input, textarea, select, [contenteditable="true"]')
+            event.target.closest('input, textarea, select, [contenteditable="true"], [role="slider"]')
         ) {
             return;
         }
@@ -118,7 +121,7 @@ export function ArticleFooter({
                 <Text type="supporting">{`Last updated: ${dateFormatter.format(new Date(lastUpdated))}`}</Text>
                 {editUrl ? (
                     <Link href={editUrl} hasUnderline isExternalLink type="supporting">
-                        Edit this page
+                        {editLabel}
                     </Link>
                 ) : null}
             </Stack>

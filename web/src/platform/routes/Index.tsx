@@ -218,7 +218,7 @@ export default function Home() {
                         <Button
                             className="w-full"
                             endContent={<ArrowRight aria-hidden="true" size={16} />}
-                            href="/use-cases/"
+                            href="/docs/introduction/"
                             label="Why LongLink"
                             variant="secondary"
                         />

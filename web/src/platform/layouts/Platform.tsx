@@ -19,6 +19,8 @@ type PlatformProps = {
     action: ReactNode;
     breadcrumb?: ReactNode;
     children: ReactNode;
+    /** Lets compact application views use AppShell's header-aware scroll region. */
+    height?: 'auto' | 'fill';
     tabs: readonly NavigationTab[];
 };
 
@@ -38,12 +40,12 @@ function findActiveTab(tabs: readonly NavigationTab[], pathname: string): string
 }
 
 /** Renders the shared Platform frame with contextual navigation and actions. */
-export default function Platform({ action, breadcrumb, children, tabs }: PlatformProps) {
+export default function Platform({ action, breadcrumb, children, height = 'auto', tabs }: PlatformProps) {
     const { pathname } = useLocation();
 
     return (
         <AppShell
-            height="auto"
+            height={height}
             mobileNav={false}
             topNav={
                 <Stack>
@@ -87,7 +89,11 @@ export default function Platform({ action, breadcrumb, children, tabs }: Platfor
             }
             variant="wash"
         >
-            <Stack className="relative" minHeight="calc(100dvh - var(--_app-shell-header-height, 0px))">
+            {/* Fill the available main region without adding another viewport-height budget. */}
+            <Stack
+                className="relative"
+                minHeight={height === 'fill' ? '100%' : 'calc(100dvh - var(--_app-shell-header-height, 0px))'}
+            >
                 <Card
                     aria-hidden="true"
                     className="pointer-events-none absolute z-0 inset-0 overflow-clip bg-body px-2 pb-2 pt-0"

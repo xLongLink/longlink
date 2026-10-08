@@ -1,93 +1,35 @@
-import type { ComponentProps } from 'react';
-import { Stack } from '@astryxdesign/core/Stack';
+import { Wordmark } from '@/components/Wordmark';
+import Platform from '@/platform/layouts/Platform';
+import { useCasePages } from '@/platform/usecases';
+import { Button } from '@astryxdesign/core/Button';
 import { Outlet, useLocation } from 'react-router';
-import { SideLayout } from '@/components/layouts/SideLayout';
-import { SideNavHeader } from '@/components/layouts/SideNavHeader';
-import { comparisonPages, useCasePages } from '@/platform/usecases';
-import { SideNav, SideNavItem, SideNavSection } from '@astryxdesign/core/SideNav';
-import { BookOpen, ClipboardCheck, ExternalLink, FolderKanban, Settings, ShieldCheck } from 'lucide-react';
-import {
-    Appsmith,
-    FastAPI,
-    Lovable,
-    Microsoft,
-    Reflex,
-    Replit,
-    Retool,
-    Superblocks,
-    Windmill,
-} from '@/components/Brands';
+import { BreadcrumbItem, Breadcrumbs } from '@astryxdesign/core/Breadcrumbs';
 
-const useCaseIcons = { BookOpen, ClipboardCheck, Settings, ShieldCheck, FolderKanban };
-
-const comparisonIcons = { Retool, Lovable, Windmill, Microsoft, Replit, Appsmith, Superblocks, FastAPI, Reflex };
-
-/** Opens sidebar documentation links in a separate tab. */
-function DocumentationLink(props: ComponentProps<'a'>) {
-    return <a {...props} rel="noopener noreferrer" target="_blank" />;
-}
-
-/** Renders use cases and comparisons in the same sidebar shell as the documentation. */
+/** Renders public use cases with the existing Platform navigation. */
 export default function UseCases() {
+    // Keep the detail breadcrumb and header-aware scrolling without section tabs.
     const { pathname } = useLocation();
-    const pagePath = pathname.replace(/\/+$/, '') || '/';
+    const isDetail = pathname.replace(/\/+$/, '') === useCasePages[0].path;
 
+    // Preserve the shared Platform navigation and standalone action.
     return (
-        <SideLayout
-            sideNav={
-                <SideNav header={<SideNavHeader />}>
-                    <Stack paddingInline={2}>
-                        {['Introduction', 'Use cases'].map((section) => (
-                            <SideNavSection key={section} title={section}>
-                                {useCasePages
-                                    .filter((page) => page.section === section)
-                                    .map((page) => {
-                                        // Resolve runtime icons without importing UI into the page catalog.
-                                        const Icon = useCaseIcons[page.icon];
-
-                                        return (
-                                            <SideNavItem
-                                                key={page.path}
-                                                href={`${page.path}/`}
-                                                icon={<Icon aria-hidden size={16} />}
-                                                isSelected={pagePath === page.path}
-                                                label={page.label}
-                                            />
-                                        );
-                                    })}
-                                {section === 'Introduction' ? (
-                                    <SideNavItem
-                                        aria-label="Documentation (opens in a new tab)"
-                                        as={DocumentationLink}
-                                        endContent={<ExternalLink aria-hidden size={16} />}
-                                        href="/docs/"
-                                        icon={<BookOpen aria-hidden size={16} />}
-                                        label="Documentation"
-                                    />
-                                ) : null}
-                            </SideNavSection>
-                        ))}
-                        <SideNavSection title="Compare">
-                            {comparisonPages.map((page) => {
-                                // Keep brand components local to the sidebar runtime.
-                                const Icon = comparisonIcons[page.icon];
-
-                                return (
-                                    <SideNavItem
-                                        key={page.path}
-                                        href={`${page.path}/`}
-                                        icon={<Icon aria-hidden className="size-4" />}
-                                        isSelected={pagePath === page.path}
-                                        label={page.label}
-                                    />
-                                );
-                            })}
-                        </SideNavSection>
-                    </Stack>
-                </SideNav>
+        <Platform
+            breadcrumb={
+                isDetail ? (
+                    <Breadcrumbs separator=">" variant="supporting">
+                        <BreadcrumbItem href="/">
+                            <Wordmark />
+                        </BreadcrumbItem>
+                        <BreadcrumbItem href="/use-cases/">Use Cases</BreadcrumbItem>
+                        <BreadcrumbItem isCurrent>{useCasePages[0].label}</BreadcrumbItem>
+                    </Breadcrumbs>
+                ) : undefined
             }
+            action={<Button href="/login/" label="Get Started" size="sm" variant="primary" />}
+            height={isDetail ? 'fill' : 'auto'}
+            tabs={[]}
         >
             <Outlet />
-        </SideLayout>
+        </Platform>
     );
 }

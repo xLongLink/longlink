@@ -1,26 +1,23 @@
 import { siteName, siteUrl } from '@/site';
 import { useLocation } from 'react-router';
+import { useCasePages } from '@/platform/usecases';
 import { buildBreadcrumbs } from '@/components/breadcrumb/text';
-import { comparisonPages, useCasePages } from '@/platform/usecases';
 
 /** Labels for public article route segments shared with visible breadcrumbs. */
 export const articleRouteLabels = {
     api: 'Platform',
     assets: 'Brand assets',
-    compare: 'Compare',
     comunication: 'Communication',
     docs: 'Documentation',
+    introduction: 'Why LongLink',
     sdk: 'Solutions',
     'use-cases': 'Use cases',
     views: 'Views',
 
     // Keep authored page labels in their navigation catalogs without replacing section labels.
-    ...Object.fromEntries([
-        ...useCasePages.flatMap(({ path, label }) =>
-            path === '/use-cases' ? [] : [[path.slice('/use-cases/'.length), label] as const]
-        ),
-        ...comparisonPages.map(({ path, label }) => [path.slice('/compare/'.length), `LongLink vs ${label}`] as const),
-    ]),
+    ...Object.fromEntries(
+        useCasePages.map(({ path, label }) => [path.slice(path.lastIndexOf('/') + 1), label] as const)
+    ),
 } satisfies Record<string, string>;
 
 /** Returns the canonical path with the site-wide trailing-slash convention. */
