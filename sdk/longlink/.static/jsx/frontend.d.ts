@@ -287,6 +287,16 @@ declare function Dialog(props: {
     isOpen: boolean;
     onOpenChange: (open: boolean) => void;
     purpose?: 'form' | 'info' | 'required';
+    /** Preferred dialog width, clamped to the viewport. */
+    width?: number | string;
+    /** Frame height; when set, short content is vertically centered while longer content scrolls. */
+    height?: number | string;
+    /** Maximum dialog height within the View viewport. */
+    maxHeight?: number | string;
+    /** Content inset using the shared spacing scale. */
+    padding?: Spacing;
+    /** Maximum width of the centered content column. */
+    contentWidth?: number | string;
 }): React.JSX.Element;
 
 /** Shared props for form controls. */

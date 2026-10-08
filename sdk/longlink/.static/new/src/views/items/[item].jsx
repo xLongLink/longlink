@@ -31,20 +31,39 @@ export default function Invoice({ params }) {
                 </Stack>
                 <Button label="Upload document" onClick={() => setOpen(true)} />
             </Stack>
-            <Dialog aria-label="Upload Invoice Document" isOpen={open} onOpenChange={setOpen} purpose="form">
-                <Form action={`/api/items/${params.item}/attachments`} method="post" onSuccess={() => setOpen(false)}>
-                    <Stack gap={3}>
+            {/* Match Platform creation dialogs with a viewport-bounded frame and centered form column. */}
+            <Dialog
+                aria-label="Upload Invoice Document"
+                isOpen={open}
+                onOpenChange={setOpen}
+                purpose="form"
+                width={960}
+                height="min(560px, calc(100dvh - var(--spacing-10) * 4))"
+                maxHeight="calc(100dvh - var(--spacing-10) * 4)"
+                padding={8}
+                contentWidth={640}
+            >
+                <Stack gap={8}>
+                    <Stack align="center" gap={0}>
                         <Heading level={2}>Upload Invoice Document</Heading>
-                        <FileInput
-                            name="file"
-                            label="Invoice document"
-                            maxSize={1_900_000}
-                            description="Maximum 1.9 MB. Images can be previewed; other documents can be downloaded."
-                            required
-                        />
-                        <Button label="Upload document" variant="primary" type="submit" />
                     </Stack>
-                </Form>
+                    <Form
+                        action={`/api/items/${params.item}/attachments`}
+                        method="post"
+                        onSuccess={() => setOpen(false)}
+                    >
+                        <Stack gap={3}>
+                            <FileInput
+                                name="file"
+                                label="Invoice document"
+                                maxSize={1_900_000}
+                                description="Maximum 1.9 MB. Images can be previewed; other documents can be downloaded."
+                                required
+                            />
+                            <Button label="Upload document" variant="primary" type="submit" />
+                        </Stack>
+                    </Form>
+                </Stack>
             </Dialog>
             <Divider />
             <Grid columns={3} gap={8}>
