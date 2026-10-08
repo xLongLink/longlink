@@ -34,7 +34,7 @@ Use FastAPI, SQLModel, and Pydantic to define how your application works. LongLi
 Requirements: Python 3.12 or later and [`uv`](https://docs.astral.sh/uv/).
 
 ```bash
-uvx --from longlink longlink init --folder .
+uvx --from longlink longlink init --folder . --ci github
 uv sync --group dev
 uv run longlink dev
 ```
@@ -49,7 +49,7 @@ Open `http://127.0.0.1:1707` to preview your Solution.
 
 ```bash
 python -m pip install longlink
-longlink init --folder .
+longlink init --folder . --ci github
 python -m venv .venv
 source .venv/bin/activate
 python -m pip install -e .

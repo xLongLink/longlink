@@ -5,7 +5,12 @@
 - The direct Web `isbot` dependency is intentional. You CAN retain it.
 - PREFER simple, maintainable, conventional solutions.
 - After creating a merge request, DO return the local checkout to its previous branch.
-- PREFER the standard library or established libraries to handwritten implementations.
+- When they simplify implementation, PREFER the standard library or established libraries over handwritten implementations.
+- DO validate inputs at system boundaries.
+- DO test actual behavior instead of duplicating production logic in tests.
+- Unless the user explicitly requests tests, DON'T add them.
+- When duplication improves clarity, PREFER explicit duplication to helpers or shared code.
+- Where practical, PREFER real implementations and explicit dependency boundaries to mocks or global runtime-state changes.
 
 ## Terminology
 
@@ -17,15 +22,11 @@
 
 - AVOID renaming imports.
 - PREFER the simplest correct implementation. AVOID features needed only for hypothetical future use.
-- When duplication makes lifecycle code clearer, PREFER explicit duplication to a local helper.
 - DO construct class instances in separate, multi-line assignments before invoking their methods.
-- DO validate types at system boundaries.
 - PREFER idiomatic Python and readability over efficiency.
 - DO use clear domain names.
 - PREFER single-word Python filenames.
 - DO use `Protocol` for behavioral interfaces and dependency contracts.
-- PREFER sparse blank lines to separate logical sections in functions.
-- DO separate method definitions in a class with one blank line.
 - DO represent application state with typed models, enums, or structured objects.
 - PREFER namespaced module APIs to importing many related functions directly.
 - DO use exceptions for genuine errors.
@@ -35,17 +36,12 @@
 - DO declare `response_model` on FastAPI routes and let FastAPI validate responses.
 - DO group Pydantic fields into commented sections.
 - Within each section, DO order fields from the shortest name to the longest name.
-- DO add a docstring to every Python function.
 - DO add a descriptive `# ...` comment before each logic block, with one blank line before the comment.
-- DO test the actual implementation instead of duplicating production logic in tests.
-- Unless the user explicitly requests new test cases, DON'T add them.
-- Where practical, PREFER real implementations and explicit dependency boundaries to mocks or global runtime-state changes.
 
 ## JavaScript / TypeScript Guidelines
 
 - DON'T use browsers or browser automation to inspect or verify changes.
 - DO inspect source and run code-level checks instead.
-- DO validate inputs at system boundaries.
 - PREFER precise types, generics, `unknown` with narrowing, discriminated unions, and established validation libraries.
 - Unless extraction improves reuse, readability, or separation of concerns, PREFER inline logic.
 - AVOID single-use helpers, unnecessary abstractions, duplicated state, dead code, or unnecessarily complex solutions.
@@ -53,8 +49,7 @@
 - DO add JSDoc to JavaScript functions.
 - When types do not make behavior clear, DO add JSDoc to TypeScript functions.
 - DO add a descriptive `// ...` comment before each logic block, with one blank line before the comment.
-- DO keep a lookup and its immediate existence check in the same logic block.
-- DO put the block comment before the lookup, not between the lookup and the `if` check.
+- DO keep each lookup and its immediate existence check together, with the block comment before the lookup.
 - DO use clear domain terms, concise filenames, consistent plural model names, and namespaced APIs for related factories or facades.
 - Unless renaming improves clarity, AVOID renaming imports.
 - DO inline simple, single-use prop types and `className` expressions.
@@ -65,18 +60,13 @@
 - DO use concurrency only for independent operations.
 - DO clean up timers, listeners, subscriptions, and observers.
 - Unless unavoidable, AVOID changing global runtime state.
-- When they simplify implementation, PREFER established libraries for validation, routing, forms, dates, URLs, parsing, and internationalization.
 - DO declare route response schemas.
 - DO return raw domain objects or primitive values without reconstructing response models solely for validation.
-- Unless the user explicitly requests tests, DON'T add them.
-- DO test the real implementation. DON'T duplicate production logic in tests.
-- Where practical, AVOID mocks.
 - DO run formatting, linting, type checking, and relevant existing tests.
 - After verification, DO review the implementation for further simplification.
 - DO use only `lucide-react` icons. DON'T use Astryx icons.
 - For brand logos, you CAN use custom SVG components with official brand colors.
 - DO keep each page simple and standalone.
-- When duplication improves clarity, PREFER it to shared code.
 
 ## Astryx Guidelines
 
