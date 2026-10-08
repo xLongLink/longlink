@@ -32,42 +32,20 @@ You are working on a LongLink Solution project.
 
 ## Views
 
-- `longlink dev` generates SDK-owned `frontend.d.ts` in the project root for editor hints. DON'T edit or commit this generated file.
-- A View is a `.jsx` file that exports one default React component. The Solution does not need a frontend build.
-- The isolated renderer supplies React hooks, `Fragment`, LongLink UI components, `request`, `navigate`, and `useApi`. DON'T import packages.
-- Route parameters are passed to the default View function as props: `export default function Item({ params })`.
-- For `[item].jsx`, DO read the URL segment with `params.item`.
-- DO use `@param {ViewProps} props` in JSDoc for editor hints.
-- DO use ordinary JSX props, React state, controlled input callbacks, and JavaScript expressions.
-- DO use `useState()`, `useEffect()`, `useMemo()`, and `useRef()` directly, without imports or a `React.` prefix.
-- DO use `<>...</>` or `<Fragment>...</Fragment>` for fragments.
-- Display titles come from JSX filenames (`items.jsx` → Items, `[item].jsx` → Item). Tabs use the default icon.
-- DON'T add metadata sidecars or exports.
-- Requests are Solution-relative and pass through a restricted host bridge.
-- DON'T use direct fetch, Platform credentials, external resources, or parent-window access.
-- For required data, PREFER `const [data, invalidate] = useApi(path)`.
-- When that exact path needs revalidation, DO call `await invalidate()`.
-- The renderer handles initial loading, errors, and retry. Cache keys come from the full path, including query parameters.
-- Successful writes through `request()` automatically refresh cached data within the isolated View. Explicit invalidation is not needed.
-- For simple forms, DO use `<Form action="/api/..." method="post">`, named fields, and `<Button type="submit">` instead of draft state.
-- `name` includes themed controls in form submissions. DO use `defaultValue` or `defaultChecked` for initial values; use `value`/`onChange` only when reactive state is needed.
-- DO use `name`, `required`, `disabled`, `value`, and `multiple` rather than Astryx field aliases. `readOnly` is not supported. Named fields retain themed Astryx controls; use `value` and `onChange` when reactive state is needed.
-- Form submissions preserve native semantics: strings, repeated names, omitted unchecked checkboxes, and files. DO receive schemas as `Annotated[Schema, fastapi.Form()]` in Python routes.
-- Form handles validation, pending submissions, and request errors. `onSuccess` can close a dialog or navigate. Successful writes refresh cached data without resetting entered values.
-- Views own a viewport-sized scroll region. Dialogs and pickers are modal only within the View, not over the Platform navigation.
-- Requests and responses are limited to 2,000,000 bytes, with at most 32 form entries and 8 pending operations. Keep uploads below the limit including field names and other values.
-- DO use `FileViewer` for image previews and attachment downloads. Set `title` to the attachment filename. PDFs and other documents download without executing inside the View.
-- For multiple resources, DO use separate `useApi` calls.
-- DO mount a component that uses `useApi` only when its resource is needed.
-- Cached data remains visible if a background refresh fails.
-- DO use the sample Views as the current JSX API reference.
+DO use the docs command to discover available View APIs and inspect their props:
+
+```bash
+uv run longlink docs
+uv run longlink docs --help
+uv run longlink docs --category <name>
+uv run longlink docs --component <name>
+```
 
 ## Python Guidelines
 
 - AVOID renaming imports.
 - DO validate types at system boundaries.
 - PREFER the simplest correct implementation. AVOID features needed only for hypothetical future use.
-- PREFER precise type annotations to `Any`.
 - PREFER idiomatic Python and readability over efficiency.
 - DO use clear domain names.
 - PREFER single-word Python filenames.
