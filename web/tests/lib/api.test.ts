@@ -23,6 +23,38 @@ describe('api error mapping', () => {
         });
     });
 
+    it('reports valid validation issues without submitted values or private context', async () => {
+        // Arrange
+        vi.stubGlobal('fetch', async () =>
+            Response.json(
+                {
+                    detail: [
+                        {
+                            loc: ['body', 'name'],
+                            msg: 'Name too short',
+                            input: 'submitted-password-must-not-leak',
+                            ctx: { error: 'private-validation-context-must-not-leak' },
+                        },
+                        { loc: ['body', 'password'], msg: 123, input: 'malformed-issue-must-not-leak' },
+                        { loc: ['body', 'members', 0, 'email'], msg: 'Invalid email' },
+                    ],
+                },
+                { status: 422 }
+            )
+        );
+
+        // Act
+        const request = api.get('https://api.example/organizations');
+
+        // Assert
+        await expect(request).rejects.toBeInstanceOf(ApiError);
+        await expect(request).rejects.toMatchObject({
+            message: 'name: Name too short; members.0.email: Invalid email',
+            status: 422,
+            url: 'https://api.example/organizations',
+        });
+    });
+
     it.each([
         { name: 'blank detail', response: () => Response.json({ detail: '   ' }, { status: 422 }) },
         { name: 'missing detail', response: () => Response.json({}, { status: 500 }) },

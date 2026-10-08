@@ -57,9 +57,8 @@ async def test_compute_registry_creation_rejects_failed_inline_verification(
         raise RuntimeError("gateway unavailable")
 
     monkeypatch.setattr("src.routes.v1.computes.gateway.verify", failed_gateway)
-    name = "Unready Compute"
     payload = {
-        "name": name,
+        "name": "Unready Compute",
         "gateway_url": "https://gateway.example",
         "storage_endpoint": "https://storage.example",
         "kubeconfig": {
@@ -75,10 +74,13 @@ async def test_compute_registry_creation_rejects_failed_inline_verification(
 
     # Assert
     assert response.status_code == 503
+    assert response.json() == {"detail": "Compute infrastructure is unavailable; verify endpoints, credentials, and certificates"}
     assert await fetch_operations() == []
+
+    # Verify rejected registration left no committed Compute through an authorized request.
     list_response = await clients[0].get("/api/v1/computes")
-    assert list_response.json()["total"] == 0
-    assert name not in {item["name"] for item in list_response.json()["items"]}
+    assert list_response.status_code == 200
+    assert list_response.json() == {"items": [], "total": 0}
 
 
 async def test_compute_registry_deletes_unused_registration(

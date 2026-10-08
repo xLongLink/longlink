@@ -101,6 +101,17 @@ async def test_list_users_rejects_anonymous_requests(client: AsyncClient) -> Non
     assert response.json() == {"detail": "Not authenticated"}
 
 
+async def test_list_users_rejects_authenticated_nonadministrator(clients: tuple[AsyncClient, AsyncClient, AsyncClient]) -> None:
+    """Keep the Platform user directory private from authenticated regular users."""
+
+    # Act
+    response = await clients[1].get("/api/v1/users")
+
+    # Assert
+    assert response.status_code == 403
+    assert response.json() == {"detail": "Permission required"}
+
+
 @pytest.mark.parametrize(
     "name",
     [pytest.param("Updated User", id="changed"), pytest.param(None, id="unchanged")],

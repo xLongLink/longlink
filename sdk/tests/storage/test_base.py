@@ -1,4 +1,6 @@
+import gc
 import pytest
+import weakref
 from s3fs import S3FileSystem
 from pathlib import Path
 from pydantic import ValidationError
@@ -55,8 +57,10 @@ def test_production_storage_scopes_paths_to_configured_bucket_prefix(production_
     assert isinstance(scoped_filesystem.fs, S3FileSystem)
 
 
-def test_production_storage_passes_configured_ca_to_s3_client(production_settings: dict[str, str | int], ca_certificate: str) -> None:
-    """Use the Platform storage CA to verify the remote S3 endpoint."""
+def test_production_storage_keeps_configured_ca_until_filesystem_is_released(
+    production_settings: dict[str, str | int], ca_certificate: str
+) -> None:
+    """Keep the Platform storage CA available only while its owning filesystem exists."""
 
     # Arrange
     settings = Envs.model_validate(production_settings | {"STORAGE_CERTIFICATE": ca_certificate})
@@ -68,6 +72,17 @@ def test_production_storage_passes_configured_ca_to_s3_client(production_setting
     assert isinstance(filesystem, DirFileSystem)
     certificate = Path(filesystem.fs.client_kwargs["verify"])
     assert certificate.read_text(encoding="utf-8") == ca_certificate
+
+    # Release the scoped filesystem without clearing caches or retaining its backend.
+    filesystem_reference = weakref.ref(filesystem)
+    backend_reference = weakref.ref(filesystem.fs)
+    del filesystem
+    gc.collect()
+
+    # Verify both cache boundaries and the transferred certificate cleanup obligation.
+    assert filesystem_reference() is None
+    assert backend_reference() is None
+    assert not certificate.exists()
 
 
 @pytest.mark.parametrize("name", ["DATABASE_HOST", "DATABASE_PASSWORD", "STORAGE_BUCKET", "STORAGE_PREFIX"])

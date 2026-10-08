@@ -6,6 +6,7 @@ from datetime import UTC, datetime, timedelta
 from factories import claim_operation, queue_operation, fetch_operations
 from functools import partial
 from src.utils import jobs as operation_worker
+from contextlib import suppress
 from src.errors import ForbiddenError
 from src.models.operations import OperationKind, OperationStatus
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -182,27 +183,53 @@ async def test_execute_fails_operation_when_handler_times_out(monkeypatch: pytes
 
 
 async def test_execute_releases_operation_when_handler_is_cancelled(monkeypatch: pytest.MonkeyPatch, operation: Operation) -> None:
-    """Release an interrupted Operation before propagating handler cancellation."""
+    """Cancel running handler work before releasing its lease and propagating worker shutdown."""
 
     # Arrange
-    async def cancelled_handler(_target_id: UUID) -> None:
-        """Model worker shutdown while the handler is executing."""
+    entered = asyncio.Event()
+    release = asyncio.Event()
+    cancelled = asyncio.Event()
 
-        raise asyncio.CancelledError
+    async def interrupted_handler(target_id: UUID) -> None:
+        """Observe actual cancellation of work suspended inside the handler."""
 
-    monkeypatch.setitem(operation_worker.handlers, operation.kind, cancelled_handler)
+        assert target_id == operation.target_id
+        entered.set()
+        try:
+            await release.wait()
+        except asyncio.CancelledError:
+            cancelled.set()
+            raise
 
-    # Act and assert
-    with pytest.raises(asyncio.CancelledError):
-        await operation_worker.execute(operation)
+    monkeypatch.setitem(operation_worker.handlers, operation.kind, interrupted_handler)
 
-    # Verify shutdown committed only a lease release, not a terminal outcome or successor.
-    [persisted] = await fetch_operations()
-    assert persisted.id == operation.id
-    assert persisted.status == OperationStatus.scheduled
-    assert persisted.finished_at is None
-    assert persisted.failed is None
-    assert persisted.lease_expires_at is None
+    # Act: cancel only after the handler is performing its pending work.
+    execution = asyncio.create_task(operation_worker.execute(operation))
+    try:
+        async with asyncio.timeout(5):
+            await entered.wait()
+            execution.cancel()
+            with pytest.raises(asyncio.CancelledError):
+                await execution
+
+        # Assert before releasing the gate or cancelling tasks during test cleanup.
+        assert cancelled.is_set()
+        assert not release.is_set()
+
+        # Verify shutdown committed only a lease release, not a terminal outcome or successor.
+        [persisted] = await fetch_operations()
+        assert persisted.id == operation.id
+        assert persisted.status == OperationStatus.scheduled
+        assert persisted.finished_at is None
+        assert persisted.failed is None
+        assert persisted.lease_expires_at is None
+    finally:
+        # Release pending work and await the worker even when an assertion fails.
+        release.set()
+        execution.cancel()
+        async with asyncio.timeout(5):
+            with suppress(asyncio.CancelledError):
+                await execution
 
 
 @pytest.mark.no_db

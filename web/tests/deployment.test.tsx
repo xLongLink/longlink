@@ -42,16 +42,14 @@ describe('Solution source update dialog', () => {
     });
 
     it('uses the native TSX dialog to review and submit a source update', async () => {
-        const submissions: { path: string; body: unknown }[] = [];
+        // Arrange
+        const submit = vi.fn<(request: Request) => Response>(() => new Response(null, { status: 204 }));
         vi.stubGlobal('fetch', async (input: RequestInfo | URL, init?: RequestInit) => {
             const request = input instanceof Request ? input : new Request(input, init);
             const path = new URL(request.url).pathname;
 
-            if (request.method === 'POST') {
-                submissions.push({ path, body: await request.json() });
-
-                return new Response(null, { status: 204 });
-            }
+            // Preserve the body before Ky cancels the original request stream after fetch returns.
+            if (request.method === 'POST') return submit(request.clone());
 
             if (path === '/api/v1/me') {
                 return Response.json({
@@ -110,6 +108,7 @@ describe('Solution source update dialog', () => {
             )
         );
 
+        // Act
         await vi.waitFor(async () => {
             await act(async () => {});
             moreMenu();
@@ -123,16 +122,17 @@ describe('Solution source update dialog', () => {
         expect(document.body.textContent).toContain('Current sha256:aaaaaaaaaaaa');
         expect(document.body.textContent).toContain('New sha256:bbbbbbbbbbbb');
         await act(async () => button('Update solution').click());
-        await act(async () =>
-            vi.waitFor(() =>
-                expect(submissions).toEqual([
-                    {
-                        path: `/api/v1/solutions/${solutionId}/update`,
-                        body: { envs: {}, expected_revision_id: revisionId },
-                    },
-                ])
-            )
-        );
+
+        // Assert
+        await act(async () => vi.waitFor(() => expect(submit).toHaveBeenCalledOnce()));
+
+        // Inspect the actual transport request without a separate submission ledger.
+        const request = submit.mock.calls[0]?.[0];
+
+        if (!request) throw new Error('Missing source update request');
+
+        expect(new URL(request.url).pathname).toBe(`/api/v1/solutions/${solutionId}/update`);
+        expect(await request.json()).toEqual({ envs: {}, expected_revision_id: revisionId });
     });
 
     /** Find the named native action without replacing UI components. */
