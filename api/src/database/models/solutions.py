@@ -66,7 +66,7 @@ class Solution(AuditTable, table=True):
         sa_relationship_kwargs={
             "primaryjoin": "Solution.desired_revision_id == Revision.id",
             "foreign_keys": "Solution.desired_revision_id",
-            "lazy": "selectin",
+            "lazy": "raise",
         }
     )
 

@@ -2,7 +2,7 @@ from uuid import UUID
 from datetime import UTC, datetime, timedelta
 from sqlmodel import col
 from sqlalchemy import Update, or_, case, func, select, update
-from sqlalchemy.orm import load_only
+from sqlalchemy.orm import defer, load_only, selectinload
 from collections.abc import Sequence
 from src.models.statuses import Status
 from src.models.operations import OperationKind
@@ -180,7 +180,17 @@ async def complete(session: AsyncSession, operation_id: UUID) -> Operation | Non
     if revision is None:
         return operation
 
-    solution = await session.get(Solution, revision.solution_id, with_for_update=True)
+    # Refresh the desired relation under the existing lock, including any state cached before a commit.
+    solution = await session.get(
+        Solution,
+        revision.solution_id,
+        options=(
+            defer(Solution.secrets),
+            selectinload(Solution.desired_revision).load_only(Revision.failed, raiseload=True),
+        ),
+        populate_existing=True,
+        with_for_update=True,
+    )
     if solution is None or solution.deleted_at is not None:
         return operation
 

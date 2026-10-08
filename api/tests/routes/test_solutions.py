@@ -5,6 +5,7 @@ from conftest import AsyncKubernetes
 from sqlmodel import col
 from factories import add_member, create_solution, fetch_operations, create_organization, assert_no_new_operations
 from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 from src.models.roles import OrganizationRoles
 from src.models.types import Image
 from src.models.metadata import LongLinkMetadata, EnvironmentMetadata
@@ -132,7 +133,9 @@ async def test_create_app_persists_desired_state_and_queues_reconciliation(
     assert response.status_code == 204
 
     async with session_scope() as session:
-        persisted = await session.scalar(select(Solution).where(col(Solution.organization_id) == organization.id))
+        persisted = await session.scalar(
+            select(Solution).options(selectinload(Solution.desired_revision)).where(col(Solution.organization_id) == organization.id)
+        )
         assert persisted is not None
         assert persisted.status == Status.creating
         assert persisted.description == "Dashboard app"
@@ -430,7 +433,9 @@ async def test_create_app_allows_maintainer(
 
     # Verify committed creation and deployment work belong to the authenticated maintainer.
     async with session_scope() as session:
-        persisted = await session.scalar(select(Solution).where(col(Solution.organization_id) == organization.id))
+        persisted = await session.scalar(
+            select(Solution).options(selectinload(Solution.desired_revision)).where(col(Solution.organization_id) == organization.id)
+        )
         assert persisted is not None
         assert (persisted.created_id, persisted.updated_id) == (maintainer.id, maintainer.id)
         assert persisted.desired_revision_id is not None

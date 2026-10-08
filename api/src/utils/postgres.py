@@ -208,7 +208,7 @@ class Postgres:
 
         runtime_username = f"longlink_{organization.hex[:16]}_{solution.hex[:16]}"
 
-        # Drop solution-owned objects before dropping the global role from the maintenance database.
+        # Remove the Solution's schema and global role atomically within its Organization database.
         async with self.connection(organization.hex) as conn:
             schema = self.quote(conn, solution.hex)
             role = self.quote(conn, runtime_username)
@@ -228,7 +228,5 @@ class Postgres:
                 )
             await conn.exec_driver_sql(f"DROP SCHEMA IF EXISTS {schema} CASCADE")
 
-        # Roles are cluster-global, so drop them from the maintenance database with autocommit.
-        async with self.connection("postgres", autocommit=True) as conn:
-            role = self.quote(conn, runtime_username)
+            # PostgreSQL permits role deletion in the same transaction after removing its dependencies.
             await conn.exec_driver_sql(f"DROP ROLE IF EXISTS {role}")
