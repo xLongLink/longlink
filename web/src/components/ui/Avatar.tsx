@@ -10,6 +10,7 @@ const wavesStyle = new dicebear.Style(waves);
 
 type AvatarProps = Pick<ComponentProps<typeof AstryxAvatar>, 'shape'> & {
     name?: string;
+    /** Organization owners use rounded Waves avatars; user owners retain the supplied geometry or a circle. */
     kind?: 'user' | 'organization';
     src?: string | null;
     alt?: string;
