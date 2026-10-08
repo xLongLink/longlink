@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
+import { act } from 'react';
 import { createRoot } from 'react-dom/client';
-import { act, type ComponentProps } from 'react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, useLocation } from 'react-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -69,10 +69,12 @@ describe('shared View documentation layout', () => {
 
     it('renders runtime-owned content without component reference tabs', async () => {
         // Runtime documentation supplies its own content rather than component panels.
-        const output = await renderLayout('?tab=properties', {
-            name: 'Functions',
-            children: <section id="reference">Runtime-owned content</section>,
-        });
+        const output = await renderLayout(
+            '?tab=properties',
+            <ViewLayout name="Functions">
+                <section id="reference">Runtime-owned content</section>
+            </ViewLayout>
+        );
 
         // A component-tab query must not hide or replace runtime content.
         expect(output.querySelector('#reference')?.textContent).toBe('Runtime-owned content');
@@ -83,7 +85,16 @@ describe('shared View documentation layout', () => {
     /** Mounts the real shared layout with a small authored reference and real routing. */
     async function renderLayout(
         query: string,
-        overrides: Partial<ComponentProps<typeof ViewLayout>> = {}
+        layout = (
+            <ViewLayout
+                name="Button"
+                reference={{
+                    introduction: 'An authored action reference.',
+                    practices: [{ guidance: true, description: 'Use a descriptive label' }],
+                }}
+                examples={[{ title: 'Greeting', code: '<Text>Native preview</Text>', preview: <p>Native preview</p> }]}
+            />
+        )
     ): Promise<HTMLDivElement> {
         // Own each render and its cleanup within this suite.
         const output = document.createElement('div');
@@ -98,17 +109,7 @@ describe('shared View documentation layout', () => {
             mountedRoot.render(
                 <MemoryRouter initialEntries={[`/docs/sdk/views/buttons/${query}`]}>
                     <Location />
-                    <ViewLayout
-                        name="Button"
-                        reference={{
-                            introduction: 'An authored action reference.',
-                            practices: [{ guidance: true, description: 'Use a descriptive label' }],
-                        }}
-                        examples={[
-                            { title: 'Greeting', code: '<Text>Native preview</Text>', preview: <p>Native preview</p> },
-                        ]}
-                        {...overrides}
-                    />
+                    {layout}
                 </MemoryRouter>
             );
         });

@@ -1169,17 +1169,23 @@ async def test_expired_browser_session_is_rejected_at_http(
     assert response.json() == {"detail": "Not authenticated"}
 
 
-@pytest.mark.no_db
 async def test_wrong_audience_browser_session_is_rejected_at_http(
     client: AsyncClient,
+    users: tuple[User, User, User],
 ) -> None:
-    """Reject a valid registration token presented as a browser session."""
+    """Reject valid recovery credentials even when their identity claims match an active account."""
 
     # Arrange
-    registration_token = token.create_registration_token("other-purpose@example.com")
-    client.cookies.set("longlink_auth", registration_token, domain="testserver.local", path="/")
+    user = users[1]
+    client.cookies.set("longlink_auth", token.create_auth_token(user), domain="testserver.local", path="/")
+
+    # Establish that this account and its current password fingerprint can authenticate.
+    authenticated = await client.get("/api/v1/me")
+    assert authenticated.status_code == 200
+    assert authenticated.json()["id"] == str(user.id)
 
     # Act
+    client.cookies.set("longlink_auth", token.create_password_reset_token(user), domain="testserver.local", path="/")
     response = await client.get("/api/v1/me")
 
     # Assert

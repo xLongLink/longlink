@@ -1,41 +1,38 @@
-import pytest
 import pytest_asyncio
 from uuid import UUID
 from typing import ClassVar
 from datetime import UTC, datetime
 from sqlmodel import Field, SQLModel
-from collections.abc import Iterator, AsyncIterator
+from collections.abc import AsyncIterator
 from longlink.database import base as database_base
 from longlink.database import audit
 from longlink.utils.settings import Envs
 
-pytestmark = pytest.mark.usefixtures("audit_model_cleanup")
-
 
 @pytest_asyncio.fixture
 async def audit_engine() -> AsyncIterator[database_base.Database]:
-    """Bind an isolated SQLite engine to the SDK session lifecycle."""
+    """Own the isolated database and temporary model metadata for one audit test."""
 
-    database = database_base.Database(Envs(ENV="testing"))
+    # Snapshot shared metadata before the test declares its temporary models.
+    metadata = SQLModel.metadata
+    existing_tables = set(metadata.tables)
+    env = Envs(
+        ENV="testing",
+    )
+    database = database_base.Database(
+        env,
+    )
 
+    # Keep database resources and their temporary tables under the same fixture lifetime.
     try:
         yield database
     finally:
-        await database.dispose()
-
-
-@pytest.fixture
-def audit_model_cleanup() -> Iterator[None]:
-    """Remove temporary SQLModel tables after an audit test completes."""
-
-    # Snapshot existing tables before each test creates its temporary model.
-    metadata = SQLModel.metadata
-    existing_tables = set(metadata.tables)
-    yield
-
-    # Clean up even if a test fails immediately after declaring a model.
-    for table_name in set(metadata.tables) - existing_tables:
-        metadata.remove(metadata.tables[table_name])
+        try:
+            await database.dispose()
+        finally:
+            # Restore metadata even if the test or database disposal raises.
+            for table_name in set(metadata.tables) - existing_tables:
+                metadata.remove(metadata.tables[table_name])
 
 
 async def test_audit_hook_persists_fields_and_leaves_deletes_hard(

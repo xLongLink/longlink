@@ -6,7 +6,6 @@ from types import SimpleNamespace
 from fastapi import Request
 from contextlib import AsyncExitStack, asynccontextmanager
 from src.routes.v1 import proxy
-from collections.abc import AsyncIterator
 from src.models.roles import OrganizationRoles
 from src.models.statuses import Status
 
@@ -63,23 +62,16 @@ def request_scope(monkeypatch: pytest.MonkeyPatch) -> SimpleNamespace:
     )
 
 
-class GatewayClient:
-    """Share the fake gateway transport shape across resource-ownership tests."""
+class GatewayClient(httpx2.AsyncClient):
+    """Use the real HTTP client while recording resource cleanup without network I/O."""
 
     closed: list[str]
 
-    def __init__(self, **_kwargs: object) -> None:
-        """Accept the request client configuration."""
-
-    def build_request(self, method: str, url: str, *, content: AsyncIterator[bytes], headers: dict[str, str]) -> object:
-        """Build an opaque request accepted by the fake transport."""
-
-        return object()
-
     async def aclose(self) -> None:
-        """Record client cleanup."""
+        """Record cleanup before releasing the real HTTP client's transports."""
 
         self.closed.append("client")
+        await super().aclose()
 
 
 async def test_gateway_response_closes_client_when_response_close_fails(
@@ -88,9 +80,8 @@ async def test_gateway_response_closes_client_when_response_close_fails(
     """Close the client even when the streamed response fails to close."""
 
     # Provide independently observable response and client cleanup paths.
-    class Response:
-        status_code = 200
-        headers = {"content-type": "text/plain"}
+    class Response(httpx2.Response):
+        """Supply the real response contract while deliberately failing its cleanup."""
 
         async def aclose(self) -> None:
             """Fail response cleanup."""
@@ -103,10 +94,11 @@ async def test_gateway_response_closes_client_when_response_close_fails(
 
         closed = request_scope.closed
 
-        async def send(self, request: object, stream: bool) -> Response:
+        async def send(self, request: httpx2.Request, *, stream: bool = False, **_kwargs: object) -> httpx2.Response:
             """Return the upstream response."""
 
-            return Response()
+            assert stream is True
+            return Response(200, headers={"content-type": "text/plain"})
 
     monkeypatch.setattr(proxy.httpx2, "AsyncClient", Client)
 
@@ -125,18 +117,19 @@ async def test_gateway_request_closes_client_when_send_is_cancelled(
 
     # Arrange a send that remains pending until its caller is cancelled.
     entered = asyncio.Event()
-    pending = asyncio.Event()
+    pending = asyncio.Future[httpx2.Response]()
 
     class Client(GatewayClient):
         """Suspend request submission before a response is acquired."""
 
         closed = request_scope.closed
 
-        async def send(self, request: object, stream: bool) -> None:
+        async def send(self, request: httpx2.Request, *, stream: bool = False, **_kwargs: object) -> httpx2.Response:
             """Signal entry and wait for task cancellation."""
 
+            assert stream is True
             entered.set()
-            await pending.wait()
+            return await pending
 
     monkeypatch.setattr(proxy.httpx2, "AsyncClient", Client)
 
@@ -165,7 +158,6 @@ async def test_gateway_request_forwards_identity_and_defers_cleanup(
 
     # Use the real HTTP request builder while recording transport and cleanup.
     captured_request: httpx2.Request | None = None
-    client_type = httpx2.AsyncClient
 
     class Response(httpx2.Response):
         """Record cleanup of the intercepted gateway response."""
@@ -181,8 +173,10 @@ async def test_gateway_request_forwards_identity_and_defers_cleanup(
             request_scope.closed.append("response")
             await super().aclose()
 
-    class Client(client_type):
+    class Client(GatewayClient):
         """Intercept gateway transport and record client cleanup."""
+
+        closed = request_scope.closed
 
         async def send(self, request: httpx2.Request, *, stream: bool = False, **_kwargs: object) -> httpx2.Response:
             """Capture the actual outbound request without closing its response."""
@@ -191,12 +185,6 @@ async def test_gateway_request_forwards_identity_and_defers_cleanup(
             captured_request = request
             assert stream is True
             return Response()
-
-        async def aclose(self) -> None:
-            """Record client cleanup before closing the HTTP client."""
-
-            request_scope.closed.append("client")
-            await super().aclose()
 
     monkeypatch.setattr(proxy.httpx2, "AsyncClient", Client)
 

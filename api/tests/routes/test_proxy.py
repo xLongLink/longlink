@@ -476,26 +476,62 @@ async def test_solution_proxy_times_out_before_gateway_response(
     users: tuple[User, User, User],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Reject a gateway request that does not produce response headers in time."""
+    """Cancel a stalled gateway request and close its client before returning the timeout response."""
 
-    # Arrange a running Solution and a gateway that delays its initial response.
+    # Arrange
     solution, _infrastructure = await create_running_solution(users[0])
+    entered = asyncio.Event()
+    release = asyncio.Event()
+    cancellation: asyncio.CancelledError | None = None
+    gateway_client: AsyncClient | None = None
+
+    def record_client(*, follow_redirects: bool, trust_env: bool, timeout: float, verify: ssl.SSLContext) -> AsyncClient:
+        """Observe the real gateway client without changing its transport or cleanup."""
+
+        nonlocal gateway_client
+        gateway_client = AsyncClient(
+            follow_redirects=follow_redirects,
+            trust_env=trust_env,
+            timeout=timeout,
+            verify=verify,
+        )
+        return gateway_client
 
     async def send(_transport: object, request: httpx2.Request) -> httpx2.Response:
-        """Wait longer than the configured request deadline."""
+        """Remain pending until the production deadline cancels the send."""
 
-        await asyncio.sleep(0.01)
+        # Observe cancellation rather than manufacture a timeout after completing work.
+        nonlocal cancellation
+        entered.set()
+        try:
+            await release.wait()
+        except asyncio.CancelledError as exc:
+            cancellation = exc
+            raise
         raise AssertionError("timed-out gateway request must not complete")
 
+    # Replace only external HTTP boundaries, allowing enough time to acquire the real client.
+    monkeypatch.setattr(httpx2, "AsyncClient", record_client)
     monkeypatch.setattr(httpx2.AsyncHTTPTransport, "handle_async_request", send)
-    monkeypatch.setattr(proxy_routes, "PROXY_REQUEST_TIMEOUT_SECONDS", 0.001)
+    monkeypatch.setattr(proxy_routes, "PROXY_REQUEST_TIMEOUT_SECONDS", 0.1)
 
-    # Act
-    response = await clients[0].get(f"/api/v1/solutions/{solution.id}/proxy")
+    try:
+        # Act: bound regressions independently of the production request deadline.
+        async with asyncio.timeout(5):
+            response = await clients[0].get(f"/api/v1/solutions/{solution.id}/proxy")
 
-    # Assert
-    assert response.status_code == 504
-    assert response.json() == {"detail": "Solution proxy request timed out"}
+        # Assert before test cleanup can hide a leaked partial acquisition.
+        assert entered.is_set()
+        assert not release.is_set()
+        assert isinstance(cancellation, asyncio.CancelledError)
+        assert response.status_code == 504
+        assert response.json() == {"detail": "Solution proxy request timed out"}
+        assert gateway_client is not None
+        assert gateway_client.is_closed
+    finally:
+        # Release the observed client even if a regression fails an assertion.
+        if gateway_client is not None:
+            await gateway_client.aclose()
 
 
 async def test_solution_proxy_propagates_timed_out_response_stream(

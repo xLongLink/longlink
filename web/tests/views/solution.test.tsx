@@ -8,23 +8,12 @@ import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 describe('SolutionRuntime', () => {
-    let root: ReturnType<typeof createRoot> | undefined;
-    let mountedClient: QueryClient | undefined;
-    let mountedContainer: HTMLDivElement | undefined;
+    let cleanup: (() => Promise<void>) | undefined;
 
     afterEach(async () => {
-        // Unmount before removing the container and restoring globals.
-        const mountedRoot = root;
-
-        if (mountedRoot) await act(async () => mountedRoot.unmount());
-
-        root = undefined;
-
-        // Clear cached queries before restoring their timers and globals.
-        mountedClient?.clear();
-        mountedClient = undefined;
-        mountedContainer?.remove();
-        mountedContainer = undefined;
+        // Release the mount before restoring its globals and timers.
+        await cleanup?.();
+        cleanup = undefined;
         vi.unstubAllGlobals();
         vi.useRealTimers();
     });
@@ -218,16 +207,22 @@ describe('SolutionRuntime', () => {
 
     /** Mounts the real runtime with isolated queries and routing. */
     async function renderRuntime(initialPath = '/', viewsUrl = '/views.json'): Promise<HTMLDivElement> {
+        // Keep all mount resources local to one cleanup owner.
         const container = document.createElement('div');
-        mountedContainer = container;
         document.body.append(container);
         const mountedRoot = createRoot(container);
-        root = mountedRoot;
         vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
         vi.stubGlobal('crypto', webcrypto);
         const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-        mountedClient = client;
 
+        // Register cleanup before rendering so failed renders still release their resources.
+        cleanup = async () => {
+            await act(async () => mountedRoot.unmount());
+            client.clear();
+            container.remove();
+        };
+
+        // Exercise the real runtime, query cache, and memory router.
         await act(async () => {
             mountedRoot.render(
                 <QueryClientProvider client={client}>

@@ -40,7 +40,7 @@ def test_token_claims_reject_wrong_audience(
     encoded = create_token(user)
 
     # Act and assert
-    with pytest.raises(jwt.InvalidTokenError):
+    with pytest.raises(jwt.InvalidAudienceError):
         read_claims(encoded)
 
 
@@ -53,7 +53,7 @@ async def test_password_reset_user_rejects_registration_token_audience() -> None
 
     # Act and assert
     async with AsyncSession() as session:
-        with pytest.raises(jwt.InvalidTokenError):
+        with pytest.raises(jwt.InvalidAudienceError):
             await token.password_reset_user(session, registration)
 
 

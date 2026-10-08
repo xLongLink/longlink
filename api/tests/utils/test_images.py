@@ -1,3 +1,4 @@
+import json
 import httpx2
 import pytest
 from src.utils import images
@@ -177,24 +178,44 @@ async def test_bounded_json_rejects_invalid_declared_response_sizes(headers: dic
 
 
 async def test_bounded_json_rejects_streamed_metadata_larger_than_limit() -> None:
-    """Reject metadata that exceeds the limit without a declared content length."""
+    """Stop consuming valid JSON as soon as cumulative metadata bytes exceed the limit."""
 
     # Arrange
+    body = json.dumps({"description": "x" * images.IMAGE_METADATA_MAX_BYTES}).encode()
+    midpoint = len(body) // 2
+
     class OversizedStream(httpx2.AsyncByteStream):
-        """Yield metadata exceeding the configured in-memory boundary."""
+        """Split valid metadata into permissible chunks and observe subsequent tail consumption."""
+
+        tail_requested = False
 
         async def __aiter__(self) -> AsyncIterator[bytes]:
-            """Yield one oversized metadata chunk."""
+            """Cross the cumulative limit before an otherwise valid whitespace tail."""
 
-            yield b"x" * (images.IMAGE_METADATA_MAX_BYTES + 1)
+            yield body[:midpoint]
+            yield body[midpoint:]
+            self.tail_requested = True
+            yield b"\n"
 
         async def aclose(self) -> None:
             """Close the in-memory stream."""
 
-    response = httpx2.Response(200, stream=OversizedStream())
+    stream = OversizedStream()
+    response = httpx2.Response(
+        200,
+        stream=stream,
+    )
 
-    # Assert
-    assert await images.bounded_json(response) is None
+    try:
+        # Act
+        result = await images.bounded_json(response)
+
+        # Assert
+        assert result is None
+        assert not stream.tail_requested
+    finally:
+        # The standalone caller owns response cleanup after early decoding termination.
+        await response.aclose()
 
 
 @pytest.mark.parametrize(
