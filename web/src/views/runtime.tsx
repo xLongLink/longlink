@@ -1,13 +1,13 @@
 import { z } from 'zod';
 import * as React from 'react';
 import { transform } from 'sucrase';
-import { stoneTheme } from '@/theme';
 import * as components from './components';
 import { createRoot } from 'react-dom/client';
 import { Theme } from '@astryxdesign/core/theme';
 import { Banner } from '@astryxdesign/core/Banner';
 import { Spinner } from '@astryxdesign/core/Spinner';
 import { ErrorBoundary } from 'react-error-boundary';
+import { stoneTheme } from '@/lib/generated/stone.js';
 import { LayerProvider } from '@astryxdesign/core/Layer';
 import { FormRequestContext } from '@/components/ui/Form';
 import { LinkNavigationContext } from '@/components/ui/Link';

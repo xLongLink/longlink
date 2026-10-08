@@ -1,12 +1,13 @@
 import type { z } from 'zod';
 import { useState } from 'react';
 import { Info } from 'lucide-react';
-import { NoIndex } from '@/components/Seo';
 import { useApi } from '@/lib/hooks/use-api';
+import { NoIndex } from '@/components/NoIndex';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
 import { Heading } from '@astryxdesign/core/Heading';
+import { Pagination } from '@astryxdesign/core/Pagination';
 import { Table, proportional } from '@astryxdesign/core/Table';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import type { zPageOperationResponse } from '@/lib/generated/platform-api-v1/zod.gen';
@@ -90,10 +91,7 @@ export default function Operations() {
                         },
                     ]}
                 />
-                <Stack direction="horizontal" gap={2} justify="between">
-                    <Button label="Previous" isDisabled={page === 1} onClick={() => setPage(page - 1)} />
-                    <Button label="Next" isDisabled={operations.total <= page * 25} onClick={() => setPage(page + 1)} />
-                </Stack>
+                <Pagination page={page} onChange={setPage} totalItems={operations.total} pageSize={25} variant="none" />
             </Stack>
             {metadata && (
                 <Dialog

@@ -1,8 +1,8 @@
 import asyncio
 from alembic import context
-from sqlalchemy import pool, text
+from sqlalchemy import text
+from longlink.shared import migrations
 from sqlalchemy.engine import Connection
-from sqlalchemy.ext.asyncio import create_async_engine
 
 config = context.config
 
@@ -40,29 +40,27 @@ def do_run_migrations(connection: Connection) -> None:
 
 
 async def run_async_migrations(database_url: str) -> None:
-    """Run shared-schema migrations through an async SQLAlchemy engine."""
+    """Open a managed connection for a standalone online Alembic command."""
 
-    # Use an operation-scoped pool because each organization has its own database.
-    connectable = create_async_engine(
-        database_url,
-        poolclass=pool.NullPool,
-        connect_args=config.attributes["connect_args"],
-        hide_parameters=True,
-    )
-    try:
-        async with connectable.connect() as connection:
-            await connection.run_sync(do_run_migrations)
-    finally:
-        await connectable.dispose()
+    # Reuse the SDK connection lifecycle without issuing another Alembic command.
+    async with migrations.migration_connection(database_url, config.attributes["connect_args"]) as connection:
+        await connection.run_sync(do_run_migrations)
 
 
 # Select migration execution from the active Alembic context.
 if context.is_offline_mode():
     run_migrations_offline()
 else:
-    # Require the organization database URL supplied by the control-plane migration runner.
-    database_url = config.get_main_option("sqlalchemy.url")
-    if database_url is None:
-        raise RuntimeError("Alembic sqlalchemy.url is not configured")
+    # The async SDK runner supplies the synchronous view of its own connection.
+    connection = config.attributes.get("connection")
+    if connection is not None:
+        if not isinstance(connection, Connection):
+            raise TypeError("Alembic connection must be a SQLAlchemy Connection")
+        do_run_migrations(connection)
+    else:
+        # Standalone commands still open their own connection on a new event loop.
+        database_url = config.get_main_option("sqlalchemy.url")
+        if database_url is None:
+            raise RuntimeError("Alembic sqlalchemy.url is not configured")
 
-    asyncio.run(run_async_migrations(database_url))
+        asyncio.run(run_async_migrations(database_url))

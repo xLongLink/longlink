@@ -1,7 +1,7 @@
 import type { z } from 'zod';
 import { ApiError } from '@/lib/api';
-import { NoIndex } from '@/components/Seo';
 import { useApi } from '@/lib/hooks/use-api';
+import { NoIndex } from '@/components/NoIndex';
 import { Grid } from '@astryxdesign/core/Grid';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';

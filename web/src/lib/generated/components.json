@@ -1,7 +1,6 @@
 [
     {
         "name": "Avatar",
-        "url": "https://astryx.atmeta.com/components/Avatar",
         "introduction": "Uses local Waves fallbacks for rounded organization avatars and Glyphs for users.",
         "practices": [
             {
@@ -16,7 +15,6 @@
     },
     {
         "name": "Badge",
-        "url": "https://astryx.atmeta.com/components/Badge",
         "introduction": "Displays a count or enumerated state.",
         "practices": [
             {
@@ -63,7 +61,6 @@
     },
     {
         "name": "Button",
-        "url": "https://astryx.atmeta.com/components/Button",
         "introduction": "Gives onClick automatic asynchronous loading and duplicate-click prevention.",
         "practices": [
             {
@@ -94,7 +91,6 @@
     },
     {
         "name": "ButtonGroup",
-        "url": "https://astryx.atmeta.com/components/ButtonGroup",
         "introduction": "Groups related flat action buttons.",
         "practices": [
             {
@@ -137,7 +133,6 @@
     },
     {
         "name": "CheckboxInput",
-        "url": "https://astryx.atmeta.com/components/CheckboxInput",
         "introduction": "Edits a boolean or indeterminate field.",
         "practices": [
             {
@@ -160,7 +155,6 @@
     },
     {
         "name": "CodeBlock",
-        "url": "https://astryx.atmeta.com/components/CodeBlock",
         "introduction": "Displays source code using standard copy and highlighting behavior.",
         "practices": [
             {
@@ -183,7 +177,6 @@
     },
     {
         "name": "Collapsible",
-        "url": "https://astryx.atmeta.com/components/Collapsible",
         "introduction": "Shows or hides content using controlled or initially open state.",
         "practices": [
             {
@@ -222,7 +215,6 @@
     },
     {
         "name": "DateInput",
-        "url": "https://astryx.atmeta.com/components/DateInput",
         "introduction": "Selects a constrained date with standard month and week presentation.",
         "practices": [
             {
@@ -257,7 +249,6 @@
     },
     {
         "name": "Dialog",
-        "url": "https://astryx.atmeta.com/components/Dialog",
         "introduction": "Displays an accessible modal with an explicit purpose and controlled visibility.",
         "practices": [
             {
@@ -288,7 +279,6 @@
     },
     {
         "name": "Divider",
-        "url": "https://astryx.atmeta.com/components/Divider",
         "introduction": "Separates View content with an optional label and configurable line presentation.",
         "practices": [
             {
@@ -307,7 +297,6 @@
     },
     {
         "name": "DropdownMenu",
-        "url": "https://astryx.atmeta.com/components/DropdownMenu",
         "introduction": "Opens an action menu using standard adaptive presentation and placement.",
         "practices": [
             {
@@ -338,7 +327,6 @@
     },
     {
         "name": "EmptyState",
-        "url": "https://astryx.atmeta.com/components/EmptyState",
         "introduction": "Describes an empty View region without custom decorative slots.",
         "practices": [
             {
@@ -365,7 +353,6 @@
     },
     {
         "name": "FileInput",
-        "url": "https://astryx.atmeta.com/components/FileInput",
         "introduction": "Selects files with explicit upload constraints; uploading remains a Solution operation.",
         "practices": [
             {
@@ -392,7 +379,6 @@
     },
     {
         "name": "Grid",
-        "url": "https://astryx.atmeta.com/components/Grid",
         "introduction": "Arranges View content into a fixed number of columns.",
         "practices": [
             {
@@ -415,7 +401,6 @@
     },
     {
         "name": "Heading",
-        "url": "https://astryx.atmeta.com/components/Text",
         "introduction": "Displays a semantic View heading without a separate visual-level override.",
         "practices": [
             {
@@ -438,7 +423,6 @@
     },
     {
         "name": "Icon",
-        "url": "https://astryx.atmeta.com/components/Icon",
         "introduction": "Renders a registered Lucide icon at the requested Astryx size.",
         "practices": [
             {
@@ -473,7 +457,6 @@
     },
     {
         "name": "IconButton",
-        "url": "https://astryx.atmeta.com/components/IconButton",
         "introduction": "Runs a labeled icon action with automatic async feedback.",
         "practices": [
             {
@@ -500,7 +483,6 @@
     },
     {
         "name": "Link",
-        "url": "https://astryx.atmeta.com/components/Link",
         "introduction": "Displays a destination without granting a View top-level browser navigation.",
         "practices": [
             {
@@ -519,7 +501,6 @@
     },
     {
         "name": "MetadataList",
-        "url": "https://astryx.atmeta.com/components/MetadataList",
         "introduction": "Lists labeled values without configurable truncation or label geometry.",
         "practices": [
             {
@@ -534,7 +515,6 @@
     },
     {
         "name": "MoreMenu",
-        "url": "https://astryx.atmeta.com/components/MoreMenu",
         "introduction": "Opens additional actions without exposing popup geometry or presentation modes.",
         "practices": [
             {
@@ -553,7 +533,6 @@
     },
     {
         "name": "MultiSelector",
-        "url": "https://astryx.atmeta.com/components/MultiSelector",
         "introduction": "Selects multiple values using standard option and selected-value rendering.",
         "practices": [
             {
@@ -584,7 +563,6 @@
     },
     {
         "name": "NumberInput",
-        "url": "https://astryx.atmeta.com/components/NumberInput",
         "introduction": "Edits a constrained number without wheel editing or custom value formatting.",
         "practices": [
             {
@@ -607,7 +585,6 @@
     },
     {
         "name": "ProgressBar",
-        "url": "https://astryx.atmeta.com/components/ProgressBar",
         "introduction": "Displays determinate progress with a semantic state.",
         "practices": [
             {
@@ -638,7 +615,6 @@
     },
     {
         "name": "RadioList",
-        "url": "https://astryx.atmeta.com/components/RadioList",
         "introduction": "Selects one of a small number of labeled values.",
         "practices": [
             {
@@ -669,7 +645,6 @@
     },
     {
         "name": "Selector",
-        "url": "https://astryx.atmeta.com/components/Selector",
         "introduction": "Selects one value without custom option rendering or popup geometry.",
         "practices": [
             {
@@ -712,7 +687,6 @@
     },
     {
         "name": "Slider",
-        "url": "https://astryx.atmeta.com/components/Slider",
         "introduction": "Edits a number or range using a standard horizontal slider.",
         "practices": [
             {
@@ -735,7 +709,6 @@
     },
     {
         "name": "Stack",
-        "url": "https://astryx.atmeta.com/components/Stack",
         "introduction": "Arranges View content using the LongLink spacing scale.",
         "practices": [
             {
@@ -754,7 +727,6 @@
     },
     {
         "name": "StatusDot",
-        "url": "https://astryx.atmeta.com/components/StatusDot",
         "introduction": "Displays a labeled semantic status without custom indicator rendering.",
         "practices": [
             {
@@ -777,7 +749,6 @@
     },
     {
         "name": "Stepper",
-        "url": "https://astryx.atmeta.com/components/Stepper",
         "introduction": "Displays the current step using standard progress indicators.",
         "practices": [
             {
@@ -796,7 +767,6 @@
     },
     {
         "name": "Switch",
-        "url": "https://astryx.atmeta.com/components/Switch",
         "introduction": "Edits an on/off setting using one controlled change handler.",
         "practices": [
             {
@@ -819,7 +789,6 @@
     },
     {
         "name": "Table",
-        "url": "https://astryx.atmeta.com/components/Table",
         "introduction": "Displays data-driven rows without plugins or a second children-based table contract.",
         "practices": [
             {
@@ -854,7 +823,6 @@
     },
     {
         "name": "Text",
-        "url": "https://astryx.atmeta.com/components/Text",
         "introduction": "Displays View text with a small set of semantic styles.",
         "practices": [
             {
@@ -877,7 +845,6 @@
     },
     {
         "name": "TextArea",
-        "url": "https://astryx.atmeta.com/components/TextArea",
         "introduction": "Edits themed multi-line text with native form serialization.",
         "practices": [
             {
@@ -900,7 +867,6 @@
     },
     {
         "name": "TextInput",
-        "url": "https://astryx.atmeta.com/components/TextInput",
         "introduction": "Edits themed text with optional local state and native form serialization.",
         "practices": [
             {
@@ -931,7 +897,6 @@
     },
     {
         "name": "TimeInput",
-        "url": "https://astryx.atmeta.com/components/TimeInput",
         "introduction": "Selects a constrained time using the standard picker.",
         "practices": [
             {
@@ -966,7 +931,6 @@
     },
     {
         "name": "Timestamp",
-        "url": "https://astryx.atmeta.com/components/Timestamp",
         "introduction": "Formats a date or timestamp using the standard date formats.",
         "practices": [
             {

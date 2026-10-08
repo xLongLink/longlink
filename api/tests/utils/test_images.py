@@ -1,7 +1,7 @@
 import httpx2
 import pytest
 from src.utils import images
-from src.errors import ForbiddenError
+from src.errors import NotFoundError, ForbiddenError
 from collections.abc import Callable, AsyncIterator
 from src.models.types import Image
 from src.models.metadata import LongLinkMetadata, EnvironmentMetadata
@@ -72,7 +72,7 @@ async def test_metadata_fetches_digest_image_references(
     mock_async_client(monkeypatch, respond)
 
     # Act
-    image_metadata = await images.metadata(Image(image))
+    image_metadata = await images.required_metadata(Image(image))
 
     # Assert
     assert image_metadata == expected_metadata
@@ -118,10 +118,10 @@ async def test_metadata_rejects_mismatched_registry_digest(monkeypatch: pytest.M
     mock_async_client(monkeypatch, respond)
 
     # Act
-    image_metadata = await images.metadata(Image(f"ghcr.io/longlink/dashboard@{digest}"))
+    with pytest.raises(NotFoundError, match=r"^Image metadata not found$"):
+        await images.required_metadata(Image(f"ghcr.io/longlink/dashboard@{digest}"))
 
     # Assert
-    assert image_metadata is None
     assert requested_paths == ["/token", f"/v2/longlink/dashboard/manifests/{digest}"]
 
 
@@ -150,11 +150,10 @@ async def test_metadata_follows_config_blob_redirects(monkeypatch: pytest.Monkey
     mock_async_client(monkeypatch, respond)
 
     # Act
-    image_metadata = await images.metadata(Image("ghcr.io/longlink/dashboard:latest"))
+    image_metadata = await images.required_metadata(Image("ghcr.io/longlink/dashboard:latest"))
 
     # Assert
-    assert image_metadata is not None
-    assert image_metadata.image == Image("ghcr.io/longlink/dashboard@sha256:deadbeef")
+    assert image_metadata == LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:deadbeef"))
 
 
 INVALID_METADATA_LENGTH_HEADERS = [
@@ -255,7 +254,7 @@ async def test_bounded_json_rejects_streamed_metadata_larger_than_limit() -> Non
 async def test_metadata_stops_when_registry_responses_are_invalid(
     monkeypatch: pytest.MonkeyPatch, responses: list[httpx2.Response], expected_paths: list[str]
 ) -> None:
-    """Return no metadata without requesting later registry resources after invalid responses."""
+    """Reject missing metadata without requesting later registry resources after invalid responses."""
 
     # Arrange
     requested_paths: list[str] = []
@@ -270,10 +269,10 @@ async def test_metadata_stops_when_registry_responses_are_invalid(
     mock_async_client(monkeypatch, respond)
 
     # Act
-    image_metadata = await images.metadata(Image("ghcr.io/longlink/dashboard:latest"))
+    with pytest.raises(NotFoundError, match=r"^Image metadata not found$"):
+        await images.required_metadata(Image("ghcr.io/longlink/dashboard:latest"))
 
     # Assert
-    assert image_metadata is None
     assert requested_paths == expected_paths
 
 
@@ -297,12 +296,10 @@ async def test_metadata_accepts_config_without_labels(monkeypatch: pytest.Monkey
     mock_async_client(monkeypatch, respond)
 
     # Act
-    image_metadata = await images.metadata(Image("ghcr.io/longlink/dashboard:latest"))
+    image_metadata = await images.required_metadata(Image("ghcr.io/longlink/dashboard:latest"))
 
     # Assert
-    assert image_metadata is not None
-    assert image_metadata.description is None
-    assert image_metadata.environments == []
+    assert image_metadata == LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:deadbeef"))
 
 
 @pytest.mark.parametrize(
@@ -321,7 +318,7 @@ async def test_metadata_accepts_config_without_labels(monkeypatch: pytest.Monkey
     ],
 )
 async def test_metadata_rejects_malformed_config_metadata(monkeypatch: pytest.MonkeyPatch, config_blob: object) -> None:
-    """Return no metadata when valid registry responses contain malformed config metadata."""
+    """Reject missing metadata when valid registry responses contain malformed config metadata."""
 
     # Arrange
     requested_paths: list[str] = []
@@ -345,10 +342,10 @@ async def test_metadata_rejects_malformed_config_metadata(monkeypatch: pytest.Mo
     mock_async_client(monkeypatch, respond)
 
     # Act
-    image_metadata = await images.metadata(Image("ghcr.io/longlink/dashboard:latest"))
+    with pytest.raises(NotFoundError, match=r"^Image metadata not found$"):
+        await images.required_metadata(Image("ghcr.io/longlink/dashboard:latest"))
 
     # Assert
-    assert image_metadata is None
     assert requested_paths == ["/token", "/v2/longlink/dashboard/manifests/latest", "/v2/longlink/dashboard/blobs/sha256:config"]
 
 
@@ -401,7 +398,7 @@ async def test_registry_allowlist_is_exact(registry: str) -> None:
     """Reject alternate spellings and unsupported registries before networking."""
 
     with pytest.raises(ForbiddenError, match="not allowed"):
-        await images.metadata(Image(f"{registry}/sample:dev"))
+        await images.required_metadata(Image(f"{registry}/sample:dev"))
 
 
 @pytest.mark.parametrize(
@@ -445,10 +442,11 @@ async def test_local_registry_selects_amd64_child_without_authentication(monkeyp
         )
 
     mock_async_client(monkeypatch, respond)
-    result = await images.metadata(Image("localhost:15000/sample:dev"))
-    assert result is not None
-    assert result.image == "localhost:15000/sample@sha256:amd"
-    assert result.environments == [EnvironmentMetadata(name="NEW", required=True)]
+    result = await images.required_metadata(Image("localhost:15000/sample:dev"))
+    assert result == LongLinkMetadata(
+        image=Image("localhost:15000/sample@sha256:amd"),
+        environments=[EnvironmentMetadata(name="NEW", required=True)],
+    )
     assert paths == ["/v2/sample/manifests/dev", "/v2/sample/manifests/sha256:amd", "/v2/sample/blobs/sha256:config"]
 
 
@@ -478,7 +476,8 @@ async def test_registry_rejects_arbitrary_blob_redirects(monkeypatch: pytest.Mon
         return httpx2.Response(307, headers={"Location": location})
 
     mock_async_client(monkeypatch, respond)
-    assert await images.metadata(Image("ghcr.io/owner/sample:latest")) is None
+    with pytest.raises(NotFoundError, match=r"^Image metadata not found$"):
+        await images.required_metadata(Image("ghcr.io/owner/sample:latest"))
 
 
 @pytest.mark.parametrize("status", [401, 403])
@@ -487,7 +486,7 @@ async def test_registry_denial_is_explicit(monkeypatch: pytest.MonkeyPatch, stat
 
     mock_async_client(monkeypatch, lambda _request: httpx2.Response(status))
     with pytest.raises(ForbiddenError, match="denied image access"):
-        await images.metadata(Image("ghcr.io/owner/private:latest"))
+        await images.required_metadata(Image("ghcr.io/owner/private:latest"))
 
 
 @pytest.mark.parametrize("children", [[], [{"digest": "sha256:arm", "platform": {"os": "linux", "architecture": "arm64"}}]])
@@ -506,8 +505,8 @@ async def test_registry_rejects_indexes_without_supported_platform(monkeypatch: 
     mock_async_client(monkeypatch, respond)
 
     # Act
-    image_metadata = await images.metadata(Image("localhost:15000/sample:dev"))
+    with pytest.raises(NotFoundError, match=r"^Image metadata not found$"):
+        await images.required_metadata(Image("localhost:15000/sample:dev"))
 
     # Assert
-    assert image_metadata is None
     assert requested_paths == ["/v2/sample/manifests/dev"]

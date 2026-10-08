@@ -1,4 +1,4 @@
-import { NoIndex } from '@/components/Seo';
+import { NoIndex } from '@/components/NoIndex';
 import { Link } from '@astryxdesign/core/Link';
 import Platform from '@/platform/layouts/Platform';
 import { SolutionRuntime } from '@/components/Solution';

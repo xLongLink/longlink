@@ -104,8 +104,12 @@ async def test_shared_audit_sync_leaves_cleanup_to_caller_when_upsert_fails(audi
 
 
 @pytest.mark.integration
-async def test_shared_migrations_use_postgresql_shared_schema(postgresql_url: URL, postgres_engine: AsyncEngine) -> None:
-    """Migrate shared tables into the isolated PostgreSQL shared schema."""
+async def test_shared_migrations_isolate_schema_and_sync_user_profiles(
+    postgresql_url: URL,
+    postgres_engine: AsyncEngine,
+    audit_user: User,
+) -> None:
+    """Migrate into the isolated shared schema and synchronize one changing user profile."""
 
     # Make a Solution schema the role default to prove migrations override it.
     async with postgres_engine.begin() as connection:
@@ -131,18 +135,6 @@ async def test_shared_migrations_use_postgresql_shared_schema(postgresql_url: UR
         )
         table_locations = set(result.tuples())
     assert table_locations == {("shared", "audit"), ("shared", "alembic_version")}
-
-
-@pytest.mark.integration
-async def test_shared_user_sync_updates_one_postgresql_row(
-    postgresql_url: URL,
-    postgres_engine: AsyncEngine,
-    audit_user: User,
-) -> None:
-    """Synchronize changing user profiles into one shared PostgreSQL row."""
-
-    # Prepare the shared schema through the public migration entrypoint.
-    await migrate_database(postgresql_url)
 
     # Insert one active control-plane user through the public synchronization entrypoint.
     user_id = audit_user.id

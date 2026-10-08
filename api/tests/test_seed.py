@@ -7,6 +7,7 @@ from conftest import TEST_PASSWORD
 from sqlmodel import col
 from src.utils import jobs
 from sqlalchemy import func, select
+from sqlalchemy.orm import selectinload
 from dev.scripts.seed import SeedSettings, seed
 from src.environments import env
 from src.models.types import Image
@@ -66,7 +67,7 @@ async def test_local_seed_creates_example_through_api(
         assert image == "localhost:15000/sample:dev"
         return LongLinkMetadata(image=Image("localhost:15000/sample@sha256:resolved"))
 
-    monkeypatch.setattr("src.routes.v1.solutions.images.metadata", metadata)
+    monkeypatch.setattr("src.routes.v1.solutions.images.required_metadata", metadata)
 
     # Act
     scheduler = asyncio.create_task(jobs.run_operation_scheduler())
@@ -84,7 +85,9 @@ async def test_local_seed_creates_example_through_api(
     assert await count(Solution) == 1
     async with session_scope() as session:
         organization = await session.scalar(select(Organization).where(col(Organization.slug) == "acme-ink"))
-        solution = await session.scalar(select(Solution).where(col(Solution.slug) == "invoices"))
+        solution = await session.scalar(
+            select(Solution).options(selectinload(Solution.desired_revision)).where(col(Solution.slug) == "invoices")
+        )
     assert organization is not None
     assert organization.name == "ACME Ink"
     assert solution is not None

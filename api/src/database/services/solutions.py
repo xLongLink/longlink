@@ -5,7 +5,7 @@ from src.utils import names, roles, images
 from sqlalchemy import func, select, update
 from src.errors import InvalidError, ConflictError, NotFoundError, ForbiddenError
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import defer, raiseload, contains_eager
+from sqlalchemy.orm import defer, selectinload, contains_eager
 from collections.abc import Mapping, Sequence
 from src.models.roles import OrganizationRoles
 from src.models.types import Image, MinScale
@@ -23,13 +23,14 @@ from src.database.models.organizations import Organization
 async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Sequence[Solution], int]:
     """Return one ordered page of active solutions for administrator views."""
 
-    # Load page response data without loading encrypted solution secrets.
+    # Load response image and deployment state without decrypting secrets or revision environments.
     statement = (
         select(Solution)
         .join(Organization, col(Organization.id) == col(Solution.organization_id))
         .options(
             contains_eager(Solution.organization),
             defer(Solution.secrets),
+            selectinload(Solution.desired_revision).load_only(Revision.image, Revision.failed, raiseload=True),
         )
         .where(col(Solution.deleted_at).is_(None))
         .order_by(col(Organization.name), col(Solution.name), col(Solution.id))
@@ -125,7 +126,7 @@ async def access(session: AsyncSession, solution_id: UUID, user_id: UUID, *, loc
     # Serialize commands and permission changes before recording a deployment.
     statement = (
         select(Solution, col(UserOrganization.role))
-        .options(defer(Solution.secrets), raiseload(Solution.desired_revision))
+        .options(defer(Solution.secrets))
         .join(UserOrganization, col(UserOrganization.organization_id) == col(Solution.organization_id))
         .join(Organization, col(Organization.id) == col(Solution.organization_id))
         .where(
@@ -162,8 +163,12 @@ async def deploy(
 ) -> None:
     """Append a snapshot and queue its exact deployment target."""
 
-    # Merge the patch into the serialized desired snapshot, not the last deployed release.
-    current = await session.get(Revision, solution.desired_revision_id) if solution.desired_revision_id is not None else None
+    # Load the complete desired snapshot even if a listing cached only its image and failure state.
+    current = (
+        await session.get(Revision, solution.desired_revision_id, populate_existing=True)
+        if solution.desired_revision_id is not None
+        else None
+    )
 
     # Keep the registry connection immutable and serialize admission with connection deletion.
     if current is not None:

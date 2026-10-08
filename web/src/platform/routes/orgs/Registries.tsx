@@ -8,7 +8,6 @@ import { Button } from '@astryxdesign/core/Button';
 import { Dialog } from '@astryxdesign/core/Dialog';
 import { Divider } from '@astryxdesign/core/Divider';
 import { Heading } from '@astryxdesign/core/Heading';
-import { Selector } from '@astryxdesign/core/Selector';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { AlertDialog } from '@astryxdesign/core/AlertDialog';
 import { Table, proportional } from '@astryxdesign/core/Table';
@@ -112,11 +111,7 @@ function RegistryForm({
     /** Saves credentials and queues synchronization of Kubernetes pull secrets. */
     async function save() {
         // Submit new credentials without loading saved tokens.
-        const json = schemas.zRegistryCreateWritable.parse({
-            provider: 'ghcr',
-            credential,
-        });
-
+        const json = schemas.zRegistryCreateWritable.parse({ credential });
         await api.post(`${base}/registries`, { json });
         await invalidate();
         onClose();
@@ -166,12 +161,7 @@ function RegistryForm({
                                 </Stack>
                                 <form action={save}>
                                     <Stack gap={3}>
-                                        <Selector
-                                            label="Provider"
-                                            value="ghcr"
-                                            options={[{ value: 'ghcr', label: 'GitHub Container Registry (ghcr.io)' }]}
-                                            isReadOnly
-                                        />
+                                        <Text as="p">GitHub Container Registry (ghcr.io)</Text>
                                         <Stack className="[&_.astryx-field-label_.astryx-icon]:ml-auto">
                                             <TextInput
                                                 label="Personal access token (classic)"

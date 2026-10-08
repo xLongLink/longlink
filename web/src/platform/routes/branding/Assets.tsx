@@ -1,5 +1,4 @@
 import { Fragment } from 'react';
-import { stoneTheme } from '@/theme';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Wordmark } from '@/components/Wordmark';
@@ -7,6 +6,7 @@ import { Stack } from '@astryxdesign/core/Stack';
 import { Theme } from '@astryxdesign/core/theme';
 import { Button } from '@astryxdesign/core/Button';
 import { Heading } from '@astryxdesign/core/Heading';
+import { stoneTheme } from '@/lib/generated/stone.js';
 import { Article } from '@/components/layouts/Article';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { Seo, articleRouteLabels } from '@/components/Seo';

@@ -3,6 +3,7 @@ import asyncio
 from uuid import UUID
 from conftest import OperationKubernetes
 from factories import claim_operation, create_solution, drain_operations, complete_operation, create_organization
+from sqlalchemy.orm import selectinload
 from src.operations import solutions as runtime
 from src.utils.jobs import execute
 from src.environments import env
@@ -83,7 +84,7 @@ async def test_failed_update_recovery(users: tuple[User, User, User], monkeypatc
     if failure == "initial":
         assert result.failed is not None
         async with session_scope() as session:
-            current = await session.get(Solution, solution.id)
+            current = await session.get(Solution, solution.id, options=(selectinload(Solution.desired_revision),))
             assert current is not None
             assert current.status == Status.failed
             assert current.deployed_revision_id is None
@@ -152,7 +153,7 @@ async def test_failed_update_recovery(users: tuple[User, User, User], monkeypatc
         assert await claim_operation() is None
         assert len(calls) == 2
         async with session_scope() as session:
-            current = await session.get(Solution, solution.id)
+            current = await session.get(Solution, solution.id, options=(selectinload(Solution.desired_revision),))
             assert current is not None
             assert current.deleted_at is not None
             assert current.deployed_revision_id == good_id
@@ -160,6 +161,16 @@ async def test_failed_update_recovery(users: tuple[User, User, User], monkeypatc
             assert current.desired_revision.failed
         return
 
+    # Assert: failure state is committed before the queued fallback is consumed.
+    async with session_scope() as session:
+        persisted_solution = await session.get(Solution, solution.id)
+        assert persisted_solution is not None
+        assert persisted_solution.status == Status.failed
+        persisted_revision = await session.get(Revision, desired_id)
+        assert persisted_revision is not None
+        assert persisted_revision.failed is True
+
+    # Act: consume the exact fallback queued by the failed update.
     recovery = await claim_operation()
     assert recovery is not None
     assert (recovery.kind, recovery.target_id) == (OperationKind.solution_deploy, good_id)
@@ -168,7 +179,7 @@ async def test_failed_update_recovery(users: tuple[User, User, User], monkeypatc
 
     # Failed desired/history survives successful fallback; failed fallback cannot claim running.
     async with session_scope() as session:
-        current = await session.get(Solution, solution.id)
+        current = await session.get(Solution, solution.id, options=(selectinload(Solution.desired_revision),))
         assert current is not None
         assert current.desired_revision_id == desired_id
         assert current.deployed_revision_id == good_id

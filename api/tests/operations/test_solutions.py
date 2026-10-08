@@ -35,7 +35,6 @@ async def create_deleted_solution(owner: User) -> tuple[Organization, Solution]:
     return organization, solution
 
 
-@pytest.mark.usefixtures("database_runtime")
 async def test_solution_delete_failure_stops_before_provider_credential_cleanup(
     users: tuple[User, User, User],
     monkeypatch: pytest.MonkeyPatch,
@@ -69,14 +68,14 @@ async def test_solution_delete_failure_stops_before_provider_credential_cleanup(
 
             raise RuntimeError("Kubernetes workload deletion failed")
 
-    def unexpected_provider(*args: object) -> object:
+    def unexpected_provider(*args: object, **_kwargs: object) -> object:
         """Record and reject provider construction before Kubernetes deletion completes."""
 
         provider_attempts.append(args)
         raise AssertionError("provider cleanup ran before Kubernetes deletion completed")
 
     monkeypatch.setattr(solution_operations, "Kubernetes", FailingKubernetes)
-    monkeypatch.setattr(DatabasePostgres, "delete_solution_schema", unexpected_provider, raising=False)
+    monkeypatch.setattr(solution_operations.databases.postgres, "Postgres", unexpected_provider)
 
     # Act
     failed = await execute(claimed)
@@ -319,7 +318,6 @@ async def test_solution_creation_preserves_schema_failure_before_storage_authori
 
 
 @pytest.mark.parametrize("identity", [None, "persisted-secret"], ids=["missing-identity", "running-existing-identity"])
-@pytest.mark.usefixtures("database_runtime")
 async def test_solution_creation_retry_reuses_persisted_runtime_secrets(
     users: tuple[User, User, User],
     monkeypatch: pytest.MonkeyPatch,
@@ -364,7 +362,7 @@ async def test_solution_creation_retry_reuses_persisted_runtime_secrets(
 
     captured: list[dict[str, str]] = []
 
-    def unexpected_provider(*_args: object) -> object:
+    def unexpected_provider(*_args: object, **_kwargs: object) -> object:
         """Fail if a retry attempts credential generation."""
 
         raise AssertionError("retry regenerated provider credentials")
@@ -389,7 +387,7 @@ async def test_solution_creation_retry_reuses_persisted_runtime_secrets(
 
             captured.append(secrets)
 
-    monkeypatch.setattr(DatabasePostgres, "solution_schema", unexpected_provider, raising=False)
+    monkeypatch.setattr(solution_operations.databases.postgres, "Postgres", unexpected_provider)
     monkeypatch.setattr(StorageKubernetes, "service_account", unexpected_provider)
     monkeypatch.setattr(solution_operations, "Kubernetes", FakeKubernetes)
     monkeypatch.setattr(solution_operations, "Storage", StorageKubernetes)

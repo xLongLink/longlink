@@ -1,16 +1,13 @@
-import jwt
 from uuid import UUID
 from typing import Annotated
 from fastapi import Depends, FastAPI, Request, HTTPException
-from longlink import identity
 from dataclasses import dataclass
 from fsspec.spec import AbstractFileSystem
-from collections.abc import Callable, Awaitable, AsyncGenerator
-from starlette.types import Send, Scope, ASGIApp, Receive
+from collections.abc import AsyncGenerator
 from longlink.database import audit
 from longlink.responses import FileResponse
-from starlette.responses import Response, JSONResponse
 from longlink.shared.models import User
+from longlink.middleware.identity import IdentityMiddleware
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 
@@ -54,23 +51,6 @@ async def _data(request: Request) -> AsyncGenerator[_ContextData, None]:
 Context = Annotated[_ContextData, Depends(_data)]
 
 
-class _RejectWebSockets:
-    """Deny a transport that the authenticated Platform proxy does not support."""
-
-    def __init__(self, app: ASGIApp) -> None:
-        """Wrap the Solution application."""
-
-        self.app = app
-
-    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
-        """Reject direct WebSocket connections before they reach Solution routes."""
-
-        if scope["type"] == "websocket":
-            await send({"type": "websocket.close", "code": 1008})
-            return
-        await self.app(scope, receive, send)
-
-
 def install_context_middleware(
     app: FastAPI,
     identity_secret: str | None,
@@ -80,33 +60,14 @@ def install_context_middleware(
 ) -> None:
     """Bind trusted Platform identity for the complete request lifecycle."""
 
+    # Reject an incomplete production policy before the middleware stack is built.
     if require_identity and not identity_secret:
         raise ValueError("Identity secret is required for protected Solution requests")
 
-    # WebSockets cannot pass through the Platform's role-checked HTTP proxy.
-    if require_identity:
-        app.add_middleware(_RejectWebSockets)
-
-    @app.middleware("http")
-    async def context_middleware(request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
-        """Attach request identity before Solution routes run."""
-
-        # Verify the Platform-signed user assertion before making it available to Solution code.
-        user_id = None
-        if identity_secret:
-            try:
-                user_id = identity.identity_token_user(request.headers.get("x-longlink-identity", ""), identity_secret)
-            except jwt.PyJWTError:
-                pass
-
-        # Only Kubernetes liveness and readiness probes are anonymous in production.
-        if require_identity and user_id is None and request.url.path not in {"/health", "/ready"}:
-            return JSONResponse({"detail": "Authentication required"}, status_code=401)
-
-        # Use the seeded local user when no signed Platform identity was supplied.
-        if user_id is None:
-            user_id = local_user_id
-
-        # Keep the request identity available to both FastAPI and database audit hooks.
-        with audit.actor(user_id):
-            return await call_next(request)
+    # One ASGI owner handles transport admission and the complete audit scope.
+    app.add_middleware(
+        IdentityMiddleware,
+        identity_secret=identity_secret,
+        require_identity=require_identity,
+        local_user_id=local_user_id,
+    )

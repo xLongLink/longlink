@@ -1,7 +1,7 @@
 import { api } from '@/lib/api';
 import { TextField } from './Field';
 import { AuthLayout } from './AuthLayout';
-import { NoIndex } from '@/components/Seo';
+import { NoIndex } from '@/components/NoIndex';
 import { Link } from '@astryxdesign/core/Link';
 import { useSearchParams } from 'react-router';
 import { Stack } from '@astryxdesign/core/Stack';

@@ -54,13 +54,10 @@ class Organization(AuditTable, table=True):
 
 
 class OrganizationActivity(PlatformModel, table=True):
-    """Keep an Organization database awake while a bounded activity lease is live."""
+    """Persist one exclusive database transition lease per Organization."""
 
     __tablename__: ClassVar[str] = "organization_activities"
 
-    # Identifier
-    id: UUID = Field(default_factory=uuid4, primary_key=True)
-
     # Lease
-    organization_id: UUID = Field(foreign_key="organizations.id", ondelete="CASCADE", index=True)
+    organization_id: UUID = Field(primary_key=True, foreign_key="organizations.id", ondelete="CASCADE")
     expires_at: datetime

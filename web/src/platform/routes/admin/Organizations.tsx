@@ -1,8 +1,8 @@
 import type { z } from 'zod';
 import { api } from '@/lib/api';
 import { Info } from 'lucide-react';
-import { NoIndex } from '@/components/Seo';
 import { useApi } from '@/lib/hooks/use-api';
+import { NoIndex } from '@/components/NoIndex';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Avatar } from '@/components/ui/Avatar';
@@ -11,6 +11,7 @@ import { Badge } from '@astryxdesign/core/Badge';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
 import { Heading } from '@astryxdesign/core/Heading';
+import { Pagination } from '@astryxdesign/core/Pagination';
 import { AlertDialog } from '@astryxdesign/core/AlertDialog';
 import { Table, proportional } from '@astryxdesign/core/Table';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
@@ -85,14 +86,13 @@ export default function Organizations() {
                         },
                     ]}
                 />
-                <Stack direction="horizontal" gap={2} justify="between">
-                    <Button label="Previous" isDisabled={page === 1} onClick={() => setPage(page - 1)} />
-                    <Button
-                        label="Next"
-                        isDisabled={organizations.total <= page * 25}
-                        onClick={() => setPage(page + 1)}
-                    />
-                </Stack>
+                <Pagination
+                    page={page}
+                    onChange={setPage}
+                    totalItems={organizations.total}
+                    pageSize={25}
+                    variant="none"
+                />
             </Stack>
             {metadata && (
                 <Dialog

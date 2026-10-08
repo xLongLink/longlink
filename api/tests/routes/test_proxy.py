@@ -104,17 +104,17 @@ async def create_running_solution(user: User) -> tuple[Solution, ComputeRegistry
     # Arrange an assignable gateway target and its running Solution.
     compute = await create_compute()
     organization = await create_organization(user, compute=compute)
-    solution = await create_solution(organization, image="ghcr.io/xlonglink/sample:latest")
 
-    # Set lifecycle state directly because proxy tests do not exercise reconciliation.
+    # Persist runtime state directly because proxy admission does not consume release history.
+    solution = Solution(
+        organization_id=organization.id,
+        name="dashboard",
+        slug="dashboard",
+        status=Status.running,
+        secrets={"LONGLINK_IDENTITY_SECRET": "test-identity-secret-01234567890"},
+    )
     async with session_scope() as session:
-        persisted_solution = await session.get(Solution, solution.id)
-        assert persisted_solution is not None
-        persisted_solution.secrets = {
-            **persisted_solution.secrets,
-            "LONGLINK_IDENTITY_SECRET": "test-identity-secret-01234567890",
-        }
-        persisted_solution.status = Status.running
+        session.add(solution)
         await session.commit()
 
     return solution, compute

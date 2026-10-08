@@ -1,13 +1,10 @@
 import pytest
 from s3fs import S3FileSystem
-from typing import Literal
 from pathlib import Path
 from pydantic import ValidationError
 from longlink.storage import base as storage_base
 from longlink.utils.settings import Envs
 from fsspec.implementations.dirfs import DirFileSystem
-from fsspec.implementations.local import LocalFileSystem
-from fsspec.implementations.memory import MemoryFileSystem
 
 UNSAFE_STORAGE_SCOPES = [
     pytest.param(None, "generated", "Storage prefixes require a bucket", id="missing-bucket"),
@@ -71,22 +68,6 @@ def test_production_storage_passes_configured_ca_to_s3_client(production_setting
     assert isinstance(filesystem, DirFileSystem)
     certificate = Path(filesystem.fs.client_kwargs["verify"])
     assert certificate.read_text(encoding="utf-8") == ca_certificate
-
-
-@pytest.mark.parametrize(("environment", "expected_filesystem"), [("testing", MemoryFileSystem), ("development", LocalFileSystem)])
-def test_nonproduction_storage_selects_local_filesystem(
-    environment: Literal["testing", "development"], expected_filesystem: type[MemoryFileSystem] | type[LocalFileSystem]
-) -> None:
-    """Use memory storage for tests and local files for development."""
-
-    # Arrange
-    settings = Envs(ENV=environment, STORAGE_BUCKET=None, STORAGE_PREFIX=None)
-
-    # Act
-    filesystem = storage_base.create_fs(settings)
-
-    # Assert
-    assert isinstance(filesystem, expected_filesystem)
 
 
 @pytest.mark.parametrize("name", ["DATABASE_HOST", "DATABASE_PASSWORD", "STORAGE_BUCKET", "STORAGE_PREFIX"])

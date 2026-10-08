@@ -1,13 +1,14 @@
 import { z } from 'zod';
 import { TextField } from './Field';
+import { Seo } from '@/components/Seo';
 import { AuthLayout } from './AuthLayout';
 import { api, ApiError } from '@/lib/api';
 import { useApiError } from '@/lib/errors';
 import { Eye, EyeOff } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { NoIndex } from '@/components/NoIndex';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
-import { Seo, NoIndex } from '@/components/Seo';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
 import { useForm, useWatch } from 'react-hook-form';

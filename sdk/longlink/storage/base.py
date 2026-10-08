@@ -44,8 +44,12 @@ def create_fs(settings: Envs) -> AbstractFileSystem:
         # Tests use memory storage while development keeps generated files locally inspectable.
         filesystem = fsspec.filesystem("memory" if settings.ENV == "testing" else "file")
 
-    # Scope configured prefixes beneath their bucket while local defaults keep the backend root.
+    # Scope paths without letting the wrapper cache retain the backend and its CA file.
     if bucket_path is not None:
-        return DirFileSystem(path=(bucket_path / prefix_path if prefix_path is not None else bucket_path).as_posix(), fs=filesystem)
+        return DirFileSystem(
+            path=(bucket_path / prefix_path if prefix_path is not None else bucket_path).as_posix(),
+            fs=filesystem,
+            skip_instance_cache=True,
+        )
 
     return filesystem

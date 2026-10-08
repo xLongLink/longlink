@@ -52,7 +52,7 @@ async def connection(organization: Organization, cluster: Kubernetes) -> postgre
 
 @dataclass
 class Lease:
-    """Fence a renewable activity using its last committed expiry as an ownership token."""
+    """Fence an exclusive transition using its last committed expiry as an ownership token."""
 
     organization_id: UUID
     expires_at: datetime
@@ -98,7 +98,7 @@ class Lease:
                         expires_at = datetime.now(UTC).replace(microsecond=0) + timedelta(seconds=LEASE_SECONDS)
                         await session.execute(
                             update(OrganizationActivity)
-                            .where(col(OrganizationActivity.id) == self.organization_id)
+                            .where(col(OrganizationActivity.organization_id) == self.organization_id)
                             .values(expires_at=expires_at)
                         )
                         self.expires_at = expires_at
@@ -122,12 +122,14 @@ class Lease:
                 async with session_scope() as session:
                     organization = await lock(session, self.organization_id)
                     if organization is not None and await self.owned(session):
-                        await session.execute(delete(OrganizationActivity).where(col(OrganizationActivity.id) == self.organization_id))
+                        await session.execute(
+                            delete(OrganizationActivity).where(col(OrganizationActivity.organization_id) == self.organization_id)
+                        )
                     await session.commit()
 
 
 async def _claim(session: AsyncSession, organization_id: UUID) -> Lease | None:
-    """Insert an activity after the caller has locked its Organization."""
+    """Claim the exclusive transition lease after the caller locks its Organization."""
 
     # The Organization UUID reserves one lease slot for exclusive database transitions.
     now = datetime.now(UTC)
@@ -140,7 +142,6 @@ async def _claim(session: AsyncSession, organization_id: UUID) -> Lease | None:
     if await session.get(OrganizationActivity, organization_id) is not None:
         return None
     row = OrganizationActivity(organization_id=organization_id, expires_at=now.replace(microsecond=0) + timedelta(seconds=LEASE_SECONDS))
-    row.id = organization_id
     session.add(row)
     await session.flush()
     return Lease(organization_id, row.expires_at)
@@ -158,7 +159,7 @@ async def deleting(organization_id: UUID) -> AsyncIterator[None]:
             if organization.deleted_at is None:
                 raise RuntimeError("Active Organizations cannot be deleted")
             active = await session.scalar(
-                select(col(OrganizationActivity.id))
+                select(col(OrganizationActivity.organization_id))
                 .where(
                     col(OrganizationActivity.organization_id) == organization_id,
                     col(OrganizationActivity.expires_at) > datetime.now(UTC),

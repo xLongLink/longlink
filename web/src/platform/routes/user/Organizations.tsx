@@ -1,7 +1,7 @@
 import type { z } from 'zod';
 import { useState } from 'react';
-import { NoIndex } from '@/components/Seo';
 import { useApi } from '@/lib/hooks/use-api';
+import { NoIndex } from '@/components/NoIndex';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Avatar } from '@/components/ui/Avatar';

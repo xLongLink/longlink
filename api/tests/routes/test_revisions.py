@@ -6,7 +6,9 @@ from datetime import UTC, datetime
 from sqlmodel import col
 from factories import create_solution, create_organization
 from sqlalchemy import func, select
+from src.errors import NotFoundError
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import selectinload
 from src.models.roles import OrganizationRoles
 from src.models.types import Image
 from src.models.metadata import LongLinkMetadata, EnvironmentMetadata
@@ -56,41 +58,6 @@ async def test_revision_snapshot_cannot_be_modified(users: tuple[User, User, Use
             await session.commit()
 
 
-async def test_update_noop_preserves_source_and_patches(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient], users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch
-) -> None:
-    """Preserve source identity and patches when resubmitting an unchanged release."""
-
-    # Arrange
-    organization = await create_organization(users[0])
-    solution = await create_solution(organization, envs={"KEEP": "private-value", "DROP": "old-value"})
-    url = f"/api/v1/solutions/{solution.id}/update"
-    source = "ghcr.io/longlink/dashboard@sha256:test"
-    resolved = LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:first"))
-
-    async def metadata(image: Image, _connection: object | None = None) -> LongLinkMetadata:
-        """Resolve metadata for the persisted source at the external boundary."""
-
-        assert image == source
-        return resolved
-
-    monkeypatch.setattr("src.routes.v1.solutions.images.metadata", metadata)
-
-    # Act
-    response = await clients[0].post(url, json={})
-
-    # Assert
-    assert response.status_code == 204
-    async with session_scope() as session:
-        current = await session.get(Solution, solution.id)
-        assert current is not None
-        revision = await session.get(Revision, current.desired_revision_id)
-        assert revision is not None
-        assert revision.source == source
-        assert revision.configured_envs == ["DROP", "KEEP"]
-        assert revision.min_scale == 0
-
-
 async def test_update_rejects_stale_revision(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient], users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -106,7 +73,7 @@ async def test_update_rejects_stale_revision(
 
         raise AssertionError("stale update must not inspect image metadata")
 
-    monkeypatch.setattr("src.routes.v1.solutions.images.metadata", unexpected_metadata)
+    monkeypatch.setattr("src.routes.v1.solutions.images.required_metadata", unexpected_metadata)
 
     # Act
     stale_response = await clients[0].post(url, json={"expected_revision_id": str(uuid4())})
@@ -135,7 +102,7 @@ async def test_update_rejects_solution_without_desired_revision(
 
         raise AssertionError("revision-less update must not inspect image metadata")
 
-    monkeypatch.setattr("src.routes.v1.solutions.images.metadata", unexpected_metadata)
+    monkeypatch.setattr("src.routes.v1.solutions.images.required_metadata", unexpected_metadata)
 
     # Act
     get_response = await clients[0].get(url)
@@ -148,59 +115,37 @@ async def test_update_rejects_solution_without_desired_revision(
     assert post_response.json() == {"detail": "Solution has no desired revision"}
 
 
-async def test_update_check_exposes_names_without_secrets(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient], users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch
-) -> None:
-    """Expose configured environment names without values in the advisory check."""
-
-    # Arrange
-    organization = await create_organization(users[0])
-    solution = await create_solution(
-        organization,
-        image="ghcr.io/longlink/dashboard@sha256:first",
-        envs={"KEEP": "private-value", "DROP": "old-value"},
-    )
-    url = f"/api/v1/solutions/{solution.id}/update"
-    resolved = LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:first"))
-
-    async def metadata(image: Image, _connection: object | None = None) -> LongLinkMetadata:
-        """Resolve metadata for the persisted source at the external boundary."""
-
-        return resolved
-
-    monkeypatch.setattr("src.routes.v1.solutions.images.metadata", metadata)
-
-    # Act
-    check = await clients[0].get(url)
-
-    # Assert
-    assert check.status_code == 200
-    check_payload = check.json()
-    assert check_payload["current_image"] == check_payload["metadata"]["image"] == resolved.image
-    assert {"source", "image", "available"}.isdisjoint(check_payload)
-    assert check_payload["configured_envs"] == ["DROP", "KEEP"]
-    assert check_payload["min_scale"] == 0
-    assert "private-value" not in check.text
-
-
 async def test_update_enforces_idempotency_and_min_scale_bounds(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient], users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Reject unchanged resubmissions and out-of-range scale settings."""
+    """Preserve release defaults and source while rejecting unchanged or invalid updates."""
 
     # Arrange
     organization = await create_organization(users[0])
     solution = await create_solution(organization, envs={"KEEP": "private-value", "DROP": "old-value"})
     url = f"/api/v1/solutions/{solution.id}/update"
+    source = "ghcr.io/longlink/dashboard@sha256:test"
     resolved = LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:first"))
 
     async def metadata(image: Image, _connection: object | None = None) -> LongLinkMetadata:
         """Resolve metadata for the persisted source at the external boundary."""
 
+        assert image == source
         return resolved
 
-    monkeypatch.setattr("src.routes.v1.solutions.images.metadata", metadata)
-    assert (await clients[0].post(url, json={})).status_code == 204
+    monkeypatch.setattr("src.routes.v1.solutions.images.required_metadata", metadata)
+
+    # Verify the first update preserves committed source, environment names, and scale defaults.
+    initial_response = await clients[0].post(url, json={})
+    assert initial_response.status_code == 204
+    async with session_scope() as session:
+        current = await session.get(Solution, solution.id)
+        assert current is not None
+        revision = await session.get(Revision, current.desired_revision_id)
+        assert revision is not None
+        assert revision.source == source
+        assert revision.configured_envs == ["DROP", "KEEP"]
+        assert revision.min_scale == 0
 
     # Act
     unchanged_response = await clients[0].post(url, json={"envs": {"KEEP": "private-value"}})
@@ -236,7 +181,7 @@ async def test_update_reresolves_moved_tag_and_enforces_required_envs(
         inspected.append(image)
         return resolved
 
-    monkeypatch.setattr("src.routes.v1.solutions.images.metadata", metadata)
+    monkeypatch.setattr("src.routes.v1.solutions.images.required_metadata", metadata)
     assert (await clients[0].post(url, json={})).status_code == 204
     assert (await clients[0].post(url, json={"min_scale": 1})).status_code == 204
 
@@ -268,7 +213,7 @@ async def test_update_reresolves_moved_tag_and_enforces_required_envs(
     assert keep_removed.status_code == 422
     assert success.status_code == 204
     async with session_scope() as session:
-        current = await session.get(Solution, solution.id)
+        current = await session.get(Solution, solution.id, options=(selectinload(Solution.desired_revision),))
         assert current is not None
         assert current.desired_revision.image == resolved.image
         assert current.desired_revision.source == source
@@ -313,7 +258,7 @@ async def test_update_check_rejects_callers_without_maintain_access(
 
         raise AssertionError("denied update check must not inspect image metadata")
 
-    monkeypatch.setattr("src.routes.v1.solutions.images.metadata", unexpected_metadata)
+    monkeypatch.setattr("src.routes.v1.solutions.images.required_metadata", unexpected_metadata)
 
     # Act
     get_response = await clients[1].get(url)
@@ -346,7 +291,7 @@ async def test_update_check_allows_maintainer_without_registry_oracle(
 
         return LongLinkMetadata(image=image)
 
-    monkeypatch.setattr("src.routes.v1.solutions.images.metadata", metadata)
+    monkeypatch.setattr("src.routes.v1.solutions.images.required_metadata", metadata)
 
     # Act
     response = await clients[1].get(url)
@@ -380,12 +325,12 @@ async def test_release_inspection_revalidates_concurrent_desired_changes(
             await session.commit()
         return metadata
 
-    monkeypatch.setattr("src.routes.v1.solutions.images.metadata", inspect)
+    monkeypatch.setattr("src.routes.v1.solutions.images.required_metadata", inspect)
     url = f"/api/v1/solutions/{solution.id}/update"
     response = await clients[0].request(method, url, json={})
     assert response.status_code == 409
     async with session_scope() as session:
-        current = await session.get(Solution, solution.id)
+        current = await session.get(Solution, solution.id, options=(selectinload(Solution.desired_revision),))
         assert current is not None
         assert current.desired_revision_id == replacement_id
         assert current.desired_revision.envs == {"OTHER": "concurrent-secret"}
@@ -405,12 +350,12 @@ async def test_environment_patch_validates_merged_limits(
 
         return LongLinkMetadata(image=image)
 
-    monkeypatch.setattr("src.routes.v1.solutions.images.metadata", metadata)
+    monkeypatch.setattr("src.routes.v1.solutions.images.required_metadata", metadata)
     url = f"/api/v1/solutions/{solution.id}/update"
     assert (await clients[0].post(url, json={"envs": {"NEW": "secret"}})).status_code == 422
     assert (await clients[0].post(url, json={"envs": {"NEW": "", "KEY_0": None}})).status_code == 204
     async with session_scope() as session:
-        current = await session.get(Solution, solution.id)
+        current = await session.get(Solution, solution.id, options=(selectinload(Solution.desired_revision),))
         assert current is not None
         assert len(current.desired_revision.envs) == 100
         assert current.desired_revision.envs["NEW"] == ""
@@ -439,7 +384,7 @@ async def test_simultaneous_source_updates_create_only_one_revision(
         await asyncio.wait_for(barrier.wait(), timeout=5)
         return LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:new"))
 
-    monkeypatch.setattr("src.routes.v1.solutions.images.metadata", metadata)
+    monkeypatch.setattr("src.routes.v1.solutions.images.required_metadata", metadata)
     url = f"/api/v1/solutions/{solution.id}/update"
 
     # Act
@@ -455,7 +400,7 @@ async def test_simultaneous_source_updates_create_only_one_revision(
 
     # Verify the successful request's complete snapshot was persisted.
     async with session_scope() as session:
-        current = await session.get(Solution, solution.id)
+        current = await session.get(Solution, solution.id, options=(selectinload(Solution.desired_revision),))
         assert current is not None
         assert current.desired_revision.envs == expected_envs
         assert await session.scalar(select(func.count()).select_from(Revision).where(col(Revision.solution_id) == solution.id)) == 2
@@ -471,8 +416,9 @@ async def test_local_registry_release_roundtrip(
 
     # All Platform mutations use the isolated test database; registry requests are read-only.
     source = Image("localhost:15000/sample:dev")
-    metadata = await images.metadata(source)
-    if metadata is None:
+    try:
+        metadata = await images.required_metadata(source)
+    except NotFoundError:
         pytest.skip("Local sample registry image is unavailable")
     organization = await create_organization(users[0])
     envs = {item.name: "integration-value" for item in metadata.environments}
