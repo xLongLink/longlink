@@ -202,7 +202,7 @@ class SeedPostgres(DatabasePostgres):
         return solution_id.hex
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def rendered_chart() -> list[dict]:
     """Render the real Compute chart with fixed gateway and storage addresses."""
 

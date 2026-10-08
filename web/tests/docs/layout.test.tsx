@@ -33,18 +33,15 @@ describe('shared View documentation layout', () => {
         expect(output.querySelector('#component-best-practices')).toBeNull();
     });
 
-    it.each([
-        { tab: 'properties', label: 'label', description: 'Visible button text and accessible label.' },
-        { tab: 'best-practices', label: 'Do', description: 'Use a descriptive label' },
-    ])('renders the URL-selected $tab panel', async ({ tab, label, description }) => {
+    it('renders the URL-selected best-practices panel', async () => {
         // Select a reference tab directly through its public URL.
-        const output = await renderLayout(`?tab=${tab}`);
+        const output = await renderLayout('?tab=best-practices');
         const panel = output.querySelector('[role="tabpanel"]');
 
         // The real reference table renders its content without mounting examples.
-        expect(panel?.id).toBe(`component-${tab}`);
-        expect(panel?.textContent).toContain(label);
-        expect(panel?.textContent).toContain(description);
+        expect(panel?.id).toBe('component-best-practices');
+        expect(panel?.textContent).toContain('Do');
+        expect(panel?.textContent).toContain('Use a descriptive label');
         expect(output.querySelector('[aria-label="Greeting preview"]')).toBeNull();
     });
 
@@ -59,6 +56,9 @@ describe('shared View documentation layout', () => {
 
         // Navigation updates both the selected content and the linkable query state.
         await vi.waitFor(() => expect(output.querySelector('[role="tabpanel"]')?.id).toBe('component-properties'));
+        const panel = output.querySelector('[role="tabpanel"]');
+        expect(panel?.textContent).toContain('label');
+        expect(panel?.textContent).toContain('Visible button text and accessible label.');
         const search = new URLSearchParams(output.querySelector('output')?.textContent ?? '');
         expect(search.get('campaign')).toBe('guide');
         expect(search.get('tab')).toBe('properties');

@@ -23,8 +23,9 @@ from src.database.models.organizations import Organization
 
 async def test_create_organization_persists_desired_state_and_queues_creation(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
 ) -> None:
-    """Persist Organization desired state and queue its infrastructure creation."""
+    """Persist Organization desired state, owner membership, and infrastructure work."""
 
     # Arrange
     compute = await create_compute()
@@ -41,9 +42,15 @@ async def test_create_organization_persists_desired_state_and_queues_creation(
     assert payload["name"] == "acme"
     async with session_scope() as session:
         organization = await session.get(Organization, UUID(payload["id"]))
-    assert organization is not None
+        assert organization is not None
+        memberships = await organizations.members(session, organization.id)
+    assert organization.name == "acme"
+    assert organization.slug == "acme"
+    assert organization.deleted_at is None
     assert organization.compute_id == compute.id
+    assert organization.database_state == DatabaseState.failed
     assert organization.status == Status.creating
+    assert [(membership.user.id, membership.role) for membership in memberships] == [(users[0].id, OrganizationRoles.owner)]
     operations = await fetch_operations()
     assert len(operations) == 1
     assert operations[0].kind == OperationKind.organization_create

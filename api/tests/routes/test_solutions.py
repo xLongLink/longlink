@@ -47,7 +47,7 @@ def mock_image_metadata(monkeypatch: pytest.MonkeyPatch, metadata: LongLinkMetad
 
         return resolved
 
-    monkeypatch.setattr("src.routes.v1.solutions.images.metadata", inspect_image)
+    monkeypatch.setattr("src.routes.v1.solutions.images.required_metadata", inspect_image)
 
 
 async def test_list_apps_returns_requested_page_for_admin(
@@ -208,12 +208,12 @@ async def test_create_app_rejects_invalid_image_metadata(
     # Arrange
     organization = await create_organization(users[0])
 
-    async def inspect_image(_image: Image, _connection: object | None = None) -> LongLinkMetadata | None:
-        """Return the configured metadata response."""
+    async def inspect_image(_client: AsyncClient, _image: Image, _base: str, _connection: object | None = None) -> LongLinkMetadata | None:
+        """Keep missing-metadata translation real while returning the configured parser result."""
 
         return metadata
 
-    monkeypatch.setattr("src.routes.v1.solutions.images.metadata", inspect_image)
+    monkeypatch.setattr("src.routes.v1.solutions.images.inspect", inspect_image)
     previous_operations = await fetch_operations()
 
     # Act
@@ -249,7 +249,7 @@ async def test_create_app_validates_payload_before_checking_organization_access(
 
         raise AssertionError("invalid solution payload must not inspect organization access")
 
-    monkeypatch.setattr("src.routes.v1.solutions.images.metadata", unexpected_metadata)
+    monkeypatch.setattr("src.routes.v1.solutions.images.required_metadata", unexpected_metadata)
     monkeypatch.setattr("src.routes.v1.solutions.organization_access", unexpected_organization_access)
 
     # Act
@@ -279,7 +279,7 @@ async def test_create_app_rejects_non_member_without_creating_state(
 
         raise AssertionError("denied solution creation must not inspect image metadata")
 
-    monkeypatch.setattr("src.routes.v1.solutions.images.metadata", unexpected_metadata)
+    monkeypatch.setattr("src.routes.v1.solutions.images.required_metadata", unexpected_metadata)
 
     # Act
     response = await clients[1].post(
@@ -331,10 +331,11 @@ async def test_solution_responses_do_not_expose_environment_secrets(
 ) -> None:
     """Redact persisted Solution environment values from every response surface."""
 
-    # Persist one Solution with a value that must remain runtime-only.
+    # Persist runtime-only values with environment names deliberately out of alphabetical order.
     owner = users[0]
     organization = await create_organization(owner)
-    await create_solution(organization, envs={"API_KEY": "runtime-secret"})
+    image = "ghcr.io/longlink/dashboard@sha256:first"
+    await create_solution(organization, image=image, envs={"TOKEN": "runtime-secret", "API_KEY": "private-value"})
 
     # Resolve update metadata at the external boundary without registry I/O.
     async def metadata(image: Image, _connection: object | None = None) -> LongLinkMetadata:
@@ -342,7 +343,7 @@ async def test_solution_responses_do_not_expose_environment_secrets(
 
         return LongLinkMetadata(image=image)
 
-    monkeypatch.setattr("src.routes.v1.solutions.images.metadata", metadata)
+    monkeypatch.setattr("src.routes.v1.solutions.images.required_metadata", metadata)
 
     # Read the administrator list and Organization solution response surfaces.
     list_response = await clients[0].get("/api/v1/solutions")
@@ -357,6 +358,8 @@ async def test_solution_responses_do_not_expose_environment_secrets(
     assert all("secrets" not in item and "envs" not in item for item in organization_solutions)
     assert "runtime-secret" not in list_response.text
     assert "runtime-secret" not in organization_response.text
+    assert "private-value" not in list_response.text
+    assert "private-value" not in organization_response.text
 
     # The advisory update check must expose configured names without values.
     solution_id = list_solutions[0]["id"]
@@ -365,10 +368,14 @@ async def test_solution_responses_do_not_expose_environment_secrets(
     # Assert
     assert check_response.status_code == 200
     check_payload = check_response.json()
-    assert check_payload["configured_envs"] == ["API_KEY"]
+    assert check_payload["current_image"] == check_payload["metadata"]["image"] == image
+    assert {"source", "image", "available"}.isdisjoint(check_payload)
+    assert check_payload["configured_envs"] == ["API_KEY", "TOKEN"]
+    assert check_payload["min_scale"] == 0
     assert "secrets" not in check_payload
     assert "envs" not in check_payload
     assert "runtime-secret" not in check_response.text
+    assert "private-value" not in check_response.text
 
 
 async def test_create_app_returns_403_for_regular_member(
@@ -390,7 +397,7 @@ async def test_create_app_returns_403_for_regular_member(
 
         raise AssertionError("denied solution creation must not inspect image metadata")
 
-    monkeypatch.setattr("src.routes.v1.solutions.images.metadata", unexpected_metadata)
+    monkeypatch.setattr("src.routes.v1.solutions.images.required_metadata", unexpected_metadata)
 
     # Act
     response = await clients[1].post(
@@ -698,7 +705,7 @@ async def test_create_solution_rejects_too_long_slug_without_queuing_work(
 
         return LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:test"))
 
-    monkeypatch.setattr("src.routes.v1.solutions.images.metadata", inspect_image)
+    monkeypatch.setattr("src.routes.v1.solutions.images.required_metadata", inspect_image)
 
     # Act
     response = await clients[0].post(

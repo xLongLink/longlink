@@ -200,6 +200,7 @@ async def test_oauth_login_rejects_unconfigured_provider_without_state_cookie(cl
     assert client.cookies.get("longlink_oauth") is None
 
 
+@pytest.mark.no_db
 @pytest.mark.parametrize(
     ("callback_provider", "state"),
     [
@@ -564,6 +565,7 @@ async def test_registration_setup_rejects_missing_verification_cookie(client: As
     assert response.json() == {"detail": INVALID_REGISTRATION_LINK}
 
 
+@pytest.mark.no_db
 async def test_registration_completion_rejects_missing_verification_cookie(client: AsyncClient) -> None:
     """Prevent account creation without verified browser registration state."""
 
@@ -833,6 +835,7 @@ async def test_registration_completion_rejects_duplicate_account(
     assert repeat_client.cookies.get("longlink_auth") is None
 
 
+@pytest.mark.no_db
 async def test_password_reset_setup_rejects_missing_reset_cookie(client: AsyncClient) -> None:
     """Reject reset setup without browser-only reset proof."""
 
@@ -845,6 +848,7 @@ async def test_password_reset_setup_rejects_missing_reset_cookie(client: AsyncCl
     assert "set-cookie" not in response.headers
 
 
+@pytest.mark.no_db
 async def test_password_reset_verify_rejects_invalid_token_without_cookie(client: AsyncClient) -> None:
     """Reject invalid reset proof before creating browser-only state."""
 
@@ -1005,6 +1009,7 @@ async def test_password_requests_do_not_send_mail_to_deleted_account(
     assert captured_mail == []
 
 
+@pytest.mark.no_db
 async def test_logout_rejects_untrusted_origin_without_browser_session(client: AsyncClient) -> None:
     """Reject an uncredentialed logout request from an untrusted origin."""
 
@@ -1164,6 +1169,7 @@ async def test_expired_browser_session_is_rejected_at_http(
     assert response.json() == {"detail": "Not authenticated"}
 
 
+@pytest.mark.no_db
 async def test_wrong_audience_browser_session_is_rejected_at_http(
     client: AsyncClient,
 ) -> None:

@@ -42,7 +42,7 @@ async def test_create_rejects_tombstoned_organization(users: tuple[User, User, U
     assert total == 0
 
 
-async def test_create_rejects_missing_organization(users: tuple[User, User, User]) -> None:
+async def test_create_rejects_missing_organization() -> None:
     """Reject solution creation when the Organization does not exist."""
 
     # Act and assert
@@ -53,7 +53,7 @@ async def test_create_rejects_missing_organization(users: tuple[User, User, User
                 uuid4(),
                 SolutionCreate(name="Dashboard", image=Image("ghcr.io/longlink/dashboard@sha256:test")),
                 metadata=LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:test")),
-                user_id=users[0].id,
+                user_id=uuid4(),
             )
 
 

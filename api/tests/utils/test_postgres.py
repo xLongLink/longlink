@@ -2,13 +2,16 @@ import pytest
 from uuid import UUID
 from src.utils import postgres
 from containers import postgres_container
+from contextlib import asynccontextmanager
 from sqlalchemy import text
 from sqlalchemy.exc import DBAPIError
-from collections.abc import Iterator
+from collections.abc import Iterator, AsyncIterator
 from longlink.shared import audit as shared_audit
 from src.models.types import DatabaseSSLMode
+from sqlalchemy.schema import CreateSchema
 from longlink.shared.models import User
-from sqlalchemy.ext.asyncio import create_async_engine
+from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
+from sqlalchemy.sql.elements import TextClause
 
 pytestmark = pytest.mark.no_db
 
@@ -191,17 +194,69 @@ async def test_postgres_removes_runtime_identity_and_tolerates_repeated_schema_c
                 await sibling_engine.dispose()
 
 
-@pytest.mark.integration
 async def test_postgres_rejects_schema_provisioning_without_string_literal_support(
-    postgres_database: tuple[postgres.Postgres, UUID, UUID], monkeypatch: pytest.MonkeyPatch
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Fail before composing a role password when the active dialect cannot quote strings."""
 
     # Arrange
-    adapter, organization_id, solution_id = postgres_database
-    await adapter.prepare_organization_database(organization_id)
-    monkeypatch.setattr(postgres.String, "literal_processor", lambda _self, _dialect: None)
+    organization_id = UUID("33333333-3333-3333-3333-333333333333")
+    solution_id = UUID("44444444-4444-4444-4444-444444444444")
+    adapter = postgres.Postgres(
+        host="localhost",
+        port=5432,
+        username="longlink",
+        password="secret",
+        sslmode=DatabaseSSLMode.disable,
+    )
 
-    # Act and assert
-    with pytest.raises(ValueError, match=r"^PostgreSQL string literal processing is unavailable$"):
-        await adapter.solution_schema(organization_id, solution_id, "stable-runtime-password")
+    # Replace external SQL execution without replacing quoting or provisioning logic.
+    class SQLConnection:
+        """Expose a real PostgreSQL dialect while accepting only pre-password SQL."""
+
+        def __init__(self, engine: AsyncEngine) -> None:
+            """Retain the unconnected engine used by the production quoting code."""
+
+            # Keep identifier and literal processing on SQLAlchemy's real dialect.
+            self.engine = engine
+
+        async def execute(self, statement: CreateSchema) -> None:
+            """Accept schema creation without connecting to PostgreSQL."""
+
+            # Reject unexpected SQL at the execution boundary.
+            assert isinstance(statement, CreateSchema)
+
+        async def scalar(self, statement: TextClause, _parameters: dict[str, str]) -> None:
+            """Report an absent role without querying PostgreSQL."""
+
+            # Accept only the role lookup needed before password processing.
+            assert str(statement) == "SELECT 1 FROM pg_roles WHERE rolname = :role"
+
+        async def exec_driver_sql(self, statement: str) -> None:
+            """Reject password SQL if the missing-processor guard is bypassed."""
+
+            # No role password SQL may execute without literal support.
+            raise AssertionError(f"Role password SQL must not execute: {statement}")
+
+    @asynccontextmanager
+    async def connection(_database: str) -> AsyncIterator[SQLConnection]:
+        """Supply the scoped SQL boundary only for this adapter instance."""
+
+        # Leave the real engine unconnected throughout provisioning.
+        yield sql_connection
+
+    # Preserve the active PostgreSQL driver while owning the engine's cleanup.
+    with adapter.url(organization_id.hex) as url:
+        engine = create_async_engine(url)
+        try:
+            sql_connection = SQLConnection(
+                engine=engine,
+            )
+            monkeypatch.setattr(adapter, "connection", connection)
+            monkeypatch.setattr(postgres.String, "literal_processor", lambda _self, _dialect: None)
+
+            # Act and assert
+            with pytest.raises(ValueError, match=r"^PostgreSQL string literal processing is unavailable$"):
+                await adapter.solution_schema(organization_id, solution_id, "stable-runtime-password")
+        finally:
+            await engine.dispose()

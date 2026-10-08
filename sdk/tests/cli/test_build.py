@@ -86,59 +86,35 @@ def test_read_pyproject_rejects_invalid_toml(tmp_path: Path) -> None:
         build.read_pyproject(tmp_path)
 
 
-@pytest.mark.parametrize(
-    ("module_path", "project_config", "module_source", "expected_spec"),
-    [
-        pytest.param(
-            "settings/envs.py",
-            '[tool.longlink]\nenvironments = "settings.envs:Env"\n',
-            "from pydantic import BaseModel, Field\n\n"
-            "class Env(BaseModel):\n"
-            "    API_KEY: str = Field(default='dev', validation_alias='LONG_API_KEY', description='API key', secret=True)\n"
-            "    TOKEN: str = Field(default_factory=str, validation_alias='LONG_TOKEN')\n"
-            "    PORT: int = 8080\n",
-            [
-                {"name": "LONG_API_KEY", "required": False, "description": "API key"},
-                {"name": "LONG_TOKEN", "required": False},
-                {"name": "PORT", "required": False},
-            ],
-            id="supported-metadata",
-        ),
-        pytest.param(
-            "src/envs.py",
-            '[tool.longlink]\nenvironments = "src.envs:Env"\n',
-            "from pydantic import BaseModel, Field\n\n"
-            "class Env(BaseModel):\n"
-            "    OPTIONAL_TOKEN: str = Field('dev', validation_alias='OPTIONAL_TOKEN')\n"
-            "    REQUIRED_TOKEN: str = Field(..., validation_alias='REQUIRED_TOKEN')\n",
-            [
-                {"name": "OPTIONAL_TOKEN", "required": False},
-                {"name": "REQUIRED_TOKEN", "required": True},
-            ],
-            id="positional-defaults",
-        ),
-    ],
-)
-def test_read_env_spec_emits_supported_environment_metadata(
-    tmp_path: Path,
-    module_path: str,
-    project_config: str,
-    module_source: str,
-    expected_spec: list[dict[str, object]],
-) -> None:
+def test_read_env_spec_emits_supported_environment_metadata(tmp_path: Path) -> None:
     """Emit supported metadata while respecting aliases and field defaults."""
 
     # Arrange
-    settings_path = tmp_path / module_path
-    settings_path.parent.mkdir(parents=True)
-    settings_path.write_text(module_source)
-    (tmp_path / "pyproject.toml").write_text(project_config)
+    settings_path = tmp_path / "settings" / "envs.py"
+    settings_path.parent.mkdir()
+    settings_path.write_text(
+        "from pydantic import BaseModel, Field\n\n"
+        "class Env(BaseModel):\n"
+        "    API_KEY: str = Field(default='dev', validation_alias='LONG_API_KEY', description='API key', secret=True)\n"
+        "    TOKEN: str = Field(default_factory=str, validation_alias='LONG_TOKEN')\n"
+        "    PORT: int = 8080\n"
+        "    OPTIONAL_TOKEN: str = Field('dev', validation_alias='OPTIONAL_TOKEN')\n"
+        "    REQUIRED_TOKEN: str = Field(..., validation_alias='REQUIRED_TOKEN')\n",
+        encoding="utf-8",
+    )
+    (tmp_path / "pyproject.toml").write_text('[tool.longlink]\nenvironments = "settings.envs:Env"\n', encoding="utf-8")
 
     # Act
     env_spec = build.read_env_spec(tmp_path, build.read_pyproject(tmp_path))
 
     # Assert
-    assert env_spec == expected_spec
+    assert env_spec == [
+        {"name": "LONG_API_KEY", "required": False, "description": "API key"},
+        {"name": "LONG_TOKEN", "required": False},
+        {"name": "PORT", "required": False},
+        {"name": "OPTIONAL_TOKEN", "required": False},
+        {"name": "REQUIRED_TOKEN", "required": True},
+    ]
 
 
 @pytest.mark.parametrize(

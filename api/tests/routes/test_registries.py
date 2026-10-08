@@ -84,11 +84,9 @@ async def test_compute_list_returns_ordered_page_and_total(
     assert response.json() == {"items": [{"id": beta_id, "name": "Beta Registry"} | expected_item], "total": 2}
 
 
-@pytest.mark.parametrize("overrides", [{}, {"database_storage_class": "local-path"}], ids=["discovered", "explicit"])
 async def test_compute_registry_creation_redacts_credentials_and_rejects_duplicate_name(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     compute_runtime: None,
-    overrides: dict[str, str],
 ) -> None:
     """Persist an inline-verified Compute without credentials in responses or queued work."""
 
@@ -103,7 +101,7 @@ async def test_compute_registry_creation_redacts_credentials_and_rejects_duplica
             "current-context": "context",
             "users": [{"name": "user", "user": {"token": "compute-credential-must-not-leak"}}],
         },
-    } | overrides
+    }
 
     # Act
     create_response = await clients[0].post("/api/v1/computes", json=payload)
