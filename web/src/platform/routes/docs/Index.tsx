@@ -57,7 +57,7 @@ export default function DocsIndex() {
                         <Grid columns={{ minWidth: 200, max: 3, repeat: 'fit' }} gap={0}>
                             <ClickableCard
                                 className="-mb-px -mr-px min-h-60 rounded-none bg-transparent"
-                                href="/use-cases/"
+                                href="/docs/introduction/"
                                 label="Explore LongLink"
                                 padding={6}
                             >

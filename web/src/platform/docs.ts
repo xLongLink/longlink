@@ -41,7 +41,10 @@ export const componentDocumentation = componentCatalog
 export const documentationSections: Array<{ title: string; pages: Array<DocumentationPage> }> = [
     {
         title: 'Introduction',
-        pages: [{ path: '/docs', label: 'Documentation', icon: BookOpen }],
+        pages: [
+            { path: '/docs', label: 'Documentation', icon: BookOpen },
+            { path: '/docs/introduction', label: 'Why LongLink', icon: BookOpen },
+        ],
     },
     {
         title: 'Solutions',
