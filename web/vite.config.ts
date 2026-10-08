@@ -2,7 +2,24 @@ import tailwindcss from '@tailwindcss/vite';
 import { defineConfig, loadEnv } from 'vite';
 import { reactRouter } from '@react-router/dev/vite';
 
-const ignoredPaths = ['.react-router/**', 'build/**', 'scripts/**', 'src/lib/generated/**'];
+const ignoredPaths = [
+    '.react-router/**',
+    'build/**',
+    'scripts/**',
+    'src/lib/generated/**',
+    '.agent/**',
+    '.agents/**',
+    '.claude/**',
+    '.codex/**',
+    '.continue/**',
+    '.cursor/**',
+    '.gemini/**',
+    '.opencode/**',
+    '.pi/**',
+    '.roo/**',
+    '.windsurf/**',
+    'tools/oxlint/anti-slop/**',
+];
 
 export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, process.cwd(), 'VITE_');
@@ -39,9 +56,31 @@ export default defineConfig(({ mode }) => {
                 typeAware: true,
                 typeCheck: true,
             },
-            jsPlugins: ['eslint-plugin-perfectionist'],
+            jsPlugins: [
+                'eslint-plugin-perfectionist',
+                { name: 'anti-slop', specifier: './tools/oxlint/anti-slop/index.ts' },
+            ],
             plugins: ['oxc', 'typescript', 'unicorn', 'react'],
             rules: {
+                'oxc/no-accumulating-spread': 'error',
+                'anti-slop/no-array-filter-map': 'error',
+                'anti-slop/no-reduce-accumulator-copy': 'error',
+                'anti-slop/no-chained-type-assertions': 'error',
+                'anti-slop/no-conditional-empty-object-spread': 'error',
+                'anti-slop/no-known-value-widening': 'error',
+                'anti-slop/no-module-mocking': 'error',
+                'anti-slop/no-object-parameters': 'error',
+                'anti-slop/no-reflect-apply': 'error',
+                'anti-slop/no-reflect-get': 'error',
+                'anti-slop/no-runtime-typeof': 'error',
+                'anti-slop/no-shape-in-symbol-names': 'error',
+                'anti-slop/no-unknown-parameters': 'error',
+                'anti-slop/no-unknown-returns': 'error',
+                'anti-slop/no-unknown-type-aliases': 'error',
+                'anti-slop/no-unsafe-dictionary-type': 'error',
+                'anti-slop/no-widen-then-assert': 'error',
+                'anti-slop/require-readable-spacing': 'error',
+                'anti-slop/require-safety-comment-for-type-assertion': 'error',
                 'perfectionist/sort-imports': [
                     'error',
                     {
