@@ -2,7 +2,7 @@ import path from 'node:path';
 import { siteUrl } from './src/site';
 import type { Config } from '@react-router/dev/config';
 import { documentationPaths } from './src/platform/docs';
-import { mkdir, rename, rm, writeFile } from 'node:fs/promises';
+import { cp, mkdir, rename, rm, writeFile } from 'node:fs/promises';
 import { comparisonPaths, useCasePaths } from './src/platform/usecases';
 
 const requestedMode = import.meta.env.MODE;
@@ -69,10 +69,21 @@ export default {
     async buildEnd({ reactRouterConfig }) {
         const clientDirectory = path.join(reactRouterConfig.buildDirectory, 'client');
 
-        // Solutions do not publish Platform images or the public agent guide.
+        // Solutions retain the shared wordmark without publishing Platform images or the public agent guide.
         if (isSolution) {
             await rm(path.join(clientDirectory, 'images'), { force: true, recursive: true });
             await rm(path.join(clientDirectory, 'llms.txt'), { force: true });
+
+            // Include both theme variants used by the shared navigation header.
+            await mkdir(path.join(clientDirectory, 'images'), { recursive: true });
+
+            for (const mode of ['light', 'dark']) {
+                const filename = `longlink-wordmark-${mode}.png`;
+                await cp(
+                    path.join(import.meta.dirname, 'public', 'images', filename),
+                    path.join(clientDirectory, 'images', filename)
+                );
+            }
         } else {
             // Generate crawler configuration from the same inventory used for prerendering.
             const urls = publicPagePaths
