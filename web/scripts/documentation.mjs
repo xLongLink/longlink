@@ -9,33 +9,26 @@ const root = path.resolve(import.meta.dirname, '..');
 const input = path.resolve(root, '../sdk/longlink/.static/jsx/frontend.d.ts');
 let source = await readFile(input, 'utf8');
 
-// Derive editor component signatures from explicit LongLink wrappers, not upstream props.
-const bindings = ts.createSourceFile(
-    'components.ts',
-    await readFile(path.join(root, 'src/views/components.ts'), 'utf8'),
-    ts.ScriptTarget.Latest,
-    true,
-);
-
 // Resolve borrowed component props against the actual Web imports before publishing standalone editor types.
 const runtimeConfig = ts.readConfigFile(path.join(root, 'tsconfig.app.json'), ts.sys.readFile);
 if (runtimeConfig.error) throw new Error(ts.flattenDiagnosticMessageText(runtimeConfig.error.messageText, '\n'));
 const runtimeOptions = ts.parseJsonConfigFileContent(runtimeConfig.config, ts.sys, root).options;
 const runtimeProgram = ts.createProgram([path.join(root, 'src/views/components.ts')], runtimeOptions);
 const runtimeChecker = runtimeProgram.getTypeChecker();
+
+// Derive editor component signatures from the same runtime source snapshot used for wrapper types.
+const bindings = runtimeProgram.getSourceFile(path.join(root, 'src/views/components.ts'));
+if (!bindings) throw new Error('Missing runtime component bindings: src/views/components.ts');
+
 const editor = ts.createSourceFile(input, source, ts.ScriptTarget.Latest, true);
 const replacements = [];
 const introductions = new Map();
 const propertyDefaults = new Map();
 
 // Generate the finite public icon contract from the same Lucide registry used by the runtime.
-const icons = ts.createSourceFile(
-    'Icon.tsx',
-    await readFile(path.join(root, 'src/components/ui/Icon.tsx'), 'utf8'),
-    ts.ScriptTarget.Latest,
-    true,
-    ts.ScriptKind.TSX,
-);
+const icons = runtimeProgram.getSourceFile(path.join(root, 'src/components/ui/Icon.tsx'));
+if (!icons) throw new Error('Missing runtime icon source: src/components/ui/Icon.tsx');
+
 const registry = icons.statements
     .filter(ts.isVariableStatement)
     .flatMap((statement) => [...statement.declarationList.declarations])
@@ -209,12 +202,9 @@ for (const binding of bindings.statements) {
 }
 
 // Keep the common field contract synchronized with the wrappers that consume it.
-const fields = ts.createSourceFile(
-    'types.ts',
-    await readFile(path.join(root, 'src/components/ui/types.ts'), 'utf8'),
-    ts.ScriptTarget.Latest,
-    true,
-);
+const fields = runtimeProgram.getSourceFile(path.join(root, 'src/components/ui/types.ts'));
+if (!fields) throw new Error('Missing runtime field source: src/components/ui/types.ts');
+
 const fieldType = fields.statements.find(
     (statement) => ts.isTypeAliasDeclaration(statement) && statement.name.text === 'FieldProps',
 );
@@ -440,6 +430,20 @@ for (const entry of components) {
     const upstreamProps =
         detail.props ?? detail.components?.find((component) => component.name === entry.name)?.props ?? [];
 
+    // Enrich exact public prop names without adding styling props or expanding grouped children.
+    for (const property of entry.properties ?? []) {
+        if (property.name === 'className') continue;
+
+        // Match only properties already supported by this component's public declaration.
+        const supported = (supportedProps ?? upstreamProps).find((candidate) => candidate.name === property.name);
+        if (!supported) continue;
+
+        // Preserve authored metadata and inherit upstream defaults only for optional props.
+        const upstream = upstreamProps.find((candidate) => candidate.name === property.name);
+        property.description ??= supported.description ?? upstream?.description ?? `The ${property.name} prop.`;
+        property.default ??= supported.default ?? (supported.required ? undefined : upstream?.default);
+    }
+
     references.push({
         name: entry.name,
         introduction:
@@ -448,21 +452,6 @@ for (const entry of components) {
             detail.description ??
             usage?.description ??
             '',
-        properties: (supportedProps ?? upstreamProps)
-            // View components use their preset styling rather than caller-provided classes.
-            .filter((property) => property.name !== 'className')
-            .map(({ name, type, required, default: defaultValue, description }) => ({
-                name,
-                type,
-                required,
-                default:
-                    defaultValue ??
-                    (required ? undefined : upstreamProps.find((property) => property.name === name)?.default),
-                description:
-                    description ??
-                    upstreamProps.find((property) => property.name === name)?.description ??
-                    `The ${name} prop.`,
-            })),
         practices: (usage?.bestPractices ?? []).filter(
             (practice) =>
                 !supportedProps ||
@@ -475,13 +464,9 @@ for (const entry of components) {
     });
 }
 
-// Share authored prop descriptions with the CLI without copying website-only guide content.
+// Format defaults for every catalog entry, including components without upstream guidance.
 for (const entry of components) {
-    const reference = references.find((reference) => reference.name === entry.name);
     for (const property of entry.properties ?? []) {
-        const referenceProperty = reference?.properties.find((candidate) => candidate.name === property.name);
-        property.description ??= referenceProperty?.description;
-        property.default ??= referenceProperty?.default;
         if (property.default !== undefined && property.default !== '-')
             property.description = `${property.description ?? `The ${property.name} prop.`} Default: ${property.default}.`;
     }
@@ -492,7 +477,7 @@ const outputs = [
     { filename: input, text: source },
     {
         filename: path.resolve(root, 'src/lib/generated/components.json'),
-        data: references.map(({ properties, ...reference }) => reference),
+        data: references,
     },
     {
         filename: path.resolve(root, '../sdk/longlink/.static/jsx/components.json'),

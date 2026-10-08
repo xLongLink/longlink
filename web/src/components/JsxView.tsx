@@ -9,7 +9,6 @@ import { useSuspenseQuery } from '@tanstack/react-query';
 import {
     commandSchema,
     parametersSchema,
-    MAX_SOURCE_SIZE,
     MAX_PENDING_REQUESTS,
     MAX_MESSAGE_SIZE,
     REQUEST_TIMEOUT,
@@ -158,8 +157,6 @@ export function JsxView({
 
         /** Builds a trusted boot document; Solution source is transferred as data, never interpolated into HTML. */
         async function bootstrap(): Promise<void> {
-            if (source.length > MAX_SOURCE_SIZE) throw new Error('View source is too large');
-
             const code = `window.__VIEW_SESSION__=${JSON.stringify(session)};\n${script}`.replace(
                 /<\/script/gi,
                 '<\\/script'

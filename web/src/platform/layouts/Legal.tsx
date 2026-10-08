@@ -1,9 +1,10 @@
+import { legalPages } from '@/platform/legal';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Outlet, useLocation } from 'react-router';
+import { Gem, Image, MessageSquare } from 'lucide-react';
 import { SideLayout } from '@/components/layouts/SideLayout';
 import { SideNavHeader } from '@/components/layouts/SideNavHeader';
 import { SideNav, SideNavItem, SideNavSection } from '@astryxdesign/core/SideNav';
-import { Building2, FileText, Gem, Image, MessageSquare, ShieldCheck } from 'lucide-react';
 
 /** Renders legal content with the fixed legal navigation. */
 export default function Legal() {
@@ -16,24 +17,20 @@ export default function Legal() {
                 <SideNav header={<SideNavHeader />}>
                     <Stack paddingInline={2}>
                         <SideNavSection title="Legal">
-                            <SideNavItem
-                                href="/terms/"
-                                icon={<FileText aria-hidden size={16} />}
-                                isSelected={pagePath === '/terms'}
-                                label="Terms"
-                            />
-                            <SideNavItem
-                                href="/impressum/"
-                                icon={<Building2 aria-hidden size={16} />}
-                                isSelected={pagePath === '/impressum'}
-                                label="Impressum"
-                            />
-                            <SideNavItem
-                                href="/privacy/"
-                                icon={<ShieldCheck aria-hidden size={16} />}
-                                isSelected={pagePath === '/privacy'}
-                                label="Privacy"
-                            />
+                            {legalPages.map((page) => {
+                                // Preserve each legal destination's label, icon, and selected state.
+                                const Icon = page.icon;
+
+                                return (
+                                    <SideNavItem
+                                        key={page.path}
+                                        href={`${page.path}/`}
+                                        icon={<Icon aria-hidden size={16} />}
+                                        isSelected={pagePath === page.path}
+                                        label={page.label}
+                                    />
+                                );
+                            })}
                         </SideNavSection>
                         <SideNavSection title="Branding">
                             <SideNavItem

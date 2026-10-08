@@ -26,7 +26,7 @@ export default function Compute() {
         { kind: 'metadata'; id: string } | { kind: 'deletion'; item: { id: string; name: string } } | null
     >(null);
 
-    const [registration, setRegistration] = useState<z.input<typeof registrationSchema> | null>(null);
+    const [registrationOpen, setRegistrationOpen] = useState(false);
     const path = `/api/v1/computes?page=${page}&page_size=25`;
     const [computes, invalidate] = useApi<z.output<typeof schemas.zPageComputeRegistryResponse>>(path);
 
@@ -35,25 +35,12 @@ export default function Compute() {
 
     if (dialog?.kind === 'metadata' && !metadata) setDialog(null);
 
-    /** Registers the validated Compute draft and refreshes the list. */
-    async function registerCompute() {
-        if (!registration) return;
-
-        // Validate the draft and refresh the list only after registration succeeds.
-        await api.post('/api/v1/computes', { json: registrationSchema.parse(registration) });
-        await invalidate();
-        setRegistration(null);
-    }
-
     return (
         <Stack gap={4}>
             <NoIndex title="Compute | LongLink" />
             <Stack direction="horizontal" justify="between" align="center" wrap="wrap">
                 <Heading level={1}>Compute</Heading>
-                <Button
-                    label="Register Compute"
-                    onClick={() => setRegistration({ name: '', kubeconfig: '', gateway_url: '', storage_endpoint: '' })}
-                />
+                <Button label="Register Compute" onClick={() => setRegistrationOpen(true)} />
             </Stack>
             <Stack gap={1}>
                 <Table
@@ -92,51 +79,8 @@ export default function Compute() {
                 />
                 <Pagination page={page} onChange={setPage} totalItems={computes.total} pageSize={25} variant="none" />
             </Stack>
-            {registration && (
-                <Dialog
-                    isOpen
-                    purpose="form"
-                    onOpenChange={(open) => {
-                        if (!open) setRegistration(null);
-                    }}
-                >
-                    <DialogHeader title="Register Compute" onOpenChange={() => setRegistration(null)} />
-                    <form action={registerCompute}>
-                        <Stack gap={3}>
-                            <TextInput
-                                label="Name"
-                                value={registration.name}
-                                isRequired
-                                onChange={(name) => setRegistration({ ...registration, name })}
-                            />
-                            <TextInput
-                                label="Gateway URL"
-                                value={registration.gateway_url}
-                                placeholder="https://<nightly_gateway_floating_ip>"
-                                isRequired
-                                onChange={(gateway_url) => setRegistration({ ...registration, gateway_url })}
-                            />
-                            <TextInput
-                                label="Storage endpoint"
-                                value={registration.storage_endpoint}
-                                placeholder="https://<nightly_storage_floating_ip>"
-                                isRequired
-                                onChange={(storage_endpoint) => setRegistration({ ...registration, storage_endpoint })}
-                            />
-                            <TextArea
-                                label="Kubeconfig"
-                                value={registration.kubeconfig}
-                                placeholder="Paste the Compute kubeconfig"
-                                isRequired
-                                onChange={(kubeconfig) => setRegistration({ ...registration, kubeconfig })}
-                            />
-                            <Stack direction="horizontal" gap={2} justify="end">
-                                <Button label="Cancel" variant="ghost" onClick={() => setRegistration(null)} />
-                                <Button label="Register" variant="primary" type="submit" />
-                            </Stack>
-                        </Stack>
-                    </form>
-                </Dialog>
+            {registrationOpen && (
+                <ComputeRegistration invalidate={invalidate} onClose={() => setRegistrationOpen(false)} />
             )}
             {metadata && (
                 <Dialog
@@ -210,5 +154,72 @@ export default function Compute() {
                 </Dialog>
             )}
         </Stack>
+    );
+}
+
+/** Owns a fresh registration draft for the lifetime of the form dialog. */
+function ComputeRegistration({ invalidate, onClose }: { invalidate: () => Promise<void>; onClose: () => void }) {
+    // Opening a new dialog starts with blank fields; dismissal discards this draft.
+    const [registration, setRegistration] = useState<z.input<typeof registrationSchema>>({
+        name: '',
+        kubeconfig: '',
+        gateway_url: '',
+        storage_endpoint: '',
+    });
+
+    /** Registers the validated Compute draft and refreshes the list. */
+    async function registerCompute() {
+        // Validate the draft and refresh the list only after registration succeeds.
+        await api.post('/api/v1/computes', { json: registrationSchema.parse(registration) });
+        await invalidate();
+        onClose();
+    }
+
+    // Preserve the existing 400px form dialog, control spacing, and dismissal behavior.
+    return (
+        <Dialog
+            isOpen
+            purpose="form"
+            onOpenChange={(open) => {
+                if (!open) onClose();
+            }}
+        >
+            <DialogHeader title="Register Compute" onOpenChange={onClose} />
+            <form action={registerCompute}>
+                <Stack gap={3}>
+                    <TextInput
+                        label="Name"
+                        value={registration.name}
+                        isRequired
+                        onChange={(name) => setRegistration({ ...registration, name })}
+                    />
+                    <TextInput
+                        label="Gateway URL"
+                        value={registration.gateway_url}
+                        placeholder="https://<nightly_gateway_floating_ip>"
+                        isRequired
+                        onChange={(gateway_url) => setRegistration({ ...registration, gateway_url })}
+                    />
+                    <TextInput
+                        label="Storage endpoint"
+                        value={registration.storage_endpoint}
+                        placeholder="https://<nightly_storage_floating_ip>"
+                        isRequired
+                        onChange={(storage_endpoint) => setRegistration({ ...registration, storage_endpoint })}
+                    />
+                    <TextArea
+                        label="Kubeconfig"
+                        value={registration.kubeconfig}
+                        placeholder="Paste the Compute kubeconfig"
+                        isRequired
+                        onChange={(kubeconfig) => setRegistration({ ...registration, kubeconfig })}
+                    />
+                    <Stack direction="horizontal" gap={2} justify="end">
+                        <Button label="Cancel" variant="ghost" onClick={onClose} />
+                        <Button label="Register" variant="primary" type="submit" />
+                    </Stack>
+                </Stack>
+            </form>
+        </Dialog>
     );
 }

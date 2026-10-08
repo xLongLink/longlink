@@ -1,3 +1,4 @@
+import { legalPages } from './legal';
 import { adminPages } from './navigation';
 import { useCasePages } from './usecases';
 import { index, layout, prefix, route, type RouteConfig } from '@react-router/dev/routes';
@@ -76,9 +77,7 @@ export default [
         ]),
     ]),
     layout('./layouts/Legal.tsx', [
-        route('terms', './routes/legal/Terms.tsx'),
-        route('privacy', './routes/legal/Privacy.tsx'),
-        route('impressum', './routes/legal/Impressum.tsx'),
+        ...legalPages.map(({ path, module }) => route(path.slice(1), module)),
         ...prefix('branding', [
             route('assets', './routes/branding/Assets.tsx'),
             route('values', './routes/branding/Values.tsx'),

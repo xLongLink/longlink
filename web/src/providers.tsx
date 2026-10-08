@@ -1,38 +1,22 @@
 import { ApiErrorContext } from '@/lib/errors';
 import { Theme } from '@astryxdesign/core/theme';
 import { useState, type ReactNode } from 'react';
+import { Link as RouterLink } from 'react-router';
 import { useToast } from '@astryxdesign/core/Toast';
 import { stoneTheme } from '@/lib/generated/stone.js';
 import { createQueryRuntime } from '@/lib/react-query';
 import { LinkProvider } from '@astryxdesign/core/Link';
 import { LayerProvider } from '@astryxdesign/core/Layer';
 import { QueryClientProvider } from '@tanstack/react-query';
-import { MenuNavigationContext } from '@/components/ui/Menu';
-import { Link as RouterLink, useLocation, useNavigate } from 'react-router';
 
 /** Provides isolated query state with the shared application provider tree. */
 export function RootProvider({ children }: { children: ReactNode }) {
-    const location = useLocation();
-    const navigate = useNavigate();
-
+    // Keep shared theme, link, layer, and API ownership independent of Platform-only navigation.
     return (
         <Theme theme={stoneTheme} mode="dark">
             <LinkProvider component={RouterLink}>
                 <LayerProvider toast={{ position: 'bottomEnd' }}>
-                    <MenuNavigationContext
-                        value={{
-                            hash: location.hash,
-                            select: (id) => {
-                                void navigate({
-                                    pathname: location.pathname,
-                                    search: location.search,
-                                    hash: `#${id}`,
-                                });
-                            },
-                        }}
-                    >
-                        <ApiProvider>{children}</ApiProvider>
-                    </MenuNavigationContext>
+                    <ApiProvider>{children}</ApiProvider>
                 </LayerProvider>
             </LinkProvider>
         </Theme>

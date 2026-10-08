@@ -33,11 +33,10 @@ const fields = [
         label: 'Properties screened monthly',
         max: propertyCounts.length - 1,
         step: 1,
-        prefix: '',
         suffix: '',
     },
-    { key: 'minutes', label: 'Manual screening time per property', max: 120, step: 15, prefix: '', suffix: ' min' },
-    { key: 'hourlyCost', label: 'Hourly labor cost', max: 500, step: 25, prefix: '', suffix: ' CHF/h' },
+    { key: 'minutes', label: 'Manual screening time per property', max: 120, step: 15, suffix: ' min' },
+    { key: 'hourlyCost', label: 'Hourly labor cost', max: 500, step: 25, suffix: ' CHF/h' },
 ] as const;
 
 /** Estimates screening time and its cost value from editable, illustrative assumptions. */
@@ -62,14 +61,13 @@ export default function Calculator() {
                         Estimate potential savings
                     </Heading>
                     <Stack gap={6}>
-                        {fields.map(({ key, label, max, step, prefix, suffix }) => (
+                        {fields.map(({ key, label, max, step, suffix }) => (
                             <Stack key={key} gap={0}>
                                 <Stack direction="horizontal" gap={2} justify="between" align="start">
                                     <Text type="label" color="secondary">
                                         {label}
                                     </Text>
                                     <Text color="secondary" weight="semibold" justify="end" textWrap="nowrap">
-                                        {prefix}
                                         {inputs[key].toLocaleString('en-US')}
                                         {suffix}
                                     </Text>
@@ -85,7 +83,7 @@ export default function Calculator() {
                                     step={step}
                                     valueDisplay="none"
                                     formatValue={(value) =>
-                                        `${prefix}${(key === 'properties' ? propertyCounts[value] : value).toLocaleString('en-US')}${suffix}`
+                                        `${(key === 'properties' ? propertyCounts[value] : value).toLocaleString('en-US')}${suffix}`
                                     }
                                     onChange={(value: number) => {
                                         // Map slider positions to actual counts before validating and calculating results.

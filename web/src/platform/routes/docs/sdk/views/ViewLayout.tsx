@@ -4,18 +4,14 @@ import { Text } from '@astryxdesign/core/Text';
 import { useSearchParams } from 'react-router';
 import { Badge } from '@astryxdesign/core/Badge';
 import { Stack } from '@astryxdesign/core/Stack';
-import { Button } from '@astryxdesign/core/Button';
 import { Heading } from '@astryxdesign/core/Heading';
-import { Article } from '@/components/layouts/Article';
 import references from '@/lib/generated/components.json';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { Tab, TabList } from '@astryxdesign/core/TabList';
-import { Seo, articleRouteLabels } from '@/components/Seo';
-import { PathBreadcrumb } from '@/components/breadcrumb/Path';
 import { documentationLastUpdated } from '@/lib/documentation';
 import { Table, proportional } from '@astryxdesign/core/Table';
-import { ArticleFooter, ArticleOutline } from '@/platform/components/Article';
-import { componentCatalog, componentDocumentation, documentationPaths } from '@/platform/docs';
+import { DocumentationArticle } from '@/platform/components/Article';
+import { componentCatalog, componentDocumentation } from '@/platform/docs';
 
 type ViewProperty = NonNullable<(typeof componentCatalog)[number]['properties']>[number];
 
@@ -102,152 +98,131 @@ export default function ViewLayout({
 
     // Render page-owned content within the existing article and reference-tab structure.
     return (
-        <>
-            <Seo description={article.description} hasBreadcrumbs title={article.title} />
-            <Article
-                className="documentation-content [--font-family-heading:var(--font-family-handwritten)] [&_.astryx-heading]:uppercase [&_.astryx-heading]:tracking-wide"
-                header={<PathBreadcrumb className="min-w-0 overflow-hidden" labels={articleRouteLabels} />}
-                headerAction={<Button href="/login/" label="Get Started" size="sm" variant="primary" />}
-                footer={
-                    <ArticleFooter
-                        lastUpdated={article.lastUpdated}
-                        editUrl={article.editUrl}
-                        paths={documentationPaths}
-                    />
-                }
-                sidebar={article.toc.length ? <ArticleOutline items={article.toc} /> : undefined}
-            >
-                <Stack gap={5}>
-                    <Heading id="introduction" level={1}>
-                        {component.label}
-                    </Heading>
-                    <Text as="p">
-                        {reference?.introduction ?? `${name} is supplied by the isolated LongLink renderer.`}
-                    </Text>
-                    {authoredReference && !runtime && <Text as="p">This is a LongLink-specific component.</Text>}
-                    <CodeBlock
-                        code={`longlink docs --component "${name}"`}
-                        language="bash"
-                        hasLanguageLabel={false}
-                        isWrapped
-                    />
-                    {runtime ? (
-                        children
-                    ) : (
-                        <Stack gap={5}>
-                            <TabList
-                                role="tablist"
-                                value={activeTab.value}
-                                onChange={(value) => {
-                                    // Preserve other query parameters while making each tab linkable.
-                                    const params = new URLSearchParams(searchParams);
-                                    params.set('tab', value);
-                                    setSearchParams(params, { preventScrollReset: true });
-                                }}
-                                hasDivider
-                            >
-                                {tabs.map((tab) => (
-                                    <Tab
-                                        key={tab.value}
-                                        value={tab.value}
-                                        label={tab.label}
-                                        panelId={`component-${tab.value}`}
-                                    />
-                                ))}
-                            </TabList>
-                            {/* Mount only the URL-selected panel, without parsing Solution View JSX markers. */}
-                            <Stack
-                                id={`component-${activeTab.value}`}
-                                role="tabpanel"
-                                tabIndex={0}
-                                aria-label={activeTab.label}
-                                gap={5}
-                            >
-                                {activeTab.value === 'examples' && (
-                                    <>
-                                        {examples.map((example) => (
-                                            <Stack key={example.title} gap={3}>
-                                                <Stack
-                                                    padding={4}
-                                                    className="overflow-auto rounded-lg border border-border"
-                                                    aria-label={`${example.title} preview`}
-                                                >
-                                                    {example.preview}
-                                                </Stack>
-                                                <CodeBlock
-                                                    code={example.code}
-                                                    language="jsx"
-                                                    hasLanguageLabel={false}
-                                                />
+        <DocumentationArticle article={article}>
+            <Stack gap={5}>
+                <Heading id="introduction" level={1}>
+                    {component.label}
+                </Heading>
+                <Text as="p">
+                    {reference?.introduction ?? `${name} is supplied by the isolated LongLink renderer.`}
+                </Text>
+                {authoredReference && !runtime && <Text as="p">This is a LongLink-specific component.</Text>}
+                <CodeBlock
+                    code={`longlink docs --component "${name}"`}
+                    language="bash"
+                    hasLanguageLabel={false}
+                    isWrapped
+                />
+                {runtime ? (
+                    children
+                ) : (
+                    <Stack gap={5}>
+                        <TabList
+                            role="tablist"
+                            value={activeTab.value}
+                            onChange={(value) => {
+                                // Preserve other query parameters while making each tab linkable.
+                                const params = new URLSearchParams(searchParams);
+                                params.set('tab', value);
+                                setSearchParams(params, { preventScrollReset: true });
+                            }}
+                            hasDivider
+                        >
+                            {tabs.map((tab) => (
+                                <Tab
+                                    key={tab.value}
+                                    value={tab.value}
+                                    label={tab.label}
+                                    panelId={`component-${tab.value}`}
+                                />
+                            ))}
+                        </TabList>
+                        {/* Mount only the URL-selected panel, without parsing Solution View JSX markers. */}
+                        <Stack
+                            id={`component-${activeTab.value}`}
+                            role="tabpanel"
+                            tabIndex={0}
+                            aria-label={activeTab.label}
+                            gap={5}
+                        >
+                            {activeTab.value === 'examples' && (
+                                <>
+                                    {examples.map((example) => (
+                                        <Stack key={example.title} gap={3}>
+                                            <Stack
+                                                padding={4}
+                                                className="overflow-auto rounded-lg border border-border"
+                                                aria-label={`${example.title} preview`}
+                                            >
+                                                {example.preview}
                                             </Stack>
-                                        ))}
-                                        {upstream && !examples.length && (
-                                            <Text as="p">No standalone examples are available for this component.</Text>
-                                        )}
-                                    </>
-                                )}
-                                {activeTab.value === 'properties' &&
-                                    propertyGroups.map((group) => (
-                                        <Stack key={group.name} gap={3}>
-                                            {group.name && <Heading level={2}>{group.name}</Heading>}
-                                            <Table
-                                                data={group.properties}
-                                                idKey="name"
-                                                density="compact"
-                                                columns={[
-                                                    {
-                                                        key: 'name',
-                                                        header: 'Property',
-                                                        width: proportional(1),
-                                                        renderCell: (property) => (
-                                                            <Stack gap={0}>
-                                                                <Stack direction="horizontal" align="center" gap={2}>
-                                                                    <Text>{property.name}</Text>
-                                                                    <Code className="text-sm">{property.type}</Code>
-                                                                </Stack>
-                                                                <Text type="supporting">{property.description}</Text>
-                                                            </Stack>
-                                                        ),
-                                                    },
-                                                ]}
-                                            />
+                                            <CodeBlock code={example.code} language="jsx" hasLanguageLabel={false} />
                                         </Stack>
                                     ))}
-                                {activeTab.value === 'best-practices' &&
-                                    reference &&
-                                    reference.practices.length > 0 && (
+                                    {upstream && !examples.length && (
+                                        <Text as="p">No standalone examples are available for this component.</Text>
+                                    )}
+                                </>
+                            )}
+                            {activeTab.value === 'properties' &&
+                                propertyGroups.map((group) => (
+                                    <Stack key={group.name} gap={3}>
+                                        {group.name && <Heading level={2}>{group.name}</Heading>}
                                         <Table
-                                            data={reference.practices}
-                                            idKey="description"
+                                            data={group.properties}
+                                            idKey="name"
                                             density="compact"
                                             columns={[
                                                 {
-                                                    key: 'guidance',
-                                                    header: 'Guidance',
+                                                    key: 'name',
+                                                    header: 'Property',
                                                     width: proportional(1),
-                                                    renderCell: (practice) => (
-                                                        <Badge
-                                                            label={practice.guidance ? 'Do' : 'Don’t'}
-                                                            variant={practice.guidance ? 'green' : 'red'}
-                                                        />
-                                                    ),
-                                                },
-                                                {
-                                                    key: 'description',
-                                                    header: 'Description',
-                                                    width: proportional(4),
-                                                    renderCell: (practice) => (
-                                                        <Text type="supporting">{practice.description}</Text>
+                                                    renderCell: (property) => (
+                                                        <Stack gap={0}>
+                                                            <Stack direction="horizontal" align="center" gap={2}>
+                                                                <Text>{property.name}</Text>
+                                                                <Code className="text-sm">{property.type}</Code>
+                                                            </Stack>
+                                                            <Text type="supporting">{property.description}</Text>
+                                                        </Stack>
                                                     ),
                                                 },
                                             ]}
                                         />
-                                    )}
-                            </Stack>
+                                    </Stack>
+                                ))}
+                            {activeTab.value === 'best-practices' && reference && reference.practices.length > 0 && (
+                                <Table
+                                    data={reference.practices}
+                                    idKey="description"
+                                    density="compact"
+                                    columns={[
+                                        {
+                                            key: 'guidance',
+                                            header: 'Guidance',
+                                            width: proportional(1),
+                                            renderCell: (practice) => (
+                                                <Badge
+                                                    label={practice.guidance ? 'Do' : 'Don’t'}
+                                                    variant={practice.guidance ? 'green' : 'red'}
+                                                />
+                                            ),
+                                        },
+                                        {
+                                            key: 'description',
+                                            header: 'Description',
+                                            width: proportional(4),
+                                            renderCell: (practice) => (
+                                                <Text type="supporting">{practice.description}</Text>
+                                            ),
+                                        },
+                                    ]}
+                                />
+                            )}
                         </Stack>
-                    )}
-                </Stack>
-            </Article>
-        </>
+                    </Stack>
+                )}
+            </Stack>
+        </DocumentationArticle>
     );
 }

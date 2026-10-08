@@ -1,5 +1,6 @@
 import path from 'node:path';
 import { siteUrl } from './src/site';
+import { legalPaths } from './src/platform/legal';
 import { useCasePaths } from './src/platform/usecases';
 import type { Config } from '@react-router/dev/config';
 import { documentationPaths } from './src/platform/docs';
@@ -19,9 +20,7 @@ const publicPagePaths = [
     '/login',
     '/pricing',
     ...useCasePaths,
-    '/terms',
-    '/impressum',
-    '/privacy',
+    ...legalPaths,
     '/branding/assets',
     '/branding/values',
     '/branding/comunication',
@@ -44,7 +43,7 @@ function sitemapPriority(pagePath: string): number {
     if (priority !== undefined) return priority;
 
     // Legal pages stay discoverable without competing with acquisition content.
-    if (pagePath === '/terms' || pagePath === '/impressum' || pagePath === '/privacy') return 0.3;
+    if (legalPaths.includes(pagePath)) return 0.3;
 
     // Generated component references are numerous, so keep them below curated guides.
     if (pagePath.startsWith('/docs/sdk/views/')) return 0.4;

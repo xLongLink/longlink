@@ -72,15 +72,10 @@ export function Form(props: {
             method="post"
             aria-busy={submission.submitting || undefined}
             onReset={(event) => {
-                // Clear feedback after a native reset, unless another handler cancels it.
-                const form = event.currentTarget;
+                // Clear only submission feedback, respecting canceled resets and author-owned field validity.
                 const nativeEvent = event.nativeEvent;
                 queueMicrotask(() => {
                     if (nativeEvent.defaultPrevented) return;
-
-                    for (const control of form.elements) {
-                        if (control instanceof HTMLInputElement) control.setCustomValidity('');
-                    }
 
                     setSubmission((current) => ({ ...current, error: undefined }));
                 });

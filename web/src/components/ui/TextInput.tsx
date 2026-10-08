@@ -1,6 +1,5 @@
 import { useValue } from './value';
 import type { ReactNode } from 'react';
-import { FormField } from './FormField';
 import type { FieldProps } from './types';
 import { useSize } from '@astryxdesign/core/SizeContext';
 import { TextInput as AstryxTextInput } from '@astryxdesign/core/TextInput';
@@ -26,27 +25,31 @@ export function TextInput(props: TextInputProps) {
 
     // Let the wrapper own state only when the Solution does not provide a value.
     const { defaultValue, ...control } = props;
-    const field = useValue(props.value, defaultValue ?? '', props.onChange);
+
+    const { ref, value, onChange } = useValue<string, HTMLInputElement>(
+        props.value,
+        defaultValue ?? '',
+        props.onChange
+    );
 
     // Use ordinary editable text without clearing controls or automatic focus.
     return (
-        <FormField {...props} fieldRef={field.ref} values={[field.value]}>
-            <AstryxTextInput
-                {...control}
-                value={field.value}
-                onChange={field.onChange}
-                htmlName={props.name}
-                type={props.type ?? 'text'}
-                size={size}
-                isReadOnly={false}
-                hasClear={props.hasClear ?? false}
-                hasAutoFocus={props.hasAutoFocus ?? false}
-                isLabelHidden={false}
-                isRequired={props.required ?? false}
-                isDisabled={props.disabled ?? false}
-                changeAction={undefined}
-                isLoading={false}
-            />
-        </FormField>
+        <AstryxTextInput
+            {...control}
+            ref={ref}
+            value={value}
+            onChange={onChange}
+            htmlName={props.name}
+            type={props.type ?? 'text'}
+            size={size}
+            isReadOnly={false}
+            hasClear={props.hasClear ?? false}
+            hasAutoFocus={props.hasAutoFocus ?? false}
+            isLabelHidden={false}
+            isRequired={props.required ?? false}
+            isDisabled={props.disabled ?? false}
+            changeAction={undefined}
+            isLoading={false}
+        />
     );
 }

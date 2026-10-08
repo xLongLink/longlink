@@ -19,9 +19,9 @@ import { Selector } from '@astryxdesign/core/Selector';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { Stack, StackItem } from '@astryxdesign/core/Stack';
-import { AlertDialog } from '@astryxdesign/core/AlertDialog';
 import { ProgressBar } from '@astryxdesign/core/ProgressBar';
 import { Table, proportional } from '@astryxdesign/core/Table';
+import { DeletionDialog } from '@/platform/components/Deletion';
 import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
@@ -51,36 +51,33 @@ function imageDigest(image: string) {
 
 /** Owns the deployment draft and submission for a freshly checked candidate. */
 function DeploymentReview({ update, invalidate, onClose }: DeploymentReviewProps) {
-    const [envs, setEnvs] = useState<Record<string, string>>({});
-    const [removed, setRemoved] = useState<Record<string, boolean>>({});
+    const [envs, setEnvs] = useState<Record<string, { value?: string; removed?: boolean }>>({});
 
     // Preserve configured required secrets, and require values for new required environments.
     const missingRequired = (update.candidate.metadata.environments ?? []).some(
         (environment) =>
             environment.required &&
-            (removed[environment.name] === true ||
+            (envs[environment.name]?.removed === true ||
                 (!update.candidate.configured_envs.includes(environment.name) &&
-                    (!Object.hasOwn(envs, environment.name) || !envs[environment.name].trim())))
+                    !envs[environment.name]?.value?.trim()))
     );
 
     const hasChanges =
         update.candidate.metadata.image !== update.candidate.current_image ||
-        Object.keys(envs).length > 0 ||
-        Object.values(removed).some(Boolean);
+        Object.values(envs).some((environment) => environment.value !== undefined || environment.removed === true);
 
     /** Submits the reviewed deployment while preserving untouched secrets. */
     async function updateSolution() {
         if (missingRequired || !hasChanges) return;
 
         // Send edited secrets and explicit removals, preserving omitted values.
-        const patchEnvs = {
-            ...envs,
-            ...Object.fromEntries(
-                Object.entries(removed)
-                    .filter(([, removed]) => removed)
-                    .map(([name]) => [name, null])
-            ),
-        };
+        const patchEnvs: Record<string, string | null> = {};
+
+        // Removal takes precedence without discarding the edit retained for untoggling.
+        for (const [name, environment] of Object.entries(envs)) {
+            if (environment.removed === true) patchEnvs[name] = null;
+            else if (environment.value !== undefined) patchEnvs[name] = environment.value;
+        }
 
         await api.post(`/api/v1/solutions/${update.item.id}/update`, {
             json: schemas.zSolutionPatch.parse({
@@ -113,7 +110,8 @@ function DeploymentReview({ update, invalidate, onClose }: DeploymentReviewProps
                     </Stack>
                     {(update.candidate.metadata.environments ?? []).map((environment) => {
                         const configured = update.candidate.configured_envs.includes(environment.name);
-                        const isRemoved = removed[environment.name] === true;
+                        const draft = envs[environment.name];
+                        const isRemoved = draft?.removed === true;
 
                         // Configured secrets remain hidden; blank untouched inputs preserve them.
                         return (
@@ -122,7 +120,7 @@ function DeploymentReview({ update, invalidate, onClose }: DeploymentReviewProps
                                     label={environment.name}
                                     labelTooltip={environment.description ?? undefined}
                                     type="password"
-                                    value={Object.hasOwn(envs, environment.name) ? envs[environment.name] : ''}
+                                    value={draft?.value ?? ''}
                                     isDisabled={isRemoved}
                                     isOptional={!environment.required}
                                     isRequired={environment.required && (!configured || isRemoved)}
@@ -133,13 +131,23 @@ function DeploymentReview({ update, invalidate, onClose }: DeploymentReviewProps
                                               ? 'Configured: preserve existing value'
                                               : environment.description || 'Enter value'
                                     }
-                                    onChange={(value) => setEnvs({ ...envs, [environment.name]: value })}
+                                    onChange={(value) =>
+                                        setEnvs((current) => ({
+                                            ...current,
+                                            [environment.name]: { ...current[environment.name], value },
+                                        }))
+                                    }
                                 />
                                 {configured && !environment.required && (
                                     <CheckboxInput
                                         label={`Remove ${environment.name}`}
                                         value={isRemoved}
-                                        onChange={(value) => setRemoved({ ...removed, [environment.name]: value })}
+                                        onChange={(removed) =>
+                                            setEnvs((current) => ({
+                                                ...current,
+                                                [environment.name]: { ...current[environment.name], removed },
+                                            }))
+                                        }
                                     />
                                 )}
                             </Stack>
@@ -460,7 +468,6 @@ function SolutionsSection({
     const [deletion, setDeletion] = useState<{ id: string; name: string } | null>(null);
     const [logs, setLogs] = useState<string | null>(null);
     const [, startAction] = useTransition();
-    const [isDeleting, startDeletion] = useTransition();
     const base = `/api/v1/organizations/${organization.id}`;
 
     // Keep solution refreshes scoped to the section's resource.
@@ -595,26 +602,23 @@ function SolutionsSection({
                     </Stack>
                 </Dialog>
             )}
-            {deletion && (
-                <AlertDialog
-                    isOpen
-                    title="Delete solution"
-                    description={`Delete solution ${deletion.name}?`}
-                    actionLabel="Delete"
-                    isActionLoading={isDeleting}
-                    onOpenChange={(open) => {
-                        if (!open) setDeletion(null);
-                    }}
-                    onAction={() =>
-                        startDeletion(async () => {
-                            // Refresh Solutions only after the delete request succeeds.
-                            await api.delete(`/api/v1/solutions/${deletion.id}`);
-                            await invalidateSolutions();
-                            setDeletion(null);
-                        })
-                    }
-                />
-            )}
+            <DeletionDialog
+                confirmation={
+                    deletion
+                        ? {
+                              title: 'Delete solution',
+                              description: `Delete solution ${deletion.name}?`,
+                              onDelete: async () => {
+                                  // Refresh Solutions only after the delete request succeeds.
+                                  await api.delete(`/api/v1/solutions/${deletion.id}`);
+                                  await invalidateSolutions();
+                                  setDeletion(null);
+                              },
+                          }
+                        : null
+                }
+                onClose={() => setDeletion(null)}
+            />
         </>
     );
 }

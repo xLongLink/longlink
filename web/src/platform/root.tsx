@@ -1,7 +1,32 @@
 import type { ReactNode } from 'react';
+import { Root } from '@/components/Root';
+import { useLocation, useNavigate } from 'react-router';
 import { Document } from '@/components/layouts/Document';
+import { MenuNavigationContext } from '@/components/ui/Menu';
 
-export { Root as default } from '@/components/Root';
+/** Supplies native Platform Menus with router-owned fragment navigation. */
+export default function PlatformRoot() {
+    const location = useLocation();
+    const navigate = useNavigate();
+
+    // Keep this host adapter out of the SDK application and its sandbox-local Menu provider.
+    return (
+        <MenuNavigationContext
+            value={{
+                hash: location.hash,
+                select: (id) => {
+                    void navigate({
+                        pathname: location.pathname,
+                        search: location.search,
+                        hash: `#${id}`,
+                    });
+                },
+            }}
+        >
+            <Root />
+        </MenuNavigationContext>
+    );
+}
 
 /** Adds website analytics only to the Platform document. */
 export function Layout({ children }: { children: ReactNode }) {
