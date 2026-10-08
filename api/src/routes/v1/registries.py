@@ -28,7 +28,7 @@ async def list_registries(organization_id: UUID, user: User = Depends(authuser),
         select(RegistryConnection)
         .options(defer(RegistryConnection.credential))
         .where(col(RegistryConnection.organization_id) == organization_id)
-        .order_by(col(RegistryConnection.provider), col(RegistryConnection.username), col(RegistryConnection.id))
+        .order_by(col(RegistryConnection.username), col(RegistryConnection.id))
     )
     return result.all()
 
@@ -58,7 +58,6 @@ async def create_registry(
     # Store new credentials within the authorized organization.
     connection = RegistryConnection(
         organization_id=organization_id,
-        provider=payload.provider,
         username=username,
         credential=payload.credential.get_secret_value(),
     )

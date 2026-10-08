@@ -53,12 +53,7 @@ async def inspect(session: AsyncSession, organization_id: UUID | None, image: Im
 
     # Only matching credentials in the caller-authorized organization may reach this registry.
     result = await session.scalars(
-        select(RegistryConnection)
-        .where(
-            col(RegistryConnection.organization_id) == organization_id,
-            col(RegistryConnection.provider) == RegistryProvider.ghcr,
-        )
-        .order_by(col(RegistryConnection.id))
+        select(RegistryConnection).where(col(RegistryConnection.organization_id) == organization_id).order_by(col(RegistryConnection.id))
     )
     connections = result.all()
     for connection in connections:

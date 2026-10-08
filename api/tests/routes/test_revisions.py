@@ -8,6 +8,7 @@ from factories import create_solution, create_organization
 from sqlalchemy import func, select
 from src.errors import NotFoundError
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import selectinload
 from src.models.roles import OrganizationRoles
 from src.models.types import Image
 from src.models.metadata import LongLinkMetadata, EnvironmentMetadata
@@ -212,7 +213,7 @@ async def test_update_reresolves_moved_tag_and_enforces_required_envs(
     assert keep_removed.status_code == 422
     assert success.status_code == 204
     async with session_scope() as session:
-        current = await session.get(Solution, solution.id)
+        current = await session.get(Solution, solution.id, options=(selectinload(Solution.desired_revision),))
         assert current is not None
         assert current.desired_revision.image == resolved.image
         assert current.desired_revision.source == source
@@ -329,7 +330,7 @@ async def test_release_inspection_revalidates_concurrent_desired_changes(
     response = await clients[0].request(method, url, json={})
     assert response.status_code == 409
     async with session_scope() as session:
-        current = await session.get(Solution, solution.id)
+        current = await session.get(Solution, solution.id, options=(selectinload(Solution.desired_revision),))
         assert current is not None
         assert current.desired_revision_id == replacement_id
         assert current.desired_revision.envs == {"OTHER": "concurrent-secret"}
@@ -354,7 +355,7 @@ async def test_environment_patch_validates_merged_limits(
     assert (await clients[0].post(url, json={"envs": {"NEW": "secret"}})).status_code == 422
     assert (await clients[0].post(url, json={"envs": {"NEW": "", "KEY_0": None}})).status_code == 204
     async with session_scope() as session:
-        current = await session.get(Solution, solution.id)
+        current = await session.get(Solution, solution.id, options=(selectinload(Solution.desired_revision),))
         assert current is not None
         assert len(current.desired_revision.envs) == 100
         assert current.desired_revision.envs["NEW"] == ""
@@ -399,7 +400,7 @@ async def test_simultaneous_source_updates_create_only_one_revision(
 
     # Verify the successful request's complete snapshot was persisted.
     async with session_scope() as session:
-        current = await session.get(Solution, solution.id)
+        current = await session.get(Solution, solution.id, options=(selectinload(Solution.desired_revision),))
         assert current is not None
         assert current.desired_revision.envs == expected_envs
         assert await session.scalar(select(func.count()).select_from(Revision).where(col(Revision.solution_id) == solution.id)) == 2

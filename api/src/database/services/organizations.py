@@ -6,7 +6,7 @@ from sqlalchemy import Select, func, delete, select
 from sqlalchemy import update as sql_update
 from src.errors import ConflictError, NotFoundError, ForbiddenError, UnavailableError
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import defer, load_only, raiseload, joinedload, contains_eager
+from sqlalchemy.orm import defer, load_only, joinedload, selectinload, contains_eager
 from collections.abc import Sequence
 from longlink.shared import audit as shared_audit
 from longlink.shared import models as shared_models
@@ -18,7 +18,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.models.organizations import OrganizationInvitationCreate
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
-from src.database.models.solutions import Solution
+from src.database.models.solutions import Revision, Solution
 from src.database.models.operations import Operation
 from src.database.models.association import UserOrganization
 from src.database.models.invitations import OrganizationInvitation
@@ -73,7 +73,6 @@ async def solution_runtime_access(
         select(Solution, col(UserOrganization.role), ComputeRegistry)
         .execution_options(populate_existing=True)
         .options(
-            raiseload(Solution.desired_revision),
             load_only(
                 Solution.id,
                 Solution.organization_id,
@@ -133,7 +132,7 @@ async def infrastructure(session: AsyncSession, organization_id: UUID) -> tuple[
 async def solution_infrastructure(session: AsyncSession, solution_id: UUID) -> tuple[Solution, Organization, ComputeRegistry] | None:
     """Return one Solution and its assigned infrastructure."""
 
-    # Load the Solution and its infrastructure in one lifecycle query.
+    # Load infrastructure and the failure state needed to select the effective release, not its environments.
     statement = (
         _infrastructure_query()
         .add_columns(Solution)
@@ -147,6 +146,7 @@ async def solution_infrastructure(session: AsyncSession, solution_id: UUID) -> t
                 Solution.status,
                 Solution.deleted_at,
             ),
+            selectinload(Solution.desired_revision).load_only(Revision.failed, raiseload=True),
         )
         .where(col(Solution.id) == solution_id)
     )
@@ -179,10 +179,13 @@ async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Seq
 async def solutions(session: AsyncSession, organization_id: UUID) -> Sequence[Solution]:
     """Return solutions for one organization."""
 
-    # Query active organization solutions in one session.
+    # Load active Solution summaries and pending deployment state without decrypting environments or secrets.
     statement = (
         select(Solution)
-        .options(defer(Solution.secrets))
+        .options(
+            defer(Solution.secrets),
+            selectinload(Solution.desired_revision).load_only(Revision.failed, raiseload=True),
+        )
         .where(
             col(Solution.organization_id) == organization_id,
             col(Solution.deleted_at).is_(None),

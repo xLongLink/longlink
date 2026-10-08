@@ -24,7 +24,6 @@ async def test_owned_requires_matching_unexpired_row(
     organization = await create_organization(users[0], name="owned")
     persisted_expires_at = datetime.now(UTC).replace(microsecond=0) + timedelta(seconds=expiry_seconds)
     activity = OrganizationActivity(
-        id=organization.id,
         organization_id=organization.id,
         expires_at=persisted_expires_at,
     )
