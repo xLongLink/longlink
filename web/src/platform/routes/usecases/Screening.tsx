@@ -89,8 +89,8 @@ export default function Screening() {
                                                 justify="center"
                                                 className="w-full max-w-64"
                                             >
-                                                Import listings, financial statements, market data, and property
-                                                documents
+                                                Consolidate property listings, financial statements, market data, and
+                                                documents.
                                             </Text>
                                         </Stack>
                                     </Stack>
@@ -117,8 +117,8 @@ export default function Screening() {
                                                 justify="center"
                                                 className="w-full max-w-64"
                                             >
-                                                Calculate investment metrics, apply screening criteria, and identify
-                                                risks
+                                                Calculate yields, compare investment criteria, and flag financial or
+                                                legal risks.
                                             </Text>
                                         </Stack>
                                     </Stack>
@@ -144,7 +144,7 @@ export default function Screening() {
                                             justify="center"
                                             className="w-full max-w-64"
                                         >
-                                            Score opportunities, flag exceptions, and produce review-ready reports
+                                            Produce standardized investment scores and reports for acquisition review.
                                         </Text>
                                     </Stack>
                                 </Stack>
@@ -160,9 +160,10 @@ export default function Screening() {
                             Why LongLink?
                         </Heading>
                         <Text as="p" color="secondary" textWrap="pretty">
-                            Build property screening applications around your investment criteria, data sources, and
-                            approval workflows. LongLink helps you automate repetitive analysis while keeping control of
-                            your models, integrations, and application logic.
+                            Build property screening applications tailored to your investment strategy, rather than
+                            adapting your processes to a fixed solution. Connect your data sources, define your
+                            evaluation criteria, and automate acquisition workflows while retaining control over your
+                            application, integrations, and business logic.
                         </Text>
                         <Stack gap={3} align="center" paddingBlockStart={6}>
                             <Text as="p" size="xl" weight="semibold" justify="center" textWrap="balance">
