@@ -8,35 +8,15 @@ from longlink.cli.main import main
 from longlink.database import migrations as database_migrations
 
 
-@pytest.mark.parametrize(
-    ("arguments", "ci_paths", "project_name"),
-    [
-        pytest.param(
-            ["--folder", "sample-solution"],
-            [],
-            "sample-solution",
-            id="default",
-        ),
-        pytest.param(
-            ["--folder", "sample-solution", "--ci", "github", "--name", "sample"],
-            [
-                ".github/workflows/release.yml",
-                ".github/workflows/tests.yml",
-            ],
-            "sample",
-            id="github-ci",
-        ),
-    ],
-)
-def test_init_copies_requested_project_scaffold(arguments: list[str], ci_paths: list[str], project_name: str, tmp_path: Path) -> None:
-    """Copy the requested project scaffold into the target folder."""
+def test_init_copies_github_project_scaffold_with_custom_name(tmp_path: Path) -> None:
+    """Copy the project scaffold with requested GitHub workflows and package name."""
 
     # Arrange
     runner = CliRunner()
 
     with chdir(tmp_path):
         # Act
-        result = runner.invoke(main, ["init", *arguments])
+        result = runner.invoke(main, ["init", "--folder", "sample-solution", "--ci", "github", "--name", "sample"])
 
         # Assert
         target = Path.cwd() / "sample-solution"
@@ -47,16 +27,15 @@ def test_init_copies_requested_project_scaffold(arguments: list[str], ci_paths: 
             "src/routes",
             "src/schemas",
             "tests/test_app.py",
-            *ci_paths,
+            ".github/workflows/release.yml",
+            ".github/workflows/tests.yml",
         ]:
             assert (target / path).exists()
-        if not ci_paths:
-            assert not (target / ".github").exists()
         main_source = (target / "main.py").read_text(encoding="utf-8")
         assert "app = LongLink()" in main_source
         assert "app.include_router(items.router)" in main_source
         pyproject = (target / "pyproject.toml").read_text(encoding="utf-8")
-        assert f'name = "{project_name}"' in pyproject
+        assert 'name = "sample"' in pyproject
         assert "[tool.longlink]" in pyproject
         assert 'environments = "src.envs:Env"' in pyproject
         assert not (target / "uv.lock").exists()
@@ -113,6 +92,10 @@ def test_initialized_project_applies_bundled_migration_through_deployment_entryp
         result = runner.invoke(main, ["init", "--folder", "sample-solution"])
         assert result.exit_code == 0
         target = Path.cwd() / "sample-solution"
+
+        # Default initialization uses the folder name and omits provider-specific automation.
+        assert 'name = "sample-solution"' in (target / "pyproject.toml").read_text(encoding="utf-8")
+        assert not (target / ".github").exists()
 
         # Act
         with chdir(target):

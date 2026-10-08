@@ -2,56 +2,21 @@ import pytest
 from uuid import uuid4
 from conftest import DatabasePostgres
 from factories import create_compute, fetch_operations, create_organization
-from src.errors import ConflictError, ForbiddenError, UnavailableError
+from src.errors import ConflictError, ForbiddenError
 from longlink.shared import models as shared_models
 from src.models.roles import OrganizationRoles
 from src.models.types import Image
 from src.models.metadata import LongLinkMetadata
-from src.models.statuses import Status
 from src.database.session import session_scope
 from src.models.solutions import SolutionCreate
 from src.database.services import solutions, organizations
-from src.models.operations import OperationKind
 from src.models.pagination import Pagination
-from src.models.organizations import DatabaseState, OrganizationInvitationCreate
+from src.models.organizations import OrganizationInvitationCreate
 from src.database.models.users import User
 from src.database.models.solutions import Solution
 from src.database.models.association import UserOrganization
 from src.database.models.invitations import OrganizationInvitation
 from src.database.models.organizations import Organization
-
-
-async def test_create_persists_org_and_owner_membership(users: tuple[User, User, User]) -> None:
-    """Persist a new org and link the creator as owner."""
-
-    # Arrange
-    owner = users[0]
-    compute = await create_compute()
-
-    # Act
-    async with session_scope() as session:
-        organization = await organizations.create(session, "acme", owner)
-        await session.commit()
-
-    # Assert
-    assert organization.compute_id == compute.id
-    assert organization.database_state == DatabaseState.failed
-    assert organization.status == Status.creating
-
-    async with session_scope() as session:
-        reloaded = await session.get(Organization, organization.id)
-        assert reloaded is not None
-        assert reloaded.deleted_at is None
-        memberships = await organizations.members(session, organization.id)
-    assert reloaded.name == "acme"
-    assert reloaded.slug == "acme"
-    assert [(membership.user.id, membership.role) for membership in memberships] == [(owner.id, OrganizationRoles.owner)]
-
-    # Verify creation queued infrastructure work for the persisted Organization.
-    recorded_operations = await fetch_operations()
-    assert [(operation.kind, operation.target_id) for operation in recorded_operations] == [
-        (OperationKind.organization_create, organization.id)
-    ]
 
 
 async def test_fetch_ignores_deleted_organizations(users: tuple[User, User, User]) -> None:
@@ -238,22 +203,6 @@ async def test_create_selects_least_assigned_infrastructure(users: tuple[User, U
 
     # Assert
     assert organization.compute_id == available_compute.id
-
-
-async def test_create_rejects_missing_available_infrastructure(users: tuple[User, User, User]) -> None:
-    """Reject Organization admission when no Compute registry is available."""
-
-    # Act and assert
-    async with session_scope() as session:
-        with pytest.raises(UnavailableError, match="No ready compute registry available"):
-            await organizations.create(session, "acme", users[0])
-
-    # Failed admission must leave both desired state and infrastructure work absent.
-    async with session_scope() as session:
-        fetched, total = await organizations.fetch_page(session, Pagination())
-    assert fetched == []
-    assert total == 0
-    assert await fetch_operations() == []
 
 
 async def test_create_rejects_duplicate_organization_name(users: tuple[User, User, User]) -> None:

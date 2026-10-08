@@ -31,7 +31,7 @@ async def test_authenticated_solution_update_rejects_untrusted_origin_before_ins
 
         raise AssertionError("untrusted solution update must not inspect image metadata")
 
-    monkeypatch.setattr("src.routes.v1.solutions.images.metadata", unexpected_metadata)
+    monkeypatch.setattr("src.routes.v1.solutions.images.required_metadata", unexpected_metadata)
 
     # Act
     response = await clients[0].post(

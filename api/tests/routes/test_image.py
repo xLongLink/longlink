@@ -1,3 +1,4 @@
+import httpx2
 import pytest
 import pytest_asyncio
 from httpx2 import AsyncClient
@@ -29,7 +30,7 @@ async def test_inspect_image_requires_authentication_before_metadata_inspection(
 
         raise AssertionError("metadata inspection should require authentication")
 
-    monkeypatch.setattr("src.routes.v1.solutions.images.metadata", unexpected_metadata)
+    monkeypatch.setattr("src.routes.v1.solutions.images.required_metadata", unexpected_metadata)
 
     # Act
     response = await client.get("/api/v1/image?image=ghcr.io/longlink/dashboard:latest")
@@ -43,10 +44,15 @@ async def test_inspect_image_returns_404_when_metadata_missing(authenticated_cli
     """Return a not-found error when the image has no LongLink metadata."""
 
     # Arrange
-    async def fake_metadata(_image: Image, _connection: object | None = None) -> None:
-        """Pretend image inspection found no LongLink metadata."""
+    def respond(request: httpx2.Request) -> httpx2.Response:
+        """Return an unavailable image without permitting later registry requests."""
 
-    monkeypatch.setattr("src.routes.v1.solutions.images.metadata", fake_metadata)
+        assert str(request.url) == "https://ghcr.io/token?service=ghcr.io&scope=repository%3Alonglink%2Fdashboard%3Apull"
+        assert "Authorization" not in request.headers
+        return httpx2.Response(503)
+
+    transport = httpx2.MockTransport(respond)
+    monkeypatch.setattr(httpx2.AsyncHTTPTransport, "handle_async_request", transport.handle_async_request)
 
     # Act
     response = await authenticated_client.get("/api/v1/image?image=ghcr.io/longlink/dashboard:latest")
@@ -69,7 +75,7 @@ async def test_inspect_image_returns_declared_metadata(authenticated_client: Asy
             environments=[EnvironmentMetadata(name="API_KEY", description="API key", required=True)],
         )
 
-    monkeypatch.setattr("src.routes.v1.solutions.images.metadata", fake_metadata)
+    monkeypatch.setattr("src.routes.v1.solutions.images.required_metadata", fake_metadata)
 
     # Act
     response = await authenticated_client.get("/api/v1/image?image=ghcr.io/longlink/dashboard:latest")

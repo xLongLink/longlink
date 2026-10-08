@@ -160,6 +160,16 @@ async def test_failed_update_recovery(users: tuple[User, User, User], monkeypatc
             assert current.desired_revision.failed
         return
 
+    # Assert: failure state is committed before the queued fallback is consumed.
+    async with session_scope() as session:
+        persisted_solution = await session.get(Solution, solution.id)
+        assert persisted_solution is not None
+        assert persisted_solution.status == Status.failed
+        persisted_revision = await session.get(Revision, desired_id)
+        assert persisted_revision is not None
+        assert persisted_revision.failed is True
+
+    # Act: consume the exact fallback queued by the failed update.
     recovery = await claim_operation()
     assert recovery is not None
     assert (recovery.kind, recovery.target_id) == (OperationKind.solution_deploy, good_id)

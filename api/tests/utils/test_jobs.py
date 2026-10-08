@@ -266,6 +266,7 @@ SCHEDULER_FAILURES = [
 ]
 
 
+@pytest.mark.no_db
 @pytest.mark.parametrize(("polling_failure", "execution_failure"), SCHEDULER_FAILURES)
 async def test_scheduler_recovers_from_worker_failures(
     monkeypatch: pytest.MonkeyPatch,

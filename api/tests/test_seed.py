@@ -66,7 +66,7 @@ async def test_local_seed_creates_example_through_api(
         assert image == "localhost:15000/sample:dev"
         return LongLinkMetadata(image=Image("localhost:15000/sample@sha256:resolved"))
 
-    monkeypatch.setattr("src.routes.v1.solutions.images.metadata", metadata)
+    monkeypatch.setattr("src.routes.v1.solutions.images.required_metadata", metadata)
 
     # Act
     scheduler = asyncio.create_task(jobs.run_operation_scheduler())

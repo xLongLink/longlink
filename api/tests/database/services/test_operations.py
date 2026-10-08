@@ -315,30 +315,3 @@ async def test_operations_service_complete_reenqueues_stale_effective_revision(
     follow_ups = [item for item in await fetch_operations() if item.target_id == desired_revision.id]
     assert len(follow_ups) == 1
     assert follow_ups[0].kind == OperationKind.solution_deploy
-
-
-async def test_operations_service_fail_marks_revision_and_enqueues_fallback(
-    pending_revision_change: tuple[Solution, Revision, Revision],
-) -> None:
-    """Mark a failed first deploy and requeue its last deployed revision."""
-
-    # Arrange
-    solution, deployed_revision, desired_revision = pending_revision_change
-    deploy = await queue(kind=OperationKind.solution_deploy, target_id=desired_revision.id)
-    assert await claim_operation() is not None
-
-    # Act
-    failed = await fail_operation(deploy.id, "deploy failed")
-
-    # Assert
-    assert failed is not None
-    async with session_scope() as session:
-        persisted_revision = await session.get(Revision, desired_revision.id)
-        persisted_solution = await session.get(Solution, solution.id)
-        assert persisted_revision is not None
-        assert persisted_revision.failed is True
-        assert persisted_solution is not None
-        assert persisted_solution.status == Status.failed
-    fallbacks = [item for item in await fetch_operations() if item.target_id == deployed_revision.id]
-    assert len(fallbacks) == 1
-    assert fallbacks[0].kind == OperationKind.solution_deploy
