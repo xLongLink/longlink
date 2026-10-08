@@ -295,22 +295,14 @@ if (document.parseDiagnostics.length) {
 const declarations = document.statements.flatMap((statement) => {
     const declaration = ts.isVariableStatement(statement) ? statement.declarationList.declarations[0] : statement;
 
-    // Publish runtime bindings and their documented prop types, not editor-only namespaces.
-    if (
-        !ts.isVariableDeclaration(declaration) &&
-        !ts.isFunctionDeclaration(declaration) &&
-        !ts.isTypeAliasDeclaration(declaration)
-    )
-        return [];
+    // Publish runtime bindings and their documented props, not editor-only types or namespaces.
+    if (!ts.isVariableDeclaration(declaration) && !ts.isFunctionDeclaration(declaration)) return [];
     const name = declaration.name?.getText(document);
     if (!name) return [];
 
     // Keep guide-only bindings available to editors without publishing standalone catalog entries.
     const tags = ts.getJSDocTags(statement);
     if (tags.some((tag) => tag.tagName.text === 'ignore')) return [];
-
-    // Include shared prop types only when explicitly assigned to a documentation entry.
-    if (ts.isTypeAliasDeclaration(declaration) && !tags.some((tag) => tag.tagName.text === 'category')) return [];
 
     // Read category identity from the editor declaration and retain the published category order.
     const category = tags.find((tag) => tag.tagName.text === 'category')?.comment;
@@ -352,7 +344,7 @@ const declarations = document.statements.flatMap((statement) => {
     ];
 });
 
-// Preserve declaration order within a group, and expose only the shared catalog contract.
+// Preserve member and property order within a group, and expose only the shared catalog contract.
 const groups = new Map();
 for (const entry of declarations) {
     const existing = groups.get(entry.name);
@@ -394,7 +386,6 @@ for (const entry of components) {
 
     references.push({
         name: entry.name,
-        url: `https://astryx.atmeta.com/components/${parentName ?? entry.name}`,
         introduction:
             introductions.get(entry.name) ??
             detail.usage?.description ??
@@ -449,7 +440,14 @@ const outputs = [
     },
     {
         filename: path.resolve(root, '../sdk/longlink/.static/jsx/components.json'),
-        data: components,
+        data: components.map(({ properties, ...component }) => ({
+            ...component,
+            ...(properties
+                ? {
+                      properties: properties.map(({ name, type, description }) => ({ name, type, description })),
+                  }
+                : {}),
+        })),
     },
 ];
 

@@ -34,7 +34,7 @@ vp fmt --write     # Formats the code
 
 ## Theme
 
-Theme preferences are defined in `src/theme.ts` and applied through the root provider. `src/lib/generated/stone.css` is a committed generated artifact; do not edit it directly. Run `vp run theme` after changing `src/theme.ts`.
+Theme preferences are authored in `src/theme.ts`. Applications and the isolated View runtime import the built theme from `src/lib/generated/stone.js` alongside `stone.css`, avoiding runtime style generation. The CSS, JavaScript, and declaration files (`stone.d.ts` and `stone.variants.d.ts`) are committed generated artifacts; do not edit them directly. Run `vp run theme` after changing `src/theme.ts`.
 
 ## Primitives
 

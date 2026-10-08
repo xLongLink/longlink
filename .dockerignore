@@ -59,5 +59,8 @@ sdk/dev
 sdk/longlink/.static/web
 web/src/lib/generated/*
 !web/src/lib/generated/stone.css
+!web/src/lib/generated/stone.js
+!web/src/lib/generated/stone.d.ts
+!web/src/lib/generated/stone.variants.d.ts
 !web/src/lib/generated/platform-api-v1/
 !web/src/lib/generated/platform-api-v1/**

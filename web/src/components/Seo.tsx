@@ -1,29 +1,26 @@
 import { siteName, siteUrl } from '@/site';
 import { useLocation } from 'react-router';
 import { buildBreadcrumbs } from '@/components/breadcrumb/text';
+import { comparisonPages, useCasePages } from '@/platform/usecases';
 
 /** Labels for public article route segments shared with visible breadcrumbs. */
 export const articleRouteLabels: Record<string, string> = {
-    'approvals-and-decisions': 'Approvals & decisions',
     api: 'Platform',
     assets: 'Brand assets',
-    'cases-and-projects': 'Cases & projects',
-    'compliance-and-quality': 'Compliance & quality',
     compare: 'Compare',
     comunication: 'Communication',
     docs: 'Documentation',
-    'longlink-vs-retool': 'LongLink vs Retool',
-    'longlink-vs-lovable': 'LongLink vs Lovable',
-    'longlink-vs-windmill': 'LongLink vs Windmill',
-    'longlink-vs-microsoft-power-apps': 'LongLink vs Microsoft Power Apps',
-    'longlink-vs-replit': 'LongLink vs Replit',
-    'longlink-vs-appsmith': 'LongLink vs Appsmith',
-    'longlink-vs-superblocks': 'LongLink vs Superblocks',
-    'longlink-vs-fastapi': 'LongLink vs FastAPI',
-    'longlink-vs-reflex': 'LongLink vs Reflex',
     sdk: 'Solutions',
     'use-cases': 'Use cases',
     views: 'Views',
+
+    // Keep authored page labels in their navigation catalogs without replacing section labels.
+    ...Object.fromEntries([
+        ...useCasePages
+            .filter(({ path }) => path !== '/use-cases')
+            .map(({ path, label }) => [path.slice('/use-cases/'.length), label] as const),
+        ...comparisonPages.map(({ path, label }) => [path.slice('/compare/'.length), `LongLink vs ${label}`] as const),
+    ]),
 };
 
 /** Returns the canonical path with the site-wide trailing-slash convention. */
@@ -83,16 +80,6 @@ export function Seo({
                     dangerouslySetInnerHTML={{ __html: JSON.stringify(schema).replaceAll('<', '\\u003c') }}
                 />
             ) : null}
-        </>
-    );
-}
-
-/** Prevents indexing without publishing canonical or social metadata for a private page. */
-export function NoIndex({ title }: { title: string }) {
-    return (
-        <>
-            <title>{title}</title>
-            <meta name="robots" content="noindex, nofollow" />
         </>
     );
 }

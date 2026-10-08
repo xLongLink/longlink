@@ -1,6 +1,6 @@
 import { ApiError } from '@/lib/api';
-import { NoIndex } from '@/components/Seo';
 import Brand from '@/platform/layouts/Brand';
+import { NoIndex } from '@/components/NoIndex';
 import { Navigate, Outlet } from 'react-router';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Banner } from '@astryxdesign/core/Banner';

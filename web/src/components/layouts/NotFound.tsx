@@ -1,4 +1,4 @@
-import { NoIndex } from '@/components/Seo';
+import { NoIndex } from '@/components/NoIndex';
 import { PageError } from '@/components/Utils';
 
 /** Renders the shared 404 state for unknown or unavailable routes. */

@@ -1,14 +1,14 @@
 import type { z } from 'zod';
 import { useState } from 'react';
-import { NoIndex } from '@/components/Seo';
 import { useApi } from '@/lib/hooks/use-api';
+import { NoIndex } from '@/components/NoIndex';
 import { Text } from '@astryxdesign/core/Text';
 import { Avatar } from '@/components/ui/Avatar';
 import { Badge } from '@astryxdesign/core/Badge';
 import { Stack } from '@astryxdesign/core/Stack';
-import { Button } from '@astryxdesign/core/Button';
 import { Heading } from '@astryxdesign/core/Heading';
 import { Timestamp } from '@astryxdesign/core/Timestamp';
+import { Pagination } from '@astryxdesign/core/Pagination';
 import { Table, proportional } from '@astryxdesign/core/Table';
 import type { zPageAdminUserSummary } from '@/lib/generated/platform-api-v1/zod.gen';
 
@@ -60,10 +60,7 @@ export default function Users() {
                         },
                     ]}
                 />
-                <Stack direction="horizontal" gap={2} justify="between">
-                    <Button label="Previous" isDisabled={page === 1} onClick={() => setPage(page - 1)} />
-                    <Button label="Next" isDisabled={users.total <= page * 25} onClick={() => setPage(page + 1)} />
-                </Stack>
+                <Pagination page={page} onChange={setPage} totalItems={users.total} pageSize={25} variant="none" />
             </Stack>
         </Stack>
     );
