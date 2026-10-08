@@ -151,7 +151,6 @@ async def test_solution_delete_removes_provider_state_and_tombstone(
         assert await session.get(Solution, solution.id) is None
 
 
-@pytest.mark.usefixtures("database_runtime")
 async def test_solution_creation_applies_user_and_managed_environment_values(
     users: tuple[User, User, User],
     monkeypatch: pytest.MonkeyPatch,
@@ -267,7 +266,6 @@ async def test_solution_creation_applies_user_and_managed_environment_values(
         assert updated.deployed_revision_id == revision_id
 
 
-@pytest.mark.usefixtures("database_runtime")
 async def test_solution_creation_preserves_schema_failure_before_storage_authorization(
     users: tuple[User, User, User],
     monkeypatch: pytest.MonkeyPatch,
@@ -464,7 +462,6 @@ async def test_solution_lifecycle_skips_missing_target_without_constructing_prov
     assert await operation(uuid4()) is None
 
 
-@pytest.mark.usefixtures("database_runtime")
 async def test_solution_creation_skips_deployment_when_deleted_before_credential_persistence(
     users: tuple[User, User, User],
     monkeypatch: pytest.MonkeyPatch,

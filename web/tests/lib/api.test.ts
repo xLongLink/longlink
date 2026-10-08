@@ -24,17 +24,17 @@ describe('api error mapping', () => {
     });
 
     it.each([
-        { name: 'blank detail', response: () => Response.json({ detail: '   ' }, { status: 422 }), status: 422 },
-        { name: 'missing detail', response: () => Response.json({}, { status: 500 }), status: 500 },
-        { name: 'non-string detail', response: () => Response.json({ detail: 123 }, { status: 422 }), status: 422 },
+        { name: 'blank detail', response: () => Response.json({ detail: '   ' }, { status: 422 }) },
+        { name: 'missing detail', response: () => Response.json({}, { status: 500 }) },
+        { name: 'non-string detail', response: () => Response.json({ detail: 123 }, { status: 422 }) },
         {
             name: 'non-JSON body',
             response: () => new Response('boom', { headers: { 'Content-Type': 'text/plain' }, status: 500 }),
-            status: 500,
         },
-    ])('falls back for a $name', async ({ response, status }) => {
+    ])('falls back for a $name', async ({ response }) => {
         // Arrange
-        vi.stubGlobal('fetch', async () => response());
+        const serverResponse = response();
+        vi.stubGlobal('fetch', async () => serverResponse);
 
         // Act
         const request = api.get('https://api.example/organizations');
@@ -43,7 +43,7 @@ describe('api error mapping', () => {
         await expect(request).rejects.toBeInstanceOf(ApiError);
         await expect(request).rejects.toMatchObject({
             message: 'The server could not complete the request. Please try again.',
-            status,
+            status: serverResponse.status,
         });
     });
 

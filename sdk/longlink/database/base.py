@@ -68,8 +68,9 @@ def create_engine(env: Envs) -> AsyncEngine:
     dburl = database_url(env)
     engine_kwargs: dict[str, object] = {"hide_parameters": True}
 
-    # Configure connection health checks and reuse only for the production database.
+    # Retain one idle connection and configure health checks only for the production database.
     if env.ENV == "production":
+        engine_kwargs["pool_size"] = 1
         engine_kwargs["pool_pre_ping"] = True
         engine_kwargs["pool_recycle"] = 20
         engine_kwargs["pool_use_lifo"] = True

@@ -10,6 +10,7 @@ from fsspec.implementations.local import LocalFileSystem
 from fsspec.implementations.memory import MemoryFileSystem
 
 UNSAFE_STORAGE_SCOPES = [
+    pytest.param(None, "generated", "Storage prefixes require a bucket", id="missing-bucket"),
     ("acme", "../shared/", "Storage prefixes must be relative paths inside a bucket"),
     ("acme", "/shared/", "Storage prefixes must be relative paths inside a bucket"),
     ("acme", ".", "Storage prefixes must be relative paths inside a bucket"),
@@ -20,7 +21,7 @@ UNSAFE_STORAGE_SCOPES = [
 
 
 @pytest.mark.parametrize(("bucket", "prefix", "message"), UNSAFE_STORAGE_SCOPES)
-def test_storage_requires_safe_bucket_scope(monkeypatch: pytest.MonkeyPatch, bucket: str, prefix: str, message: str) -> None:
+def test_storage_requires_safe_bucket_scope(monkeypatch: pytest.MonkeyPatch, bucket: str | None, prefix: str, message: str) -> None:
     """Reject unsafe storage scopes before filesystem selection."""
 
     # Arrange
@@ -70,18 +71,6 @@ def test_production_storage_passes_configured_ca_to_s3_client(production_setting
     assert isinstance(filesystem, DirFileSystem)
     certificate = Path(filesystem.fs.client_kwargs["verify"])
     assert certificate.read_text(encoding="utf-8") == ca_certificate
-
-
-def test_storage_rejects_prefix_without_bucket(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Require a bucket before constructing a scoped storage prefix."""
-
-    # Arrange
-    monkeypatch.setattr(storage_base.fsspec, "filesystem", lambda *_args, **_kwargs: pytest.fail("filesystem was constructed"))
-    settings = Envs(ENV="testing", STORAGE_PREFIX="generated")
-
-    # Act and assert
-    with pytest.raises(ValueError, match="Storage prefixes require a bucket"):
-        storage_base.create_fs(settings)
 
 
 @pytest.mark.parametrize(("environment", "expected_filesystem"), [("testing", MemoryFileSystem), ("development", LocalFileSystem)])

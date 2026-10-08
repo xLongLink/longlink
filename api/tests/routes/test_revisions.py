@@ -100,22 +100,19 @@ async def test_update_rejects_stale_revision(
     organization = await create_organization(users[0])
     solution = await create_solution(organization, envs={"KEEP": "private-value", "DROP": "old-value"})
     url = f"/api/v1/solutions/{solution.id}/update"
-    inspected: list[str] = []
 
-    async def metadata(image: Image, _connection: object | None = None) -> LongLinkMetadata:
-        """Record whether stale submissions reach image resolution."""
+    async def unexpected_metadata(_image: Image, _connection: object | None = None) -> LongLinkMetadata:
+        """Fail if a stale submission reaches image resolution."""
 
-        inspected.append(image)
-        return LongLinkMetadata(image=image)
+        raise AssertionError("stale update must not inspect image metadata")
 
-    monkeypatch.setattr("src.routes.v1.solutions.images.metadata", metadata)
+    monkeypatch.setattr("src.routes.v1.solutions.images.metadata", unexpected_metadata)
 
     # Act
     stale_response = await clients[0].post(url, json={"expected_revision_id": str(uuid4())})
 
     # Assert
     assert stale_response.status_code == 409
-    assert inspected == []
 
 
 async def test_update_rejects_solution_without_desired_revision(
