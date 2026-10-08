@@ -4,6 +4,8 @@
 type ViewNode = React.JSX.Element | string | number | boolean | null | undefined | ViewNode[];
 type ViewComponent<P> = (props: P & { children?: ViewNode }) => React.JSX.Element;
 type ViewProps = { params: Readonly<Record<string, string>> };
+type ViewJson = string | number | boolean | null | ViewJson[] | { [key: string]: ViewJson };
+type ViewData = ViewJson | Blob;
 type Spacing = 0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10;
 
 /** Supported LongLink Lucide icon names, generated from the runtime registry. @ignore */
@@ -265,13 +267,18 @@ declare function StatusDot(props: {
 }): React.JSX.Element;
 
 /** @category Display */
-declare function Avatar(props: {
-    name?: string;
-    shape?: 'circle' | 'rounded';
-    src?: string | null;
-    alt?: string;
-    size?: 'sm' | 'md' | 'lg';
-}): React.JSX.Element;
+declare function Avatar(
+    props: {
+        shape?: undefined | 'circle' | 'rounded' | 'square';
+    } & {
+        name?: string;
+        /** Organization owners use rounded Waves avatars; user owners retain the supplied geometry or a circle. */
+        kind?: 'user' | 'organization';
+        src?: string | null;
+        alt?: string;
+        size?: 'sm' | 'md' | 'lg';
+    },
+): React.JSX.Element;
 
 /** @category Layouts */
 declare function Dialog(props: {
@@ -306,7 +313,7 @@ declare function Form(props: {
     /** Native form ID for associating external submit or reset buttons. */
     id?: string;
     /** Runs after a successful write and automatic cached-data refresh. */
-    onSuccess?: (data: unknown) => void | Promise<void>;
+    onSuccess?: (data: ViewData) => void | Promise<void>;
 }): React.JSX.Element;
 
 /** @category Form @group DateInput */

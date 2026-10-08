@@ -13,6 +13,7 @@ describe('shared View documentation layout', () => {
     afterEach(async () => {
         // Release the article listeners and mounted content before restoring globals.
         const mountedRoot = root;
+
         if (mountedRoot) await act(async () => mountedRoot.unmount());
 
         root = undefined;
@@ -50,6 +51,7 @@ describe('shared View documentation layout', () => {
         const output = await renderLayout('?campaign=guide&tab=examples');
         const user = userEvent.setup();
         const propertiesTab = output.querySelector<HTMLElement>('[role="tab"][aria-controls="component-properties"]');
+
         if (!propertiesTab) throw new Error('Missing Properties tab');
 
         await act(async () => user.click(propertiesTab));

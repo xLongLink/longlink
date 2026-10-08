@@ -19,8 +19,8 @@ export function useVerification(token: string, verify: (request: VerificationReq
         controller.current = nextController;
 
         // Credential-specific outcomes stay in the page; unexpected active failures reach its boundary.
-        void verify({ signal: nextController.signal, token: verificationToken }).catch((error: unknown) => {
-            if (controller.current === nextController) showBoundary(error);
+        void verify({ signal: nextController.signal, token: verificationToken }).catch((cause: unknown) => {
+            if (controller.current === nextController) showBoundary(cause);
         });
     }
 

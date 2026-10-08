@@ -15,6 +15,7 @@ describe('SolutionRuntime', () => {
     afterEach(async () => {
         // Unmount before removing the container and restoring globals.
         const mountedRoot = root;
+
         if (mountedRoot) await act(async () => mountedRoot.unmount());
 
         root = undefined;
@@ -74,6 +75,7 @@ describe('SolutionRuntime', () => {
         // Arrange
         stubFetch((url) => {
             if (url.endsWith('/views.json')) return Response.json([view('home.jsx', '/home')]);
+
             return Response.json({ detail: 'View unavailable' }, { status: 503 });
         });
 
@@ -91,6 +93,7 @@ describe('SolutionRuntime', () => {
             if (url.endsWith('/views.json')) return Response.json([view('https://example.com/view.jsx', '/home')]);
             throw new Error('View fetch must not occur');
         });
+
         stubFetch(fetchRequest);
 
         // Act
@@ -106,6 +109,7 @@ describe('SolutionRuntime', () => {
         vi.useFakeTimers();
         stubFetch((url) => {
             if (url.endsWith('/views.json')) return Response.json([view('views/issues/[item]', '/issues/:issueId')]);
+
             return sourceResponse(
                 'export default function Issue({ params }) { return <Text>{params.issueId}</Text>; }'
             );
@@ -117,6 +121,7 @@ describe('SolutionRuntime', () => {
         // Assert
         await vi.waitFor(() => expect(output.querySelector('iframe')?.srcdoc).toContain('Content-Security-Policy'));
         const frame = output.querySelector('iframe');
+
         if (!frame?.contentWindow) throw new Error('Missing isolated frame');
         const initialization = vi.fn<(event: MessageEvent<unknown>) => void>();
         frame.contentWindow.addEventListener('message', initialization, { once: true });
@@ -145,7 +150,9 @@ describe('SolutionRuntime', () => {
         const requests: Request[] = [];
         stubFetch((url, request) => {
             requests.push(request);
+
             if (url.endsWith('/proxy/views.json?version=1#manifest')) return Response.json([view('home.jsx', '/home')]);
+
             if (url.endsWith('/proxy/home.jsx'))
                 return sourceResponse('export default function Welcome() { return <Text>Welcome</Text>; }');
 
@@ -161,6 +168,7 @@ describe('SolutionRuntime', () => {
         // Identify contract requests independently of runtime asset loading order and count.
         const manifestRequest = requests.find((request) => new URL(request.url).pathname === '/proxy/views.json');
         const viewRequest = requests.find((request) => new URL(request.url).pathname === '/proxy/home.jsx');
+
         if (!manifestRequest || !viewRequest) throw new Error('Missing manifest or JSX request');
         const manifestUrl = new URL(manifestRequest.url);
         expect(`${manifestUrl.pathname}${manifestUrl.search}${manifestUrl.hash}`).toBe(
@@ -197,6 +205,7 @@ describe('SolutionRuntime', () => {
             if (url.endsWith('/views.json')) return Response.json([view('issue.jsx', '/issues/:issueId')]);
             throw new Error('View fetch must not occur for an unmatched route');
         });
+
         stubFetch(response);
 
         // Act
@@ -275,6 +284,7 @@ function stubFetch(response: (url: string, request: Request) => Response): void 
     vi.stubGlobal('fetch', async (input: RequestInfo | URL) => {
         if (!(input instanceof Request)) throw new Error('Expected a Request at the HTTP boundary');
         const url = input.url;
+
         if (url.endsWith('/views/runtime.js') || url.endsWith('/views/runtime.css')) return sourceResponse('');
 
         return response(url, input);

@@ -19,6 +19,7 @@ import {
 } from '@/components/Brands';
 
 const useCaseIcons = { BookOpen, ClipboardCheck, Settings, ShieldCheck, FolderKanban };
+
 const comparisonIcons = { Retool, Lovable, Windmill, Microsoft, Replit, Appsmith, Superblocks, FastAPI, Reflex };
 
 /** Opens sidebar documentation links in a separate tab. */

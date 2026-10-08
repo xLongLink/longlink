@@ -28,6 +28,7 @@ function findActiveTab(tabs: readonly NavigationTab[], pathname: string): string
 
     return tabs.reduce<string | undefined>((best, tab) => {
         const tabPathname = tab.href.replace(/\/+$/, '') || '/';
+
         if (tabPathname !== normalizedPathname && !normalizedPathname.startsWith(`${tabPathname}/`)) {
             return best;
         }

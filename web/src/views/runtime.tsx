@@ -26,6 +26,8 @@ import {
     type DownloadCommand,
     downloadSchema,
     type ViewReply,
+    type ViewData,
+    responseSchema,
 } from './protocol';
 import './theme.css';
 
@@ -36,11 +38,13 @@ declare global {
 }
 
 const session = window.__VIEW_SESSION__;
+
 const fileRequests = { preview: requestImage, download };
 
 /** Subscribes only to fragment changes inside this sandbox. */
 function subscribeToHash(notify: () => void): () => void {
     window.addEventListener('hashchange', notify);
+
     return () => window.removeEventListener('hashchange', notify);
 }
 
@@ -70,21 +74,26 @@ function MenuNavigationProvider({ children }: { children: React.ReactNode }) {
         </MenuNavigationContext>
     );
 }
+
 const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+
 const pending = new Map<
     number,
-    { resolve: (value: unknown) => void; reject: (error: Error) => void; timer: ReturnType<typeof setTimeout> }
+    { resolve: (value: ViewData) => void; reject: (error: Error) => void; timer: ReturnType<typeof setTimeout> }
 >();
+
 let sequence = 0;
+
 let port: MessagePort;
 
 /** Requests a scoped Solution operation and refreshes cached data after successful writes. */
 async function request(
     path: string,
     options: Omit<RequestCommand, 'type' | 'id' | 'path' | 'method'> & { method?: RequestCommand['method'] } = {}
-): Promise<unknown> {
+): Promise<ViewData> {
     const id = sequence++;
     const command = requestSchema.parse({ ...options, type: 'request', id, path, method: options.method ?? 'GET' });
+
     if (messageSize(command) > MAX_MESSAGE_SIZE) throw new Error('Solution request is too large');
     const data = await exchange(command);
 
@@ -95,14 +104,16 @@ async function request(
 }
 
 /** Owns the pending slot, deadline, and channel transfer for each scoped operation. */
-async function exchange(command: RequestCommand | DownloadCommand): Promise<unknown> {
+async function exchange(command: RequestCommand | DownloadCommand): Promise<ViewData> {
     if (pending.size >= MAX_PENDING_REQUESTS) throw new Error('Too many pending requests');
     const { id } = command;
-    return new Promise<unknown>((resolve, reject) => {
+
+    return new Promise<ViewData>((resolve, reject) => {
         const timer = setTimeout(() => {
             pending.delete(id);
             reject(new Error('Solution request timed out'));
         }, REQUEST_TIMEOUT);
+
         pending.set(id, { resolve, reject, timer });
 
         // A failed transfer must release its slot and timer immediately, not at timeout.
@@ -117,8 +128,11 @@ async function exchange(command: RequestCommand | DownloadCommand): Promise<unkn
 }
 
 /** Supplies a stable binary-request capability without exposing the general request API to image components. */
-function requestImage(path: string): Promise<unknown> {
-    return request(path, { binary: true });
+async function requestImage(path: string): Promise<Blob> {
+    // Binary previews must remain inert file data rather than arbitrary response objects.
+    const data = await request(path, { binary: true });
+
+    return z.instanceof(Blob).parse(data);
 }
 
 /** Asks the host to save a bounded attachment without opening a document inside the sandbox. */
@@ -133,16 +147,18 @@ function navigate(path: string): void {
 }
 
 /** Returns Solution data and an awaitable invalidator scoped to the full request path. */
-function useApi(path: string): readonly [unknown, () => Promise<void>] {
+function useApi(path: string): readonly [ViewData, () => Promise<void>] {
     // Use the full request path as cache identity, including pagination parameters.
     const { data } = useSuspenseQuery({
         queryKey: ['api', path],
         queryFn: () => request(path),
     });
+
     const invalidate = React.useCallback(
         () => client.invalidateQueries({ queryKey: ['api', path], exact: true }),
         [path]
     );
+
     return [data, invalidate];
 }
 
@@ -152,22 +168,34 @@ const initialization = z.object({ session: z.string(), source: z.string(), param
 function initialize(event: MessageEvent<unknown>): void {
     if (event.source !== window.parent || event.ports.length !== 1) return;
     const parsed = initialization.safeParse(event.data);
+
     if (!parsed.success || parsed.data.session !== session) return;
     window.removeEventListener('message', initialize);
     port = event.ports[0];
     port.onmessage = (reply: MessageEvent<ViewReply>) => {
         const waiter = pending.get(reply.data.id);
+
         if (!waiter) return;
         pending.delete(reply.data.id);
         clearTimeout(waiter.timer);
-        if (reply.data.ok) waiter.resolve(reply.data.data);
-        else waiter.reject(Object.assign(new Error(reply.data.error), { status: reply.data.status }));
+
+        if (reply.data.ok) {
+            // Validate the response at the receiving boundary before exposing it to a View.
+            const data = responseSchema.safeParse(reply.data.data);
+
+            if (data.success) waiter.resolve(data.data);
+            else waiter.reject(new Error('The Solution returned an invalid response.'));
+        } else waiter.reject(Object.assign(new Error(reply.data.error), { status: reply.data.status }));
     };
+
     const mount = document.getElementById('view');
+
     if (!mount) {
         port.close();
+
         return;
     }
+
     const root = createRoot(mount);
 
     // Release all resources acquired by this initialized sandbox in one teardown.
@@ -178,6 +206,7 @@ function initialize(event: MessageEvent<unknown>): void {
                 clearTimeout(waiter.timer);
                 waiter.reject(new Error('View closed'));
             }
+
             pending.clear();
             port.close();
         },
@@ -193,6 +222,7 @@ function initialize(event: MessageEvent<unknown>): void {
             jsxFragmentPragma: 'Fragment',
             production: true,
         }).code;
+
         const bindings = {
             // Keep JSX compilation separate from the public View API.
             __jsx: React.createElement,
@@ -206,7 +236,11 @@ function initialize(event: MessageEvent<unknown>): void {
             navigate,
             useApi,
         };
-        const module = { exports: {} as { default?: React.ComponentType } };
+
+        type ViewModule = { exports: { default?: React.ComponentType<{ params: Readonly<Record<string, string>> }> } };
+
+        const module: ViewModule = { exports: {} };
+
         // oxlint-disable-next-line typescript/no-implied-eval -- This entry runs exclusively in the opaque-origin sandbox.
         const evaluate = new Function(
             'module',
@@ -214,9 +248,17 @@ function initialize(event: MessageEvent<unknown>): void {
             ...Object.keys(bindings),
             `${code}\nreturn module.exports.default;`
         );
-        const result: unknown = evaluate(module, module.exports, ...Object.values(bindings));
-        if (typeof result !== 'function') throw new Error('A View must export a component as default');
-        const View = result as React.ComponentType<{ params: Readonly<Record<string, string>> }>;
+
+        // A callable export is the admission contract; React's error boundary handles invalid component rendering.
+        const component = z
+            .custom<React.ComponentType<{ params: Readonly<Record<string, string>> }>>(
+                (value) => value instanceof Function
+            )
+            .safeParse(evaluate(module, module.exports, ...Object.values(bindings)));
+
+        if (!component.success) throw new Error('A View must export a component as default');
+        const View = component.data;
+
         const params = Object.freeze(parsed.data.params);
         root.render(
             <Theme theme={stoneTheme} mode="dark">
@@ -281,4 +323,5 @@ function initialize(event: MessageEvent<unknown>): void {
 
 // A fresh opaque-origin frame cannot read parent state, storage, or cookies.
 window.addEventListener('message', initialize);
+
 window.parent.postMessage(session, '*');

@@ -83,6 +83,7 @@ const stoneIconComponents = {
 
 export type StoneIconName = keyof typeof stoneIconComponents;
 
+// SAFETY: Every registry entry is created from the complete StoneIconName component map without filtering keys.
 export const stoneIconRegistry = Object.fromEntries(
     Object.entries(stoneIconComponents).map(([name, IconComponent]) => [
         name,

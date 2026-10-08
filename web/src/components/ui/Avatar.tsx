@@ -1,23 +1,29 @@
 import * as dicebear from '@dicebear/core';
+import type { ComponentProps } from 'react';
 import { Avatar as AstryxAvatar } from '@astryxdesign/core/Avatar';
 import waves from '@dicebear/styles/waves.json' with { type: 'json' };
 import glyphs from '@dicebear/styles/glyphs.json' with { type: 'json' };
 
 const glyphsStyle = new dicebear.Style(glyphs);
+
 const wavesStyle = new dicebear.Style(waves);
 
-type AvatarProps = {
+type AvatarProps = Pick<ComponentProps<typeof AstryxAvatar>, 'shape'> & {
     name?: string;
-    shape?: 'circle' | 'rounded';
+    /** Organization owners use rounded Waves avatars; user owners retain the supplied geometry or a circle. */
+    kind?: 'user' | 'organization';
     src?: string | null;
     alt?: string;
     size?: 'sm' | 'md' | 'lg';
 };
 
 /** Uses local Waves fallbacks for rounded organization avatars and Glyphs for users. */
-export function Avatar({ shape = 'circle', src, name, ...props }: AvatarProps) {
+export function Avatar({ kind, src, name, ...props }: AvatarProps) {
+    // Native pages identify the owner; existing Views may still supply Astryx's geometry prop.
+    props.shape = kind === 'organization' ? 'rounded' : (props.shape ?? 'circle');
+
     // Generate a stable fallback without sending names to an external avatar service.
-    const avatar = new dicebear.Avatar(shape === 'rounded' ? wavesStyle : glyphsStyle, {
+    const avatar = new dicebear.Avatar(props.shape === 'rounded' ? wavesStyle : glyphsStyle, {
         seed: name?.trim() || 'avatar',
     });
 
@@ -26,7 +32,6 @@ export function Avatar({ shape = 'circle', src, name, ...props }: AvatarProps) {
             {...props}
             size={props.size ?? 'md'}
             name={name}
-            shape={shape}
             src={src?.trim() || undefined}
             fallbackSrc={avatar.toDataUri()}
         />

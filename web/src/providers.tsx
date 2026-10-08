@@ -42,6 +42,7 @@ export function RootProvider({ children }: { children: ReactNode }) {
 /** Connects cache and direct-request failures to the shared notification layer. */
 function ApiProvider({ children }: { children: ReactNode }) {
     const toast = useToast();
+
     const [runtime] = useState(() =>
         createQueryRuntime(
             (body) => {
@@ -51,11 +52,13 @@ function ApiProvider({ children }: { children: ReactNode }) {
                 requestAnimationFrame(() => {
                     for (const viewport of document.querySelectorAll<HTMLElement>('[popover="manual"]')) {
                         if (!viewport.querySelector('[data-toast-id]')) continue;
-                        if (typeof viewport.hidePopover !== 'function' || typeof viewport.showPopover !== 'function')
-                            return;
+
+                        // Older browsers may not implement the native popover capability.
+                        if (!('hidePopover' in viewport) || !('showPopover' in viewport)) return;
 
                         if (viewport.matches(':popover-open')) viewport.hidePopover();
                         viewport.showPopover();
+
                         return;
                     }
                 });

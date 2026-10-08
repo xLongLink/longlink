@@ -21,15 +21,18 @@ const registrationSchema = schemas.zComputeRegistryCreate.extend({ kubeconfig: z
 /** Lists registered Compute infrastructure and manages registration and removal. */
 export default function Compute() {
     const [page, setPage] = useState(1);
+
     const [dialog, setDialog] = useState<
         { kind: 'metadata'; id: string } | { kind: 'deletion'; item: { id: string; name: string } } | null
     >(null);
+
     const [registration, setRegistration] = useState<z.input<typeof registrationSchema> | null>(null);
     const path = `/api/v1/computes?page=${page}&page_size=25`;
     const [computes, invalidate] = useApi<z.output<typeof schemas.zPageComputeRegistryResponse>>(path);
 
     // Use current metadata and clear missing selections so returning to a page cannot reopen the dialog.
     const metadata = dialog?.kind === 'metadata' ? computes.items.find((item) => item.id === dialog.id) : undefined;
+
     if (dialog?.kind === 'metadata' && !metadata) setDialog(null);
 
     /** Registers the validated Compute draft and refreshes the list. */

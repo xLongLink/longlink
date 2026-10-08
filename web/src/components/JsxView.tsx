@@ -32,10 +32,13 @@ export function JsxView({
 }) {
     const frame = useRef<HTMLIFrameElement>(null);
     const navigate = useNavigate();
+
     const [bootstrapState, setBootstrapState] = useState<
         { status: 'preparing' } | { status: 'prepared'; document: string } | { status: 'failed' }
     >({ status: 'preparing' });
+
     const parameters = JSON.stringify(params);
+
     const { data: kernel } = useSuspenseQuery({
         queryKey: ['view-runtime'],
         staleTime: Infinity,
@@ -43,6 +46,7 @@ export function JsxView({
         queryFn: async ({ signal }) => {
             // Bound asset loading through body completion, not just response headers.
             const lifetime = AbortSignal.any([signal, AbortSignal.timeout(REQUEST_TIMEOUT)]);
+
             return Promise.all([
                 api('/views/runtime.js', { signal: lifetime, credentials: 'omit', timeout: false }).text(),
                 api('/views/runtime.css', { signal: lifetime, credentials: 'omit', timeout: false }).text(),
@@ -77,7 +81,9 @@ export function JsxView({
         /** Connects one trusted bootstrap instance; subsequent window messages have no capabilities. */
         function ready(event: MessageEvent<unknown>): void {
             if (controller.signal.aborted) return;
+
             if (event.source !== frame.current?.contentWindow || event.origin !== 'null') return;
+
             if (event.data !== session) return;
             window.removeEventListener('message', ready);
 
@@ -98,19 +104,25 @@ export function JsxView({
         window.addEventListener('message', ready);
         channel.port1.onmessage = async (event: MessageEvent<unknown>) => {
             const parsed = commandSchema.safeParse(event.data);
+
             if (!parsed.success || controller.signal.aborted) return;
             const command = parsed.data;
+
             if (command.type === 'navigate') {
                 try {
                     host.requestUrl(navigationBaseUrl, command.path);
                     const destination = resolveNavigationUrl(navigationBaseUrl, command.path);
+
                     if (destination) await navigate(destination);
                 } catch {
                     // Invalid navigation does not acquire any host capability.
                 }
+
                 return;
             }
+
             if (pending.has(command.id)) return;
+
             if (pending.size >= MAX_PENDING_REQUESTS) {
                 channel.port1.postMessage({
                     id: command.id,
@@ -118,8 +130,10 @@ export function JsxView({
                     error: 'Too many pending requests',
                     status: 429,
                 });
+
                 return;
             }
+
             pending.add(command.id);
 
             // The frame chooses a Solution-relative operation, never credentials, headers, or fetch options.
@@ -127,10 +141,12 @@ export function JsxView({
                 if (command.type === 'request' && messageSize(command) > MAX_MESSAGE_SIZE) {
                     throw new ApiError('Solution request is too large', 413);
                 }
+
                 const data =
                     command.type === 'download'
                         ? await host.download(requestBaseUrl, command, controller.signal)
                         : await host.request(requestBaseUrl, command, controller.signal);
+
                 if (!controller.signal.aborted) channel.port1.postMessage({ id: command.id, ok: true, data });
             } catch (error) {
                 if (!controller.signal.aborted)
@@ -143,13 +159,16 @@ export function JsxView({
         /** Builds a trusted boot document; Solution source is transferred as data, never interpolated into HTML. */
         async function bootstrap(): Promise<void> {
             if (source.length > MAX_SOURCE_SIZE) throw new Error('View source is too large');
+
             const code = `window.__VIEW_SESSION__=${JSON.stringify(session)};\n${script}`.replace(
                 /<\/script/gi,
                 '<\\/script'
             );
+
             const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(code));
             const hash = btoa(String.fromCharCode(...new Uint8Array(digest)));
             const policy = `default-src 'none'; script-src 'sha256-${hash}' 'unsafe-eval'; style-src 'unsafe-inline'; img-src data: blob:; font-src data:; connect-src 'none'; frame-src 'none'; worker-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'`;
+
             if (!controller.signal.aborted) {
                 // A blocked bootstrap script must surface an error instead of leaving a blank frame.
                 handshakeTimer = setTimeout(fail, BOOTSTRAP_TIMEOUT_MS);
@@ -161,6 +180,7 @@ export function JsxView({
                 );
             }
         }
+
         void bootstrap().catch(fail);
 
         // Replacing or unmounting a View revokes its channel and cancels every outstanding operation.
@@ -171,6 +191,7 @@ export function JsxView({
         return (
             <PageError title="Unable to load this View" description="The isolated View runtime could not be loaded." />
         );
+
     return (
         // The View owns one viewport and scroll region; overlays no longer depend on normal-flow content height.
         <Stack height="calc(100dvh - var(--_app-shell-header-height, 0px) - var(--spacing-8))" gap={0}>

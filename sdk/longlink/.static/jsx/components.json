@@ -4,14 +4,19 @@
         "category": "Display",
         "properties": [
             {
+                "name": "shape",
+                "type": "\"circle\" | \"rounded\" | \"square\"",
+                "description": "Shape variant of the avatar. 'circle' (default) stays fully round. 'rounded' uses the element radius token so it matches UI corner rounding and can be set globally via theme. 'square' has no radius. Status dot positioning adapts automatically: 4-o'clock on circle, bottom-right corner on rounded/square. Default: 'circle'."
+            },
+            {
                 "name": "name",
                 "type": "string",
                 "description": "User name for initials and alt text."
             },
             {
-                "name": "shape",
-                "type": "\"circle\" | \"rounded\"",
-                "description": "Shape variant of the avatar. 'circle' (default) stays fully round. 'rounded' uses the element radius token so it matches UI corner rounding and can be set globally via theme. 'square' has no radius. Status dot positioning adapts automatically: 4-o'clock on circle, bottom-right corner on rounded/square. Default: 'circle'."
+                "name": "kind",
+                "type": "\"user\" | \"organization\"",
+                "description": "Organization owners use rounded Waves avatars; user owners retain the supplied geometry or a circle."
             },
             {
                 "name": "src",
@@ -681,7 +686,7 @@
             },
             {
                 "name": "onSuccess",
-                "type": "(data: unknown) => void | Promise<void>",
+                "type": "(data: ViewData) => void | Promise<void>",
                 "description": "Runs after a successful write and automatic cached-data refresh."
             }
         ]

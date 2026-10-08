@@ -13,6 +13,7 @@ export function CheckboxInput(
 ) {
     // Astryx's underlying checkbox retains omission semantics and native validation.
     const { defaultChecked, ...control } = props;
+
     const field = useValue<boolean | 'indeterminate', HTMLInputElement>(props.value, defaultChecked ?? false, (value) =>
         props.onChange?.(value === true)
     );

@@ -98,6 +98,7 @@ function OrganizationSettings() {
     const [creating, setCreating] = useState(false);
     const [isDeleting, startDeletion] = useTransition();
     const [deletion, setDeletion] = useState<{ id: string; name: string } | null>(null);
+
     const [memberships, invalidate] =
         useApi<z.output<typeof schemas.zGetMyOrganizationsApiV1MeOrganizationsGetResponse>>('/api/v1/me/organizations');
 
@@ -121,7 +122,7 @@ function OrganizationSettings() {
                             width: proportional(1),
                             renderCell: (row) => (
                                 <Stack direction="horizontal" gap={3} align="center">
-                                    <Avatar shape="rounded" name={row.organization.name} />
+                                    <Avatar kind="organization" name={row.organization.name} />
                                     <Stack align="start">
                                         <Stack direction="horizontal" gap={1} align="center">
                                             <Link href={`/orgs/${row.organization.slug}`}>{row.organization.name}</Link>

@@ -21,6 +21,7 @@ import { zEmailPayload, zUserSummary } from '@/lib/generated/platform-api-v1/zod
 import { useVerification, type VerificationRequest } from '@/lib/hooks/use-verification';
 
 const REGISTRATION_TOKEN_KEY = 'longlink.registration.token';
+
 const registrationCompleteSchema = z.object({
     name: z.string().trim().min(1, 'Name is required').max(255, 'Name cannot exceed 255 characters'),
     password: passwordSchema,
@@ -33,13 +34,16 @@ export default function VerifyEmail() {
     const navigate = useNavigate();
     const queryClient = useQueryClient();
     const token = useFragmentToken(REGISTRATION_TOKEN_KEY);
+
     const form = useForm<RegistrationCompleteValues>({
         defaultValues: { name: '', password: '' },
         resolver: zodResolver(registrationCompleteSchema),
     });
+
     const [verification, setVerification] = useState<
         { status: 'verified'; data: z.output<typeof zEmailPayload> } | { status: 'error' } | null
     >(null);
+
     const [accountConflict, setAccountConflict] = useState(false);
 
     /** Verifies the signed email claim without publishing canceled or replaced results. */
@@ -54,14 +58,16 @@ export default function VerifyEmail() {
                   signal,
               }).json()
             : api('/api/v1/auth/register/setup', { signal }).json();
+
         await request.then(
             (value) => {
                 if (signal.aborted) return;
                 setVerification({ status: 'verified', data: zEmailPayload.parse(value) });
             },
-            (error: unknown) => {
+            (cause: unknown) => {
                 if (signal.aborted) return;
-                if (!(error instanceof ApiError) || error.status !== 400) throw error;
+
+                if (!(cause instanceof ApiError) || cause.status !== 400) throw cause;
                 sessionStorage.removeItem(REGISTRATION_TOKEN_KEY);
                 setVerification({ status: 'error' });
             }
@@ -86,12 +92,13 @@ export default function VerifyEmail() {
                     sessionStorage.removeItem(REGISTRATION_TOKEN_KEY);
                     void navigate('/user/organizations', { replace: true });
                 },
-                (error: unknown) => {
-                    if (!(error instanceof ApiError) || ![400, 409].includes(error.status)) throw error;
-                    if (error.status === 409) setAccountConflict(true);
+                (cause: unknown) => {
+                    if (!(cause instanceof ApiError) || ![400, 409].includes(cause.status)) throw cause;
+
+                    if (cause.status === 409) setAccountConflict(true);
 
                     // Expired setup cookies require recovering or replacing the registration link.
-                    if (error.status === 400) startVerification('');
+                    if (cause.status === 400) startVerification('');
                 }
             );
     }
@@ -99,6 +106,7 @@ export default function VerifyEmail() {
     const recoveryRegisterHref = verifiedEmail
         ? `/auth/register?${new URLSearchParams({ email: verifiedEmail })}`
         : '/auth/register';
+
     const pageMetadata = <NoIndex title="Verify Your Email | LongLink" />;
 
     // Invalid credentials require a replacement registration link.

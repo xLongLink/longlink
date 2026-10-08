@@ -99,6 +99,7 @@ export default function OrganizationLayout() {
 function OrganizationPage() {
     const { organization = '' } = useParams();
     const user = useAuthenticatedUser();
+
     const [membership] = useApi<z.output<typeof zUserOrganizationMembership>>(
         `/api/v1/organizations/slug/${encodeURIComponent(organization)}`
     );

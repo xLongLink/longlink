@@ -15,6 +15,7 @@ import { Layout, LayoutContent } from '@astryxdesign/core/Layout';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 
 type Registry = z.output<typeof schemas.zRegistryResponse>;
+
 type RegistryAction = { kind: 'create' } | { kind: 'delete'; connection: Registry };
 
 /** Lists organization-owned registry connections without loading credentials. */

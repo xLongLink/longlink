@@ -1,3 +1,4 @@
+import { z } from 'zod';
 import { ApiError } from '@/lib/api';
 import { QueryCache, QueryClient } from '@tanstack/react-query';
 import { createErrorReporter, isCanceledRequest } from '@/lib/errors';
@@ -9,10 +10,11 @@ export function createQueryRuntime(notify: (message: string) => void, platformSe
     const failedQueries = new WeakMap<object, string>();
 
     /** Apply session policy consistently to cached and direct requests. */
-    function reportError(error: unknown, notify = true) {
-        if (isCanceledRequest(error)) return;
-        if (platformSession && error instanceof ApiError && error.status === 401 && error.url !== '') {
-            const url = new URL(error.url);
+    function reportError(cause: unknown, notify = true) {
+        if (isCanceledRequest(cause)) return;
+
+        if (platformSession && cause instanceof ApiError && cause.status === 401 && cause.url !== '') {
+            const url = new URL(cause.url);
 
             // Reuse the cancellable identity query; a Solution 401 does not prove session loss.
             if (
@@ -25,7 +27,8 @@ export function createQueryRuntime(notify: (message: string) => void, platformSe
                     .catch(notifyError);
             }
         }
-        if (notify) notifyError(error);
+
+        if (notify) notifyError(cause);
     }
 
     const queryCache = new QueryCache({
@@ -46,16 +49,19 @@ export function createQueryRuntime(notify: (message: string) => void, platformSe
                         if (query.state === identity) client.setQueryData(query.queryKey, null);
                     })
                     .catch(notifyError);
+
                 return;
             }
 
             // Suppress repeated polling notifications, never status handling or changed failures.
             let repeated = false;
+
             if (query.meta?.polling === true) {
                 const incident = error instanceof ApiError ? `${error.status}:${error.message}` : error.name;
                 repeated = failedQueries.get(query) === incident;
                 failedQueries.set(query, incident);
             }
+
             reportError(error, !repeated);
         },
         onSuccess: (_data, query) => {
@@ -86,13 +92,13 @@ export function createQueryRuntime(notify: (message: string) => void, platformSe
                 event.query.queryKey[1] !== '/api/v1/me'
             )
                 return;
-            const user: unknown = event.query.state.data;
-            const nextUserId =
-                user !== null && typeof user === 'object' && 'id' in user && typeof user.id === 'string'
-                    ? user.id
-                    : null;
+            // Only a validated identity can trigger an account switch.
+            const user = z.object({ id: z.string() }).safeParse(event.query.state.data);
+            const nextUserId = user.success ? user.data.id : null;
+
             const changedAccount = userId !== null && nextUserId !== null && userId !== nextUserId;
             userId = nextUserId;
+
             if (changedAccount) void clearSessionQueries(client, true).catch(notifyError);
         });
     }
@@ -103,11 +109,13 @@ export function createQueryRuntime(notify: (message: string) => void, platformSe
 /** Cancels and removes cached API data from the previous identity. */
 export async function clearSessionQueries(client: QueryClient, preserveCurrentUser = false): Promise<void> {
     const identity = client.getQueryData(['api', '/api/v1/me']);
+
     const isSessionQuery = (query: { queryKey: readonly unknown[] }) =>
         query.queryKey[0] === 'api' && (!preserveCurrentUser || query.queryKey[1] !== '/api/v1/me');
 
     // Stop requests from the previous identity before removing their cached results.
     await client.cancelQueries({ predicate: isSessionQuery });
+
     if (client.getQueryData(['api', '/api/v1/me']) === identity) {
         client.removeQueries({ predicate: isSessionQuery });
     }

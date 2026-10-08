@@ -6,6 +6,7 @@ export type DropdownMenuItemData = Omit<DropdownMenus.DropdownMenuItemData, 'ico
     icon?: StoneIconName;
     items?: DropdownMenuOption[];
 };
+
 export type DropdownMenuOption =
     | DropdownMenuItemData
     | { type: 'divider' }

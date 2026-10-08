@@ -4,7 +4,7 @@ import { buildBreadcrumbs } from '@/components/breadcrumb/text';
 import { comparisonPages, useCasePages } from '@/platform/usecases';
 
 /** Labels for public article route segments shared with visible breadcrumbs. */
-export const articleRouteLabels: Record<string, string> = {
+export const articleRouteLabels = {
     api: 'Platform',
     assets: 'Brand assets',
     compare: 'Compare',
@@ -16,12 +16,12 @@ export const articleRouteLabels: Record<string, string> = {
 
     // Keep authored page labels in their navigation catalogs without replacing section labels.
     ...Object.fromEntries([
-        ...useCasePages
-            .filter(({ path }) => path !== '/use-cases')
-            .map(({ path, label }) => [path.slice('/use-cases/'.length), label] as const),
+        ...useCasePages.flatMap(({ path, label }) =>
+            path === '/use-cases' ? [] : [[path.slice('/use-cases/'.length), label] as const]
+        ),
         ...comparisonPages.map(({ path, label }) => [path.slice('/compare/'.length), `LongLink vs ${label}`] as const),
     ]),
-};
+} satisfies Record<string, string>;
 
 /** Returns the canonical path with the site-wide trailing-slash convention. */
 function canonicalPath(pathname: string): string {
@@ -29,7 +29,7 @@ function canonicalPath(pathname: string): string {
 }
 
 /** Builds breadcrumb structured data for an article's current route. */
-function breadcrumbs(pathname: string): object {
+function breadcrumbs(pathname: string) {
     const items = [{ '@type': 'ListItem', position: 1, name: 'Home', item: `${siteUrl}/` }];
 
     for (const [index, segment] of buildBreadcrumbs(pathname, articleRouteLabels).entries()) {

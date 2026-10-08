@@ -15,7 +15,8 @@ export default function FormPreview({ children, action = '/api/example' }: { chi
         <FormRequestContext
             value={async (_path, { form }) => {
                 setSubmission(form);
-                return form;
+
+                return null;
             }}
         >
             <Stack gap={3} onResetCapture={() => setSubmission(null)}>
@@ -37,13 +38,13 @@ export default function FormPreview({ children, action = '/api/example' }: { chi
                             code={JSON.stringify(
                                 submission.map(([name, value]) => [
                                     name,
-                                    typeof value === 'string'
-                                        ? value
-                                        : {
+                                    value instanceof Blob
+                                        ? {
                                               name: value instanceof File ? value.name : 'blob',
                                               size: value.size,
                                               type: value.type,
-                                          },
+                                          }
+                                        : value,
                                 ]),
                                 null,
                                 2

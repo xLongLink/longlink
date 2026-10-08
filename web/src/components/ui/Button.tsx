@@ -51,10 +51,12 @@ export function Button({ onClick, ...props }: ButtonProps) {
                     ? (event) => {
                           // Run the action first so it can cancel ordinary scoped navigation.
                           const result = onClick?.(event);
+
                           if (navigate && props.href && !event.defaultPrevented) {
                               event.preventDefault();
                               navigate(props.href);
                           }
+
                           return result;
                       }
                     : undefined

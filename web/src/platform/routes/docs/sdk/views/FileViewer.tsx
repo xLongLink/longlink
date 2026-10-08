@@ -36,7 +36,9 @@ export default function FileViewerPage() {
 async function requestPreviewImage() {
     // Use a fixed documentation asset rather than a user-supplied endpoint.
     const response = await fetch('/images/introducing-longlink.png');
+
     if (!response.ok) throw new Error('Could not load the preview image');
+
     return response.blob();
 }
 

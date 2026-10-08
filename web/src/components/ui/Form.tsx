@@ -1,6 +1,7 @@
 import { Icon } from './Icon';
 import { Stack } from './Stack';
 import type { ReactNode } from 'react';
+import type { ViewData } from '@/views/protocol';
 import { Banner } from '@astryxdesign/core/Banner';
 import { createContext, use, useRef, useState } from 'react';
 
@@ -11,7 +12,7 @@ export const FormRequestContext = createContext<
               method: 'POST';
               form: [string, string | Blob][];
           }
-      ) => Promise<unknown>)
+      ) => Promise<ViewData>)
     | null
 >(null);
 
@@ -26,7 +27,7 @@ export function Form(props: {
     /** Native form ID for associating external submit or reset buttons. */
     id?: string;
     /** Runs after a successful write and automatic cached-data refresh. */
-    onSuccess?: (data: unknown) => void | Promise<void>;
+    onSuccess?: (data: ViewData) => void | Promise<void>;
 }) {
     // Obtain the request capability from the isolated runtime, never from global state.
     const request = use(FormRequestContext);
@@ -46,9 +47,11 @@ export function Form(props: {
 
             // Route all writes through the same validated transport as explicit request calls.
             if (!request) throw new Error('Forms require the Solution runtime');
+
             if (props.method !== undefined && props.method !== 'post') {
                 throw new Error('Forms support method="post"');
             }
+
             const result = await request(props.action, { method: 'POST', form: [...data.entries()] });
             await props.onSuccess?.(result);
         } catch (failure) {
@@ -74,9 +77,11 @@ export function Form(props: {
                 const nativeEvent = event.nativeEvent;
                 queueMicrotask(() => {
                     if (nativeEvent.defaultPrevented) return;
+
                     for (const control of form.elements) {
                         if (control instanceof HTMLInputElement) control.setCustomValidity('');
                     }
+
                     setSubmission((current) => ({ ...current, error: undefined }));
                 });
             }}

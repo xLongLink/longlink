@@ -8,6 +8,7 @@ import { ButtonGroup } from '@/components/ui/ButtonGroup';
 
 // Preserve the narrower LongLink button contract rather than upstream-only props.
 const upstream = references.find((reference) => reference.name === 'Button');
+
 if (!upstream) throw new Error('Missing Button documentation reference');
 
 // Keep page-specific guidance separate from the generated Button and ButtonGroup contracts.

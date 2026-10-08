@@ -18,18 +18,21 @@ const kinds = {
     'organization.create': 'Organization creation',
     'organization.delete': 'Organization deletion',
 };
+
 const statuses = { scheduled: 'Scheduled', active: 'Active', completed: 'Completed', failed: 'Failed' };
 
 /** Lists operation history and exposes its metadata. */
 export default function Operations() {
     const [page, setPage] = useState(1);
     const [metadataId, setMetadataId] = useState<string | null>(null);
+
     const [operations] = useApi<z.output<typeof zPageOperationResponse>>(
         `/api/v1/operations?page=${page}&page_size=25`
     );
 
     // Use current metadata and clear missing selections so returning to a page cannot reopen the dialog.
     const metadata = operations.items.find((item) => item.id === metadataId);
+
     if (metadataId !== null && !metadata) setMetadataId(null);
 
     return (

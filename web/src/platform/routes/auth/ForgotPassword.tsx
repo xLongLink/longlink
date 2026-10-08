@@ -15,6 +15,7 @@ import { emailPayloadSchema, type EmailPayload } from './validation';
 /** Requests a password reset email without disclosing whether an account exists. */
 export default function ForgotPassword() {
     const [sent, setSent] = useState(false);
+
     const form = useForm<EmailPayload>({
         defaultValues: { email: '' },
         resolver: zodResolver(emailPayloadSchema),

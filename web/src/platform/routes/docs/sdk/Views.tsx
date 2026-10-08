@@ -1,4 +1,3 @@
-import type { ReactNode } from 'react';
 import { GridExample } from './views/Grid';
 import { IconExample } from './views/Icon';
 import { LinkExample } from './views/Link';
@@ -73,70 +72,72 @@ const article = {
 };
 
 // Reuse page-owned examples as inert catalog artwork, without a shared preview implementation.
-const previews: Record<string, ReactNode> = {
-    Avatar: <AvatarExample />,
-    Badge: <BadgeExample />,
-    Button: <ButtonExample />,
-    Card: <Card>Lorem ipsum dolor sit amet.</Card>,
-    CheckboxInput: <CheckboxInputExample />,
-    Collapsible: <CollapsibleExample />,
-    Currency: <Currency value={1275.5} currency="CHF" />,
-    DateInput: <DateInputExample />,
-    Dialog: <DialogExample />,
-    Divider: <DividerExample />,
-    DropdownMenu: <DropdownMenuExample />,
-    EmptyState: <EmptyStateExample />,
-    FileInput: <FileInputExample />,
-    FileViewer: <FileViewerExample />,
-    Form: (
-        <Form action="/api/items">
-            <TextInputExample />
-        </Form>
-    ),
-    Grid: <GridExample />,
-    // Keep article section spacing out of the centered heading thumbnail.
-    Heading: (
-        <Stack className="[&_.astryx-heading]:mt-0">
-            <HeadingExample />
-        </Stack>
-    ),
-    Icon: <IconExample />,
-    IconButton: <IconButtonExample />,
-    Link: <LinkExample />,
-    // Show only the navigation in the thumbnail; the full Menu has a fixed-width sidebar and content panel.
-    Menu: (
-        <SideNav className="h-auto w-full">
-            <SideNavSection title="Settings">
-                <SideNavItem label="Profile" isSelected size="sm" />
-                <SideNavItem label="Workflow" size="sm" />
-            </SideNavSection>
-        </SideNav>
-    ),
-    MetadataList: <MetadataListExample />,
-    MoreMenu: <MoreMenuExample />,
-    MultiSelector: <MultiSelectorExample />,
-    NumberInput: <NumberInputExample />,
-    ProgressBar: <ProgressBarExample />,
-    RadioList: <RadioListExample />,
-    Selector: <SelectorExample />,
-    Slider: <SliderExample />,
-    Stack: <StackExample />,
-    Stepper: <StepperExample orientation="vertical" />,
-    Switch: <SwitchExample />,
-    Table: <TableExample />,
-    // Keep the thumbnail focused on the tab strip rather than its panel content.
-    Tabs: (
-        <TabList value="overview" onChange={() => undefined} size="sm">
-            <Tab label="Overview" value="overview" />
-            <Tab label="Activity" value="activity" />
-        </TabList>
-    ),
-    Text: <TextExample />,
-    TextArea: <TextAreaExample />,
-    TextInput: <TextInputExample />,
-    TimeInput: <TimeInputExample />,
-    Timestamp: <TimestampExample />,
-};
+const previews = new Map(
+    Object.entries({
+        Avatar: <AvatarExample />,
+        Badge: <BadgeExample />,
+        Button: <ButtonExample />,
+        Card: <Card>Lorem ipsum dolor sit amet.</Card>,
+        CheckboxInput: <CheckboxInputExample />,
+        Collapsible: <CollapsibleExample />,
+        Currency: <Currency value={1275.5} currency="CHF" />,
+        DateInput: <DateInputExample />,
+        Dialog: <DialogExample />,
+        Divider: <DividerExample />,
+        DropdownMenu: <DropdownMenuExample />,
+        EmptyState: <EmptyStateExample />,
+        FileInput: <FileInputExample />,
+        FileViewer: <FileViewerExample />,
+        Form: (
+            <Form action="/api/items">
+                <TextInputExample />
+            </Form>
+        ),
+        Grid: <GridExample />,
+        // Keep article section spacing out of the centered heading thumbnail.
+        Heading: (
+            <Stack className="[&_.astryx-heading]:mt-0">
+                <HeadingExample />
+            </Stack>
+        ),
+        Icon: <IconExample />,
+        IconButton: <IconButtonExample />,
+        Link: <LinkExample />,
+        // Show only the navigation in the thumbnail; the full Menu has a fixed-width sidebar and content panel.
+        Menu: (
+            <SideNav className="h-auto w-full">
+                <SideNavSection title="Settings">
+                    <SideNavItem label="Profile" isSelected size="sm" />
+                    <SideNavItem label="Workflow" size="sm" />
+                </SideNavSection>
+            </SideNav>
+        ),
+        MetadataList: <MetadataListExample />,
+        MoreMenu: <MoreMenuExample />,
+        MultiSelector: <MultiSelectorExample />,
+        NumberInput: <NumberInputExample />,
+        ProgressBar: <ProgressBarExample />,
+        RadioList: <RadioListExample />,
+        Selector: <SelectorExample />,
+        Slider: <SliderExample />,
+        Stack: <StackExample />,
+        Stepper: <StepperExample orientation="vertical" />,
+        Switch: <SwitchExample />,
+        Table: <TableExample />,
+        // Keep the thumbnail focused on the tab strip rather than its panel content.
+        Tabs: (
+            <TabList value="overview" onChange={() => undefined} size="sm">
+                <Tab label="Overview" value="overview" />
+                <Tab label="Activity" value="activity" />
+            </TabList>
+        ),
+        Text: <TextExample />,
+        TextArea: <TextAreaExample />,
+        TextInput: <TextInputExample />,
+        TimeInput: <TimeInputExample />,
+        Timestamp: <TimestampExample />,
+    })
+);
 
 /** Renders the native JSX catalog generated from the shared editor declarations. */
 export default function DocsArticleRoute() {
@@ -221,7 +222,7 @@ export default function Item({ params }) {
                                                         {component.category === 'Runtime' ? (
                                                             <Code>{component.name}</Code>
                                                         ) : (
-                                                            (previews[component.name] ?? (
+                                                            (previews.get(component.name) ?? (
                                                                 <Code>{`<${component.name} />`}</Code>
                                                             ))
                                                         )}
