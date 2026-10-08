@@ -513,47 +513,32 @@ async def test_app_logs_reject_non_maintainers_before_constructing_kubernetes(
     assert response.json() == {"detail": expected_detail}
 
 
+@pytest.mark.parametrize("failure_stage", ["construction", "retrieval"])
 async def test_app_logs_return_unavailable_when_backend_fails(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
     monkeypatch: pytest.MonkeyPatch,
+    failure_stage: str,
 ) -> None:
-    """Return a stable error when pod logs cannot be loaded."""
+    """Hide provider diagnostics when client construction or log retrieval fails."""
 
     # Arrange
     owner = users[0]
     organization = await create_organization(owner)
     app = await create_solution(organization)
-    monkeypatch.setattr("src.routes.v1.solutions.Kubernetes", lambda _kubeconfig: FakeCompute(RuntimeError("logs unavailable"), {}))
 
-    # Act
-    response = await clients[0].get(f"/api/v1/solutions/{app.id}/logs")
+    def unavailable_kubernetes(_kubeconfig: object) -> FakeCompute:
+        """Fail at the configured Kubernetes boundary."""
 
-    # Assert
-    assert response.status_code == 503
-    assert response.json() == {"detail": "Solution logs unavailable"}
-
-
-async def test_app_logs_return_unavailable_when_kubernetes_construction_fails(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-    users: tuple[User, User, User],
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """Hide Kubernetes client construction details from authorized log readers."""
-
-    # Arrange
-    organization = await create_organization(users[0])
-    solution = await create_solution(organization)
-
-    def unavailable_kubernetes(*_args: object) -> object:
-        """Fail before the Kubernetes client can open its connection."""
-
-        raise RuntimeError("cluster credential unavailable")
+        # Keep construction and retrieval failures as distinct provider scenarios.
+        if failure_stage == "construction":
+            raise RuntimeError("cluster credential unavailable")
+        return FakeCompute(RuntimeError("logs unavailable"), {})
 
     monkeypatch.setattr("src.routes.v1.solutions.Kubernetes", unavailable_kubernetes)
 
     # Act
-    response = await clients[0].get(f"/api/v1/solutions/{solution.id}/logs")
+    response = await clients[0].get(f"/api/v1/solutions/{app.id}/logs")
 
     # Assert
     assert response.status_code == 503

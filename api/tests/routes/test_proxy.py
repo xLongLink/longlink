@@ -120,14 +120,17 @@ async def create_running_solution(user: User) -> tuple[Solution, ComputeRegistry
     return solution, compute
 
 
+@pytest.mark.parametrize(("request_content_type", "upstream_status"), [("text/plain", 201), (None, 200)])
 async def test_solution_proxy_forwards_safe_content(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
-    monkeypatch,
+    monkeypatch: pytest.MonkeyPatch,
+    request_content_type: str | None,
+    upstream_status: int,
 ) -> None:
     """Forward an authenticated request through the Organization's compute gateway."""
 
-    # Prepare a running remote Solution and capture gateway traffic.
+    # Arrange
     user = users[0]
     solution, _ = await create_running_solution(user)
     captured: dict[str, object] = {}
@@ -139,7 +142,8 @@ async def test_solution_proxy_forwards_safe_content(
         captured["method"] = request.method
         captured["url"] = str(request.url)
         captured["content"] = await request.aread()
-        captured["content_type"] = request.headers["content-type"]
+        captured["content_type"] = request.headers.get("content-type")
+        captured["has_content_type"] = "content-type" in request.headers
         captured["user_id"] = str(identity.identity_token_user(request.headers["x-longlink-identity"], "test-identity-secret-01234567890"))
 
         def close() -> None:
@@ -148,7 +152,7 @@ async def test_solution_proxy_forwards_safe_content(
             captured["close_count"] = 1
 
         return make_upstream(
-            201,
+            upstream_status,
             {"content-type": "text/plain", "set-cookie": "ignored=1"},
             b"proxied",
             on_close=close,
@@ -157,17 +161,15 @@ async def test_solution_proxy_forwards_safe_content(
     monkeypatch.setattr(httpx2.AsyncHTTPTransport, "handle_async_request", send)
     client = clients[0]
 
-    # Proxy a request with a content type and request body.
+    # Act
     response = await client.post(
         f"/api/v1/solutions/{solution.id}/proxy/anything?answer=42",
         content=b"payload",
-        headers={
-            "content-type": "text/plain",
-        },
+        headers={"content-type": request_content_type} if request_content_type is not None else {},
     )
 
-    # Verify safe response metadata and authenticated upstream request fields.
-    assert response.status_code == 201
+    # Assert
+    assert response.status_code == upstream_status
     assert response.text == "proxied"
     assert response.headers["cache-control"] == "no-store"
     assert response.headers["content-type"] == "text/plain"
@@ -181,45 +183,8 @@ async def test_solution_proxy_forwards_safe_content(
     assert captured.get("url") == "https://gateway.example/anything?answer=42"
     assert captured.get("content") == b"payload"
     assert captured.get("user_id") == str(user.id)
-    assert captured.get("content_type") == "text/plain"
-
-
-async def test_solution_proxy_forwards_request_without_content_type(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-    users: tuple[User, User, User],
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """Forward an authenticated request without inventing an upstream content type."""
-
-    # Arrange
-    user = users[0]
-    solution, _ = await create_running_solution(user)
-    captured: dict[str, object] = {}
-
-    async def send(_transport: object, request: httpx2.Request) -> httpx2.Response:
-        """Record upstream headers and prove identity signing without a content type."""
-
-        captured["has_content_type"] = "content-type" in request.headers
-        captured["user_id"] = str(identity.identity_token_user(request.headers["x-longlink-identity"], "test-identity-secret-01234567890"))
-
-        def close() -> None:
-            """Record upstream response cleanup."""
-
-            captured["close_count"] = 1
-
-        return make_upstream(200, {"content-type": "text/plain"}, b"proxied", on_close=close)
-
-    monkeypatch.setattr(httpx2.AsyncHTTPTransport, "handle_async_request", send)
-
-    # Act
-    response = await clients[0].post(f"/api/v1/solutions/{solution.id}/proxy/anything", content=b"payload")
-
-    # Assert
-    assert response.status_code == 200
-    assert response.text == "proxied"
-    assert captured.get("has_content_type") is False
-    assert captured.get("user_id") == str(user.id)
-    assert captured.get("close_count") == 1
+    assert captured["content_type"] == request_content_type
+    assert captured["has_content_type"] is (request_content_type is not None)
 
 
 async def test_solution_proxy_strips_credential_headers_and_pins_gateway_tls(

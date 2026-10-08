@@ -30,7 +30,7 @@ describe('SolutionRuntime', () => {
 
     it('renders a manifest failure', async () => {
         // Arrange
-        stubFetch(() => new Response(JSON.stringify({ detail: 'Manifest unavailable' }), { status: 503 }));
+        stubFetch(() => Response.json({ detail: 'Manifest unavailable' }, { status: 503 }));
 
         // Act
         const output = await renderRuntime();
@@ -74,7 +74,7 @@ describe('SolutionRuntime', () => {
         // Arrange
         stubFetch((url) => {
             if (url.endsWith('/views.json')) return Response.json([view('home.jsx', '/home')]);
-            return new Response(JSON.stringify({ detail: 'View unavailable' }), { status: 503 });
+            return Response.json({ detail: 'View unavailable' }, { status: 503 });
         });
 
         // Act

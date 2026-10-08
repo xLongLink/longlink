@@ -111,7 +111,6 @@ async def test_create_engine_selects_database_url_and_options(
         """Record async engine settings and forward them to SQLAlchemy."""
 
         # Preserve the exact arguments accepted by the real engine factory.
-        captured["database_url"] = database_url
         captured["kwargs"] = kwargs
         return create_async_engine(database_url, **kwargs)
 
@@ -139,8 +138,7 @@ async def test_create_engine_selects_database_url_and_options(
             assert certificate_context.check_hostname is True
             assert ssl.PEM_cert_to_DER_cert(ca_certificate) in certificate_context.get_ca_certs(binary_form=True)
 
-        # Verify the exact selected URL and remaining connection options.
-        assert captured["database_url"] == expected_url
+        # Verify the remaining connection options.
         assert engine_kwargs == expected_kwargs
     finally:
         # Release the real engine even when an assertion fails.

@@ -58,7 +58,8 @@ def test_build_reports_missing_project_file_before_docker(tmp_path: Path) -> Non
         assert "Docker is required" not in result.output
 
 
-def test_build_reports_missing_docker_after_validating_project(chdir_project: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+@pytest.mark.usefixtures("chdir_project")
+def test_build_reports_missing_docker_after_validating_project(monkeypatch: pytest.MonkeyPatch) -> None:
     """Require Docker after validating project metadata but before preparing the context."""
 
     # Arrange
@@ -504,8 +505,8 @@ def test_resolve_image_tag_rejects_invalid_image_references(
         pytest.param([], [], id="local-only"),
     ],
 )
+@pytest.mark.usefixtures("docker_build")
 def test_build_command_reports_built_image(
-    docker_build: None,
     monkeypatch: pytest.MonkeyPatch,
     arguments: list[str],
     expected_commands: list[list[str]],
@@ -560,8 +561,8 @@ def test_build_command_reports_built_image(
         pytest.param("push", 24, ["build", "push"], id="push"),
     ],
 )
+@pytest.mark.usefixtures("docker_build")
 def test_build_command_reports_docker_failure(
-    docker_build: None,
     monkeypatch: pytest.MonkeyPatch,
     failed_command: str,
     exit_code: int,
