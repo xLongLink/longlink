@@ -20,9 +20,11 @@ import type { zPageOrganizationIdentity } from '@/lib/generated/platform-api-v1/
 export default function Organizations() {
     const [page, setPage] = useState(1);
     const [isDeleting, startDeletion] = useTransition();
+
     const [dialog, setDialog] = useState<
         { kind: 'metadata'; id: string } | { kind: 'deletion'; item: { id: string; name: string } } | null
     >(null);
+
     const [organizations, invalidate] = useApi<z.output<typeof zPageOrganizationIdentity>>(
         `/api/v1/organizations?page=${page}&page_size=25`
     );
@@ -30,6 +32,7 @@ export default function Organizations() {
     // Use current metadata and clear missing selections so returning to a page cannot reopen the dialog.
     const metadata =
         dialog?.kind === 'metadata' ? organizations.items.find((item) => item.id === dialog.id) : undefined;
+
     if (dialog?.kind === 'metadata' && !metadata) setDialog(null);
 
     return (
@@ -49,7 +52,7 @@ export default function Organizations() {
                             width: proportional(1),
                             renderCell: (row) => (
                                 <Stack direction="horizontal" gap={3} align="center">
-                                    <Avatar shape="rounded" name={row.name} />
+                                    <Avatar kind="organization" name={row.name} />
                                     <Stack align="start">
                                         <Stack direction="horizontal" gap={1} align="center">
                                             <Link href={`/orgs/${row.slug}`}>{row.name}</Link>

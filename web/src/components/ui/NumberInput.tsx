@@ -27,6 +27,7 @@ export function NumberInput(props: NumberInputProps) {
 
     // Keep optional draft state inside the themed numeric control.
     const { defaultValue, ...control } = props;
+
     const field = useValue<number | null>(props.value, defaultValue ?? null, (value) => {
         if (value !== null) props.onChange?.(value);
         else if (props.hasClear) props.onChange?.(null);

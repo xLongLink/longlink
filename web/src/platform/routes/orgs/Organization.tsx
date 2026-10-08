@@ -21,9 +21,11 @@ export default function Organization() {
     const [creating, setCreating] = useState(false);
     const membership = useResolvedOrganizationMembership();
     const organizationId = membership.organization.id;
+
     const [solutions, invalidateSolutions] = useApi<
         z.output<typeof schemas.zGetOrganizationSolutionsApiV1OrganizationsOrganizationIdSolutionsGetResponse>
     >(`/api/v1/organizations/${organizationId}/solutions`);
+
     const canCreate = ['maintain', 'admin', 'owner'].includes(membership.role);
 
     // Match the Organizations empty state within the existing Platform shell and padding.

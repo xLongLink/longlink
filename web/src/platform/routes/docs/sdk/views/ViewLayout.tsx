@@ -18,7 +18,9 @@ import { ArticleFooter, ArticleOutline } from '@/platform/components/Article';
 import { componentCatalog, componentDocumentation, documentationPaths } from '@/platform/docs';
 
 type ViewProperty = NonNullable<(typeof componentCatalog)[number]['properties']>[number];
+
 export type ViewReference = Pick<(typeof references)[number], 'introduction' | 'practices'>;
+
 export type ViewExample = { title: string; code: string; preview: ReactNode };
 
 const tabs = [
@@ -45,6 +47,7 @@ export default function ViewLayout({
 
     // Resolve the declaration catalog and optional generated reference for this explicit page.
     const component = componentDocumentation.find((entry) => entry.name === name);
+
     if (!component) throw new Error(`Missing View documentation: ${name}`);
     const upstream = references.find((entry) => entry.name === name);
     const reference = authoredReference ?? upstream;
@@ -56,21 +59,27 @@ export default function ViewLayout({
         name === 'Button'
             ? [component, ...componentCatalog.filter((entry) => entry.name === 'ButtonGroup')]
             : [component];
+
     const groups = new Map<string, ViewProperty[]>();
+
     for (const entry of entries) {
         for (const property of entry.properties ?? []) {
             const separator = property.name.indexOf('.');
             const group = separator < 0 ? entry.name : property.name.slice(0, separator);
+
             const row = {
                 ...property,
                 name: separator < 0 ? property.name : property.name.slice(separator + 1),
                 description: property.description ?? '',
             };
+
             const properties = groups.get(group);
+
             if (properties) properties.push(row);
             else groups.set(group, [row]);
         }
     }
+
     const propertyGroups = [...groups].map(([name, properties]) => ({ name, properties }));
 
     // Preserve the existing documentation shell, region sizes, and table of contents.

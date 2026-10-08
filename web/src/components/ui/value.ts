@@ -17,13 +17,17 @@ export function useValue<T, Element extends HTMLElement = HTMLDivElement>(
     // Synchronize with the real form's reset event, respecting canceled resets.
     useEffect(() => {
         const form = ref.current?.closest('form');
+
         if (!form || controlled) return;
+
         const reset = (event: Event) => {
             queueMicrotask(() => {
                 if (!event.defaultPrevented) setLocal(defaultValue);
             });
         };
+
         form.addEventListener('reset', reset);
+
         return () => form.removeEventListener('reset', reset);
     }, [controlled, defaultValue]);
 
@@ -32,5 +36,7 @@ export function useValue<T, Element extends HTMLElement = HTMLDivElement>(
         if (!controlled) setLocal(next);
         onChange?.(next);
     };
+
+    // SAFETY: Controlled callers supply a value, or explicitly include undefined in T for an empty value.
     return { ref, value: controlled ? (value as T) : local, onChange: change };
 }

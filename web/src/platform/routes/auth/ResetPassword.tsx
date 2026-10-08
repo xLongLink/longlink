@@ -14,6 +14,7 @@ import { useFragmentToken } from '@/lib/hooks/use-fragment-token';
 import { useVerification, type VerificationRequest } from '@/lib/hooks/use-verification';
 
 const PASSWORD_RESET_TOKEN_KEY = 'longlink.password-reset.token';
+
 const resetPasswordSchema = z.object({
     password: passwordSchema,
 });
@@ -21,17 +22,19 @@ const resetPasswordSchema = z.object({
 type ResetPasswordValues = z.infer<typeof resetPasswordSchema>;
 
 /** Returns whether an API error reports an invalid or expired reset token. */
-function isBadTokenError(error: unknown): boolean {
-    return error instanceof ApiError && error.status === 400;
+function isBadTokenError(cause: unknown): boolean {
+    return cause instanceof ApiError && cause.status === 400;
 }
 
 /** Accepts a password reset token and saves a new password. */
 export default function ResetPassword() {
     const token = useFragmentToken(PASSWORD_RESET_TOKEN_KEY);
+
     const form = useForm<ResetPasswordValues>({
         defaultValues: { password: '' },
         resolver: zodResolver(resetPasswordSchema),
     });
+
     const [verification, setVerification] = useState<{ status: 'verified' } | { status: 'error' } | null>(null);
     const [reset, setReset] = useState<{ status: 'saved' } | { status: 'error' } | null>(null);
 
@@ -47,15 +50,17 @@ export default function ResetPassword() {
                   signal,
               })
             : api('/api/v1/auth/reset-password/setup', { signal });
+
         await request.then(
             () => {
                 if (signal.aborted) return;
                 sessionStorage.removeItem(PASSWORD_RESET_TOKEN_KEY);
                 setVerification({ status: 'verified' });
             },
-            (error: unknown) => {
+            (cause: unknown) => {
                 if (signal.aborted) return;
-                if (!isBadTokenError(error)) throw error;
+
+                if (!isBadTokenError(cause)) throw cause;
                 sessionStorage.removeItem(PASSWORD_RESET_TOKEN_KEY);
                 setVerification({ status: 'error' });
             }
@@ -96,8 +101,8 @@ export default function ResetPassword() {
                             // Publish the saved result only after the password change succeeds.
                             await api('/api/v1/auth/reset-password', { json: payload, method: 'POST' }).then(
                                 () => setReset({ status: 'saved' }),
-                                (error: unknown) => {
-                                    if (!isBadTokenError(error)) throw error;
+                                (cause: unknown) => {
+                                    if (!isBadTokenError(cause)) throw cause;
                                     setReset({ status: 'error' });
                                 }
                             );

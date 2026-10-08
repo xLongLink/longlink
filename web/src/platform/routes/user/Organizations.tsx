@@ -31,6 +31,7 @@ export default function Organizations() {
 /** Renders the organization's list while its boundary owns request lifecycle state. */
 function OrganizationList() {
     const [creating, setCreating] = useState(false);
+
     const [memberships, invalidate] =
         useApi<z.output<typeof schemas.zGetMyOrganizationsApiV1MeOrganizationsGetResponse>>('/api/v1/me/organizations');
 
@@ -100,7 +101,7 @@ function OrganizationList() {
                                 width: proportional(1),
                                 renderCell: (row) => (
                                     <Stack direction="horizontal" gap={3} align="center">
-                                        <Avatar shape="rounded" name={row.organization.name} />
+                                        <Avatar kind="organization" name={row.organization.name} />
                                         <Stack align="start" gap={0}>
                                             <Link href={`/orgs/${row.organization.slug}`}>{row.organization.name}</Link>
                                             <Text type="supporting">Organization</Text>

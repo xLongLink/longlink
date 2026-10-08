@@ -15,5 +15,6 @@ export function useResolvedOrganizationMembership() {
     if (membership === undefined) {
         throw new Error('useResolvedOrganizationMembership must be used within an organization route');
     }
+
     return membership;
 }

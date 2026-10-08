@@ -43,6 +43,7 @@ export default function CreateSolution({
                 },
             }).json()
         );
+
         setImage(image.trim());
         setDescription(inspected.description || '');
         setEnvs({});
@@ -58,6 +59,7 @@ export default function CreateSolution({
             image,
             name: name.trim(),
         });
+
         await api.post(`/api/v1/organizations/${organizationId}/solutions`, { json });
         await invalidate();
         onClose();
@@ -212,6 +214,7 @@ export default function CreateSolution({
                                         as="form"
                                         onSubmit={(event) => {
                                             event.preventDefault();
+
                                             if (name.trim()) setStage({ step: 2, metadata: stage.metadata });
                                         }}
                                     >

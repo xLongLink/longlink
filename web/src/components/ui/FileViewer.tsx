@@ -6,7 +6,7 @@ import { createContext, useContext, useEffect, useState } from 'react';
 
 // Only the isolated runtime supplies the scoped binary-request capability.
 export const FileRequestContext = createContext<{
-    preview: (path: string) => Promise<unknown>;
+    preview: (path: string) => Promise<Blob>;
     download: (path: string, filename: string) => Promise<void>;
 } | null>(null);
 
@@ -35,6 +35,7 @@ export function FileViewer({
                     onClick={async () => {
                         // Normalize an attachment label into a bounded filename, never a filesystem path.
                         setError(undefined);
+
                         try {
                             if (!files) throw new Error('Downloads require the Solution runtime');
                             const filename = title.replace(/[/\\\p{Cc}]/gu, '_').slice(0, 256) || 'attachment';
@@ -54,6 +55,7 @@ export function FileViewer({
 /** Releases image resources when the preview closes or its request capability changes. */
 function FilePreview({ src, title }: { src: string; title: string }) {
     const request = useContext(FileRequestContext)?.preview;
+
     const [preview, setPreview] = useState<
         { status: 'loading' } | { status: 'error'; message: string } | { status: 'ready'; url: string }
     >({ status: 'loading' });
@@ -67,14 +69,18 @@ function FilePreview({ src, title }: { src: string; title: string }) {
         async function load() {
             try {
                 const value = await request?.(src);
+
                 if (!active) return;
+
                 if (!(value instanceof Blob) || !value.type.startsWith('image/')) {
                     setPreview({
                         status: 'error',
                         message: 'No image preview is available. Use Download to save this file.',
                     });
+
                     return;
                 }
+
                 objectUrl = URL.createObjectURL(value);
                 setPreview({ status: 'ready', url: objectUrl });
             } catch (failure) {
@@ -85,9 +91,12 @@ function FilePreview({ src, title }: { src: string; title: string }) {
                     });
             }
         }
+
         void load();
+
         return () => {
             active = false;
+
             if (objectUrl) URL.revokeObjectURL(objectUrl);
         };
     }, [request, src]);

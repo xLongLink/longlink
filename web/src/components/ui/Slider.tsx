@@ -22,14 +22,20 @@ type SliderProps = FieldProps & {
           }
     );
 
+/** Tuple-valued inputs select the range slider and its corresponding callbacks. */
+function isRangeSlider(props: SliderProps): props is Extract<SliderProps, { value?: [number, number] }> {
+    // Use the supplied value contract rather than inspecting callback signatures.
+    return Array.isArray(props.value) || Array.isArray(props.defaultValue);
+}
+
 /** Edits a number or range using a standard horizontal slider. */
 export function Slider(props: SliderProps) {
     // Slider carriers already preserve repeated names; local state only adapts uncontrolled editing.
     const field = useValue<number | [number, number]>(props.value, props.defaultValue ?? props.min ?? 0, (value) => {
-        if (Array.isArray(props.value) || Array.isArray(props.defaultValue)) {
-            if (Array.isArray(value)) (props.onChange as ((value: [number, number]) => void) | undefined)?.(value);
-        } else if (typeof value === 'number') {
-            (props.onChange as ((value: number) => void) | undefined)?.(value);
+        if (isRangeSlider(props)) {
+            if (Array.isArray(value)) props.onChange?.(value);
+        } else if (!Array.isArray(value)) {
+            props.onChange?.(value);
         }
     });
 
@@ -42,12 +48,12 @@ export function Slider(props: SliderProps) {
                 ? {
                       value: field.value,
                       onChange: (value: [number, number]) => field.onChange(value),
-                      onChangeEnd: props.onChangeEnd as ((value: [number, number]) => void) | undefined,
+                      onChangeEnd: isRangeSlider(props) ? props.onChangeEnd : undefined,
                   }
                 : {
                       value: field.value,
                       onChange: (value: number) => field.onChange(value),
-                      onChangeEnd: props.onChangeEnd as ((value: number) => void) | undefined,
+                      onChangeEnd: !isRangeSlider(props) ? props.onChangeEnd : undefined,
                   })}
             htmlName={props.name}
             min={props.min ?? 0}

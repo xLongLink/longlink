@@ -17,10 +17,12 @@ import { emailPayloadSchema, type EmailPayload } from './validation';
 export default function Register() {
     const showToast = useToast();
     const [searchParams] = useSearchParams();
+
     const form = useForm<EmailPayload>({
         defaultValues: { email: searchParams.get('email') ?? '' },
         resolver: zodResolver(emailPayloadSchema),
     });
+
     const trimmedEmail = useWatch({ control: form.control, name: 'email' }).trim();
     const signInSearch = trimmedEmail ? `?${new URLSearchParams({ email: trimmedEmail })}` : '';
 

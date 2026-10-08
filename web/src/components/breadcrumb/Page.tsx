@@ -9,6 +9,7 @@ export function PageBreadcrumb({ solutionName }: { solutionName?: string }) {
     const organization = pathname.split('/')[2] ?? '';
     const label = pathname.startsWith('/admin/') ? 'Admin' : formatPathSegment(organization);
     const isSolutionBreadcrumb = solutionName !== undefined;
+
     return (
         <Breadcrumbs separator=">" variant="supporting">
             <BreadcrumbItem href="/user/organizations">

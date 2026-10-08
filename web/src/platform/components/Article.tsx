@@ -67,6 +67,7 @@ export function ArticleFooter({
         // Navigate only when the collection has a page in the requested direction.
         const destination =
             event.key === 'ArrowLeft' ? previousPage : event.key === 'ArrowRight' ? nextPage : undefined;
+
         if (destination === undefined) {
             return;
         }
@@ -85,6 +86,7 @@ export function ArticleFooter({
 
         // Release the listener when the article leaves the collection or unmounts.
         document.addEventListener('keydown', handleKeyDown);
+
         return () => document.removeEventListener('keydown', handleKeyDown);
     }, [currentPage]);
 

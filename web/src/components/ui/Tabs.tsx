@@ -12,6 +12,7 @@ type TabProps = {
     /** Whether the tab is disabled. */
     isDisabled?: boolean;
 };
+
 type TabsProps = {
     /** Tab elements defining labels and panel content. */
     children?: ReactNode;
@@ -32,7 +33,9 @@ export function Tabs({ children, gap = 3, onChange, value: controlledValue, ...p
     const tabs = Children.toArray(children).filter(
         (child): child is ReactElement<TabProps> => isValidElement(child) && child.type === Tab
     );
+
     const activeTab = tabs.find((tab) => tab.props.value === (controlledValue ?? selection)) ?? tabs[0];
+
     if (!activeTab) return null;
     const panelId = `${instance}-${activeTab.props.value}`;
 

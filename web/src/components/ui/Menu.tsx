@@ -16,6 +16,7 @@ type MenuSectionProps = {
     /** Section heading displayed in the navigation. */
     title: string;
 };
+
 type MenuItemProps = {
     /** Content mounted beside the navigation while this item is selected. */
     children?: ReactNode;
@@ -24,6 +25,7 @@ type MenuItemProps = {
     /** Navigation label; its lowercase, hyphenated form identifies the item's URL fragment. */
     label: string;
 };
+
 type MenuEntry =
     | { kind: 'item'; item: ReactElement<MenuItemProps> }
     | { kind: 'subsection'; group: ReactElement<MenuItemProps>; items: ReactElement<MenuItemProps>[] };
@@ -67,6 +69,7 @@ export function Menu({
             section,
             entries: Children.toArray(section.props.children).flatMap<MenuEntry>((child) => {
                 if (isMenuItem(child)) return [{ kind: 'item', item: child }];
+
                 if (isValidElement<MenuItemProps>(child) && child.type === MenuSubSection) {
                     return [
                         {
@@ -76,6 +79,7 @@ export function Menu({
                         },
                     ];
                 }
+
                 return [];
             }),
         }));
@@ -84,6 +88,7 @@ export function Menu({
     const items = sections.flatMap(({ entries }) =>
         entries.flatMap((entry) => (entry.kind === 'subsection' ? entry.items : [entry.item]))
     );
+
     const activeItem = items.find((item) => `#${menuItemId(item)}` === hash) ?? items[0];
 
     /** Renders direct and nested items with the same navigation and selection behavior. */

@@ -54,6 +54,7 @@ export default function OrganizationSolution() {
 function SolutionPage() {
     const { organization = '', solution = '' } = useParams();
     const user = useAuthenticatedUser();
+
     const [membership] = useApi<z.output<typeof zUserOrganizationMembership>>(
         `/api/v1/organizations/slug/${encodeURIComponent(organization)}`
     );
@@ -71,6 +72,7 @@ function SolutionPage() {
 
     // Keep the solution lookup and its existence check together.
     const solutionAccess = solutions.find((item) => item.slug === solution);
+
     if (!solutionAccess) {
         return <NotFoundLayout />;
     }

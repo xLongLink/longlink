@@ -24,6 +24,7 @@ const EMPTY_VIEWS = [] as const;
 function viewLabel(path: string): string {
     // SDK paths omit the extension; custom manifests may retain it.
     const filename = path.substring(path.lastIndexOf('/') + 1).replace(/\.jsx$/, '');
+
     return startCase(filename.replace(/^\[(.*)\]$/, '$1'));
 }
 
@@ -35,15 +36,19 @@ export function SolutionRuntime({ children, navigationBaseUrl = '/', viewsUrl = 
     const viewsLocation = new URL(viewsUrl, 'http://longlink.local');
     const requestBaseLocation = new URL('.', viewsLocation);
     const requestBaseUrl = viewsUrl.startsWith('/') ? requestBaseLocation.pathname : requestBaseLocation.toString();
+
     const { data: registeredViews, error: viewsError } = useQuery({
         queryKey: ['api', viewsUrl],
         queryFn: async ({ signal }) => {
             const body = await host.load(viewsUrl, { signal });
             const data: unknown = JSON.parse(await body.text());
+
             return viewsSchema.parse(data);
         },
     });
+
     const views = registeredViews ?? EMPTY_VIEWS;
+
     const match = matchRoutes(
         views.map((view) => ({
             path: view.route,
@@ -58,17 +63,20 @@ export function SolutionRuntime({ children, navigationBaseUrl = '/', viewsUrl = 
     const activeView = routePath || tabViews.length === 0 ? match?.route.view : undefined;
     const activeViewTitle = activeView ? viewLabel(activeView.path) : undefined;
     const isNotFound = registeredViews !== undefined && routePath.length > 0 && match == null;
+
     const { data: activeViewSource, error: activeViewError } = useQuery({
         queryKey: ['api', 'solution-view', viewsUrl, activeView?.path],
         queryFn: activeView
             ? async ({ signal }) => {
                   const viewUrl = resolveRequestUrl(requestBaseUrl, activeView.path);
                   const body = await host.load(viewUrl, { headers: { Accept: 'text/plain' }, signal }, MAX_SOURCE_SIZE);
+
                   return body.text();
               }
             : skipToken,
         retry: false,
     });
+
     // Build one static navigation target per solution tab.
     const tabs = tabViews.map(
         (view) =>

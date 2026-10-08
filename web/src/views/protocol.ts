@@ -1,10 +1,14 @@
 import { z } from 'zod';
 
 export const MAX_SOURCE_SIZE = 1_000_000;
+
 export const MAX_MESSAGE_SIZE = 2_000_000;
+
 export const MAX_PENDING_REQUESTS = 8;
+
 // Allow the Platform's 120-second Solution proxy timeout to finish, including cold starts.
 export const REQUEST_TIMEOUT = 130_000;
+
 export const parametersSchema = z.record(z.string(), z.string());
 
 export const requestSchema = z
@@ -26,6 +30,7 @@ export const requestSchema = z
         if (command.json !== undefined && command.form !== undefined) {
             context.addIssue({ code: 'custom', path: ['form'], message: 'Choose JSON or form data' });
         }
+
         if (command.method === 'GET' && (command.json !== undefined || command.form !== undefined)) {
             context.addIssue({ code: 'custom', path: ['method'], message: 'GET requests cannot send a body' });
         }
@@ -51,22 +56,30 @@ export const commandSchema = z.discriminatedUnion('type', [
 ]);
 
 export type RequestCommand = z.output<typeof requestSchema>;
+
 export type DownloadCommand = z.output<typeof downloadSchema>;
+
+// Replies contain only backend JSON or bounded binary responses, never arbitrary runtime objects.
+export const responseSchema = z.union([z.json(), z.instanceof(Blob)]);
+
+export type ViewData = z.output<typeof responseSchema>;
+
 export type ViewReply =
-    | { id: number; ok: true; data: unknown }
+    | { id: number; ok: true; data: ViewData }
     | { id: number; ok: false; error: string; status?: number };
 
 /** Bounds bridge payloads before allowing them to consume host resources. */
 export function messageSize(command: RequestCommand): number {
     // Count UTF-8 bytes consistently with the SDK source and host response limits.
     const encoder = new TextEncoder();
+
     return (
         encoder.encode(JSON.stringify(command.json ?? null)).byteLength +
         (command.form ?? []).reduce(
             (size, [name, value]) =>
                 size +
                 encoder.encode(name).byteLength +
-                (typeof value === 'string' ? encoder.encode(value).byteLength : value.size),
+                (value instanceof Blob ? value.size : encoder.encode(value).byteLength),
             0
         )
     );

@@ -3,7 +3,7 @@ import { useLocation } from 'react-router';
 import { buildBreadcrumbs } from '@/components/breadcrumb/text';
 
 /** Labels for public article route segments shared with visible breadcrumbs. */
-export const articleRouteLabels: Record<string, string> = {
+export const articleRouteLabels = {
     'approvals-and-decisions': 'Approvals & decisions',
     api: 'Platform',
     assets: 'Brand assets',
@@ -24,7 +24,7 @@ export const articleRouteLabels: Record<string, string> = {
     sdk: 'Solutions',
     'use-cases': 'Use cases',
     views: 'Views',
-};
+} satisfies Record<string, string>;
 
 /** Returns the canonical path with the site-wide trailing-slash convention. */
 function canonicalPath(pathname: string): string {
@@ -32,7 +32,7 @@ function canonicalPath(pathname: string): string {
 }
 
 /** Builds breadcrumb structured data for an article's current route. */
-function breadcrumbs(pathname: string): object {
+function breadcrumbs(pathname: string) {
     const items = [{ '@type': 'ListItem', position: 1, name: 'Home', item: `${siteUrl}/` }];
 
     for (const [index, segment] of buildBreadcrumbs(pathname, articleRouteLabels).entries()) {

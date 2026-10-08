@@ -70,4 +70,5 @@ export const comparisonPages = [
 ] as const;
 
 export const useCasePaths: string[] = useCasePages.map(({ path }) => path);
+
 export const comparisonPaths: string[] = comparisonPages.map(({ path }) => path);

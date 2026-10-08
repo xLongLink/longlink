@@ -18,6 +18,7 @@ import type { zUserSummary } from '@/lib/generated/platform-api-v1/zod.gen';
 export function ProfileMenu({ user }: { user: z.output<typeof zUserSummary> }) {
     const [isOpen, setIsOpen] = useState(false);
     const closeMenu = () => setIsOpen(false);
+
     return (
         <Popover
             alignment="end"

@@ -4,6 +4,7 @@ import { resolveRequestUrl } from '@/lib/url';
 /** Returns whether a manifest route is a normalized supported React Router path. */
 function isRoute(route: string): boolean {
     if (!route.startsWith('/')) return false;
+
     if (route === '/') return true;
 
     return route
@@ -11,6 +12,7 @@ function isRoute(route: string): boolean {
         .split('/')
         .every((segment) => {
             if (!segment || segment === '.' || segment === '..') return false;
+
             if (segment.startsWith(':')) return /^[A-Za-z_][A-Za-z0-9_]*$/.test(segment.slice(1));
 
             return /^[A-Za-z0-9._~-]+$/.test(segment);
@@ -25,6 +27,7 @@ const viewSchema = z.object({
         .refine((path) => {
             try {
                 resolveRequestUrl('/', path);
+
                 return true;
             } catch {
                 return false;
@@ -46,6 +49,7 @@ export const viewsSchema = z.array(viewSchema).superRefine((views, context) => {
         if (routes.has(routeKey)) {
             context.addIssue({ code: 'custom', message: 'Routes must be unique', path: [index, 'route'] });
         }
+
         routes.add(routeKey);
     }
 });

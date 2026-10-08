@@ -13,11 +13,13 @@ export type SelectorOptionData = {
     icon?: StoneIconName;
     disabled?: boolean;
 };
+
 export type SelectorOptionType =
     | string
     | SelectorOptionData
     | { type: 'divider' }
     | { type: 'section'; title?: string; options: SelectorOptionData[] };
+
 type SelectorProps = FieldProps & {
     options: SelectorOptionType[];
     defaultValue?: string;
@@ -36,6 +38,7 @@ export function Selector(props: SelectorProps) {
 
     // Retain search, option presentation, and clearing while adapting optional local state.
     const { defaultValue, ...control } = props;
+
     const field = useValue<string | null>(props.value, defaultValue ?? null, (value) => {
         if (props.hasClear) props.onChange?.(value);
         else if (value !== null) props.onChange?.(value);

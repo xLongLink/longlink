@@ -20,15 +20,18 @@ import type { zPageSolutionResponse } from '@/lib/generated/platform-api-v1/zod.
 export default function Solutions() {
     const [page, setPage] = useState(1);
     const [isDeleting, startDeletion] = useTransition();
+
     const [dialog, setDialog] = useState<
         { kind: 'metadata'; id: string } | { kind: 'deletion'; item: { id: string; name: string } } | null
     >(null);
+
     const [solutions, invalidate] = useApi<z.output<typeof zPageSolutionResponse>>(
         `/api/v1/solutions?page=${page}&page_size=25`
     );
 
     // Use current metadata and clear missing selections so returning to a page cannot reopen the dialog.
     const metadata = dialog?.kind === 'metadata' ? solutions.items.find((item) => item.id === dialog.id) : undefined;
+
     if (dialog?.kind === 'metadata' && !metadata) setDialog(null);
 
     return (
@@ -69,7 +72,7 @@ export default function Solutions() {
                             width: proportional(1),
                             renderCell: (row) => (
                                 <Stack direction="horizontal" gap={3} align="center">
-                                    <Avatar shape="rounded" name={row.organization.name} />
+                                    <Avatar kind="organization" name={row.organization.name} />
                                     <Stack align="start">
                                         <Link href={`/orgs/${row.organization.slug}`}>{row.organization.name}</Link>
                                         <Text type="supporting">Organization</Text>

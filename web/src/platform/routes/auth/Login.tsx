@@ -42,6 +42,7 @@ export default function Login() {
     const reportApiError = useApiError();
     const oauthError = searchParams.get('oauth_error') === '1';
     const { data: user } = useCurrentUser();
+
     const { data: oauthAvailability } = useQuery({
         queryKey: ['public-api', '/api/v1/auth/oauth'],
         queryFn: async ({ signal }) => zOAuthAvailability.parse(await api('/api/v1/auth/oauth', { signal }).json()),
@@ -51,10 +52,12 @@ export default function Login() {
 
     // Resolve enabled providers once for both section visibility and button rendering.
     const availableOAuthProviders = oauthProviders.filter((provider) => oauthAvailability?.[provider.availability]);
+
     const form = useForm<LoginValues>({
         defaultValues: { email: searchParams.get('email') ?? '', password: '' },
         resolver: zodResolver(loginSchema),
     });
+
     const trimmedEmail = useWatch({ control: form.control, name: 'email' }).trim();
     const registerSearch = trimmedEmail ? `?${new URLSearchParams({ email: trimmedEmail })}` : '';
 

@@ -18,8 +18,10 @@ export function formatPathSegment(segment: string, labels: Record<string, string
 export function buildBreadcrumbs(pathname: string, labels?: Record<string, string>): { label: string; href: string }[] {
     // Apply the shared trailing-slash convention to each cumulative path.
     const segments = pathname.split('/').filter(Boolean);
+
     return segments.map((segment, index) => {
         const path = `/${segments.slice(0, index + 1).join('/')}/`;
+
         return {
             label: formatPathSegment(segment, labels),
             href: path,

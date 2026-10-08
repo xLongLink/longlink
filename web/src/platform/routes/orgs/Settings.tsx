@@ -29,12 +29,14 @@ import { useResolvedOrganizationMembership } from '@/lib/hooks/use-organization'
 import { Menu, MenuSection, MenuItem, MenuSubSection } from '@/components/ui/Menu';
 
 type Solution = z.output<typeof schemas.zOrganizationSolutionSummary>;
+
 type Update = {
     // Remount drafts for every fresh check, including checks of the same revision.
     key: string;
     item: { id: string; name: string };
     candidate: z.output<typeof schemas.zSolutionUpdateCheck>;
 };
+
 type DeploymentReviewProps = {
     update: Update;
     invalidate: () => Promise<void>;
@@ -60,6 +62,7 @@ function DeploymentReview({ update, invalidate, onClose }: DeploymentReviewProps
                 (!update.candidate.configured_envs.includes(environment.name) &&
                     (!Object.hasOwn(envs, environment.name) || !envs[environment.name].trim())))
     );
+
     const hasChanges =
         update.candidate.metadata.image !== update.candidate.current_image ||
         Object.keys(envs).length > 0 ||
@@ -78,6 +81,7 @@ function DeploymentReview({ update, invalidate, onClose }: DeploymentReviewProps
                     .map(([name]) => [name, null])
             ),
         };
+
         await api.post(`/api/v1/solutions/${update.item.id}/update`, {
             json: schemas.zSolutionPatch.parse({
                 envs: patchEnvs,
@@ -169,7 +173,7 @@ export default function OrganizationSettings() {
         <Stack gap={8}>
             <NoIndex title="Organization Settings | LongLink" />
             <Stack direction="horizontal" gap={3} align="center">
-                <Avatar shape="rounded" name={membership.organization.name} />
+                <Avatar kind="organization" name={membership.organization.name} />
                 <Stack gap={0}>
                     <Heading level={4} accessibilityLevel={1}>
                         {membership.organization.name}
@@ -264,18 +268,22 @@ function MembersSection({ base, canAdminister }: { base: string; canAdminister: 
                                       renderCell: (row: z.output<typeof schemas.zOrganizationMemberAccessResponse>) => (
                                           <MoreMenu
                                               alignment="end"
-                                              items={['read', 'write', 'maintain', 'admin']
-                                                  .filter((role) => role !== row.role)
-                                                  .map((role) => ({
-                                                      id: role,
-                                                      label: `Set as ${role[0].toUpperCase() + role.slice(1)}`,
-                                                      onClick: () =>
-                                                          setMember({
-                                                              id: row.user.id,
-                                                              name: row.user.name,
-                                                              role,
-                                                          }),
-                                                  }))}
+                                              items={['read', 'write', 'maintain', 'admin'].flatMap((role) =>
+                                                  role === row.role
+                                                      ? []
+                                                      : [
+                                                            {
+                                                                id: role,
+                                                                label: `Set as ${role[0].toUpperCase() + role.slice(1)}`,
+                                                                onClick: () =>
+                                                                    setMember({
+                                                                        id: row.user.id,
+                                                                        name: row.user.name,
+                                                                        role,
+                                                                    }),
+                                                            },
+                                                        ]
+                                              )}
                                           />
                                       ),
                                   },
@@ -514,6 +522,7 @@ function SolutionsSection({
                                                                                     `/api/v1/solutions/${row.id}/update`
                                                                                 ).json()
                                                                             );
+
                                                                         setUpdate({
                                                                             key: crypto.randomUUID(),
                                                                             item: {

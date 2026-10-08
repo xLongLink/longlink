@@ -22,37 +22,48 @@ export function FormField({
 }) {
     // Keep validation feedback separate from the control's editable value.
     const [failure, setFailure] = useState<{ values: (string | Blob)[]; message: string }>();
+
     const error =
         fieldError ??
-        (required && !values.some((value) => typeof value !== 'string' || value !== '')
+        (required && !values.some((value) => value instanceof Blob || value !== '')
             ? 'Please complete this field.'
             : undefined);
 
     // Join the actual ancestor form, preserving ordinary FormData and canceled reset behavior.
     useEffect(() => {
         const form = fieldRef.current?.closest('form');
+
         if (!form || !name) return;
+
         const validate = (event: Event) => {
             const invalidControl = fieldRef.current?.querySelector<HTMLElement>('[aria-invalid="true"]');
+
             if (disabled || fieldRef.current?.closest('fieldset:disabled') || (!error && !invalidControl)) {
                 setFailure(undefined);
+
                 return;
             }
+
             setFailure({ values, message: error ?? 'Please enter a valid value.' });
+
             if (!event.defaultPrevented) {
                 (
                     invalidControl ??
                     fieldRef.current?.querySelector<HTMLElement>('input:not([type="hidden"]), textarea, button')
                 )?.focus();
             }
+
             event.preventDefault();
         };
+
         const collect = (event: FormDataEvent) => {
             if (disabled || fieldRef.current?.closest('fieldset:disabled')) return;
+
             for (const value of values) {
-                if (typeof value !== 'string') event.formData.append(name, value);
+                if (value instanceof Blob) event.formData.append(name, value);
             }
         };
+
         const reset = (event: Event) => {
             queueMicrotask(() => {
                 if (!event.defaultPrevented) setFailure(undefined);
@@ -60,12 +71,15 @@ export function FormField({
         };
 
         // Only serialized binary values need a collector; strings use native controls or hidden carriers.
-        const collectFiles = serialize && values.some((value) => typeof value !== 'string');
+        const collectFiles = serialize && values.some((value) => value instanceof Blob);
         form.addEventListener('submit', validate, true);
+
         if (collectFiles) form.addEventListener('formdata', collect);
         form.addEventListener('reset', reset);
+
         return () => {
             form.removeEventListener('submit', validate, true);
+
             if (collectFiles) form.removeEventListener('formdata', collect);
             form.removeEventListener('reset', reset);
         };
@@ -79,7 +93,7 @@ export function FormField({
                 name &&
                 values.map(
                     (value, index) =>
-                        typeof value === 'string' && (
+                        !(value instanceof Blob) && (
                             // eslint-disable-next-line react/no-array-index-key -- Hidden carriers represent ordered slots, including identical range endpoints.
                             <input key={index} type="hidden" name={name} value={value} disabled={disabled} />
                         )

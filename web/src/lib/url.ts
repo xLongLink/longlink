@@ -20,6 +20,7 @@ function resolveUrl(baseUrl: string, path: string): string {
             if (resolvedSegments.length > baseSegments.length) {
                 resolvedSegments.pop();
             }
+
             continue;
         }
 

@@ -8,6 +8,7 @@ export function useApi<T = unknown>(
     options?: Pick<UseSuspenseQueryOptions<T, Error, T, readonly ['api', string]>, 'refetchInterval' | 'meta'>
 ): readonly [T, () => Promise<void>] {
     const client = useQueryClient();
+
     const { data } = useSuspenseQuery({
         ...options,
         queryKey: ['api', path],
@@ -15,9 +16,11 @@ export function useApi<T = unknown>(
         retry: false,
         staleTime: 0,
     });
+
     const invalidate = useCallback(
         () => client.invalidateQueries({ queryKey: ['api', path], exact: true }),
         [client, path]
     );
+
     return [data, invalidate];
 }

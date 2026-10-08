@@ -96,6 +96,7 @@ export function Card({
                         ? (event) => {
                               // Keep nested controls independent and let surface actions cancel navigation.
                               onClick?.(event);
+
                               if (navigate && href && !event.defaultPrevented) {
                                   event.preventDefault();
                                   navigate(href);

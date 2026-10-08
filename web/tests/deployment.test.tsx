@@ -10,8 +10,11 @@ import OrganizationLayout from '@/platform/layouts/Organization';
 import AuthenticatedLayout from '@/platform/layouts/Authenticated';
 
 const organizationId = '00000000-0000-4000-8000-000000000003';
+
 const solutionId = '00000000-0000-4000-8000-000000000002';
+
 const revisionId = '00000000-0000-4000-8000-000000000001';
+
 const candidate = {
     current_image: `ghcr.io/owner/sample@sha256:${'a'.repeat(64)}`,
     revision_id: revisionId,
@@ -31,6 +34,7 @@ describe('Solution source update dialog', () => {
     afterEach(async () => {
         // Unmount before removing the container and restoring globals.
         const mountedRoot = root;
+
         if (mountedRoot) await act(async () => mountedRoot.unmount());
 
         container?.remove();
@@ -45,6 +49,7 @@ describe('Solution source update dialog', () => {
 
             if (request.method === 'POST') {
                 submissions.push({ path, body: await request.json() });
+
                 return new Response(null, { status: 204 });
             }
 
@@ -57,12 +62,14 @@ describe('Solution source update dialog', () => {
                     administrator: false,
                 });
             }
+
             if (path === '/api/v1/organizations/slug/development') {
                 return Response.json({
                     organization: { id: organizationId, name: 'Development', slug: 'development', status: 'running' },
                     role: 'maintain',
                 });
             }
+
             if (path === `/api/v1/organizations/${organizationId}/solutions`) {
                 return Response.json([
                     {
@@ -75,6 +82,7 @@ describe('Solution source update dialog', () => {
                     },
                 ]);
             }
+
             if (path === `/api/v1/solutions/${solutionId}/update`) return Response.json(candidate);
 
             throw new Error(`Unexpected request ${request.method} ${path}`);
@@ -130,14 +138,18 @@ describe('Solution source update dialog', () => {
     /** Find the named native action without replacing UI components. */
     function button(label: string) {
         const found = [...document.querySelectorAll('button')].find((item) => item.textContent === label);
+
         if (!found) throw new Error(`Button not found: ${label}`);
+
         return found;
     }
 
     /** Return the solution overflow-menu trigger. */
     function moreMenu() {
         const found = document.querySelector<HTMLButtonElement>('button[aria-label="More options"]');
+
         if (!found) throw new Error('Solution overflow-menu trigger not found');
+
         return found;
     }
 
@@ -146,7 +158,9 @@ describe('Solution source update dialog', () => {
         const found = [...document.querySelectorAll<HTMLElement>('[role="menuitem"]')].find(
             (item) => item.textContent === label
         );
+
         if (!found) throw new Error(`Menu item not found: ${label}`);
+
         return found;
     }
 });
