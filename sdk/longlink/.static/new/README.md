@@ -35,9 +35,9 @@ uv run longlink migrate
 ## Release
 
 ```bash
-git tag v0.1.0
-git push origin v0.1.0
-gh release create v0.1.0 --generate-notes
+git tag v0.0.0
+git push origin v0.0.0
+gh release create v0.0.0 --generate-notes
 ```
 
 <br />
