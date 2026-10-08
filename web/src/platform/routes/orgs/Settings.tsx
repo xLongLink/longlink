@@ -1,5 +1,6 @@
 import type { z } from 'zod';
 import { api } from '@/lib/api';
+import Registries from './Registries';
 import { NoIndex } from '@/components/Seo';
 import { useApi } from '@/lib/hooks/use-api';
 import CreateSolution from './CreateSolution';
@@ -178,9 +179,14 @@ export default function OrganizationSettings() {
             </Stack>
             <Menu>
                 <MenuSection title="Settings" isHeaderHidden>
-                    <MenuItem label="Organization" icon="building2">
+                    <MenuItem label="Usage" icon="building2">
                         <ApiBoundary key="storage">
                             <StorageSection base={base} />
+                        </ApiBoundary>
+                    </MenuItem>
+                    <MenuItem label="Connections" icon="boxes">
+                        <ApiBoundary key="registries">
+                            <Registries base={base} canMaintain={canMaintain} />
                         </ApiBoundary>
                     </MenuItem>
                     <MenuSubSection label="People" icon="users">
@@ -208,7 +214,11 @@ export default function OrganizationSettings() {
 
 /** Owns role-change confirmation only while the members section is active. */
 function MembersSection({ base, canAdminister }: { base: string; canAdminister: boolean }) {
-    const [member, setMember] = useState<{ id: string; name: string; role: string } | null>(null);
+    const [member, setMember] = useState<{
+        id: string;
+        name: string;
+        role: string;
+    } | null>(null);
 
     // Load and invalidate People data only while the members section is active.
     const [{ members }, invalidateDetails] = useApi<z.output<typeof schemas.zOrganizationDetails>>(base);
@@ -295,7 +305,9 @@ function MembersSection({ base, canAdminister }: { base: string; canAdminister: 
                                 clickAction={async () => {
                                     // Update access on the server before refreshing the member list.
                                     await api.patch(`${base}/members/${member.id}`, {
-                                        json: schemas.zOrganizationMemberUpdate.parse({ role: member.role }),
+                                        json: schemas.zOrganizationMemberUpdate.parse({
+                                            role: member.role,
+                                        }),
                                     });
                                     await invalidateDetails();
                                     setMember(null);
@@ -397,7 +409,10 @@ function InvitationsSection({ base, canMaintain }: { base: string; canMaintain: 
                         <Selector
                             label="Role"
                             value={invitation.role}
-                            options={['read', 'write', 'maintain', 'admin'].map((value) => ({ value, label: value }))}
+                            options={['read', 'write', 'maintain', 'admin'].map((value) => ({
+                                value,
+                                label: value,
+                            }))}
                             onChange={(role) => setInvitation({ ...invitation, role })}
                         />
                         <Button label="Invite" variant="primary" type="submit" />
@@ -415,7 +430,7 @@ function StorageSection({ base }: { base: string }) {
     return (
         <Stack gap={4}>
             <Stack gap={1}>
-                <Heading level={2}>Organization</Heading>
+                <Heading level={2}>Usage</Heading>
                 <Text color="secondary">Review storage usage.</Text>
             </Stack>
             <Divider />

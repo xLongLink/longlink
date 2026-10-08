@@ -60,7 +60,7 @@ async def test_local_seed_creates_example_through_api(
     local_settings = settings(tmp_path, str(administrator.email))
 
     # Isolate registry transport from the workstation's mutable sample tag.
-    async def metadata(image: Image) -> LongLinkMetadata:
+    async def metadata(image: Image, _connection: object | None = None) -> LongLinkMetadata:
         """Resolve the seed through the same metadata boundary as deployment."""
 
         assert image == "localhost:15000/sample:dev"

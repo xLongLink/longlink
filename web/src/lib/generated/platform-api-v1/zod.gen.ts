@@ -274,6 +274,34 @@ export const zRegistrationComplete = z.object({
 });
 
 /**
+ * RegistryProvider
+ *
+ * Identify supported container registry authentication providers.
+ */
+export const zRegistryProvider = z.enum(['ghcr']);
+
+/**
+ * RegistryCreate
+ *
+ * Validate the registry provider and write-only credentials.
+ */
+export const zRegistryCreate = z.object({
+    provider: zRegistryProvider.optional().default('ghcr')
+});
+
+/**
+ * RegistryResponse
+ *
+ * Expose registry connection identity without encrypted credentials.
+ */
+export const zRegistryResponse = z.object({
+    id: z.uuid(),
+    host: z.string(),
+    provider: zRegistryProvider,
+    username: z.string()
+});
+
+/**
  * SolutionCreate
  *
  * Validate solution creation metadata and release configuration.
@@ -462,6 +490,16 @@ export const zUserUpdate = z.object({
 });
 
 /**
+ * RegistryCreate
+ *
+ * Validate the registry provider and write-only credentials.
+ */
+export const zRegistryCreateWritable = z.object({
+    provider: zRegistryProvider.optional().default('ghcr'),
+    credential: z.string().min(1).max(4096)
+});
+
+/**
  * Successful Response
  */
 export const zGetOauthAvailabilityApiV1AuthOauthGetResponse = zOAuthAvailability;
@@ -628,7 +666,8 @@ export const zHealthzApiV1HealthzGetResponse = z.record(z.string(), z.boolean())
 export const zReadyzApiV1ReadyzGetResponse = z.record(z.string(), z.boolean());
 
 export const zInspectImageApiV1ImageGetQuery = z.object({
-    image: z.string()
+    image: z.string(),
+    organization_id: z.uuid().nullish()
 });
 
 /**
@@ -769,3 +808,35 @@ export const zListUsersApiV1UsersGetQuery = z.object({
  * Successful Response
  */
 export const zListUsersApiV1UsersGetResponse = zPageAdminUserSummary;
+
+export const zListRegistriesApiV1OrganizationsOrganizationIdRegistriesGetPath = z.object({
+    organization_id: z.uuid()
+});
+
+/**
+ * Response List Registries Api V1 Organizations  Organization Id  Registries Get
+ *
+ * Successful Response
+ */
+export const zListRegistriesApiV1OrganizationsOrganizationIdRegistriesGetResponse = z.array(zRegistryResponse);
+
+export const zCreateRegistryApiV1OrganizationsOrganizationIdRegistriesPostBody = zRegistryCreateWritable;
+
+export const zCreateRegistryApiV1OrganizationsOrganizationIdRegistriesPostPath = z.object({
+    organization_id: z.uuid()
+});
+
+/**
+ * Successful Response
+ */
+export const zCreateRegistryApiV1OrganizationsOrganizationIdRegistriesPostResponse = zRegistryResponse;
+
+export const zDeleteRegistryApiV1OrganizationsOrganizationIdRegistriesConnectionIdDeletePath = z.object({
+    organization_id: z.uuid(),
+    connection_id: z.uuid()
+});
+
+/**
+ * Successful Response
+ */
+export const zDeleteRegistryApiV1OrganizationsOrganizationIdRegistriesConnectionIdDeleteResponse = z.void();

@@ -82,22 +82,24 @@ async def enqueue(
     *,
     kind: OperationKind,
     target_id: UUID,
+    coalesce: bool = True,
 ) -> Operation:
-    """Coalesce unfinished work when visible, allowing duplicates from concurrent requests."""
+    """Queue reconciliation, optionally reusing visible unfinished work."""
 
     # Reuse unfinished work, including an active or interrupted attempt at this exact target.
-    operation = await session.scalar(
-        select(Operation)
-        .where(
-            col(Operation.kind) == kind,
-            col(Operation.target_id) == target_id,
-            col(Operation.finished_at).is_(None),
+    if coalesce:
+        operation = await session.scalar(
+            select(Operation)
+            .where(
+                col(Operation.kind) == kind,
+                col(Operation.target_id) == target_id,
+                col(Operation.finished_at).is_(None),
+            )
+            .order_by(col(Operation.created_at), col(Operation.id))
+            .limit(1)
         )
-        .order_by(col(Operation.created_at), col(Operation.id))
-        .limit(1)
-    )
-    if operation is not None:
-        return operation
+        if operation is not None:
+            return operation
 
     # Duplicate requests may queue repeated reconciliation; handlers must remain idempotent.
     operation = Operation(kind=kind, target_id=target_id)

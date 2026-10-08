@@ -7,7 +7,7 @@ from src.models.roles import OrganizationRoles
 from src.models.types import Image
 from src.models.metadata import LongLinkMetadata
 from src.models.solutions import SolutionPatch, SolutionCreate, SolutionResponse, SolutionUpdateCheck
-from src.database.services import solutions, organizations
+from src.database.services import solutions, registries, organizations
 from src.kubernetes.client import Kubernetes
 from src.models.pagination import Page, Pagination
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -22,7 +22,7 @@ async def update_candidate(
 ) -> tuple[Solution, Revision, Image, LongLinkMetadata]:
     """Inspect and revalidate one desired Solution revision for an update request."""
 
-    # Avoid holding command locks while waiting for the public registry.
+    # Avoid holding command locks while waiting for the container registry.
     solution = await solutions.access(session, solution_id, user_id, lock=False)
     if expected_revision_id is not None and expected_revision_id != solution.desired_revision_id:
         raise HTTPException(status_code=409, detail="Desired revision changed since review. Check again.")
@@ -30,10 +30,13 @@ async def update_candidate(
     if revision is None:
         raise HTTPException(status_code=409, detail="Solution has no desired revision")
     source, revision_id = Image(revision.source), revision.id
+    connection = await registries.resolve(session, solution.organization_id, revision.registry_connection_id, source)
     await session.commit()
-    metadata = await images.required_metadata(source)
+    metadata = await images.required_metadata(source, connection)
 
     # Revalidate permissions and the source after inspection before returning a candidate.
+    if revision.registry_connection_id is not None:
+        await registries.lock(session, solution.organization_id)
     solution = await solutions.access(session, solution_id, user_id)
     if solution.desired_revision_id != revision_id:
         raise HTTPException(status_code=409, detail="Desired revision changed during inspection. Check again.")
@@ -69,7 +72,7 @@ async def create_solution(
         raise HTTPException(status_code=403, detail="Permission required")
 
     # Resolve immutable image metadata before creating durable Solution state.
-    metadata = await images.required_metadata(payload.image)
+    metadata, connection_id = await registries.inspect(session, organization_id, payload.image)
 
     await solutions.create(
         session,
@@ -77,6 +80,7 @@ async def create_solution(
         payload,
         metadata=metadata,
         user_id=user.id,
+        registry_connection_id=connection_id,
     )
     await session.commit()
 

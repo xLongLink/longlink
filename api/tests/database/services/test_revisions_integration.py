@@ -42,7 +42,7 @@ async def test_revision_ownership_constraints_and_cleanup(monkeypatch: pytest.Mo
             # Competing HTTP commands inspect outside PostgreSQL locks, then serialize their snapshots.
             barrier = asyncio.Barrier(2)
 
-            async def metadata(_image: Image) -> LongLinkMetadata:
+            async def metadata(_image: Image, _connection: object | None = None) -> LongLinkMetadata:
                 """Release both registry inspections together to exercise real row locking."""
 
                 await asyncio.wait_for(barrier.wait(), timeout=5)

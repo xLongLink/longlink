@@ -46,6 +46,7 @@ def test_solution_template_constrains_workloads() -> None:
         secret_id="solution-revision",
         min_scale=1,
         window="60s",
+        pull_secrets="[]",
     )
 
     # Assert

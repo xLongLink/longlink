@@ -231,6 +231,7 @@ class Solutions:
         min_scale: MinScale = 0,
         idle_seconds: int = 60,
         migrate: bool = True,
+        registry_connection_id: UUID | None = None,
     ) -> None:
         """Deploy one Solution and wait for its rollout."""
 
@@ -253,6 +254,7 @@ class Solutions:
             secret_id=secret_id,
             min_scale=min_scale,
             window=window,
+            pull_secrets=json.dumps([{"name": f"registry-{registry_connection_id}"}] if registry_connection_id is not None else []),
         )
 
         api = await self._client.api()

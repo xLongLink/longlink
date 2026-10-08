@@ -19,6 +19,7 @@ spec:
         spec:
             automountServiceAccountToken: false
             restartPolicy: Never
+            imagePullSecrets: $pull_secrets
             nodeSelector:
                 kubernetes.io/os: linux
                 kubernetes.io/arch: amd64
@@ -81,6 +82,7 @@ spec:
                 longlink.io/component: solution
         spec:
             containerConcurrency: 80
+            imagePullSecrets: $pull_secrets
             timeoutSeconds: 300
             automountServiceAccountToken: false
             nodeSelector:

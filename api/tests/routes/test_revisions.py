@@ -68,7 +68,7 @@ async def test_update_noop_preserves_source_and_patches(
     source = "ghcr.io/longlink/dashboard@sha256:test"
     resolved = LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:first"))
 
-    async def metadata(image: Image) -> LongLinkMetadata:
+    async def metadata(image: Image, _connection: object | None = None) -> LongLinkMetadata:
         """Resolve metadata for the persisted source at the external boundary."""
 
         assert image == source
@@ -102,7 +102,7 @@ async def test_update_rejects_stale_revision(
     url = f"/api/v1/solutions/{solution.id}/update"
     inspected: list[str] = []
 
-    async def metadata(image: Image) -> LongLinkMetadata:
+    async def metadata(image: Image, _connection: object | None = None) -> LongLinkMetadata:
         """Record whether stale submissions reach image resolution."""
 
         inspected.append(image)
@@ -133,7 +133,7 @@ async def test_update_rejects_solution_without_desired_revision(
         current.desired_revision_id = None
         await session.commit()
 
-    async def unexpected_metadata(_image: Image) -> LongLinkMetadata:
+    async def unexpected_metadata(_image: Image, _connection: object | None = None) -> LongLinkMetadata:
         """Fail if a revision-less candidate reaches image resolution."""
 
         raise AssertionError("revision-less update must not inspect image metadata")
@@ -166,7 +166,7 @@ async def test_update_check_exposes_names_without_secrets(
     url = f"/api/v1/solutions/{solution.id}/update"
     resolved = LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:first"))
 
-    async def metadata(image: Image) -> LongLinkMetadata:
+    async def metadata(image: Image, _connection: object | None = None) -> LongLinkMetadata:
         """Resolve metadata for the persisted source at the external boundary."""
 
         return resolved
@@ -197,7 +197,7 @@ async def test_update_enforces_idempotency_and_min_scale_bounds(
     url = f"/api/v1/solutions/{solution.id}/update"
     resolved = LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:first"))
 
-    async def metadata(image: Image) -> LongLinkMetadata:
+    async def metadata(image: Image, _connection: object | None = None) -> LongLinkMetadata:
         """Resolve metadata for the persisted source at the external boundary."""
 
         return resolved
@@ -233,7 +233,7 @@ async def test_update_reresolves_moved_tag_and_enforces_required_envs(
     resolved = LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:first"))
     inspected: list[str] = []
 
-    async def metadata(image: Image) -> LongLinkMetadata:
+    async def metadata(image: Image, _connection: object | None = None) -> LongLinkMetadata:
         """Resolve the current candidate metadata at the external boundary."""
 
         inspected.append(image)
@@ -311,7 +311,7 @@ async def test_update_check_rejects_callers_without_maintain_access(
             await session.commit()
     url = f"/api/v1/solutions/{solution.id}/update"
 
-    async def unexpected_metadata(_image: Image) -> LongLinkMetadata:
+    async def unexpected_metadata(_image: Image, _connection: object | None = None) -> LongLinkMetadata:
         """Fail if denied inspection reaches remote image resolution."""
 
         raise AssertionError("denied update check must not inspect image metadata")
@@ -344,7 +344,7 @@ async def test_update_check_allows_maintainer_without_registry_oracle(
         await session.commit()
     url = f"/api/v1/solutions/{solution.id}/update"
 
-    async def metadata(image: Image) -> LongLinkMetadata:
+    async def metadata(image: Image, _connection: object | None = None) -> LongLinkMetadata:
         """Resolve metadata for the persisted source at the external boundary."""
 
         return LongLinkMetadata(image=image)
@@ -372,7 +372,7 @@ async def test_release_inspection_revalidates_concurrent_desired_changes(
     metadata = LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:new"))
     replacement_id = None
 
-    async def inspect(_image: Image) -> LongLinkMetadata:
+    async def inspect(_image: Image, _connection: object | None = None) -> LongLinkMetadata:
         """Commit a competing command while the original lookup is still waiting."""
 
         nonlocal replacement_id
@@ -403,7 +403,7 @@ async def test_environment_patch_validates_merged_limits(
     solution = await create_solution(organization, envs={f"KEY_{index}": "value" for index in range(100)})
     image = Image("ghcr.io/longlink/dashboard@sha256:next")
 
-    async def metadata(_image: Image) -> LongLinkMetadata:
+    async def metadata(_image: Image, _connection: object | None = None) -> LongLinkMetadata:
         """Provide a valid release without additional required variables."""
 
         return LongLinkMetadata(image=image)
@@ -436,7 +436,7 @@ async def test_simultaneous_source_updates_create_only_one_revision(
     solution = await create_solution(organization, envs={"KEEP": "private-value"})
     barrier = asyncio.Barrier(2)
 
-    async def metadata(_image: Image) -> LongLinkMetadata:
+    async def metadata(_image: Image, _connection: object | None = None) -> LongLinkMetadata:
         """Let both commands inspect before either reacquires a command lock."""
 
         await asyncio.wait_for(barrier.wait(), timeout=5)

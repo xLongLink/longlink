@@ -24,7 +24,7 @@ async def test_inspect_image_requires_authentication_before_metadata_inspection(
     """Reject anonymous image inspection without reaching the image metadata adapter."""
 
     # Arrange
-    async def unexpected_metadata(_image: Image) -> None:
+    async def unexpected_metadata(_image: Image, _connection: object | None = None) -> None:
         """Fail if unauthenticated requests reach image inspection."""
 
         raise AssertionError("metadata inspection should require authentication")
@@ -43,7 +43,7 @@ async def test_inspect_image_returns_404_when_metadata_missing(authenticated_cli
     """Return a not-found error when the image has no LongLink metadata."""
 
     # Arrange
-    async def fake_metadata(_image: Image) -> None:
+    async def fake_metadata(_image: Image, _connection: object | None = None) -> None:
         """Pretend image inspection found no LongLink metadata."""
 
     monkeypatch.setattr("src.routes.v1.solutions.images.metadata", fake_metadata)
@@ -60,7 +60,7 @@ async def test_inspect_image_returns_declared_metadata(authenticated_client: Asy
     """Return the immutable image and declared runtime environment metadata."""
 
     # Arrange
-    async def fake_metadata(image: Image) -> LongLinkMetadata:
+    async def fake_metadata(image: Image, _connection: object | None = None) -> LongLinkMetadata:
         """Verify the requested image and return its declared metadata."""
 
         assert image == Image("ghcr.io/longlink/dashboard:latest")
