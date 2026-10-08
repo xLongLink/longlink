@@ -3,7 +3,8 @@ import httpx2
 from uuid import UUID
 from typing import TYPE_CHECKING
 from src.utils import s3, rustfs
-from collections.abc import Sequence
+from contextlib import asynccontextmanager
+from collections.abc import Sequence, AsyncIterator
 from kr8s.asyncio.objects import Secret
 
 if TYPE_CHECKING:
@@ -27,12 +28,21 @@ class Storage:
         self._credentials = credentials
         self._cluster = cluster
 
-    async def _admin(self) -> rustfs.RustFS:
-        """Connect administrator operations only through the authenticated cluster tunnel."""
+    @asynccontextmanager
+    async def _admin(self) -> AsyncIterator[rustfs.RustFS]:
+        """Own one administrator workflow's HTTP client over the cluster-owned tunnel."""
 
         # Route administrator requests through the bound Kubernetes connection.
         port = await self._cluster.forward_storage()
-        return rustfs.RustFS(f"http://127.0.0.1:{port}", self._credentials)
+
+        # Close the workflow transport without releasing the Kubernetes-owned tunnel.
+        async with httpx2.AsyncClient(trust_env=False, timeout=30, follow_redirects=False) as client:
+            admin = rustfs.RustFS(
+                f"http://127.0.0.1:{port}",
+                self._credentials,
+                client,
+            )
+            yield admin
 
     @staticmethod
     async def controller_credentials(cluster: "Kubernetes") -> s3.Credentials:
@@ -77,14 +87,16 @@ class Storage:
     async def service_account(self, organization: UUID, solution: UUID) -> s3.Credentials:
         """Create one Solution-scoped service account in the Organization bucket."""
 
-        admin = await self._admin()
-        return await admin.service_account(self.bucket_name(organization), solution)
+        # Keep account replacement and any retry on the same managed transport.
+        async with self._admin() as admin:
+            return await admin.service_account(self.bucket_name(organization), solution)
 
     async def revoke(self, solution: UUID) -> None:
         """Revoke one Solution service account."""
 
-        admin = await self._admin()
-        await admin.revoke(solution)
+        # Release the administrative transport after revocation succeeds or fails.
+        async with self._admin() as admin:
+            await admin.revoke(solution)
 
     async def delete_prefix(self, organization: UUID, prefix: str) -> None:
         """Remove one Solution prefix from the Organization bucket."""
@@ -97,15 +109,19 @@ class Storage:
         # Organization boundaries are direct deterministic buckets, not Kubernetes claim resources.
         name = self.bucket_name(organization)
         await self._storage.create_bucket(name)
-        admin = await self._admin()
-        await admin.quota(name, quota_bytes)
+
+        # Reuse the managed transport until RustFS acknowledges the hard quota.
+        async with self._admin() as admin:
+            await admin.quota(name, quota_bytes)
 
     async def delete(self, organization: UUID, solutions: Sequence[UUID]) -> None:
         """Revoke all scoped credentials and remove an Organization bucket's complete contents."""
 
         # Revoke every known account before data removal, including tombstoned Solutions.
         name = self.bucket_name(organization)
-        admin = await self._admin()
-        for solution in solutions:
-            await admin.revoke(solution)
+        async with self._admin() as admin:
+            for solution in solutions:
+                await admin.revoke(solution)
+
+        # Close the administrator transport before deleting the bucket and its contents.
         await self._storage.delete(name)

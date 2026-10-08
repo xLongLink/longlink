@@ -1,12 +1,16 @@
 from uuid import UUID
 from sqlmodel import col
-from src.utils import images
+from src.utils import roles, images
 from sqlalchemy import select, update
 from src.errors import InvalidError, ConflictError, NotFoundError, ForbiddenError
+from src.models.roles import OrganizationRoles
 from src.models.types import Image
 from src.models.metadata import LongLinkMetadata
-from src.models.registries import RegistryProvider
+from src.database.services import operations, organizations
+from src.models.operations import OperationKind
+from src.models.registries import RegistryCreate, RegistryProvider
 from sqlalchemy.ext.asyncio import AsyncSession
+from src.database.models.solutions import Revision
 from src.database.models.registries import RegistryConnection
 from src.database.models.organizations import Organization
 
@@ -22,6 +26,58 @@ async def lock(session: AsyncSession, organization_id: UUID) -> None:
     organization = await session.scalar(select(Organization).where(col(Organization.id) == organization_id).with_for_update())
     if organization is None or organization.deleted_at is not None:
         raise ConflictError("Organization is not available")
+
+
+async def create(
+    session: AsyncSession, organization_id: UUID, payload: RegistryCreate, *, user_id: UUID, username: str
+) -> RegistryConnection:
+    """Persist authorized credentials and fresh reconciliation work in the caller's transaction."""
+
+    # Revalidate access after the external lookup and serialize creation with secret synchronization.
+    await lock(session, organization_id)
+    membership = await organizations.membership(session, user_id, organization_id)
+    if membership is None:
+        raise ForbiddenError("Access required")
+    if not roles.atleast(membership.role, OrganizationRoles.maintain):
+        raise ForbiddenError("Permission required")
+
+    # Store new credentials within the authorized Organization.
+    connection = RegistryConnection(
+        organization_id=organization_id,
+        username=username,
+        credential=payload.credential.get_secret_value(),
+    )
+    session.add(connection)
+
+    # An active reconciliation may already have synchronized older credentials, so always queue fresh work.
+    await operations.enqueue(session, kind=OperationKind.organization_create, target_id=organization_id, coalesce=False)
+    return connection
+
+
+async def delete(session: AsyncSession, organization_id: UUID, connection_id: UUID, *, user_id: UUID) -> None:
+    """Remove unused credentials and queue fresh reconciliation in the caller's transaction."""
+
+    # Lock the Organization before rechecking access and retained revision dependencies.
+    await lock(session, organization_id)
+    membership = await organizations.membership(session, user_id, organization_id)
+    if membership is None:
+        raise ForbiddenError("Access required")
+    if not roles.atleast(membership.role, OrganizationRoles.maintain):
+        raise ForbiddenError("Permission required")
+
+    # A user-controlled connection identifier must belong to the authorized Organization.
+    connection = await session.get(RegistryConnection, connection_id)
+    if connection is None or connection.organization_id != organization_id:
+        raise NotFoundError("Registry connection not found")
+
+    # Historical releases retain their pull credentials even when they are no longer desired.
+    dependency = await session.scalar(select(Revision.id).where(col(Revision.registry_connection_id) == connection_id).limit(1))
+    if dependency is not None:
+        raise ConflictError("Registry connection is used by retained Solution revisions")
+    await session.delete(connection)
+
+    # Do not coalesce deletion with a reconciliation that already applied its captured secrets.
+    await operations.enqueue(session, kind=OperationKind.organization_create, target_id=organization_id, coalesce=False)
 
 
 async def resolve(session: AsyncSession, organization_id: UUID, connection_id: UUID | None, image: Image) -> RegistryConnection | None:

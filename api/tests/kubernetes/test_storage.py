@@ -43,8 +43,9 @@ async def test_storage_administration_uses_cluster_tunnel(
 ) -> None:
     """Sign admin requests for the loopback tunnel, not the public S3 endpoint."""
 
-    # Supply a real RustFS HTTP client with only its network transport replaced.
+    # Supply the workflow-owned HTTP client with only its network transport replaced.
     requests: list[httpx2.Request] = []
+    clients: list[httpx2.AsyncClient] = []
 
     def respond(request: httpx2.Request) -> httpx2.Response:
         """Observe the destination and signed admin request at the HTTP boundary."""
@@ -56,11 +57,20 @@ async def test_storage_administration_uses_cluster_tunnel(
     client = httpx2.AsyncClient
 
     def local_client(**kwargs: object) -> httpx2.AsyncClient:
-        """Keep real request construction and signature verification observable."""
+        """Observe workflow ownership without replacing request construction or signing."""
 
-        return client(transport=transport, **kwargs)
+        # Preserve the administrator transport's proxy, timeout, and redirect configuration.
+        assert kwargs["trust_env"] is False
+        assert kwargs["timeout"] == 30
+        assert kwargs["follow_redirects"] is False
+        connection = client(
+            transport=transport,
+            **kwargs,
+        )
+        clients.append(connection)
+        return connection
 
-    monkeypatch.setattr(storage.rustfs.httpx2, "AsyncClient", local_client)
+    monkeypatch.setattr(storage.httpx2, "AsyncClient", local_client)
     target = storage.Storage(storage_compute, storage_cluster)  # type: ignore[arg-type]
 
     # A legitimate controller operation succeeds without sending admin traffic to the public endpoint.
@@ -71,6 +81,8 @@ async def test_storage_administration_uses_cluster_tunnel(
     assert len(requests) == 1
     assert requests[0].url == "http://127.0.0.1:19000/rustfs/admin/v3/add-service-account"
     assert requests[0].headers["Authorization"].startswith("AWS4-HMAC-SHA256 Credential=controller/")
+    assert len(clients) == 1
+    assert clients[0].is_closed
 
 
 @pytest.mark.parametrize("status", [200, 503], ids=["ready", "unavailable"])

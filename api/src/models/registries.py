@@ -16,10 +16,11 @@ class RegistryProvider(StrEnum):
 
 
 class RegistryCreate(BaseModel):
-    """Validate the registry provider and write-only credentials."""
+    """Validate write-only GHCR credentials without a provider selector."""
+
+    model_config = ConfigDict(extra="forbid")
 
     # Connection
-    provider: RegistryProvider = RegistryProvider.ghcr
     credential: SecretStr = Field(min_length=1, max_length=4096)
 
 

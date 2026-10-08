@@ -21,20 +21,21 @@ class FakeCompute(AsyncKubernetes):
     """Fake Kubernetes log client with a configured result."""
 
     def __init__(self, outcome: list[str] | RuntimeError, captured: dict[str, UUID | str]) -> None:
-        """Expose the solution log client and its configured outcome."""
+        """Retain the configured log outcome within the client resource scope."""
 
-        self.solutions = self
         self.outcome = outcome
         self.captured = captured
 
-    async def logs(self, organization_id: UUID, solution_id: UUID) -> list[str]:
-        """Record a request and return or raise the configured outcome."""
 
-        self.captured["logs"] = solution_id
-        self.captured["organization"] = organization_id
-        if isinstance(self.outcome, RuntimeError):
-            raise self.outcome
-        return self.outcome
+async def logs(client: FakeCompute, organization_id: UUID, solution_id: UUID) -> list[str]:
+    """Record a request and return or raise the configured outcome."""
+
+    # Keep the outcome bound to the client selected from the Solution's Compute.
+    client.captured["logs"] = solution_id
+    client.captured["organization"] = organization_id
+    if isinstance(client.outcome, RuntimeError):
+        raise client.outcome
+    return client.outcome
 
 
 def mock_image_metadata(monkeypatch: pytest.MonkeyPatch, metadata: LongLinkMetadata | None = None) -> None:
@@ -475,6 +476,7 @@ async def test_get_app_logs_returns_pod_logs(
     await add_member(user=users[1], organization=organization, role=OrganizationRoles.maintain)
     captured: dict[str, UUID | str] = {}
     monkeypatch.setattr("src.routes.v1.solutions.Kubernetes", lambda _kubeconfig: FakeCompute(["line 1", "line 2"], captured))
+    monkeypatch.setattr("src.kubernetes.solutions.logs", logs)
 
     # Act
     response = await clients[client_index].get(f"/api/v1/solutions/{app.id}/logs")
@@ -548,6 +550,7 @@ async def test_app_logs_return_unavailable_when_backend_fails(
         return FakeCompute(RuntimeError("logs unavailable"), {})
 
     monkeypatch.setattr("src.routes.v1.solutions.Kubernetes", unavailable_kubernetes)
+    monkeypatch.setattr("src.kubernetes.solutions.logs", logs)
 
     # Act
     response = await clients[0].get(f"/api/v1/solutions/{app.id}/logs")

@@ -1,6 +1,7 @@
 import pytest
+import src.kubernetes.solutions
 from uuid import UUID, uuid4
-from conftest import DatabasePostgres, StorageKubernetes, DatabaseKubernetes, OperationKubernetes, reject_provider_construction
+from conftest import DatabasePostgres, StorageKubernetes, DatabaseKubernetes, reject_provider_construction
 from factories import (
     claim_operation,
     create_solution,
@@ -20,6 +21,8 @@ from src.models.operations import OperationKind, OperationStatus
 from src.database.models.users import User
 from src.database.models.solutions import Revision, Solution
 from src.database.models.organizations import Organization
+
+pytestmark = pytest.mark.usefixtures("database_runtime")
 
 
 async def create_deleted_solution(owner: User) -> tuple[Organization, Solution]:
@@ -60,13 +63,10 @@ async def test_solution_delete_failure_stops_before_provider_credential_cleanup(
     assert claimed is not None
     assert claimed.target_id == solution.id
 
-    class FailingKubernetes(OperationKubernetes):
-        """Expose the failing Solution workload client."""
+    async def delete(client: object, *_args: object) -> None:
+        """Raise the Kubernetes deletion failure under test."""
 
-        async def delete(self, *_args: object) -> None:
-            """Raise the Kubernetes deletion failure under test."""
-
-            raise RuntimeError("Kubernetes workload deletion failed")
+        raise RuntimeError("Kubernetes workload deletion failed")
 
     def unexpected_provider(*args: object, **_kwargs: object) -> object:
         """Record and reject provider construction before Kubernetes deletion completes."""
@@ -74,7 +74,8 @@ async def test_solution_delete_failure_stops_before_provider_credential_cleanup(
         provider_attempts.append(args)
         raise AssertionError("provider cleanup ran before Kubernetes deletion completed")
 
-    monkeypatch.setattr(solution_operations, "Kubernetes", FailingKubernetes)
+    monkeypatch.setattr(solution_operations, "Kubernetes", DatabaseKubernetes)
+    monkeypatch.setattr(src.kubernetes.solutions, "delete", delete)
     monkeypatch.setattr(solution_operations.databases.postgres, "Postgres", unexpected_provider)
 
     # Act
@@ -100,13 +101,10 @@ async def test_solution_delete_removes_provider_state_and_tombstone(
     _, solution = await create_deleted_solution(users[0])
     calls: list[tuple[str, object]] = []
 
-    class FakeKubernetes(OperationKubernetes):
-        """Record workload deletion."""
+    async def delete(client: object, _organization_id: object, solution_id: object) -> None:
+        """Record workload removal."""
 
-        async def delete(self, _organization_id: object, solution_id: object) -> None:
-            """Record workload removal."""
-
-            calls.append(("workload", solution_id))
+        calls.append(("workload", solution_id))
 
     class FakePostgres(DatabasePostgres):
         """Record schema deletion."""
@@ -132,7 +130,8 @@ async def test_solution_delete_removes_provider_state_and_tombstone(
 
             calls.append(("prefix", prefix))
 
-    monkeypatch.setattr(solution_operations, "Kubernetes", FakeKubernetes)
+    monkeypatch.setattr(solution_operations, "Kubernetes", DatabaseKubernetes)
+    monkeypatch.setattr(src.kubernetes.solutions, "delete", delete)
     monkeypatch.setattr(solution_operations, "Storage", FakeStorage)
     monkeypatch.setattr(solution_operations.databases.postgres, "Postgres", FakePostgres)
 
@@ -183,8 +182,8 @@ async def test_solution_creation_applies_user_and_managed_environment_values(
             calls.append("schema")
             return "solution"
 
-    class FakeKubernetes(OperationKubernetes):
-        """Capture the Kubernetes Secret submitted during deployment."""
+    class FakeKubernetes(DatabaseKubernetes):
+        """Record the resource lifetime around deployment."""
 
         def __init__(self, *_args: object) -> None:
             """Record client construction alongside shared fake ownership."""
@@ -192,32 +191,33 @@ async def test_solution_creation_applies_user_and_managed_environment_values(
             super().__init__()
             calls.append("open")
 
-        async def apply(
-            self,
-            organization_id: object,
-            _solution_id: object,
-            _image: object,
-            secrets: dict[str, str],
-            *,
-            revision_id: object,
-            min_scale: int,
-            idle_seconds: int = 60,
-            migrate: bool,
-            registry_connection_id: UUID | None = None,
-        ) -> None:
-            """Capture the generated runtime environment."""
-
-            assert organization_id == organization.id
-            captured["secrets"] = secrets
-            calls.append("workload")
-
         async def aclose(self) -> None:
             """Provide the Kubernetes client cleanup contract."""
 
             calls.append("close")
 
+    async def apply(
+        client: object,
+        organization_id: object,
+        _solution_id: object,
+        _image: object,
+        secrets: dict[str, str],
+        *,
+        revision_id: object,
+        min_scale: int,
+        idle_seconds: int = 60,
+        migrate: bool,
+        registry_connection_id: UUID | None = None,
+    ) -> None:
+        """Capture the generated runtime environment."""
+
+        assert organization_id == organization.id
+        captured["secrets"] = secrets
+        calls.append("workload")
+
     monkeypatch.setattr(solution_operations.databases.postgres, "Postgres", FakePostgres)
     monkeypatch.setattr(solution_operations, "Kubernetes", FakeKubernetes)
+    monkeypatch.setattr(src.kubernetes.solutions, "apply", apply)
     monkeypatch.setattr(solution_operations, "Storage", Storage)
 
     # Run the actual lifecycle handler with fake external providers.
@@ -367,29 +367,27 @@ async def test_solution_creation_retry_reuses_persisted_runtime_secrets(
 
         raise AssertionError("retry regenerated provider credentials")
 
-    class FakeKubernetes(OperationKubernetes):
-        """Capture the retry workload environment."""
+    async def apply(
+        client: object,
+        _organization_id: object,
+        _solution_id: object,
+        _image: object,
+        secrets: dict[str, str],
+        *,
+        revision_id: object,
+        min_scale: int,
+        idle_seconds: int = 60,
+        migrate: bool,
+        registry_connection_id: UUID | None = None,
+    ) -> None:
+        """Capture the persisted runtime environment."""
 
-        async def apply(
-            self,
-            _organization_id: object,
-            _solution_id: object,
-            _image: object,
-            secrets: dict[str, str],
-            *,
-            revision_id: object,
-            min_scale: int,
-            idle_seconds: int = 60,
-            migrate: bool,
-            registry_connection_id: UUID | None = None,
-        ) -> None:
-            """Capture the persisted runtime environment."""
-
-            captured.append(secrets)
+        captured.append(secrets)
 
     monkeypatch.setattr(solution_operations.databases.postgres, "Postgres", unexpected_provider)
     monkeypatch.setattr(StorageKubernetes, "service_account", unexpected_provider)
-    monkeypatch.setattr(solution_operations, "Kubernetes", FakeKubernetes)
+    monkeypatch.setattr(solution_operations, "Kubernetes", DatabaseKubernetes)
+    monkeypatch.setattr(src.kubernetes.solutions, "apply", apply)
     monkeypatch.setattr(solution_operations, "Storage", StorageKubernetes)
 
     # Act

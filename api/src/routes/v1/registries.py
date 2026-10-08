@@ -4,15 +4,13 @@ from sqlmodel import col
 from src.auth import authuser, get_session, organization_access
 from src.utils import roles, github
 from sqlalchemy import select
-from src.errors import ConflictError, NotFoundError, ForbiddenError
+from src.errors import ForbiddenError
 from sqlalchemy.orm import defer
 from src.models.roles import OrganizationRoles
-from src.database.services import operations, registries
-from src.models.operations import OperationKind
+from src.database.services import registries
 from src.models.registries import RegistryCreate, RegistryResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.users import User
-from src.database.models.solutions import Revision
 from src.database.models.registries import RegistryConnection
 
 router = APIRouter()
@@ -49,22 +47,8 @@ async def create_registry(
     session.expire(membership)
     username = await github.username(payload.credential)
 
-    # Revalidate access after the external lookup and serialize creation with secret synchronization.
-    await registries.lock(session, organization_id)
-    membership = await organization_access(organization_id, user, session)
-    if not roles.atleast(membership.role, OrganizationRoles.maintain):
-        raise ForbiddenError("Permission required")
-
-    # Store new credentials within the authorized organization.
-    connection = RegistryConnection(
-        organization_id=organization_id,
-        username=username,
-        credential=payload.credential.get_secret_value(),
-    )
-    session.add(connection)
-
-    # Always queue fresh work: an active reconciliation may already have synchronized older credentials.
-    await operations.enqueue(session, kind=OperationKind.organization_create, target_id=organization_id, coalesce=False)
+    # The command revalidates access and owns the atomic credential mutation and reconciliation demand.
+    connection = await registries.create(session, organization_id, payload, user_id=user.id, username=username)
     await session.commit()
     return connection
 
@@ -75,22 +59,11 @@ async def delete_registry(
 ) -> None:
     """Remove unused credentials without breaking retained deployment revisions."""
 
-    # Lock the organization before checking retained revision dependencies.
+    # Authorize before entering the serialized mutation command.
     membership = await organization_access(organization_id, user, session)
     if not roles.atleast(membership.role, OrganizationRoles.maintain):
         raise ForbiddenError("Permission required")
-    await registries.lock(session, organization_id)
-    membership = await organization_access(organization_id, user, session)
-    if not roles.atleast(membership.role, OrganizationRoles.maintain):
-        raise ForbiddenError("Permission required")
-    connection = await session.get(RegistryConnection, connection_id)
-    if connection is None or connection.organization_id != organization_id:
-        raise NotFoundError("Registry connection not found")
-    dependency = await session.scalar(select(Revision.id).where(col(Revision.registry_connection_id) == connection_id).limit(1))
-    if dependency is not None:
-        raise ConflictError("Registry connection is used by retained Solution revisions")
-    await session.delete(connection)
 
-    # Do not coalesce deletion with a reconciliation that already applied its captured secrets.
-    await operations.enqueue(session, kind=OperationKind.organization_create, target_id=organization_id, coalesce=False)
+    # Keep retained-revision protection and fresh reconciliation demand in the deletion command.
+    await registries.delete(session, organization_id, connection_id, user_id=user.id)
     await session.commit()

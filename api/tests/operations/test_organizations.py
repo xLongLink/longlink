@@ -1,6 +1,7 @@
 import pytest
+import src.kubernetes.databases
 from uuid import UUID, uuid4
-from conftest import AsyncKubernetes, DatabasePostgres, StorageKubernetes, OperationKubernetes, reject_provider_construction
+from conftest import DatabasePostgres, StorageKubernetes, DatabaseKubernetes, reject_provider_construction
 from datetime import UTC, datetime
 from factories import create_compute, create_solution, create_organization
 from src.errors import ForbiddenError
@@ -25,15 +26,11 @@ def install_recording_delete(
     # Keep the delete-path provider double in one owner; tests assert on the returned calls.
     calls: list[str] = []
 
-    class Database:
-        def __init__(self, *args: object) -> None:
-            """Accept registry connection settings."""
+    async def delete_database(client: object, target_organization_id: UUID) -> None:
+        """Record Organization database and scoped runtime-role deletion."""
 
-        async def delete(self, target_organization_id: UUID) -> None:
-            """Record Organization database and scoped runtime-role deletion."""
-
-            assert target_organization_id == organization_id
-            calls.append("database")
+        assert target_organization_id == organization_id
+        calls.append("database")
 
     class Storage:
         def __init__(self, *args: object) -> None:
@@ -55,15 +52,8 @@ def install_recording_delete(
         assert target_organization_id == organization_id
         calls.append("namespace")
 
-    class Kubernetes(AsyncKubernetes):
-        """Expose the recording Organization delete operations."""
-
-        def __init__(self, *args: object) -> None:
-            """Expose the recording Organization database operations."""
-
-            self.databases = Database()
-
-    monkeypatch.setattr(organization_operations, "Kubernetes", Kubernetes)
+    monkeypatch.setattr(organization_operations, "Kubernetes", DatabaseKubernetes)
+    monkeypatch.setattr(src.kubernetes.databases, "delete", delete_database)
     monkeypatch.setattr(organization_operations, "Storage", Storage)
     monkeypatch.setattr(organization_operations.organizations, "delete", delete)
     return calls
@@ -110,7 +100,7 @@ async def test_reconcile_prepares_providers_namespace_and_publishes_organization
         calls.append("registries")
 
     monkeypatch.setattr(organization_operations.databases.postgres, "Postgres", Database)
-    monkeypatch.setattr(organization_operations, "Kubernetes", OperationKubernetes)
+    monkeypatch.setattr(organization_operations, "Kubernetes", DatabaseKubernetes)
     monkeypatch.setattr(organization_operations, "Storage", Storage)
     monkeypatch.setattr(organization_operations.organizations, "apply", apply)
     monkeypatch.setattr(organization_operations.registries, "synchronize", synchronize)
@@ -143,7 +133,7 @@ async def test_reconcile_rolls_back_publication_when_storage_fails(
 
             raise RuntimeError("storage failed")
 
-    monkeypatch.setattr(organization_operations, "Kubernetes", OperationKubernetes)
+    monkeypatch.setattr(organization_operations, "Kubernetes", DatabaseKubernetes)
     monkeypatch.setattr(organization_operations, "Storage", Storage)
 
     # Act and assert

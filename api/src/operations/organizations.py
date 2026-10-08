@@ -1,3 +1,4 @@
+import src.kubernetes.databases
 import src.database.services.organizations
 from uuid import UUID
 from sqlmodel import col
@@ -96,7 +97,7 @@ async def delete(organization_id: UUID) -> None:
         async with cluster:
             await organizations.delete(cluster, organization.id)
             # Delete the dedicated CNPG boundary only after compute Pods have terminated.
-            await cluster.databases.delete(organization.id)
+            await src.kubernetes.databases.delete(cluster, organization.id)
             logger.info("Deleting object storage for Organization %s", organization.id)
             storage = Storage(compute, cluster)
             await storage.delete(organization.id, solution_ids)

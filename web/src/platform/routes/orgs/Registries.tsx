@@ -111,7 +111,7 @@ function RegistryForm({
     /** Saves credentials and queues synchronization of Kubernetes pull secrets. */
     async function save() {
         // Submit new credentials without loading saved tokens.
-        const json = schemas.zRegistryCreateWritable.parse({ credential });
+        const json = schemas.zRegistryCreate.parse({ credential });
         await api.post(`${base}/registries`, { json });
         await invalidate();
         onClose();

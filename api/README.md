@@ -29,6 +29,17 @@ Registry.
 
 <br />
 
+## Registry connection requests
+
+Registry creation accepts only `credential`; GHCR is the sole supported provider.
+The former `provider` selector and other unknown request fields are rejected before
+credentials are sent to GitHub. Clients that explicitly send `provider: "ghcr"`
+must omit it when deploying this API contract; deploy the matching generated Web
+client together with the API. Registry responses still expose the provider and
+host. This request-contract change requires no database migration.
+
+<br />
+
 ## Database upgrades
 
 Revision `20261008_0004` removes redundant lease identifiers

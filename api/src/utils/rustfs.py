@@ -23,11 +23,13 @@ class Error(RuntimeError):
 class RustFS:
     """Manage RustFS service accounts and hard bucket quotas over its signed admin API."""
 
-    def __init__(self, endpoint: str, credentials: s3.Credentials) -> None:
-        """Store the controller connection without opening a transport."""
+    def __init__(self, endpoint: str, credentials: s3.Credentials, client: httpx2.AsyncClient) -> None:
+        """Use the HTTP client owned by the administrator workflow."""
 
+        # Keep signing credentials separate from the workflow's managed HTTP transport.
         self._endpoint = endpoint
         self._credentials = credentials
+        self._client = client
 
     @staticmethod
     def policy(bucket: str, solution: UUID) -> dict[str, object]:
@@ -86,9 +88,8 @@ class RustFS:
         credentials = AwsCredentials(self._credentials.access_key, self._credentials.secret_key)
         SigV4Auth(credentials, "s3", "us-east-1").add_auth(request)
 
-        # Use default TLS verification without environment proxies for the cluster tunnel.
-        async with httpx2.AsyncClient(trust_env=False, timeout=30) as client:
-            response = await client.request(method, str(request.url), content=body, headers=dict(request.headers))
+        # Reuse the workflow transport while signing and validating every administrative request.
+        response = await self._client.request(method, str(request.url), content=body, headers=dict(request.headers))
         if response.is_error:
             raise Error(response.status_code, response.text)
         if not response.content:

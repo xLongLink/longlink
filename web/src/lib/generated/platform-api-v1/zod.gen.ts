@@ -274,20 +274,20 @@ export const zRegistrationComplete = z.object({
 });
 
 /**
+ * RegistryCreate
+ *
+ * Validate write-only GHCR credentials without a provider selector.
+ */
+export const zRegistryCreate = z.object({
+    credential: z.string().min(1).max(4096)
+});
+
+/**
  * RegistryProvider
  *
  * Identify supported container registry authentication providers.
  */
 export const zRegistryProvider = z.enum(['ghcr']);
-
-/**
- * RegistryCreate
- *
- * Validate the registry provider and write-only credentials.
- */
-export const zRegistryCreate = z.object({
-    provider: zRegistryProvider.optional().default('ghcr')
-});
 
 /**
  * RegistryResponse
@@ -487,16 +487,6 @@ export const zUserSummary = z.object({
 export const zUserUpdate = z.object({
     name: z.string().min(1).max(255).nullish(),
     avatar: z.string().max(2048).nullish()
-});
-
-/**
- * RegistryCreate
- *
- * Validate the registry provider and write-only credentials.
- */
-export const zRegistryCreateWritable = z.object({
-    provider: zRegistryProvider.optional().default('ghcr'),
-    credential: z.string().min(1).max(4096)
 });
 
 /**
@@ -820,7 +810,7 @@ export const zListRegistriesApiV1OrganizationsOrganizationIdRegistriesGetPath = 
  */
 export const zListRegistriesApiV1OrganizationsOrganizationIdRegistriesGetResponse = z.array(zRegistryResponse);
 
-export const zCreateRegistryApiV1OrganizationsOrganizationIdRegistriesPostBody = zRegistryCreateWritable;
+export const zCreateRegistryApiV1OrganizationsOrganizationIdRegistriesPostBody = zRegistryCreate;
 
 export const zCreateRegistryApiV1OrganizationsOrganizationIdRegistriesPostPath = z.object({
     organization_id: z.uuid()

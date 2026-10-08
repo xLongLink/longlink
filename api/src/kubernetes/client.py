@@ -6,27 +6,22 @@ from contextlib import AsyncExitStack
 from kr8s.asyncio import Api
 from src.kubernetes import namespace
 from kr8s.asyncio.objects import Service, Namespace
-from src.kubernetes.databases import Databases
-from src.kubernetes.solutions import Solutions
 
 
 class Kubernetes:
     """Own one Compute API connection and its Kubernetes resource lifetimes.
 
     Database resources have dedicated Organization namespaces; Solutions run in
-    the Organization compute namespace. Kubernetes resource facades share this
+    the Organization compute namespace. Kubernetes resource modules share this
     client's lazy kr8s connection and its port-forward lifetime.
     """
 
     def __init__(self, kubeconfig: dict[str, object]) -> None:
-        """Initialize components that share one lazy cluster connection."""
+        """Initialize one lazy cluster connection and its tunnel lifetime."""
 
         self._kubeconfig = kubeconfig
         self._api_client: Api | None = None
         self._connections = AsyncExitStack()
-
-        self.databases = Databases(self)
-        self.solutions = Solutions(self)
 
     async def __aenter__(self) -> Self:
         """Return this Kubernetes client for an async resource scope."""

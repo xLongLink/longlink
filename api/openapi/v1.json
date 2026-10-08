@@ -3444,10 +3444,6 @@
       },
       "RegistryCreate": {
         "properties": {
-          "provider": {
-            "$ref": "#/components/schemas/RegistryProvider",
-            "default": "ghcr"
-          },
           "credential": {
             "type": "string",
             "maxLength": 4096,
@@ -3457,12 +3453,13 @@
             "writeOnly": true
           }
         },
+        "additionalProperties": false,
         "type": "object",
         "required": [
           "credential"
         ],
         "title": "RegistryCreate",
-        "description": "Validate the registry provider and write-only credentials."
+        "description": "Validate write-only GHCR credentials without a provider selector."
       },
       "RegistryProvider": {
         "type": "string",

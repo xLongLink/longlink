@@ -1,5 +1,6 @@
 import asyncio
 import contextlib
+import src.kubernetes.databases
 from uuid import UUID
 from datetime import UTC, datetime, timedelta
 from sqlmodel import col
@@ -38,7 +39,7 @@ async def connection(organization: Organization, cluster: Kubernetes) -> postgre
     port = await cluster.forward_database(organization.id)
 
     # Preserve the cluster DNS hostname for certificate verification even through a local tunnel.
-    certificate = await cluster.databases.certificate(organization.id)
+    certificate = await src.kubernetes.databases.certificate(cluster, organization.id)
     return postgres.Postgres(
         host=namespace.database_hostname(organization.id),
         port=port,
@@ -207,7 +208,8 @@ async def ready(organization_id: UUID) -> bool:
                 async with cluster:
                     await lease.check()
                     if organization.status != Status.running:
-                        await cluster.databases.apply(
+                        await src.kubernetes.databases.apply(
+                            cluster,
                             organization_id,
                             organization.database_password,
                             compute.database_storage_class,
@@ -216,7 +218,7 @@ async def ready(organization_id: UUID) -> bool:
                         )
                     else:
                         # Reassert the desired annotation even after an expired worker's interrupted sleep.
-                        await cluster.databases.resume(organization_id)
+                        await src.kubernetes.databases.resume(cluster, organization_id)
                     database = await connection(organization, cluster)
                     if organization.status != Status.running:
                         await lease.check()
