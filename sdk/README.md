@@ -29,58 +29,11 @@ uv run longlink dev
 
 ## Documentation
 
-Check [LongLink Documentation](https://www.longlink.dev/docs/sdk/) or use the `cli` (designed for agents):
+Check [Documentation](https://www.longlink.dev/docs/sdk/) or use the `cli` (designed for agents):
 
 ```bash
 longlink docs --help
 ```
-
-### HTML-style forms
-
-Use named fields instead of maintaining draft state:
-
-```jsx
-/** Creates an item through the Solution request bridge. */
-export default function CreateItem() {
-    return (
-        <Form action="/api/items" method="post">
-            <Stack gap={3}>
-                <TextInput name="name" label="Name" required />
-                <NumberInput name="price" label="Price" min={0} defaultValue={0} required />
-                <Button type="submit" label="Create" />
-            </Stack>
-        </Form>
-    );
-}
-```
-
-`name` keeps the themed Astryx control and includes its value in form submissions.
-Use `defaultValue` or `defaultChecked` for initial values, or `value` and `onChange`
-when the interface needs reactive state. Ordinary HTML inputs also work inside `Form`.
-
-Receive the fields with `payload: Annotated[ItemCreate, fastapi.Form()]` in your Python
-route (`Annotated` comes from `typing`; install `python-multipart`). Form validation
-provides immediate feedback; the backend schema validates and parses submitted strings.
-Repeated names and files are preserved, and unchecked checkboxes are omitted.
-
-`Form` prevents duplicate submissions and displays request errors. Successful writes
-refresh cached View data but do not reset the form. Use `onSuccess` to close a dialog
-or navigate, or a reset button to restore defaults.
-
-Use `name`, `required`, `disabled`, `value`, and `multiple` as the public field props.
-The former `htmlName`, `isRequired`, `isDisabled`, `checked`, `isMultiple`, and
-read-only aliases are no longer supported on fields (`isDisabled` is also removed
-from `Button`). Keep `defaultValue` and `defaultChecked` for uncontrolled defaults.
-Run `longlink dev` after upgrading to refresh editor declarations.
-
-Views have their own viewport-sized scroll region. Dialogs and pickers are modal
-within that View only; Platform navigation remains available. Button and Card
-destinations use the same Solution-scoped host navigation as Link.
-
-Requests and responses are limited to 2,000,000 bytes, with at most 32 form entries
-and 8 pending operations. The sample limits files to 1.9 MB to leave room for other
-fields. `FileViewer` previews images and provides a download action for all file
-types, including PDFs; use the attachment filename as its `title`.
 
 <br/>
 

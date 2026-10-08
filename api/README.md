@@ -29,25 +29,6 @@ Registry.
 
 <br />
 
-## Database upgrades
-
-Revision `20261008_0004` removes redundant lease identifiers
-and the stored GHCR provider. Existing installations must run this upgrade;
-editing or stamping the initial migration is not sufficient.
-
-Back up the Platform database, stop all API replicas and background workers,
-then run `uv run --locked alembic upgrade head` from `api/` with the new release.
-Restart only matching API replicas afterward: old and new binaries must not
-share the changed schema. The shared-schema migration runner also requires the
-matching SDK package bundled with the API release.
-
-The upgrade retains lease expiries, registry credentials, connection identifiers,
-and revision references. It refuses noncanonical activity rows (`id` different
-from `organization_id`) or unsupported registry providers; resolve those rows
-explicitly before retrying rather than deleting or collapsing them automatically.
-
-<br />
-
 ---
 
 <div align="center">
