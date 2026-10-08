@@ -326,7 +326,6 @@ const declarations = document.statements.flatMap((statement) => {
         {
             name: group?.trim() ?? name,
             category,
-            declaration: statement.getText(document),
             ...(category !== 'Runtime' && publicProps.has(name)
                 ? {
                       properties: publicProps.get(name).map((property) => ({
@@ -360,7 +359,6 @@ for (const entry of declarations) {
     if (existing) {
         if (existing.category !== entry.category)
             throw new Error(`Conflicting documentation categories: ${entry.name}`);
-        existing.declaration += `\n\n${entry.declaration}`;
         if (entry.members) (existing.members ??= []).push(...entry.members);
         if (entry.properties) (existing.properties ??= []).push(...entry.properties);
     } else {
