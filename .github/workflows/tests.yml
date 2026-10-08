@@ -14,6 +14,31 @@ concurrency:
     cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
+    # Only run Compute checks for Compute changes in pull requests and merge queues.
+    compute-changes:
+        runs-on: ubuntu-24.04
+        timeout-minutes: 5
+        outputs:
+            changed: ${{ steps.changes.outputs.compute || 'true' }}
+
+        steps:
+            - name: Checkout repository
+              if: github.event_name == 'pull_request' || github.event_name == 'merge_group'
+              uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+              with:
+                  fetch-depth: 0
+
+            - name: Detect Compute changes
+              if: github.event_name == 'pull_request' || github.event_name == 'merge_group'
+              id: changes
+              uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
+              with:
+                  token: ''
+                  base: ${{ github.event.merge_group.base_sha }}
+                  filters: |
+                      compute:
+                          - 'k8s/**'
+
     # The API is packaged into a container, so test it on the supported Python runtime.
     api-tests:
         runs-on: ubuntu-24.04
@@ -207,6 +232,8 @@ jobs:
 
     # Verify Compute installation and removal on a fresh local Kubernetes cluster.
     compute-tests:
+        needs: compute-changes
+        if: needs.compute-changes.outputs.changed == 'true'
         runs-on: ubuntu-24.04
         timeout-minutes: 55
 
