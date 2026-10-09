@@ -1,4 +1,6 @@
-import type { ESTree, Scope, SourceCode, Variable } from "@oxlint/plugins";
+import type { ESTree, SourceCode, Variable } from "@oxlint/plugins";
+
+import { resolveVariable } from "./scope.ts";
 
 /** Unwrap syntax-only wrappers when inspecting array methods and accumulator references. */
 export function unwrapArrayExpression(node: ESTree.Node): ESTree.Node {
@@ -19,13 +21,7 @@ export function unwrapArrayExpression(node: ESTree.Node): ESTree.Node {
 export function resolveArrayBinding(sourceCode: SourceCode, node: ESTree.Node): Variable | null {
   node = unwrapArrayExpression(node);
   if (node.type !== "Identifier") return null;
-  let scope: Scope | null = sourceCode.getScope(node);
-  while (scope !== null) {
-    const variable = scope.set.get(node.name);
-    if (variable !== undefined) return variable;
-    scope = scope.upper;
-  }
-  return null;
+  return resolveVariable(sourceCode, node);
 }
 
 /** Read static method names, including computed string literals, without evaluating expressions. */
