@@ -34,14 +34,6 @@ def chdir_project(build_project: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     return build_project
 
 
-@pytest.fixture
-def docker_build(chdir_project: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    """Prepare a real project and replace external Docker discovery."""
-
-    # Run build-command tests from the project without depending on a Docker installation.
-    monkeypatch.setattr(build.shutil, "which", lambda command: "/usr/bin/docker" if command == "docker" else None)
-
-
 def test_build_reports_missing_project_file_before_docker(tmp_path: Path) -> None:
     """Report a missing project file instead of blaming the Docker CLI."""
 
@@ -481,7 +473,7 @@ def test_resolve_image_tag_rejects_invalid_image_references(
         pytest.param([], [], id="local-only"),
     ],
 )
-@pytest.mark.usefixtures("docker_build")
+@pytest.mark.usefixtures("chdir_project")
 def test_build_command_reports_built_image(
     monkeypatch: pytest.MonkeyPatch,
     arguments: list[str],
@@ -503,6 +495,7 @@ def test_build_command_reports_built_image(
             assert Path(command[-1], "Dockerfile").is_file()
 
     # Replace Docker boundaries with deterministic local fakes.
+    monkeypatch.setattr(build.shutil, "which", lambda command: "/usr/bin/docker" if command == "docker" else None)
     monkeypatch.setattr(build.subprocess, "run", run_docker)
 
     # Act
@@ -537,7 +530,7 @@ def test_build_command_reports_built_image(
         pytest.param("push", 24, ["build", "push"], id="push"),
     ],
 )
-@pytest.mark.usefixtures("docker_build")
+@pytest.mark.usefixtures("chdir_project")
 def test_build_command_reports_docker_failure(
     monkeypatch: pytest.MonkeyPatch,
     failed_command: str,
@@ -561,6 +554,8 @@ def test_build_command_reports_docker_failure(
         if command[1] == failed_command:
             raise subprocess.CalledProcessError(exit_code, command)
 
+    # Replace Docker boundaries with deterministic local fakes.
+    monkeypatch.setattr(build.shutil, "which", lambda command: "/usr/bin/docker" if command == "docker" else None)
     monkeypatch.setattr(build.subprocess, "run", run_docker)
 
     # Act

@@ -1,6 +1,5 @@
 // @vitest-environment happy-dom
 import { act, Suspense } from 'react';
-import { webcrypto } from 'node:crypto';
 import { createRoot } from 'react-dom/client';
 import { SolutionRuntime } from '@/components/Solution';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -224,7 +223,6 @@ describe('SolutionRuntime', () => {
         const mountedRoot = createRoot(container);
         root = mountedRoot;
         vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
-        vi.stubGlobal('crypto', webcrypto);
         const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
         mountedClient = client;
 
@@ -281,13 +279,14 @@ function view(path: string, route: string) {
 
 /** Stubs fetch at the runtime's HTTP boundary. */
 function stubFetch(response: (url: string, request: Request) => Response): void {
-    vi.stubGlobal('fetch', async (input: RequestInfo | URL) => {
-        if (!(input instanceof Request)) throw new Error('Expected a Request at the HTTP boundary');
-        const url = input.url;
+    vi.stubGlobal('fetch', async (input: RequestInfo | URL, init?: RequestInit) => {
+        // Normalize standard fetch inputs without depending on Ky's argument representation.
+        const request = input instanceof Request ? input : new Request(input, init);
+        const url = request.url;
 
         if (url.endsWith('/views/runtime.js') || url.endsWith('/views/runtime.css')) return sourceResponse('');
 
-        return response(url, input);
+        return response(url, request);
     });
 }
 

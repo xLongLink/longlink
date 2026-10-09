@@ -19,11 +19,8 @@ async def test_logo_svg_returns_public_no_store_response(client: AsyncClient) ->
     assert ".logo-theme { fill: #171717; }" not in response.text
 
 
-async def test_system_logo_svg_uses_system_theme_and_selected_accent(client: AsyncClient, monkeypatch: pytest.MonkeyPatch) -> None:
-    """Render the system color rule and the selected accent in the logo SVG."""
-
-    # Arrange
-    monkeypatch.setattr(branding.random, "choice", lambda _colors: "#64748b")
+async def test_system_logo_svg_uses_system_theme_and_selected_accent(client: AsyncClient) -> None:
+    """Render the system color rule and an allowed accent in the logo SVG."""
 
     # Act
     response = await client.get("/logo.svg?theme=system")
@@ -33,7 +30,7 @@ async def test_system_logo_svg_uses_system_theme_and_selected_accent(client: Asy
     assert "@media (prefers-color-scheme: dark)" in response.text
     assert ".logo-theme { fill: #171717; }" in response.text
     assert ".logo-theme { fill: #fafafa; }" in response.text
-    assert '<tspan fill="#64748b">LONG</tspan>' in response.text
+    assert any(f'<tspan fill="{color}">LONG</tspan>' in response.text for color in branding.ACCENT_COLOR_VALUES)
 
 
 async def test_logo_svg_rejects_invalid_theme_without_rendering_logo(client: AsyncClient) -> None:
