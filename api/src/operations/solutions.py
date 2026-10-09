@@ -5,7 +5,9 @@ from sqlmodel import col
 from sqlalchemy import delete as sql_delete
 from sqlalchemy import update
 from src.logger import logger
+from src.kubernetes import databases as database_resources
 from src.kubernetes import namespace
+from src.kubernetes import solutions as solution_resources
 from src.operations import databases, registries
 from src.models.statuses import Status
 from src.database.session import session_scope
@@ -88,7 +90,7 @@ async def deploy(revision_id: UUID) -> None:
             # Workloads always reach object storage through the cluster-local TLS proxy.
             "LONGLINK_STORAGE_ENDPOINT_URL": "https://longlink-storage.rustfs.svc:443",
             # Fetch the current CA once for workload rendering on every path.
-            "LONGLINK_DATABASE_CERTIFICATE": await cluster.databases.certificate(organization.id),
+            "LONGLINK_DATABASE_CERTIFICATE": await database_resources.certificate(cluster, organization.id),
             **({"LONGLINK_STORAGE_CERTIFICATE": compute.storage_certificate} if compute.storage_certificate else {}),
         }
 
@@ -113,7 +115,8 @@ async def deploy(revision_id: UUID) -> None:
         logger.info("Applying Kubernetes workload for Solution %s", solution.id)
         if revision.registry_connection_id is not None:
             await registries.synchronize(cluster, organization.id)
-        await cluster.solutions.apply(
+        await solution_resources.apply(
+            cluster,
             organization.id,
             solution.id,
             revision.image,
@@ -156,7 +159,7 @@ async def delete(solution_id: UUID) -> None:
         compute.kubeconfig,
     )
     async with cluster:
-        await cluster.solutions.delete(organization.id, solution.id)
+        await solution_resources.delete(cluster, organization.id, solution.id)
         db = await databases.connection(organization, cluster)
         logger.info("Deleting PostgreSQL schema for Solution %s", solution.id)
         await db.delete_solution_schema(organization.id, solution.id)

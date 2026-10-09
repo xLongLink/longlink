@@ -41,6 +41,8 @@ from src.utils import mail, token
 from src.database import session
 from src.utils.s3 import Credentials
 from src.kubernetes import storage
+from src.kubernetes import databases as database_resources
+from src.kubernetes import solutions as solution_resources
 from src.environments import env
 from src.database.models import registry
 from src.database.models.users import User
@@ -111,38 +113,10 @@ class DatabaseKubernetes(AsyncKubernetes):
     """Provide the CNPG provider boundary without opening Kubernetes connections."""
 
     def __init__(self, *_args: object) -> None:
-        """Expose database operations through the production client shape."""
-
-        self.databases = self
-
-    async def apply(self, organization: UUID, password: str, storage_class: str, *, size_mib: int = 100, instances: int = 1) -> None:
-        """Accept Organization cluster provisioning."""
-
-    async def resume(self, organization: UUID) -> None:
-        """Accept database resumption."""
+        """Accept cluster configuration without opening connections."""
 
     async def forward_database(self, organization: UUID) -> int:
         """Supply a local transport port consumed only by the SQL fake."""
-
-        return 15432
-
-    async def certificate(self, organization: UUID) -> str:
-        """Return a synthetic certificate consumed only by the SQL fake."""
-
-        return "test-database-ca"
-
-
-class OperationKubernetes(AsyncKubernetes):
-    """Expose the Solution lifecycle client without external Kubernetes I/O."""
-
-    def __init__(self, *_args: object) -> None:
-        """Share one fake cluster connection with the solution and database clients."""
-
-        self.solutions = self
-        self.databases = DatabaseKubernetes()
-
-    async def forward_database(self, organization: UUID) -> int:
-        """Supply a local transport port without depending on the replaced database facade."""
 
         return 15432
 
@@ -171,21 +145,8 @@ class DatabasePostgres:
         """Accept shared schema provisioning."""
 
 
-class SeedSolutions:
-    """Accept Solution workload provisioning for seed lifecycle tests."""
-
-    async def apply(self, *_args: object, **_kwargs: object) -> None:
-        """Accept the requested workload."""
-
-
 class SeedKubernetes(DatabaseKubernetes):
     """Expose every seed lifecycle provider boundary without external I/O."""
-
-    def __init__(self, *_args: object) -> None:
-        """Share one fake cluster connection with the seed solution and database clients."""
-
-        super().__init__()
-        self.solutions = SeedSolutions()
 
     async def cluster_uid(self) -> str:
         """Return the identity submitted by the test Compute."""
@@ -240,7 +201,23 @@ def database_runtime(monkeypatch: pytest.MonkeyPatch) -> None:
     async def sync(*args: object, **kwargs: object) -> None:
         """Accept the real shared-user snapshot at its database transport boundary."""
 
+    async def apply(
+        client: object, organization: UUID, password: str, storage_class: str, *, size_mib: int = 100, instances: int = 1
+    ) -> None:
+        """Accept Organization cluster provisioning."""
+
+    async def resume(client: object, organization: UUID) -> None:
+        """Accept database resumption."""
+
+    async def certificate(client: object, organization: UUID) -> str:
+        """Return a synthetic certificate consumed only by the SQL fake."""
+
+        return "test-database-ca"
+
     monkeypatch.setattr(databases, "Kubernetes", DatabaseKubernetes)
+    monkeypatch.setattr(database_resources, "apply", apply)
+    monkeypatch.setattr(database_resources, "resume", resume)
+    monkeypatch.setattr(database_resources, "certificate", certificate)
     monkeypatch.setattr(databases.postgres, "Postgres", DatabasePostgres)
     monkeypatch.setattr(organizations.shared_audit, "sync", sync)
 
@@ -254,6 +231,9 @@ def seed_runtime(monkeypatch: pytest.MonkeyPatch, database_runtime: None, comput
     async def apply(client: object, organization_id: UUID) -> None:
         """Accept Organization boundary provisioning without external I/O."""
 
+    async def apply_solution(client: object, *_args: object, **_kwargs: object) -> None:
+        """Accept Solution workload provisioning without external I/O."""
+
     # Preserve the seed-specific client after installing the Compute verification boundary.
     monkeypatch.setattr("src.routes.v1.computes.Kubernetes", SeedKubernetes)
     monkeypatch.setattr(databases, "Kubernetes", SeedKubernetes)
@@ -262,6 +242,7 @@ def seed_runtime(monkeypatch: pytest.MonkeyPatch, database_runtime: None, comput
     monkeypatch.setattr(organizations.organizations, "apply", apply)
     monkeypatch.setattr(solutions, "Kubernetes", SeedKubernetes)
     monkeypatch.setattr(solutions, "Storage", StorageKubernetes)
+    monkeypatch.setattr(solution_resources, "apply", apply_solution)
     monkeypatch.setattr(databases.postgres, "Postgres", SeedPostgres)
 
 

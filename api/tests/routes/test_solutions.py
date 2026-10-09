@@ -1,7 +1,7 @@
 import pytest
 from uuid import UUID
 from httpx2 import AsyncClient
-from conftest import AsyncKubernetes
+from conftest import DatabaseKubernetes
 from sqlmodel import col
 from factories import add_member, create_solution, fetch_operations, create_organization, assert_no_new_operations
 from sqlalchemy import select
@@ -15,26 +15,6 @@ from src.models.operations import OperationKind
 from src.database.models.users import User
 from src.database.models.solutions import Solution
 from src.database.models.operations import Operation
-
-
-class FakeCompute(AsyncKubernetes):
-    """Fake Kubernetes log client with a configured result."""
-
-    def __init__(self, outcome: list[str] | RuntimeError, captured: dict[str, UUID | str]) -> None:
-        """Expose the solution log client and its configured outcome."""
-
-        self.solutions = self
-        self.outcome = outcome
-        self.captured = captured
-
-    async def logs(self, organization_id: UUID, solution_id: UUID) -> list[str]:
-        """Record a request and return or raise the configured outcome."""
-
-        self.captured["logs"] = solution_id
-        self.captured["organization"] = organization_id
-        if isinstance(self.outcome, RuntimeError):
-            raise self.outcome
-        return self.outcome
 
 
 def mock_image_metadata(monkeypatch: pytest.MonkeyPatch, metadata: LongLinkMetadata | None = None) -> None:
@@ -474,7 +454,16 @@ async def test_get_app_logs_returns_pod_logs(
     app = await create_solution(organization)
     await add_member(user=users[1], organization=organization, role=OrganizationRoles.maintain)
     captured: dict[str, UUID | str] = {}
-    monkeypatch.setattr("src.routes.v1.solutions.Kubernetes", lambda _kubeconfig: FakeCompute(["line 1", "line 2"], captured))
+
+    async def logs(client: object, organization_id: UUID, solution_id: UUID) -> list[str]:
+        """Record the requested Solution and return its recent output."""
+
+        captured["logs"] = solution_id
+        captured["organization"] = organization_id
+        return ["line 1", "line 2"]
+
+    monkeypatch.setattr("src.routes.v1.solutions.Kubernetes", DatabaseKubernetes)
+    monkeypatch.setattr("src.routes.v1.solutions.solution_resources.logs", logs)
 
     # Act
     response = await clients[client_index].get(f"/api/v1/solutions/{app.id}/logs")
@@ -539,15 +528,21 @@ async def test_app_logs_return_unavailable_when_backend_fails(
     organization = await create_organization(owner)
     app = await create_solution(organization)
 
-    def unavailable_kubernetes(_kubeconfig: object) -> FakeCompute:
+    def unavailable_kubernetes(_kubeconfig: object) -> DatabaseKubernetes:
         """Fail at the configured Kubernetes boundary."""
 
         # Keep construction and retrieval failures as distinct provider scenarios.
         if failure_stage == "construction":
             raise RuntimeError("cluster credential unavailable")
-        return FakeCompute(RuntimeError("logs unavailable"), {})
+        return DatabaseKubernetes()
+
+    async def unavailable_logs(client: object, organization_id: UUID, solution_id: UUID) -> list[str]:
+        """Fail retrieval separately from client construction."""
+
+        raise RuntimeError("logs unavailable")
 
     monkeypatch.setattr("src.routes.v1.solutions.Kubernetes", unavailable_kubernetes)
+    monkeypatch.setattr("src.routes.v1.solutions.solution_resources.logs", unavailable_logs)
 
     # Act
     response = await clients[0].get(f"/api/v1/solutions/{app.id}/logs")

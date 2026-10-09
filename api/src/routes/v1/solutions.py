@@ -3,6 +3,7 @@ from fastapi import Depends, APIRouter, HTTPException
 from src.auth import authuser, authadmin, get_session, organization_access
 from src.utils import roles, images
 from src.logger import logger
+from src.kubernetes import solutions as solution_resources
 from src.models.roles import OrganizationRoles
 from src.models.types import Image
 from src.models.metadata import LongLinkMetadata
@@ -137,7 +138,7 @@ async def get_solution_logs(
             registry.kubeconfig,
         )
         async with cluster:
-            return await cluster.solutions.logs(solution.organization_id, solution.id)
+            return await solution_resources.logs(cluster, solution.organization_id, solution.id)
     except RuntimeError as exc:
         logger.warning("Solution logs unavailable for '%s': %s", solution.id, exc)
         raise HTTPException(status_code=503, detail="Solution logs unavailable") from exc
