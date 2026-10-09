@@ -18,7 +18,6 @@ import { TextInput } from '@astryxdesign/core/TextInput';
 import { PageContainer } from '@/components/PageContainer';
 import { useAuthenticatedUser } from '@/lib/hooks/use-user';
 import { Table, proportional } from '@astryxdesign/core/Table';
-import { DeletionDialog } from '@/platform/components/Deletion';
 import { Menu, MenuSection, MenuItem } from '@/components/ui/Menu';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 
@@ -51,13 +50,13 @@ function SettingsPage({ user }: { user: z.output<typeof schemas.zUserSummary> })
     // Keep account editing independent of organization loading and failures.
     return (
         <Stack gap={8}>
-            <Stack direction="horizontal" gap={3} align="start">
-                <Avatar name={name} src={user.avatar} />
-                <Stack gap={1}>
+            <Stack direction="horizontal" gap={3} align="center">
+                <Avatar name={name} src={user.avatar} seed={user.id} />
+                <Stack gap={0}>
                     <Heading level={4} accessibilityLevel={1}>
                         {name}
                     </Heading>
-                    <Text type="supporting">Your Account</Text>
+                    <Text type="supporting">{user.email}</Text>
                 </Stack>
             </Stack>
             <Menu>
@@ -65,12 +64,13 @@ function SettingsPage({ user }: { user: z.output<typeof schemas.zUserSummary> })
                     <MenuItem label="Account" icon="userRound">
                         <form action={saveAccount}>
                             <Stack gap={4}>
-                                <Heading level={2}>Account</Heading>
+                                <Stack justify="end" minHeight="var(--size-element-md)">
+                                    <Heading level={2} hasCapsize>
+                                        Account
+                                    </Heading>
+                                </Stack>
                                 <Divider />
                                 <TextInput label="Username" value={name} isRequired onChange={setName} />
-                                <Text>
-                                    <b>Email</b> {user.email}
-                                </Text>
                                 <Stack direction="horizontal" justify="end">
                                     <Button
                                         label="Save account"
@@ -96,7 +96,6 @@ function SettingsPage({ user }: { user: z.output<typeof schemas.zUserSummary> })
 /** Owns organization management independently of account editing. */
 function OrganizationSettings() {
     const [creating, setCreating] = useState(false);
-    const [deletion, setDeletion] = useState<{ id: string; name: string } | null>(null);
 
     const [memberships, invalidate] =
         useApi<z.output<typeof schemas.zUserOrganizationMembership>[]>('/api/v1/me/organizations');
@@ -104,8 +103,16 @@ function OrganizationSettings() {
     return (
         <>
             <Stack gap={4}>
-                <Stack direction="horizontal" justify="between" align="center" wrap="wrap">
-                    <Heading level={2}>Organizations</Heading>
+                <Stack
+                    direction="horizontal"
+                    justify="between"
+                    align="end"
+                    wrap="wrap"
+                    minHeight="var(--size-element-md)"
+                >
+                    <Heading level={2} hasCapsize>
+                        Organizations
+                    </Heading>
                     <Button label="Create Organization" onClick={() => setCreating(true)} />
                 </Stack>
                 <Divider />
@@ -132,40 +139,7 @@ function OrganizationSettings() {
                                 </Stack>
                             ),
                         },
-                        {
-                            key: 'role',
-                            header: 'Actions',
-                            align: 'end',
-                            width: proportional(0.5),
-                            renderCell: (row) =>
-                                row.role === 'owner' && (
-                                    <Button
-                                        label="Delete"
-                                        variant="destructive"
-                                        onClick={() =>
-                                            setDeletion({ id: row.organization.id, name: row.organization.name })
-                                        }
-                                    />
-                                ),
-                        },
                     ]}
-                />
-                <DeletionDialog
-                    confirmation={
-                        deletion
-                            ? {
-                                  title: 'Delete organization',
-                                  description: `Delete ${deletion.name} from your account?`,
-                                  onDelete: async () => {
-                                      // Refresh memberships only after deletion succeeds.
-                                      await api.delete(`/api/v1/organizations/${deletion.id}`);
-                                      await invalidate();
-                                      setDeletion(null);
-                                  },
-                              }
-                            : null
-                    }
-                    onClose={() => setDeletion(null)}
                 />
             </Stack>
             <CreateOrganization isOpen={creating} onOpenChange={setCreating} invalidate={invalidate} />

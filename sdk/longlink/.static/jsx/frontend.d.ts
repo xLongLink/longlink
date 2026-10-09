@@ -272,6 +272,8 @@ declare function Avatar(
         shape?: undefined | 'circle' | 'rounded' | 'square';
     } & {
         name?: string;
+        /** Stable identity for generated avatars, independent of the display name. */
+        seed?: string;
         /** Organization owners use rounded Waves avatars; user owners retain the supplied geometry or a circle. */
         kind?: 'user' | 'organization';
         src?: string | null;

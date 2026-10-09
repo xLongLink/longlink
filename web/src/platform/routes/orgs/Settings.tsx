@@ -191,16 +191,27 @@ export default function OrganizationSettings() {
             </Stack>
             <Menu>
                 <MenuSection title="Settings" isHeaderHidden>
-                    <MenuItem label="Usage" icon="building2">
-                        <ApiBoundary key="storage">
-                            <StorageSection base={base} />
-                        </ApiBoundary>
-                    </MenuItem>
-                    <MenuItem label="Connections" icon="boxes">
-                        <ApiBoundary key="registries">
-                            <Registries base={base} canMaintain={canMaintain} />
-                        </ApiBoundary>
-                    </MenuItem>
+                    <MenuSubSection label="Organization" icon="building2">
+                        <MenuItem label="General">
+                            <ApiBoundary>
+                                <GeneralSection
+                                    base={base}
+                                    name={membership.organization.name}
+                                    canDelete={membership.role === 'owner'}
+                                />
+                            </ApiBoundary>
+                        </MenuItem>
+                        <MenuItem label="Usage">
+                            <ApiBoundary key="storage">
+                                <StorageSection base={base} />
+                            </ApiBoundary>
+                        </MenuItem>
+                        <MenuItem label="Private registries">
+                            <ApiBoundary key="registries">
+                                <Registries base={base} canMaintain={canMaintain} />
+                            </ApiBoundary>
+                        </MenuItem>
+                    </MenuSubSection>
                     <MenuSubSection label="People" icon="users">
                         <MenuItem label="Members">
                             <ApiBoundary key="members">
@@ -224,6 +235,62 @@ export default function OrganizationSettings() {
     );
 }
 
+/** Shows owner-only organization deletion with explicit confirmation. */
+function GeneralSection({ base, name, canDelete }: { base: string; name: string; canDelete: boolean }) {
+    const [isConfirming, setIsConfirming] = useState(false);
+
+    return (
+        <Stack gap={4}>
+            <Stack justify="end" minHeight="var(--size-element-md)">
+                <Heading level={2} hasCapsize>
+                    General
+                </Heading>
+            </Stack>
+            <Divider />
+            {canDelete && (
+                <Stack gap={3}>
+                    <Stack className="text-red-600 dark:text-red-400">
+                        <Heading level={3} color="inherit">
+                            Danger zone
+                        </Heading>
+                    </Stack>
+                    <Stack
+                        direction="horizontal"
+                        justify="between"
+                        align="center"
+                        wrap="wrap"
+                        gap={4}
+                        padding={4}
+                        className="rounded-lg border border-red-600 dark:border-red-400"
+                    >
+                        <Stack gap={0}>
+                            <Text weight="bold">Delete this organization</Text>
+                            <Text color="secondary">Once deleted, it will be gone forever. Please be certain.</Text>
+                        </Stack>
+                        <Button label="Delete" variant="destructive" onClick={() => setIsConfirming(true)} />
+                    </Stack>
+                </Stack>
+            )}
+            <DeletionDialog
+                confirmation={
+                    isConfirming
+                        ? {
+                              title: 'Delete organization',
+                              description: `Delete ${name}? Once deleted, it will be gone forever. Please be certain.`,
+                              onDelete: async () => {
+                                  // Leave the deleted organization only after the server accepts deletion.
+                                  await api.delete(base);
+                                  window.location.assign('/user/organizations');
+                              },
+                          }
+                        : null
+                }
+                onClose={() => setIsConfirming(false)}
+            />
+        </Stack>
+    );
+}
+
 /** Owns role-change confirmation only while the members section is active. */
 function MembersSection({ base, canAdminister }: { base: string; canAdminister: boolean }) {
     const [member, setMember] = useState<{
@@ -238,9 +305,10 @@ function MembersSection({ base, canAdminister }: { base: string; canAdminister: 
     return (
         <>
             <Stack gap={4}>
-                <Stack gap={1}>
-                    <Heading level={2}>Members</Heading>
-                    <Text color="secondary">Manage the people in this organization.</Text>
+                <Stack justify="end" minHeight="var(--size-element-md)">
+                    <Heading level={2} hasCapsize>
+                        Members
+                    </Heading>
                 </Stack>
                 <Divider />
                 <Table
@@ -255,7 +323,7 @@ function MembersSection({ base, canAdminister }: { base: string; canAdminister: 
                             width: proportional(1),
                             renderCell: (row) => (
                                 <Stack direction="horizontal" gap={3} align="center">
-                                    <Avatar name={row.user.name} src={row.user.avatar} />
+                                    <Avatar name={row.user.name} src={row.user.avatar} seed={row.user.id} />
                                     <Stack align="start">
                                         <Stack direction="horizontal" gap={1} align="center">
                                             <Text>{row.user.name}</Text>
@@ -361,11 +429,16 @@ function InvitationsSection({ base, canMaintain }: { base: string; canMaintain: 
     return (
         <>
             <Stack gap={4}>
-                <Stack direction="horizontal" justify="between" align="center" wrap="wrap">
-                    <Stack gap={1}>
-                        <Heading level={2}>Invitations</Heading>
-                        <Text color="secondary">Send an invitation to join this organization.</Text>
-                    </Stack>
+                <Stack
+                    direction="horizontal"
+                    justify="between"
+                    align="end"
+                    wrap="wrap"
+                    minHeight="var(--size-element-md)"
+                >
+                    <Heading level={2} hasCapsize>
+                        Invitations
+                    </Heading>
                     {canMaintain && <Button label="Invite" onClick={() => setInviting(true)} />}
                 </Stack>
                 <Divider />
@@ -445,9 +518,10 @@ function StorageSection({ base }: { base: string }) {
 
     return (
         <Stack gap={4}>
-            <Stack gap={1}>
-                <Heading level={2}>Usage</Heading>
-                <Text color="secondary">Review storage usage.</Text>
+            <Stack justify="end" minHeight="var(--size-element-md)">
+                <Heading level={2} hasCapsize>
+                    Usage
+                </Heading>
             </Stack>
             <Divider />
             <ProgressBar label="Storage" value={storage.space_used} max={storage.quota_bytes} />
@@ -478,8 +552,16 @@ function SolutionsSection({
     return (
         <>
             <Stack gap={4}>
-                <Stack direction="horizontal" justify="between" align="center" wrap="wrap">
-                    <Heading level={1}>Solutions</Heading>
+                <Stack
+                    direction="horizontal"
+                    justify="between"
+                    align="end"
+                    wrap="wrap"
+                    minHeight="var(--size-element-md)"
+                >
+                    <Heading level={2} hasCapsize>
+                        Solutions
+                    </Heading>
                     {canMaintain && <Button label="New Solution" onClick={() => setCreating(true)} />}
                 </Stack>
                 <Divider />
@@ -510,6 +592,7 @@ function SolutionsSection({
                                       renderCell: (row: Solution) => (
                                           <MoreMenu
                                               alignment="end"
+                                              size="sm"
                                               items={[
                                                   ...(row.desired_revision_id &&
                                                   !row.deployment_pending &&
@@ -518,7 +601,9 @@ function SolutionsSection({
                                                             {
                                                                 id: 'update',
                                                                 label: 'Update',
-                                                                icon: <RefreshCw />,
+                                                                icon: (
+                                                                    <RefreshCw className="size-4" aria-hidden="true" />
+                                                                ),
                                                                 onClick: () => {
                                                                     // Forward async menu failures to the surrounding boundary without tracking pending state.
                                                                     startAction(async () => {
@@ -546,13 +631,13 @@ function SolutionsSection({
                                                   {
                                                       id: 'logs',
                                                       label: 'Logs',
-                                                      icon: <Logs />,
+                                                      icon: <Logs className="size-4" aria-hidden="true" />,
                                                       onClick: () => setLogs(row.id),
                                                   },
                                                   {
                                                       id: 'delete',
                                                       label: 'Delete',
-                                                      icon: <Trash />,
+                                                      icon: <Trash className="size-4" aria-hidden="true" />,
                                                       onClick: () =>
                                                           setDeletion({
                                                               id: row.id,
