@@ -75,7 +75,7 @@ export default function Home() {
                         <Globe />
                     </Stack>
                     <section className="relative z-10 mx-auto flex w-full max-w-5xl -translate-y-16 flex-col items-center text-center sm:-translate-y-24">
-                        <Stack gap={2} hAlign="center">
+                        <Stack gap={3} hAlign="center">
                             <Text
                                 as="p"
                                 className="text-yellow-vivid"
@@ -118,7 +118,7 @@ export default function Home() {
                                     Improve
                                 </Text>
                             </Heading>
-                            <Text as="p" className="pt-1 text-lg sm:text-2xl" color="secondary" textWrap="pretty">
+                            <Text as="p" className="text-lg sm:text-2xl" color="secondary" textWrap="pretty">
                                 <Text display="block" type="inherit">
                                     The complete business process lifecycle, defined as code
                                 </Text>
@@ -126,7 +126,7 @@ export default function Home() {
                                     One source of truth for how work gets done
                                 </Text>
                             </Text>
-                            <Stack direction="horizontal" gap={3} hAlign="center" paddingBlockStart={1} wrap="wrap">
+                            <Stack direction="horizontal" gap={3} hAlign="center" wrap="wrap">
                                 <Button
                                     className="w-44"
                                     href={`https://chatgpt.com/?q=${aiPrompt}`}
