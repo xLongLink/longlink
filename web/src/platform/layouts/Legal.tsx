@@ -1,7 +1,7 @@
 import { legalPages } from '@/platform/legal';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Outlet, useLocation } from 'react-router';
-import { Gem, Image, MessageSquare } from 'lucide-react';
+import { brandingPages } from '@/platform/branding';
 import { SideLayout } from '@/components/layouts/SideLayout';
 import { SideNavHeader } from '@/components/layouts/SideNavHeader';
 import { SideNav, SideNavItem, SideNavSection } from '@astryxdesign/core/SideNav';
@@ -33,24 +33,20 @@ export default function Legal() {
                             })}
                         </SideNavSection>
                         <SideNavSection title="Branding">
-                            <SideNavItem
-                                href="/branding/assets"
-                                icon={<Image aria-hidden size={16} />}
-                                isSelected={pagePath === '/branding/assets'}
-                                label="Brand assets"
-                            />
-                            <SideNavItem
-                                href="/branding/values"
-                                icon={<Gem aria-hidden size={16} />}
-                                isSelected={pagePath === '/branding/values'}
-                                label="Values"
-                            />
-                            <SideNavItem
-                                href="/branding/comunication"
-                                icon={<MessageSquare aria-hidden size={16} />}
-                                isSelected={pagePath === '/branding/comunication'}
-                                label="Communication"
-                            />
+                            {brandingPages.map((page) => {
+                                // Preserve branding destinations without a trailing slash.
+                                const Icon = page.icon;
+
+                                return (
+                                    <SideNavItem
+                                        key={page.path}
+                                        href={page.path}
+                                        icon={<Icon aria-hidden size={16} />}
+                                        isSelected={pagePath === page.path}
+                                        label={page.label}
+                                    />
+                                );
+                            })}
                         </SideNavSection>
                     </Stack>
                 </SideNav>

@@ -4,6 +4,7 @@ import { legalPaths } from './src/platform/legal';
 // Use cases are a work in progress; exclude them from prerendering and the sitemap.
 // import { useCasePaths } from './src/platform/usecases';
 import type { Config } from '@react-router/dev/config';
+import { brandingPaths } from './src/platform/branding';
 import { documentationPaths } from './src/platform/docs';
 import { cp, mkdir, rename, rm, writeFile } from 'node:fs/promises';
 
@@ -22,9 +23,7 @@ const publicPagePaths = [
     '/pricing',
     // ...useCasePaths,
     ...legalPaths,
-    '/branding/assets',
-    '/branding/values',
-    '/branding/comunication',
+    ...brandingPaths,
     ...documentationPaths,
 ];
 

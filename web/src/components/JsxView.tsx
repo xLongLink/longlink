@@ -190,8 +190,8 @@ export function JsxView({
         );
 
     return (
-        // The View owns one viewport and scroll region; overlays no longer depend on normal-flow content height.
-        <Stack height="calc(100dvh - var(--_app-shell-header-height, 0px) - var(--spacing-8))" gap={0}>
+        // Fill the host shell's allocated region; scrolling and overlays stay inside the isolated View.
+        <Stack height="100%" minHeight={0} gap={0}>
             <iframe
                 ref={frame}
                 title="Solution View"

@@ -177,6 +177,114 @@ declare function request<T = unknown>(
  */
 declare function useApi<T = unknown>(path: string): readonly [T, () => Promise<void>];
 
+/** Shared props for form controls. */
+type FieldProps = {
+    label: string;
+    description?: string;
+    /** Includes the themed control's value under this form submission name. */
+    name?: string;
+    /** Requires a value before native form submission. */
+    required?: boolean;
+    /** Prevents interaction and excludes the field from submission. */
+    disabled?: boolean;
+    width?: number | string;
+};
+
+/** @category Form @group DateInput */
+type ISODateString = `${number}${number}${number}${number}-${number}${number}-${number}${number}`;
+
+/** @category Form @group DateInput */
+type DateInputProps = FieldProps & {
+    value?: ISODateString;
+    defaultValue?: ISODateString;
+    onChange?: (value: ISODateString | undefined) => void;
+    min?: ISODateString;
+    max?: ISODateString;
+    /** Additional constraints applied to the themed calendar picker. */
+    dateConstraints?: readonly ((date: Date) => boolean)[];
+    placeholder?: string;
+    hasClear?: boolean;
+    size?: 'sm' | 'md' | 'lg';
+};
+
+/** @category Form @group TimeInput */
+type ISOTimeString = string & { readonly __brand: 'ISOTimeString' };
+
+/** @category Form @group Selector */
+type SelectorOptionData = {
+    value: string;
+    label?: string;
+    description?: ViewNode;
+    icon?: StoneIconName;
+    disabled?: boolean;
+};
+
+/** @category Form @group Selector */
+type SelectorOptionType =
+    | string
+    | SelectorOptionData
+    | { type: 'divider' }
+    | {
+          type: 'section';
+          title?: string;
+          options: SelectorOptionData[];
+      };
+
+/** @category Layouts @group Card */
+type CardProps = {
+    /** Content rendered inside the card. */
+    children?: ViewNode;
+    /** Inner spacing using the theme spacing scale. */
+    padding?: 0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10;
+    /** Background color variant, independent of the interaction mode. */
+    variant?:
+        | 'default'
+        | 'transparent'
+        | 'muted'
+        | 'blue'
+        | 'cyan'
+        | 'gray'
+        | 'green'
+        | 'orange'
+        | 'pink'
+        | 'purple'
+        | 'red'
+        | 'teal'
+        | 'yellow';
+    /** Card width; numbers are pixels and strings are CSS sizes. */
+    width?: number | string;
+    /** Card height; numbers are pixels and strings are CSS sizes. */
+    height?: number | string;
+    /** Maximum card width. */
+    maxWidth?: number | string;
+    /** Minimum card height. */
+    minHeight?: number | string;
+    /** Makes the card and its descendants non-interactive. */
+    inert?: boolean;
+    /** Hides the card from assistive technologies. */
+    'aria-hidden'?: boolean | 'true' | 'false';
+    /** Accessible label for interactive cards; supply a descriptive label. */
+    label?: string;
+    /** Makes the card clickable when its surface is activated; nested controls act independently. */
+    onClick?: (event: ViewMouseEvent) => void;
+    /** Makes the card a navigation target when no selection callback is supplied. */
+    href?: string;
+    /** Native link target; isolated Views always navigate in the host's current Solution. */
+    target?: string;
+    /** Disables activation of an interactive card. */
+    isDisabled?: boolean;
+    /** Selection state; supply onChange to let users toggle it. */
+    isSelected?: boolean;
+    /** Makes the card selectable and receives its next selection state; takes priority over onClick and href. */
+    onChange?: (isSelected: boolean) => void;
+};
+
+/** @category Display @group Table */
+type ColumnWidth = { type: 'proportional'; value: number; minWidth?: number } | { type: 'pixel'; value: number };
+
+// BEGIN GENERATED COMPONENTS
+// Generated from web/src/views/components.ts by vp run generate:docs. Do not edit.
+
 /** @category Layouts */
 declare function Stack(props: {
     children?: ViewNode;
@@ -189,6 +297,37 @@ declare function Stack(props: {
     wrap?: 'nowrap' | 'wrap' | 'wrap-reverse';
 }): React.JSX.Element;
 
+/** @category Layouts @group Stack */
+declare function StackItem(props: {
+    /** Content rendered inside the stack item. */
+    children?: ViewNode;
+    size?: 'static' | 'fill';
+    isScrollable?: boolean;
+    /** Overrides this item's cross-axis alignment; omitted values inherit the parent alignment. */
+    crossAlignSelf?: 'start' | 'center' | 'end' | 'stretch';
+}): React.JSX.Element;
+
+/** @category Layouts */
+declare function Grid(props: { children?: ViewNode; columns?: number; gap?: Spacing }): React.JSX.Element;
+
+/** @category Layouts @group Grid */
+declare function GridSpan(props: {
+    /** Content rendered inside the grid item. */
+    children?: ViewNode;
+    /** Number of columns to occupy, or full to span the entire grid. */
+    columns?: number | 'full';
+}): React.JSX.Element;
+
+/** @category Layouts */
+declare function Collapsible(props: {
+    children?: ViewNode;
+    trigger: ViewNode;
+    defaultIsOpen?: boolean;
+    isOpen?: boolean;
+    isDisabled?: boolean;
+    onOpenChange?: (isOpen: boolean) => void;
+}): React.JSX.Element;
+
 /** @category Display */
 declare function Heading(props: { children?: ViewNode; level?: 1 | 2 | 3 | 4 | 5 | 6 }): React.JSX.Element;
 
@@ -198,6 +337,53 @@ declare function Text(props: {
     color?: 'primary' | 'secondary';
     type?: 'body' | 'large' | 'label' | 'supporting' | 'code';
 }): React.JSX.Element;
+
+/** @category Display */
+declare function Avatar(
+    props: {
+        shape?: undefined | 'circle' | 'rounded' | 'square';
+    } & {
+        name?: string;
+        /** Stable identity for generated avatars, independent of the display name. */
+        seed?: string;
+        /** Organization owners use rounded Waves avatars; user owners retain the supplied geometry or a circle. */
+        kind?: 'user' | 'organization';
+        src?: string | null;
+        alt?: string;
+        size?: 'sm' | 'md' | 'lg';
+    },
+): React.JSX.Element;
+
+/** @category Display */
+declare function Badge(props: {
+    label?: ViewNode;
+    icon?: StoneIconName;
+    variant?:
+        | 'neutral'
+        | 'info'
+        | 'success'
+        | 'warning'
+        | 'error'
+        | 'blue'
+        | 'cyan'
+        | 'green'
+        | 'orange'
+        | 'pink'
+        | 'purple'
+        | 'red'
+        | 'teal'
+        | 'yellow';
+}): React.JSX.Element;
+
+/** @category Display */
+declare function StatusDot(props: {
+    label: string;
+    variant: 'success' | 'warning' | 'error' | 'accent' | 'neutral';
+    tooltip?: string;
+}): React.JSX.Element;
+
+/** @category Layouts */
+declare function Card(props: CardProps): React.JSX.Element;
 
 /** @category Action */
 declare function Button(props: ButtonProps): React.JSX.Element;
@@ -235,52 +421,13 @@ declare function IconButton(props: {
     onClick?: (event: ViewMouseEvent) => void | Promise<void>;
 }): React.JSX.Element;
 
-/** @category Action */
-declare function Link(props: { to: string; children?: ViewNode }): React.JSX.Element;
-
 /** @category Display */
-declare function Badge(props: {
+declare function Divider(props: {
     label?: ViewNode;
-    icon?: StoneIconName;
-    variant?:
-        | 'neutral'
-        | 'info'
-        | 'success'
-        | 'warning'
-        | 'error'
-        | 'blue'
-        | 'cyan'
-        | 'green'
-        | 'orange'
-        | 'pink'
-        | 'purple'
-        | 'red'
-        | 'teal'
-        | 'yellow';
+    variant?: 'subtle' | 'strong';
+    orientation?: 'horizontal' | 'vertical';
+    isFullBleed?: boolean;
 }): React.JSX.Element;
-
-/** @category Display */
-declare function StatusDot(props: {
-    label: string;
-    variant: 'success' | 'warning' | 'error' | 'accent' | 'neutral';
-    tooltip?: string;
-}): React.JSX.Element;
-
-/** @category Display */
-declare function Avatar(
-    props: {
-        shape?: undefined | 'circle' | 'rounded' | 'square';
-    } & {
-        name?: string;
-        /** Stable identity for generated avatars, independent of the display name. */
-        seed?: string;
-        /** Organization owners use rounded Waves avatars; user owners retain the supplied geometry or a circle. */
-        kind?: 'user' | 'organization';
-        src?: string | null;
-        alt?: string;
-        size?: 'sm' | 'md' | 'lg';
-    },
-): React.JSX.Element;
 
 /** @category Layouts */
 declare function Dialog(props: {
@@ -301,19 +448,6 @@ declare function Dialog(props: {
     contentWidth?: number | string;
 }): React.JSX.Element;
 
-/** Shared props for form controls. */
-type FieldProps = {
-    label: string;
-    description?: string;
-    /** Includes the themed control's value under this form submission name. */
-    name?: string;
-    /** Requires a value before native form submission. */
-    required?: boolean;
-    /** Prevents interaction and excludes the field from submission. */
-    disabled?: boolean;
-    width?: number | string;
-};
-
 /** Submits named themed fields and ordinary HTML inputs to a Solution API endpoint. @category Form */
 declare function Form(props: {
     /** Named controls, ordinary HTML fields, and layout components. */
@@ -328,28 +462,23 @@ declare function Form(props: {
     onSuccess?: (data: ViewData) => void | Promise<void>;
 }): React.JSX.Element;
 
-/** @category Form @group DateInput */
-type ISODateString = `${number}${number}${number}${number}-${number}${number}-${number}${number}`;
-
-/** @category Form @group DateInput */
-type DateInputProps = FieldProps & {
-    value?: ISODateString;
-    defaultValue?: ISODateString;
-    onChange?: (value: ISODateString | undefined) => void;
-    min?: ISODateString;
-    max?: ISODateString;
-    /** Additional constraints applied to the themed calendar picker. */
-    dateConstraints?: readonly ((date: Date) => boolean)[];
-    placeholder?: string;
-    hasClear?: boolean;
-    size?: 'sm' | 'md' | 'lg';
-};
-
 /** @category Form */
 declare function DateInput(props: DateInputProps): React.JSX.Element;
 
-/** @category Form @group TimeInput */
-type ISOTimeString = string & { readonly __brand: 'ISOTimeString' };
+/** @category Form */
+declare function MultiSelector(
+    props: FieldProps & {
+        options: SelectorOptionType[];
+        value?: string[];
+        defaultValue?: string[];
+        onChange?: (value: string[]) => void;
+        placeholder?: string;
+        size?: 'sm' | 'md' | 'lg';
+        hasSelectAll?: boolean;
+        hasSearch?: boolean;
+        hasClear?: boolean;
+    },
+): React.JSX.Element;
 
 /** @category Form */
 declare function TimeInput(
@@ -418,160 +547,6 @@ declare function NumberInput(
         ),
 ): React.JSX.Element;
 
-/** @category Form @group Selector */
-type SelectorOptionData = {
-    value: string;
-    label?: string;
-    description?: ViewNode;
-    icon?: StoneIconName;
-    disabled?: boolean;
-};
-
-/** @category Form @group Selector */
-type SelectorOptionType =
-    | string
-    | SelectorOptionData
-    | { type: 'divider' }
-    | {
-          type: 'section';
-          title?: string;
-          options: SelectorOptionData[];
-      };
-
-/** @category Form */
-declare function MultiSelector(
-    props: FieldProps & {
-        options: SelectorOptionType[];
-        value?: string[];
-        defaultValue?: string[];
-        onChange?: (value: string[]) => void;
-        placeholder?: string;
-        size?: 'sm' | 'md' | 'lg';
-        hasSelectAll?: boolean;
-        hasSearch?: boolean;
-        hasClear?: boolean;
-    },
-): React.JSX.Element;
-
-/** @category Form */
-declare function Selector(
-    props: FieldProps & {
-        options: SelectorOptionType[];
-        defaultValue?: string;
-        hasSearch?: boolean;
-        placeholder?: string;
-        size?: 'sm' | 'md' | 'lg';
-    } & (
-            | { hasClear?: false; value?: string; onChange?: (value: string) => void }
-            | { hasClear: true; value?: string | null; onChange?: (value: string | null) => void }
-        ),
-): React.JSX.Element;
-
-/** @category Form */
-declare function FileInput(
-    props: FieldProps & {
-        value?: File | File[] | null;
-        onChange?: (value: File | File[] | null) => void;
-        accept?: string;
-        multiple?: boolean;
-        maxSize?: number;
-        maxFiles?: number;
-        placeholder?: string;
-        mode?: 'input' | 'dropzone';
-    },
-): React.JSX.Element;
-
-/** @category Display */
-declare function FileViewer(props: {
-    /** Scoped Solution operation path returning the file to preview. */
-    src: string;
-    /** Attachment name used for accessible action labels and the downloaded filename. */
-    title: string;
-}): React.JSX.Element;
-
-/** @category Layouts */
-declare function Grid(props: { children?: ViewNode; columns?: number; gap?: Spacing }): React.JSX.Element;
-
-/** @category Layouts @group Grid */
-declare function GridSpan(props: {
-    /** Content rendered inside the grid item. */
-    children?: ViewNode;
-    /** Number of columns to occupy, or full to span the entire grid. */
-    columns?: number | 'full';
-}): React.JSX.Element;
-
-/** @category Layouts @group Stack */
-declare function StackItem(props: {
-    /** Content rendered inside the stack item. */
-    children?: ViewNode;
-    size?: 'static' | 'fill';
-    isScrollable?: boolean;
-    /** Overrides this item's cross-axis alignment; omitted values inherit the parent alignment. */
-    crossAlignSelf?: 'start' | 'center' | 'end' | 'stretch';
-}): React.JSX.Element;
-
-/** @category Layouts @group Card */
-type CardProps = {
-    /** Content rendered inside the card. */
-    children?: ViewNode;
-    /** Inner spacing using the theme spacing scale. */
-    padding?: 0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10;
-    /** Background color variant, independent of the interaction mode. */
-    variant?:
-        | 'default'
-        | 'transparent'
-        | 'muted'
-        | 'blue'
-        | 'cyan'
-        | 'gray'
-        | 'green'
-        | 'orange'
-        | 'pink'
-        | 'purple'
-        | 'red'
-        | 'teal'
-        | 'yellow';
-    /** Card width; numbers are pixels and strings are CSS sizes. */
-    width?: number | string;
-    /** Card height; numbers are pixels and strings are CSS sizes. */
-    height?: number | string;
-    /** Maximum card width. */
-    maxWidth?: number | string;
-    /** Minimum card height. */
-    minHeight?: number | string;
-    /** Makes the card and its descendants non-interactive. */
-    inert?: boolean;
-    /** Hides the card from assistive technologies. */
-    'aria-hidden'?: boolean | 'true' | 'false';
-    /** Accessible label for interactive cards; supply a descriptive label. */
-    label?: string;
-    /** Makes the card clickable when its surface is activated; nested controls act independently. */
-    onClick?: (event: ViewMouseEvent) => void;
-    /** Makes the card a navigation target when no selection callback is supplied. */
-    href?: string;
-    /** Native link target; isolated Views always navigate in the host's current Solution. */
-    target?: string;
-    /** Disables activation of an interactive card. */
-    isDisabled?: boolean;
-    /** Selection state; supply onChange to let users toggle it. */
-    isSelected?: boolean;
-    /** Makes the card selectable and receives its next selection state; takes priority over onClick and href. */
-    onChange?: (isSelected: boolean) => void;
-};
-
-/** @category Layouts */
-declare function Card(props: CardProps): React.JSX.Element;
-
-/** @category Layouts */
-declare function Collapsible(props: {
-    children?: ViewNode;
-    trigger: ViewNode;
-    defaultIsOpen?: boolean;
-    isOpen?: boolean;
-    isDisabled?: boolean;
-    onOpenChange?: (isOpen: boolean) => void;
-}): React.JSX.Element;
-
 /** @category Form */
 declare function CheckboxInput(
     props: FieldProps & {
@@ -616,6 +591,34 @@ declare function Slider(
 ): React.JSX.Element;
 
 /** @category Form */
+declare function FileInput(
+    props: FieldProps & {
+        value?: File | File[] | null;
+        onChange?: (value: File | File[] | null) => void;
+        accept?: string;
+        multiple?: boolean;
+        maxSize?: number;
+        maxFiles?: number;
+        placeholder?: string;
+        mode?: 'input' | 'dropzone';
+    },
+): React.JSX.Element;
+
+/** @category Form */
+declare function Selector(
+    props: FieldProps & {
+        options: SelectorOptionType[];
+        defaultValue?: string;
+        hasSearch?: boolean;
+        placeholder?: string;
+        size?: 'sm' | 'md' | 'lg';
+    } & (
+            | { hasClear?: false; value?: string; onChange?: (value: string) => void }
+            | { hasClear: true; value?: string | null; onChange?: (value: string | null) => void }
+        ),
+): React.JSX.Element;
+
+/** @category Form */
 declare function RadioList(
     props: FieldProps & {
         children?: ViewNode;
@@ -638,54 +641,64 @@ declare function RadioListItem(props: {
     isDisabled?: boolean;
 }): React.JSX.Element;
 
-/** @category Action */
-declare function MoreMenu(props: {
-    items: DropdownMenuOption[];
-    label?: string;
-    icon?: StoneIconName;
-    isDisabled?: boolean;
-    onOpenChange?: (isOpen: boolean) => void;
+/** @category Display */
+declare function MetadataList(props: {
+    children?: ViewNode;
+    columns?: 'multi' | 'single' | number;
+    title?: ViewNode;
 }): React.JSX.Element;
 
-/** @category Layouts */
-declare function Menu(props: {
-    /** MenuSection elements defining navigation and content. */
+/** @category Display @group MetadataList */
+declare function MetadataListItem(props: {
+    /** Value rendered beside the metadata label. */
     children?: ViewNode;
-    gap?: 0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10;
-}): React.JSX.Element;
-
-/** @category Layouts @group Menu */
-declare function MenuSection(props: {
-    /** MenuItem elements or nested MenuSubSection groups. */
-    children?: ViewNode;
-    /** Hides the section heading; visible by default. */
-    isHeaderHidden?: boolean;
-    /** Section heading displayed in the navigation. */
-    title: string;
-}): React.JSX.Element;
-
-/** @category Layouts @group Menu */
-declare function MenuItem(props: {
-    /** Content mounted beside the navigation while this item is selected. */
-    children?: ViewNode;
-    /** Optional LongLink icon name displayed beside the label. */
-    icon?: StoneIconName;
-    /** Navigation label; its lowercase, hyphenated form identifies the item's URL fragment. */
+    /** Label identifying the metadata value. */
     label: string;
-}): React.JSX.Element;
-
-/** @category Layouts @group Menu */
-declare function MenuSubSection(props: {
-    /** MenuItem elements nested inside this collapsible group. */
-    children?: ViewNode;
-    /** Optional LongLink icon name displayed beside the group label. */
+    /** Optional icon displayed beside the metadata label. */
     icon?: StoneIconName;
-    /** Label displayed on the collapsible navigation group. */
-    label: string;
 }): React.JSX.Element;
 
 /** @category Display */
-declare function Icon(props: { icon: StoneIconName; size: 'sm' | 'md' | 'lg' }): React.JSX.Element;
+declare function Table<T extends Record<string, unknown>>(props: {
+    data: T[];
+    idKey?: (keyof T & string) | ((row: T) => string | number);
+    density?: 'compact' | 'balanced' | 'spacious';
+    hasHover?: boolean;
+    isStriped?: boolean;
+    columns?: {
+        key: string;
+        header?: ViewNode;
+        width?: ColumnWidth;
+        align?: 'start' | 'center' | 'end';
+        renderCell?: (row: T) => ViewNode;
+    }[];
+}): React.JSX.Element;
+
+/** @category Display @group Table */
+declare function proportional(
+    value?: number,
+    options?: {
+        minWidth?: number;
+    },
+): Extract<ColumnWidth, { type: 'proportional' }>;
+
+/** @category Display @group Table */
+declare function pixel(value: number): Extract<ColumnWidth, { type: 'pixel' }>;
+
+/** @category Display */
+declare function Timestamp(props: {
+    value: number | string;
+    format?:
+        | 'date'
+        | 'date_long'
+        | 'date_weekday'
+        | 'date_time'
+        | 'time'
+        | 'relative'
+        | 'system_date'
+        | 'system_date_time'
+        | 'system_time';
+}): React.JSX.Element;
 
 /** @category Display */
 declare function CodeBlock(props: {
@@ -746,6 +759,58 @@ declare function Tab(props: {
 /** @category Display */
 declare function EmptyState(props: { title: string; isCompact?: boolean }): React.JSX.Element;
 
+/** @category Action */
+declare function MoreMenu(props: {
+    items: DropdownMenuOption[];
+    label?: string;
+    icon?: StoneIconName;
+    isDisabled?: boolean;
+    onOpenChange?: (isOpen: boolean) => void;
+}): React.JSX.Element;
+
+/** @category Layouts */
+declare function Menu(props: {
+    /** MenuSection elements defining navigation and content. */
+    children?: ViewNode;
+    gap?: 0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10;
+}): React.JSX.Element;
+
+/** @category Layouts @group Menu */
+declare function MenuSection(props: {
+    /** MenuItem elements or nested MenuSubSection groups. */
+    children?: ViewNode;
+    /** Hides the section heading; visible by default. */
+    isHeaderHidden?: boolean;
+    /** Section heading displayed in the navigation. */
+    title: string;
+}): React.JSX.Element;
+
+/** @category Layouts @group Menu */
+declare function MenuItem(props: {
+    /** Content mounted beside the navigation while this item is selected. */
+    children?: ViewNode;
+    /** Optional LongLink icon name displayed beside the label. */
+    icon?: StoneIconName;
+    /** Navigation label; its lowercase, hyphenated form identifies the item's URL fragment. */
+    label: string;
+}): React.JSX.Element;
+
+/** @category Layouts @group Menu */
+declare function MenuSubSection(props: {
+    /** MenuItem elements nested inside this collapsible group. */
+    children?: ViewNode;
+    /** Optional LongLink icon name displayed beside the group label. */
+    icon?: StoneIconName;
+    /** Label displayed on the collapsible navigation group. */
+    label: string;
+}): React.JSX.Element;
+
+/** @category Display */
+declare function Icon(props: { icon: StoneIconName; size: 'sm' | 'md' | 'lg' }): React.JSX.Element;
+
+/** @category Action */
+declare function Link(props: { to: string; children?: ViewNode }): React.JSX.Element;
+
 /** @category Display */
 declare function Currency(props: {
     /** Amount to format in currency units. */
@@ -757,69 +822,11 @@ declare function Currency(props: {
 }): React.JSX.Element;
 
 /** @category Display */
-declare function Timestamp(props: {
-    value: number | string;
-    format?:
-        | 'date'
-        | 'date_long'
-        | 'date_weekday'
-        | 'date_time'
-        | 'time'
-        | 'relative'
-        | 'system_date'
-        | 'system_date_time'
-        | 'system_time';
+declare function FileViewer(props: {
+    /** Scoped Solution operation path returning the file to preview. */
+    src: string;
+    /** Attachment name used for accessible action labels and the downloaded filename. */
+    title: string;
 }): React.JSX.Element;
 
-/** @category Display */
-declare function Divider(props: {
-    label?: ViewNode;
-    variant?: 'subtle' | 'strong';
-    orientation?: 'horizontal' | 'vertical';
-    isFullBleed?: boolean;
-}): React.JSX.Element;
-
-/** @category Display */
-declare function MetadataList(props: {
-    children?: ViewNode;
-    columns?: 'multi' | 'single' | number;
-    title?: ViewNode;
-}): React.JSX.Element;
-
-/** @category Display @group MetadataList */
-declare function MetadataListItem(props: {
-    /** Value rendered beside the metadata label. */
-    children?: ViewNode;
-    /** Label identifying the metadata value. */
-    label: string;
-    /** Optional icon displayed beside the metadata label. */
-    icon?: StoneIconName;
-}): React.JSX.Element;
-
-/** @category Display @group Table */
-type ColumnWidth = { type: 'proportional'; value: number; minWidth?: number } | { type: 'pixel'; value: number };
-
-/** @category Display @group Table */
-declare function proportional(
-    value?: number,
-    options?: { minWidth?: number },
-): Extract<ColumnWidth, { type: 'proportional' }>;
-
-/** @category Display @group Table */
-declare function pixel(value: number): Extract<ColumnWidth, { type: 'pixel' }>;
-
-/** @category Display */
-declare function Table<T extends Record<string, unknown>>(props: {
-    data: T[];
-    idKey?: (keyof T & string) | ((row: T) => string | number);
-    density?: 'compact' | 'balanced' | 'spacious';
-    hasHover?: boolean;
-    isStriped?: boolean;
-    columns?: {
-        key: string;
-        header?: ViewNode;
-        width?: ColumnWidth;
-        align?: 'start' | 'center' | 'end';
-        renderCell?: (row: T) => ViewNode;
-    }[];
-}): React.JSX.Element;
+// END GENERATED COMPONENTS
