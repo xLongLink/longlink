@@ -124,9 +124,10 @@ class Storage:
 
         # Revoke every known account before data removal, including tombstoned Solutions.
         name = self.bucket_name(organization)
-        async with self._admin() as admin:
-            for solution in solutions:
-                await admin.revoke(solution)
+        if solutions:
+            async with self._admin() as admin:
+                for solution in solutions:
+                    await admin.revoke(solution)
 
         # Remove data only after all revocations succeed and their transport closes.
         await self._storage.delete(name)

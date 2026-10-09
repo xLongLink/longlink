@@ -9,7 +9,6 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import defer, load_only, joinedload, selectinload, contains_eager
 from collections.abc import Sequence
 from longlink.shared import audit as shared_audit
-from longlink.shared import models as shared_models
 from src.models.roles import OrganizationRoles
 from src.database.services import operations
 from src.models.operations import OperationKind
@@ -74,7 +73,7 @@ async def memberships(session: AsyncSession, user_id: UUID) -> Sequence[UserOrga
 async def solution_runtime_access(
     session: AsyncSession, user_id: UUID, solution_id: UUID
 ) -> tuple[Solution, OrganizationRoles, ComputeRegistry] | None:
-    """Return one user's active solution access with its compute registry."""
+    """Return one user's active Solution access with its gateway connection."""
 
     # Load Solution access and its gateway secret in one query.
     result = await session.execute(
@@ -89,7 +88,6 @@ async def solution_runtime_access(
             ),
             load_only(
                 ComputeRegistry.id,
-                ComputeRegistry.kubeconfig,
                 ComputeRegistry.gateway_url,
                 ComputeRegistry.gateway_certificate,
             ),
@@ -105,6 +103,48 @@ async def solution_runtime_access(
         )
     )
     return result.tuples().one_or_none()
+
+
+async def solution_logs_access(
+    session: AsyncSession, user_id: UUID, solution_id: UUID
+) -> tuple[UUID, OrganizationRoles, dict[str, object]] | None:
+    """Return active Solution log access without loading runtime or gateway credentials."""
+
+    # Resolve the Organization, current membership role, and cluster connection in one query.
+    result = await session.execute(
+        select(col(Solution.organization_id), col(UserOrganization.role), col(ComputeRegistry.kubeconfig))
+        .select_from(Solution)
+        .join(Organization, col(Organization.id) == col(Solution.organization_id))
+        .join(UserOrganization, col(UserOrganization.organization_id) == col(Organization.id))
+        .join(ComputeRegistry, col(ComputeRegistry.id) == col(Organization.compute_id))
+        .where(
+            col(Solution.id) == solution_id,
+            col(Solution.deleted_at).is_(None),
+            col(Organization.deleted_at).is_(None),
+            col(UserOrganization.user_id) == user_id,
+        )
+    )
+    return result.tuples().one_or_none()
+
+
+async def storage_infrastructure(session: AsyncSession, organization_id: UUID) -> ComputeRegistry | None:
+    """Return one Organization's assigned storage connection without lifecycle credentials."""
+
+    # Load only the Compute fields needed to inspect the Organization bucket.
+    return await session.scalar(
+        select(ComputeRegistry)
+        .options(
+            load_only(
+                ComputeRegistry.id,
+                ComputeRegistry.storage_endpoint,
+                ComputeRegistry.storage_access_key,
+                ComputeRegistry.storage_secret_key,
+                ComputeRegistry.storage_certificate,
+            )
+        )
+        .join(Organization, col(Organization.compute_id) == col(ComputeRegistry.id))
+        .where(col(Organization.id) == organization_id)
+    )
 
 
 def _infrastructure_query() -> Select[tuple[Organization, ComputeRegistry]]:
@@ -249,18 +289,7 @@ async def project_users(session: AsyncSession, organization_id: UUID, db: postgr
         .where(col(UserOrganization.organization_id) == organization_id)
     )
     result = await session.execute(statement)
-    users = result.all()
-
-    # Build the shared-schema user snapshot from Platform-authoritative memberships.
-    rows = [
-        shared_models.User(
-            id=user.id,
-            name=user.name,
-            email=user.email,
-            avatar=user.avatar,
-        )
-        for user in users
-    ]
+    rows = result.mappings().all()
 
     # Empty snapshots must not open an Organization database connection.
     if not rows:

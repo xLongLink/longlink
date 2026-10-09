@@ -88,7 +88,7 @@ async def register(session: AsyncSession, name: str, email: str, password: str, 
     return user
 
 
-async def ensure_administrator(session: AsyncSession) -> User:
+async def ensure_administrator(session: AsyncSession) -> None:
     """Reconcile the configured account as the sole Platform administrator."""
 
     # Reconcile the persisted administrator before considering an initial account creation.
@@ -116,7 +116,7 @@ async def ensure_administrator(session: AsyncSession) -> User:
             if user is None:
                 raise
         else:
-            return user
+            return
 
     # Reconcile the configured account, including one created concurrently by another replica.
     if not PASSWORD_HASH.verify(env.ADMIN_PASSWORD, user.password):
@@ -125,4 +125,3 @@ async def ensure_administrator(session: AsyncSession) -> User:
     user.email = env.ADMIN_EMAIL
     user.administrator = True
     user.deleted_at = None
-    return user

@@ -96,8 +96,8 @@ async def registry_json(
         return payload, response.headers
 
 
-async def metadata(image: Image, connection: RegistryConnection | None = None) -> LongLinkMetadata | None:
-    """Fetch LongLink metadata from a remote image via the OCI Distribution API."""
+async def required_metadata(image: Image, connection: RegistryConnection | None = None) -> LongLinkMetadata:
+    """Fetch image metadata or raise the stable missing-image response."""
 
     # Only supported registry origins may receive image requests.
     base = registry_base(image.registry)
@@ -106,21 +106,17 @@ async def metadata(image: Image, connection: RegistryConnection | None = None) -
     if connection is not None and connection.host != image.registry:
         raise ForbiddenError("Registry connection does not match the image host")
 
+    # Keep registry inspection and transport cleanup within one client lifetime.
     async with httpx2.AsyncClient(follow_redirects=False, timeout=5.0, trust_env=False) as client:
         try:
             # Bound the whole lookup as well as individual network reads.
             async with asyncio.timeout(20):
-                return await inspect(client, image, base, connection)
+                result = await inspect(client, image, base, connection)
         except (httpx2.HTTPError, TimeoutError, TypeError, ValueError) as exc:
             logger.warning("Failed to inspect image metadata: %s", exc)
-            return None
-
-
-async def required_metadata(image: Image, connection: RegistryConnection | None = None) -> LongLinkMetadata:
-    """Return image metadata or raise the stable missing-image response."""
+            result = None
 
     # Require declared metadata before callers mutate durable Solution state.
-    result = await metadata(image, connection)
     if result is None:
         raise NotFoundError("Image metadata not found")
     return result

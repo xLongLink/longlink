@@ -3,7 +3,7 @@ from uuid import uuid4
 from conftest import DatabasePostgres
 from factories import create_compute, fetch_operations, create_organization
 from src.errors import ConflictError, ForbiddenError
-from longlink.shared import models as shared_models
+from collections.abc import Mapping, Sequence
 from src.models.roles import OrganizationRoles
 from src.models.types import Image
 from src.models.metadata import LongLinkMetadata
@@ -46,9 +46,9 @@ async def test_sync_users_projects_active_organization_members(
 
     # Arrange
     organization = await create_organization(users[0])
-    synchronized: list[tuple[DatabasePostgres, list[shared_models.User]]] = []
+    synchronized: list[tuple[DatabasePostgres, Sequence[Mapping[str, object]]]] = []
 
-    async def capture_sync(conn: DatabasePostgres, rows: list[shared_models.User]) -> None:
+    async def capture_sync(conn: DatabasePostgres, rows: Sequence[Mapping[str, object]]) -> None:
         """Capture the shared-database projection without opening a connection."""
 
         synchronized.append((conn, rows))
@@ -64,10 +64,10 @@ async def test_sync_users_projects_active_organization_members(
     assert conn.database == organization.id.hex
     assert conn.search_path == "shared"
     (row,) = rows
-    assert row.id == users[0].id
-    assert row.name == users[0].name
-    assert row.email == users[0].email
-    assert row.avatar == users[0].avatar
+    assert row["id"] == users[0].id
+    assert row["name"] == users[0].name
+    assert row["email"] == users[0].email
+    assert row["avatar"] == users[0].avatar
 
 
 async def test_update_member_role_rejects_owner_changes_from_non_owners(users: tuple[User, User, User]) -> None:

@@ -125,22 +125,22 @@ async def get_solution_logs(
     """Return recent pod logs for one managed solution."""
 
     # Resolve active Solution access before enforcing runtime permissions.
-    access = await organizations.solution_runtime_access(session, user.id, solution_id)
+    access = await organizations.solution_logs_access(session, user.id, solution_id)
     if access is None:
         raise HTTPException(status_code=403, detail="Access required")
-    solution, role, registry = access
+    organization_id, role, kubeconfig = access
     if not roles.atleast(role, OrganizationRoles.maintain):
         raise HTTPException(status_code=403, detail="Permission required")
 
     # Map expected cluster log failures to a service-unavailable response.
     try:
         cluster = Kubernetes(
-            registry.kubeconfig,
+            kubeconfig,
         )
         async with cluster:
-            return await solution_resources.logs(cluster, solution.organization_id, solution.id)
+            return await solution_resources.logs(cluster, organization_id, solution_id)
     except RuntimeError as exc:
-        logger.warning("Solution logs unavailable for '%s': %s", solution.id, exc)
+        logger.warning("Solution logs unavailable for '%s': %s", solution_id, exc)
         raise HTTPException(status_code=503, detail="Solution logs unavailable") from exc
 
 
