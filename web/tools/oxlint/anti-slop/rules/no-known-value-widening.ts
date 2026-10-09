@@ -6,7 +6,7 @@ import {
 	createTypeEnvironment,
 	isKnownEvidenceExpression,
 	type TypeEnvironment,
-	type WideningTarget,
+	type WideningTargetKind,
 } from "../shared/dictionary-types.ts";
 import {
 	containsUnknownType,
@@ -208,7 +208,7 @@ function typePredicateSubjectIndex(
 function annotationTarget(
 	annotation: ESTree.TSTypeAnnotation | null | undefined,
 	environment: TypeEnvironment,
-): WideningTarget | null {
+): WideningTargetKind | null {
 	return annotation === null || annotation === undefined
 		? null
 		: classifyWideningTarget(annotation.typeAnnotation, environment);
@@ -250,8 +250,8 @@ function isEmptyObjectExpression(expression: ESTree.Expression): boolean {
 	return unwrapped.type === "ObjectExpression" && unwrapped.properties.length === 0;
 }
 
-function isDictionaryAccumulatorTarget(destination: WideningTarget): boolean {
-	return destination.kind === "open dictionary" || destination.kind === "generic container";
+function isDictionaryAccumulatorTarget(destination: WideningTargetKind): boolean {
+	return destination === "open dictionary" || destination === "generic container";
 }
 
 function hasParentAssertion(node: ESTree.Node): boolean {
@@ -276,7 +276,7 @@ export const noKnownValueWideningRule = defineRule({
 
 		const reportFlow = (
 			expression: ESTree.Expression,
-			destination: WideningTarget | null,
+			destination: WideningTargetKind | null,
 			subject: string,
 		) => {
 			if (destination === null) return;
@@ -290,7 +290,7 @@ export const noKnownValueWideningRule = defineRule({
 			context.report({
 				node: expression,
 				messageId: "widening",
-				data: { subject, target: destination.kind },
+				data: { subject, target: destination },
 			});
 		};
 

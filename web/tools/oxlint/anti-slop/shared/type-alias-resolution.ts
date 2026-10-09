@@ -7,7 +7,6 @@ type TypeScope = ESTree.Node;
 
 type TypeBinding = {
 	readonly alias: ESTree.TSTypeAliasDeclaration | null;
-	readonly name: string;
 	readonly scope: TypeScope;
 };
 
@@ -19,7 +18,6 @@ type Substitution = {
 type Substitutions = ReadonlyMap<string, Substitution>;
 
 export type TypeAliasEnvironment = {
-	readonly aliases: readonly ESTree.TSTypeAliasDeclaration[];
 	readonly bindingsByName: ReadonlyMap<string, readonly TypeBinding[]>;
 	readonly visitorKeys: VisitorKeys;
 };
@@ -86,14 +84,12 @@ function collectTypeBindings(
 	node: ESTree.Node,
 	visitorKeys: VisitorKeys,
 	bindingsByName: Map<string, TypeBinding[]>,
-	aliases: ESTree.TSTypeAliasDeclaration[],
 ): void {
 	const declared = declaredTypeBinding(node);
 	if (declared !== null) {
 		const bindings = bindingsByName.get(declared.name) ?? [];
-		bindings.push({ ...declared, scope: enclosingTypeScope(node) });
+		bindings.push({ alias: declared.alias, scope: enclosingTypeScope(node) });
 		bindingsByName.set(declared.name, bindings);
-		if (declared.alias !== null) aliases.push(declared.alias);
 	}
 
 	// SAFETY: Oxlint's visitor keys identify only ESTree child-node properties.
@@ -101,13 +97,13 @@ function collectTypeBindings(
 	for (const key of visitorKeys[node.type] ?? []) {
 		const value = fields[key];
 		if (isNode(value)) {
-			collectTypeBindings(value, visitorKeys, bindingsByName, aliases);
+			collectTypeBindings(value, visitorKeys, bindingsByName);
 			continue;
 		}
 		if (!Array.isArray(value)) continue;
 		for (const child of value) {
 			if (isNode(child)) {
-				collectTypeBindings(child, visitorKeys, bindingsByName, aliases);
+				collectTypeBindings(child, visitorKeys, bindingsByName);
 			}
 		}
 	}
@@ -121,9 +117,8 @@ export function createTypeAliasEnvironment(
 	const cached = environmentsByProgram.get(program);
 	if (cached !== undefined) return cached;
 	const bindingsByName = new Map<string, TypeBinding[]>();
-	const aliases: ESTree.TSTypeAliasDeclaration[] = [];
-	collectTypeBindings(program, visitorKeys, bindingsByName, aliases);
-	const environment = { aliases, bindingsByName, visitorKeys };
+	collectTypeBindings(program, visitorKeys, bindingsByName);
+	const environment = { bindingsByName, visitorKeys };
 	environmentsByProgram.set(program, environment);
 	return environment;
 }
