@@ -163,12 +163,13 @@ async def test_solution_apply_stops_after_failed_migration_job(monkeypatch: pyte
     monkeypatch.setattr(solutions, "Job", MigrationJob)
     monkeypatch.setattr(solutions, "Pod", MigrationPod)
     monkeypatch.setattr(solutions, "Event", MigrationEvent)
-    monkeypatch.setattr(solutions, "apply", apply)
+    monkeypatch.setattr(solutions.utils, "apply", apply)
     monkeypatch.setattr(solutions.logger, "handlers", [*solutions.logger.handlers, caplog.handler])
 
     # Act and assert
     with pytest.raises(RuntimeError, match=r"Solution migration Job .* failed"):
-        await solutions.Solutions(kubernetes_client()).apply(
+        await solutions.apply(
+            kubernetes_client(),
             ORGANIZATION_ID,
             UUID("00000000-0000-4000-8000-000000000001"),
             "ghcr.io/longlink/dashboard:latest",
@@ -256,10 +257,11 @@ async def test_solution_apply_waits_for_deployment_and_route_readiness(monkeypat
     monkeypatch.setattr(solutions, "Job", MigrationJob)
     monkeypatch.setattr(solutions, "Pod", MigrationJobs)
     monkeypatch.setattr(solutions, "KnativeServiceResource", Resource)
-    monkeypatch.setattr(solutions, "apply", apply)
+    monkeypatch.setattr(solutions.utils, "apply", apply)
 
     # Act
-    await solutions.Solutions(kubernetes_client()).apply(
+    await solutions.apply(
+        kubernetes_client(),
         ORGANIZATION_ID,
         UUID("00000000-0000-4000-8000-000000000001"),
         "ghcr.io/longlink/dashboard:latest",
@@ -304,15 +306,13 @@ async def test_solution_apply_reports_quota_admission_failure(monkeypatch: pytes
 
     monkeypatch.setattr(solutions, "Job", MigrationJobs)
     monkeypatch.setattr(solutions, "KnativeServiceResource", Resource)
-    monkeypatch.setattr(solutions, "apply", apply)
-    solution_client = solutions.Solutions(
-        kubernetes_client(),
-    )
+    monkeypatch.setattr(solutions.utils, "apply", apply)
 
     # Act and assert
     with pytest.raises(RuntimeError, match="capacity exhausted"):
         async with asyncio.timeout(1):
-            await solution_client.apply(
+            await solutions.apply(
+                kubernetes_client(),
                 ORGANIZATION_ID,
                 UUID("00000000-0000-4000-8000-000000000001"),
                 "ghcr.io/longlink/dashboard:latest",
@@ -344,14 +344,12 @@ async def test_solution_apply_reports_disappeared_deployment(monkeypatch: pytest
 
     monkeypatch.setattr(solutions, "Job", MigrationJobs)
     monkeypatch.setattr(solutions, "KnativeServiceResource", Resource)
-    monkeypatch.setattr(solutions, "apply", apply)
-    solution_client = solutions.Solutions(
-        kubernetes_client(),
-    )
+    monkeypatch.setattr(solutions.utils, "apply", apply)
 
     # Act and assert
     with pytest.raises(RuntimeError, match="Knative Solution Service disappeared during rollout"):
-        await solution_client.apply(
+        await solutions.apply(
+            kubernetes_client(),
             ORGANIZATION_ID,
             UUID("00000000-0000-4000-8000-000000000001"),
             "ghcr.io/longlink/dashboard:latest",
@@ -421,14 +419,12 @@ async def test_solution_apply_waits_for_route_after_deployment_readiness(monkeyp
 
     monkeypatch.setattr(solutions, "Job", MigrationJobs)
     monkeypatch.setattr(solutions, "KnativeServiceResource", Resource)
-    monkeypatch.setattr(solutions, "apply", apply)
+    monkeypatch.setattr(solutions.utils, "apply", apply)
     monkeypatch.setattr(solutions, "asyncio", Clock)
-    solution_client = solutions.Solutions(
-        kubernetes_client(),
-    )
 
     # Act
-    await solution_client.apply(
+    await solutions.apply(
+        kubernetes_client(),
         ORGANIZATION_ID,
         UUID("00000000-0000-4000-8000-000000000001"),
         "ghcr.io/longlink/dashboard:latest",
@@ -494,7 +490,8 @@ async def test_solution_logs_returns_pod_output(
     monkeypatch.setattr(solutions, "Pod", PodResource)
 
     # Act
-    logs = await solutions.Solutions(kubernetes_client()).logs(
+    logs = await solutions.logs(
+        kubernetes_client(),
         ORGANIZATION_ID,
         UUID("00000000-0000-4000-8000-000000000001"),
     )
@@ -524,7 +521,8 @@ async def test_solution_logs_reports_completed_migration_when_solution_pod_is_un
     monkeypatch.setattr(solutions, "Pod", PodResource)
 
     # Act
-    logs = await solutions.Solutions(kubernetes_client()).logs(
+    logs = await solutions.logs(
+        kubernetes_client(),
         ORGANIZATION_ID,
         UUID("00000000-0000-4000-8000-000000000001"),
     )
@@ -571,7 +569,7 @@ async def test_solution_logs_reports_unavailable_without_usable_pods(
 
     # Act and assert
     with pytest.raises(RuntimeError, match="Solution logs unavailable"):
-        await solutions.Solutions(kubernetes_client()).logs(ORGANIZATION_ID, UUID("00000000-0000-4000-8000-000000000001"))
+        await solutions.logs(kubernetes_client(), ORGANIZATION_ID, UUID("00000000-0000-4000-8000-000000000001"))
 
 
 async def test_solution_logs_translates_kubernetes_api_errors(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -592,7 +590,7 @@ async def test_solution_logs_translates_kubernetes_api_errors(monkeypatch: pytes
 
     # Act and assert
     with pytest.raises(RuntimeError, match="Solution logs unavailable") as error:
-        await solutions.Solutions(kubernetes_client()).logs(ORGANIZATION_ID, UUID("00000000-0000-4000-8000-000000000001"))
+        await solutions.logs(kubernetes_client(), ORGANIZATION_ID, UUID("00000000-0000-4000-8000-000000000001"))
     assert isinstance(error.value.__cause__, solutions.APITimeoutError)
 
 
@@ -695,11 +693,9 @@ async def test_solution_delete_removes_resources_before_waiting_for_pods(monkeyp
     monkeypatch.setattr(solutions, "asyncio", Clock)
 
     # Act
-    client = solutions.Solutions(
-        kubernetes_client(),
-    )
     async with asyncio.timeout(5):
-        await client.delete(
+        await solutions.delete(
+            kubernetes_client(),
             ORGANIZATION_ID,
             UUID("00000000-0000-4000-8000-000000000001"),
         )
@@ -738,7 +734,8 @@ async def test_solution_delete_skips_cleanup_when_namespace_is_absent(monkeypatc
     monkeypatch.setattr(solutions, "KnativeServiceResource", Resource)
 
     # Act
-    await solutions.Solutions(kubernetes_client()).delete(
+    await solutions.delete(
+        kubernetes_client(),
         ORGANIZATION_ID,
         UUID("00000000-0000-4000-8000-000000000001"),
     )
@@ -797,7 +794,7 @@ async def test_solution_delete_does_not_repeat_deletions_for_terminating_resourc
     monkeypatch.setattr(solutions, "asyncio", Clock)
 
     # Act
-    await solutions.Solutions(kubernetes_client()).delete(ORGANIZATION_ID, UUID("00000000-0000-4000-8000-000000000001"))
+    await solutions.delete(kubernetes_client(), ORGANIZATION_ID, UUID("00000000-0000-4000-8000-000000000001"))
 
     # Assert
     assert deleted == []

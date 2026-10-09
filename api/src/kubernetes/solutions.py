@@ -7,12 +7,11 @@ from typing import TYPE_CHECKING, cast
 from src.utils import templates
 from src.logger import logger
 from kr8s.asyncio import Api
-from src.kubernetes import namespace
+from src.kubernetes import utils, namespace
 from collections.abc import AsyncIterator
 from src.models.types import MinScale
 from importlib.resources import files
 from kr8s.asyncio.objects import Job, Pod, Event, Secret, APIObject, Namespace, new_class
-from src.kubernetes.utils import apply
 
 if TYPE_CHECKING:
     from src.kubernetes.client import Kubernetes
@@ -144,7 +143,7 @@ async def _run_migration(migration_job: Job) -> None:
     # Keep the rendered identity available even before Kubernetes accepts the Job.
     metadata = migration_job.raw["metadata"]
     migration_id = metadata["name"]
-    await apply(migration_job)
+    await utils.apply(migration_job)
     try:
         await _wait_for_job_condition(migration_job, {"Complete", "Failed"})
     except asyncio.CancelledError:
@@ -212,143 +211,137 @@ async def _wait_for_rollout(deployed: APIObject) -> None:
         await asyncio.sleep(5)
 
 
-class Solutions:
-    """Manage explicit Solution deployment, deletion, readiness, and logs."""
+async def apply(
+    client: "Kubernetes",
+    organization_id: UUID,
+    solution_id: UUID,
+    image: str,
+    secrets: dict[str, str],
+    *,
+    revision_id: UUID,
+    min_scale: MinScale = 0,
+    idle_seconds: int = 60,
+    migrate: bool = True,
+    registry_connection_id: UUID | None = None,
+) -> None:
+    """Deploy one Solution and wait for its rollout."""
 
-    def __init__(self, client: "Kubernetes") -> None:
-        """Initialize Solution lifecycle access through shared cluster resources."""
+    # min_scale and idle_seconds are independent: min_scale decides whether
+    # scale-to-zero is allowed; idle_seconds only tunes the stable window.
+    # Zero idle falls back to the platform default window.
+    window = "60s" if idle_seconds == 0 else f"{idle_seconds}s"
 
-        self._client = client
+    # Render workload resources before the first cluster mutation.
+    compute_namespace = namespace.compute(organization_id)
+    migration_id = f"migration-{revision_id}"
+    secret_id = f"revision-{revision_id}"
+    migration, service = templates.readyml_list(
+        files("src.kubernetes.templates").joinpath("solution", "solution.yml"),
+        solution_id=str(solution_id),
+        image=json.dumps(image),
+        namespace=compute_namespace,
+        runtime_revision=revision_id.hex,
+        migration_id=migration_id,
+        secret_id=secret_id,
+        min_scale=min_scale,
+        window=window,
+        pull_secrets=json.dumps([{"name": f"registry-{registry_connection_id}"}] if registry_connection_id is not None else []),
+    )
 
-    async def apply(
-        self,
-        organization_id: UUID,
-        solution_id: UUID,
-        image: str,
-        secrets: dict[str, str],
-        *,
-        revision_id: UUID,
-        min_scale: MinScale = 0,
-        idle_seconds: int = 60,
-        migrate: bool = True,
-        registry_connection_id: UUID | None = None,
-    ) -> None:
-        """Deploy one Solution and wait for its rollout."""
+    api = await client.api()
 
-        # min_scale and idle_seconds are independent: min_scale decides whether
-        # scale-to-zero is allowed; idle_seconds only tunes the stable window.
-        # Zero idle falls back to the platform default window.
-        window = "60s" if idle_seconds == 0 else f"{idle_seconds}s"
+    # Stop interrupted migrations before another release or fallback can use the schema.
+    await _stop_migrations(api, compute_namespace, solution_id, resume_job=migration_id if migrate else None)
 
-        # Render workload resources before the first cluster mutation.
-        compute_namespace = namespace.compute(organization_id)
-        migration_id = f"migration-{revision_id}"
-        secret_id = f"revision-{revision_id}"
-        migration, service = templates.readyml_list(
-            files("src.kubernetes.templates").joinpath("solution", "solution.yml"),
-            solution_id=str(solution_id),
-            image=json.dumps(image),
-            namespace=compute_namespace,
-            runtime_revision=revision_id.hex,
-            migration_id=migration_id,
-            secret_id=secret_id,
-            min_scale=min_scale,
-            window=window,
-            pull_secrets=json.dumps([{"name": f"registry-{registry_connection_id}"}] if registry_connection_id is not None else []),
-        )
-
-        api = await self._client.api()
-
-        # Stop interrupted migrations before another release or fallback can use the schema.
-        await _stop_migrations(api, compute_namespace, solution_id, resume_job=migration_id if migrate else None)
-
-        # Keep each revision's environment isolated from the currently running Pods.
-        solution_secret = Secret(
-            {
-                "metadata": {
-                    "name": secret_id,
-                    "namespace": compute_namespace,
-                    "labels": {SOLUTION_ID_LABEL: str(solution_id)},
-                },
-                "stringData": secrets,
+    # Keep each revision's environment isolated from the currently running Pods.
+    solution_secret = Secret(
+        {
+            "metadata": {
+                "name": secret_id,
+                "namespace": compute_namespace,
+                "labels": {SOLUTION_ID_LABEL: str(solution_id)},
             },
-            api=api,
+            "stringData": secrets,
+        },
+        api=api,
+    )
+    await utils.apply(solution_secret)
+
+    # Apply migrations once without restarting a failed migration container.
+    if migrate:
+        logger.info(
+            "Starting migration Job %s for Solution %s in namespace %s from image %s",
+            migration_id,
+            solution_id,
+            compute_namespace,
+            image,
         )
-        await apply(solution_secret)
+        migration_job = Job(migration, api=api)
+        await _run_migration(migration_job)
+        logger.info("Migration Job %s completed for Solution %s in namespace %s", migration_id, solution_id, compute_namespace)
+    else:
+        logger.info("Restoring Solution %s revision %s without running migrations", solution_id, revision_id)
 
-        # Apply migrations once without restarting a failed migration container.
-        if migrate:
-            logger.info(
-                "Starting migration Job %s for Solution %s in namespace %s from image %s",
-                migration_id,
-                solution_id,
-                compute_namespace,
-                image,
-            )
-            migration_job = Job(migration, api=api)
-            await _run_migration(migration_job)
-            logger.info("Migration Job %s completed for Solution %s in namespace %s", migration_id, solution_id, compute_namespace)
-        else:
-            logger.info("Restoring Solution %s revision %s without running migrations", solution_id, revision_id)
+    # Knative owns revision Deployments, Services, routing, and scale-to-zero activation.
+    deployed = KnativeServiceResource(service, api=api)
+    await utils.apply(deployed)
+    await _wait_for_rollout(deployed)
 
-        # Knative owns revision Deployments, Services, routing, and scale-to-zero activation.
-        deployed = KnativeServiceResource(service, api=api)
-        await apply(deployed)
-        await _wait_for_rollout(deployed)
 
-    async def delete(self, organization_id: UUID, solution_id: UUID) -> None:
-        """Delete one Solution and wait until its Pods have terminated."""
+async def delete(client: "Kubernetes", organization_id: UUID, solution_id: UUID) -> None:
+    """Delete one Solution and wait until its Pods have terminated."""
 
-        # Recheck only Kubernetes state while resources and Pods terminate.
+    # Recheck only Kubernetes state while resources and Pods terminate.
+    compute_namespace = namespace.compute(organization_id)
+    api = await client.api()
+    namespace_resource = Namespace(compute_namespace, api=api)
+    while await namespace_resource.exists():
+        remaining = False
+
+        # Delete the Service, retained migration Jobs, and revision secrets in order.
+        for resources in (
+            KnativeServiceResource.list(
+                api=api,
+                namespace=compute_namespace,
+                field_selector={"metadata.name": f"solution-{solution_id}"},
+            ),
+            Job.list(api=api, namespace=compute_namespace, label_selector={SOLUTION_ID_LABEL: str(solution_id)}),
+            Secret.list(api=api, namespace=compute_namespace, label_selector={SOLUTION_ID_LABEL: str(solution_id)}),
+        ):
+            if await _delete_resources(resources):
+                remaining = True
+
+        # Provider cleanup must not race a remaining Pod that can still use runtime credentials.
+        if not remaining and not await _has_active_pods(api, compute_namespace, {SOLUTION_ID_LABEL: str(solution_id)}):
+            return
+        await asyncio.sleep(5)
+
+
+async def logs(client: "Kubernetes", organization_id: UUID, solution_id: UUID) -> list[str]:
+    """Return recent logs for one managed Solution Pod."""
+
+    # Scope the Solution Pod lookup to its Organization Namespace.
+    try:
         compute_namespace = namespace.compute(organization_id)
-        api = await self._client.api()
-        namespace_resource = Namespace(compute_namespace, api=api)
-        while await namespace_resource.exists():
-            remaining = False
+        api = await client.api()
+        migration_pod: Pod | None = None
+        async for candidate in Pod.list(api=api, namespace=compute_namespace, label_selector={SOLUTION_ID_LABEL: str(solution_id)}):
+            pod = cast(Pod, candidate)
+            phase = pod.raw.get("status", {}).get("phase")
+            component = pod.metadata.get("labels", {}).get("longlink.io/component")
+            if component != "migration" and phase not in {"Succeeded", "Failed"}:
+                return [line async for line in pod.logs(container="solution", tail_lines=200)]
+            if component == "migration":
+                migration_pod = pod
 
-            # Delete the Service, retained migration Jobs, and revision secrets in order.
-            for resources in (
-                KnativeServiceResource.list(
-                    api=api,
-                    namespace=compute_namespace,
-                    field_selector={"metadata.name": f"solution-{solution_id}"},
-                ),
-                Job.list(api=api, namespace=compute_namespace, label_selector={SOLUTION_ID_LABEL: str(solution_id)}),
-                Secret.list(api=api, namespace=compute_namespace, label_selector={SOLUTION_ID_LABEL: str(solution_id)}),
-            ):
-                if await _delete_resources(resources):
-                    remaining = True
-
-            # Provider cleanup must not race a remaining Pod that can still use runtime credentials.
-            if not remaining and not await _has_active_pods(api, compute_namespace, {SOLUTION_ID_LABEL: str(solution_id)}):
-                return
-            await asyncio.sleep(5)
-
-    async def logs(self, organization_id: UUID, solution_id: UUID) -> list[str]:
-        """Return recent logs for one managed Solution Pod."""
-
-        # Scope the Solution Pod lookup to its Organization Namespace.
-        try:
-            compute_namespace = namespace.compute(organization_id)
-            api = await self._client.api()
-            migration_pod: Pod | None = None
-            async for candidate in Pod.list(api=api, namespace=compute_namespace, label_selector={SOLUTION_ID_LABEL: str(solution_id)}):
-                pod = cast(Pod, candidate)
-                phase = pod.raw.get("status", {}).get("phase")
-                component = pod.metadata.get("labels", {}).get("longlink.io/component")
-                if component != "migration" and phase not in {"Succeeded", "Failed"}:
-                    return [line async for line in pod.logs(container="solution", tail_lines=200)]
-                if component == "migration":
-                    migration_pod = pod
-
-            # Derive fallback context only from the selected migration Pod.
-            if migration_pod is not None:
-                migration_phase = migration_pod.raw.get("status", {}).get("phase")
-                migration_name = migration_pod.metadata["name"]
-                if migration_phase == "Failed":
-                    output = [line async for line in migration_pod.logs(tail_lines=200)]
-                    return [f"Migration Pod {migration_name} failed:", *output]
-                return [f"Migration Pod {migration_name} is {migration_phase or 'unknown'}; Solution Pod unavailable"]
-            raise RuntimeError("Solution logs unavailable")
-        except (APITimeoutError, ConnectionClosedError, NotFoundError, ServerError) as exc:
-            raise RuntimeError("Solution logs unavailable") from exc
+        # Derive fallback context only from the selected migration Pod.
+        if migration_pod is not None:
+            migration_phase = migration_pod.raw.get("status", {}).get("phase")
+            migration_name = migration_pod.metadata["name"]
+            if migration_phase == "Failed":
+                output = [line async for line in migration_pod.logs(tail_lines=200)]
+                return [f"Migration Pod {migration_name} failed:", *output]
+            return [f"Migration Pod {migration_name} is {migration_phase or 'unknown'}; Solution Pod unavailable"]
+        raise RuntimeError("Solution logs unavailable")
+    except (APITimeoutError, ConnectionClosedError, NotFoundError, ServerError) as exc:
+        raise RuntimeError("Solution logs unavailable") from exc

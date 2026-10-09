@@ -5,6 +5,7 @@ from sqlalchemy import delete as sql_delete
 from sqlalchemy import select, update
 from src.errors import ForbiddenError
 from src.logger import logger
+from src.kubernetes import databases as database_resources
 from src.kubernetes import organizations
 from src.operations import databases, registries
 from src.models.statuses import Status
@@ -96,7 +97,7 @@ async def delete(organization_id: UUID) -> None:
         async with cluster:
             await organizations.delete(cluster, organization.id)
             # Delete the dedicated CNPG boundary only after compute Pods have terminated.
-            await cluster.databases.delete(organization.id)
+            await database_resources.delete(cluster, organization.id)
             logger.info("Deleting object storage for Organization %s", organization.id)
             storage = Storage(compute, cluster)
             await storage.delete(organization.id, solution_ids)
