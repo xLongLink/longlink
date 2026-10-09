@@ -35,13 +35,13 @@ export default function ResetPassword() {
         resolver: zodResolver(resetPasswordSchema),
     });
 
-    const [verification, setVerification] = useState<{ status: 'verified' } | { status: 'error' } | null>(null);
     const [reset, setReset] = useState<{ status: 'saved' } | { status: 'error' } | null>(null);
 
-    /** Verifies the credential and ignores results from canceled or replaced attempts. */
-    async function verify({ signal, token: resetToken }: VerificationRequest) {
-        setVerification(null);
-
+    /** Returns the credential outcome while preserving cancellation of token-storage cleanup. */
+    async function verify({
+        signal,
+        token: resetToken,
+    }: VerificationRequest): Promise<{ status: 'verified' } | { status: 'error' } | undefined> {
         // Exchange the URL credential, or recover the already established setup cookie.
         const request = resetToken
             ? api('/api/v1/auth/reset-password/verify', {
@@ -51,23 +51,25 @@ export default function ResetPassword() {
               })
             : api('/api/v1/auth/reset-password/setup', { signal });
 
-        await request.then(
+        return request.then(
             () => {
                 if (signal.aborted) return;
                 sessionStorage.removeItem(PASSWORD_RESET_TOKEN_KEY);
-                setVerification({ status: 'verified' });
+
+                return { status: 'verified' };
             },
             (cause: unknown) => {
                 if (signal.aborted) return;
 
                 if (!isBadTokenError(cause)) throw cause;
                 sessionStorage.removeItem(PASSWORD_RESET_TOKEN_KEY);
-                setVerification({ status: 'error' });
+
+                return { status: 'error' };
             }
         );
     }
 
-    useVerification(token, verify);
+    const { verification } = useVerification(token, verify);
 
     const pageMetadata = <NoIndex title="Set a New Password | LongLink" />;
 

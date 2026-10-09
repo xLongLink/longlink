@@ -17,7 +17,7 @@ type ViewProperty = NonNullable<(typeof componentCatalog)[number]['properties']>
 
 export type ViewReference = Pick<(typeof references)[number], 'introduction' | 'practices'>;
 
-export type ViewExample = { title: string; code: string; preview: ReactNode };
+type ViewExample = { title: string; code: string; preview: ReactNode };
 
 const tabs = [
     { value: 'examples', label: 'Examples' },

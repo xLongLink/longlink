@@ -9,15 +9,15 @@ const root = path.resolve(import.meta.dirname, '..');
 const input = path.resolve(root, '../sdk/longlink/.static/jsx/frontend.d.ts');
 let source = await readFile(input, 'utf8');
 
-// Load runtime component sources before publishing standalone editor types.
-const runtimeConfig = ts.readConfigFile(path.join(root, 'tsconfig.app.json'), ts.sys.readFile);
-if (runtimeConfig.error) throw new Error(ts.flattenDiagnosticMessageText(runtimeConfig.error.messageText, '\n'));
-const runtimeOptions = ts.parseJsonConfigFileContent(runtimeConfig.config, ts.sys, root).options;
-const runtimeProgram = ts.createProgram([path.join(root, 'src/views/components.ts')], runtimeOptions);
+/** Parses explicit runtime sources without resolving their transitive imports. */
+async function readSource(filename) {
+    const text = await readFile(filename, 'utf8');
+
+    return ts.createSourceFile(filename, text, ts.ScriptTarget.Latest, true);
+}
 
 // Derive editor component signatures from the same runtime source snapshot used for wrapper types.
-const bindings = runtimeProgram.getSourceFile(path.join(root, 'src/views/components.ts'));
-if (!bindings) throw new Error('Missing runtime component bindings: src/views/components.ts');
+const bindings = await readSource(path.join(root, 'src/views/components.ts'));
 
 const editor = ts.createSourceFile(input, source, ts.ScriptTarget.Latest, true);
 const replacements = [];
@@ -25,8 +25,7 @@ const introductions = new Map();
 const propertyDefaults = new Map();
 
 // Generate the finite public icon contract from the same Lucide registry used by the runtime.
-const icons = runtimeProgram.getSourceFile(path.join(root, 'src/components/ui/Icon.tsx'));
-if (!icons) throw new Error('Missing runtime icon source: src/components/ui/Icon.tsx');
+const icons = await readSource(path.join(root, 'src/components/ui/Icon.tsx'));
 
 const registry = icons.statements
     .filter(ts.isVariableStatement)
@@ -53,8 +52,7 @@ for (const binding of bindings.statements) {
     const modulePath = binding.moduleSpecifier.text;
     if (!modulePath.startsWith('@/components/ui/')) continue;
     const filename = path.join(root, 'src', modulePath.slice(2) + '.tsx');
-    const wrapper = runtimeProgram.getSourceFile(filename);
-    if (!wrapper) throw new Error(`Missing runtime wrapper: ${filename}`);
+    const wrapper = await readSource(filename);
     const aliases = new Map(
         wrapper.statements.filter(ts.isTypeAliasDeclaration).map((alias) => [alias.name.text, alias.type]),
     );
@@ -149,8 +147,7 @@ for (const binding of bindings.statements) {
 }
 
 // Keep the common field contract synchronized with the wrappers that consume it.
-const fields = runtimeProgram.getSourceFile(path.join(root, 'src/components/ui/types.ts'));
-if (!fields) throw new Error('Missing runtime field source: src/components/ui/types.ts');
+const fields = await readSource(path.join(root, 'src/components/ui/types.ts'));
 
 const fieldType = fields.statements.find(
     (statement) => ts.isTypeAliasDeclaration(statement) && statement.name.text === 'FieldProps',

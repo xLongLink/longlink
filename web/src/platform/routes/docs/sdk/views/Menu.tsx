@@ -44,7 +44,7 @@ export default function MenuPage() {
 }
 
 /** Demonstrates the page's settings menu with switchable content. */
-export function MenuExample() {
+function MenuExample() {
     // Let the menu manage selection and show the chosen settings panel.
     return (
         <Menu>
