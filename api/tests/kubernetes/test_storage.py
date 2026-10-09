@@ -37,9 +37,7 @@ def storage_cluster() -> object:
 
 
 async def test_storage_administration_uses_cluster_tunnel(
-    monkeypatch: pytest.MonkeyPatch,
-    storage_compute: SimpleNamespace,
-    storage_cluster: object,
+    monkeypatch: pytest.MonkeyPatch, storage_compute: SimpleNamespace, storage_cluster: object
 ) -> None:
     """Sign admin requests for the loopback tunnel, not the public S3 endpoint."""
 
@@ -60,7 +58,7 @@ async def test_storage_administration_uses_cluster_tunnel(
 
         return client(transport=transport, **kwargs)
 
-    monkeypatch.setattr(storage.rustfs.httpx2, "AsyncClient", local_client)
+    monkeypatch.setattr(storage.httpx2, "AsyncClient", local_client)
     target = storage.Storage(storage_compute, storage_cluster)  # type: ignore[arg-type]
 
     # A legitimate controller operation succeeds without sending admin traffic to the public endpoint.
@@ -75,10 +73,7 @@ async def test_storage_administration_uses_cluster_tunnel(
 
 @pytest.mark.parametrize("status", [200, 503], ids=["ready", "unavailable"])
 async def test_storage_registration_checks_remote_tunnel(
-    monkeypatch: pytest.MonkeyPatch,
-    status: int,
-    storage_compute: SimpleNamespace,
-    storage_cluster: object,
+    monkeypatch: pytest.MonkeyPatch, status: int, storage_compute: SimpleNamespace, storage_cluster: object
 ) -> None:
     """Verify public S3 credentials before exercising the tunneled readiness connection."""
 
