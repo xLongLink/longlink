@@ -161,24 +161,24 @@ def _leased_operation_update(operation_id: UUID, now: datetime) -> Update:
     )
 
 
-async def complete(session: AsyncSession, operation_id: UUID) -> Operation | None:
+async def complete(session: AsyncSession, operation_id: UUID) -> bool:
     """Complete one operation while the caller owns its unexpired lease."""
 
     # Complete only the currently leased operation.
     now = datetime.now(UTC)
     result = await session.execute(_leased_operation_update(operation_id, now).values(finished_at=now, lease_expires_at=None))
     if result.rowcount != 1:
-        return None
+        return False
     operation = await session.get_one(Operation, operation_id, populate_existing=True)
 
     # A request can reuse this lease after its handler already skipped an outdated target.
     # Recheck desired state at completion so that request cannot disappear with the lease.
     if operation.kind != OperationKind.solution_deploy:
-        return operation
+        return True
 
     revision = await session.get(Revision, operation.target_id)
     if revision is None:
-        return operation
+        return True
 
     # Refresh the desired relation under the existing lock, including any state cached before a commit.
     solution = await session.get(
@@ -192,27 +192,25 @@ async def complete(session: AsyncSession, operation_id: UUID) -> Operation | Non
         with_for_update=True,
     )
     if solution is None or solution.deleted_at is not None:
-        return operation
+        return True
 
     target_id = solution.effective_revision_id
     if target_id is not None and target_id != solution.deployed_revision_id:
         await enqueue(session, kind=OperationKind.solution_deploy, target_id=target_id)
 
-    return operation
+    return True
 
 
-async def release(session: AsyncSession, operation_id: UUID) -> Operation | None:
+async def release(session: AsyncSession, operation_id: UUID) -> bool:
     """Release one interrupted Operation for another worker to resume."""
 
     # Release only work still owned by this worker.
     now = datetime.now(UTC)
     result = await session.execute(_leased_operation_update(operation_id, now).values(lease_expires_at=None))
-    if result.rowcount != 1:
-        return None
-    return await session.get_one(Operation, operation_id, populate_existing=True)
+    return result.rowcount == 1
 
 
-async def fail(session: AsyncSession, operation_id: UUID, reason: str) -> Operation | None:
+async def fail(session: AsyncSession, operation_id: UUID, reason: str) -> bool:
     """Fail one leased Operation."""
 
     # Mark only an unfinished Operation that remains leased terminal.
@@ -225,7 +223,7 @@ async def fail(session: AsyncSession, operation_id: UUID, reason: str) -> Operat
         )
     )
     if result.rowcount != 1:
-        return None
+        return False
     operation = await session.get_one(Operation, operation_id, populate_existing=True)
 
     # Expose failed creation on its target without changing deletion lifecycle state.
@@ -239,20 +237,20 @@ async def fail(session: AsyncSession, operation_id: UUID, reason: str) -> Operat
     # Persist recovery alongside failure, including timeout failures from jobs.execute.
     # A failed restoration remains failed and never recursively schedules itself.
     if operation.kind != OperationKind.solution_deploy:
-        return operation
+        return True
 
     revision = await session.get(Revision, operation.target_id)
     if revision is None:
-        return operation
+        return True
     if revision.deployed_at is None:
         revision.failed = True
 
     solution = await session.get(Solution, revision.solution_id, with_for_update=True)
     if solution is None or solution.deleted_at is not None:
-        return operation
+        return True
 
     solution.status = Status.failed
     if revision.deployed_at is None and solution.deployed_revision_id is not None:
         await enqueue(session, kind=OperationKind.solution_deploy, target_id=solution.deployed_revision_id)
 
-    return operation
+    return True

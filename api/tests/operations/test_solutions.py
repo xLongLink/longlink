@@ -19,6 +19,7 @@ from src.database.services import solutions
 from src.models.operations import OperationKind, OperationStatus
 from src.database.models.users import User
 from src.database.models.solutions import Revision, Solution
+from src.database.models.operations import Operation
 from src.database.models.organizations import Organization
 
 
@@ -78,13 +79,15 @@ async def test_solution_delete_failure_stops_before_provider_credential_cleanup(
     monkeypatch.setattr(solution_operations.databases.postgres, "Postgres", unexpected_provider)
 
     # Act
-    failed = await execute(claimed)
+    await execute(claimed)
 
     # Assert
     assert provider_attempts == []
-    assert failed.status == OperationStatus.failed
-    assert failed.failed == "RuntimeError: Kubernetes workload deletion failed"
     async with session_scope() as session:
+        failed = await session.get(Operation, claimed.id)
+        assert failed is not None
+        assert failed.status == OperationStatus.failed
+        assert failed.failed == "RuntimeError: Kubernetes workload deletion failed"
         retained = await session.get(Solution, solution.id)
     assert retained is not None
     assert retained.deleted_at is not None
