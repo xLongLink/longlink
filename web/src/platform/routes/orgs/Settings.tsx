@@ -12,7 +12,6 @@ import { Badge } from '@astryxdesign/core/Badge';
 import { Button } from '@astryxdesign/core/Button';
 import { Divider } from '@astryxdesign/core/Divider';
 import { Heading } from '@astryxdesign/core/Heading';
-import { RefreshCw, Logs, Trash } from 'lucide-react';
 import { ApiBoundary } from '@/components/ApiBoundary';
 import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { Selector } from '@astryxdesign/core/Selector';
@@ -25,8 +24,10 @@ import { DeletionDialog } from '@/platform/components/Deletion';
 import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
+import { Layout, LayoutPanel, LayoutContent } from '@astryxdesign/core/Layout';
 import { useResolvedOrganizationMembership } from '@/lib/hooks/use-organization';
 import { Menu, MenuSection, MenuItem, MenuSubSection } from '@/components/ui/Menu';
+import { ArrowUp, CheckCheck, EyeOff, Logs, RefreshCw, Trash, Wrench } from 'lucide-react';
 
 type Solution = z.output<typeof schemas.zOrganizationSolutionSummary>;
 
@@ -415,6 +416,8 @@ function InvitationsSection({ base, canMaintain }: { base: string; canMaintain: 
 
     /** Sends the validated invitation and refreshes organization access. */
     async function inviteMember() {
+        if (!invitation.email.trim()) return;
+
         // Refresh organization access only after sending the invitation succeeds.
         await api.post(`${base}/invitations`, {
             json: schemas.zOrganizationInvitationCreate.parse({
@@ -479,34 +482,100 @@ function InvitationsSection({ base, canMaintain }: { base: string; canMaintain: 
                     ]}
                 />
             </Stack>
-            <Dialog isOpen={inviting} purpose="form" onOpenChange={setInviting}>
-                <DialogHeader
-                    title="Invite user"
-                    subtitle="Send an invitation to join this organization."
-                    onOpenChange={() => setInviting(false)}
-                />
-                <form action={inviteMember}>
-                    <Stack gap={3}>
-                        <TextInput
-                            label="Email"
-                            type="email"
-                            value={invitation.email}
-                            placeholder="user@example.com"
-                            isRequired
-                            onChange={(email) => setInvitation({ ...invitation, email })}
-                        />
-                        <Selector
-                            label="Role"
-                            value={invitation.role}
-                            options={['read', 'write', 'maintain', 'admin'].map((value) => ({
-                                value,
-                                label: value,
-                            }))}
-                            onChange={(role) => setInvitation({ ...invitation, role })}
-                        />
-                        <Button label="Invite" variant="primary" type="submit" />
-                    </Stack>
-                </form>
+            {/* Match organization creation with a centered form and a desktop-only illustration. */}
+            <Dialog
+                aria-label="Invite user"
+                isOpen={inviting}
+                purpose="info"
+                onOpenChange={setInviting}
+                width={960}
+                maxHeight="calc(100dvh - var(--spacing-10) * 4)"
+                padding={0}
+            >
+                <Stack height="min(560px, calc(100dvh - var(--spacing-10) * 4))">
+                    <Layout
+                        padding={0}
+                        end={
+                            <LayoutPanel width="50%" padding={0} className="hidden bg-muted md:flex">
+                                <Stack width="100%" height="100%" align="center" justify="center" padding={6}>
+                                    <img
+                                        src="/images/invitation.png"
+                                        alt="Hand-drawn envelopes."
+                                        className="h-full w-full object-contain"
+                                        width={1223}
+                                        height={1286}
+                                        decoding="async"
+                                    />
+                                </Stack>
+                            </LayoutPanel>
+                        }
+                        content={
+                            <LayoutContent padding={8}>
+                                <Stack
+                                    height="100%"
+                                    justify="center"
+                                    width="max-content"
+                                    maxWidth="100%"
+                                    className="mx-auto"
+                                >
+                                    <form action={inviteMember}>
+                                        <Stack gap={10}>
+                                            <Stack gap={2} align="center">
+                                                <img
+                                                    src="/images/organization.png"
+                                                    alt=""
+                                                    className="size-20 object-contain"
+                                                    width={1254}
+                                                    height={1254}
+                                                    decoding="async"
+                                                />
+                                                <Stack gap={0}>
+                                                    <Heading level={2} justify="center">
+                                                        Invite user
+                                                    </Heading>
+                                                    <Text as="p" color="secondary" justify="center">
+                                                        Send an invitation to join this organization.
+                                                    </Text>
+                                                </Stack>
+                                            </Stack>
+                                            {/* Let the subtitle size the column, then stretch the controls to match. */}
+                                            <Stack gap={4} width={0} className="min-w-full">
+                                                <TextInput
+                                                    label="Email"
+                                                    type="email"
+                                                    value={invitation.email}
+                                                    placeholder="user@example.com"
+                                                    isRequired
+                                                    onChange={(email) => setInvitation({ ...invitation, email })}
+                                                    width="100%"
+                                                />
+                                                <Selector
+                                                    label="Role"
+                                                    value={invitation.role}
+                                                    options={[
+                                                        { value: 'read', label: 'read', icon: EyeOff },
+                                                        { value: 'write', label: 'write', icon: ArrowUp },
+                                                        { value: 'maintain', label: 'maintain', icon: Wrench },
+                                                        { value: 'admin', label: 'admin', icon: CheckCheck },
+                                                    ]}
+                                                    onChange={(role) => setInvitation({ ...invitation, role })}
+                                                    width="100%"
+                                                />
+                                                <Button
+                                                    label="Invite"
+                                                    variant="primary"
+                                                    type="submit"
+                                                    width="100%"
+                                                    isDisabled={!invitation.email.trim()}
+                                                />
+                                            </Stack>
+                                        </Stack>
+                                    </form>
+                                </Stack>
+                            </LayoutContent>
+                        }
+                    />
+                </Stack>
             </Dialog>
         </>
     );
