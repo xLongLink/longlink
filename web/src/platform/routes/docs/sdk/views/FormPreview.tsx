@@ -6,7 +6,7 @@ import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { Form, FormRequestContext } from '@/components/ui/Form';
 
 /** Exercises the real Form locally and displays submitted fields without sending API requests. */
-export default function FormPreview({ children, action = '/api/example' }: { children: ReactNode; action?: string }) {
+export default function FormPreview({ children }: { children: ReactNode }) {
     // Retain the latest submission as entries so repeated names and file objects remain intact.
     const [submission, setSubmission] = useState<[string, string | Blob][] | null>(null);
 
@@ -20,7 +20,7 @@ export default function FormPreview({ children, action = '/api/example' }: { chi
             }}
         >
             <Stack gap={3} onResetCapture={() => setSubmission(null)}>
-                <Form action={action} method="post">
+                <Form action="/api/example" method="post">
                     <Stack gap={3}>
                         {children}
                         <Stack direction="horizontal" gap={2}>

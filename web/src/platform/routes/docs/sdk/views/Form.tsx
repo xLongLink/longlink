@@ -76,10 +76,10 @@ export default function CreateItem() {
 }
 
 /** Shows a complete form with local submission output and native reset behavior. */
-export function FormExample() {
+function FormExample() {
     // Exercise the real Form with a local capability rather than disabling its controls.
     return (
-        <FormPreview action="/api/items">
+        <FormPreview>
             <TextInput name="name" label="Name" required />
             <NumberInput name="price" label="Price" min={0} defaultValue={0} required />
         </FormPreview>

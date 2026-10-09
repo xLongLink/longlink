@@ -78,7 +78,7 @@ export function ButtonExample() {
 }
 
 /** Demonstrates grouped actions with local feedback. */
-export function ButtonGroupExample() {
+function ButtonGroupExample() {
     const [action, setAction] = useState('');
 
     // Simulate editing actions without changing the clipboard.

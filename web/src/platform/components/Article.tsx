@@ -47,7 +47,6 @@ export function DocumentationArticle({
             <Article
                 className={className}
                 header={<PathBreadcrumb className="min-w-0 overflow-hidden" labels={articleRouteLabels} />}
-                headerAction={<Button href="/login/" label="Get Started" size="sm" variant="primary" />}
                 footer={
                     <ArticleFooter
                         lastUpdated={article.lastUpdated}
@@ -85,7 +84,6 @@ export function PublicArticle({
                         root={<BreadcrumbItem href="/">Home</BreadcrumbItem>}
                     />
                 }
-                headerAction={<Button href="/login/" label="Get Started" size="sm" variant="primary" />}
                 footer={<ArticleFooter lastUpdated={article.lastUpdated} editUrl={article.editUrl} paths={paths} />}
                 sidebar={article.toc.length ? <ArticleOutline items={article.toc} /> : undefined}
             >
@@ -96,7 +94,7 @@ export function PublicArticle({
 }
 
 /** Renders the Platform article's authored table of contents. */
-export function ArticleOutline({ items }: { items: ComponentProps<typeof Outline>['items'] }) {
+function ArticleOutline({ items }: { items: ComponentProps<typeof Outline>['items'] }) {
     // Keep the heading and navigation within the same labelled landmark.
     return (
         <Stack as="aside" aria-label="On this page" gap={3}>

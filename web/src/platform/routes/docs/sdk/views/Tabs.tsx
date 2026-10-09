@@ -41,7 +41,7 @@ export default function TabsPage() {
 }
 
 /** Demonstrates the page's tabs with independently selectable panels. */
-export function TabsExample() {
+function TabsExample() {
     // Let the tabs manage selection and render the active panel.
     return (
         <Tabs>

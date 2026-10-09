@@ -3,6 +3,9 @@ import { Root } from '@/components/Root';
 import { useLocation, useNavigate } from 'react-router';
 import { Document } from '@/components/layouts/Document';
 import { MenuNavigationContext } from '@/components/ui/Menu';
+// Handwritten fonts belong only to native Platform pages, not the embedded SDK application.
+import '@fontsource/kalam';
+import '@fontsource/kalam/700.css';
 
 /** Supplies native Platform Menus with router-owned fragment navigation. */
 export default function PlatformRoot() {
