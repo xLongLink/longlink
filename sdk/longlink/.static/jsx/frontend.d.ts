@@ -66,7 +66,7 @@ type ButtonProps = {
     tooltip?: string;
     width?: number | string;
     disabled?: boolean;
-    /** Solution-relative destination; sandbox links navigate through the host. */
+    /** Solution-relative destination or HTTP(S) URL to open in a new tab. */
     href?: string;
     /** Runs an action with automatic async loading and duplicate-click prevention until its promise settles. */
     onClick?: (event: ViewMouseEvent) => void | Promise<void>;
@@ -149,7 +149,7 @@ declare function useMemo<T>(factory: () => T, dependencies: readonly unknown[]):
 declare function useRef<T>(initial: T): { current: T };
 
 /**
- * Navigates within the current Solution using a scoped path.
+ * Navigates within the current Solution using a scoped path, or opens an HTTP(S) URL in a new tab. External URLs require user activation and open without an opener or referrer.
  * @category Runtime
  * @group Functions
  */
@@ -267,9 +267,9 @@ type CardProps = {
     label?: string;
     /** Makes the card clickable when its surface is activated; nested controls act independently. */
     onClick?: (event: ViewMouseEvent) => void;
-    /** Makes the card a navigation target when no selection callback is supplied. */
+    /** Solution-relative destination or HTTP(S) URL to open in a new tab when no selection callback is supplied. */
     href?: string;
-    /** Native link target; isolated Views always navigate in the host's current Solution. */
+    /** Native link target; isolated Views use the current Solution for relative paths and a new tab for HTTP(S) URLs. */
     target?: string;
     /** Disables activation of an interactive card. */
     isDisabled?: boolean;

@@ -19,7 +19,7 @@ type ButtonProps = {
     tooltip?: string;
     width?: number | string;
     disabled?: boolean;
-    /** Solution-relative destination; sandbox links navigate through the host. */
+    /** Solution-relative destination or HTTP(S) URL to open in a new tab. */
     href?: string;
     /** Runs an action with automatic async loading and duplicate-click prevention until its promise settles. */
     onClick?: (event: MouseEvent<HTMLButtonElement>) => void | Promise<void>;

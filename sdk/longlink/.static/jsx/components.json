@@ -128,7 +128,7 @@
             {
                 "name": "href",
                 "type": "string",
-                "description": "Solution-relative destination; sandbox links navigate through the host."
+                "description": "Solution-relative destination or HTTP(S) URL to open in a new tab."
             },
             {
                 "name": "onClick",
@@ -230,12 +230,12 @@
             {
                 "name": "href",
                 "type": "string",
-                "description": "Makes the card a navigation target when no selection callback is supplied."
+                "description": "Solution-relative destination or HTTP(S) URL to open in a new tab when no selection callback is supplied."
             },
             {
                 "name": "target",
                 "type": "string",
-                "description": "Native link target; isolated Views always navigate in the host's current Solution. Default: '_self'."
+                "description": "Native link target; isolated Views use the current Solution for relative paths and a new tab for HTTP(S) URLs. Default: '_self'."
             },
             {
                 "name": "isDisabled",
@@ -727,7 +727,7 @@
         "members": [
             {
                 "name": "navigate(path)",
-                "description": "Navigates within the current Solution using a scoped path."
+                "description": "Navigates within the current Solution using a scoped path, or opens an HTTP(S) URL in a new tab. External URLs require user activation and open without an opener or referrer."
             },
             {
                 "name": "request(path, options)",

@@ -109,6 +109,25 @@ export function JsxView({
 
             if (command.type === 'navigate') {
                 try {
+                    // Open web destinations only during user activation, without exposing the host to the new page.
+                    const path = command.path.trim();
+
+                    if (URL.canParse(path) || path.startsWith('//')) {
+                        const url = new URL(path, window.location.origin);
+
+                        if (
+                            (url.protocol === 'https:' || url.protocol === 'http:') &&
+                            !url.username &&
+                            !url.password &&
+                            navigator.userActivation.isActive
+                        ) {
+                            window.open(url.href, '_blank', 'noopener,noreferrer');
+                        }
+
+                        return;
+                    }
+
+                    // Keep relative navigation scoped to the current Solution.
                     host.requestUrl(navigationBaseUrl, command.path);
                     const destination = resolveNavigationUrl(navigationBaseUrl, command.path);
 
