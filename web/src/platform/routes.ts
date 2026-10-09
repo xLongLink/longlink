@@ -1,5 +1,6 @@
 import { legalPages } from './legal';
 import { adminPages } from './navigation';
+import { brandingPages } from './branding';
 // Use cases are a work in progress; keep their routes unpublished until ready.
 // import { useCasePages } from './usecases';
 import { componentDocumentation } from './docs';
@@ -46,11 +47,10 @@ export default [
     ]),
     layout('./layouts/Legal.tsx', [
         ...legalPages.map(({ path, module }) => route(path.slice(1), module)),
-        ...prefix('branding', [
-            route('assets', './routes/branding/Assets.tsx'),
-            route('values', './routes/branding/Values.tsx'),
-            route('comunication', './routes/branding/Communication.tsx'),
-        ]),
+        ...prefix(
+            'branding',
+            brandingPages.map(({ path, module }) => route(path.slice('/branding/'.length), module))
+        ),
     ]),
     layout('./layouts/Brand.tsx', [
         ...prefix('auth', [

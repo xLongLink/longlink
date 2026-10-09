@@ -1,13 +1,12 @@
 import { siteName, siteUrl } from '@/site';
 import { useLocation } from 'react-router';
 import { useCasePages } from '@/platform/usecases';
+import { brandingPages } from '@/platform/branding';
 import { buildBreadcrumbs } from '@/components/breadcrumb/text';
 
 /** Labels for public article route segments shared with visible breadcrumbs. */
 export const articleRouteLabels = {
     api: 'Platform',
-    assets: 'Brand assets',
-    comunication: 'Communication',
     docs: 'Documentation',
     introduction: 'Why LongLink',
     sdk: 'Solutions',
@@ -15,6 +14,9 @@ export const articleRouteLabels = {
     views: 'Views',
 
     // Keep authored page labels in their navigation catalogs without replacing section labels.
+    ...Object.fromEntries(
+        brandingPages.map(({ path, label }) => [path.slice(path.lastIndexOf('/') + 1), label] as const)
+    ),
     ...Object.fromEntries(
         useCasePages.map(({ path, label }) => [path.slice(path.lastIndexOf('/') + 1), label] as const)
     ),

@@ -16,13 +16,30 @@ async function readSource(filename) {
     return ts.createSourceFile(filename, text, ts.ScriptTarget.Latest, true);
 }
 
-// Derive editor component signatures from the same runtime source snapshot used for wrapper types.
-const bindings = await readSource(path.join(root, 'src/views/components.ts'));
+// Resolve exported signatures, including re-exported helpers, from the runtime's TypeScript program.
+const runtimeConfig = ts.readConfigFile(path.join(root, 'tsconfig.app.json'), ts.sys.readFile);
+if (runtimeConfig.error) throw new Error(ts.flattenDiagnosticMessageText(runtimeConfig.error.messageText, '\n'));
+const runtimeOptions = ts.parseJsonConfigFileContent(runtimeConfig.config, ts.sys, root).options;
+const runtimeProgram = ts.createProgram([path.join(root, 'src/views/components.ts')], runtimeOptions);
+const bindings = runtimeProgram.getSourceFile(path.join(root, 'src/views/components.ts'));
+if (!bindings) throw new Error('Missing runtime component bindings: src/views/components.ts');
 
 const editor = ts.createSourceFile(input, source, ts.ScriptTarget.Latest, true);
 const replacements = [];
 const introductions = new Map();
 const propertyDefaults = new Map();
+const componentMetadata = new Map();
+const componentDeclarations = [];
+const runtimeChecker = runtimeProgram.getTypeChecker();
+
+/** Translates runtime support types to the standalone editor's existing aliases. */
+function editorType(text) {
+    return text
+        .replaceAll('ReactNode', 'ViewNode')
+        .replace(/MouseEvent<(HTMLButtonElement|HTMLElement)>/g, 'ViewMouseEvent')
+        .replaceAll('ProportionalWidth', "Extract<ColumnWidth, { type: 'proportional' }>")
+        .replaceAll('PixelWidth', "Extract<ColumnWidth, { type: 'pixel' }>");
+}
 
 // Generate the finite public icon contract from the same Lucide registry used by the runtime.
 const icons = await readSource(path.join(root, 'src/components/ui/Icon.tsx'));
@@ -47,21 +64,39 @@ replacements.push({
 });
 
 for (const binding of bindings.statements) {
-    if (!ts.isExportDeclaration(binding) || !binding.moduleSpecifier || !ts.isNamedExports(binding.exportClause))
-        continue;
-    const modulePath = binding.moduleSpecifier.text;
-    if (!modulePath.startsWith('@/components/ui/')) continue;
-    const filename = path.join(root, 'src', modulePath.slice(2) + '.tsx');
-    const wrapper = await readSource(filename);
-    const aliases = new Map(
-        wrapper.statements.filter(ts.isTypeAliasDeclaration).map((alias) => [alias.name.text, alias.type]),
-    );
+    if (!ts.isExportDeclaration(binding)) continue;
+    if (binding.isTypeOnly) continue;
+    if (!binding.moduleSpecifier || !binding.exportClause || !ts.isNamedExports(binding.exportClause))
+        throw new Error('Public runtime bindings must use named exports');
+
+    // Keep category and group identity beside the runtime exports, including grouped children and helpers.
+    const tags = ts.getJSDocTags(binding);
+    const category = tags.find((tag) => tag.tagName.text === 'category')?.comment;
+    if (typeof category !== 'string' || !documentationCategories.includes(category))
+        throw new Error(`Unknown documentation category: ${binding.getText(bindings)}`);
+    const group = tags.find((tag) => tag.tagName.text === 'group')?.comment;
+    if (group !== undefined && (typeof group !== 'string' || !group.trim()))
+        throw new Error(`Invalid documentation group: ${binding.getText(bindings)}`);
+    const overview = binding.jsDoc
+        ?.map((comment) => comment.comment)
+        .filter((comment) => typeof comment === 'string')
+        .join(' ');
+
     for (const exported of binding.exportClause.elements) {
+        if (exported.isTypeOnly) continue;
         const name = exported.name.text;
-        const implementation = wrapper.statements.find(
-            (statement) => ts.isFunctionDeclaration(statement) && statement.name?.text === name,
+
+        // Resolve re-exported implementations too; an unsupported binding must fail rather than disappear.
+        const symbol = runtimeChecker.getSymbolAtLocation(exported.name);
+        if (!symbol) throw new Error(`Missing runtime export: ${name}`);
+        const implementation = runtimeChecker.getAliasedSymbol(symbol).valueDeclaration;
+        if (!implementation || !ts.isFunctionDeclaration(implementation))
+            throw new Error(`Unsupported runtime component declaration: ${name}`);
+        const wrapper = implementation.getSourceFile();
+        const aliases = new Map(
+            wrapper.statements.filter(ts.isTypeAliasDeclaration).map((alias) => [alias.name.text, alias.type]),
         );
-        if (!implementation) continue;
+        componentMetadata.set(name, { category, group: group?.trim() });
         const description = implementation.jsDoc
             ?.map((comment) => comment.comment)
             .filter((comment) => typeof comment === 'string')
@@ -112,39 +147,63 @@ for (const binding of bindings.statements) {
         if (props && ts.isTypeReferenceNode(props) && aliases.has(props.typeName.getText(wrapper)))
             props = aliases.get(props.typeName.getText(wrapper));
 
-        // Publish authored prop contracts with the standalone editor's React aliases.
-        const propText = (props?.getText(wrapper) ?? '{}')
-            .replaceAll('ReactNode', 'ViewNode')
-            .replace(/MouseEvent<(HTMLButtonElement|HTMLElement)>/g, 'ViewMouseEvent');
+        // Preserve existing public prop aliases while deriving every component signature from its implementation.
+        const propText = editorType(props?.getText(wrapper) ?? '{}');
         const generics = implementation.typeParameters?.length
             ? `<${implementation.typeParameters.map((type) => type.getText(wrapper)).join(', ')}>`
             : '';
-        const statement = editor.statements.find((statement) =>
-            ts.isFunctionDeclaration(statement)
-                ? statement.name?.text === name
-                : ts.isVariableStatement(statement) &&
-                  statement.declarationList.declarations[0].name.getText(editor) === name,
+        const alias = editor.statements.find(
+            (statement) => ts.isTypeAliasDeclaration(statement) && statement.name.text === `${name}Props`,
         );
-        const publicType = ['Button', 'Card', 'DateInput'].includes(name) ? `${name}Props` : propText;
-        if (statement)
+        if (alias)
             replacements.push({
-                start: statement.getStart(editor),
-                end: statement.end,
-                text: `declare function ${name}${generics}(props: ${publicType}): React.JSX.Element;`,
+                start: alias.type.getStart(editor),
+                end: alias.type.end,
+                text: propText,
             });
-        if (['Button', 'Card', 'DateInput'].includes(name)) {
-            const alias = editor.statements.find(
-                (statement) => ts.isTypeAliasDeclaration(statement) && statement.name.text === `${name}Props`,
-            );
-            if (alias)
-                replacements.push({
-                    start: alias.type.getStart(editor),
-                    end: alias.type.end,
-                    text: propText,
-                });
+
+        // Components keep the public JSX contract, including marker children whose implementations return null.
+        let parameters;
+        let returnType;
+        if (
+            category !== 'Runtime' &&
+            (parameter?.name.getText(wrapper) === 'props' ||
+                parameter?.name.getText(wrapper) === '_props' ||
+                (parameter && ts.isObjectBindingPattern(parameter.name)))
+        ) {
+            parameters = `props: ${alias ? alias.name.text : propText}`;
+            returnType = 'React.JSX.Element';
+        } else {
+            // Helpers retain their actual argument names, optional defaults, and explicit return contracts.
+            parameters = implementation.parameters
+                .map((parameter) => {
+                    if (!parameter.type) throw new Error(`Missing runtime parameter type: ${name}`);
+                    return `${parameter.dotDotDotToken ? '...' : ''}${parameter.name.getText(wrapper)}${
+                        parameter.questionToken || parameter.initializer ? '?' : ''
+                    }: ${editorType(parameter.type.getText(wrapper))}`;
+                })
+                .join(', ');
+            if (!implementation.type) throw new Error(`Missing runtime return type: ${name}`);
+            returnType = editorType(implementation.type.getText(wrapper));
         }
+        componentDeclarations.push(
+            `/** ${overview ? `${overview} ` : ''}@category ${category}${group ? ` @group ${group.trim()}` : ''} */\n` +
+                `declare function ${name}${generics}(${parameters}): ${returnType};`,
+        );
     }
 }
+
+// Replace the complete generated component section; editor support types and runtime APIs remain authored separately.
+const componentStart = '// BEGIN GENERATED COMPONENTS';
+const componentEnd = '// END GENERATED COMPONENTS';
+const start = source.indexOf(componentStart);
+const end = source.indexOf(componentEnd);
+if (start === -1 || end < start) throw new Error('Missing generated component section in frontend.d.ts');
+replacements.push({
+    start: start + componentStart.length,
+    end,
+    text: `\n// Generated from web/src/views/components.ts by vp run generate:docs. Do not edit.\n\n${componentDeclarations.join('\n\n')}\n\n`,
+});
 
 // Keep the common field contract synchronized with the wrappers that consume it.
 const fields = await readSource(path.join(root, 'src/components/ui/types.ts'));
@@ -282,7 +341,19 @@ for (const statement of document.statements) {
 if (document.parseDiagnostics.length) {
     throw new Error(ts.flattenDiagnosticMessageText(document.parseDiagnostics[0].messageText, '\n'));
 }
-const declarations = document.statements.flatMap((statement) => {
+
+// Inventory component exports directly; only runtime APIs retain separately authored editor membership.
+const catalogDeclarations = document.statements.filter((statement) =>
+    ts.getJSDocTags(statement).some((tag) => tag.tagName.text === 'category' && tag.comment === 'Runtime'),
+);
+for (const name of componentMetadata.keys()) {
+    const statement = document.statements.find(
+        (statement) => ts.isFunctionDeclaration(statement) && statement.name?.text === name,
+    );
+    if (!statement) throw new Error(`Missing generated component declaration: ${name}`);
+    catalogDeclarations.push(statement);
+}
+const declarations = catalogDeclarations.flatMap((statement) => {
     const declaration = ts.isVariableStatement(statement) ? statement.declarationList.declarations[0] : statement;
 
     // Publish runtime bindings and their documented props, not editor-only types or namespaces.
@@ -294,14 +365,15 @@ const declarations = document.statements.flatMap((statement) => {
     const tags = ts.getJSDocTags(statement);
     if (tags.some((tag) => tag.tagName.text === 'ignore')) return [];
 
-    // Read category identity from the editor declaration and retain the published category order.
-    const category = tags.find((tag) => tag.tagName.text === 'category')?.comment;
-    if (!category) throw new Error(`Missing documentation category: ${name}`);
+    // Component membership and metadata come exclusively from runtime exports; retain authored runtime APIs.
+    const metadata = componentMetadata.get(name);
+    const category = metadata?.category ?? tags.find((tag) => tag.tagName.text === 'category')?.comment;
+    if (!metadata && category !== 'Runtime') throw new Error(`Unexpected standalone component declaration: ${name}`);
     if (typeof category !== 'string' || !documentationCategories.includes(category))
         throw new Error(`Unknown documentation category: ${name}: ${category}`);
 
     // Let related runtime declarations publish one shared documentation entry.
-    const group = tags.find((tag) => tag.tagName.text === 'group')?.comment;
+    const group = metadata ? metadata.group : tags.find((tag) => tag.tagName.text === 'group')?.comment;
     if (group !== undefined && (typeof group !== 'string' || !group.trim()))
         throw new Error(`Invalid documentation group: ${name}`);
     return [

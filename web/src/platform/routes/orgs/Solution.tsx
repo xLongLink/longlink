@@ -66,7 +66,6 @@ function SolutionPage() {
                 query.state.data?.some((solution) => solution.status === 'creating' || solution.deployment_pending)
                     ? 5000
                     : false,
-            meta: { polling: true },
         }
     );
 
@@ -137,9 +136,9 @@ function SolutionPage() {
             viewsUrl={`/api/v1/solutions/${solutionAccess.id}/proxy/views.json`}
         >
             {({ content, tabs, title }) => (
-                <Platform action={action} breadcrumb={breadcrumb} tabs={tabs}>
+                <Platform action={action} breadcrumb={breadcrumb} height="fill" tabs={tabs}>
                     <NoIndex title={`${title ?? solutionAccess.name} | LongLink`} />
-                    <PageContainer minHeight="100%" padding={2}>
+                    <PageContainer height="100%" minHeight={0} padding={2}>
                         {content}
                     </PageContainer>
                 </Platform>
