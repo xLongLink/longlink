@@ -25,19 +25,17 @@ const replacements = [];
 const introductions = new Map();
 const propertyDefaults = new Map();
 
-// Generate the finite public icon contract from the same Lucide registry used by the runtime.
+// Generate editor suggestions from the complete public icon type, including Lucide's on-demand catalog.
 const icons = runtimeProgram.getSourceFile(path.join(root, 'src/components/ui/Icon.tsx'));
 if (!icons) throw new Error('Missing runtime icon source: src/components/ui/Icon.tsx');
 
-const registry = icons.statements
-    .filter(ts.isVariableStatement)
-    .flatMap((statement) => [...statement.declarationList.declarations])
-    .find((declaration) => declaration.name.getText(icons) === 'stoneIconComponents');
-const iconObject =
-    registry?.initializer && ts.isSatisfiesExpression(registry.initializer)
-        ? registry.initializer.expression
-        : registry?.initializer;
-if (!iconObject || !ts.isObjectLiteralExpression(iconObject)) throw new Error('Missing LongLink icon registry');
+const iconAlias = icons.statements.find(
+    (statement) => ts.isTypeAliasDeclaration(statement) && statement.name.text === 'StoneIconName',
+);
+if (!iconAlias) throw new Error('Missing LongLink icon type');
+const iconNames = runtimeProgram.getTypeChecker().getTypeFromTypeNode(iconAlias.type);
+if (!iconNames.isUnion() || !iconNames.types.every((type) => type.isStringLiteral()))
+    throw new Error('LongLink icon names must be a finite string union');
 const editorIcons = editor.statements.find(
     (statement) => ts.isTypeAliasDeclaration(statement) && statement.name.text === 'StoneIconName',
 );
@@ -45,7 +43,7 @@ if (!editorIcons) throw new Error('Missing editor icon type');
 replacements.push({
     start: editorIcons.type.getStart(editor),
     end: editorIcons.type.end,
-    text: iconObject.properties.map((property) => JSON.stringify(property.name.getText(icons))).join(' | '),
+    text: iconNames.types.map((type) => JSON.stringify(type.value)).join(' | '),
 });
 
 for (const binding of bindings.statements) {
@@ -238,9 +236,6 @@ const publicProps = new Map();
 const spacing = document.statements.find(
     (statement) => ts.isTypeAliasDeclaration(statement) && statement.name.text === 'Spacing',
 );
-const iconType = document.statements.find(
-    (statement) => ts.isTypeAliasDeclaration(statement) && statement.name.text === 'StoneIconName',
-);
 
 /** Hides omission from prop choices while preserving empty values in callback contracts. */
 function documentedType(type) {
@@ -254,7 +249,6 @@ function documentedType(type) {
                 if (ts.isTypeReferenceNode(node) && ts.isIdentifier(node.typeName)) {
                     if (node.typeName.text === 'ViewNode') return ts.factory.createTypeReferenceNode('ReactNode');
                     if (node.typeName.text === 'Spacing') return spacing.type;
-                    if (node.typeName.text === 'StoneIconName') return iconType.type;
                 }
 
                 // Omission is not a prop choice, but callbacks can genuinely emit an empty value.

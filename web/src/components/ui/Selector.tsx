@@ -1,8 +1,9 @@
 import { useValue } from './value';
+import { isString } from 'es-toolkit';
 import type { ReactNode } from 'react';
 import { FormField } from './FormField';
 import type { FieldProps } from './types';
-import type { StoneIconName } from './Icon';
+import { Icon, type StoneIconName } from './Icon';
 import { useSize } from '@astryxdesign/core/SizeContext';
 import { Selector as AstryxSelector } from '@astryxdesign/core/Selector';
 
@@ -49,6 +50,23 @@ export function Selector(props: SelectorProps) {
         <FormField {...props} fieldRef={field.ref} values={[field.value ?? '']}>
             <AstryxSelector
                 {...control}
+                options={props.options.map((option) => {
+                    // Preserve plain labels and dividers without adding a glyph.
+                    if (isString(option) || ('type' in option && option.type === 'divider')) return option;
+
+                    // Adapt section glyphs through the same immediate-or-deferred LongLink renderer.
+                    if ('type' in option)
+                        return {
+                            ...option,
+                            options: option.options.map((entry) => ({
+                                ...entry,
+                                icon: entry.icon ? <Icon icon={entry.icon} size="sm" /> : undefined,
+                            })),
+                        };
+
+                    // Keep the selected value and its menu row on the same icon-loading path.
+                    return { ...option, icon: option.icon ? <Icon icon={option.icon} size="sm" /> : undefined };
+                })}
                 {...(props.hasClear
                     ? {
                           hasClear: true,

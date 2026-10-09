@@ -5,7 +5,7 @@
         "properties": [
             {
                 "name": "shape",
-                "type": "\"circle\" | \"rounded\" | \"square\"",
+                "type": "\"circle\" | \"square\" | \"rounded\"",
                 "description": "Shape variant of the avatar. 'circle' (default) stays fully round. 'rounded' uses the element radius token so it matches UI corner rounding and can be set globally via theme. 'square' has no radius. Status dot positioning adapts automatically: 4-o'clock on circle, bottom-right corner on rounded/square. Default: 'circle'."
             },
             {
@@ -46,7 +46,7 @@
             },
             {
                 "name": "icon",
-                "type": "'close' | 'chevronDown' | 'chevronLeft' | 'chevronRight' | 'chevronsLeft' | 'chevronsRight' | 'check' | 'success' | 'error' | 'warning' | 'info' | 'calendar' | 'clock' | 'externalLink' | 'menu' | 'moreHorizontal' | 'refresh' | 'search' | 'arrowUp' | 'arrowDown' | 'arrowsUpDown' | 'boxes' | 'building2' | 'database' | 'funnel' | 'eyeSlash' | 'viewColumns' | 'copy' | 'checkDouble' | 'wrench' | 'stop' | 'microphone' | 'logs' | 'trash' | 'hardDrive' | 'userRound' | 'users'",
+                "type": "StoneIconName",
                 "description": "Optional leading icon."
             },
             {
@@ -97,7 +97,7 @@
             },
             {
                 "name": "icon",
-                "type": "'close' | 'chevronDown' | 'chevronLeft' | 'chevronRight' | 'chevronsLeft' | 'chevronsRight' | 'check' | 'success' | 'error' | 'warning' | 'info' | 'calendar' | 'clock' | 'externalLink' | 'menu' | 'moreHorizontal' | 'refresh' | 'search' | 'arrowUp' | 'arrowDown' | 'arrowsUpDown' | 'boxes' | 'building2' | 'database' | 'funnel' | 'eyeSlash' | 'viewColumns' | 'copy' | 'checkDouble' | 'wrench' | 'stop' | 'microphone' | 'logs' | 'trash' | 'hardDrive' | 'userRound' | 'users'",
+                "type": "StoneIconName",
                 "description": "Icon element rendered before the label text. An Astryx Icon with no explicit size defaults to sm for sm/md buttons and md for lg buttons."
             },
             {
@@ -809,8 +809,8 @@
         "properties": [
             {
                 "name": "icon",
-                "type": "'close' | 'chevronDown' | 'chevronLeft' | 'chevronRight' | 'chevronsLeft' | 'chevronsRight' | 'check' | 'success' | 'error' | 'warning' | 'info' | 'calendar' | 'clock' | 'externalLink' | 'menu' | 'moreHorizontal' | 'refresh' | 'search' | 'arrowUp' | 'arrowDown' | 'arrowsUpDown' | 'boxes' | 'building2' | 'database' | 'funnel' | 'eyeSlash' | 'viewColumns' | 'copy' | 'checkDouble' | 'wrench' | 'stop' | 'microphone' | 'logs' | 'trash' | 'hardDrive' | 'userRound' | 'users'",
-                "description": "Semantic icon name or SVG component. Valid semantic names: close, chevronDown, chevronLeft, chevronRight, chevronsLeft, chevronsRight, check, success, error, warning, info, calendar, clock, externalLink, menu, moreHorizontal, search, arrowUp, arrowDown, arrowsUpDown, funnel, eyeSlash, viewColumns, copy, checkDouble, wrench, stop, microphone. For any icon not in this list, pass an SVG component directly (e.g. import from lucide-react or @heroicons/react). Note: this prop is called `icon`, not `name`."
+                "type": "StoneIconName",
+                "description": "Lucide kebab-case name or LongLink alias. Prefix with lucide: to bypass an existing alias, such as lucide:logs."
             },
             {
                 "name": "size",
@@ -830,7 +830,7 @@
             },
             {
                 "name": "icon",
-                "type": "'close' | 'chevronDown' | 'chevronLeft' | 'chevronRight' | 'chevronsLeft' | 'chevronsRight' | 'check' | 'success' | 'error' | 'warning' | 'info' | 'calendar' | 'clock' | 'externalLink' | 'menu' | 'moreHorizontal' | 'refresh' | 'search' | 'arrowUp' | 'arrowDown' | 'arrowsUpDown' | 'boxes' | 'building2' | 'database' | 'funnel' | 'eyeSlash' | 'viewColumns' | 'copy' | 'checkDouble' | 'wrench' | 'stop' | 'microphone' | 'logs' | 'trash' | 'hardDrive' | 'userRound' | 'users'",
+                "type": "StoneIconName",
                 "description": "Icon element rendered inside the button. An Astryx Icon with no explicit size defaults to sm for sm/md buttons and md for lg buttons."
             },
             {
@@ -912,7 +912,7 @@
             },
             {
                 "name": "MenuItem.icon",
-                "type": "'close' | 'chevronDown' | 'chevronLeft' | 'chevronRight' | 'chevronsLeft' | 'chevronsRight' | 'check' | 'success' | 'error' | 'warning' | 'info' | 'calendar' | 'clock' | 'externalLink' | 'menu' | 'moreHorizontal' | 'refresh' | 'search' | 'arrowUp' | 'arrowDown' | 'arrowsUpDown' | 'boxes' | 'building2' | 'database' | 'funnel' | 'eyeSlash' | 'viewColumns' | 'copy' | 'checkDouble' | 'wrench' | 'stop' | 'microphone' | 'logs' | 'trash' | 'hardDrive' | 'userRound' | 'users'",
+                "type": "StoneIconName",
                 "description": "Optional LongLink icon name displayed beside the label."
             },
             {
@@ -927,7 +927,7 @@
             },
             {
                 "name": "MenuSubSection.icon",
-                "type": "'close' | 'chevronDown' | 'chevronLeft' | 'chevronRight' | 'chevronsLeft' | 'chevronsRight' | 'check' | 'success' | 'error' | 'warning' | 'info' | 'calendar' | 'clock' | 'externalLink' | 'menu' | 'moreHorizontal' | 'refresh' | 'search' | 'arrowUp' | 'arrowDown' | 'arrowsUpDown' | 'boxes' | 'building2' | 'database' | 'funnel' | 'eyeSlash' | 'viewColumns' | 'copy' | 'checkDouble' | 'wrench' | 'stop' | 'microphone' | 'logs' | 'trash' | 'hardDrive' | 'userRound' | 'users'",
+                "type": "StoneIconName",
                 "description": "Optional LongLink icon name displayed beside the group label."
             },
             {
@@ -968,7 +968,7 @@
             },
             {
                 "name": "MetadataListItem.icon",
-                "type": "'close' | 'chevronDown' | 'chevronLeft' | 'chevronRight' | 'chevronsLeft' | 'chevronsRight' | 'check' | 'success' | 'error' | 'warning' | 'info' | 'calendar' | 'clock' | 'externalLink' | 'menu' | 'moreHorizontal' | 'refresh' | 'search' | 'arrowUp' | 'arrowDown' | 'arrowsUpDown' | 'boxes' | 'building2' | 'database' | 'funnel' | 'eyeSlash' | 'viewColumns' | 'copy' | 'checkDouble' | 'wrench' | 'stop' | 'microphone' | 'logs' | 'trash' | 'hardDrive' | 'userRound' | 'users'",
+                "type": "StoneIconName",
                 "description": "Optional icon displayed beside the metadata label."
             }
         ]
@@ -989,7 +989,7 @@
             },
             {
                 "name": "icon",
-                "type": "'close' | 'chevronDown' | 'chevronLeft' | 'chevronRight' | 'chevronsLeft' | 'chevronsRight' | 'check' | 'success' | 'error' | 'warning' | 'info' | 'calendar' | 'clock' | 'externalLink' | 'menu' | 'moreHorizontal' | 'refresh' | 'search' | 'arrowUp' | 'arrowDown' | 'arrowsUpDown' | 'boxes' | 'building2' | 'database' | 'funnel' | 'eyeSlash' | 'viewColumns' | 'copy' | 'checkDouble' | 'wrench' | 'stop' | 'microphone' | 'logs' | 'trash' | 'hardDrive' | 'userRound' | 'users'",
+                "type": "StoneIconName",
                 "description": "Override the default three-dot icon. Accepts any ReactNode."
             },
             {

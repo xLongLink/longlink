@@ -1,3 +1,4 @@
+import * as icons from '@/lib/icons';
 import * as host from '@/views/host';
 import { api, ApiError } from '@/lib/api';
 import { useNavigate } from 'react-router';
@@ -10,9 +11,12 @@ import {
     commandSchema,
     parametersSchema,
     MAX_PENDING_REQUESTS,
+    MAX_PENDING_ICONS,
     MAX_MESSAGE_SIZE,
     REQUEST_TIMEOUT,
     messageSize,
+    iconDataSchema,
+    type ViewData,
 } from '@/views/protocol';
 
 const BOOTSTRAP_TIMEOUT_MS = 10_000;
@@ -58,7 +62,7 @@ export function JsxView({
         const controller = new AbortController();
         const channel = new MessageChannel();
         const session = crypto.randomUUID();
-        const pending = new Set<number>();
+        const pending = new Map<number, 'icon' | 'request' | 'download'>();
         let handshakeTimer: ReturnType<typeof setTimeout> | undefined;
 
         /** Revokes the attempt's capabilities and startup deadline on failure or unmount. */
@@ -122,7 +126,11 @@ export function JsxView({
 
             if (pending.has(command.id)) return;
 
-            if (pending.size >= MAX_PENDING_REQUESTS) {
+            // Bound icons independently so on-demand glyphs cannot starve Solution operations.
+            const iconRequest = command.type === 'icon';
+            const count = [...pending.values()].filter((type) => (type === 'icon') === iconRequest).length;
+
+            if (count >= (iconRequest ? MAX_PENDING_ICONS : MAX_PENDING_REQUESTS)) {
                 channel.port1.postMessage({
                     id: command.id,
                     ok: false,
@@ -133,18 +141,25 @@ export function JsxView({
                 return;
             }
 
-            pending.add(command.id);
+            pending.set(command.id, command.type);
 
-            // The frame chooses a Solution-relative operation, never credentials, headers, or fetch options.
+            // The frame chooses a catalog icon or Solution-relative operation, never URLs or fetch options.
             try {
                 if (command.type === 'request' && messageSize(command) > MAX_MESSAGE_SIZE) {
                     throw new ApiError('Solution request is too large', 413);
                 }
 
-                const data =
-                    command.type === 'download'
-                        ? await host.download(requestBaseUrl, command, controller.signal)
-                        : await host.request(requestBaseUrl, command, controller.signal);
+                let data: ViewData;
+
+                if (command.type === 'icon') {
+                    // Import only host-owned Lucide modules and transfer validated geometry, not code.
+                    const icon = await icons.load(command.name);
+                    data = iconDataSchema.parse(icon);
+                } else if (command.type === 'download') {
+                    data = await host.download(requestBaseUrl, command, controller.signal);
+                } else {
+                    data = await host.request(requestBaseUrl, command, controller.signal);
+                }
 
                 if (!controller.signal.aborted) channel.port1.postMessage({ id: command.id, ok: true, data });
             } catch (error) {

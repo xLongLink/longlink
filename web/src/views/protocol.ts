@@ -6,6 +6,9 @@ export const MAX_MESSAGE_SIZE = 2_000_000;
 
 export const MAX_PENDING_REQUESTS = 8;
 
+// Icon loading has its own small budget so a gallery cannot consume Solution request slots.
+export const MAX_PENDING_ICONS = 4;
+
 // Allow the Platform's 120-second Solution proxy timeout to finish, including cold starts.
 export const REQUEST_TIMEOUT = 130_000;
 
@@ -49,15 +52,64 @@ export const downloadSchema = z
     })
     .strict();
 
+export const iconSchema = z
+    .object({
+        type: z.literal('icon'),
+        id: z.number().int().nonnegative(),
+        name: z
+            .string()
+            .max(64)
+            .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
+    })
+    .strict();
+
+// The icon bridge carries inert SVG geometry, never markup, URLs, or executable element attributes.
+export const iconDataSchema = z.object({
+    name: z.string().max(64).optional(),
+    size: z.literal(24),
+    node: z
+        .array(
+            z.tuple([
+                z.enum(['path', 'circle', 'rect', 'line', 'ellipse', 'polyline', 'polygon']),
+                z.partialRecord(
+                    z.enum([
+                        'd',
+                        'key',
+                        'cx',
+                        'cy',
+                        'r',
+                        'x',
+                        'y',
+                        'width',
+                        'height',
+                        'rx',
+                        'ry',
+                        'x1',
+                        'x2',
+                        'y1',
+                        'y2',
+                        'fill',
+                        'points',
+                    ]),
+                    z.string().max(8192)
+                ),
+            ])
+        )
+        .max(64),
+});
+
 export const commandSchema = z.discriminatedUnion('type', [
     requestSchema,
     z.object({ type: z.literal('navigate'), path: z.string().min(1).max(4096) }).strict(),
     downloadSchema,
+    iconSchema,
 ]);
 
 export type RequestCommand = z.output<typeof requestSchema>;
 
 export type DownloadCommand = z.output<typeof downloadSchema>;
+
+export type IconCommand = z.output<typeof iconSchema>;
 
 // Replies contain only backend JSON or bounded binary responses, never arbitrary runtime objects.
 export const responseSchema = z.union([z.json(), z.instanceof(Blob)]);

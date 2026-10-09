@@ -1,3 +1,4 @@
+import * as icons from '@/lib/icons';
 import { ApiErrorContext } from '@/lib/errors';
 import { Theme } from '@astryxdesign/core/theme';
 import { useState, type ReactNode } from 'react';
@@ -7,6 +8,7 @@ import { stoneTheme } from '@/lib/generated/stone.js';
 import { createQueryRuntime } from '@/lib/react-query';
 import { LinkProvider } from '@astryxdesign/core/Link';
 import { LayerProvider } from '@astryxdesign/core/Layer';
+import { IconRequestContext } from '@/components/ui/Icon';
 import { QueryClientProvider } from '@tanstack/react-query';
 
 /** Provides isolated query state with the shared application provider tree. */
@@ -16,7 +18,9 @@ export function RootProvider({ children }: { children: ReactNode }) {
         <Theme theme={stoneTheme} mode="dark">
             <LinkProvider component={RouterLink}>
                 <LayerProvider toast={{ position: 'bottomEnd' }}>
-                    <ApiProvider>{children}</ApiProvider>
+                    <IconRequestContext value={icons.load}>
+                        <ApiProvider>{children}</ApiProvider>
+                    </IconRequestContext>
                 </LayerProvider>
             </LinkProvider>
         </Theme>

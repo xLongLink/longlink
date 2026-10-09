@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import * as React from 'react';
 import { transform } from 'sucrase';
+import { limitAsync } from 'es-toolkit';
 import * as components from './components';
 import { createRoot } from 'react-dom/client';
 import { Theme } from '@astryxdesign/core/theme';
@@ -10,6 +11,7 @@ import { ErrorBoundary } from 'react-error-boundary';
 import { stoneTheme } from '@/lib/generated/stone.js';
 import { LayerProvider } from '@astryxdesign/core/Layer';
 import { FormRequestContext } from '@/components/ui/Form';
+import { IconRequestContext } from '@/components/ui/Icon';
 import { LinkNavigationContext } from '@/components/ui/Link';
 import { MenuNavigationContext } from '@/components/ui/Menu';
 import { FileRequestContext } from '@/components/ui/FileViewer';
@@ -21,13 +23,17 @@ import {
     messageSize,
     MAX_MESSAGE_SIZE,
     MAX_PENDING_REQUESTS,
+    MAX_PENDING_ICONS,
     REQUEST_TIMEOUT,
     type RequestCommand,
     type DownloadCommand,
+    type IconCommand,
     downloadSchema,
     type ViewReply,
     type ViewData,
     responseSchema,
+    iconSchema,
+    iconDataSchema,
 } from './protocol';
 import './theme.css';
 
@@ -77,9 +83,16 @@ function MenuNavigationProvider({ children }: { children: React.ReactNode }) {
 
 const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
 
+const lifetime = new AbortController();
+
 const pending = new Map<
     number,
-    { resolve: (value: ViewData) => void; reject: (error: Error) => void; timer: ReturnType<typeof setTimeout> }
+    {
+        type: 'icon' | 'request' | 'download';
+        resolve: (value: ViewData) => void;
+        reject: (error: Error) => void;
+        timer: ReturnType<typeof setTimeout>;
+    }
 >();
 
 let sequence = 0;
@@ -98,14 +111,19 @@ async function request(
     const data = await exchange(command);
 
     // Refresh active data and mark inactive resources stale only after the write succeeds.
-    if (command.method !== 'GET') await client.invalidateQueries();
+    if (command.method !== 'GET') await client.invalidateQueries({ queryKey: ['api'] });
 
     return data;
 }
 
 /** Owns the pending slot, deadline, and channel transfer for each scoped operation. */
-async function exchange(command: RequestCommand | DownloadCommand): Promise<ViewData> {
-    if (pending.size >= MAX_PENDING_REQUESTS) throw new Error('Too many pending requests');
+async function exchange(command: RequestCommand | DownloadCommand | IconCommand): Promise<ViewData> {
+    // Keep icon admission separate from the existing Solution operation budget.
+    lifetime.signal.throwIfAborted();
+    const iconRequest = command.type === 'icon';
+    const count = [...pending.values()].filter((entry) => (entry.type === 'icon') === iconRequest).length;
+
+    if (count >= (iconRequest ? MAX_PENDING_ICONS : MAX_PENDING_REQUESTS)) throw new Error('Too many pending requests');
     const { id } = command;
 
     return new Promise<ViewData>((resolve, reject) => {
@@ -114,7 +132,7 @@ async function exchange(command: RequestCommand | DownloadCommand): Promise<View
             reject(new Error('Solution request timed out'));
         }, REQUEST_TIMEOUT);
 
-        pending.set(id, { resolve, reject, timer });
+        pending.set(id, { type: command.type, resolve, reject, timer });
 
         // A failed transfer must release its slot and timer immediately, not at timeout.
         try {
@@ -126,6 +144,15 @@ async function exchange(command: RequestCommand | DownloadCommand): Promise<View
         }
     });
 }
+
+// Queue excess glyphs locally rather than overwhelming the host's bounded icon capability.
+const loadIcon = limitAsync(async (name: string) => {
+    const command = iconSchema.parse({ type: 'icon', id: sequence++, name });
+    const data = await exchange(command);
+
+    // Validate icon geometry at the receiving boundary before giving it to Lucide's renderer.
+    return iconDataSchema.parse(data);
+}, MAX_PENDING_ICONS);
 
 /** Supplies a stable binary-request capability without exposing the general request API to image components. */
 async function requestImage(path: string): Promise<Blob> {
@@ -202,6 +229,8 @@ function initialize(event: MessageEvent<unknown>): void {
     window.addEventListener(
         'pagehide',
         () => {
+            lifetime.abort();
+
             for (const waiter of pending.values()) {
                 clearTimeout(waiter.timer);
                 waiter.reject(new Error('View closed'));
@@ -286,9 +315,11 @@ function initialize(event: MessageEvent<unknown>): void {
                                             )}
                                         >
                                             <React.Suspense fallback={<Spinner label="Loading View" />}>
-                                                <MenuNavigationProvider>
-                                                    <View params={params} />
-                                                </MenuNavigationProvider>
+                                                <IconRequestContext value={loadIcon}>
+                                                    <MenuNavigationProvider>
+                                                        <View params={params} />
+                                                    </MenuNavigationProvider>
+                                                </IconRequestContext>
                                             </React.Suspense>
                                         </ErrorBoundary>
                                     </LayoutContent>
