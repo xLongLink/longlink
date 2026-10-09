@@ -43,8 +43,54 @@ function findActiveTab(tabs: readonly NavigationTab[], pathname: string): string
 export default function Platform({ action, breadcrumb, children, height = 'auto', tabs }: PlatformProps) {
     const { pathname } = useLocation();
 
+    // Keep route selection outside the presentation frame so previews need no account or router state.
+    return (
+        <PlatformFrame
+            action={action}
+            breadcrumb={breadcrumb}
+            height={height}
+            navigation={
+                tabs.length > 0 ? (
+                    <TabList
+                        aria-label="Section navigation"
+                        onChange={() => undefined}
+                        size="sm"
+                        value={findActiveTab(tabs, pathname) ?? ''}
+                    >
+                        {tabs.map((tab) => {
+                            const Icon = tab.icon;
+
+                            return (
+                                <Tab
+                                    href={tab.href}
+                                    icon={Icon ? <Icon aria-hidden="true" size={16} /> : undefined}
+                                    key={tab.href}
+                                    label={tab.label}
+                                    value={tab.href}
+                                />
+                            );
+                        })}
+                    </TabList>
+                ) : undefined
+            }
+        >
+            {children}
+        </PlatformFrame>
+    );
+}
+
+/** Shares the actual Platform chrome and content frame without authentication or route-dependent navigation. */
+export function PlatformFrame({
+    action,
+    breadcrumb,
+    children,
+    className,
+    height = 'auto',
+    navigation,
+}: Omit<PlatformProps, 'tabs'> & { className?: string; navigation?: ReactNode }) {
     return (
         <AppShell
+            className={className}
             height={height}
             mobileNav={false}
             topNav={
@@ -61,28 +107,9 @@ export default function Platform({ action, breadcrumb, children, height = 'auto'
                         }
                         label="Platform navigation"
                     />
-                    {tabs.length > 0 && (
+                    {navigation && (
                         <Stack direction="horizontal" paddingInline={4} width="100%">
-                            <TabList
-                                aria-label="Section navigation"
-                                onChange={() => undefined}
-                                size="sm"
-                                value={findActiveTab(tabs, pathname) ?? ''}
-                            >
-                                {tabs.map((tab) => {
-                                    const Icon = tab.icon;
-
-                                    return (
-                                        <Tab
-                                            href={tab.href}
-                                            icon={Icon ? <Icon aria-hidden="true" size={16} /> : undefined}
-                                            key={tab.href}
-                                            label={tab.label}
-                                            value={tab.href}
-                                        />
-                                    );
-                                })}
-                            </TabList>
+                            {navigation}
                         </Stack>
                     )}
                 </Stack>

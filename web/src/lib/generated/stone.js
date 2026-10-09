@@ -192,11 +192,17 @@ export const stoneTheme = {
   },
   localTokens: {
     "--font-family-handwritten": "Kalam, \"Segoe Print\", \"Bradley Hand\", cursive",
-    "--color-background-success-inverted": "light-dark(#2e6b33, #2e7d32)"
+    "--color-background-success-inverted": "light-dark(#2e6b33, #2e7d32)",
+    "--color-window-close": "#ff5f57",
+    "--color-window-minimize": "#ff9f0a",
+    "--color-window-maximize": "#28c840"
   },
   __localTokenOwners: {
     "--font-family-handwritten": "stone",
-    "--color-background-success-inverted": "stone"
+    "--color-background-success-inverted": "stone",
+    "--color-window-close": "stone",
+    "--color-window-minimize": "stone",
+    "--color-window-maximize": "stone"
   },
   __localTokenLineage: ["stone"],
   components: {
