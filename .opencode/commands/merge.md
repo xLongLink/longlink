@@ -1,9 +1,15 @@
 ---
-name: merge
-description: Create a GitHub pull request (merge request) for your changes. Use when the user asks to publish the current work as a merge request or pull request. Do not merge it.
+description: Publish the current changes as a GitHub pull request without merging it.
+agent: build
+model: openai/gpt-6.1-sol#medium
+subagent: false
 ---
 
 # Merge Request
+
+Publish only the changes from the current conversation as a GitHub pull request. Do not merge the request.
+
+Additional instructions: $ARGUMENTS
 
 ## Scope
 
