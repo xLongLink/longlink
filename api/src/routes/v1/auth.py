@@ -87,7 +87,7 @@ async def get_oauth_availability():
 
 
 @router.get("/auth/oauth/{provider}", include_in_schema=False)
-async def start_oauth_login(provider: oauth.OAuthProvider):
+async def start_oauth_login(provider: oauth.OAuthProvider, return_to: Annotated[str | None, Query(max_length=8192)] = None):
     """Start one provider sign-in flow with browser-bound state and PKCE proof."""
 
     # Enabled providers require their complete server-only confidential client configuration.
@@ -95,7 +95,7 @@ async def start_oauth_login(provider: oauth.OAuthProvider):
         raise HTTPException(status_code=404, detail="OAuth provider is not configured")
     state = secrets.token_urlsafe(32)
     verifier = secrets.token_urlsafe(64)
-    credential = token.create_oauth_state_token(provider, state, verifier)
+    credential = token.create_oauth_state_token(provider, state, verifier, oauth.login_destination(return_to))
     response = RedirectResponse(oauth.authorization_url(provider, state, verifier), status_code=302)
 
     # Store callback proof outside browser-readable storage and restrict it to OAuth endpoints.
@@ -151,7 +151,8 @@ async def complete_oauth_login(
         return oauth_failure_response()
 
     # Commit verified identity changes before publishing browser authentication.
-    response = RedirectResponse(f"{env.PUBLIC_URL}/user/organizations", status_code=302)
+    destination = oauth.login_destination(token.oauth_return_path(oauth_state or "", provider))
+    response = RedirectResponse(f"{env.PUBLIC_URL}{destination}", status_code=302)
     try:
         await set_auth_session(session, response, user)
     except IntegrityError:

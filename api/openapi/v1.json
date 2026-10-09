@@ -2649,10 +2649,742 @@
           }
         }
       }
+    },
+    "/.well-known/oauth-authorization-server": {
+      "get": {
+        "tags": [
+          "mcp"
+        ],
+        "summary": "Server Metadata",
+        "description": "Advertise only the implemented public authorization-code and PKCE flow.",
+        "operationId": "server_metadata__well_known_oauth_authorization_server_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServerMetadata"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OAuthFailure"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/.well-known/oauth-protected-resource/api/v1/solutions/{solution_id}/proxy/mcp": {
+      "get": {
+        "tags": [
+          "mcp"
+        ],
+        "summary": "Resource Metadata",
+        "description": "Expose authentication discovery without revealing whether a Solution exists.",
+        "operationId": "resource_metadata__well_known_oauth_protected_resource_api_v1_solutions__solution_id__proxy_mcp_get",
+        "parameters": [
+          {
+            "name": "solution_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Solution Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResourceMetadata"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OAuthFailure"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/mcp/register": {
+      "post": {
+        "tags": [
+          "mcp"
+        ],
+        "summary": "Register",
+        "description": "Register immutable callbacks for a public client; registration grants no access.",
+        "operationId": "register_api_v1_mcp_register_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClientRegistration"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegisteredClient"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OAuthFailure"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/mcp/authorize": {
+      "get": {
+        "tags": [
+          "mcp"
+        ],
+        "summary": "Authorize",
+        "description": "Validate the client request before navigating to first-party login and consent.",
+        "operationId": "authorize_api_v1_mcp_authorize_get",
+        "parameters": [
+          {
+            "name": "state",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1024,
+              "title": "State"
+            }
+          },
+          {
+            "name": "scope",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "const": "mcp",
+              "type": "string",
+              "default": "mcp",
+              "title": "Scope"
+            }
+          },
+          {
+            "name": "resource",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "maxLength": 2048,
+              "title": "Resource"
+            }
+          },
+          {
+            "name": "client_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Client Id"
+            }
+          },
+          {
+            "name": "redirect_uri",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "maxLength": 2048,
+              "title": "Redirect Uri"
+            }
+          },
+          {
+            "name": "response_type",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "const": "code",
+              "type": "string",
+              "title": "Response Type"
+            }
+          },
+          {
+            "name": "code_challenge",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]{43}$",
+              "title": "Code Challenge"
+            }
+          },
+          {
+            "name": "code_challenge_method",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "const": "S256",
+              "type": "string",
+              "title": "Code Challenge Method"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OAuthFailure"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/mcp/consent": {
+      "get": {
+        "tags": [
+          "mcp"
+        ],
+        "summary": "Consent",
+        "description": "Describe the registered callback and Solution only after current permission checks.",
+        "operationId": "consent_api_v1_mcp_consent_get",
+        "parameters": [
+          {
+            "name": "state",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1024,
+              "title": "State"
+            }
+          },
+          {
+            "name": "scope",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "const": "mcp",
+              "type": "string",
+              "default": "mcp",
+              "title": "Scope"
+            }
+          },
+          {
+            "name": "resource",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "maxLength": 2048,
+              "title": "Resource"
+            }
+          },
+          {
+            "name": "client_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Client Id"
+            }
+          },
+          {
+            "name": "redirect_uri",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "maxLength": 2048,
+              "title": "Redirect Uri"
+            }
+          },
+          {
+            "name": "response_type",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "const": "code",
+              "type": "string",
+              "title": "Response Type"
+            }
+          },
+          {
+            "name": "code_challenge",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]{43}$",
+              "title": "Code Challenge"
+            }
+          },
+          {
+            "name": "code_challenge_method",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "const": "S256",
+              "type": "string",
+              "title": "Code Challenge Method"
+            }
+          },
+          {
+            "name": "longlink_auth",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Longlink Auth"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Consent"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OAuthFailure"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "mcp"
+        ],
+        "summary": "Approve",
+        "description": "Issue one short-lived PKCE code only after an explicit same-origin browser decision.",
+        "operationId": "approve_api_v1_mcp_consent_post",
+        "parameters": [
+          {
+            "name": "longlink_auth",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Longlink Auth"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Approval"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthorizationRedirect"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OAuthFailure"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/mcp/token": {
+      "post": {
+        "tags": [
+          "mcp"
+        ],
+        "summary": "Exchange",
+        "description": "Exchange a single-use code with exact client, resource, redirect, and PKCE binding.",
+        "operationId": "exchange_api_v1_mcp_token_post",
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_exchange_api_v1_mcp_token_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccessToken"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OAuthFailure"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/mcp/revoke": {
+      "post": {
+        "tags": [
+          "mcp"
+        ],
+        "summary": "Revoke",
+        "description": "Let a public client revoke its credential without exposing credential existence.",
+        "operationId": "revoke_api_v1_mcp_revoke_post",
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_revoke_api_v1_mcp_revoke_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OAuthFailure"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/mcp/tokens": {
+      "get": {
+        "tags": [
+          "mcp"
+        ],
+        "summary": "Tokens",
+        "description": "List the current user's revocation handles without exposing credentials.",
+        "operationId": "tokens_api_v1_mcp_tokens_get",
+        "parameters": [
+          {
+            "name": "longlink_auth",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Longlink Auth"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TokenSummary"
+                  },
+                  "title": "Response Tokens Api V1 Mcp Tokens Get"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OAuthFailure"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/mcp/tokens/{token_id}": {
+      "delete": {
+        "tags": [
+          "mcp"
+        ],
+        "summary": "Delete Token",
+        "description": "Revoke only grants owned by the authenticated browser user.",
+        "operationId": "delete_token_api_v1_mcp_tokens__token_id__delete",
+        "parameters": [
+          {
+            "name": "token_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Token Id"
+            }
+          },
+          {
+            "name": "longlink_auth",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Longlink Auth"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OAuthFailure"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
     "schemas": {
+      "AccessToken": {
+        "properties": {
+          "scope": {
+            "type": "string",
+            "const": "mcp",
+            "title": "Scope",
+            "default": "mcp"
+          },
+          "token_type": {
+            "type": "string",
+            "const": "Bearer",
+            "title": "Token Type",
+            "default": "Bearer"
+          },
+          "expires_in": {
+            "type": "integer",
+            "title": "Expires In"
+          },
+          "access_token": {
+            "type": "string",
+            "title": "Access Token"
+          }
+        },
+        "type": "object",
+        "required": [
+          "expires_in",
+          "access_token"
+        ],
+        "title": "AccessToken",
+        "description": "Return a short-lived opaque MCP access credential."
+      },
       "AdminUserSummary": {
         "properties": {
           "id": {
@@ -2695,6 +3427,127 @@
         "title": "AdminUserSummary",
         "description": "Represent a user with its creation time for platform administrators."
       },
+      "Approval": {
+        "properties": {
+          "state": {
+            "type": "string",
+            "maxLength": 1024,
+            "minLength": 1,
+            "title": "State"
+          },
+          "scope": {
+            "type": "string",
+            "const": "mcp",
+            "title": "Scope",
+            "default": "mcp"
+          },
+          "resource": {
+            "type": "string",
+            "maxLength": 2048,
+            "title": "Resource"
+          },
+          "client_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Client Id"
+          },
+          "redirect_uri": {
+            "type": "string",
+            "maxLength": 2048,
+            "title": "Redirect Uri"
+          },
+          "response_type": {
+            "type": "string",
+            "const": "code",
+            "title": "Response Type"
+          },
+          "code_challenge": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{43}$",
+            "title": "Code Challenge"
+          },
+          "code_challenge_method": {
+            "type": "string",
+            "const": "S256",
+            "title": "Code Challenge Method"
+          },
+          "approve": {
+            "type": "boolean",
+            "title": "Approve"
+          }
+        },
+        "type": "object",
+        "required": [
+          "state",
+          "resource",
+          "client_id",
+          "redirect_uri",
+          "response_type",
+          "code_challenge",
+          "code_challenge_method",
+          "approve"
+        ],
+        "title": "Approval",
+        "description": "Bind explicit browser approval to the validated authorization request."
+      },
+      "AuthorizationRedirect": {
+        "properties": {
+          "url": {
+            "type": "string",
+            "title": "Url"
+          }
+        },
+        "type": "object",
+        "required": [
+          "url"
+        ],
+        "title": "AuthorizationRedirect",
+        "description": "Return a validated client redirect after a browser consent decision."
+      },
+      "Body_exchange_api_v1_mcp_token_post": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "Code"
+          },
+          "resource": {
+            "type": "string",
+            "maxLength": 2048,
+            "title": "Resource"
+          },
+          "client_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Client Id"
+          },
+          "redirect_uri": {
+            "type": "string",
+            "maxLength": 2048,
+            "title": "Redirect Uri"
+          },
+          "code_verifier": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9._~-]{43,128}$",
+            "title": "Code Verifier"
+          },
+          "grant_type": {
+            "type": "string",
+            "maxLength": 64,
+            "title": "Grant Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "resource",
+          "client_id",
+          "redirect_uri",
+          "code_verifier",
+          "grant_type"
+        ],
+        "title": "Body_exchange_api_v1_mcp_token_post"
+      },
       "Body_request_password_reset_api_v1_auth_forgot_password_post": {
         "properties": {
           "email": {
@@ -2722,6 +3575,84 @@
           "email"
         ],
         "title": "Body_request_registration_api_v1_auth_register_post"
+      },
+      "Body_revoke_api_v1_mcp_revoke_post": {
+        "properties": {
+          "token": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "Token"
+          },
+          "client_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Client Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "token",
+          "client_id"
+        ],
+        "title": "Body_revoke_api_v1_mcp_revoke_post"
+      },
+      "ClientRegistration": {
+        "properties": {
+          "client_name": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Client Name",
+            "default": "MCP client"
+          },
+          "grant_types": {
+            "items": {
+              "type": "string",
+              "const": "authorization_code"
+            },
+            "type": "array",
+            "maxItems": 1,
+            "minItems": 1,
+            "title": "Grant Types",
+            "default": [
+              "authorization_code"
+            ]
+          },
+          "redirect_uris": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 10,
+            "minItems": 1,
+            "title": "Redirect Uris"
+          },
+          "response_types": {
+            "items": {
+              "type": "string",
+              "const": "code"
+            },
+            "type": "array",
+            "maxItems": 1,
+            "minItems": 1,
+            "title": "Response Types",
+            "default": [
+              "code"
+            ]
+          },
+          "token_endpoint_auth_method": {
+            "type": "string",
+            "const": "none",
+            "title": "Token Endpoint Auth Method",
+            "default": "none"
+          }
+        },
+        "type": "object",
+        "required": [
+          "redirect_uris"
+        ],
+        "title": "ClientRegistration",
+        "description": "Accept only public authorization-code clients with fixed safe callbacks."
       },
       "ComputeRegistryCreate": {
         "properties": {
@@ -2792,6 +3723,30 @@
         "title": "ComputeRegistryResponse",
         "description": "Describe one compute backend without exposing its private connection state or secrets."
       },
+      "Consent": {
+        "properties": {
+          "client_name": {
+            "type": "string",
+            "title": "Client Name"
+          },
+          "redirect_uri": {
+            "type": "string",
+            "title": "Redirect Uri"
+          },
+          "solution_name": {
+            "type": "string",
+            "title": "Solution Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "client_name",
+          "redirect_uri",
+          "solution_name"
+        ],
+        "title": "Consent",
+        "description": "Describe the actual client callback and selected Solution to the user."
+      },
       "EmailPayload": {
         "properties": {
           "email": {
@@ -2851,6 +3806,19 @@
         "title": "ErrorResponse",
         "description": "Describe the public error contract without internal diagnostics."
       },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
       "LongLinkMetadata": {
         "properties": {
           "image": {
@@ -2901,6 +3869,25 @@
         ],
         "title": "OAuthAvailability",
         "description": "Return the external sign-in providers enabled for this Platform."
+      },
+      "OAuthFailure": {
+        "properties": {
+          "error": {
+            "type": "string",
+            "title": "Error"
+          },
+          "error_description": {
+            "type": "string",
+            "title": "Error Description"
+          }
+        },
+        "type": "object",
+        "required": [
+          "error",
+          "error_description"
+        ],
+        "title": "OAuthFailure",
+        "description": "Describe OAuth errors without returning submitted credentials."
       },
       "OperationKind": {
         "type": "string",
@@ -3419,6 +4406,70 @@
         "title": "PasswordResetComplete",
         "description": "Validate a new password supplied with browser-only reset proof."
       },
+      "RegisteredClient": {
+        "properties": {
+          "client_name": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Client Name",
+            "default": "MCP client"
+          },
+          "grant_types": {
+            "items": {
+              "type": "string",
+              "const": "authorization_code"
+            },
+            "type": "array",
+            "maxItems": 1,
+            "minItems": 1,
+            "title": "Grant Types",
+            "default": [
+              "authorization_code"
+            ]
+          },
+          "redirect_uris": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 10,
+            "minItems": 1,
+            "title": "Redirect Uris"
+          },
+          "response_types": {
+            "items": {
+              "type": "string",
+              "const": "code"
+            },
+            "type": "array",
+            "maxItems": 1,
+            "minItems": 1,
+            "title": "Response Types",
+            "default": [
+              "code"
+            ]
+          },
+          "token_endpoint_auth_method": {
+            "type": "string",
+            "const": "none",
+            "title": "Token Endpoint Auth Method",
+            "default": "none"
+          },
+          "client_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Client Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "redirect_uris",
+          "client_id"
+        ],
+        "title": "RegisteredClient",
+        "description": "Return public registration metadata, never a confidential client credential."
+      },
       "RegistrationComplete": {
         "properties": {
           "name": {
@@ -3496,6 +4547,120 @@
         ],
         "title": "RegistryResponse",
         "description": "Expose registry connection identity without encrypted credentials."
+      },
+      "ResourceMetadata": {
+        "properties": {
+          "resource": {
+            "type": "string",
+            "title": "Resource"
+          },
+          "scopes_supported": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Scopes Supported"
+          },
+          "authorization_servers": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Authorization Servers"
+          },
+          "bearer_methods_supported": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Bearer Methods Supported",
+            "default": [
+              "header"
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "resource",
+          "scopes_supported",
+          "authorization_servers"
+        ],
+        "title": "ResourceMetadata",
+        "description": "Publish RFC 9728 resource discovery for one Solution endpoint."
+      },
+      "ServerMetadata": {
+        "properties": {
+          "issuer": {
+            "type": "string",
+            "title": "Issuer"
+          },
+          "token_endpoint": {
+            "type": "string",
+            "title": "Token Endpoint"
+          },
+          "scopes_supported": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Scopes Supported"
+          },
+          "revocation_endpoint": {
+            "type": "string",
+            "title": "Revocation Endpoint"
+          },
+          "grant_types_supported": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Grant Types Supported"
+          },
+          "registration_endpoint": {
+            "type": "string",
+            "title": "Registration Endpoint"
+          },
+          "authorization_endpoint": {
+            "type": "string",
+            "title": "Authorization Endpoint"
+          },
+          "response_types_supported": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Response Types Supported"
+          },
+          "code_challenge_methods_supported": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Code Challenge Methods Supported"
+          },
+          "token_endpoint_auth_methods_supported": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Token Endpoint Auth Methods Supported"
+          }
+        },
+        "type": "object",
+        "required": [
+          "issuer",
+          "token_endpoint",
+          "scopes_supported",
+          "revocation_endpoint",
+          "grant_types_supported",
+          "registration_endpoint",
+          "authorization_endpoint",
+          "response_types_supported",
+          "code_challenge_methods_supported",
+          "token_endpoint_auth_methods_supported"
+        ],
+        "title": "ServerMetadata",
+        "description": "Publish the supported public-client OAuth authorization flow."
       },
       "SolutionCreate": {
         "properties": {
@@ -3774,6 +4939,39 @@
         "title": "TokenPayload",
         "description": "Validate one unchanged authentication token."
       },
+      "TokenSummary": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "client_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Client Id"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Expires At"
+          },
+          "solution_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Solution Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "client_id",
+          "expires_at",
+          "solution_id"
+        ],
+        "title": "TokenSummary",
+        "description": "Expose revocation handles without access credentials or hashes."
+      },
       "UserIdentity": {
         "properties": {
           "id": {
@@ -3889,6 +5087,46 @@
         "type": "object",
         "title": "UserUpdate",
         "description": "Payload to update mutable user profile fields."
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
       }
     }
   }

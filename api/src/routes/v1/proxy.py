@@ -2,7 +2,7 @@ import ssl
 import json
 import httpx2
 import asyncio
-from src import auth
+from src import mcp, auth
 from uuid import UUID
 from fastapi import Depends, Request, Response, APIRouter, HTTPException
 from longlink import identity
@@ -35,7 +35,7 @@ async def runtime_scope() -> AsyncIterator[AsyncExitStack]:
 async def proxy_solution_request(
     request: Request,
     solution_id: UUID,
-    user: auth.CurrentUser,
+    user: mcp.ProxyUser,
     session: auth.Session,
     path: str = "",
     runtime: AsyncExitStack = Depends(runtime_scope, scope="request"),
@@ -46,6 +46,9 @@ async def proxy_solution_request(
     """
 
     required_role = SOLUTION_PROXY_METHOD_ROLES[request.method]
+
+    # Preserve protocol metadata only on the scoped MCP transport, never ordinary Solution routes.
+    is_mcp = path.rstrip("/") == "mcp"
 
     # Release the request snapshot before independent runtime transactions begin.
     await session.commit()
@@ -93,6 +96,13 @@ async def proxy_solution_request(
                 content_type = request.headers.get("content-type")
                 if content_type is not None:
                     headers["content-type"] = content_type
+
+                # Keep negotiated sessions intact without forwarding bearer tokens or browser credentials.
+                if is_mcp:
+                    for name in ("accept", "mcp-session-id", "mcp-protocol-version", "mcp-method", "mcp-name", "last-event-id"):
+                        value = request.headers.get(name)
+                        if value is not None:
+                            headers[name] = value
                 query = request.url.query
                 upstream_request = client.build_request(
                     request.method,
@@ -117,6 +127,13 @@ async def proxy_solution_request(
         "content-security-policy": "sandbox; default-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'",
         "x-content-type-options": "nosniff",
     }
+    # Return only explicitly allowed MCP negotiation metadata to the authenticated client.
+    if is_mcp:
+        for name in ("mcp-session-id", "mcp-protocol-version"):
+            value = upstream.headers.get(name)
+            if value is not None:
+                response_headers[name] = value
+
     if upstream.status_code >= 400:
         detail = "The Solution could not complete the request. Please try again later."
 

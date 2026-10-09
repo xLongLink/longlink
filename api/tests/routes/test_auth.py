@@ -330,17 +330,28 @@ async def test_oauth_callback_rejects_unresolved_identity_without_account_change
 
 
 @pytest.mark.parametrize("provider", OAUTH_PROVIDERS)
+@pytest.mark.parametrize(
+    ("return_to", "destination"),
+    [
+        ("/user/organizations", "/user/organizations"),
+        ("/mcp/authorize?state=client-state", "/mcp/authorize?state=client-state"),
+        ("https://attacker.example", "/user/organizations"),
+        ("//attacker.example/mcp/authorize", "/user/organizations"),
+    ],
+)
 async def test_oauth_callback_links_existing_email_and_authenticates_browser(
     client: AsyncClient,
     users: tuple[User, User, User],
     oauth_responses: dict[str, object],
     provider: oauth.OAuthProvider,
+    return_to: str,
+    destination: str,
 ) -> None:
     """Link a verified provider identity to its existing canonical account."""
 
     # Arrange
     user = users[1]
-    credential = token.create_oauth_state_token(provider, "expected-state", "pkce-verifier")
+    credential = token.create_oauth_state_token(provider, "expected-state", "pkce-verifier", return_to)
     client.cookies.set("longlink_oauth", credential, domain="testserver.local", path="/api/v1/auth/oauth")
 
     # Act
@@ -354,7 +365,7 @@ async def test_oauth_callback_links_existing_email_and_authenticates_browser(
     # Assert
     assert response.status_code == 302
     assert response.content == b""
-    assert response.headers["location"] == f"{env.PUBLIC_URL}/user/organizations"
+    assert response.headers["location"] == f"{env.PUBLIC_URL}{destination}"
     assert response.headers["cache-control"] == "no-store"
     assert client.cookies.get("longlink_oauth") is None
     assert client.cookies.get("longlink_auth") is not None
