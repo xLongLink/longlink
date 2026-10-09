@@ -4,7 +4,7 @@ from datetime import UTC, datetime
 from functools import partial
 from src.errors import ServiceError
 from src.logger import logger
-from src.operations import handlers
+from src.operations import handlers, databases
 from collections.abc import Callable, Awaitable
 from src.environments import env
 from src.database.session import session_scope
@@ -126,8 +126,11 @@ async def run_administrator_reconciler() -> None:
     while True:
         try:
             async with session_scope() as session:
-                await users.ensure_administrator(session)
+                administrator = await users.ensure_administrator(session)
                 await session.commit()
+
+            # Refresh administrator profiles in place before declaring reconciliation complete.
+            await databases.sync_users(administrator.id)
         except Exception:
             logger.exception("Administrator reconciliation failed")
             await asyncio.sleep(1)

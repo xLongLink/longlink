@@ -722,6 +722,7 @@ async def test_password_login_rejects_deleted_account_with_correct_password_with
     assert client.cookies.get("longlink_auth") is None
 
 
+@pytest.mark.usefixtures("database_runtime")
 async def test_registration_completion_accepts_pending_organization_invitation(
     client: AsyncClient,
     captured_mail: list[tuple[str, str, str, str | None]],
@@ -768,6 +769,7 @@ async def test_registration_completion_accepts_pending_organization_invitation(
     assert client.cookies.get("longlink_auth") is not None
 
 
+@pytest.mark.usefixtures("database_runtime")
 async def test_password_login_accepts_pending_organization_invitation(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
