@@ -8,7 +8,7 @@ from src.models.types import Image
 from src.models.metadata import LongLinkMetadata
 from src.database.services import operations, organizations
 from src.models.operations import OperationKind
-from src.models.registries import RegistryCreate, RegistryProvider
+from src.models.registries import RegistryCreate
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.solutions import Revision
 from src.database.models.registries import RegistryConnection
@@ -104,7 +104,7 @@ async def inspect(session: AsyncSession, organization_id: UUID | None, image: Im
         metadata = await images.required_metadata(image)
         return metadata, None
     except ForbiddenError:
-        if organization_id is None or image.registry != RegistryProvider.ghcr.host:
+        if organization_id is None or image.registry != RegistryConnection.host:
             raise
 
     # Only matching credentials in the caller-authorized organization may reach this registry.

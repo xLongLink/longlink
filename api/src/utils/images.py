@@ -20,17 +20,6 @@ GHCR_ORIGIN = "https://ghcr.io"
 LOCAL_ORIGIN = "http://localhost:15000"
 
 
-def registry_base(registry: str) -> str | None:
-    """Return the fixed origin for one supported image registry host."""
-
-    # Only GHCR and the local development registry may receive image requests.
-    if registry == "ghcr.io":
-        return GHCR_ORIGIN
-    if registry == "localhost:15000":
-        return LOCAL_ORIGIN
-    return None
-
-
 def missing_envs(metadata: LongLinkMetadata, envs: Mapping[str, str]) -> list[str]:
     """Return sorted image-required environment names missing from submitted values."""
 
@@ -100,7 +89,7 @@ async def required_metadata(image: Image, connection: RegistryConnection | None 
     """Fetch image metadata or raise the stable missing-image response."""
 
     # Only supported registry origins may receive image requests.
-    base = registry_base(image.registry)
+    base = {"ghcr.io": GHCR_ORIGIN, "localhost:15000": LOCAL_ORIGIN}.get(image.registry)
     if base is None:
         raise ForbiddenError("Image registry is not allowed")
     if connection is not None and connection.host != image.registry:

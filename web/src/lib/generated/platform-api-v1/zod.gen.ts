@@ -274,19 +274,12 @@ export const zRegistrationComplete = z.object({
 });
 
 /**
- * RegistryProvider
- *
- * Identify supported container registry authentication providers.
- */
-export const zRegistryProvider = z.enum(['ghcr']);
-
-/**
  * RegistryCreate
  *
  * Validate the registry provider and write-only credentials.
  */
 export const zRegistryCreate = z.object({
-    provider: zRegistryProvider.optional().default('ghcr')
+    provider: z.literal('ghcr').optional().default('ghcr')
 });
 
 /**
@@ -297,7 +290,7 @@ export const zRegistryCreate = z.object({
 export const zRegistryResponse = z.object({
     id: z.uuid(),
     host: z.string(),
-    provider: zRegistryProvider,
+    provider: z.literal('ghcr'),
     username: z.string()
 });
 
@@ -495,6 +488,6 @@ export const zUserUpdate = z.object({
  * Validate the registry provider and write-only credentials.
  */
 export const zRegistryCreateWritable = z.object({
-    provider: zRegistryProvider.optional().default('ghcr'),
+    provider: z.literal('ghcr').optional().default('ghcr'),
     credential: z.string().min(1).max(4096)
 });

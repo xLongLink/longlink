@@ -1,25 +1,13 @@
-from enum import StrEnum
 from uuid import UUID
+from typing import Literal
 from pydantic import Field, BaseModel, SecretStr, ConfigDict
-
-
-class RegistryProvider(StrEnum):
-    """Identify supported container registry authentication providers."""
-
-    ghcr = "ghcr"
-
-    @property
-    def host(self) -> str:
-        """Trusted registry host for this provider."""
-
-        return "ghcr.io"
 
 
 class RegistryCreate(BaseModel):
     """Validate the registry provider and write-only credentials."""
 
     # Connection
-    provider: RegistryProvider = RegistryProvider.ghcr
+    provider: Literal["ghcr"] = "ghcr"
     credential: SecretStr = Field(min_length=1, max_length=4096)
 
 
@@ -31,5 +19,5 @@ class RegistryResponse(BaseModel):
     # Connection
     id: UUID
     host: str
-    provider: RegistryProvider
+    provider: Literal["ghcr"]
     username: str

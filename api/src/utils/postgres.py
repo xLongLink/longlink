@@ -83,12 +83,6 @@ class Postgres:
             with tls.certificate_file(self._certificate) as name:
                 yield url.update_query_dict({"sslrootcert": name})
 
-    @staticmethod
-    def quote(conn: AsyncConnection, value: str) -> str:
-        """Return a SQLAlchemy dialect-quoted SQL identifier."""
-
-        return conn.engine.sync_engine.dialect.identifier_preparer.quote(value)
-
     @contextlib.asynccontextmanager
     async def connection(
         self,
@@ -131,7 +125,7 @@ class Postgres:
             # Create the database only when PostgreSQL does not already list it.
             if await conn.scalar(text("SELECT 1 FROM pg_database WHERE datname = :name"), {"name": organization.hex}) is None:
                 # CREATE DATABASE needs a quoted identifier, so compile it with SQLAlchemy's dialect preparer.
-                quoted_database_name = self.quote(conn, organization.hex)
+                quoted_database_name = conn.engine.sync_engine.dialect.identifier_preparer.quote(organization.hex)
                 await conn.exec_driver_sql(f"CREATE DATABASE {quoted_database_name}")
 
         # SDK migrations create the organization schema before users or solution schemas rely on it.
@@ -140,7 +134,7 @@ class Postgres:
 
         # Re-apply shared schema restrictions because migrations can recreate schema-owned objects.
         async with self.connection(organization.hex) as conn:
-            shared_schema = self.quote(conn, "shared")
+            shared_schema = conn.engine.sync_engine.dialect.identifier_preparer.quote("shared")
             await conn.execute(text("REVOKE CREATE ON SCHEMA public FROM PUBLIC"))
             await conn.exec_driver_sql(f"REVOKE CREATE ON SCHEMA {shared_schema} FROM PUBLIC")
             await conn.execute(text("REVOKE INSERT, UPDATE, DELETE, TRUNCATE ON ALL TABLES IN SCHEMA public FROM PUBLIC"))
@@ -157,17 +151,15 @@ class Postgres:
 
         # Create the solution schema and bind the runtime role inside the organization database.
         async with self.connection(organization.hex) as conn:
+            quote = conn.engine.sync_engine.dialect.identifier_preparer.quote
             await conn.execute(CreateSchema(quoted_name(solution.hex, True), if_not_exists=True))
 
             # Create or rotate the solution login role before granting schema permissions.
             role_exists = await conn.scalar(text("SELECT 1 FROM pg_roles WHERE rolname = :role"), {"role": runtime_username})
-            role = self.quote(conn, runtime_username)
+            role = quote(runtime_username)
 
             # PostgreSQL password literals must be escaped by the active SQLAlchemy dialect.
             password_processor = String().literal_processor(conn.engine.sync_engine.dialect)
-            if password_processor is None:
-                raise ValueError("PostgreSQL string literal processing is unavailable")
-
             password_literal = password_processor(password)
 
             # Create new roles and rotate existing roles with fresh credentials.
@@ -175,9 +167,9 @@ class Postgres:
             await conn.exec_driver_sql(f"{verb} ROLE {role} LOGIN PASSWORD {password_literal}")
 
             # Quote all identifiers before composing role and privilege statements.
-            database = self.quote(conn, organization.hex)
-            schema = self.quote(conn, solution.hex)
-            shared_schema = self.quote(conn, "shared")
+            database = quote(organization.hex)
+            schema = quote(solution.hex)
+            shared_schema = quote("shared")
 
             # Solution roles write to their own schema and read organization shared tables.
             await conn.exec_driver_sql(
@@ -210,10 +202,11 @@ class Postgres:
 
         # Remove the Solution's schema and global role atomically within its Organization database.
         async with self.connection(organization.hex) as conn:
-            schema = self.quote(conn, solution.hex)
-            role = self.quote(conn, runtime_username)
-            database = self.quote(conn, organization.hex)
-            shared_schema = self.quote(conn, "shared")
+            quote = conn.engine.sync_engine.dialect.identifier_preparer.quote
+            schema = quote(solution.hex)
+            role = quote(runtime_username)
+            database = quote(organization.hex)
+            shared_schema = quote("shared")
 
             # Remove every grant and setting assigned during Solution provisioning when its role exists.
             if await conn.scalar(text("SELECT 1 FROM pg_roles WHERE rolname = :role"), {"role": runtime_username}) is not None:
