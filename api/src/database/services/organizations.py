@@ -54,6 +54,23 @@ async def membership(session: AsyncSession, user_id: UUID, organization_id: UUID
     return await session.scalar(statement)
 
 
+async def require_membership(
+    session: AsyncSession,
+    user_id: UUID,
+    organization_id: UUID,
+    minimum_role: OrganizationRoles = OrganizationRoles.read,
+) -> UserOrganization:
+    """Require active Organization access with the requested minimum role without taking command locks."""
+
+    # Resolve active access before checking its minimum required role.
+    access = await membership(session, user_id, organization_id)
+    if access is None:
+        raise ForbiddenError("Access required")
+    if not roles.atleast(access.role, minimum_role):
+        raise ForbiddenError("Permission required")
+    return access
+
+
 async def membership_by_slug(session: AsyncSession, user_id: UUID, organization_slug: str) -> UserOrganization | None:
     """Return one user's active membership for an active Organization slug."""
 

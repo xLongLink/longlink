@@ -2587,16 +2587,6 @@
         "operationId": "delete_registry_api_v1_organizations__organization_id__registries__connection_id__delete",
         "parameters": [
           {
-            "name": "organization_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Organization Id"
-            }
-          },
-          {
             "name": "connection_id",
             "in": "path",
             "required": true,
@@ -2604,6 +2594,16 @@
               "type": "string",
               "format": "uuid",
               "title": "Connection Id"
+            }
+          },
+          {
+            "name": "organization_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Organization Id"
             }
           },
           {
