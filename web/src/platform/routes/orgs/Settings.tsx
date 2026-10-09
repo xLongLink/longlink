@@ -1,6 +1,7 @@
 import type { z } from 'zod';
 import { api } from '@/lib/api';
 import Registries from './Registries';
+import { OpenAI } from '@/components/OpenAI';
 import { useApi } from '@/lib/hooks/use-api';
 import CreateSolution from './CreateSolution';
 import { NoIndex } from '@/components/NoIndex';
@@ -27,7 +28,7 @@ import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { Layout, LayoutPanel, LayoutContent } from '@astryxdesign/core/Layout';
 import { useResolvedOrganizationMembership } from '@/lib/hooks/use-organization';
 import { Menu, MenuSection, MenuItem, MenuSubSection } from '@/components/ui/Menu';
-import { ArrowUp, CheckCheck, EyeOff, Logs, RefreshCw, Trash, Wrench } from 'lucide-react';
+import { ArrowUp, CheckCheck, EyeOff, Logs, Plug, RefreshCw, Trash, Wrench } from 'lucide-react';
 
 type Solution = z.output<typeof schemas.zOrganizationSolutionSummary>;
 
@@ -610,6 +611,7 @@ function SolutionsSection({
     const [update, setUpdate] = useState<Update | null>(null);
     const [deletion, setDeletion] = useState<{ id: string; name: string } | null>(null);
     const [logs, setLogs] = useState<string | null>(null);
+    const [mcp, setMcp] = useState<{ id: string; name: string } | null>(null);
     const [, startAction] = useTransition();
     const base = `/api/v1/organizations/${organization.id}`;
 
@@ -704,6 +706,12 @@ function SolutionsSection({
                                                       onClick: () => setLogs(row.id),
                                                   },
                                                   {
+                                                      id: 'mcp',
+                                                      label: 'MCP',
+                                                      icon: <Plug className="size-4" aria-hidden="true" />,
+                                                      onClick: () => setMcp({ id: row.id, name: row.name }),
+                                                  },
+                                                  {
                                                       id: 'delete',
                                                       label: 'Delete',
                                                       icon: <Trash className="size-4" aria-hidden="true" />,
@@ -753,6 +761,81 @@ function SolutionsSection({
                         <ApiBoundary key={logs}>
                             <SolutionLogs solutionId={logs} onClose={() => setLogs(null)} />
                         </ApiBoundary>
+                    </Stack>
+                </Dialog>
+            )}
+            {/* Download only the selected Solution's package, without embedding credentials. */}
+            {mcp && (
+                <Dialog
+                    aria-label="Model Context Protocol"
+                    isOpen
+                    purpose="info"
+                    width={960}
+                    maxHeight="calc(100dvh - var(--spacing-10) * 4)"
+                    padding={0}
+                    onOpenChange={(open) => {
+                        if (!open) setMcp(null);
+                    }}
+                >
+                    <Stack height="min(560px, calc(100dvh - var(--spacing-10) * 4))">
+                        <Layout
+                            padding={0}
+                            end={
+                                <LayoutPanel width="50%" padding={0} className="hidden bg-muted md:flex">
+                                    <Stack width="100%" height="100%" align="center" justify="center" padding={6}>
+                                        <img
+                                            src="/images/mcp.png"
+                                            alt="Hand-drawn globe surrounded by orbiting spheres."
+                                            className="h-full w-full object-contain"
+                                            width={941}
+                                            height={1672}
+                                            decoding="async"
+                                        />
+                                    </Stack>
+                                </LayoutPanel>
+                            }
+                            content={
+                                <LayoutContent padding={8}>
+                                    <Stack
+                                        height="100%"
+                                        justify="center"
+                                        width="max-content"
+                                        maxWidth="100%"
+                                        gap={10}
+                                        className="mx-auto"
+                                    >
+                                        <Stack gap={2} align="center">
+                                            <Plug className="size-20 text-secondary" aria-hidden="true" />
+                                            <Stack gap={0}>
+                                                <Heading level={2} justify="center">
+                                                    Model Context Protocol
+                                                </Heading>
+                                                <Text as="p" color="secondary" justify="center">
+                                                    Connect your solution to AI tools
+                                                </Text>
+                                            </Stack>
+                                        </Stack>
+                                        {/* Match the creation dialog's content-sized column and control width. */}
+                                        <Stack gap={4} width={0} className="min-w-full">
+                                            <Button
+                                                as="a"
+                                                href={`/api/v1/solutions/${mcp.id}/plugin`}
+                                                label="Download plugin ZIP"
+                                                variant="primary"
+                                                width="100%"
+                                                icon={
+                                                    <OpenAI
+                                                        className="size-5 scale-125"
+                                                        aria-hidden="true"
+                                                        focusable="false"
+                                                    />
+                                                }
+                                            />
+                                        </Stack>
+                                    </Stack>
+                                </LayoutContent>
+                            }
+                        />
                     </Stack>
                 </Dialog>
             )}

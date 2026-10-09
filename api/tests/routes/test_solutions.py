@@ -1,4 +1,7 @@
+import io
+import json
 import pytest
+import zipfile
 from uuid import UUID
 from httpx2 import AsyncClient
 from conftest import DatabaseKubernetes
@@ -6,6 +9,7 @@ from sqlmodel import col
 from factories import add_member, create_solution, fetch_operations, create_organization, assert_no_new_operations
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
+from src.environments import env
 from src.models.roles import OrganizationRoles
 from src.models.types import Image
 from src.models.metadata import LongLinkMetadata, EnvironmentMetadata
@@ -714,3 +718,110 @@ async def test_create_solution_rejects_too_long_slug_without_queuing_work(
     async with session_scope() as session:
         assert await session.scalar(select(Solution).where(col(Solution.organization_id) == organization.id)) is None
     await assert_no_new_operations(previous_operations)
+
+
+async def test_plugin_download_packages_only_the_selected_solution_without_credentials(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+) -> None:
+    """Allow a maintainer to download portable manifests without exporting runtime secrets."""
+
+    # Arrange
+    organization = await create_organization(users[0])
+    other = await create_solution(organization, name="other-solution")
+    solution = await create_solution(
+        organization,
+        name="selected-solution",
+        envs={"API_KEY": "private-environment-value"},
+        runtime_secrets={"LONGLINK_IDENTITY_SECRET": "private-identity-value"},
+    )
+    await add_member(user=users[1], organization=organization, role=OrganizationRoles.maintain)
+
+    # Act
+    response = await clients[1].get(f"/api/v1/solutions/{solution.id}/plugin")
+
+    # Assert
+    assert response.status_code == 200
+    assert response.headers["content-type"] == "application/zip"
+    assert response.headers["content-disposition"] == f'attachment; filename="longlink-{solution.id}.zip"'
+    assert response.headers["cache-control"] == "no-store"
+    assert response.headers["x-content-type-options"] == "nosniff"
+    archive = zipfile.ZipFile(
+        io.BytesIO(response.content),
+    )
+    with archive:
+        assert set(archive.namelist()) == {"plugin.json", "mcp.json"}
+        manifest = json.loads(archive.read("plugin.json"))
+        mcp = json.loads(archive.read("mcp.json"))
+    assert manifest["$schema"] == "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json"
+    assert manifest["name"] == f"longlink-{solution.id}"
+    assert manifest["version"] == "1.0.0"
+    assert manifest["extensions"]["com.openai"]["interface"]["displayName"] == solution.name
+    assert mcp == {
+        "$schema": "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json",
+        "mcpServers": {
+            f"longlink-{solution.id}": {
+                "type": "streamable-http",
+                "url": f"{env.PUBLIC_URL}/api/v1/solutions/{solution.id}/proxy/mcp",
+            }
+        },
+    }
+    contents = json.dumps([manifest, mcp])
+    assert str(other.id) not in contents
+    assert "private-environment-value" not in contents
+    assert "private-identity-value" not in contents
+
+
+@pytest.mark.no_db
+async def test_plugin_download_requires_authentication(client: AsyncClient) -> None:
+    """Reject anonymous ZIP downloads before looking up Solution state."""
+
+    # Act
+    response = await client.get(f"/api/v1/solutions/{UUID(int=1)}/plugin")
+
+    # Assert
+    assert response.status_code == 401
+    assert response.json() == {"detail": "Not authenticated"}
+
+
+@pytest.mark.parametrize("role", [OrganizationRoles.read, OrganizationRoles.write])
+async def test_plugin_download_requires_maintenance_access(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+    role: OrganizationRoles,
+) -> None:
+    """Reject a valid Organization member below the ZIP download's maintenance boundary."""
+
+    # Arrange
+    organization = await create_organization(users[0])
+    solution = await create_solution(organization)
+    await add_member(user=users[1], organization=organization, role=role)
+
+    # Act
+    authorized = await clients[0].get(f"/api/v1/solutions/{solution.id}/plugin")
+    response = await clients[1].get(f"/api/v1/solutions/{solution.id}/plugin")
+
+    # Assert
+    assert authorized.status_code == 200
+    assert response.status_code == 403
+    assert response.json() == {"detail": "Permission required"}
+
+
+async def test_plugin_download_rejects_cross_organization_access(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+) -> None:
+    """Keep an existing Solution's package inaccessible outside its Organization."""
+
+    # Arrange
+    organization = await create_organization(users[0])
+    solution = await create_solution(organization)
+
+    # Act
+    authorized = await clients[0].get(f"/api/v1/solutions/{solution.id}/plugin")
+    response = await clients[2].get(f"/api/v1/solutions/{solution.id}/plugin")
+
+    # Assert
+    assert authorized.status_code == 200
+    assert response.status_code == 403
+    assert response.json() == {"detail": "Access required"}
