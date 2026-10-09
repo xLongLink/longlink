@@ -80,7 +80,6 @@ async def register_compute(client: httpx2.AsyncClient, settings: SeedSettings) -
             "name": DEVELOPMENT_COMPUTE,
             "kubeconfig": settings.KUBECONFIG.read_text(encoding="utf-8"),
             "gateway_url": "https://127.0.0.1:8443",
-            "database_storage_class": "local-path",
             # Controller endpoint reachable from the host; administrator keys are read from the cluster.
             "storage_endpoint": "https://storage.localhost:9443",
         },
@@ -111,8 +110,8 @@ async def create_organization(client: httpx2.AsyncClient) -> Resource:
     if organization is not None:
         return organization
 
-    # Disable database hibernation for local development; zero keeps it awake.
-    response = await client.post("/api/v1/organizations", json={"name": "ACME Ink", "database_idle_seconds": 0})
+    # Create the development Organization with Platform-owned infrastructure defaults.
+    response = await client.post("/api/v1/organizations", json={"name": "ACME Ink"})
     if response.status_code != 409:
         response.raise_for_status()
         return Resource.model_validate(response.json())

@@ -33,7 +33,6 @@ RUN --mount=type=cache,target=/root/.cache/uv uv sync --frozen --no-dev --no-edi
     && useradd --system --uid 10001 --gid 10001 --home-dir /tmp --shell /usr/sbin/nologin longlink
 COPY sdk/ /sdk/
 RUN --mount=type=cache,target=/root/.cache/uv SETUPTOOLS_SCM_PRETEND_VERSION_FOR_LONGLINK=${VERSION} uv sync --frozen --no-dev --no-editable --no-install-project
-ENV VERSION=${VERSION}
 COPY api/ /app/
 COPY --chown=10001:10001 --from=web-builder /repo/api/src/.static/web /app/src/.static/web
 

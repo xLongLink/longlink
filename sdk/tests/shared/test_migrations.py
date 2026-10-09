@@ -10,20 +10,21 @@ from collections.abc import AsyncIterator
 from longlink.shared import audit as shared_audit
 from longlink.shared import migrations as shared_migrations
 from sqlalchemy.engine import URL
-from longlink.shared.models import User
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncConnection, create_async_engine
 from longlink.shared.migrations import migrate_database, migration_config
 
 
 @pytest.fixture
-def audit_user() -> User:
-    """Create one representative shared-audit user."""
+def audit_user() -> dict[str, UUID | str]:
+    """Create one representative shared-audit user snapshot."""
 
-    return User(
-        id=UUID("00000000-0000-0000-0000-000000000001"),
-        name="Owner User",
-        email="owner@example.com",
-    )
+    # Include every authoritative profile field supplied by the Platform projection.
+    return {
+        "id": UUID("00000000-0000-0000-0000-000000000001"),
+        "name": "Owner User",
+        "email": "owner@example.com",
+        "avatar": "",
+    }
 
 
 @pytest_asyncio.fixture
@@ -80,7 +81,7 @@ async def test_empty_shared_audit_sync_does_not_execute_sql() -> None:
     await shared_audit.sync(conn, [])
 
 
-async def test_shared_audit_sync_leaves_cleanup_to_caller_when_upsert_fails(audit_user: User) -> None:
+async def test_shared_audit_sync_leaves_cleanup_to_caller_when_upsert_fails(audit_user: dict[str, UUID | str]) -> None:
     """Propagate SQL failures while leaving connection and transaction ownership with the caller."""
 
     # Missing shared tables cause a real SQL failure within a caller-owned transaction.
@@ -107,7 +108,7 @@ async def test_shared_audit_sync_leaves_cleanup_to_caller_when_upsert_fails(audi
 async def test_shared_migrations_isolate_schema_and_sync_user_profiles(
     postgresql_url: URL,
     postgres_engine: AsyncEngine,
-    audit_user: User,
+    audit_user: dict[str, UUID | str],
 ) -> None:
     """Migrate into the isolated shared schema and synchronize one changing user profile."""
 
@@ -137,19 +138,18 @@ async def test_shared_migrations_isolate_schema_and_sync_user_profiles(
     assert table_locations == {("shared", "audit"), ("shared", "alembic_version")}
 
     # Insert one active control-plane user through the public synchronization entrypoint.
-    user_id = audit_user.id
+    user_id = audit_user["id"]
     async with postgres_engine.begin() as connection:
         await connection.execute(text("SET LOCAL search_path TO shared"))
         await shared_audit.sync(connection, [audit_user])
 
     # Upsert changed mutable profile fields.
-    updated_user = audit_user.model_copy(
-        update={
-            "name": "Updated User",
-            "email": "updated@example.com",
-            "avatar": "https://example.com/avatar.png",
-        }
-    )
+    updated_user = {
+        **audit_user,
+        "name": "Updated User",
+        "email": "updated@example.com",
+        "avatar": "https://example.com/avatar.png",
+    }
     async with postgres_engine.begin() as connection:
         await connection.execute(text("SET LOCAL search_path TO shared"))
         await shared_audit.sync(connection, [updated_user])

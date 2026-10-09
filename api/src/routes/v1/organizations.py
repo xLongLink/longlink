@@ -111,10 +111,9 @@ async def get_organization_storage_usage(
     """Return live usage for the Organization bucket."""
 
     # Load the Organization's immutable storage assignment.
-    target = await organizations.infrastructure(session, membership.organization_id)
-    if target is None:
+    compute = await organizations.storage_infrastructure(session, membership.organization_id)
+    if compute is None:
         raise HTTPException(status_code=404, detail="Organization not found")
-    _, compute = target
     await session.commit()
 
     # Inspect the complete Organization bucket and report storage failures as unavailable.

@@ -9,7 +9,6 @@ class Env(BaseSettings):
 
     # Runtime scheduling
     OPERATION_TIMEOUT_SECONDS: int = Field(default=180, ge=60, le=1740)
-    VERSION: str = Field(default="v0.0.0", pattern=r"^v[0-9]+\.[0-9]+\.[0-9]+(?:-.+)?$")
 
     # Authentication
     PUBLIC_URL: str = Field(default="http://localhost:5173", pattern=r"^https?://")

@@ -9,7 +9,6 @@ from collections.abc import Iterator, AsyncIterator
 from longlink.shared import audit as shared_audit
 from src.models.types import DatabaseSSLMode
 from sqlalchemy.schema import CreateSchema
-from longlink.shared.models import User
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 from sqlalchemy.sql.elements import TextClause
 
@@ -42,12 +41,12 @@ async def test_postgres_creates_idempotent_runtime_schema_with_readonly_audit_ac
 
     # Arrange
     adapter, organization_id, solution_id = postgres_database
-    active_user = User(
-        id=UUID("11111111-1111-1111-1111-111111111111"),
-        name="Owner User",
-        email="owner@example.com",
-        avatar="",
-    )
+    active_user = {
+        "id": UUID("11111111-1111-1111-1111-111111111111"),
+        "name": "Owner User",
+        "email": "owner@example.com",
+        "avatar": "",
+    }
     await adapter.prepare_organization_database(organization_id)
     await adapter.prepare_organization_database(organization_id)
     async with adapter.connection(organization_id.hex, search_path="shared") as conn:
@@ -77,7 +76,7 @@ async def test_postgres_creates_idempotent_runtime_schema_with_readonly_audit_ac
                     runtime_name = await connection.scalar(text("SELECT name FROM runtime_items WHERE id = 1"))
                     result = await connection.execute(
                         text("SELECT email FROM shared.audit WHERE id = :user_id"),
-                        {"user_id": active_user.id},
+                        {"user_id": active_user["id"]},
                     )
                     shared_email = result.scalar_one()
 
@@ -109,13 +108,13 @@ async def test_postgres_creates_idempotent_runtime_schema_with_readonly_audit_ac
         finally:
             await sibling_engine.dispose()
 
-    updated_user = active_user.model_copy(update={"name": "Updated User"})
+    updated_user = {**active_user, "name": "Updated User"}
     async with adapter.connection(organization_id.hex, search_path="shared") as conn:
         await shared_audit.sync(conn, [updated_user])
     async with adapter.connection(organization_id.hex) as connection:
         result = await connection.execute(
             text("SELECT name FROM shared.audit WHERE id = :user_id"),
-            {"user_id": active_user.id},
+            {"user_id": active_user["id"]},
         )
         updated_name = result.scalar_one()
 
