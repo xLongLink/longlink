@@ -1,5 +1,6 @@
 from src import auth
 from fastapi import Depends, APIRouter
+from src.operations import databases
 from src.models.users import UserUpdate, UserSummary, AdminUserSummary, UserOrganizationMembership
 from src.database.services import users, organizations
 from src.models.pagination import Page, Pagination
@@ -38,14 +39,14 @@ async def list_users(
 async def patch_me(payload: UserUpdate, user: auth.CurrentUser, session: auth.Session):
     """Update the authenticated user's details."""
 
-    # Commit profile changes and durable projection demand together, without a no-op transaction.
-    if (payload.name is None or payload.name == user.name) and (payload.avatar is None or payload.avatar == user.avatar):
-        return user
-
+    # Persist the authoritative profile before synchronizing independent Organization databases.
     if payload.name is not None:
         user.name = payload.name
     if payload.avatar is not None:
         user.avatar = payload.avatar
 
     await session.commit()
+
+    # Await synchronization even for unchanged payloads so failed requests can be retried.
+    await databases.sync_users(user.id)
     return user

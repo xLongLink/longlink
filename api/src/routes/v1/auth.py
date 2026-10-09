@@ -7,6 +7,7 @@ from typing import Annotated
 from fastapi import Body, Query, Cookie, Header, Response, APIRouter, HTTPException, BackgroundTasks
 from src.utils import mail, oauth, token, cookies
 from sqlalchemy.exc import IntegrityError
+from src.operations import databases
 from src.models.auth import EmailPayload, TokenPayload, PasswordLogin, OAuthAvailability, RegistrationComplete, PasswordResetComplete
 from src.environments import env
 from src.models.users import UserSummary
@@ -30,6 +31,9 @@ async def set_auth_session(session: AsyncSession, response: Response, user: User
     with audit.actor(user.id):
         await invitations.accept(session, user)
         await session.commit()
+
+    # Synchronize committed memberships before issuing authentication, including retries after a failed sync.
+    await databases.sync_users(user.id)
 
     # Publish authentication as a private, browser-only session only after persistence succeeds.
     cookies.set_browser_cookie(
