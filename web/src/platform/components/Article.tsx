@@ -10,6 +10,7 @@ import { Article } from '@/components/layouts/Article';
 import { useLocation, useNavigate } from 'react-router';
 import { Seo, articleRouteLabels } from '@/components/Seo';
 import { PathBreadcrumb } from '@/components/breadcrumb/Path';
+import { BreadcrumbItem } from '@astryxdesign/core/Breadcrumbs';
 import { useEffect, useEffectEvent, type ComponentProps, type ReactNode } from 'react';
 
 const dateFormatter = new Intl.DateTimeFormat('en-GB', {
@@ -19,14 +20,16 @@ const dateFormatter = new Intl.DateTimeFormat('en-GB', {
     timeZone: 'UTC',
 });
 
+type ArticleMetadata = {
+    title: string;
+    description: string;
+    lastUpdated: string;
+    editUrl: string;
+    toc: ComponentProps<typeof Outline>['items'];
+};
+
 type DocumentationArticleProps = {
-    article: {
-        title: string;
-        description: string;
-        lastUpdated: string;
-        editUrl: string;
-        toc: ComponentProps<typeof Outline>['items'];
-    };
+    article: ArticleMetadata;
     children: ReactNode;
     className?: string;
 };
@@ -52,6 +55,38 @@ export function DocumentationArticle({
                         paths={documentationPaths}
                     />
                 }
+                sidebar={article.toc.length ? <ArticleOutline items={article.toc} /> : undefined}
+            >
+                {children}
+            </Article>
+        </>
+    );
+}
+
+/** Publishes public articles with Home-rooted navigation and optional collection reading order. */
+export function PublicArticle({
+    article,
+    children,
+    paths,
+}: {
+    article: ArticleMetadata;
+    children: ReactNode;
+    paths?: readonly string[];
+}) {
+    // Preserve default typography, the 720px reading column, 224px outline, and 64px header.
+    return (
+        <>
+            <Seo description={article.description} hasBreadcrumbs title={article.title} />
+            <Article
+                header={
+                    <PathBreadcrumb
+                        className="min-w-0 overflow-hidden"
+                        labels={articleRouteLabels}
+                        root={<BreadcrumbItem href="/">Home</BreadcrumbItem>}
+                    />
+                }
+                headerAction={<Button href="/login/" label="Get Started" size="sm" variant="primary" />}
+                footer={<ArticleFooter lastUpdated={article.lastUpdated} editUrl={article.editUrl} paths={paths} />}
                 sidebar={article.toc.length ? <ArticleOutline items={article.toc} /> : undefined}
             >
                 {children}

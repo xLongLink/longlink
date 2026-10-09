@@ -22,9 +22,9 @@ export default function Organization() {
     const membership = useResolvedOrganizationMembership();
     const organizationId = membership.organization.id;
 
-    const [solutions, invalidateSolutions] = useApi<
-        z.output<typeof schemas.zGetOrganizationSolutionsApiV1OrganizationsOrganizationIdSolutionsGetResponse>
-    >(`/api/v1/organizations/${organizationId}/solutions`);
+    const [solutions, invalidateSolutions] = useApi<z.output<typeof schemas.zOrganizationSolutionSummary>[]>(
+        `/api/v1/organizations/${organizationId}/solutions`
+    );
 
     const canCreate = ['maintain', 'admin', 'owner'].includes(membership.role);
 

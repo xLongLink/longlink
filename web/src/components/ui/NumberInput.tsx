@@ -1,7 +1,6 @@
 import { useValue } from './value';
 import { FormField } from './FormField';
 import type { FieldProps } from './types';
-import { useSize } from '@astryxdesign/core/SizeContext';
 import { NumberInput as AstryxNumberInput } from '@astryxdesign/core/NumberInput';
 
 type NumberInputProps = FieldProps & {
@@ -22,9 +21,6 @@ type NumberInputProps = FieldProps & {
 
 /** Edits a constrained number without wheel editing or custom value formatting. */
 export function NumberInput(props: NumberInputProps) {
-    // Preserve inherited control sizing before applying the medium fallback.
-    const size = useSize(props.size, 'md');
-
     // Keep optional draft state inside the themed numeric control.
     const { defaultValue, ...control } = props;
 
@@ -54,7 +50,6 @@ export function NumberInput(props: NumberInputProps) {
                 value={field.value}
                 onChange={field.onChange}
                 htmlName={props.name}
-                size={size}
                 step={props.step === undefined ? 1 : props.step}
                 isReadOnly={false}
                 isIntegerOnly={props.isIntegerOnly ?? false}

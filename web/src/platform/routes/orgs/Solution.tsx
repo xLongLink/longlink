@@ -20,8 +20,7 @@ import { useAuthenticatedUser } from '@/lib/hooks/use-user';
 import { PageBreadcrumb } from '@/components/breadcrumb/Page';
 import type {
     zUserOrganizationMembership,
-    zGetSolutionLogsApiV1SolutionsSolutionIdLogsGetResponse,
-    zGetOrganizationSolutionsApiV1OrganizationsOrganizationIdSolutionsGetResponse,
+    zOrganizationSolutionSummary,
 } from '@/lib/generated/platform-api-v1/zod.gen';
 
 /** Renders one proxy-backed organization solution after route authentication. */
@@ -60,15 +59,16 @@ function SolutionPage() {
     );
 
     // Fetch accessible solutions after membership resolves and poll pending deployments.
-    const [solutions] = useApi<
-        z.output<typeof zGetOrganizationSolutionsApiV1OrganizationsOrganizationIdSolutionsGetResponse>
-    >(`/api/v1/organizations/${membership.organization.id}/solutions`, {
-        refetchInterval: (query) =>
-            query.state.data?.some((solution) => solution.status === 'creating' || solution.deployment_pending)
-                ? 5000
-                : false,
-        meta: { polling: true },
-    });
+    const [solutions] = useApi<z.output<typeof zOrganizationSolutionSummary>[]>(
+        `/api/v1/organizations/${membership.organization.id}/solutions`,
+        {
+            refetchInterval: (query) =>
+                query.state.data?.some((solution) => solution.status === 'creating' || solution.deployment_pending)
+                    ? 5000
+                    : false,
+            meta: { polling: true },
+        }
+    );
 
     // Keep the solution lookup and its existence check together.
     const solutionAccess = solutions.find((item) => item.slug === solution);
@@ -150,9 +150,7 @@ function SolutionPage() {
 
 /** Reads failed-deployment logs only for authorized maintainers. */
 function DeploymentLogs({ solutionId }: { solutionId: string }) {
-    const [logs] = useApi<z.output<typeof zGetSolutionLogsApiV1SolutionsSolutionIdLogsGetResponse>>(
-        `/api/v1/solutions/${solutionId}/logs`
-    );
+    const [logs] = useApi<string[]>(`/api/v1/solutions/${solutionId}/logs`);
 
     return (
         <Stack gap={2}>

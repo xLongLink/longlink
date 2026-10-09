@@ -9,12 +9,11 @@ const root = path.resolve(import.meta.dirname, '..');
 const input = path.resolve(root, '../sdk/longlink/.static/jsx/frontend.d.ts');
 let source = await readFile(input, 'utf8');
 
-// Resolve borrowed component props against the actual Web imports before publishing standalone editor types.
+// Load runtime component sources before publishing standalone editor types.
 const runtimeConfig = ts.readConfigFile(path.join(root, 'tsconfig.app.json'), ts.sys.readFile);
 if (runtimeConfig.error) throw new Error(ts.flattenDiagnosticMessageText(runtimeConfig.error.messageText, '\n'));
 const runtimeOptions = ts.parseJsonConfigFileContent(runtimeConfig.config, ts.sys, root).options;
 const runtimeProgram = ts.createProgram([path.join(root, 'src/views/components.ts')], runtimeOptions);
-const runtimeChecker = runtimeProgram.getTypeChecker();
 
 // Derive editor component signatures from the same runtime source snapshot used for wrapper types.
 const bindings = runtimeProgram.getSourceFile(path.join(root, 'src/views/components.ts'));
@@ -115,62 +114,10 @@ for (const binding of bindings.statements) {
         if (props && ts.isTypeReferenceNode(props) && aliases.has(props.typeName.getText(wrapper)))
             props = aliases.get(props.typeName.getText(wrapper));
 
-        // Materialize picked upstream props without leaking unavailable imports into Solution declarations.
-        let hasBorrowedProps = false;
-        const resolved =
-            props &&
-            ts.transform(props, [
-                (context) => {
-                    /** Resolves borrowed component fields while preserving authored local prop contracts. */
-                    function visit(node) {
-                        // Only imported component projections need to become explicit editor fields.
-                        if (
-                            ts.isTypeReferenceNode(node) &&
-                            node.typeName.getText(wrapper) === 'Pick' &&
-                            node.typeArguments?.[0] &&
-                            ts.isTypeReferenceNode(node.typeArguments[0]) &&
-                            node.typeArguments[0].typeName.getText(wrapper) === 'ComponentProps'
-                        ) {
-                            hasBorrowedProps = true;
-                            const borrowed = runtimeChecker.getTypeFromTypeNode(node);
-                            return ts.factory.createTypeLiteralNode(
-                                borrowed.getProperties().map((property) => {
-                                    // Expand literal unions rather than retaining names owned by the upstream component library.
-                                    const type = runtimeChecker.getTypeOfSymbolAtLocation(property, node);
-                                    const choices = type.isUnion() ? type.types : [type];
-                                    const nodes = choices.map((choice) =>
-                                        runtimeChecker.typeToTypeNode(
-                                            choice,
-                                            undefined,
-                                            ts.NodeBuilderFlags.NoTruncation,
-                                        ),
-                                    );
-                                    return ts.factory.createPropertySignature(
-                                        undefined,
-                                        property.name,
-                                        property.flags & ts.SymbolFlags.Optional
-                                            ? ts.factory.createToken(ts.SyntaxKind.QuestionToken)
-                                            : undefined,
-                                        nodes.length === 1 ? nodes[0] : ts.factory.createUnionTypeNode(nodes),
-                                    );
-                                }),
-                            );
-                        }
-
-                        return ts.visitEachChild(node, visit, context);
-                    }
-
-                    return (node) => ts.visitNode(node, visit);
-                },
-            ]);
-        const propText = (
-            hasBorrowedProps
-                ? ts.createPrinter().printNode(ts.EmitHint.Unspecified, resolved.transformed[0], wrapper)
-                : (props?.getText(wrapper) ?? '{}')
-        )
+        // Publish authored prop contracts with the standalone editor's React aliases.
+        const propText = (props?.getText(wrapper) ?? '{}')
             .replaceAll('ReactNode', 'ViewNode')
             .replace(/MouseEvent<(HTMLButtonElement|HTMLElement)>/g, 'ViewMouseEvent');
-        resolved?.dispose();
         const generics = implementation.typeParameters?.length
             ? `<${implementation.typeParameters.map((type) => type.getText(wrapper)).join(', ')}>`
             : '';

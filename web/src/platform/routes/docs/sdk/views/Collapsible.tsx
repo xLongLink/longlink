@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import ViewLayout from './ViewLayout';
 import { Text } from '@astryxdesign/core/Text';
 import { Collapsible } from '@/components/ui/Collapsible';
@@ -26,13 +25,11 @@ export default function CollapsiblePage() {
     );
 }
 
-/** Keeps disclosure state local to this example. */
+/** Lets the disclosure own its initially expanded state. */
 export function CollapsibleExample() {
-    const [isOpen, setIsOpen] = useState(true);
-
     // Expand or collapse the additional information on demand.
     return (
-        <Collapsible trigger="Details" isOpen={isOpen} onOpenChange={setIsOpen}>
+        <Collapsible trigger="Details">
             <Text color="secondary">Additional information.</Text>
         </Collapsible>
     );
