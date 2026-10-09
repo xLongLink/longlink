@@ -31,7 +31,15 @@ def _membership_query(user_id: UUID) -> Select[tuple[UserOrganization]]:
     return (
         select(UserOrganization)
         .join(Organization, col(Organization.id) == col(UserOrganization.organization_id))
-        .options(contains_eager(UserOrganization.organization))
+        .options(
+            contains_eager(UserOrganization.organization).load_only(
+                Organization.id,
+                Organization.name,
+                Organization.slug,
+                Organization.status,
+                Organization.storage_quota_bytes,
+            )
+        )
         .where(
             col(UserOrganization.user_id) == user_id,
             col(Organization.deleted_at).is_(None),
@@ -161,9 +169,10 @@ async def solution_infrastructure(session: AsyncSession, solution_id: UUID) -> t
 async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Sequence[Organization], int]:
     """Return one ordered page of active organizations for administrator views."""
 
-    # Query active organization rows using a stable page order.
+    # Load only Organization identity fields using a stable page order.
     statement = (
         select(Organization)
+        .options(load_only(Organization.id, Organization.name, Organization.slug, Organization.status))
         .where(col(Organization.deleted_at).is_(None))
         .order_by(col(Organization.name), col(Organization.id))
         .offset(pagination.offset)
@@ -380,9 +389,10 @@ async def create(
         raise UnavailableError("No ready compute registry available")
 
     # A no-op write serializes admission on every supported backend, including SQLite.
-    await session.execute(sql_update(ComputeRegistry).where(col(ComputeRegistry.id) == compute_id).values(name=col(ComputeRegistry.name)))
-    compute = await session.get(ComputeRegistry, compute_id, populate_existing=True)
-    if compute is None:
+    result = await session.execute(
+        sql_update(ComputeRegistry).where(col(ComputeRegistry.id) == compute_id).values(name=col(ComputeRegistry.name))
+    )
+    if result.rowcount != 1:
         raise UnavailableError("No compute registry available")
 
     # Build the Organization with its immutable infrastructure assignments.

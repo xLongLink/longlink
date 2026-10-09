@@ -80,7 +80,12 @@ async def test_failed_update_recovery(users: tuple[User, User, User], monkeypatc
     monkeypatch.setattr(runtime, "Kubernetes", Kubernetes)
     initial = await claim_operation()
     assert initial is not None
-    result = await execute(initial)
+    await execute(initial)
+
+    # Read the committed worker outcome before checking deployment behavior.
+    async with session_scope() as session:
+        result = await session.get(Operation, initial.id)
+        assert result is not None
     if failure == "initial":
         assert result.failed is not None
         async with session_scope() as session:
@@ -124,9 +129,12 @@ async def test_failed_update_recovery(users: tuple[User, User, User], monkeypatc
     with monkeypatch.context() as timeout:
         if failure == "timeout":
             timeout.setattr(env, "OPERATION_TIMEOUT_SECONDS", 0.5)
-        failed = await execute(update)
+        await execute(update)
 
     # Assert: rollout finalization and the exact persisted timeout precede worker return.
+    async with session_scope() as session:
+        failed = await session.get(Operation, update.id)
+        assert failed is not None
     assert failed.failed is not None
     if failure == "timeout":
         assert rollout_finalized.is_set()
@@ -145,7 +153,13 @@ async def test_failed_update_recovery(users: tuple[User, User, User], monkeypatc
             recovery = await claim_operation()
             assert recovery is not None
             assert recovery.kind == OperationKind.solution_deploy
-            assert (await execute(recovery)).failed is None
+            await execute(recovery)
+
+            # Read the committed outcome for the tombstoned recovery target.
+            async with session_scope() as session:
+                recovered = await session.get(Operation, recovery.id)
+                assert recovered is not None
+                assert recovered.failed is None
         deletion = await claim_operation()
         assert deletion is not None
         assert deletion.kind == OperationKind.solution_delete
@@ -174,8 +188,13 @@ async def test_failed_update_recovery(users: tuple[User, User, User], monkeypatc
     recovery = await claim_operation()
     assert recovery is not None
     assert (recovery.kind, recovery.target_id) == (OperationKind.solution_deploy, good_id)
-    restored = await execute(recovery)
-    assert (restored.failed is not None) == (failure == "restoration")
+    await execute(recovery)
+
+    # Read the committed recovery outcome independently of worker execution.
+    async with session_scope() as session:
+        restored = await session.get(Operation, recovery.id)
+        assert restored is not None
+        assert (restored.failed is not None) == (failure == "restoration")
 
     # Failed desired/history survives successful fallback; failed fallback cannot claim running.
     async with session_scope() as session:
@@ -271,11 +290,23 @@ async def test_queued_deployments_keep_exact_targets(users: tuple[User, User, Us
     second_operation = await claim_operation()
     assert second_operation is not None
     assert second_operation.target_id == second_id
-    assert (await execute(second_operation)).failed is None
+    await execute(second_operation)
+
+    # Read the committed outcome before consuming the next queued deployment.
+    async with session_scope() as session:
+        completed = await session.get(Operation, second_operation.id)
+        assert completed is not None
+        assert completed.failed is None
     third_operation = await claim_operation()
     assert third_operation is not None
     assert third_operation.target_id == third_id
-    assert (await execute(third_operation)).failed is None
+    await execute(third_operation)
+
+    # Read the final committed outcome before checking deployment order.
+    async with session_scope() as session:
+        completed = await session.get(Operation, third_operation.id)
+        assert completed is not None
+        assert completed.failed is None
     assert applied == ["first", "second", "third"]
     assert await claim_operation() is None
     async with session_scope() as session:

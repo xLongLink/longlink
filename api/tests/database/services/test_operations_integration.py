@@ -60,19 +60,25 @@ async def test_claim_globally_leases_one_operation_to_one_concurrent_worker(monk
 
             # Releasing work remains safe with multiple unfinished rows for the same target.
             async with session_factory() as session:
-                released = await operations.release(session, claimed[0].id)
+                assert await operations.release(session, claimed[0].id) is True
+
+                # Read the persisted lease state after the guarded transition.
+                released = await session.get(Operation, claimed[0].id, populate_existing=True)
                 assert released is not None
                 assert released.status == OperationStatus.scheduled
                 assert released.lease_expires_at is None
                 assert released.finished_at is None
                 await session.commit()
 
-            # Complete released work and verify the returned row reflects the guarded update.
+            # Complete released work and verify persisted state reflects the guarded update.
             resumed = await claim_operation()
             assert resumed is not None
             assert resumed.id == claimed[0].id
             async with session_factory() as session:
-                completed = await operations.complete(session, resumed.id)
+                assert await operations.complete(session, resumed.id) is True
+
+                # Read the persisted completion after the guarded transition.
+                completed = await session.get(Operation, resumed.id, populate_existing=True)
                 assert completed is not None
                 assert completed.status == OperationStatus.completed
                 assert completed.lease_expires_at is None
@@ -84,7 +90,10 @@ async def test_claim_globally_leases_one_operation_to_one_concurrent_worker(monk
             assert remaining is not None
             assert {completed.id, remaining.id} == {first.id, duplicate.id}
             async with session_factory() as session:
-                failed = await operations.fail(session, remaining.id, "worker failed")
+                assert await operations.fail(session, remaining.id, "worker failed") is True
+
+                # Read the persisted failure after the guarded transition.
+                failed = await session.get(Operation, remaining.id, populate_existing=True)
                 assert failed is not None
                 assert failed.status == OperationStatus.failed
                 assert failed.failed == "worker failed"

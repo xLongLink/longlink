@@ -253,7 +253,10 @@ async def test_operations_service_coalesces_claimed_work() -> None:
     assert follow_up.id == claimed.id
     assert follow_up.status == OperationStatus.active
     async with session_scope() as session:
-        released = await operations.release(session, claimed.id)
+        assert await operations.release(session, claimed.id) is True
+
+        # Read the guarded update from persisted state rather than its boolean result.
+        released = await session.get(Operation, claimed.id, populate_existing=True)
         await session.commit()
         assert released is not None
         assert released.status == OperationStatus.scheduled
