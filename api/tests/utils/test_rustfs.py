@@ -8,8 +8,8 @@ from src.utils.rustfs import Error, RustFS
 pytestmark = pytest.mark.no_db
 
 
-def test_policy_scopes_solution_object_access() -> None:
-    """Grant object reads and writes only under the solution's private prefix."""
+def test_policy_scopes_solution_access_and_denies_acl_grants() -> None:
+    """Scope object access and bucket listing while denying ACL grants."""
 
     # Arrange
     solution = uuid4()
@@ -27,37 +27,13 @@ def test_policy_scopes_solution_object_access() -> None:
     assert reads["Resource"] == ["arn:aws:s3:::org-bucket/shared", "arn:aws:s3:::org-bucket/shared/*", prefix, f"{prefix}/*"]
     assert writes["Resource"] == [f"{prefix}/*"]
 
-
-def test_policy_denies_acl_grants() -> None:
-    """Prevent upload-time ACL grants from widening solution access."""
-
-    # Arrange
-    solution = uuid4()
-
-    # Act
-    policy = RustFS.policy("org-bucket", solution)
-
-    # Assert
-    statements = policy["Statement"]
-    assert isinstance(statements, list)
+    # Prevent upload-time ACL grants from widening Solution access.
     denies = [statement for statement in statements if statement["Effect"] == "Deny"]
     assert [statement["Condition"]["StringLike"] for statement in denies] == [
         {f"s3:x-amz-grant-{header}": "?*"} for header in ("read", "write", "read-acp", "write-acp", "full-control")
     ]
 
-
-def test_policy_restricts_list_bucket_to_owned_prefixes() -> None:
-    """Limit bucket listing to shared data and the solution's own prefix."""
-
-    # Arrange
-    solution = uuid4()
-
-    # Act
-    policy = RustFS.policy("org-bucket", solution)
-
-    # Assert
-    statements = policy["Statement"]
-    assert isinstance(statements, list)
+    # Restrict bucket listing to shared data and the Solution's own prefix.
     listing = next(statement for statement in statements if statement["Effect"] == "Allow" and "s3:ListBucket" in statement["Action"])
     assert listing["Condition"] == {"StringLike": {"s3:prefix": ["shared/*", f"solutions/{solution.hex}/*"]}}
 
