@@ -1,48 +1,67 @@
-# This workflow uses actions that are not certified by GitHub.
-# They are provided by a third-party and are governed by
-# separate terms of service, privacy policy, and support
-# documentation.
-
-name: trivy
+name: Trivy
 
 on:
-  push:
-    branches: [ "main" ]
-  pull_request:
-    # The branches below must be a subset of the branches above
-    branches: [ "main" ]
-  schedule:
-    - cron: '36 17 * * 2'
+    push:
+        branches: ['main']
+    pull_request:
+        branches: ['main']
+    schedule:
+        - cron: '36 17 * * 2'
 
 permissions:
-  contents: read
+    contents: read
 
 jobs:
-  build:
-    permissions:
-      contents: read # for actions/checkout to fetch code
-      security-events: write # for github/codeql-action/upload-sarif to upload SARIF results
-      actions: read # only required for a private repository by github/codeql-action/upload-sarif to get the Action run status
-    name: Build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+    build:
+        name: Scan API image
+        runs-on: ubuntu-24.04
+        timeout-minutes: 30
 
-      - name: Build an image from Dockerfile
-        run: |
-          docker build -t docker.io/my-organization/my-app:${{ github.sha }} .
+        permissions:
+            contents: read
+            security-events: write
 
-      - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@7b7aa264d83dc58691451798b4d117d53d21edfe
-        with:
-          image-ref: 'docker.io/my-organization/my-app:${{ github.sha }}'
-          format: 'template'
-          template: '@/contrib/sarif.tpl'
-          output: 'trivy-results.sarif'
-          severity: 'CRITICAL,HIGH'
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Upload Trivy scan results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: 'trivy-results.sarif'
+            # Build the same production image as the API image checks.
+            - name: Set up Helm
+              uses: azure/setup-helm@9bc31f4ebc9c6b171d7bfbaa5d006ae7abdb4310 # v5
+              with:
+                  version: v4.3.0
+
+            - name: Package Compute chart
+              run: helm package k8s/chart --version 0.0.0 --destination .
+
+            - name: Setup Docker Buildx
+              uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
+            - name: Build API image
+              uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+              with:
+                  context: .
+                  file: api/Dockerfile
+                  platforms: linux/amd64
+                  load: true
+                  push: false
+                  tags: longlink-api:trivy
+                  build-args: COMPUTE_ARCHIVE=longlink-0.0.0.tgz
+                  cache-from: type=gha,scope=api
+                  cache-to: type=gha,mode=max,scope=api
+
+            # Report high and critical vulnerabilities without publishing the image.
+            - name: Run Trivy vulnerability scanner
+              uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+              with:
+                  image-ref: longlink-api:trivy
+                  format: sarif
+                  output: trivy-results.sarif
+                  scanners: vuln
+                  severity: CRITICAL,HIGH
+                  limit-severities-for-sarif: true
+
+            - name: Upload Trivy scan results to GitHub Security tab
+              uses: github/codeql-action/upload-sarif@24c54180a607b1449ed407dd24f251e4e9147c8d # v4
+              with:
+                  sarif_file: trivy-results.sarif
