@@ -82,6 +82,7 @@ Before writing UI, DO complete these steps in order:
 
 ### Layout and styling
 
+- DON'T add superfluous UI microcopy that creates visual clutter. Include text only when it helps users understand or complete a task.
 - DO use components for layout and spacing, not raw `<div>` elements.
 - DO use `AppShell` for full pages and `SideNav` for sidebar navigation.
 - Before writing content, DO select the shell (`AppShell` or `Layout` with `LayoutPanel`) and plan region sizes in pixels using `astryx docs layout`.

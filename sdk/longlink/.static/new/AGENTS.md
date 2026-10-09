@@ -32,6 +32,8 @@ You are working on a LongLink Solution project.
 
 ## Views
 
+- DON'T add superfluous UI microcopy that creates visual clutter. Include text only when it helps users understand or complete a task.
+
 DO use the docs command to discover available View APIs and inspect their props:
 
 ```bash
