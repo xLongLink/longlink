@@ -1,6 +1,7 @@
 import { legalPages } from './legal';
 import { adminPages } from './navigation';
 import { useCasePages } from './usecases';
+import { componentDocumentation } from './docs';
 import { index, layout, prefix, route, type RouteConfig } from '@react-router/dev/routes';
 
 export default [
@@ -29,47 +30,11 @@ export default [
                 route('testing', './routes/docs/sdk/Testing.tsx'),
                 ...prefix('views', [
                     index('./routes/docs/sdk/Views.tsx'),
-                    route('avatar', './routes/docs/sdk/views/Avatar.tsx'),
-                    route('badge', './routes/docs/sdk/views/Badge.tsx'),
-                    route('buttons', './routes/docs/sdk/views/Buttons.tsx'),
-                    route('card', './routes/docs/sdk/views/Card.tsx'),
-                    route('checkbox-input', './routes/docs/sdk/views/CheckboxInput.tsx'),
-                    route('collapsible', './routes/docs/sdk/views/Collapsible.tsx'),
-                    route('currency', './routes/docs/sdk/views/Currency.tsx'),
-                    route('date-input', './routes/docs/sdk/views/DateInput.tsx'),
-                    route('dialog', './routes/docs/sdk/views/Dialog.tsx'),
-                    route('divider', './routes/docs/sdk/views/Divider.tsx'),
-                    route('dropdown-menu', './routes/docs/sdk/views/DropdownMenu.tsx'),
-                    route('empty-state', './routes/docs/sdk/views/EmptyState.tsx'),
-                    route('file-input', './routes/docs/sdk/views/FileInput.tsx'),
-                    route('file-viewer', './routes/docs/sdk/views/FileViewer.tsx'),
-                    route('form', './routes/docs/sdk/views/Form.tsx'),
-                    route('grid', './routes/docs/sdk/views/Grid.tsx'),
-                    route('heading', './routes/docs/sdk/views/Heading.tsx'),
-                    route('icon', './routes/docs/sdk/views/Icon.tsx'),
-                    route('icon-button', './routes/docs/sdk/views/IconButton.tsx'),
-                    route('link', './routes/docs/sdk/views/Link.tsx'),
-                    route('menu', './routes/docs/sdk/views/Menu.tsx'),
-                    route('metadata-list', './routes/docs/sdk/views/MetadataList.tsx'),
-                    route('more-menu', './routes/docs/sdk/views/MoreMenu.tsx'),
-                    route('multi-selector', './routes/docs/sdk/views/MultiSelector.tsx'),
-                    route('number-input', './routes/docs/sdk/views/NumberInput.tsx'),
-                    route('progress-bar', './routes/docs/sdk/views/ProgressBar.tsx'),
-                    route('radio-list', './routes/docs/sdk/views/RadioList.tsx'),
-                    route('hooks', './routes/docs/sdk/views/Hooks.tsx'),
-                    route('selector', './routes/docs/sdk/views/Selector.tsx'),
-                    route('slider', './routes/docs/sdk/views/Slider.tsx'),
-                    route('functions', './routes/docs/sdk/views/Functions.tsx'),
-                    route('stack', './routes/docs/sdk/views/Stack.tsx'),
-                    route('stepper', './routes/docs/sdk/views/Stepper.tsx'),
-                    route('switch', './routes/docs/sdk/views/Switch.tsx'),
-                    route('table', './routes/docs/sdk/views/Table.tsx'),
-                    route('tabs', './routes/docs/sdk/views/Tabs.tsx'),
-                    route('text', './routes/docs/sdk/views/Text.tsx'),
-                    route('text-area', './routes/docs/sdk/views/TextArea.tsx'),
-                    route('text-input', './routes/docs/sdk/views/TextInput.tsx'),
-                    route('time-input', './routes/docs/sdk/views/TimeInput.tsx'),
-                    route('timestamp', './routes/docs/sdk/views/Timestamp.tsx'),
+
+                    // Keep component routes aligned with the published documentation catalog.
+                    ...componentDocumentation.map(({ slug, label }) =>
+                        route(slug, `./routes/docs/sdk/views/${label}.tsx`)
+                    ),
                 ]),
             ]),
             ...prefix('api', [index('./routes/docs/api/Index.tsx')]),

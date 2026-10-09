@@ -2,7 +2,6 @@ import { useValue } from './value';
 import { FormField } from './FormField';
 import type { FieldProps } from './types';
 import type { SelectorOptionType } from './Selector';
-import { useSize } from '@astryxdesign/core/SizeContext';
 import { MultiSelector as AstryxMultiSelector } from '@astryxdesign/core/MultiSelector';
 
 /** Selects multiple values using standard option and selected-value rendering. */
@@ -19,9 +18,6 @@ export function MultiSelector(
         hasClear?: boolean;
     }
 ) {
-    // Preserve inherited control sizing before applying the medium fallback.
-    const size = useSize(props.size, 'md');
-
     // Astryx's hidden carriers already preserve repeated names and the themed option picker.
     const { defaultValue, ...control } = props;
     const field = useValue(props.value, defaultValue ?? [], props.onChange);
@@ -34,7 +30,6 @@ export function MultiSelector(
                 value={field.value}
                 onChange={field.onChange}
                 htmlName={props.name}
-                size={size}
                 placeholder={props.placeholder ?? 'Select...'}
                 hasSelectAll={props.hasSelectAll ?? false}
                 hasSearch={props.hasSearch ?? false}

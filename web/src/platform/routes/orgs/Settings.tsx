@@ -471,9 +471,9 @@ function SolutionsSection({
     const base = `/api/v1/organizations/${organization.id}`;
 
     // Keep solution refreshes scoped to the section's resource.
-    const [solutions, invalidateSolutions] = useApi<
-        z.output<typeof schemas.zGetOrganizationSolutionsApiV1OrganizationsOrganizationIdSolutionsGetResponse>
-    >(`${base}/solutions`);
+    const [solutions, invalidateSolutions] = useApi<z.output<typeof schemas.zOrganizationSolutionSummary>[]>(
+        `${base}/solutions`
+    );
 
     return (
         <>
@@ -625,9 +625,7 @@ function SolutionsSection({
 
 /** Loads pod logs only while their dialog is open. */
 function SolutionLogs({ solutionId, onClose }: { solutionId: string; onClose: () => void }) {
-    const [logs, invalidate] = useApi<z.output<typeof schemas.zGetSolutionLogsApiV1SolutionsSolutionIdLogsGetResponse>>(
-        `/api/v1/solutions/${solutionId}/logs`
-    );
+    const [logs, invalidate] = useApi<string[]>(`/api/v1/solutions/${solutionId}/logs`);
 
     // Keep log scrolling inside CodeBlock while dismissal and refresh remain visible.
     return (

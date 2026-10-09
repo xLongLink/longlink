@@ -3,7 +3,6 @@ import type { ReactNode } from 'react';
 import { FormField } from './FormField';
 import type { FieldProps } from './types';
 import type { StoneIconName } from './Icon';
-import { useSize } from '@astryxdesign/core/SizeContext';
 import { Selector as AstryxSelector } from '@astryxdesign/core/Selector';
 
 export type SelectorOptionData = {
@@ -33,9 +32,6 @@ type SelectorProps = FieldProps & {
 
 /** Selects one value without custom option rendering or popup geometry. */
 export function Selector(props: SelectorProps) {
-    // Preserve inherited control sizing before applying the medium fallback.
-    const size = useSize(props.size, 'md');
-
     // Retain search, option presentation, and clearing while adapting optional local state.
     const { defaultValue, ...control } = props;
 
@@ -60,7 +56,6 @@ export function Selector(props: SelectorProps) {
                           value: field.value ?? undefined,
                           onChange: field.onChange,
                       })}
-                size={size}
                 htmlName={props.name}
                 placeholder={props.placeholder ?? 'Select...'}
                 hasSearch={props.hasSearch ?? false}

@@ -1,7 +1,6 @@
 import { useValue } from './value';
 import type { ReactNode } from 'react';
 import type { FieldProps } from './types';
-import { useSize } from '@astryxdesign/core/SizeContext';
 import { TextInput as AstryxTextInput } from '@astryxdesign/core/TextInput';
 
 type TextInputProps = FieldProps & {
@@ -20,9 +19,6 @@ type TextInputProps = FieldProps & {
 
 /** Edits themed text with optional local state and native form serialization. */
 export function TextInput(props: TextInputProps) {
-    // Preserve inherited control sizing before applying the medium fallback.
-    const size = useSize(props.size, 'md');
-
     // Let the wrapper own state only when the Solution does not provide a value.
     const { defaultValue, ...control } = props;
 
@@ -41,7 +37,6 @@ export function TextInput(props: TextInputProps) {
             onChange={onChange}
             htmlName={props.name}
             type={props.type ?? 'text'}
-            size={size}
             isReadOnly={false}
             hasClear={props.hasClear ?? false}
             hasAutoFocus={props.hasAutoFocus ?? false}

@@ -99,7 +99,7 @@ function OrganizationSettings() {
     const [deletion, setDeletion] = useState<{ id: string; name: string } | null>(null);
 
     const [memberships, invalidate] =
-        useApi<z.output<typeof schemas.zGetMyOrganizationsApiV1MeOrganizationsGetResponse>>('/api/v1/me/organizations');
+        useApi<z.output<typeof schemas.zUserOrganizationMembership>[]>('/api/v1/me/organizations');
 
     return (
         <>
