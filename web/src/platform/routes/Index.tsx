@@ -9,6 +9,7 @@ import { Icon } from '@astryxdesign/core/Icon';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { ClaudeAI } from '@/components/ClaudeAI';
+import { Showcase } from '@/components/Showcase';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
 import { Heading } from '@astryxdesign/core/Heading';
@@ -157,6 +158,7 @@ export default function Home() {
                     variant="transparent"
                 />
             </Stack>
+            <Showcase />
             <Section className="relative z-20 bg-body" variant="transparent" padding={6} paddingBlock={6}>
                 <Grid className="mx-auto" columns={{ minWidth: 320, max: 2 }} gap={0} maxWidth={1000}>
                     <CapabilityCard
