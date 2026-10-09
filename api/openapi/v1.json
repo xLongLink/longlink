@@ -3445,7 +3445,9 @@
       "RegistryCreate": {
         "properties": {
           "provider": {
-            "$ref": "#/components/schemas/RegistryProvider",
+            "type": "string",
+            "const": "ghcr",
+            "title": "Provider",
             "default": "ghcr"
           },
           "credential": {
@@ -3464,14 +3466,6 @@
         "title": "RegistryCreate",
         "description": "Validate the registry provider and write-only credentials."
       },
-      "RegistryProvider": {
-        "type": "string",
-        "enum": [
-          "ghcr"
-        ],
-        "title": "RegistryProvider",
-        "description": "Identify supported container registry authentication providers."
-      },
       "RegistryResponse": {
         "properties": {
           "id": {
@@ -3484,7 +3478,9 @@
             "title": "Host"
           },
           "provider": {
-            "$ref": "#/components/schemas/RegistryProvider"
+            "type": "string",
+            "const": "ghcr",
+            "title": "Provider"
           },
           "username": {
             "type": "string",

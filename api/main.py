@@ -12,10 +12,8 @@ from longlink.logger import ApiAccessFilter
 from src.environments import env
 from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
 from src.utils.cookies import AUTH_COOKIE, OAUTH_STATE_COOKIE, REGISTRATION_COOKIE, PASSWORD_RESET_COOKIE
-from fastapi.exceptions import RequestValidationError
 from longlink.middleware import FrontendMiddleware
 from src.database.session import dispose_engine
-from starlette.exceptions import HTTPException
 
 # Keep successful Kubernetes probes out of the Platform API access log.
 logging.getLogger("uvicorn.access").addFilter(ApiAccessFilter())
@@ -88,9 +86,7 @@ async def prevent_cross_origin_authenticated_writes(
 
 # Apply the same public contract to domain, HTTP, validation, and unexpected failures.
 app.exception_handler(errors.ServiceError)(errors.service_error_response)
-app.exception_handler(HTTPException)(solution_errors.http_error_response)
-app.exception_handler(RequestValidationError)(solution_errors.validation_error_response)
-app.add_exception_handler(Exception, solution_errors.unexpected_error_response)
+solution_errors.install_error_handlers(app)
 
 
 @app.middleware("http")

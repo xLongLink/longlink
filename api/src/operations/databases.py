@@ -4,7 +4,8 @@ from uuid import UUID
 from datetime import UTC, datetime, timedelta
 from sqlmodel import col
 from src.utils import postgres
-from sqlalchemy import text, delete, select, update
+from sqlalchemy import text, delete, update
+from src.errors import ForbiddenError
 from dataclasses import dataclass
 from src.kubernetes import databases as database_resources
 from src.kubernetes import namespace
@@ -152,22 +153,15 @@ async def _claim(session: AsyncSession, organization_id: UUID) -> Lease | None:
 async def deleting(organization_id: UUID) -> AsyncIterator[None]:
     """Drain admitted work and fence database transitions during destructive cleanup."""
 
+    # Serialize deletion eligibility and lease admission under the same Organization lock.
     while True:
         async with session_scope() as session:
             organization = await lock(session, organization_id)
             if organization is None:
                 break
             if organization.deleted_at is None:
-                raise RuntimeError("Active Organizations cannot be deleted")
-            active = await session.scalar(
-                select(col(OrganizationActivity.organization_id))
-                .where(
-                    col(OrganizationActivity.organization_id) == organization_id,
-                    col(OrganizationActivity.expires_at) > datetime.now(UTC),
-                )
-                .limit(1)
-            )
-            lease = None if active is not None else await _claim(session, organization_id)
+                raise ForbiddenError("Active Organizations cannot be deleted by lifecycle cleanup")
+            lease = await _claim(session, organization_id)
             await session.commit()
         if lease is not None:
             async with lease.maintain():

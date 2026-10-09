@@ -64,17 +64,7 @@ async def reconcile(organization_id: UUID) -> None:
 async def delete(organization_id: UUID) -> None:
     """Drain runtime activity before destroying the Organization's boundaries."""
 
-    # Reject active targets before waiting for their admitted runtime work.
-    async with session_scope() as session:
-        result = await session.execute(
-            select(col(Organization.id), col(Organization.deleted_at)).where(col(Organization.id) == organization_id)
-        )
-        target = result.tuples().one_or_none()
-    if target is None:
-        return
-    _, deleted_at = target
-    if deleted_at is None:
-        raise ForbiddenError("Active Organizations cannot be deleted by lifecycle cleanup")
+    # Delegate deletion eligibility and lease admission to the locked database scope.
     async with databases.deleting(organization_id):
         # An absent tombstone means a previous execution completed cleanup.
         async with session_scope() as session:

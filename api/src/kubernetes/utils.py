@@ -14,7 +14,7 @@ async def apply(resource: APIObject) -> None:
         await resource.create()
 
 
-async def delete_namespace(api: Api, name: str, timeout_seconds: float = 600) -> None:
+async def delete_namespace(api: Api, name: str) -> None:
     """Delete one Namespace and wait until Kubernetes reports its absence."""
 
     # Issue deletion once and wait for Kubernetes to report terminal absence.
@@ -23,5 +23,5 @@ async def delete_namespace(api: Api, name: str, timeout_seconds: float = 600) ->
         await resource.delete()
     except NotFoundError:
         return
-    async with asyncio.timeout(timeout_seconds):
+    async with asyncio.timeout(600):
         await resource.wait("delete")

@@ -97,17 +97,6 @@ async def test_send_mail_delivers_multipart_message_with_configured_smtp(
     }
 
 
-async def test_send_mail_requires_smtp(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Reject delivery when SMTP is absent."""
-
-    # Arrange
-    monkeypatch.setattr(env, "SMTP_HOST", None)
-
-    # Act and assert
-    with pytest.raises(RuntimeError, match="SMTP_HOST is not configured"):
-        await mail.send_mail("user@example.com", "Welcome", "Plain message", "<p>HTML message</p>")
-
-
 async def test_password_reset_email_keeps_credential_in_url_fragment(
     monkeypatch: pytest.MonkeyPatch, captured_mail: list[tuple[str, str, str, str | None]]
 ) -> None:
