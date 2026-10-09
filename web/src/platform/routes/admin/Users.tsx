@@ -34,7 +34,7 @@ export default function Users() {
                             width: proportional(1),
                             renderCell: (row) => (
                                 <Stack direction="horizontal" gap={3} align="center">
-                                    <Avatar name={row.name} src={row.avatar} />
+                                    <Avatar name={row.name} src={row.avatar} seed={row.id} />
                                     <Stack align="start">
                                         <Stack direction="horizontal" gap={1} align="center">
                                             <Text>{row.name}</Text>
