@@ -18,6 +18,9 @@ OAUTH_STATE_TOKEN_AUDIENCE = "longlink:oauth"  # noqa: S105
 EMAIL_TOKEN_LIFETIME_SECONDS = 3600
 OAUTH_STATE_TOKEN_LIFETIME_SECONDS = 600
 
+# Compile canonical email validation once for all signed registration claims.
+EMAIL_ADAPTER = TypeAdapter(Email)
+
 
 def password_fingerprint(password: str) -> str:
     """Return the signed-token fingerprint for one current password hash."""
@@ -51,7 +54,7 @@ def registration_claims(token: str) -> Email:
     if not isinstance(email, str) or not email:
         raise jwt.InvalidTokenError("Invalid registration token claims")
     try:
-        return TypeAdapter(Email).validate_python(email)
+        return EMAIL_ADAPTER.validate_python(email)
     except ValidationError as exc:
         raise jwt.InvalidTokenError("Invalid registration token claims") from exc
 
