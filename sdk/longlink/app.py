@@ -1,11 +1,15 @@
+import httpx2
 import logging
 from typing import Any
 from fastapi import FastAPI, APIRouter
+from fastmcp import FastMCP
 from pathlib import Path
+from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from fsspec.spec import AbstractFileSystem
 from longlink.views import ViewDefinition, view_stem_route
-from collections.abc import Callable, Awaitable
+from collections.abc import Mapping, Callable, Awaitable, AsyncIterator
+from fastapi.routing import APIRoute
 from longlink.errors import install_error_handlers
 from longlink.logger import ApiAccessFilter
 from longlink.routes import router
@@ -14,9 +18,13 @@ from fastapi.responses import Response, RedirectResponse
 from starlette.routing import Match, BaseRoute
 from longlink.constants import ROOT
 from longlink.middleware import FrontendMiddleware
+from fastapi.openapi.utils import get_openapi
 from longlink.storage.base import create_fs
 from longlink.database.base import LOCAL_USER_ID, Database
 from longlink.utils.settings import Envs
+from fastmcp.utilities.openapi import HTTPRoute
+from fastmcp.server.dependencies import get_http_headers
+from fastmcp.server.providers.openapi import MCPType
 
 
 @dataclass(slots=True)
@@ -85,7 +93,9 @@ class LongLink(FastAPI):
                 access_logger.addFilter(ApiAccessFilter())
 
         # Mount SDK-managed routes before user-facing assets.
-        self.include_router(router(view_definitions))
+        runtime_router = router(view_definitions)
+        self.include_router(runtime_router)
+        runtime_operation_ids = {route.unique_id for route in runtime_router.routes if isinstance(route, APIRoute)}
 
         # Only production requests with a valid Platform identity may reach Solution routes.
         install_context_middleware(
@@ -127,6 +137,66 @@ class LongLink(FastAPI):
 
         # Share the manifest catalog after registering Views so they cannot collide with themselves.
         self._views = view_definitions
+
+        # Credentials come from the current MCP request, never tool arguments or a previous caller.
+        async def forward_credentials(request: httpx2.Request) -> None:
+            """Forward only request-owned credentials into the Solution's identity boundary."""
+
+            headers = get_http_headers(include={"authorization", "cookie"})
+            for name in ("authorization", "cookie", "x-longlink-identity"):
+                request.headers.pop(name, None)
+                if name in headers:
+                    request.headers[name] = headers[name]
+
+        def map_route(route: HTTPRoute, mcp_type: MCPType) -> MCPType:
+            """Exclude SDK operations from MCP discovery and execution."""
+
+            # Filter by operation identity without hiding Solution methods sharing an SDK path.
+            return MCPType.EXCLUDE if route.operation_id in runtime_operation_ids else mcp_type
+
+        # Preserve SDK startup and shutdown while giving MCP its own managed lifespan.
+        runtime_lifespan = self.router.lifespan_context
+
+        @asynccontextmanager
+        async def lifespan(app: FastAPI) -> AsyncIterator[Mapping[str, Any]]:
+            """Build the completed Solution catalog and close MCP sessions before runtime services."""
+
+            async with runtime_lifespan(app) as state:
+                # Use a fresh schema, including routes registered after an earlier OpenAPI request.
+                schema = get_openapi(
+                    title=self.title,
+                    version=self.version,
+                    openapi_version=self.openapi_version,
+                    description=self.description,
+                    routes=self.routes,
+                )
+                transport = httpx2.ASGITransport(app=self, raise_app_exceptions=False)
+                client = httpx2.AsyncClient(
+                    transport=transport,
+                    base_url="http://solution",
+                    timeout=10.0,
+                    event_hooks={"request": [forward_credentials]},
+                )
+                async with client:
+                    mcp = FastMCP.from_openapi(
+                        openapi_spec=schema,
+                        client=client,
+                        name=self.title,
+                        route_map_fn=map_route,
+                    )
+
+                    # Place MCP ahead of all frontend routes and own its public lifespan context.
+                    mcp_app = mcp.http_app(path="/mcp", json_response=True)
+                    self.router.routes[0:0] = mcp_app.routes
+                    try:
+                        async with mcp_app.lifespan(mcp_app):
+                            yield state or {}
+                    finally:
+                        # Remove only these routes so later lifespans cannot reuse a closed transport.
+                        for route in mcp_app.routes:
+                            self.router.routes.remove(route)
+
+        self.router.lifespan_context = lifespan
 
         # Serve the embedded frontend as low-priority routes so Solution routes take precedence.
         self.frontend("/", directory=frontend_index.parent)
