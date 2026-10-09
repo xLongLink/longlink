@@ -23,11 +23,12 @@ class Error(RuntimeError):
 class RustFS:
     """Manage RustFS service accounts and hard bucket quotas over its signed admin API."""
 
-    def __init__(self, endpoint: str, credentials: s3.Credentials) -> None:
-        """Store the controller connection without opening a transport."""
+    def __init__(self, endpoint: str, credentials: s3.Credentials, client: httpx2.AsyncClient) -> None:
+        """Borrow the workflow's HTTP client without owning its transport lifetime."""
 
         self._endpoint = endpoint
         self._credentials = credentials
+        self._client = client
 
     @staticmethod
     def policy(bucket: str, solution: UUID) -> dict[str, object]:
@@ -86,9 +87,16 @@ class RustFS:
         credentials = AwsCredentials(self._credentials.access_key, self._credentials.secret_key)
         SigV4Auth(credentials, "s3", "us-east-1").add_auth(request)
 
-        # Use default TLS verification without environment proxies for the cluster tunnel.
-        async with httpx2.AsyncClient(trust_env=False, timeout=30) as client:
-            response = await client.request(method, str(request.url), content=body, headers=dict(request.headers))
+        # Send the signed request without merging cookies retained by the workflow's shared client.
+        signed_request = httpx2.Request(
+            method,
+            str(request.url),
+            content=body,
+            headers=dict(request.headers),
+        )
+        response = await self._client.send(signed_request)
+
+        # Preserve administrative errors and require an object whenever a response body is present.
         if response.is_error:
             raise Error(response.status_code, response.text)
         if not response.content:
@@ -103,11 +111,7 @@ class RustFS:
 
         # A deploy retry can follow a failure before Platform secrets were persisted.
         credentials = s3.Credentials(f"solution-{solution.hex}", secrets.token_hex(20))
-        payload = {
-            "accessKey": credentials.access_key,
-            "secretKey": credentials.secret_key,
-            "policy": self.policy(bucket, solution),
-        }
+        payload = {"accessKey": credentials.access_key, "secretKey": credentials.secret_key, "policy": self.policy(bucket, solution)}
         try:
             await self._request("PUT", "/rustfs/admin/v3/add-service-account", payload)
         except Error as error:
@@ -122,10 +126,7 @@ class RustFS:
 
         # Missing accounts are already converged during failed provisioning and cleanup retries.
         try:
-            await self._request(
-                "DELETE",
-                f"/rustfs/admin/v3/delete-service-account?accessKey=solution-{solution.hex}",
-            )
+            await self._request("DELETE", f"/rustfs/admin/v3/delete-service-account?accessKey=solution-{solution.hex}")
         except Error as error:
             if error.status_code != 404 and "service account not exist" not in str(error):
                 raise
