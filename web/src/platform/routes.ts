@@ -1,6 +1,7 @@
 import { legalPages } from './legal';
 import { adminPages } from './navigation';
-import { useCasePages } from './usecases';
+// Use cases are a work in progress; keep their routes unpublished until ready.
+// import { useCasePages } from './usecases';
 import { componentDocumentation } from './docs';
 import { index, layout, prefix, route, type RouteConfig } from '@react-router/dev/routes';
 
@@ -8,14 +9,16 @@ export default [
     layout('./layouts/Page.tsx', [
         index('./routes/Index.tsx'),
         route('pricing', './routes/Pricing.tsx'),
-        route('use-cases', './routes/usecases/Index.tsx'),
+        // route('use-cases', './routes/usecases/Index.tsx'),
     ]),
+    /* Use cases are a work in progress; retain the route definitions for later.
     layout('./layouts/UseCases.tsx', [
         ...prefix('use-cases', [
             ...useCasePages.map(({ path, module }) => route(path.slice('/use-cases/'.length), module)),
             route('*', '../components/layouts/NotFound.tsx', { id: 'use-cases-not-found' }),
         ]),
     ]),
+    */
     ...prefix('docs', [
         layout('./layouts/Documentation.tsx', [
             index('./routes/docs/Index.tsx'),

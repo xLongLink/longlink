@@ -32,9 +32,11 @@ export function Navbar() {
                                     Docs
                                 </Link>
                                 <Stack className="hidden sm:flex" direction="horizontal" gap={4} vAlign="center">
+                                    {/* Use cases are a work in progress; keep hidden until ready.
                                     <Link href="/use-cases/" color="secondary" isStandalone weight="medium">
                                         Use cases
                                     </Link>
+                                    */}
                                     <Link href="/docs/" color="secondary" isStandalone weight="medium">
                                         Documentation
                                     </Link>
