@@ -2,10 +2,10 @@ import ssl
 import json
 import httpx2
 import asyncio
+from src import auth
 from uuid import UUID
 from fastapi import Depends, Request, Response, APIRouter, HTTPException
 from longlink import identity
-from src.auth import authuser, get_session
 from src.utils import roles
 from contextlib import AsyncExitStack
 from src.kubernetes import namespace
@@ -14,8 +14,6 @@ from src.models.roles import SOLUTION_PROXY_METHOD_ROLES
 from fastapi.responses import JSONResponse, StreamingResponse
 from src.models.statuses import Status
 from src.database.services import organizations
-from sqlalchemy.ext.asyncio import AsyncSession
-from src.database.models.users import User
 
 router = APIRouter()
 BLOCKED_PROXY_CONTENT_TYPES = {"application/xhtml+xml", "image/svg+xml", "text/html"}
@@ -37,9 +35,9 @@ async def runtime_scope() -> AsyncIterator[AsyncExitStack]:
 async def proxy_solution_request(
     request: Request,
     solution_id: UUID,
+    user: auth.CurrentUser,
+    session: auth.Session,
     path: str = "",
-    user: User = Depends(authuser),
-    session: AsyncSession = Depends(get_session),
     runtime: AsyncExitStack = Depends(runtime_scope, scope="request"),
 ) -> Response:
     """Enforce HTTP-method-specific Organization roles before traffic enters its compute gateway.

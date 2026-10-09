@@ -1,6 +1,6 @@
+from src import auth
 from uuid import UUID
 from fastapi import Depends, APIRouter, HTTPException
-from src.auth import authuser, authadmin, get_session, organization_access
 from src.utils import roles, images
 from src.logger import logger
 from src.kubernetes import solutions as solution_resources
@@ -12,7 +12,6 @@ from src.database.services import solutions, registries, organizations
 from src.kubernetes.client import Kubernetes
 from src.models.pagination import Page, Pagination
 from sqlalchemy.ext.asyncio import AsyncSession
-from src.database.models.users import User
 from src.database.models.solutions import Revision, Solution
 
 router = APIRouter()
@@ -46,9 +45,9 @@ async def update_candidate(
 
 @router.get("/solutions", response_model=Page[SolutionResponse])
 async def list_solutions(
-    _user: User = Depends(authadmin),
+    _user: auth.PlatformAdmin,
+    session: auth.Session,
     pagination: Pagination = Depends(),
-    session: AsyncSession = Depends(get_session),
 ):
     """Return all solutions for administrator views."""
 
@@ -56,38 +55,30 @@ async def list_solutions(
     return {"items": items, "total": total}
 
 
-@router.post("/organizations/{organization_id}/solutions", status_code=204)
+@router.post("/organizations/{organization_id}/solutions", status_code=204)  # noqa: FAST003 - Consumed by auth.OrganizationMaintainer.
 async def create_solution(
-    organization_id: UUID,
     payload: SolutionCreate,
-    user: User = Depends(authuser),
-    session: AsyncSession = Depends(get_session),
+    membership: auth.OrganizationMaintainer,
+    session: auth.Session,
 ):
     """Create Solution state and queue its explicit deployment lifecycle."""
 
-    # Resolve access inside the handler so body validation can reject malformed payloads first.
-    membership = await organization_access(organization_id, user, session)
-
-    # Solution creation provisions runtime resources, so it requires elevated organization permissions.
-    if not roles.atleast(membership.role, OrganizationRoles.maintain):
-        raise HTTPException(status_code=403, detail="Permission required")
-
     # Resolve immutable image metadata before creating durable Solution state.
-    metadata, connection_id = await registries.inspect(session, organization_id, payload.image)
+    metadata, connection_id = await registries.inspect(session, membership.organization_id, payload.image)
 
     await solutions.create(
         session,
-        organization_id,
+        membership.organization_id,
         payload,
         metadata=metadata,
-        user_id=user.id,
+        user_id=membership.user_id,
         registry_connection_id=connection_id,
     )
     await session.commit()
 
 
 @router.get("/solutions/{solution_id}/update", response_model=SolutionUpdateCheck)
-async def check_update(solution_id: UUID, user: User = Depends(authuser), session: AsyncSession = Depends(get_session)):
+async def check_update(solution_id: UUID, user: auth.CurrentUser, session: auth.Session):
     """Inspect the desired release source without changing deployment state."""
 
     _, revision, _, metadata = await update_candidate(session, solution_id, user.id)
@@ -102,9 +93,7 @@ async def check_update(solution_id: UUID, user: User = Depends(authuser), sessio
 
 
 @router.post("/solutions/{solution_id}/update", status_code=204)
-async def apply_update(
-    solution_id: UUID, payload: SolutionPatch, user: User = Depends(authuser), session: AsyncSession = Depends(get_session)
-):
+async def apply_update(solution_id: UUID, payload: SolutionPatch, user: auth.CurrentUser, session: auth.Session):
     """Re-resolve the desired source and deploy a changed image or configuration."""
 
     solution, _, source, metadata = await update_candidate(session, solution_id, user.id, payload.expected_revision_id)
@@ -119,8 +108,8 @@ async def apply_update(
 @router.get("/solutions/{solution_id}/logs", response_model=list[str])
 async def get_solution_logs(
     solution_id: UUID,
-    user: User = Depends(authuser),
-    session: AsyncSession = Depends(get_session),
+    user: auth.CurrentUser,
+    session: auth.Session,
 ):
     """Return recent pod logs for one managed solution."""
 
@@ -147,8 +136,8 @@ async def get_solution_logs(
 @router.delete("/solutions/{solution_id}", status_code=204)
 async def delete_solution(
     solution_id: UUID,
-    user: User = Depends(authuser),
-    session: AsyncSession = Depends(get_session),
+    user: auth.CurrentUser,
+    session: auth.Session,
 ):
     """Mark one Solution absent and queue explicit lifecycle cleanup."""
 

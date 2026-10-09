@@ -1,8 +1,8 @@
 import asyncio
+from src import auth
 from kr8s import ServerError, NotFoundError
 from uuid import UUID
 from fastapi import Depends, APIRouter
-from src.auth import authadmin, get_session
 from src.errors import InvalidError, UnavailableError
 from src.logger import logger
 from src.kubernetes import tls, gateway, storageclasses
@@ -11,15 +11,14 @@ from src.models.computes import ComputeRegistryCreate, ComputeRegistryResponse
 from src.database.services import compute
 from src.kubernetes.client import Kubernetes
 from src.models.pagination import Page, Pagination
-from sqlalchemy.ext.asyncio import AsyncSession
 from src.kubernetes.storage import Storage
 from src.database.models.computes import ComputeRegistry
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(auth.authadmin)])
 
 
-@router.post("/computes", response_model=ComputeRegistryResponse, status_code=201, dependencies=[Depends(authadmin)])
-async def create_compute_registry(payload: ComputeRegistryCreate, session: AsyncSession = Depends(get_session)) -> ComputeRegistry:
+@router.post("/computes", response_model=ComputeRegistryResponse, status_code=201)
+async def create_compute_registry(payload: ComputeRegistryCreate, session: auth.Session) -> ComputeRegistry:
     """Register a compute target after verifying its infrastructure inline."""
 
     # Bound cluster discovery, verification, and connection cleanup so failures return before the browser times out.
@@ -75,18 +74,16 @@ async def create_compute_registry(payload: ComputeRegistryCreate, session: Async
     return candidate
 
 
-@router.get("/computes", response_model=Page[ComputeRegistryResponse], dependencies=[Depends(authadmin)])
-async def list_compute_registries(
-    pagination: Pagination = Depends(), session: AsyncSession = Depends(get_session)
-) -> dict[str, Sequence[ComputeRegistry] | int]:
+@router.get("/computes", response_model=Page[ComputeRegistryResponse])
+async def list_compute_registries(session: auth.Session, pagination: Pagination = Depends()) -> dict[str, Sequence[ComputeRegistry] | int]:
     """Return all registered compute backends."""
 
     items, total = await compute.fetch_page(session, pagination)
     return {"items": items, "total": total}
 
 
-@router.delete("/computes/{registry_id}", status_code=204, dependencies=[Depends(authadmin)])
-async def delete_compute_registry(registry_id: UUID, session: AsyncSession = Depends(get_session)) -> None:
+@router.delete("/computes/{registry_id}", status_code=204)
+async def delete_compute_registry(registry_id: UUID, session: auth.Session) -> None:
     """Remove one unused compute registration without changing its cluster."""
 
     # Remove only a registered Compute with no Organization dependency.

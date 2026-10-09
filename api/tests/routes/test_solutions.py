@@ -213,11 +213,11 @@ async def test_create_app_rejects_invalid_image_metadata(
     await assert_no_new_operations(previous_operations)
 
 
-async def test_create_app_validates_payload_before_checking_organization_access(
+async def test_create_app_checks_organization_access_before_validating_payload(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Reject an invalid request body before inspecting membership or image metadata."""
+    """Reject missing Organization access even when the request body is malformed."""
 
     # Arrange
     organization_id = UUID(int=1)
@@ -227,13 +227,7 @@ async def test_create_app_validates_payload_before_checking_organization_access(
 
         raise AssertionError("invalid solution payload must not inspect image metadata")
 
-    async def unexpected_organization_access(*_args: object, **_kwargs: object) -> object:
-        """Fail if invalid input reaches Organization authorization."""
-
-        raise AssertionError("invalid solution payload must not inspect organization access")
-
     monkeypatch.setattr("src.routes.v1.solutions.images.required_metadata", unexpected_metadata)
-    monkeypatch.setattr("src.routes.v1.solutions.organization_access", unexpected_organization_access)
 
     # Act
     response = await clients[1].post(
@@ -242,7 +236,8 @@ async def test_create_app_validates_payload_before_checking_organization_access(
     )
 
     # Assert
-    assert response.status_code == 422
+    assert response.status_code == 403
+    assert response.json() == {"detail": "Access required"}
 
 
 async def test_create_app_rejects_non_member_without_creating_state(

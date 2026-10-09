@@ -1,15 +1,14 @@
+from src import auth
 from fastapi import Depends, APIRouter
-from src.auth import authadmin, get_session
 from src.database.services import operations
 from src.models.operations import OperationResponse
 from src.models.pagination import Page, Pagination
-from sqlalchemy.ext.asyncio import AsyncSession
 
-router = APIRouter(dependencies=[Depends(authadmin)])
+router = APIRouter(dependencies=[Depends(auth.authadmin)])
 
 
 @router.get("/operations", response_model=Page[OperationResponse])
-async def list_operations(pagination: Pagination = Depends(), session: AsyncSession = Depends(get_session)):
+async def list_operations(session: auth.Session, pagination: Pagination = Depends()):
     """Return Platform reconciliation history for administrators."""
 
     items, total = await operations.fetch_page(session, pagination)
