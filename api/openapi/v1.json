@@ -3621,9 +3621,6 @@
             "format": "uuid",
             "title": "Id"
           },
-          "organization": {
-            "$ref": "#/components/schemas/OrganizationIdentity"
-          },
           "name": {
             "type": "string",
             "title": "Name"
@@ -3643,9 +3640,12 @@
             ],
             "title": "Description"
           },
-          "image_desired": {
-            "type": "string",
-            "title": "Image Desired"
+          "status": {
+            "$ref": "#/components/schemas/Status"
+          },
+          "deployment_pending": {
+            "type": "boolean",
+            "title": "Deployment Pending"
           },
           "desired_revision_id": {
             "anyOf": [
@@ -3659,6 +3659,13 @@
             ],
             "title": "Desired Revision Id"
           },
+          "organization": {
+            "$ref": "#/components/schemas/OrganizationIdentity"
+          },
+          "image_desired": {
+            "type": "string",
+            "title": "Image Desired"
+          },
           "deployed_revision_id": {
             "anyOf": [
               {
@@ -3671,13 +3678,6 @@
             ],
             "title": "Deployed Revision Id"
           },
-          "status": {
-            "$ref": "#/components/schemas/Status"
-          },
-          "deployment_pending": {
-            "type": "boolean",
-            "title": "Deployment Pending"
-          },
           "created_at": {
             "type": "string",
             "format": "date-time",
@@ -3687,15 +3687,15 @@
         "type": "object",
         "required": [
           "id",
-          "organization",
           "name",
           "slug",
           "description",
-          "image_desired",
-          "desired_revision_id",
-          "deployed_revision_id",
           "status",
           "deployment_pending",
+          "desired_revision_id",
+          "organization",
+          "image_desired",
+          "deployed_revision_id",
           "created_at"
         ],
         "title": "SolutionResponse",

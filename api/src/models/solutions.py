@@ -2,11 +2,10 @@ import re
 from uuid import UUID
 from typing import Annotated
 from datetime import datetime
-from pydantic import Field, BaseModel, ConfigDict, AfterValidator, field_validator
+from pydantic import Field, BaseModel, AfterValidator, field_validator
 from src.models.types import Image, MinScale
 from src.models.metadata import LongLinkMetadata
-from src.models.statuses import Status
-from src.models.resources import OrganizationIdentity
+from src.models.resources import OrganizationIdentity, OrganizationSolutionSummary
 
 
 def validate_idle_seconds(value: int) -> int:
@@ -56,19 +55,12 @@ def validate_environment_variables(envs: dict[str, str]) -> dict[str, str]:
 class SolutionCreate(BaseModel):
     """Validate solution creation metadata and release configuration."""
 
-    envs: dict[str, str] = Field(default_factory=dict)
+    envs: Annotated[dict[str, str], AfterValidator(validate_environment_variables)] = Field(default_factory=dict)
     image: Image
     name: str = Field(min_length=1, max_length=100)
     min_scale: MinScale = 0
     idle_seconds: IdleSeconds = 60
     description: str | None = Field(default=None, max_length=255)
-
-    @field_validator("envs")
-    @classmethod
-    def validate_envs(cls, envs: dict[str, str]) -> dict[str, str]:
-        """Validate solution environment names, ownership, and bounded value sizes."""
-
-        return validate_environment_variables(envs)
 
 
 class SolutionPatch(BaseModel):
@@ -99,30 +91,18 @@ class SolutionUpdateCheck(BaseModel):
     metadata: LongLinkMetadata
 
 
-class SolutionResponse(BaseModel):
+class SolutionResponse(OrganizationSolutionSummary):
     """Represent one solution in API responses."""
-
-    model_config = ConfigDict(from_attributes=True)
-
-    # Identifier
-    id: UUID
 
     # Relationships
     organization: OrganizationIdentity
 
     # Metadata
-    name: str
-    slug: str
-    description: str | None
+    description: str | None = Field(...)
 
     # Desired release
     image_desired: str
-    desired_revision_id: UUID | None
     deployed_revision_id: UUID | None
-
-    # State
-    status: Status
-    deployment_pending: bool
 
     # Audit
     created_at: datetime

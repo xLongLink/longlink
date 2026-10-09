@@ -387,15 +387,15 @@ export const zPageOrganizationIdentity = z.object({
  */
 export const zSolutionResponse = z.object({
     id: z.uuid(),
-    organization: zOrganizationIdentity,
     name: z.string(),
     slug: z.string(),
     description: z.string().nullable(),
-    image_desired: z.string(),
-    desired_revision_id: z.uuid().nullable(),
-    deployed_revision_id: z.uuid().nullable(),
     status: zStatus,
     deployment_pending: z.boolean(),
+    desired_revision_id: z.uuid().nullable(),
+    organization: zOrganizationIdentity,
+    image_desired: z.string(),
+    deployed_revision_id: z.uuid().nullable(),
     created_at: z.iso.datetime()
 });
 

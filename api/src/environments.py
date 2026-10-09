@@ -25,7 +25,7 @@ class Env(BaseSettings):
 
     # Authentication email delivery
     SMTP_FROM: Email = "no-reply@longlink.dev"
-    SMTP_HOST: str | None = None
+    SMTP_HOST: str
     SMTP_PORT: int = Field(default=587, ge=1, le=65535)
     SMTP_TRANSPORT: Literal["plain", "starttls", "tls"] = "starttls"
     SMTP_PASSWORD: str | None = None
@@ -57,7 +57,7 @@ class Env(BaseSettings):
         self.PUBLIC_URL = str(public).rstrip("/")
 
         # All authentication workflows use a real SMTP server, including local mail capture.
-        if self.SMTP_HOST is None or not self.SMTP_HOST.strip():
+        if not self.SMTP_HOST.strip():
             raise ValueError("SMTP_HOST is required")
 
         # Authenticated SMTP requires a complete credential pair and a delivery host.

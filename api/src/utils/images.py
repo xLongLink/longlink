@@ -1,17 +1,17 @@
 import json
 import httpx2
 import asyncio
+import pydantic_core
 from pydantic import TypeAdapter
 from src.errors import NotFoundError, ForbiddenError
 from src.logger import logger
 from collections.abc import Mapping
 from src.models.types import IMAGE_DIGEST_PATTERN, Image
-from src.models.metadata import LongLinkMetadata, EnvironmentMetadata
+from src.models.metadata import LongLinkMetadata
 from src.database.models.registries import RegistryConnection
 
 IMAGE_METADATA_MAX_BYTES = 1024 * 1024
 LABELS_ADAPTER = TypeAdapter(dict[str, str])
-ENVIRONMENTS_ADAPTER = TypeAdapter(list[EnvironmentMetadata])
 MANIFEST_ACCEPT = (
     "application/vnd.docker.distribution.manifest.v2+json, application/vnd.oci.image.manifest.v1+json, "
     "application/vnd.docker.distribution.manifest.list.v2+json, application/vnd.oci.image.index.v1+json"
@@ -204,17 +204,15 @@ async def inspect(
         raw_labels = image_config.get("Labels")
         labels: dict[str, str] = {} if raw_labels is None else LABELS_ADAPTER.validate_python(raw_labels)
 
-        result = LongLinkMetadata(
-            image=Image(f"{image.registry}/{image.repository}@{digest}"),
-            description=labels.get("org.opencontainers.image.description"),
-        )
-
         # Prefer the domain-namespaced label while supporting previously built images.
         environments = labels.get("dev.longlink.environments", labels.get("longlink.environments"))
-        if environments is not None:
-            result.environments = ENVIRONMENTS_ADAPTER.validate_json(environments)
 
-        return result
+        # Validate the complete image metadata before returning it to release workflows.
+        return LongLinkMetadata(
+            image=Image(f"{image.registry}/{image.repository}@{digest}"),
+            description=labels.get("org.opencontainers.image.description"),
+            environments=pydantic_core.from_json(environments) if environments is not None else [],
+        )
 
-    # The manifest traversal always returns inside the loop.
+    # Keep an explicit fallback for the bounded traversal's return contract.
     return None
