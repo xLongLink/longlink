@@ -121,8 +121,11 @@ export default defineConfig(({ mode }) => {
         server: {
             host: devServerHost,
             port: devServerPort,
+
+            // Route API calls and canonical MCP resource discovery to the local backend.
             proxy: {
                 '/api': 'http://localhost:8000',
+                '/.well-known/oauth-protected-resource': 'http://localhost:8000',
             },
         },
 

@@ -11,6 +11,7 @@ import { Avatar } from '@/components/ui/Avatar';
 import { useState, useTransition } from 'react';
 import { Badge } from '@astryxdesign/core/Badge';
 import { Button } from '@astryxdesign/core/Button';
+import { useToast } from '@astryxdesign/core/Toast';
 import { Divider } from '@astryxdesign/core/Divider';
 import { Heading } from '@astryxdesign/core/Heading';
 import { ApiBoundary } from '@/components/ApiBoundary';
@@ -762,7 +763,7 @@ function SolutionsSection({
                     </Stack>
                 </Dialog>
             )}
-            {/* Download only the selected Solution's package, without embedding credentials. */}
+            {/* Offer direct MCP connection details and the selected Solution's credential-free package. */}
             {mcp && (
                 <Dialog
                     aria-label="Model Context Protocol"
@@ -793,13 +794,13 @@ function SolutionsSection({
                                 </LayoutPanel>
                             }
                             content={
-                                <LayoutContent padding={8}>
+                                <LayoutContent padding={8} isScrollable>
                                     <Stack
-                                        height="100%"
+                                        minHeight="100%"
                                         justify="center"
                                         width="max-content"
                                         maxWidth="100%"
-                                        gap={10}
+                                        gap={6}
                                         className="mx-auto"
                                     >
                                         <Stack gap={2} align="center">
@@ -815,6 +816,9 @@ function SolutionsSection({
                                         </Stack>
                                         {/* Match the creation dialog's content-sized column and control width. */}
                                         <Stack gap={4} width={0} className="min-w-full">
+                                            <ApiBoundary key={mcp.id}>
+                                                <SolutionMcpUrl solutionId={mcp.id} onClose={() => setMcp(null)} />
+                                            </ApiBoundary>
                                             <Button
                                                 as="a"
                                                 href={`/api/v1/solutions/${mcp.id}/plugin`}
@@ -855,6 +859,32 @@ function SolutionsSection({
                 onClose={() => setDeletion(null)}
             />
         </>
+    );
+}
+
+/** Reads the canonical public connection URL without guessing the deployment's origin. */
+function SolutionMcpUrl({ solutionId, onClose }: { solutionId: string; onClose: () => void }) {
+    const showToast = useToast();
+
+    // Reuse OAuth discovery so the copied URL matches the plugin's configured public address.
+    const [{ resource }] = useApi(
+        `/.well-known/oauth-protected-resource/api/v1/solutions/${solutionId}/proxy/mcp`,
+        schemas.zResourceMetadata
+    );
+
+    return (
+        <Button
+            label="Copy MCP server URL"
+            width="100%"
+            clickAction={async () => {
+                // Copy only the canonical connection URL, without credentials.
+                await navigator.clipboard.writeText(resource);
+
+                // Confirm a successful copy and dismiss the MCP dialog.
+                showToast({ body: 'Copied' });
+                onClose();
+            }}
+        />
     );
 }
 
