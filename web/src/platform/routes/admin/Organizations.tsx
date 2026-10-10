@@ -1,4 +1,3 @@
-import type { z } from 'zod';
 import { api } from '@/lib/api';
 import { useState } from 'react';
 import { Info } from 'lucide-react';
@@ -15,7 +14,7 @@ import { Pagination } from '@astryxdesign/core/Pagination';
 import { Table, proportional } from '@astryxdesign/core/Table';
 import { DeletionDialog } from '@/platform/components/Deletion';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
-import type { zPageOrganizationIdentity } from '@/lib/generated/platform-api-v1/zod.gen';
+import { zPageOrganizationIdentity } from '@/lib/generated/platform-api-v1/zod.gen';
 
 /** Lists organizations and confirms administrator deletion. */
 export default function Organizations() {
@@ -25,8 +24,9 @@ export default function Organizations() {
         { kind: 'metadata'; id: string } | { kind: 'deletion'; item: { id: string; name: string } } | null
     >(null);
 
-    const [organizations, invalidate] = useApi<z.output<typeof zPageOrganizationIdentity>>(
-        `/api/v1/organizations?page=${page}&page_size=25`
+    const [organizations, invalidate] = useApi(
+        `/api/v1/organizations?page=${page}&page_size=25`,
+        zPageOrganizationIdentity
     );
 
     // Use current metadata and clear missing selections so returning to a page cannot reopen the dialog.

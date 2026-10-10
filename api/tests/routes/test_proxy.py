@@ -253,7 +253,11 @@ async def test_solution_proxy_strips_credential_headers_and_pins_gateway_tls(
 
         captured["upstream_headers"] = {key.lower(): value for key, value in request.headers.items()}
 
-        return make_upstream(200, {"content-type": "text/plain"}, b"proxied")
+        return make_upstream(
+            200,
+            {"content-type": "text/plain", "mcp-session-id": "private-session", "mcp-protocol-version": "2025-11-25"},
+            b"proxied",
+        )
 
     monkeypatch.setattr(ssl, "create_default_context", record_context)
     monkeypatch.setattr(httpx2, "AsyncClient", record_client)
@@ -268,6 +272,11 @@ async def test_solution_proxy_strips_credential_headers_and_pins_gateway_tls(
             "authorization": "Bearer browser-session",
             "x-forwarded-for": "203.0.113.7",
             "x-forwarded-host": "attacker.example",
+            "mcp-session-id": "caller-session",
+            "mcp-protocol-version": "2025-11-25",
+            "mcp-method": "tools/call",
+            "mcp-name": "private_tool",
+            "last-event-id": "caller-event",
         },
     )
 
@@ -281,10 +290,79 @@ async def test_solution_proxy_strips_credential_headers_and_pins_gateway_tls(
     assert "cookie" not in upstream_headers
     assert "x-forwarded-for" not in upstream_headers
     assert "x-forwarded-host" not in upstream_headers
+    assert "mcp-session-id" not in upstream_headers
+    assert "mcp-protocol-version" not in upstream_headers
+    assert "mcp-method" not in upstream_headers
+    assert "mcp-name" not in upstream_headers
+    assert "last-event-id" not in upstream_headers
+    assert "mcp-session-id" not in response.headers
+    assert "mcp-protocol-version" not in response.headers
     assert captured.get("cadata") == "test-gateway-ca"
     assert captured.get("follow_redirects") is False
     assert captured.get("trust_env") is False
     assert captured.get("timeout") == 300.0
+
+
+@pytest.mark.parametrize("path", ["mcp", "mcp/"])
+async def test_solution_proxy_preserves_mcp_transport_metadata(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+    monkeypatch: pytest.MonkeyPatch,
+    path: str,
+) -> None:
+    """Forward resumability and negotiation metadata without exposing browser credentials."""
+
+    # Arrange
+    solution, _ = await create_running_solution(users[0])
+    captured: dict[str, str] = {}
+
+    async def send(_transport: object, request: httpx2.Request) -> httpx2.Response:
+        """Record transport metadata at the external gateway boundary."""
+
+        captured.update(request.headers)
+        return make_upstream(
+            200,
+            {
+                "content-type": "application/json",
+                "mcp-session-id": "negotiated-session",
+                "mcp-protocol-version": "2025-11-25",
+                "set-cookie": "runtime=must-not-reach-browser",
+            },
+            b'{"jsonrpc":"2.0","id":1,"result":{"tools":[]}}',
+        )
+
+    monkeypatch.setattr(httpx2.AsyncHTTPTransport, "handle_async_request", send)
+
+    # Act
+    response = await clients[0].post(
+        f"/api/v1/solutions/{solution.id}/proxy/{path}",
+        headers={
+            "accept": "application/json, text/event-stream",
+            "mcp-session-id": "caller-session",
+            "mcp-protocol-version": "2025-11-25",
+            "mcp-method": "tools/list",
+            "mcp-name": "list_tools",
+            "last-event-id": "caller-event",
+            "x-longlink-identity": "forged-identity",
+        },
+        json={"jsonrpc": "2.0", "id": 1, "method": "tools/list"},
+    )
+
+    # Assert
+    assert response.status_code == 200
+    assert response.json() == {"jsonrpc": "2.0", "id": 1, "result": {"tools": []}}
+    assert captured["accept"] == "application/json, text/event-stream"
+    assert captured["mcp-session-id"] == "caller-session"
+    assert captured["mcp-protocol-version"] == "2025-11-25"
+    assert captured["mcp-method"] == "tools/list"
+    assert captured["mcp-name"] == "list_tools"
+    assert captured["last-event-id"] == "caller-event"
+    assert identity.identity_token_user(captured["x-longlink-identity"], "test-identity-secret-01234567890") == users[0].id
+    assert "authorization" not in captured
+    assert "cookie" not in captured
+    assert response.headers["mcp-session-id"] == "negotiated-session"
+    assert response.headers["mcp-protocol-version"] == "2025-11-25"
+    assert "set-cookie" not in response.headers
 
 
 async def test_solution_proxy_sanitizes_json_upstream_error(

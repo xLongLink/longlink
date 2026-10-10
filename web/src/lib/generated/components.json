@@ -483,7 +483,7 @@
     },
     {
         "name": "Link",
-        "introduction": "Displays a destination without granting a View top-level browser navigation.",
+        "introduction": "Navigates within the Solution or opens an external HTTP(S) URL in a new tab.",
         "practices": [
             {
                 "guidance": true,

@@ -8,6 +8,7 @@ from src.mcp import MCPMiddleware
 from longlink import errors as solution_errors
 from src.utils import jobs
 from src.routes import v1, mcp, branding
+from src.kubernetes import client
 from collections.abc import Callable, Awaitable, AsyncGenerator
 from longlink.logger import ApiAccessFilter
 from src.environments import env
@@ -36,14 +37,22 @@ async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:
         yield
     finally:
         try:
-            # Always stop database work before releasing its shared database pool.
+            # Always stop background consumers before releasing their shared transports and database pool.
             for task in tasks:
                 task.cancel()
-            for task in tasks:
-                with contextlib.suppress(asyncio.CancelledError):
-                    await task
+
+            # Join every worker before propagating failure so another worker's cleanup can still finish.
+            results = await asyncio.gather(*tasks, return_exceptions=True)
+            for result in results:
+                if isinstance(result, BaseException) and not isinstance(result, asyncio.CancelledError):
+                    raise result
         finally:
-            await dispose_engine()
+            try:
+                # Kubernetes requests and port forwards have finished before their shared transport closes.
+                await client.dispose_clients()
+            finally:
+                # A transport cleanup failure must not prevent database pool disposal.
+                await dispose_engine()
 
 
 app = FastAPI(

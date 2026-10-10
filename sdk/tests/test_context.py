@@ -1,3 +1,4 @@
+import httpx2
 import pytest
 import asyncio
 from uuid import UUID
@@ -176,7 +177,9 @@ def test_production_context_requires_signed_identity_except_for_probes() -> None
 
         await socket.accept()
 
-    headers = identity_headers(UUID("00000000-0000-0000-0000-000000000001"))
+    user_id = UUID("00000000-0000-0000-0000-000000000001")
+    headers = identity_headers(user_id)
+    wrong_key_token = identity.create_identity_token(user_id, "wrong-identity-secret-01234567890")
     client = TestClient(app)
 
     # Direct gateway requests have no valid Platform assertion; proxy requests do.
@@ -185,6 +188,9 @@ def test_production_context_requires_signed_identity_except_for_probes() -> None
         assert anonymous.status_code == 401
         assert anonymous.json() == {"detail": "Authentication required"}
         assert client.get("/views.json", headers={"x-longlink-identity": "invalid-token"}).status_code == 401
+        forged = client.get("/views.json", headers={"x-longlink-identity": wrong_key_token})
+        assert forged.status_code == 401
+        assert forged.json() == {"detail": "Authentication required"}
         authorized = client.get("/views.json", headers=headers)
         assert authorized.status_code == 200
         assert authorized.json() == {"authenticated": True}
@@ -206,6 +212,8 @@ async def test_context_middleware_isolates_concurrent_audit_identities() -> None
     # Arrange
     first_id = UUID("00000000-0000-0000-0000-000000000006")
     second_id = UUID("00000000-0000-0000-0000-000000000007")
+    first_outer_id = UUID("00000000-0000-0000-0000-000000000008")
+    second_outer_id = UUID("00000000-0000-0000-0000-000000000009")
     both_requests_arrived = asyncio.Barrier(2)
     app = FastAPI()
     context.install_context_middleware(app, IDENTITY_SECRET)
@@ -219,12 +227,25 @@ async def test_context_middleware_isolates_concurrent_audit_identities() -> None
         user_id = audit.current_actor.get()
         return {"user_id": str(user_id) if user_id is not None else None}
 
+    # Send requests in their own coroutine contexts and check restoration there.
+    transport = httpx2.ASGITransport(app=app)
+    client = httpx2.AsyncClient(transport=transport, base_url="http://test")
+
+    async def request(user_id: UUID, outer_id: UUID) -> httpx2.Response:
+        """Verify the middleware restores the caller's actor before returning."""
+
+        # Assert restoration in the same task that executes the ASGI middleware.
+        with audit.actor(outer_id):
+            response = await client.get("/", headers=identity_headers(user_id))
+            assert audit.current_actor.get() == outer_id
+            return response
+
     # Act
-    with TestClient(app) as client:
+    async with client:
         async with asyncio.timeout(5):
             first_response, second_response = await asyncio.gather(
-                asyncio.to_thread(client.get, "/", headers=identity_headers(first_id)),
-                asyncio.to_thread(client.get, "/", headers=identity_headers(second_id)),
+                request(first_id, first_outer_id),
+                request(second_id, second_outer_id),
             )
 
     # Assert

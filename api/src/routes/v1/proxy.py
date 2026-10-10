@@ -103,6 +103,7 @@ async def proxy_solution_request(
                         value = request.headers.get(name)
                         if value is not None:
                             headers[name] = value
+
                 query = request.url.query
                 upstream_request = client.build_request(
                     request.method,
@@ -127,6 +128,7 @@ async def proxy_solution_request(
         "content-security-policy": "sandbox; default-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'",
         "x-content-type-options": "nosniff",
     }
+
     # Return only explicitly allowed MCP negotiation metadata to the authenticated client.
     if is_mcp:
         for name in ("mcp-session-id", "mcp-protocol-version"):
@@ -136,6 +138,10 @@ async def proxy_solution_request(
 
     if upstream.status_code >= 400:
         detail = "The Solution could not complete the request. Please try again later."
+
+        # Explain browser navigation failures without exposing raw JSON-RPC diagnostics.
+        if is_mcp and request.method == "GET" and upstream.status_code == 400 and not request.headers.get("mcp-session-id"):
+            detail = "This is an MCP endpoint, not a browser page. Connect using an MCP client to initialize a session."
 
         # Only explicitly public JSON details cross the boundary; never forward raw diagnostics.
         try:
@@ -166,7 +172,7 @@ async def proxy_solution_request(
     ):
         raise HTTPException(status_code=502, detail="Solution proxy returned an unsupported content type")
 
-    # Only content type crosses the runtime-to-browser boundary.
+    # Preserve content type alongside the explicitly allowed MCP transport metadata.
     if response_content_type is not None:
         response_headers["content-type"] = response_content_type
 

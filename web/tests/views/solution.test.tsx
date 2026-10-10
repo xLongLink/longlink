@@ -144,6 +144,53 @@ describe('SolutionRuntime', () => {
         }
     });
 
+    it.each([
+        { name: 'source window', overrides: { source: window } },
+        { name: 'origin', overrides: { origin: 'https://attacker.example' } },
+        { name: 'session', overrides: { data: 'wrong-session' } },
+    ])('rejects a handshake with the wrong $name without consuming a valid handshake', async ({ overrides }) => {
+        // Arrange
+        vi.useFakeTimers();
+        const source = 'export default function Home() { return <Text>Home</Text>; }';
+        stubFetch((url) =>
+            url.endsWith('/views.json') ? Response.json([view('home.jsx', '/home')]) : sourceResponse(source)
+        );
+        const output = await renderRuntime('/home');
+        await vi.waitFor(async () => {
+            await act(async () => {});
+            expect(output.querySelector('iframe')?.srcdoc).toContain('Content-Security-Policy');
+        });
+        const frame = output.querySelector('iframe');
+
+        if (!frame?.contentWindow) throw new Error('Missing isolated frame');
+        const session = frame.srcdoc.match(/__VIEW_SESSION__="([^"]+)"/)?.[1];
+
+        if (!session) throw new Error('Missing bootstrap session');
+
+        // Observe the real capability transfer without replacing its implementation.
+        const transfer = vi.spyOn(frame.contentWindow, 'postMessage');
+        const handshake = { source: frame.contentWindow, origin: 'null', data: session };
+
+        try {
+            // Act
+            window.dispatchEvent(new MessageEvent('message', { ...handshake, ...overrides }));
+
+            // Assert
+            // Window dispatch is synchronous, so rejection must not transfer a capability.
+            expect(transfer).not.toHaveBeenCalled();
+
+            // A correctly authenticated bootstrap must still acquire its port and cancel the deadline.
+            window.dispatchEvent(new MessageEvent('message', handshake));
+            expect(transfer).toHaveBeenCalledOnce();
+            expect(transfer.mock.calls[0]?.[0]).toEqual({ session, source, params: {} });
+            await act(async () => vi.advanceTimersByTimeAsync(10_000));
+            expect(output.querySelector('iframe')).toBe(frame);
+        } finally {
+            // Restore the transport observer even if a security assertion fails.
+            transfer.mockRestore();
+        }
+    });
+
     it('keeps a custom manifest URL and fetches JSX beside it without executing it in the host', async () => {
         // Arrange
         const requests: Request[] = [];

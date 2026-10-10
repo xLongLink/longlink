@@ -71,7 +71,7 @@ async def delete(session: AsyncSession, organization_id: UUID, connection_id: UU
         raise NotFoundError("Registry connection not found")
 
     # Retained deployment revisions must keep their registry credentials available.
-    dependency = await session.scalar(select(Revision.id).where(col(Revision.registry_connection_id) == connection_id).limit(1))
+    dependency = await session.scalar(select(col(Revision.id)).where(col(Revision.registry_connection_id) == connection_id).limit(1))
     if dependency is not None:
         raise ConflictError("Registry connection is used by retained Solution revisions")
     await session.delete(connection)

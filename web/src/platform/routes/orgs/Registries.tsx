@@ -20,7 +20,7 @@ type RegistryAction = { kind: 'create' } | { kind: 'delete'; connection: Registr
 
 /** Lists organization-owned registry connections without loading credentials. */
 export default function Registries({ base, canMaintain }: { base: string; canMaintain: boolean }) {
-    const [connections, invalidate] = useApi<Registry[]>(`${base}/registries`);
+    const [connections, invalidate] = useApi(`${base}/registries`, schemas.zRegistryResponse.array());
     const [action, setAction] = useState<RegistryAction | null>(null);
 
     // Retain the settings shell's 260px navigation and show dense, edge-to-edge rows.

@@ -97,8 +97,7 @@ function SettingsPage({ user }: { user: z.output<typeof schemas.zUserSummary> })
 function OrganizationSettings() {
     const [creating, setCreating] = useState(false);
 
-    const [memberships, invalidate] =
-        useApi<z.output<typeof schemas.zUserOrganizationMembership>[]>('/api/v1/me/organizations');
+    const [memberships, invalidate] = useApi('/api/v1/me/organizations', schemas.zUserOrganizationMembership.array());
 
     return (
         <>
