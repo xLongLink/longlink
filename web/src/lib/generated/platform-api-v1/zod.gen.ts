@@ -91,11 +91,11 @@ export const zBodyRevokeApiV1McpRevokePost = z.object({
 /**
  * ClientRegistration
  *
- * Accept only public authorization-code clients with fixed safe callbacks.
+ * Negotiate public authorization-code clients with fixed safe callbacks.
  */
 export const zClientRegistration = z.object({
     client_name: z.string().min(1).max(128).optional().default('MCP client'),
-    grant_types: z.tuple([z.literal('authorization_code')]).optional().default(['authorization_code']),
+    grant_types: z.array(z.enum(['authorization_code', 'refresh_token'])).min(1).max(2).optional().default(['authorization_code']),
     redirect_uris: z.array(z.string()).min(1).max(10),
     response_types: z.tuple([z.literal('code')]).optional().default(['code']),
     token_endpoint_auth_method: z.literal('none').optional().default('none')
