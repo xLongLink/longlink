@@ -378,14 +378,18 @@ async def test_delete_organization_requires_owner_or_platform_admin(
     async with session_scope() as session:
         session.add(UserOrganization(user_id=org_admin.id, organization_id=owned_organization.id, role=OrganizationRoles.admin))
         await session.commit()
+    previous_operations = await fetch_operations()
 
     # Act
     non_owner_response = await clients[1].delete(f"/api/v1/organizations/{owned_organization.id}")
-    platform_admin_response = await clients[0].delete(f"/api/v1/organizations/{admin_owned_organization.id}")
 
     # Assert
     assert non_owner_response.status_code == 403
     assert non_owner_response.json() == {"detail": "Permission required"}
+    await assert_no_new_operations(previous_operations)
+
+    # Verify a platform administrator can delete without Organization membership.
+    platform_admin_response = await clients[0].delete(f"/api/v1/organizations/{admin_owned_organization.id}")
     assert platform_admin_response.status_code == 202
     async with session_scope() as session:
         protected_organization = await session.get(Organization, owned_organization.id)

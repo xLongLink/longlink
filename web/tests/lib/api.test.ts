@@ -23,6 +23,36 @@ describe('api error mapping', () => {
         });
     });
 
+    it('reports validation locations and messages without submitted values or error context', async () => {
+        // Arrange
+        vi.stubGlobal('fetch', async () =>
+            Response.json(
+                {
+                    detail: [
+                        {
+                            loc: ['body', 'envs', 'API_KEY'],
+                            msg: 'Invalid API key',
+                            input: 'submitted-secret',
+                            ctx: { error: 'sensitive internal diagnostic' },
+                        },
+                    ],
+                },
+                { status: 422 }
+            )
+        );
+
+        // Act
+        const request = api.get('https://api.example/organizations');
+
+        // Assert
+        await expect(request).rejects.toBeInstanceOf(ApiError);
+        await expect(request).rejects.toMatchObject({
+            message: 'envs.API_KEY: Invalid API key',
+            status: 422,
+            url: 'https://api.example/organizations',
+        });
+    });
+
     it.each([
         { name: 'blank detail', response: () => Response.json({ detail: '   ' }, { status: 422 }) },
         { name: 'missing detail', response: () => Response.json({}, { status: 500 }) },

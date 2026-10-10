@@ -18,8 +18,19 @@ describe('viewsSchema', () => {
         expect(viewsSchema.safeParse([view({ path })]).success).toBe(false);
     });
 
-    it('rejects duplicate routes', () => {
-        expect(viewsSchema.safeParse([view(), view({ path: 'other.jsx' })])).toMatchObject({
+    it.each([
+        { first: '/home', second: '/home' },
+        { first: '/home', second: '/HOME' },
+        { first: '/issues/:issueId', second: '/issues/:otherId' },
+    ])('rejects colliding routes $first and $second', ({ first, second }) => {
+        // Arrange
+        const views = [view({ route: first }), view({ path: 'other.jsx', route: second })];
+
+        // Act
+        const result = viewsSchema.safeParse(views);
+
+        // Assert
+        expect(result).toMatchObject({
             success: false,
             error: { issues: [{ path: [1, 'route'], message: 'Routes must be unique' }] },
         });
