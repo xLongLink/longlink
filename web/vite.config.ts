@@ -1,6 +1,6 @@
 import tailwindcss from '@tailwindcss/vite';
-import * as catalog from './src/lib/catalog';
 import { defineConfig, loadEnv } from 'vite';
+import * as catalog from './src/lib/catalog-loader';
 import { reactRouter } from '@react-router/dev/vite';
 
 const ignoredPaths = [

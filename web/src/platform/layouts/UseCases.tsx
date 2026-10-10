@@ -1,8 +1,8 @@
 import { Wordmark } from '@/components/Wordmark';
-import Platform from '@/platform/layouts/Platform';
 import { useCasePages } from '@/platform/usecases';
 import { Button } from '@astryxdesign/core/Button';
 import { Outlet, useLocation } from 'react-router';
+import Platform from '@/components/layouts/Platform';
 import { BreadcrumbItem, Breadcrumbs } from '@astryxdesign/core/Breadcrumbs';
 
 /** Renders public use cases with the existing Platform navigation. */

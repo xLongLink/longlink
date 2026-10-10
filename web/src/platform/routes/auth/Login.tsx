@@ -1,6 +1,5 @@
 import { z } from 'zod';
 import { TextField } from './Field';
-import { Seo } from '@/components/Seo';
 import { AuthLayout } from './AuthLayout';
 import { api, ApiError } from '@/lib/api';
 import { useApiError } from '@/lib/errors';
@@ -9,6 +8,7 @@ import { useEffect, useState } from 'react';
 import { NoIndex } from '@/components/NoIndex';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
+import { Seo } from '@/platform/components/Seo';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
 import { useForm, useWatch } from 'react-hook-form';
@@ -50,7 +50,7 @@ export default function Login() {
 
     const { data: oauthAvailability } = useQuery({
         queryKey: ['public-api', '/api/v1/auth/oauth'],
-        queryFn: async ({ signal }) => zOAuthAvailability.parse(await api('/api/v1/auth/oauth', { signal }).json()),
+        queryFn: ({ signal }) => api('/api/v1/auth/oauth', { signal }).json(zOAuthAvailability),
         enabled: !user,
         staleTime: Infinity,
     });

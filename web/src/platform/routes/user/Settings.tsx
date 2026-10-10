@@ -1,25 +1,24 @@
 import type { z } from 'zod';
 import { api } from '@/lib/api';
-import { useState } from 'react';
-import { useApi } from '@/lib/hooks/use-api';
 import { NoIndex } from '@/components/NoIndex';
-import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Avatar } from '@/components/ui/Avatar';
-import { Badge } from '@astryxdesign/core/Badge';
 import { Stack } from '@astryxdesign/core/Stack';
+import { useState, type MouseEvent } from 'react';
 import { Button } from '@astryxdesign/core/Button';
+import { UserRound, Building2 } from 'lucide-react';
 import { Divider } from '@astryxdesign/core/Divider';
 import { Heading } from '@astryxdesign/core/Heading';
-import CreateOrganization from './CreateOrganization';
 import { ApiBoundary } from '@/components/ApiBoundary';
 import { useQueryClient } from '@tanstack/react-query';
+import { useLocation, useNavigate } from 'react-router';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { PageContainer } from '@/components/PageContainer';
 import { useAuthenticatedUser } from '@/lib/hooks/use-user';
-import { Table, proportional } from '@astryxdesign/core/Table';
-import { Menu, MenuSection, MenuItem } from '@/components/ui/Menu';
+import OrganizationManagement from './OrganizationManagement';
+import { Layout, LayoutPanel } from '@astryxdesign/core/Layout';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
+import { SideNav, SideNavItem, SideNavSection } from '@astryxdesign/core/SideNav';
 
 /** Renders account metadata and resets drafts when the authenticated identity changes. */
 export default function Settings() {
@@ -37,6 +36,29 @@ export default function Settings() {
 function SettingsPage({ user }: { user: z.output<typeof schemas.zUserSummary> }) {
     const [name, setName] = useState(user.name);
     const queryClient = useQueryClient();
+    const location = useLocation();
+    const navigate = useNavigate();
+
+    // Unknown fragments select Account without loading organization memberships.
+    const section = location.hash === '#organizations' ? 'organizations' : 'account';
+
+    /** Preserves ordinary-click history pushes while leaving modified clicks to the native link. */
+    function selectSection(event: MouseEvent, id: string) {
+        // Leave prevented and modified activations to the native link.
+        if (
+            event.defaultPrevented ||
+            event.button !== 0 ||
+            event.altKey ||
+            event.ctrlKey ||
+            event.metaKey ||
+            event.shiftKey
+        )
+            return;
+
+        // Push even when the selected fragment is already current, matching the existing Menu behavior.
+        event.preventDefault();
+        void navigate({ pathname: location.pathname, search: location.search, hash: `#${id}` });
+    }
 
     /** Saves the validated account name and refreshes the profile. */
     async function saveAccount() {
@@ -59,9 +81,45 @@ function SettingsPage({ user }: { user: z.output<typeof schemas.zUserSummary> })
                     <Text type="supporting">{user.email}</Text>
                 </Stack>
             </Stack>
-            <Menu>
-                <MenuSection title="Settings" isHeaderHidden>
-                    <MenuItem label="Account" icon="userRound">
+            <Layout
+                height="auto"
+                start={
+                    <LayoutPanel
+                        isScrollable={false}
+                        label="Settings navigation"
+                        padding={0}
+                        role="navigation"
+                        width={260}
+                    >
+                        <SideNav className="h-auto w-full pr-4 [&>div:first-child]:pt-0 [&_.astryx-side-nav-section>div:first-child]:pt-0 [&_.astryx-side-nav-section>div:first-child]:pl-0">
+                            <SideNavSection title="Settings" isHeaderHidden className="pt-0">
+                                <SideNavItem
+                                    as="a"
+                                    href={`${location.pathname}${location.search}#account`}
+                                    icon={<UserRound className="size-4" aria-hidden="true" />}
+                                    isSelected={section === 'account'}
+                                    label="Account"
+                                    onClick={(event) => selectSection(event, 'account')}
+                                />
+                                <SideNavItem
+                                    as="a"
+                                    href={`${location.pathname}${location.search}#organizations`}
+                                    icon={<Building2 className="size-4" aria-hidden="true" />}
+                                    isSelected={section === 'organizations'}
+                                    label="Organizations"
+                                    onClick={(event) => selectSection(event, 'organizations')}
+                                />
+                            </SideNavSection>
+                        </SideNav>
+                    </LayoutPanel>
+                }
+            >
+                <Stack gap={3}>
+                    {section === 'organizations' ? (
+                        <ApiBoundary>
+                            <OrganizationManagement presentation="settings" />
+                        </ApiBoundary>
+                    ) : (
                         <form action={saveAccount}>
                             <Stack gap={4}>
                                 <Stack justify="end" minHeight="var(--size-element-md)">
@@ -81,67 +139,9 @@ function SettingsPage({ user }: { user: z.output<typeof schemas.zUserSummary> })
                                 </Stack>
                             </Stack>
                         </form>
-                    </MenuItem>
-                    <MenuItem label="Organizations" icon="building2">
-                        <ApiBoundary>
-                            <OrganizationSettings />
-                        </ApiBoundary>
-                    </MenuItem>
-                </MenuSection>
-            </Menu>
-        </Stack>
-    );
-}
-
-/** Owns organization management independently of account editing. */
-function OrganizationSettings() {
-    const [creating, setCreating] = useState(false);
-
-    const [memberships, invalidate] = useApi('/api/v1/me/organizations', schemas.zUserOrganizationMembership.array());
-
-    return (
-        <>
-            <Stack gap={4}>
-                <Stack
-                    direction="horizontal"
-                    justify="between"
-                    align="end"
-                    wrap="wrap"
-                    minHeight="var(--size-element-md)"
-                >
-                    <Heading level={2} hasCapsize>
-                        Organizations
-                    </Heading>
-                    <Button label="Create Organization" onClick={() => setCreating(true)} />
+                    )}
                 </Stack>
-                <Divider />
-                <Table
-                    data={memberships}
-                    idKey={(row) => row.organization.id}
-                    hasHover
-                    density="compact"
-                    columns={[
-                        {
-                            key: 'organization',
-                            header: 'Name',
-                            width: proportional(1),
-                            renderCell: (row) => (
-                                <Stack direction="horizontal" gap={3} align="center">
-                                    <Avatar kind="organization" name={row.organization.name} />
-                                    <Stack align="start">
-                                        <Stack direction="horizontal" gap={1} align="center">
-                                            <Link href={`/orgs/${row.organization.slug}`}>{row.organization.name}</Link>
-                                            <Badge label={row.role} />
-                                        </Stack>
-                                        <Text type="supporting">Organization</Text>
-                                    </Stack>
-                                </Stack>
-                            ),
-                        },
-                    ]}
-                />
-            </Stack>
-            <CreateOrganization isOpen={creating} onOpenChange={setCreating} invalidate={invalidate} />
-        </>
+            </Layout>
+        </Stack>
     );
 }

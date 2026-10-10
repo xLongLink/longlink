@@ -1,7 +1,7 @@
 import { Outlet } from 'react-router';
 import type { ReactNode } from 'react';
 import { Link } from '@astryxdesign/core/Link';
-import Platform from '@/platform/layouts/Platform';
+import Platform from '@/components/layouts/Platform';
 
 /** Renders the brand-only shell around routed or supplied Platform content. */
 export default function Brand({ children = <Outlet /> }: { children?: ReactNode }) {
