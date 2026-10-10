@@ -353,12 +353,11 @@ def resolve_docker_paths(root: Path, pyproject_data: Mapping[str, object]) -> tu
     return common_root, workdir, sorted(seen_paths - {root})
 
 
-def build_solution(build_context: Path, *, pyproject_data: Mapping[str, object]) -> None:
+def build_solution(build_context: Path, *, pyproject_data: Mapping[str, object], project_description: str | None) -> None:
     """Create Docker build artifacts from validated Solution metadata."""
 
     # Resolve build paths using the project metadata prepared by the command.
     root = Path.cwd().resolve()
-    _, _, project_description = read_project_metadata(pyproject_data)
     source_root, workdir, local_source_paths = resolve_docker_paths(root, pyproject_data)
 
     # Use the installed package version when available, falling back for editable source trees.
@@ -425,7 +424,18 @@ def build_solution(build_context: Path, *, pyproject_data: Mapping[str, object])
         return ignored
 
     # Copy only the Solution and its local dependencies, keeping workspace-relative paths.
+    copied_paths: list[Path] = []
     for selected in selected_paths:
+        # Skip nested projects only when an earlier copy included their entire path.
+        if any(
+            selected.is_relative_to(copied)
+            and not any(fnmatch(part, pattern) for part in selected.relative_to(copied).parts for pattern in CONTEXT_IGNORE_PATTERNS)
+            and not (copied == source_root and selected.relative_to(copied).parts[0] in {"Dockerfile", ".dockerignore"})
+            for copied in copied_paths
+        ):
+            continue
+
+        # Retain separate copies for projects reached through excluded directories.
         shutil.copytree(
             selected,
             build_context / selected.relative_to(source_root),
@@ -433,6 +443,7 @@ def build_solution(build_context: Path, *, pyproject_data: Mapping[str, object])
             symlinks=True,
             ignore=ignore_context_paths,
         )
+        copied_paths.append(selected)
 
     # Keep workspace discovery and lockfile resolution available to uv.
     if source_root not in selected_paths:
@@ -509,7 +520,7 @@ def build_command(
 
     # Validate the project and Docker prerequisites before copying source files.
     pyproject_data = read_pyproject(Path.cwd())
-    solution_name, project_version, _ = read_project_metadata(pyproject_data)
+    solution_name, project_version, project_description = read_project_metadata(pyproject_data)
     image_tag = resolve_image_tag(solution_name, tag or project_version, registry)
     image_tags = [image_tag]
 
@@ -527,7 +538,7 @@ def build_command(
     # Build inside a temporary context.
     with tempfile.TemporaryDirectory(prefix="longlink-build-") as temp_dir:
         build_context = Path(temp_dir)
-        build_solution(build_context, pyproject_data=pyproject_data)
+        build_solution(build_context, pyproject_data=pyproject_data, project_description=project_description)
 
         # Run the Docker build and optional push.
         try:

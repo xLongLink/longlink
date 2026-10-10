@@ -179,11 +179,12 @@ def test_build_solution_generates_docker_artifacts_from_project_metadata(
 
     monkeypatch.setattr(build, "package_version", missing_package_version)
 
-    # Read project metadata for validation by the build operation.
+    # Validate project metadata before preparing build artifacts.
     pyproject_data = build.read_pyproject(chdir_project)
+    _, _, project_description = build.read_project_metadata(pyproject_data)
 
     # Act
-    build.build_solution(build_context, pyproject_data=pyproject_data)
+    build.build_solution(build_context, pyproject_data=pyproject_data, project_description=project_description)
 
     # Assert
     dockerfile = build_context.joinpath("Dockerfile").read_text(encoding="utf-8")
@@ -257,9 +258,10 @@ def test_build_solution_filters_symlinks_by_resolved_target(chdir_project: Path)
 
     # Read project metadata for validation by the build operation.
     pyproject_data = build.read_pyproject(chdir_project)
+    _, _, project_description = build.read_project_metadata(pyproject_data)
 
     # Act
-    build.build_solution(build_context, pyproject_data=pyproject_data)
+    build.build_solution(build_context, pyproject_data=pyproject_data, project_description=project_description)
 
     # Assert
     assert build_context.joinpath("linked-envs.py").readlink() == Path("src/envs.py")
@@ -381,11 +383,12 @@ def test_build_solution_filters_expanded_context(chdir_project: Path) -> None:
     chdir_project.joinpath("nested", "source.py").write_text("VALUE = 1\n", encoding="utf-8")
     build_context = chdir_project.parent / "context"
 
-    # Read project metadata for validation by the build operation.
+    # Validate project metadata before preparing build artifacts.
     pyproject_data = build.read_pyproject(chdir_project)
+    _, _, project_description = build.read_project_metadata(pyproject_data)
 
     # Act
-    build.build_solution(build_context, pyproject_data=pyproject_data)
+    build.build_solution(build_context, pyproject_data=pyproject_data, project_description=project_description)
 
     # Assert
     assert not build_context.joinpath("solution", ".env").exists()

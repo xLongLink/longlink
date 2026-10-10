@@ -39,12 +39,16 @@ def docs_command(component: str | None = None, category: str | None = None) -> N
         list[ComponentDoc],
     )
     components = catalog.validate_json((ROOT / ".static" / "jsx" / "components.json").read_text(encoding="utf-8"))
-    categories = sorted({entry.category for entry in components})
 
     # Resolve documented categories and symbols case-insensitively at the CLI boundary.
-    selected = next((name for name in categories if category and name.casefold() == category.casefold()), None)
-    if category is not None and selected is None:
-        raise CliError(f"Unknown category: {category}. Available categories: {', '.join(categories)}.")
+    categories = sorted({entry.category for entry in components}) if component is None or category is not None else []
+    selected = None
+    if category is not None:
+        selected = next((name for name in categories if name.casefold() == category.casefold()), None)
+        if selected is None:
+            raise CliError(f"Unknown category: {category}. Available categories: {', '.join(categories)}.")
+
+    # Resolve an individual symbol after validating any explicit category.
     if component is not None:
         entry = next((entry for entry in components if entry.name.casefold() == component.casefold()), None)
         if entry is None:

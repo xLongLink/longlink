@@ -29,7 +29,7 @@ def handle_errors[**Parameters](command: Callable[Parameters, None]) -> Callable
 # Register each typed command on the public CLI application.
 main = typer.Typer(help="LongLink command line interface.")
 main.command(name="build")(handle_errors(build_command))
-main.command(name="dev")(handle_errors(dev_command))
+main.command(name="dev")(dev_command)
 main.command(name="docs")(handle_errors(docs_command))
 main.command(name="init")(handle_errors(init_command))
-main.command(name="migrate")(handle_errors(migrate_command))
+main.command(name="migrate")(migrate_command)
