@@ -6,7 +6,7 @@
  * Montserrat for headings, Figtree for body, JetBrains Mono for code.
  */
 
-import { stoneIconRegistry } from './components/ui/Icon';
+import { stoneIconRegistry } from './lib/glyphs';
 import { defineTheme, defineSyntaxTheme } from '@astryxdesign/core/theme';
 
 /**
@@ -15,20 +15,20 @@ import { defineTheme, defineSyntaxTheme } from '@astryxdesign/core/theme';
 const stoneSyntax = defineSyntaxTheme({
     name: 'xds-stone',
     tokens: {
-        keyword: ['#569cd6', '#569cd6'],
-        string: ['#ce9178', '#ce9178'],
-        comment: ['#a0a0a0', '#a0a0a0'],
-        number: ['#b5cea8', '#b5cea8'],
-        function: ['#dcdcaa', '#dcdcaa'],
-        type: ['#4ec9b0', '#4ec9b0'],
-        variable: ['#9cdcfe', '#9cdcfe'],
-        operator: ['#d4d4d4', '#d4d4d4'],
-        constant: ['#4fc1ff', '#4fc1ff'],
-        tag: ['#569cd6', '#569cd6'],
-        attribute: ['#9cdcfe', '#9cdcfe'],
-        property: ['#9cdcfe', '#9cdcfe'],
-        punctuation: ['#d4d4d4', '#d4d4d4'],
-        background: ['#1e1e1e', '#1e1e1e'],
+        keyword: '#569cd6',
+        string: '#ce9178',
+        comment: '#a0a0a0',
+        number: '#b5cea8',
+        function: '#dcdcaa',
+        type: '#4ec9b0',
+        variable: '#9cdcfe',
+        operator: '#d4d4d4',
+        constant: '#4fc1ff',
+        tag: '#569cd6',
+        attribute: '#9cdcfe',
+        property: '#9cdcfe',
+        punctuation: '#d4d4d4',
+        background: '#1e1e1e',
     },
 });
 
@@ -167,31 +167,31 @@ export const stoneTheme = defineTheme({
         // Categorical — Pink H=340 C=9
         '--color-background-pink': ['#f0dde8', '#5e4e57'],
         '--color-border-pink': ['#e2cfda', '#463740'],
-        '--color-icon-pink': ['#52424c', '#f0dde8'],
+        '--color-icon-pink': 'var(--color-text-pink)',
         '--color-text-pink': ['#52424c', '#f0dde8'],
 
         // Categorical — Purple H=307 C=11
         '--color-background-purple': ['#e8dff3', '#564f60'],
         '--color-border-purple': ['#d9d1e5', '#3f3949'],
-        '--color-icon-purple': ['#4b4454', '#e8dff3'],
+        '--color-icon-purple': 'var(--color-text-purple)',
         '--color-text-purple': ['#4b4454', '#e8dff3'],
 
         // Categorical — Red H=33 C=11
         '--color-background-red': ['#f9dcd7', '#644d49'],
         '--color-border-red': ['#ebcec9', '#4c3633'],
-        '--color-icon-red': ['#58413e', '#f9dcd7'],
+        '--color-icon-red': 'var(--color-text-red)',
         '--color-text-red': ['#58413e', '#f9dcd7'],
 
         // Categorical — Teal H=158 C=9
         '--color-background-teal': ['#d4e7dc', '#46564d'],
         '--color-border-teal': ['#c6d9ce', '#303f36'],
-        '--color-icon-teal': ['#3b4a41', '#d4e7dc'],
+        '--color-icon-teal': 'var(--color-text-teal)',
         '--color-text-teal': ['#3b4a41', '#d4e7dc'],
 
         // Categorical — Yellow H=90 C=23
         '--color-background-yellow': ['#f4e1b7', '#5e512d'],
         '--color-border-yellow': ['#e5d3a9', '#463a18'],
-        '--color-icon-yellow': ['#524622', '#f4e1b7'],
+        '--color-icon-yellow': 'var(--color-text-yellow)',
         '--color-text-yellow': ['#524622', '#f4e1b7'],
 
         // =========================================================================
