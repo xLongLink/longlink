@@ -7,6 +7,7 @@ from uuid import UUID
 from fastapi import Request
 from pathlib import Path
 from datetime import UTC, datetime, timedelta
+from longlink import app
 from factories import create_compute, create_solution, create_organization
 from sqlalchemy import delete, select
 from longlink.app import LongLink
@@ -423,6 +424,12 @@ async def test_oauth_mcp_session_discovers_and_calls_real_sdk_tools(
         await session.commit()
     issued = await client.post("/api/v1/mcp/token", data=exchange)
     assert issued.status_code == 200, issued.text
+
+    # Arrange an isolated frontend artifact; MCP behavior must not depend on a local SDK build.
+    frontend = tmp_path / ".static" / "web" / "index.html"
+    frontend.parent.mkdir(parents=True)
+    frontend.write_text("<!doctype html><html></html>", encoding="utf-8")
+    monkeypatch.setattr(app, "ROOT", tmp_path)
 
     # Discover a real isolated SDK application rather than replacing protocol behavior.
     (tmp_path / "src" / "views").mkdir(parents=True)
