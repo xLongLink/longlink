@@ -2,8 +2,10 @@
 
 <img src="banner.png" alt="LongLink banner" />
 
-<br />
-<br />
+
+<h3 >
+Create the tools your company always needed but couldn't afford to build
+</h3 >
 
 <a href="https://www.longlink.dev/">Website</a> &nbsp; · &nbsp; <a href="https://www.longlink.dev/docs/introduction/">Documentation</a> &nbsp; · &nbsp; <a href="https://github.com/xLongLink/sample">Sample</a> &nbsp; · &nbsp; <a href="https://pypi.org/project/longlink/">PyPI</a> &nbsp; · &nbsp; <a href="https://github.com/xLongLink/longlink/issues">Issues</a>
 
@@ -16,21 +18,32 @@
 
 <br />
 
-> [!WARNING]
-> LongLink is under active development. APIs may change before version 1.0.
 
 
 ## Introduction
 
-LongLink helps you build and run applications with Python.
+LongLink is a Python framework and platform for building and running business applications.
 
-Use FastAPI, SQLModel, and Pydantic to define how your application works. LongLink handles users, access control, databases, storage, and deployment, so you don't have to build those services yourself.
+Write your application logic using familiar Python tools. LongLink takes care of the common infrastructure, so you can focus on solving the actual problems.
+
+Some highlights:
+- **Built on FastAPI**: Use standard FastAPI routes, Pydantic, SQLModel, and your favorite Python libraries.
+- **Built-in UI**: Build modern interfaces without the complexity of maintaining a complete frontend.
+- **User management**: Built-in authentication, organizations, roles, and permissions.
+- **Managed infrastructure**: Databases, storage, logging, and deployment handled by the platform.
+- **AI integration**: Expose your applications to AI agents through an MCP server.
+- **Portable**: Applications run as standard containers.
+
+
 
 
 <br />
 
 ## Create a Solution
 
+> [!WARNING]
+> LongLink is under active development. APIs may change before version 1.0.
+> 
 Requirements: Python 3.12 or later and [`uv`](https://docs.astral.sh/uv/).
 
 ```bash
