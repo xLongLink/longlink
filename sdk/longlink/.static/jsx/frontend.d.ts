@@ -4725,7 +4725,7 @@ declare function Dialog(props: {
 declare function Form(props: {
     /** Hides the form while keeping its fields mounted and enabled for submission and validation. */
     hidden?: boolean;
-    /** Named controls, ordinary HTML fields, and layout components. */
+    /** Named controls and layout, or direct FormStep children for automatic navigation. Next validates the current step and shared fields; final submission validates all steps and reveals the first invalid field. Inactive fields remain mounted and enabled. */
     children?: ViewNode;
     /** Solution-relative API path; external URLs are not supported. */
     action: string;
@@ -4733,8 +4733,18 @@ declare function Form(props: {
     method?: 'post';
     /** Native form ID for associating external submit or reset buttons. */
     id?: string;
+    /** Label for the automatic final submit button when using FormStep children; defaults to Save. */
+    submitLabel?: string;
     /** Runs after a successful write and automatic cached-data refresh. */
     onSuccess?: (data: ViewData) => void | Promise<void>;
+}): React.JSX.Element;
+
+/** @category Form */
+declare function FormStep(props: {
+    /** Visible label identifying this step in the progress indicator. */
+    label: string;
+    /** Fields and layout displayed when this step is active. */
+    children?: ViewNode;
 }): React.JSX.Element;
 
 /** @category Form */

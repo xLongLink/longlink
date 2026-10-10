@@ -53,6 +53,9 @@ export { Dialog } from '@/components/ui/Dialog';
 export { Form } from '@/components/ui/Form';
 
 /** @category Form */
+export { FormStep } from '@/components/ui/FormStep';
+
+/** @category Form */
 export { DateInput } from '@/components/ui/DateInput';
 
 /** @category Form */

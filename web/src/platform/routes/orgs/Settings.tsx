@@ -9,6 +9,7 @@ import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Avatar } from '@/components/ui/Avatar';
 import { Badge } from '@astryxdesign/core/Badge';
+import { Form, FormStep } from '@/components/Form';
 import { Button } from '@astryxdesign/core/Button';
 import { useToast } from '@astryxdesign/core/Toast';
 import { Divider } from '@astryxdesign/core/Divider';
@@ -18,7 +19,6 @@ import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { Selector } from '@astryxdesign/core/Selector';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { TextInput } from '@astryxdesign/core/TextInput';
-import { Step, Stepper } from '@astryxdesign/core/Stepper';
 import { Stack, StackItem } from '@astryxdesign/core/Stack';
 import { ProgressBar } from '@astryxdesign/core/ProgressBar';
 import { Table, proportional } from '@astryxdesign/core/Table';
@@ -28,8 +28,8 @@ import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import { useState, useTransition, type MouseEvent } from 'react';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { useLocation, useNavigate, useOutletContext } from 'react-router';
+import { Layout, LayoutPanel, LayoutContent } from '@astryxdesign/core/Layout';
 import { SideNav, SideNavItem, SideNavSection } from '@astryxdesign/core/SideNav';
-import { Layout, LayoutPanel, LayoutHeader, LayoutContent } from '@astryxdesign/core/Layout';
 import {
     ArrowRight,
     ArrowUp,
@@ -68,7 +68,6 @@ function imageDigest(image: string) {
 
 /** Owns the deployment draft and submission for a freshly checked candidate. */
 function DeploymentReview({ update, invalidate, onClose }: DeploymentReviewProps) {
-    const [step, setStep] = useState<0 | 1>(0);
     const [envs, setEnvs] = useState<Record<string, { value?: string; removed?: boolean }>>({});
 
     // Preserve configured required secrets, and require values for new required environments.
@@ -86,7 +85,7 @@ function DeploymentReview({ update, invalidate, onClose }: DeploymentReviewProps
 
     /** Submits the reviewed deployment while preserving untouched secrets. */
     async function updateSolution() {
-        if (step !== 1 || missingRequired || !hasChanges) return;
+        if (missingRequired || !hasChanges) return;
 
         // Send edited secrets and explicit removals, preserving omitted values.
         const patchEnvs: Record<string, string | null> = {};
@@ -107,7 +106,7 @@ function DeploymentReview({ update, invalidate, onClose }: DeploymentReviewProps
         onClose();
     }
 
-    // Keep update progress above the centered, scrollable form.
+    // Share wizard navigation while retaining revision fencing and configured-secret semantics.
     return (
         <Dialog
             aria-label={`Update ${update.item.name}`}
@@ -120,169 +119,115 @@ function DeploymentReview({ update, invalidate, onClose }: DeploymentReviewProps
                 if (!open) onClose();
             }}
         >
-            <Stack height="min(560px, calc(100dvh - var(--spacing-10) * 4))">
-                <Layout
-                    padding={0}
-                    header={
-                        <LayoutHeader hasDivider={false}>
-                            <Stack paddingInline={8} paddingBlock={4}>
-                                <Stepper
-                                    activeStep={step}
-                                    indicatorPosition="separated"
-                                    label="Solution update"
-                                    orientation="horizontal"
-                                    density="balanced"
-                                >
-                                    <Step
-                                        step={0}
-                                        label="Image"
-                                        status={step > 0 ? 'success' : undefined}
-                                        indicator="auto"
-                                    />
-                                    <Step step={1} label="Environment" indicator="auto" />
-                                </Stepper>
-                            </Stack>
-                        </LayoutHeader>
-                    }
-                    content={
-                        <LayoutContent padding={8}>
-                            <Stack
-                                minHeight="100%"
-                                justify="center"
-                                gap={8}
-                                width="100%"
-                                maxWidth={640}
-                                className="mx-auto"
-                            >
-                                <Stack gap={3} align="center">
-                                    <RefreshCw className="size-20 text-secondary" aria-hidden="true" />
-                                    <Heading level={2} justify="center">
-                                        {step === 0 ? `Update ${update.item.name}` : 'Configure your environment'}
-                                    </Heading>
+            <Form
+                height="min(560px, calc(100dvh - var(--spacing-10) * 4))"
+                action={updateSolution}
+                submitLabel="Update solution"
+                submitDisabled={missingRequired || !hasChanges}
+                onCancel={onClose}
+            >
+                <FormStep label="Image">
+                    <Stack gap={4}>
+                        <Stack gap={3} align="center">
+                            <RefreshCw className="size-20 text-secondary" aria-hidden="true" />
+                            <Heading level={2} justify="center">
+                                Update {update.item.name}
+                            </Heading>
+                        </Stack>
+                        <Stack direction="horizontal" gap={4} align="center">
+                            <StackItem size="fill">
+                                <Stack padding={3} className="rounded-lg bg-muted">
+                                    <Text
+                                        type="code"
+                                        color="secondary"
+                                        justify="center"
+                                        display="block"
+                                        className="break-all"
+                                    >
+                                        {update.candidate.current_version ||
+                                            imageDigest(update.candidate.current_image)}
+                                    </Text>
                                 </Stack>
-                                {step === 0 && (
-                                    <Stack gap={4}>
-                                        <Stack direction="horizontal" gap={4} align="center">
-                                            <StackItem size="fill">
-                                                <Stack padding={3} className="rounded-lg bg-muted">
-                                                    <Text
-                                                        type="code"
-                                                        color="secondary"
-                                                        justify="center"
-                                                        display="block"
-                                                        className="break-all"
-                                                    >
-                                                        {update.candidate.current_version ||
-                                                            imageDigest(update.candidate.current_image)}
-                                                    </Text>
-                                                </Stack>
-                                            </StackItem>
-                                            <ArrowRight className="size-5 shrink-0 text-secondary" aria-hidden="true" />
-                                            <StackItem size="fill">
-                                                <Stack padding={3} className="rounded-lg bg-muted">
-                                                    <Text
-                                                        type="code"
-                                                        justify="center"
-                                                        display="block"
-                                                        className="break-all"
-                                                    >
-                                                        {update.candidate.metadata.version ||
-                                                            imageDigest(update.candidate.metadata.image)}
-                                                    </Text>
-                                                </Stack>
-                                            </StackItem>
-                                        </Stack>
-                                        <Stack direction="horizontal" gap={2} justify="between" wrap="wrap">
-                                            <Button label="Cancel" variant="ghost" onClick={onClose} />
-                                            <Button label="Next" variant="primary" onClick={() => setStep(1)} />
-                                        </Stack>
-                                    </Stack>
-                                )}
-                                {step === 1 && (
-                                    <form action={updateSolution}>
-                                        <Stack gap={4}>
-                                            {!update.candidate.metadata.environments?.length && (
-                                                <Text color="secondary">
-                                                    This solution does not require environment variables.
-                                                </Text>
-                                            )}
-                                            {(update.candidate.metadata.environments ?? []).map((environment) => {
-                                                // Resolve the configured secret and its local draft without exposing its value.
-                                                const configured = update.candidate.configured_envs.includes(
-                                                    environment.name
-                                                );
+                            </StackItem>
+                            <ArrowRight className="size-5 shrink-0 text-secondary" aria-hidden="true" />
+                            <StackItem size="fill">
+                                <Stack padding={3} className="rounded-lg bg-muted">
+                                    <Text type="code" justify="center" display="block" className="break-all">
+                                        {update.candidate.metadata.version ||
+                                            imageDigest(update.candidate.metadata.image)}
+                                    </Text>
+                                </Stack>
+                            </StackItem>
+                        </Stack>
+                    </Stack>
+                </FormStep>
+                <FormStep label="Environment">
+                    <Stack gap={4}>
+                        <Stack gap={3} align="center">
+                            <RefreshCw className="size-20 text-secondary" aria-hidden="true" />
+                            <Heading level={2} justify="center">
+                                Configure your environment
+                            </Heading>
+                        </Stack>
+                        {!update.candidate.metadata.environments?.length && (
+                            <Text color="secondary">This solution does not require environment variables.</Text>
+                        )}
+                        {(update.candidate.metadata.environments ?? []).map((environment) => {
+                            // Resolve the configured secret and its local draft without exposing its value.
+                            const configured = update.candidate.configured_envs.includes(environment.name);
 
-                                                const draft = envs[environment.name];
-                                                const isRemoved = draft?.removed === true;
+                            const draft = envs[environment.name];
+                            const isRemoved = draft?.removed === true;
 
-                                                // Configured secrets remain hidden; blank untouched inputs preserve them.
-                                                return (
-                                                    <Stack key={environment.name} gap={2}>
-                                                        <TextInput
-                                                            label={environment.name}
-                                                            labelTooltip={environment.description ?? undefined}
-                                                            type="password"
-                                                            value={draft?.value ?? ''}
-                                                            isDisabled={isRemoved}
-                                                            isOptional={!environment.required}
-                                                            isRequired={
-                                                                environment.required && (!configured || isRemoved)
-                                                            }
-                                                            placeholder={
-                                                                isRemoved
-                                                                    ? 'Will be removed'
-                                                                    : configured
-                                                                      ? 'Configured: preserve existing value'
-                                                                      : environment.description || 'Enter value'
-                                                            }
-                                                            onChange={(value) =>
-                                                                setEnvs((current) => ({
-                                                                    ...current,
-                                                                    [environment.name]: {
-                                                                        ...current[environment.name],
-                                                                        value,
-                                                                    },
-                                                                }))
-                                                            }
-                                                        />
-                                                        {configured && !environment.required && (
-                                                            <CheckboxInput
-                                                                label={`Remove ${environment.name}`}
-                                                                value={isRemoved}
-                                                                onChange={(removed) =>
-                                                                    setEnvs((current) => ({
-                                                                        ...current,
-                                                                        [environment.name]: {
-                                                                            ...current[environment.name],
-                                                                            removed,
-                                                                        },
-                                                                    }))
-                                                                }
-                                                            />
-                                                        )}
-                                                    </Stack>
-                                                );
-                                            })}
-                                            <Stack direction="horizontal" gap={2} justify="between" wrap="wrap">
-                                                <Stack direction="horizontal" gap={2}>
-                                                    <Button label="Cancel" variant="ghost" onClick={onClose} />
-                                                    <Button label="Back" variant="ghost" onClick={() => setStep(0)} />
-                                                </Stack>
-                                                <Button
-                                                    label="Update solution"
-                                                    variant="primary"
-                                                    type="submit"
-                                                    isDisabled={missingRequired || !hasChanges}
-                                                />
-                                            </Stack>
-                                        </Stack>
-                                    </form>
-                                )}
-                            </Stack>
-                        </LayoutContent>
-                    }
-                />
-            </Stack>
+                            // Configured secrets remain hidden; blank untouched inputs preserve them.
+                            return (
+                                <Stack key={environment.name} gap={2}>
+                                    <TextInput
+                                        label={environment.name}
+                                        labelTooltip={environment.description ?? undefined}
+                                        type="password"
+                                        value={draft?.value ?? ''}
+                                        isDisabled={isRemoved}
+                                        isOptional={!environment.required}
+                                        isRequired={environment.required && (!configured || isRemoved)}
+                                        placeholder={
+                                            isRemoved
+                                                ? 'Will be removed'
+                                                : configured
+                                                  ? 'Configured: preserve existing value'
+                                                  : environment.description || 'Enter value'
+                                        }
+                                        onChange={(value) =>
+                                            setEnvs((current) => ({
+                                                ...current,
+                                                [environment.name]: {
+                                                    ...current[environment.name],
+                                                    value,
+                                                },
+                                            }))
+                                        }
+                                    />
+                                    {configured && !environment.required && (
+                                        <CheckboxInput
+                                            label={`Remove ${environment.name}`}
+                                            value={isRemoved}
+                                            onChange={(removed) =>
+                                                setEnvs((current) => ({
+                                                    ...current,
+                                                    [environment.name]: {
+                                                        ...current[environment.name],
+                                                        removed,
+                                                    },
+                                                }))
+                                            }
+                                        />
+                                    )}
+                                </Stack>
+                            );
+                        })}
+                    </Stack>
+                </FormStep>
+            </Form>
         </Dialog>
     );
 }

@@ -1,26 +1,16 @@
-import { Icon } from './Icon';
-import { Stack } from './Stack';
-import type { ReactNode } from 'react';
+import * as forms from '@/components/Form';
 import type { ViewData } from '@/views/protocol';
-import { Banner } from '@astryxdesign/core/Banner';
-import { createContext, use, useRef, useState } from 'react';
+import { use, createContext, type ReactNode } from 'react';
 
 export const FormRequestContext = createContext<
-    | ((
-          path: string,
-          options: {
-              method: 'POST';
-              form: [string, string | Blob][];
-          }
-      ) => Promise<ViewData>)
-    | null
+    ((path: string, options: { method: 'POST'; form: [string, string | Blob][] }) => Promise<ViewData>) | null
 >(null);
 
 /** Submits named native fields through the Solution bridge without navigating or resetting the form. */
 export function Form(props: {
     /** Hides the form while keeping its fields mounted and enabled for submission and validation. */
     hidden?: boolean;
-    /** Named controls, ordinary HTML fields, and layout components. */
+    /** Named controls and layout, or direct FormStep children for automatic navigation. Next validates the current step and shared fields; final submission validates all steps and reveals the first invalid field. Inactive fields remain mounted and enabled. */
     children?: ReactNode;
     /** Solution-relative API path; external URLs are not supported. */
     action: string;
@@ -28,77 +18,31 @@ export function Form(props: {
     method?: 'post';
     /** Native form ID for associating external submit or reset buttons. */
     id?: string;
+    /** Label for the automatic final submit button when using FormStep children; defaults to Save. */
+    submitLabel?: string;
     /** Runs after a successful write and automatic cached-data refresh. */
     onSuccess?: (data: ViewData) => void | Promise<void>;
 }) {
-    // Obtain the request capability from the isolated runtime, never from global state.
+    // Keep Solution transport separate from the shared native form lifecycle.
     const request = use(FormRequestContext);
-    const pending = useRef(false);
-    const [submission, setSubmission] = useState<{ submitting: boolean; error?: string }>({ submitting: false });
 
-    /** Runs the asynchronous request after the native submit event has been intercepted. */
-    async function submit(form: HTMLFormElement, submitter: HTMLElement | null) {
-        // Guard synchronously so repeated submits cannot race a React state update.
-        if (pending.current) return;
-        pending.current = true;
-
-        // Serialize before disabling fields, preserving repeated names, files, and the submitter.
-        try {
-            const data = new FormData(form, submitter);
-            setSubmission({ submitting: true });
-
-            // Route all writes through the same validated transport as explicit request calls.
-            if (!request) throw new Error('Forms require the Solution runtime');
-
-            if (props.method !== undefined && props.method !== 'post') {
-                throw new Error('Forms support method="post"');
-            }
-
-            const result = await request(props.action, { method: 'POST', form: [...data.entries()] });
-            await props.onSuccess?.(result);
-        } catch (failure) {
-            setSubmission((current) => ({
-                ...current,
-                error: failure instanceof Error ? failure.message : 'Form submission failed',
-            }));
-        } finally {
-            pending.current = false;
-            setSubmission((current) => ({ ...current, submitting: false }));
-        }
-    }
-
-    // Use a real form so Enter, reset buttons, and browser constraint validation stay native.
     return (
-        <form
+        <forms.Form
             hidden={props.hidden}
-            className={props.hidden ? 'hidden!' : undefined}
             id={props.id}
-            method="post"
-            aria-busy={submission.submitting || undefined}
-            onReset={(event) => {
-                // Clear only submission feedback, respecting canceled resets and author-owned field validity.
-                const nativeEvent = event.nativeEvent;
-                queueMicrotask(() => {
-                    if (nativeEvent.defaultPrevented) return;
+            submitLabel={props.submitLabel}
+            action={async (data) => {
+                // Route writes through the same validated bridge as explicit request calls.
+                if (!request) throw new Error('Forms require the Solution runtime');
 
-                    setSubmission((current) => ({ ...current, error: undefined }));
-                });
-            }}
-            onSubmit={(event) => {
-                // Themed fields may reject a submission before this handler runs.
-                if (event.defaultPrevented) return;
-                event.preventDefault();
-                void submit(event.currentTarget, event.nativeEvent.submitter);
+                if (props.method !== undefined && props.method !== 'post')
+                    throw new Error('Forms support method="post"');
+
+                const result = await request(props.action, { method: 'POST', form: [...data.entries()] });
+                await props.onSuccess?.(result);
             }}
         >
-            <Stack gap={3}>
-                <fieldset disabled={submission.submitting} className="m-0 min-w-0 border-0 p-0">
-                    {props.children}
-                </fieldset>
-                {submission.error && (
-                    <Banner status="error" title={submission.error} icon={<Icon icon="error" size="md" />} />
-                )}
-            </Stack>
-        </form>
+            {props.children}
+        </forms.Form>
     );
 }

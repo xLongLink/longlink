@@ -730,7 +730,10 @@
 
     - name: children
       type: ReactNode
-      description: Named controls, ordinary HTML fields, and layout components.
+      description: Named controls and layout, or direct FormStep children for
+        automatic navigation. Next validates the current step and shared fields;
+        final submission validates all steps and reveals the first invalid
+        field. Inactive fields remain mounted and enabled.
 
     - name: action
       type: string
@@ -745,9 +748,27 @@
       type: string
       description: Native form ID for associating external submit or reset buttons.
 
+    - name: submitLabel
+      type: string
+      description: Label for the automatic final submit button when using FormStep
+        children; defaults to Save.
+
     - name: onSuccess
       type: "(data: ViewData) => void | Promise<void>"
       description: Runs after a successful write and automatic cached-data refresh.
+
+
+- name: FormStep
+  category: Form
+  introduction: ""
+  properties:
+    - name: label
+      type: string
+      description: Visible label identifying this step in the progress indicator.
+
+    - name: children
+      type: ReactNode
+      description: Fields and layout displayed when this step is active.
 
 
 - name: Functions
