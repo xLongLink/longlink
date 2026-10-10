@@ -80,6 +80,11 @@ jobs:
               working-directory: web
               run: vp run build:api:bundle --logLevel warn
 
+            # API MCP tests start a real Solution runtime with its embedded frontend.
+            - name: Build SDK web bundle
+              working-directory: web
+              run: vp run build:sdk:bundle --logLevel warn
+
             - name: Run tests
               working-directory: api
               run: uv run --locked pytest tests --cov=main --cov=src --cov-report=term-missing
