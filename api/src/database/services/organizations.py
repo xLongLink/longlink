@@ -10,6 +10,7 @@ from sqlalchemy.orm import defer, load_only, joinedload, selectinload, contains_
 from collections.abc import Sequence
 from longlink.shared import audit as shared_audit
 from src.models.roles import OrganizationRoles
+from src.database.types import attr
 from src.database.services import operations
 from src.models.operations import OperationKind
 from src.models.pagination import Pagination
@@ -31,12 +32,12 @@ def _membership_query(user_id: UUID) -> Select[tuple[UserOrganization]]:
         select(UserOrganization)
         .join(Organization, col(Organization.id) == col(UserOrganization.organization_id))
         .options(
-            contains_eager(UserOrganization.organization).load_only(
-                Organization.id,
-                Organization.name,
-                Organization.slug,
-                Organization.status,
-                Organization.storage_quota_bytes,
+            contains_eager(attr(UserOrganization.organization)).load_only(
+                attr(Organization.id),
+                attr(Organization.name),
+                attr(Organization.slug),
+                attr(Organization.status),
+                attr(Organization.storage_quota_bytes),
             )
         )
         .where(
@@ -98,15 +99,15 @@ async def solution_runtime_access(
         .execution_options(populate_existing=True)
         .options(
             load_only(
-                Solution.id,
-                Solution.organization_id,
-                Solution.secrets,
-                Solution.status,
+                attr(Solution.id),
+                attr(Solution.organization_id),
+                attr(Solution.secrets),
+                attr(Solution.status),
             ),
             load_only(
-                ComputeRegistry.id,
-                ComputeRegistry.gateway_url,
-                ComputeRegistry.gateway_certificate,
+                attr(ComputeRegistry.id),
+                attr(ComputeRegistry.gateway_url),
+                attr(ComputeRegistry.gateway_certificate),
             ),
         )
         .join(Organization, col(Organization.id) == col(Solution.organization_id))
@@ -152,11 +153,11 @@ async def storage_infrastructure(session: AsyncSession, organization_id: UUID) -
         select(ComputeRegistry)
         .options(
             load_only(
-                ComputeRegistry.id,
-                ComputeRegistry.storage_endpoint,
-                ComputeRegistry.storage_access_key,
-                ComputeRegistry.storage_secret_key,
-                ComputeRegistry.storage_certificate,
+                attr(ComputeRegistry.id),
+                attr(ComputeRegistry.storage_endpoint),
+                attr(ComputeRegistry.storage_access_key),
+                attr(ComputeRegistry.storage_secret_key),
+                attr(ComputeRegistry.storage_certificate),
             )
         )
         .join(Organization, col(Organization.compute_id) == col(ComputeRegistry.id))
@@ -172,13 +173,13 @@ def _infrastructure_query() -> Select[tuple[Organization, ComputeRegistry]]:
         select(Organization, ComputeRegistry)
         .options(
             load_only(
-                ComputeRegistry.id,
-                ComputeRegistry.kubeconfig,
-                ComputeRegistry.database_storage_class,
-                ComputeRegistry.storage_endpoint,
-                ComputeRegistry.storage_access_key,
-                ComputeRegistry.storage_secret_key,
-                ComputeRegistry.storage_certificate,
+                attr(ComputeRegistry.id),
+                attr(ComputeRegistry.kubeconfig),
+                attr(ComputeRegistry.database_storage_class),
+                attr(ComputeRegistry.storage_endpoint),
+                attr(ComputeRegistry.storage_access_key),
+                attr(ComputeRegistry.storage_secret_key),
+                attr(ComputeRegistry.storage_certificate),
             ),
         )
         .join(ComputeRegistry, col(ComputeRegistry.id) == col(Organization.compute_id))
@@ -204,14 +205,14 @@ async def solution_infrastructure(session: AsyncSession, solution_id: UUID) -> t
         .join_from(Organization, Solution, col(Solution.organization_id) == col(Organization.id))
         .options(
             load_only(
-                Solution.id,
-                Solution.desired_revision_id,
-                Solution.deployed_revision_id,
-                Solution.secrets,
-                Solution.status,
-                Solution.deleted_at,
+                attr(Solution.id),
+                attr(Solution.desired_revision_id),
+                attr(Solution.deployed_revision_id),
+                attr(Solution.secrets),
+                attr(Solution.status),
+                attr(Solution.deleted_at),
             ),
-            selectinload(Solution.desired_revision).load_only(Revision.failed, raiseload=True),
+            selectinload(attr(Solution.desired_revision)).load_only(attr(Revision.failed), raiseload=True),
         )
         .where(col(Solution.id) == solution_id)
     )
@@ -229,7 +230,14 @@ async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Seq
     # Load only Organization identity fields using a stable page order.
     statement = (
         select(Organization)
-        .options(load_only(Organization.id, Organization.name, Organization.slug, Organization.status))
+        .options(
+            load_only(
+                attr(Organization.id),
+                attr(Organization.name),
+                attr(Organization.slug),
+                attr(Organization.status),
+            )
+        )
         .where(col(Organization.deleted_at).is_(None))
         .order_by(col(Organization.name), col(Organization.id))
         .offset(pagination.offset)
@@ -249,8 +257,8 @@ async def solutions(session: AsyncSession, organization_id: UUID) -> Sequence[So
     statement = (
         select(Solution)
         .options(
-            defer(Solution.secrets),
-            selectinload(Solution.desired_revision).load_only(Revision.failed, raiseload=True),
+            defer(attr(Solution.secrets)),
+            selectinload(attr(Solution.desired_revision)).load_only(attr(Revision.failed), raiseload=True),
         )
         .where(
             col(Solution.organization_id) == organization_id,
@@ -286,7 +294,14 @@ async def members(session: AsyncSession, organization_id: UUID) -> Sequence[User
     # Load memberships with the user identity fields required by API payloads.
     statement = (
         select(UserOrganization)
-        .options(joinedload(UserOrganization.user).load_only(User.id, User.name, User.email, User.avatar))
+        .options(
+            joinedload(attr(UserOrganization.user)).load_only(
+                attr(User.id),
+                attr(User.name),
+                attr(User.email),
+                attr(User.avatar),
+            )
+        )
         .where(
             col(UserOrganization.organization_id) == organization_id,
         )

@@ -8,6 +8,7 @@ from sqlalchemy.orm import load_only
 from collections.abc import Sequence
 from src.utils.oauth import OAuthProvider
 from src.environments import env
+from src.database.types import attr
 from src.models.pagination import Pagination
 from longlink.shared.models import Email
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -36,12 +37,12 @@ async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Seq
         select(User)
         .options(
             load_only(
-                User.id,
-                User.name,
-                User.email,
-                User.avatar,
-                User.administrator,
-                User.created_at,
+                attr(User.id),
+                attr(User.name),
+                attr(User.email),
+                attr(User.avatar),
+                attr(User.administrator),
+                attr(User.created_at),
             )
         )
         .order_by(col(User.name), col(User.id))

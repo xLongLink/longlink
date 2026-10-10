@@ -4,6 +4,7 @@ from sqlmodel import col
 from sqlalchemy import Update, or_, case, func, select, update
 from sqlalchemy.orm import defer, load_only, selectinload
 from collections.abc import Sequence
+from src.database.types import attr
 from src.models.statuses import Status
 from src.models.operations import OperationKind
 from src.models.pagination import Pagination
@@ -41,13 +42,13 @@ async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Seq
         select(Operation, resource_name)
         .options(
             load_only(
-                Operation.id,
-                Operation.kind,
-                Operation.target_id,
-                Operation.failed,
-                Operation.lease_expires_at,
-                Operation.created_at,
-                Operation.finished_at,
+                attr(Operation.id),
+                attr(Operation.kind),
+                attr(Operation.target_id),
+                attr(Operation.failed),
+                attr(Operation.lease_expires_at),
+                attr(Operation.created_at),
+                attr(Operation.finished_at),
             )
         )
         .order_by(col(Operation.created_at).desc(), col(Operation.id).desc())
@@ -185,8 +186,8 @@ async def complete(session: AsyncSession, operation_id: UUID) -> bool:
         Solution,
         revision.solution_id,
         options=(
-            defer(Solution.secrets),
-            selectinload(Solution.desired_revision).load_only(Revision.failed, raiseload=True),
+            defer(attr(Solution.secrets)),
+            selectinload(attr(Solution.desired_revision)).load_only(attr(Revision.failed), raiseload=True),
         ),
         populate_existing=True,
         with_for_update=True,
