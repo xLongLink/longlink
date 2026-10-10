@@ -60,6 +60,7 @@ async def mcp_gateway(
     return solution, sdk
 
 
+@pytest.mark.usefixtures("database_runtime")
 async def test_mcp_proxy_supports_session_initialization_discovery_and_invocation(
     client: httpx2.AsyncClient,
     users: tuple[User, User, User],
