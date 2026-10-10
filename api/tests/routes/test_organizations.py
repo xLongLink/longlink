@@ -185,13 +185,11 @@ async def test_get_organization_returns_member_payload(
     # Arrange
     owner = users[0]
     organization = await create_organization(owner)
-    solution = await create_solution(organization)
 
     client = clients[0]
 
     # Act
     response = await client.get(f"/api/v1/organizations/{organization.id}")
-    solutions_response = await client.get(f"/api/v1/organizations/{organization.id}/solutions")
 
     # Assert
     assert response.status_code == 200
@@ -202,11 +200,6 @@ async def test_get_organization_returns_member_payload(
     assert payload["organization"]["name"] == "acme"
     assert payload["members"][0]["user"]["id"] == str(owner.id)
     assert payload["members"][0]["role"] == "owner"
-    assert solutions_response.status_code == 200
-    assert solutions_response.headers["cache-control"] == "no-store"
-    solutions_payload = solutions_response.json()
-    assert len(solutions_payload) == 1
-    assert solutions_payload[0]["id"] == str(solution.id)
 
 
 async def test_get_organization_solutions_omits_deleted_solutions(
@@ -230,6 +223,7 @@ async def test_get_organization_solutions_omits_deleted_solutions(
 
     # Assert
     assert response.status_code == 200
+    assert response.headers["cache-control"] == "no-store"
     assert [item["id"] for item in response.json()] == [str(active.id)]
 
 

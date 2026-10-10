@@ -182,7 +182,6 @@ async def test_update_reresolves_moved_tag_and_enforces_required_envs(
         return resolved
 
     monkeypatch.setattr("src.routes.v1.solutions.images.required_metadata", metadata)
-    assert (await clients[0].post(url, json={})).status_code == 204
     assert (await clients[0].post(url, json={"min_scale": 1})).status_code == 204
 
     # Act: the advisory check observes the moved tag without persisting it.

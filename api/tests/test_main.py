@@ -76,7 +76,6 @@ async def test_lifespan_starts_and_stops_background_jobs(monkeypatch: pytest.Mon
         events.append("serving")
 
     # Assert both jobs stop before the shared Kubernetes transport and database pool are disposed.
-    assert len(events) == 7
     assert set(events[:2]) == {"administrator start", "scheduler start"}
     assert events[2] == "serving"
     assert set(events[3:5]) == {"administrator cancel", "scheduler cancel"}

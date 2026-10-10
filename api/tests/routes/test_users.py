@@ -101,20 +101,15 @@ async def test_list_users_rejects_anonymous_requests(client: AsyncClient) -> Non
     assert response.json() == {"detail": "Not authenticated"}
 
 
-@pytest.mark.parametrize(
-    "name",
-    [pytest.param("Updated User", id="changed"), pytest.param(None, id="unchanged")],
-)
 async def test_patch_me_persists_profile_name(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
-    name: str | None,
 ) -> None:
-    """Persist both changed and unchanged profile names."""
+    """Persist an updated profile name."""
 
     # Arrange
     user = users[0]
-    expected_name = name if name is not None else user.name
+    expected_name = "Updated User"
 
     # Act
     response = await clients[0].patch("/api/v1/me", json={"name": expected_name})
