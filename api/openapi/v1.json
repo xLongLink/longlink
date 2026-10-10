@@ -3608,10 +3608,13 @@
           "grant_types": {
             "items": {
               "type": "string",
-              "const": "authorization_code"
+              "enum": [
+                "authorization_code",
+                "refresh_token"
+              ]
             },
             "type": "array",
-            "maxItems": 1,
+            "maxItems": 2,
             "minItems": 1,
             "title": "Grant Types",
             "default": [
@@ -3652,7 +3655,7 @@
           "redirect_uris"
         ],
         "title": "ClientRegistration",
-        "description": "Accept only public authorization-code clients with fixed safe callbacks."
+        "description": "Negotiate public authorization-code clients with fixed safe callbacks."
       },
       "ComputeRegistryCreate": {
         "properties": {
