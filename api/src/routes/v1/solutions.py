@@ -1,9 +1,13 @@
+import io
+import json
+import zipfile
 from src import auth
 from uuid import UUID
-from fastapi import Depends, APIRouter, HTTPException
+from fastapi import Depends, Response, APIRouter, HTTPException
 from src.utils import roles, images
 from src.logger import logger
 from src.kubernetes import solutions as solution_resources
+from src.environments import env
 from src.models.roles import OrganizationRoles
 from src.models.types import Image
 from src.models.metadata import LongLinkMetadata
@@ -103,6 +107,65 @@ async def apply_update(solution_id: UUID, payload: SolutionPatch, user: auth.Cur
         session, solution, user.id, metadata, payload.envs, source=source, min_scale=payload.min_scale, idle_seconds=payload.idle_seconds
     )
     await session.commit()
+
+
+@router.get(
+    "/solutions/{solution_id}/plugin",
+    response_model=None,
+    response_class=Response,
+    responses={200: {"content": {"application/zip": {"schema": {"type": "string", "format": "binary"}}}}},
+)
+async def download_plugin(solution_id: UUID, user: auth.CurrentUser, session: auth.Session) -> Response:
+    """Download a credential-free Agent Plugins package for one maintained Solution."""
+
+    # Reuse maintenance access without locking or loading Solution secrets.
+    solution = await solutions.access(session, solution_id, user.id, lock=False)
+    name = f"longlink-{solution.id}"
+
+    # Keep plugin identity stable and expose the selected Solution's display metadata.
+    manifest = {
+        "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+        "name": name,
+        "version": "1.0.0",
+        "description": solution.description or f"Tools for {solution.name}.",
+        "extensions": {
+            "com.openai": {
+                "interface": {
+                    "displayName": solution.name,
+                    "shortDescription": "LongLink solution tools",
+                    "longDescription": solution.description or f"Tools for {solution.name}.",
+                    "developerName": "LongLink",
+                    "category": "Productivity",
+                }
+            }
+        },
+    }
+    mcp = {
+        "$schema": "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json",
+        "mcpServers": {
+            name: {
+                "type": "streamable-http",
+                "url": f"{env.PUBLIC_URL}/api/v1/solutions/{solution.id}/proxy/mcp",
+            }
+        },
+    }
+
+    # Put the portable manifests at the ZIP root; never bundle runtime credentials.
+    content = io.BytesIO()
+    with zipfile.ZipFile(content, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+        archive.writestr("plugin.json", json.dumps(manifest, indent=2) + "\n")
+        archive.writestr("mcp.json", json.dumps(mcp, indent=2) + "\n")
+
+    # Serve inert attachment bytes rather than a navigable document.
+    return Response(
+        content.getvalue(),
+        media_type="application/zip",
+        headers={
+            "Content-Disposition": f'attachment; filename="{name}.zip"',
+            "Cache-Control": "no-store",
+            "X-Content-Type-Options": "nosniff",
+        },
+    )
 
 
 @router.get("/solutions/{solution_id}/logs", response_model=list[str])
