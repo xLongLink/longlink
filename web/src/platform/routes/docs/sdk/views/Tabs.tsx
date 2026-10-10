@@ -8,16 +8,7 @@ export default function TabsPage() {
     return (
         <ViewLayout
             name="Tabs"
-            reference={{
-                introduction: 'Tabs is a LongLink component that displays a tab strip and the selected Tab’s content.',
-                practices: [
-                    {
-                        guidance: true,
-                        description:
-                            'Give each Tab a unique value. Use value and onChange together when selection must be controlled.',
-                    },
-                ],
-            }}
+            introduction="Tabs is a LongLink component that displays a tab strip and the selected Tab’s content."
             examples={[
                 {
                     title: 'Tabs',

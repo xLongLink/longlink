@@ -4,7 +4,6 @@ import shutil
 from typing import Literal, Annotated
 from pathlib import Path
 from longlink.constants import ROOT
-from longlink.cli.errors import CliError
 
 
 def init_command(
@@ -25,17 +24,17 @@ def init_command(
 
     # Keep generated package metadata compatible with Python package conventions.
     if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]*", project_name):
-        raise CliError(f"Invalid project name: {project_name}")
+        raise typer.TyperException(f"Invalid project name: {project_name}")
 
     # Reject conflicting scaffold paths before copying into an existing directory.
     if target.is_symlink() or (target.exists() and not target.is_dir()):
-        raise CliError(f"Target is not a directory: {target}")
+        raise typer.TyperException(f"Target is not a directory: {target}")
     if target.exists():
         scaffold = ROOT / ".static" / "new"
         for source in scaffold.rglob("*"):
             destination = target / source.relative_to(scaffold)
             if destination.is_symlink() or (destination.exists() and (source.is_file() or not destination.is_dir())):
-                raise CliError(f"Target already exists: {destination}")
+                raise typer.TyperException(f"Target already exists: {destination}")
 
     # Copy the bundled blank project scaffold into the requested target directory.
     shutil.copytree(

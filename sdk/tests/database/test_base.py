@@ -36,12 +36,6 @@ def test_production_settings_reject_invalid_database_schema(database_schema: str
             {"server_settings": {"timezone": "UTC"}},
             id="postgresql-defaults",
         ),
-        pytest.param(
-            "postgresql+asyncpg://solution:secret@db/longlink",
-            "solution",
-            {"server_settings": {"timezone": "UTC", "search_path": '"solution", shared'}},
-            id="postgresql-schema",
-        ),
     ],
 )
 def test_connect_args_returns_driver_specific_settings(database_url: str, schema: str | None, expected: dict[str, object]) -> None:

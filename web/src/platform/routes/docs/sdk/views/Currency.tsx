@@ -8,16 +8,7 @@ export default function CurrencyPage() {
     return (
         <ViewLayout
             name="Currency"
-            reference={{
-                introduction: 'Currency formats a numeric value with the browser’s locale-aware currency formatter.',
-                practices: [
-                    {
-                        guidance: true,
-                        description:
-                            'Pass a numeric value and a valid currency code. Set locale when a specific regional format is required.',
-                    },
-                ],
-            }}
+            introduction="Currency formats a numeric value with the browser’s locale-aware currency formatter."
             examples={[
                 {
                     title: 'Currency',

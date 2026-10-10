@@ -1,5 +1,6 @@
 import path from 'node:path';
 import ts from 'typescript';
+import * as yaml from 'yaml';
 import * as prettier from 'prettier';
 import * as astryx from '@astryxdesign/cli/api';
 import { readFile, writeFile } from 'node:fs/promises';
@@ -245,6 +246,9 @@ const iconType = document.statements.find(
     (statement) => ts.isTypeAliasDeclaration(statement) && statement.name.text === 'StoneIconName',
 );
 
+// Reuse one printer for property types with the same formatting configuration.
+const printer = ts.createPrinter();
+
 /** Hides omission from prop choices while preserving empty values in callback contracts. */
 function documentedType(type) {
     // Work with TypeScript syntax so nullable values and nested callable types remain correct.
@@ -283,13 +287,11 @@ function documentedType(type) {
         },
     ]);
     const transformed = result.transformed[0];
-    const text = ts
-        .createPrinter()
-        .printNode(
-            ts.EmitHint.Unspecified,
-            ts.isParenthesizedTypeNode(transformed) ? transformed.type : transformed,
-            document,
-        );
+    const text = printer.printNode(
+        ts.EmitHint.Unspecified,
+        ts.isParenthesizedTypeNode(transformed) ? transformed.type : transformed,
+        document,
+    );
     result.dispose();
     return text.replace(/\s*\n\s*/g, ' ');
 }
@@ -376,13 +378,16 @@ const declarations = catalogDeclarations.flatMap((statement) => {
     const group = metadata ? metadata.group : tags.find((tag) => tag.tagName.text === 'group')?.comment;
     if (group !== undefined && (typeof group !== 'string' || !group.trim()))
         throw new Error(`Invalid documentation group: ${name}`);
+
+    // Keep each public-props lookup with its existence check.
+    const properties = publicProps.get(name);
     return [
         {
             name: group?.trim() ?? name,
             category,
-            ...(category !== 'Runtime' && publicProps.has(name)
+            ...(category !== 'Runtime' && properties
                 ? {
-                      properties: publicProps.get(name).map((property) => ({
+                      properties: properties.map((property) => ({
                           ...property,
                           name: group && group.trim() !== name ? `${name}.${property.name}` : property.name,
                       })),
@@ -422,7 +427,6 @@ for (const entry of declarations) {
 const components = [...groups.values()].sort((left, right) => left.name.localeCompare(right.name));
 
 // Read the same authored component content used by the Astryx website, pinned to the installed library.
-const references = [];
 const componentDetails = new Map();
 
 /** Reuses successful documentation lookups for the lifetime of this generation. */
@@ -460,72 +464,98 @@ for (const entry of components) {
         property.default ??= supported.default ?? (supported.required ? undefined : upstream?.default);
     }
 
-    references.push({
-        name: entry.name,
-        introduction:
-            introductions.get(entry.name) ??
-            detail.usage?.description ??
-            detail.description ??
-            usage?.description ??
-            '',
-        practices: (usage?.bestPractices ?? []).filter(
-            (practice) =>
-                !supportedProps ||
-                !upstreamProps.some(
-                    (property) =>
-                        !supportedProps.some((supported) => supported.name === property.name) &&
-                        practice.description.includes(property.name),
-                ),
-        ),
-    });
+    entry.introduction =
+        introductions.get(entry.name) ?? detail.usage?.description ?? detail.description ?? usage?.description ?? '';
 }
 
-// Format defaults for every catalog entry, including components without upstream guidance.
+// Keep inline default labels out of descriptions when a separate default is documented.
 for (const entry of components) {
     for (const property of entry.properties ?? []) {
         if (property.default !== undefined && property.default !== '-')
-            property.description = `${property.description ?? `The ${property.name} prop.`} Default: ${property.default}.`;
+            property.description = property.description?.replace(/\s+\(default\)/gi, '');
+
+        // Describe named sizes without embedding their pixel dimensions.
+        if (property.name === 'size')
+            property.description = property.description?.replace(/\s*\([^)]*\d+(?:x\d+)?px[^)]*\)/g, '');
     }
 }
 
-// Publish property contracts only in the SDK catalog and website-only guidance separately.
+/** Converts literal JavaScript defaults to native YAML values without executing expressions. */
+function nativeDefault(value) {
+    // Parse the expression with the same TypeScript parser used for the declaration catalog.
+    const document = ts.createSourceFile('default.ts', `(${value})`, ts.ScriptTarget.Latest, true);
+    const statement = document.statements[0];
+    if (document.parseDiagnostics.length || !statement || !ts.isExpressionStatement(statement)) return value;
+
+    /** Reads literal values from the parsed tree while preserving unsupported expression text. */
+    function readLiteral(expression, fallback = expression.getText(document)) {
+        // Unwrap grouping while retaining the original text for computed defaults.
+        while (ts.isParenthesizedExpression(expression)) expression = expression.expression;
+
+        // Preserve scalar types and remove JavaScript string-literal quoting.
+        if (ts.isStringLiteral(expression) || ts.isNoSubstitutionTemplateLiteral(expression)) return expression.text;
+        if (ts.isNumericLiteral(expression)) return Number(expression.text);
+        if (expression.kind === ts.SyntaxKind.TrueKeyword) return true;
+        if (expression.kind === ts.SyntaxKind.FalseKeyword) return false;
+        if (expression.kind === ts.SyntaxKind.NullKeyword) return null;
+
+        // Visit object members directly instead of parsing their source text again.
+        if (
+            ts.isObjectLiteralExpression(expression) &&
+            expression.properties.every(
+                (property) =>
+                    ts.isPropertyAssignment(property) &&
+                    (ts.isIdentifier(property.name) || ts.isStringLiteral(property.name) || ts.isNumericLiteral(property.name))
+            )
+        )
+            return Object.fromEntries(
+                expression.properties.map((property) => [property.name.text, readLiteral(property.initializer)])
+            );
+        return fallback;
+    }
+
+    return readLiteral(statement.expression, value);
+}
+
+// Publish one YAML catalog for both the CLI and website.
+const catalog = components.map(({ properties, ...component }) => ({
+    ...component,
+    introduction: component.introduction ?? '',
+    ...(properties
+        ? {
+              properties: properties.map(({ name, type, description, default: defaultValue }) => ({
+                  name,
+                  type,
+                  description,
+                  ...(defaultValue !== undefined && defaultValue !== '-' ? { default: nativeDefault(defaultValue) } : {}),
+              })),
+          }
+        : {}),
+}));
 const outputs = [
     { filename: input, text: source },
     {
-        filename: path.resolve(root, 'src/lib/generated/components.json'),
-        data: references,
-    },
-    {
-        filename: path.resolve(root, '../sdk/longlink/.static/jsx/components.json'),
-        data: components.map(({ properties, ...component }) => ({
-            ...component,
-            ...(properties
-                ? {
-                      properties: properties.map(({ name, type, description }) => ({
-                          name,
-                          type,
-                          description,
-                      })),
-                  }
-                : {}),
-        })),
+        filename: path.resolve(root, '../sdk/longlink/.static/jsx/components.yml'),
+        text: yaml
+            .stringify(catalog)
+            .replace(/\n- name:/g, '\n\n\n- name:')
+            .replace(/(?<!  properties:)\n    - name:/g, '\n\n    - name:'),
     },
 ];
 
 // CLI and website documentation share one generated catalog; checking must not modify files.
-for (const { filename, data, text } of outputs) {
-    const output = text ?? `${JSON.stringify(data, null, 4)}\n`;
+for (const { filename, text } of outputs) {
     const current = await readFile(filename, 'utf8').catch((error) => {
         // Only a missing output is regenerable; surface permission and other I/O failures.
         if (error.code === 'ENOENT') return undefined;
         throw error;
     });
-    if (current !== output) {
+    if (current !== text) {
         if (process.argv.includes('--check')) {
             console.error(`Generated documentation is stale: ${filename}`);
             process.exitCode = 1;
         } else {
-            await writeFile(filename, output, 'utf8');
+            await writeFile(filename, text, 'utf8');
         }
     }
 }
