@@ -9,6 +9,8 @@ import {
 } from '@astryxdesign/core/SideNav';
 
 type MenuSectionProps = {
+    /** Hides the section navigation and its selected content without unmounting them. */
+    hidden?: boolean;
     /** MenuItem elements or nested MenuSubSection groups. */
     children?: ReactNode;
     /** Hides the section heading; visible by default. */
@@ -18,6 +20,8 @@ type MenuSectionProps = {
 };
 
 type MenuItemProps = {
+    /** Hides the navigation item and its selected content without unmounting them. */
+    hidden?: boolean;
     /** Content mounted beside the navigation while this item is selected. */
     children?: ReactNode;
     /** Optional LongLink icon name displayed beside the label. */
@@ -51,7 +55,10 @@ function isMenuItem(child: ReactNode): child is ReactElement<MenuItemProps> {
 export function Menu({
     children,
     gap = 3,
+    hidden,
 }: {
+    /** Hides the navigation and selected content without unmounting them. */
+    hidden?: boolean;
     /** MenuSection elements defining navigation and content. */
     children?: ReactNode;
     gap?: 0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10;
@@ -91,6 +98,18 @@ export function Menu({
 
     const activeItem = items.find((item) => `#${menuItemId(item)}` === hash) ?? items[0];
 
+    // Apply section and group visibility to the selected content without replacing the selection.
+    const activeContentHidden =
+        activeItem?.props.hidden ||
+        sections.some(({ section, entries }) =>
+            entries.some((entry) =>
+                entry.kind === 'subsection'
+                    ? entry.items.some((item) => item === activeItem) &&
+                      (section.props.hidden || entry.group.props.hidden)
+                    : entry.item === activeItem && section.props.hidden
+            )
+        );
+
     /** Renders direct and nested items with the same navigation and selection behavior. */
     function renderItem(item: ReactElement<MenuItemProps>) {
         const id = menuItemId(item);
@@ -98,6 +117,8 @@ export function Menu({
         // Preserve normal link semantics while routing ordinary clicks through the runtime API.
         return (
             <AstryxSideNavItem
+                hidden={item.props.hidden}
+                className={item.props.hidden ? 'hidden!' : undefined}
                 href={`#${id}`}
                 icon={item.props.icon ? <Icon icon={item.props.icon} size="sm" /> : undefined}
                 isSelected={item === activeItem}
@@ -122,6 +143,8 @@ export function Menu({
 
     return (
         <Layout
+            hidden={hidden}
+            className={hidden ? 'hidden!' : undefined}
             height="auto"
             start={
                 <LayoutPanel isScrollable={false} label="Settings navigation" padding={0} role="navigation" width={260}>
@@ -130,7 +153,8 @@ export function Menu({
                             <AstryxSideNavSection
                                 title={section.props.title}
                                 isHeaderHidden={section.props.isHeaderHidden}
-                                className="pt-0"
+                                hidden={section.props.hidden}
+                                className={section.props.hidden ? 'pt-0 hidden!' : 'pt-0'}
                                 key={section.props.title}
                             >
                                 {entries.map((entry) => {
@@ -139,6 +163,8 @@ export function Menu({
 
                                         return (
                                             <AstryxSideNavItem
+                                                hidden={entry.group.props.hidden}
+                                                className={entry.group.props.hidden ? 'hidden!' : undefined}
                                                 collapsible={{ defaultIsCollapsed: true }}
                                                 icon={icon ? <Icon icon={icon} size="sm" /> : undefined}
                                                 key={label}
@@ -157,7 +183,9 @@ export function Menu({
                 </LayoutPanel>
             }
         >
-            <Stack gap={gap}>{activeItem?.props.children}</Stack>
+            <Stack gap={gap} hidden={activeContentHidden} className={activeContentHidden ? 'hidden!' : undefined}>
+                {activeItem?.props.children}
+            </Stack>
         </Layout>
     );
 }
@@ -174,6 +202,8 @@ export function MenuItem(_props: MenuItemProps) {
 
 /** Defines a collapsible group of MenuItems. */
 export function MenuSubSection(_props: {
+    /** Hides the group navigation and its selected content without unmounting them. */
+    hidden?: boolean;
     /** MenuItem elements nested inside this collapsible group. */
     children?: ReactNode;
     /** Optional LongLink icon name displayed beside the group label. */

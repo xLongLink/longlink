@@ -4,6 +4,16 @@ import { Stack as AstryxStack, StackItem as AstryxStackItem } from '@astryxdesig
 
 type StackProps = {
     children?: ReactNode;
+    /** Hides the stack while keeping children mounted and enabled for form submission and validation. */
+    hidden?: boolean;
+    /** Container width; numbers are pixels and strings are CSS sizes. */
+    width?: number | string;
+    /** Container height; numbers are pixels and strings are CSS sizes. */
+    height?: number | string;
+    /** Maximum container width; numbers are pixels and strings are CSS sizes. */
+    maxWidth?: number | string;
+    /** Minimum container height; numbers are pixels and strings are CSS sizes. */
+    minHeight?: number | string;
     /** Spacing between items. */
     gap?: Spacing;
     padding?: Spacing;
@@ -15,10 +25,11 @@ type StackProps = {
 
 /** Arranges View content using the LongLink spacing scale. */
 export function Stack(props: StackProps) {
-    // Leave structural sizing and advanced styling outside the View contract.
+    // Keep hidden content mounted and override the underlying flex display without disabling fields.
     return (
         <AstryxStack
             {...props}
+            className={props.hidden ? 'hidden!' : undefined}
             gap={props.gap ?? 3}
             padding={props.padding ?? 0}
             direction={props.direction ?? 'vertical'}
@@ -31,6 +42,8 @@ export function Stack(props: StackProps) {
 
 /** Controls how one item participates in its surrounding Stack. */
 export function StackItem(props: {
+    /** Hides the component without unmounting it. */
+    hidden?: boolean;
     /** Content rendered inside the stack item. */
     children?: ReactNode;
     size?: 'static' | 'fill';
@@ -39,5 +52,12 @@ export function StackItem(props: {
     crossAlignSelf?: 'start' | 'center' | 'end' | 'stretch';
 }) {
     // Preserve natural sizing and visible overflow unless explicitly overridden.
-    return <AstryxStackItem {...props} size={props.size ?? 'static'} isScrollable={props.isScrollable ?? false} />;
+    return (
+        <AstryxStackItem
+            {...props}
+            className={props.hidden ? 'hidden!' : undefined}
+            size={props.size ?? 'static'}
+            isScrollable={props.isScrollable ?? false}
+        />
+    );
 }

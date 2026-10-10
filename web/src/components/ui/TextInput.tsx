@@ -1,6 +1,7 @@
 import { useValue } from './value';
 import type { ReactNode } from 'react';
 import type { FieldProps } from './types';
+import { Stack } from '@astryxdesign/core/Stack';
 import { TextInput as AstryxTextInput } from '@astryxdesign/core/TextInput';
 
 type TextInputProps = FieldProps & {
@@ -30,21 +31,23 @@ export function TextInput(props: TextInputProps) {
 
     // Use ordinary editable text without clearing controls or automatic focus.
     return (
-        <AstryxTextInput
-            {...control}
-            ref={ref}
-            value={value}
-            onChange={onChange}
-            htmlName={props.name}
-            type={props.type ?? 'text'}
-            isReadOnly={false}
-            hasClear={props.hasClear ?? false}
-            hasAutoFocus={props.hasAutoFocus ?? false}
-            isLabelHidden={false}
-            isRequired={props.required ?? false}
-            isDisabled={props.disabled ?? false}
-            changeAction={undefined}
-            isLoading={false}
-        />
+        <Stack gap={0} hidden={props.hidden} className={props.hidden ? 'hidden!' : 'contents!'}>
+            <AstryxTextInput
+                {...control}
+                ref={ref}
+                value={value}
+                onChange={onChange}
+                htmlName={props.name}
+                type={props.type ?? 'text'}
+                isReadOnly={false}
+                hasClear={props.hasClear ?? false}
+                hasAutoFocus={props.hasAutoFocus ?? false}
+                isLabelHidden={false}
+                isRequired={props.required ?? false}
+                isDisabled={props.disabled ?? false}
+                changeAction={undefined}
+                isLoading={false}
+            />
+        </Stack>
     );
 }

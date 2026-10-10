@@ -12,6 +12,10 @@
         corner on rounded/square."
       default: circle
 
+    - name: hidden
+      type: boolean
+      description: Hides the component without unmounting it.
+
     - name: name
       type: string
       description: User name for initials and alt text.
@@ -46,6 +50,10 @@
   category: Display
   introduction: Displays a count or enumerated state.
   properties:
+    - name: hidden
+      type: boolean
+      description: Hides the component without unmounting it.
+
     - name: label
       type: ReactNode
       description: Badge text content. A badge is one line, so a label wider than the
@@ -76,6 +84,10 @@
   category: Action
   introduction: Gives onClick automatic asynchronous loading and duplicate-click prevention.
   properties:
+    - name: hidden
+      type: boolean
+      description: Hides the component without unmounting it.
+
     - name: label
       type: string
       description: Visible button text and accessible label.
@@ -153,6 +165,10 @@
   category: Action
   introduction: Groups related flat action buttons.
   properties:
+    - name: hidden
+      type: boolean
+      description: Hides the component without unmounting it.
+
     - name: children
       type: ReactNode
       description: Button or IconButton children.
@@ -181,6 +197,10 @@
   category: Layouts
   introduction: ""
   properties:
+    - name: hidden
+      type: boolean
+      description: Hides the component without unmounting it.
+
     - name: children
       type: ReactNode
       description: Content rendered inside the card.
@@ -261,6 +281,11 @@
   category: Form
   introduction: Edits a boolean or indeterminate field.
   properties:
+    - name: hidden
+      type: boolean
+      description: Hides the field while keeping it mounted and enabled for form
+        submission and validation.
+
     - name: label
       type: string
       description: Label text for the checkbox (always rendered for accessibility).
@@ -309,6 +334,10 @@
   category: Display
   introduction: Displays source code using standard copy and highlighting behavior.
   properties:
+    - name: hidden
+      type: boolean
+      description: Hides the component without unmounting it.
+
     - name: code
       type: string
       description: The code string to display.
@@ -332,6 +361,10 @@
   category: Layouts
   introduction: Shows or hides content using controlled or initially open state.
   properties:
+    - name: hidden
+      type: boolean
+      description: Hides the component without unmounting it.
+
     - name: children
       type: ReactNode
       description: Content that collapses and expands.
@@ -365,6 +398,10 @@
   category: Display
   introduction: ""
   properties:
+    - name: hidden
+      type: boolean
+      description: Hides the component without unmounting it.
+
     - name: value
       type: number
       description: Amount to format in currency units.
@@ -382,6 +419,11 @@
   category: Form
   introduction: Selects a constrained date with standard month and week presentation.
   properties:
+    - name: hidden
+      type: boolean
+      description: Hides the field while keeping it mounted and enabled for form
+        submission and validation.
+
     - name: label
       type: string
       description: Label text.
@@ -460,6 +502,11 @@
   introduction: Displays an accessible modal with an explicit purpose and
     controlled visibility.
   properties:
+    - name: hidden
+      type: boolean
+      description: Hides the modal without unmounting its fields or changing the
+        caller's open state.
+
     - name: children
       type: ReactNode
       description: Dialog content.
@@ -513,6 +560,10 @@
   introduction: Separates View content with an optional label and configurable
     line presentation.
   properties:
+    - name: hidden
+      type: boolean
+      description: Hides the component without unmounting it.
+
     - name: label
       type: ReactNode
       description: Optional label centered on the divider.
@@ -537,15 +588,16 @@
   category: Action
   introduction: Opens an action menu using standard adaptive presentation and placement.
   properties:
+    - name: hidden
+      type: boolean
+      description: Hides the trigger and closes its popup without unmounting the component.
+
     - name: button
       type: '{ label: string; variant?: "primary" | "secondary" | "ghost" |
         "destructive"; size?: "sm" | "md" | "lg"; isDisabled?: boolean; }'
       description: Props for the trigger button (Button props except onClick).
       default:
         label: Menu
-        variant: secondary
-        size: md
-        isDisabled: false
 
     - name: items
       type: DropdownMenuOption[]
@@ -572,6 +624,10 @@
   category: Display
   introduction: Describes an empty View region without custom decorative slots.
   properties:
+    - name: hidden
+      type: boolean
+      description: Hides the component without unmounting it.
+
     - name: title
       type: string
       description: Primary message rendered as an <h3> heading inside the empty state.
@@ -588,6 +644,11 @@
   introduction: Selects files with explicit upload constraints; uploading remains
     a Solution operation.
   properties:
+    - name: hidden
+      type: boolean
+      description: Hides the field while keeping it mounted and enabled for form
+        submission and validation.
+
     - name: label
       type: string
       description: Accessible label for the file input.
@@ -656,6 +717,10 @@
   category: Display
   introduction: ""
   properties:
+    - name: hidden
+      type: boolean
+      description: Hides the component without unmounting it.
+
     - name: src
       type: string
       description: Scoped Solution operation path returning the file to preview.
@@ -670,6 +735,11 @@
   category: Form
   introduction: ""
   properties:
+    - name: hidden
+      type: boolean
+      description: Hides the form while keeping its fields mounted and enabled for
+        submission and validation.
+
     - name: children
       type: ReactNode
       description: Named controls, ordinary HTML fields, and layout components.
@@ -715,6 +785,10 @@
   category: Layouts
   introduction: Arranges View content into a fixed number of columns.
   properties:
+    - name: hidden
+      type: boolean
+      description: Hides the component without unmounting it.
+
     - name: children
       type: ReactNode
       description: Grid content.
@@ -734,6 +808,10 @@
       description: Spacing between all items.
       default: 3
 
+    - name: GridSpan.hidden
+      type: boolean
+      description: Hides the component without unmounting it.
+
     - name: GridSpan.children
       type: ReactNode
       description: Content rendered inside the grid item.
@@ -748,6 +826,10 @@
   category: Display
   introduction: Displays a semantic View heading without a separate visual-level override.
   properties:
+    - name: hidden
+      type: boolean
+      description: Hides the component without unmounting it.
+
     - name: children
       type: ReactNode
       description: Heading content.
@@ -791,6 +873,10 @@
   category: Display
   introduction: Renders a registered Lucide icon at the requested Astryx size.
   properties:
+    - name: hidden
+      type: boolean
+      description: Hides the component without unmounting it.
+
     - name: icon
       type: "'close' | 'chevronDown' | 'chevronLeft' | 'chevronRight' | 'chevronsLeft'
         | 'chevronsRight' | 'check' | 'success' | 'error' | 'warning' | 'info' |
@@ -819,6 +905,10 @@
   category: Action
   introduction: Runs a labeled icon action with automatic async feedback.
   properties:
+    - name: hidden
+      type: boolean
+      description: Hides the component without unmounting it.
+
     - name: label
       type: string
       description: Accessible label. Used as aria-label (not rendered as visible text).
@@ -862,6 +952,10 @@
   category: Action
   introduction: Navigates within the Solution or opens an external HTTP(S) URL in a new tab.
   properties:
+    - name: hidden
+      type: boolean
+      description: Hides the component without unmounting it.
+
     - name: to
       type: string
       description: The to prop.
@@ -875,6 +969,10 @@
   category: Layouts
   introduction: ""
   properties:
+    - name: hidden
+      type: boolean
+      description: Hides the navigation and selected content without unmounting them.
+
     - name: children
       type: ReactNode
       description: MenuSection elements defining navigation and content.
@@ -882,6 +980,11 @@
     - name: gap
       type: 0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10
       default: 3
+
+    - name: MenuSection.hidden
+      type: boolean
+      description: Hides the section navigation and its selected content without
+        unmounting them.
 
     - name: MenuSection.children
       type: ReactNode
@@ -894,6 +997,11 @@
     - name: MenuSection.title
       type: string
       description: Section heading displayed in the navigation.
+
+    - name: MenuItem.hidden
+      type: boolean
+      description: Hides the navigation item and its selected content without
+        unmounting them.
 
     - name: MenuItem.children
       type: ReactNode
@@ -913,6 +1021,11 @@
       type: string
       description: Navigation label; its lowercase, hyphenated form identifies the
         item's URL fragment.
+
+    - name: MenuSubSection.hidden
+      type: boolean
+      description: Hides the group navigation and its selected content without
+        unmounting them.
 
     - name: MenuSubSection.children
       type: ReactNode
@@ -937,6 +1050,10 @@
   category: Display
   introduction: Lists labeled values without configurable truncation or label geometry.
   properties:
+    - name: hidden
+      type: boolean
+      description: Hides the component without unmounting it.
+
     - name: children
       type: ReactNode
       description: Metadata items (MetadataListItem components).
@@ -949,6 +1066,10 @@
     - name: title
       type: ReactNode
       description: Optional title or heading above the list.
+
+    - name: MetadataListItem.hidden
+      type: boolean
+      description: Hides both the label and value without unmounting them.
 
     - name: MetadataListItem.children
       type: ReactNode
@@ -974,6 +1095,10 @@
   introduction: Opens additional actions without exposing popup geometry or
     presentation modes.
   properties:
+    - name: hidden
+      type: boolean
+      description: Hides the trigger and closes its popup without unmounting the component.
+
     - name: items
       type: DropdownMenuOption[]
       description: "Menu items: data array of actions, dividers, and sections. Same
@@ -1008,6 +1133,11 @@
   category: Form
   introduction: Selects multiple values using standard option and selected-value rendering.
   properties:
+    - name: hidden
+      type: boolean
+      description: Hides the field while keeping it mounted and enabled for form
+        submission and validation.
+
     - name: label
       type: string
       description: Label text for accessibility.
@@ -1086,6 +1216,11 @@
   category: Form
   introduction: Edits a constrained number without wheel editing or custom value formatting.
   properties:
+    - name: hidden
+      type: boolean
+      description: Hides the field while keeping it mounted and enabled for form
+        submission and validation.
+
     - name: label
       type: string
       description: Label text for the input (always rendered for accessibility).
@@ -1174,6 +1309,10 @@
   category: Display
   introduction: Displays determinate progress with a semantic state.
   properties:
+    - name: hidden
+      type: boolean
+      description: Hides the component without unmounting it.
+
     - name: label
       type: string
       description: accessible label
@@ -1203,6 +1342,11 @@
   category: Form
   introduction: Selects one of a small number of labeled values.
   properties:
+    - name: hidden
+      type: boolean
+      description: Hides the field while keeping it mounted and enabled for form
+        submission and validation.
+
     - name: label
       type: string
       description: Label text for the radio group (always rendered for accessibility).
@@ -1255,6 +1399,10 @@
       description: Size of the radio controls.
       default: md
 
+    - name: RadioListItem.hidden
+      type: boolean
+      description: Hides the option without unmounting or disabling it.
+
     - name: RadioListItem.label
       type: string
       description: Visible label identifying this choice.
@@ -1276,6 +1424,11 @@
   category: Form
   introduction: Selects one value without custom option rendering or popup geometry.
   properties:
+    - name: hidden
+      type: boolean
+      description: Hides the field while keeping it mounted and enabled for form
+        submission and validation.
+
     - name: label
       type: string
       description: Label text for accessibility.
@@ -1351,6 +1504,11 @@
   category: Form
   introduction: Edits a number or range using a standard horizontal slider.
   properties:
+    - name: hidden
+      type: boolean
+      description: Hides the field while keeping it mounted and enabled for form
+        submission and validation.
+
     - name: label
       type: string
       description: Label text (always rendered for accessibility).
@@ -1424,6 +1582,27 @@
       type: ReactNode
       description: Stack content.
 
+    - name: hidden
+      type: boolean
+      description: Hides the stack while keeping children mounted and enabled for form
+        submission and validation.
+
+    - name: width
+      type: string | number
+      description: Container width; numbers are pixels and strings are CSS sizes.
+
+    - name: height
+      type: string | number
+      description: Container height; numbers are pixels and strings are CSS sizes.
+
+    - name: maxWidth
+      type: string | number
+      description: Maximum container width; numbers are pixels and strings are CSS sizes.
+
+    - name: minHeight
+      type: string | number
+      description: Minimum container height; numbers are pixels and strings are CSS sizes.
+
     - name: gap
       type: 0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10
       description: Spacing between items.
@@ -1458,6 +1637,10 @@
       description: Flex wrap behavior.
       default: nowrap
 
+    - name: StackItem.hidden
+      type: boolean
+      description: Hides the component without unmounting it.
+
     - name: StackItem.children
       type: ReactNode
       description: Content rendered inside the stack item.
@@ -1480,6 +1663,10 @@
   category: Display
   introduction: Displays a labeled semantic status without custom indicator rendering.
   properties:
+    - name: hidden
+      type: boolean
+      description: Hides the component without unmounting it.
+
     - name: label
       type: string
       description: Accessible label surfaced via aria-label.
@@ -1497,6 +1684,10 @@
   category: Layouts
   introduction: Displays the current step using standard progress indicators.
   properties:
+    - name: hidden
+      type: boolean
+      description: Hides the component without unmounting it.
+
     - name: children
       type: ReactNode
       description: Step elements to render in the stepper.
@@ -1512,6 +1703,10 @@
       description: Layout direction of the stepper.
       default: horizontal
 
+    - name: Step.hidden
+      type: boolean
+      description: Hides the step indicator and label without changing its index.
+
     - name: Step.step
       type: number
       description: Zero-based index of this step in the process.
@@ -1525,6 +1720,11 @@
   category: Form
   introduction: Edits an on/off setting using one controlled change handler.
   properties:
+    - name: hidden
+      type: boolean
+      description: Hides the field while keeping it mounted and enabled for form
+        submission and validation.
+
     - name: label
       type: string
       description: Label text for the switch (always rendered for accessibility).
@@ -1576,6 +1776,10 @@
   introduction: Displays data-driven rows without plugins or a second
     children-based table contract.
   properties:
+    - name: hidden
+      type: boolean
+      description: Hides the component without unmounting it.
+
     - name: data
       type: T[]
       description: Array of data items to render as rows. T must extend Record<string,
@@ -1618,6 +1822,10 @@
   category: Layouts
   introduction: ""
   properties:
+    - name: hidden
+      type: boolean
+      description: Hides the tab strip and selected panel without unmounting them.
+
     - name: children
       type: ReactNode
       description: Tab elements defining labels and panel content.
@@ -1638,6 +1846,10 @@
       type: string
       description: Selected Tab value; omit for internal selection, initially choosing
         the first tab.
+
+    - name: Tab.hidden
+      type: boolean
+      description: Hides this tab and its selected panel without changing the selection.
 
     - name: Tab.children
       type: ReactNode
@@ -1660,6 +1872,10 @@
   category: Display
   introduction: Displays View text with a small set of semantic styles.
   properties:
+    - name: hidden
+      type: boolean
+      description: Hides the component without unmounting it.
+
     - name: children
       type: ReactNode
       description: Text content.
@@ -1683,6 +1899,11 @@
   category: Form
   introduction: Edits themed multi-line text with native form serialization.
   properties:
+    - name: hidden
+      type: boolean
+      description: Hides the field while keeping it mounted and enabled for form
+        submission and validation.
+
     - name: label
       type: string
       description: Label text for the textarea. Always rendered for accessibility.
@@ -1757,6 +1978,11 @@
   category: Form
   introduction: Edits themed text with optional local state and native form serialization.
   properties:
+    - name: hidden
+      type: boolean
+      description: Hides the field while keeping it mounted and enabled for form
+        submission and validation.
+
     - name: label
       type: string
       description: "Label text for the input: always rendered for accessibility."
@@ -1841,6 +2067,11 @@
   category: Form
   introduction: Selects a constrained time using the standard picker.
   properties:
+    - name: hidden
+      type: boolean
+      description: Hides the field while keeping it mounted and enabled for form
+        submission and validation.
+
     - name: label
       type: string
       description: Label text for the input (required for accessibility).
@@ -1928,6 +2159,10 @@
   category: Display
   introduction: Formats a date or timestamp using the standard date formats.
   properties:
+    - name: hidden
+      type: boolean
+      description: Hides the component without unmounting it.
+
     - name: value
       type: string | number
       description: The date/time to display. Accepts Unix timestamps (seconds) or ISO

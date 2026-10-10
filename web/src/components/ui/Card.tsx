@@ -6,6 +6,8 @@ import { ClickableCard } from '@astryxdesign/core/ClickableCard';
 import { SelectableCard } from '@astryxdesign/core/SelectableCard';
 
 type CardProps = {
+    /** Hides the component without unmounting it. */
+    hidden?: boolean;
     /** Content rendered inside the card. */
     children?: ReactNode;
     /** Inner spacing using the theme spacing scale. */
@@ -73,6 +75,7 @@ export function Card({
         return (
             <SelectableCard
                 {...props}
+                className={props.hidden ? 'hidden!' : undefined}
                 padding={padding}
                 variant={variant}
                 label={label}
@@ -88,6 +91,7 @@ export function Card({
         return (
             <ClickableCard
                 {...props}
+                className={props.hidden ? 'hidden!' : undefined}
                 padding={padding}
                 variant={variant}
                 label={label}
@@ -112,5 +116,7 @@ export function Card({
     }
 
     // Keep content-only cards non-interactive.
-    return <AstryxCard {...props} padding={padding} variant={variant} />;
+    return (
+        <AstryxCard {...props} className={props.hidden ? 'hidden!' : undefined} padding={padding} variant={variant} />
+    );
 }

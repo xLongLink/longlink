@@ -26,6 +26,7 @@ export function RadioList(
         <AstryxRadioList
             {...props}
             {...field}
+            className={props.hidden ? 'hidden!' : undefined}
             htmlName={props.name}
             children={props.children}
             orientation={props.orientation ?? 'vertical'}
@@ -39,6 +40,8 @@ export function RadioList(
 
 /** Defines one option using the surrounding RadioList's selection context. */
 export function RadioListItem(props: {
+    /** Hides the option without unmounting or disabling it. */
+    hidden?: boolean;
     /** Visible label identifying this choice. */
     label: string;
     /** Value passed to the surrounding RadioList when selected. */
@@ -48,5 +51,11 @@ export function RadioListItem(props: {
     isDisabled?: boolean;
 }) {
     // Individual options remain selectable unless disabled.
-    return <AstryxRadioListItem {...props} isDisabled={props.isDisabled ?? false} />;
+    return (
+        <AstryxRadioListItem
+            {...props}
+            className={props.hidden ? 'hidden!' : undefined}
+            isDisabled={props.isDisabled ?? false}
+        />
+    );
 }

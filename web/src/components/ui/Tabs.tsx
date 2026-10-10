@@ -3,6 +3,8 @@ import { Tab as AstryxTab, TabList } from '@astryxdesign/core/TabList';
 import { Children, isValidElement, useId, useState, type ReactElement, type ReactNode } from 'react';
 
 type TabProps = {
+    /** Hides this tab and its selected panel without changing the selection. */
+    hidden?: boolean;
     /** Panel content mounted only while this tab is selected. */
     children?: ReactNode;
     /** Unique value identifying this tab. */
@@ -14,6 +16,8 @@ type TabProps = {
 };
 
 type TabsProps = {
+    /** Hides the tab strip and selected panel without unmounting them. */
+    hidden?: boolean;
     /** Tab elements defining labels and panel content. */
     children?: ReactNode;
     gap?: 0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10;
@@ -25,7 +29,7 @@ type TabsProps = {
 };
 
 /** Renders a tab strip and mounts only the selected Tab's content. */
-export function Tabs({ children, gap = 3, onChange, value: controlledValue, ...props }: TabsProps) {
+export function Tabs({ children, gap = 3, onChange, value: controlledValue, hidden, ...props }: TabsProps) {
     const instance = useId();
     const [selection, setSelection] = useState('');
 
@@ -41,7 +45,7 @@ export function Tabs({ children, gap = 3, onChange, value: controlledValue, ...p
 
     // Link each tab to the one content panel owned by this Tabs instance.
     return (
-        <Stack gap={gap}>
+        <Stack gap={gap} hidden={hidden} className={hidden ? 'hidden!' : undefined}>
             <TabList
                 {...props}
                 hasDivider={props.hasDivider ?? false}
@@ -56,10 +60,25 @@ export function Tabs({ children, gap = 3, onChange, value: controlledValue, ...p
                     const { children: _content, ...tabProps } = tab.props;
 
                     // Keep panel content out of the underlying tab button props.
-                    return <AstryxTab {...tabProps} key={tab.props.value} panelId={`${instance}-${tab.props.value}`} />;
+                    return (
+                        <AstryxTab
+                            {...tabProps}
+                            className={tab.props.hidden ? 'hidden!' : undefined}
+                            key={tab.props.value}
+                            panelId={`${instance}-${tab.props.value}`}
+                        />
+                    );
                 })}
             </TabList>
-            <Stack id={panelId} role="tabpanel" tabIndex={0} aria-label={activeTab.props.label} gap={gap}>
+            <Stack
+                id={panelId}
+                role="tabpanel"
+                tabIndex={0}
+                aria-label={activeTab.props.label}
+                gap={gap}
+                hidden={activeTab.props.hidden}
+                className={activeTab.props.hidden ? 'hidden!' : undefined}
+            >
                 {activeTab.props.children}
             </Stack>
         </Stack>

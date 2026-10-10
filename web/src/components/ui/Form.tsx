@@ -18,6 +18,8 @@ export const FormRequestContext = createContext<
 
 /** Submits named native fields through the Solution bridge without navigating or resetting the form. */
 export function Form(props: {
+    /** Hides the form while keeping its fields mounted and enabled for submission and validation. */
+    hidden?: boolean;
     /** Named controls, ordinary HTML fields, and layout components. */
     children?: ReactNode;
     /** Solution-relative API path; external URLs are not supported. */
@@ -68,6 +70,8 @@ export function Form(props: {
     // Use a real form so Enter, reset buttons, and browser constraint validation stay native.
     return (
         <form
+            hidden={props.hidden}
+            className={props.hidden ? 'hidden!' : undefined}
             id={props.id}
             method="post"
             aria-busy={submission.submitting || undefined}
