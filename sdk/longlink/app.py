@@ -1,13 +1,13 @@
 import httpx2
 import logging
-from typing import Any
+from typing import Any, Self
 from fastapi import FastAPI, APIRouter
 from fastmcp import FastMCP
 from pathlib import Path
+from longlink import views
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from fsspec.spec import AbstractFileSystem
-from longlink.views import ViewDefinition, view_stem_route
 from collections.abc import Mapping, Callable, Awaitable, AsyncIterator
 from fastapi.routing import APIRoute
 from longlink.errors import install_error_handlers
@@ -34,6 +34,18 @@ class RuntimeState:
     storage: AbstractFileSystem
     database: Database
 
+    @classmethod
+    def from_settings(cls, settings: Envs) -> Self:
+        """Construct the services owned by one application runtime."""
+
+        # Preserve eager storage creation and lazy database initialization.
+        storage = create_fs(settings)
+        database = Database(settings)
+        return cls(
+            storage=storage,
+            database=database,
+        )
+
 
 def _view_handler(content: bytes) -> Callable[[], Awaitable[Response]]:
     """Capture JSX source without exposing it as a request parameter."""
@@ -54,7 +66,7 @@ class LongLink(FastAPI):
         """Install runtime services, routes, and the frontend fallback."""
 
         super().__init__()
-        self._views: list[ViewDefinition] = []
+        self._views: list[views.ViewDefinition] = []
 
         # Validate the Platform-provided runtime environment before loading Solution files.
         settings = Envs()
@@ -70,12 +82,11 @@ class LongLink(FastAPI):
             raise ValueError(f"Solution source directory is required: {views_directory}")
 
         # Validate the complete catalog before installing runtime services.
-        discovered_views = self._discover_views(views_directory)
+        discovered_views = views.discover(views_directory)
         view_definitions = [definition for definition, _ in discovered_views]
 
         # Initialize Solution storage and database connections.
-        storage = create_fs(settings)
-        database = Database(settings)
+        runtime = RuntimeState.from_settings(settings)
 
         # Supply safe defaults while preserving Solution-owned exception handlers.
         install_error_handlers(self)
@@ -105,7 +116,7 @@ class LongLink(FastAPI):
             local_user_id=LOCAL_USER_ID if settings.ENV != "production" else None,
         )
 
-        self.state.longlink = RuntimeState(storage=storage, database=database)
+        self.state.longlink = runtime
 
         async def close_database() -> None:
             """Dispose the active database when the application shuts down."""
@@ -209,11 +220,8 @@ class LongLink(FastAPI):
         added = len(self.router.routes)
         super().include_router(router, **kwargs)
 
-        try:
-            self._ensure_no_view_overlap(self.router.routes[added:])
-        except ValueError:
-            del self.router.routes[added:]
-            raise
+        # Validate only after framework registration succeeds.
+        self._validate_added_routes(added)
 
     # FastAPI accepts framework-defined route arguments with heterogeneous values.
     def add_api_route(self, *args: Any, **kwargs: Any) -> None:  # noqa: ANN401
@@ -223,6 +231,13 @@ class LongLink(FastAPI):
         added = len(self.router.routes)
         super().add_api_route(*args, **kwargs)
 
+        # Validate only after framework registration succeeds.
+        self._validate_added_routes(added)
+
+    def _validate_added_routes(self, added: int) -> None:
+        """Roll back appended routes when View overlap validation fails."""
+
+        # Remove the complete registration without handling framework errors.
         try:
             self._ensure_no_view_overlap(self.router.routes[added:])
         except ValueError:
@@ -238,42 +253,3 @@ class LongLink(FastAPI):
             scope = {"type": "http", "method": "GET", "path": view_path}
             if any(route.matches(scope)[0] is Match.FULL for route in routes):
                 raise ValueError(f"View endpoint '{view_path}' overlaps a Solution route")
-
-    @staticmethod
-    def _discover_views(views_directory: Path) -> list[tuple[ViewDefinition, bytes]]:
-        """Discover and validate all Views before registering any route."""
-
-        registered_route_keys: set[str] = set()
-        discovered_views: list[tuple[ViewDefinition, bytes]] = []
-
-        # Discover JSX source in deterministic order without compiling JavaScript in Python.
-        for view_file in sorted(views_directory.rglob("*.jsx")):
-            path_without_suffix = view_file.relative_to(views_directory).as_posix().removesuffix(".jsx")
-
-            view_path = f"views/{path_without_suffix}"
-            # Read source without parsing or executing JavaScript.
-            content = view_file.read_text(encoding="utf-8")
-            encoded_content = content.encode("utf-8")
-            if not content.strip() or len(encoded_content) > 1_000_000:
-                raise ValueError(f"View source must contain between 1 and 1000000 bytes: {view_file}")
-
-            view_route = view_stem_route(path_without_suffix)
-            relative_route = view_route.removeprefix("/")
-            route_key = "/".join(":" if segment.startswith(":") else segment.lower() for segment in relative_route.split("/"))
-
-            # View endpoints and browser routes must remain unique across all directories.
-            if route_key in registered_route_keys:
-                raise ValueError(f"Browser route '{view_route}' is already registered")
-
-            discovered_views.append(
-                (
-                    ViewDefinition(
-                        path=view_path,
-                        route=view_route,
-                    ),
-                    encoded_content,
-                )
-            )
-            registered_route_keys.add(route_key)
-
-        return discovered_views

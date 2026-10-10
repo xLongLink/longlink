@@ -199,15 +199,14 @@ def test_shared_migration_environment_emits_offline_schema_bootstrap() -> None:
     )
 
 
-def test_shared_migration_environment_rejects_missing_online_url() -> None:
-    """Require the control plane to provide an organization database URL."""
+def test_shared_migration_environment_rejects_missing_online_connection() -> None:
+    """Require the async migration runner to supply its owned connection."""
 
     # Arrange
     config = shared_migrations.migration_config("postgresql+asyncpg://db/organization")
-    config.remove_main_option("sqlalchemy.url")
 
     # Act and assert
-    with pytest.raises(RuntimeError, match="Alembic sqlalchemy.url is not configured"):
+    with pytest.raises(RuntimeError, match="Online shared migrations require a supplied SQLAlchemy Connection"):
         command.upgrade(config, "head")
 
 

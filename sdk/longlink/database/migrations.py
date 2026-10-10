@@ -15,6 +15,7 @@ def migration_config(migrations_path: Path) -> Config:
     # Point Alembic at the SDK environment and the Solution-owned revision directory.
     config = Config()
     config.set_main_option("script_location", str(CURRENT_FILE.parent))
+    config.set_main_option("path_separator", "os")
     config.set_main_option("version_locations", str(migrations_path))
     return config
 

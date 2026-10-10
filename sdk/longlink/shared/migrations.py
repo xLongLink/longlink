@@ -10,7 +10,10 @@ from sqlalchemy.ext.asyncio import AsyncConnection, create_async_engine
 
 
 def migration_config(database_url: str | URL) -> Config:
-    """Build an Alembic config for one organization database."""
+    """Build organization migration config; online execution requires a supplied connection.
+
+    Use ``migrate_database()`` to own the online connection and its cleanup.
+    """
 
     # Normalize structured and string URLs before validating the database driver.
     url = make_url(database_url)

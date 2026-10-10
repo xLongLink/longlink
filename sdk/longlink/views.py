@@ -1,4 +1,5 @@
 import re
+from pathlib import Path
 from dataclasses import dataclass
 
 STATIC_ROUTE_SEGMENT_PATTERN = re.compile(r"[A-Za-z0-9._~-]+")
@@ -53,3 +54,41 @@ def view_stem_route(view_stem: str) -> str:
         route_segments.append(segment)
 
     return f"/{'/'.join(route_segments)}"
+
+
+def discover(views_directory: Path) -> list[tuple[ViewDefinition, bytes]]:
+    """Discover and validate all Views before registering any route."""
+
+    # Track the catalog and normalized routes for the complete discovery operation.
+    registered_route_keys: set[str] = set()
+    discovered_views: list[tuple[ViewDefinition, bytes]] = []
+
+    # Discover JSX source in deterministic order without compiling JavaScript in Python.
+    for view_file in sorted(views_directory.rglob("*.jsx")):
+        path_without_suffix = view_file.relative_to(views_directory).as_posix().removesuffix(".jsx")
+        view_path = f"views/{path_without_suffix}"
+
+        # Read source without parsing or executing JavaScript.
+        content = view_file.read_text(encoding="utf-8")
+        encoded_content = content.encode("utf-8")
+        if not content.strip() or len(encoded_content) > 1_000_000:
+            raise ValueError(f"View source must contain between 1 and 1000000 bytes: {view_file}")
+
+        # Normalize static case and dynamic parameter names for collision detection.
+        view_route = view_stem_route(path_without_suffix)
+        relative_route = view_route.removeprefix("/")
+        route_key = "/".join(":" if segment.startswith(":") else segment.lower() for segment in relative_route.split("/"))
+
+        # View endpoints and browser routes must remain unique across all directories.
+        if route_key in registered_route_keys:
+            raise ValueError(f"Browser route '{view_route}' is already registered")
+
+        # Keep each validated definition paired with its startup source snapshot.
+        definition = ViewDefinition(
+            path=view_path,
+            route=view_route,
+        )
+        discovered_views.append((definition, encoded_content))
+        registered_route_keys.add(route_key)
+
+    return discovered_views
