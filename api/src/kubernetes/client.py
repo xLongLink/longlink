@@ -1,4 +1,5 @@
 import kr8s
+import asyncio
 from uuid import UUID
 from types import TracebackType
 from typing import Self, cast
@@ -7,9 +8,25 @@ from kr8s.asyncio import Api
 from src.kubernetes import namespace
 from kr8s.asyncio.objects import Service, Namespace
 
+# Retain each loop's borrowed clients until the Platform lifespan stops their consumers.
+_api_clients: dict[asyncio.AbstractEventLoop, set[Api]] = {}
+
+
+async def dispose_clients() -> None:
+    """Close the current Platform loop's shared Kubernetes transports at shutdown."""
+
+    # Detach ownership before cleanup so repeated shutdown cannot close the same clients twice.
+    clients = _api_clients.pop(asyncio.get_running_loop(), set())
+
+    # kr8s has no public close method; close its current sessions even if another close fails.
+    async with AsyncExitStack() as connections:
+        for api in clients:
+            if api._session is not None:
+                connections.push_async_callback(api._session.aclose)
+
 
 class Kubernetes:
-    """Own one Compute API connection and its Kubernetes resource lifetimes.
+    """Borrow one Compute API connection and own operation-local Kubernetes tunnels.
 
     Database resources have dedicated Organization namespaces; Solutions run in
     the Organization compute namespace. Resource operations borrow this client's
@@ -44,16 +61,19 @@ class Kubernetes:
         # Lazily connect so clients that only construct lifecycle objects open no cluster connection.
         if self._api_client is None:
             self._api_client = await kr8s.asyncio.api(kubeconfig=cast(str, self._kubeconfig), serviceaccount="")
+
+        # The kr8s factory shares clients within a loop; only the Platform lifespan owns their transport.
+        _api_clients.setdefault(asyncio.get_running_loop(), set()).add(self._api_client)
         return self._api_client
 
     async def aclose(self) -> None:
-        """Close local tunnels before releasing their Kubernetes HTTP session."""
+        """Close local tunnels without closing another operation's shared transport."""
 
-        # Tunnels depend on the kr8s session and must finish before its transport closes.
-        await self._connections.aclose()
-        if self._api_client is not None and self._api_client._session is not None:
-            await self._api_client._session.aclose()
-        self._api_client = None
+        # Release the borrowed reference even when tunnel cleanup fails; the lifespan retains ownership.
+        try:
+            await self._connections.aclose()
+        finally:
+            self._api_client = None
 
     async def cluster_uid(self) -> str:
         """Return the stable UID of the configured Kubernetes cluster."""

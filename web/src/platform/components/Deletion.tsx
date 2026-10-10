@@ -1,7 +1,7 @@
-import { useTransition } from 'react';
+import { useRef, useTransition } from 'react';
 import { AlertDialog } from '@astryxdesign/core/AlertDialog';
 
-/** Keeps deletion pending state alive across dismissal; callers own the resource and success-only closure. */
+/** Tracks deletion for its mounted lifetime; callers own the resource, mounting, and success-only closure. */
 export function DeletionDialog({
     confirmation,
     onClose,
@@ -9,8 +9,9 @@ export function DeletionDialog({
     confirmation: { title: string; description: string; onDelete: () => Promise<void> } | null;
     onClose: () => void;
 }) {
-    // Remain mounted for the section's lifetime, including while its confirmation is absent.
+    // Preserve pending state across dismissal for callers that keep this component mounted.
     const [isDeleting, startDeletion] = useTransition();
+    const deletionInFlight = useRef(false);
 
     if (!confirmation) return null;
 
@@ -25,7 +26,20 @@ export function DeletionDialog({
             onOpenChange={(open) => {
                 if (!open) onClose();
             }}
-            onAction={() => startDeletion(confirmation.onDelete)}
+            onAction={() => {
+                // Deduplicate same-tick clicks before the transition's pending state renders.
+                if (deletionInFlight.current) return;
+
+                deletionInFlight.current = true;
+                startDeletion(async () => {
+                    // Release the guard on success or failure without swallowing transition errors.
+                    try {
+                        await confirmation.onDelete();
+                    } finally {
+                        deletionInFlight.current = false;
+                    }
+                });
+            }}
         />
     );
 }

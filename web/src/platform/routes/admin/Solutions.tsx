@@ -1,4 +1,3 @@
-import type { z } from 'zod';
 import { api } from '@/lib/api';
 import { useState } from 'react';
 import { Info } from 'lucide-react';
@@ -15,7 +14,7 @@ import { Pagination } from '@astryxdesign/core/Pagination';
 import { Table, proportional } from '@astryxdesign/core/Table';
 import { DeletionDialog } from '@/platform/components/Deletion';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
-import type { zPageSolutionResponse } from '@/lib/generated/platform-api-v1/zod.gen';
+import { zPageSolutionResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 
 /** Lists Solutions and manages administrator metadata and deletion dialogs. */
 export default function Solutions() {
@@ -25,9 +24,7 @@ export default function Solutions() {
         { kind: 'metadata'; id: string } | { kind: 'deletion'; item: { id: string; name: string } } | null
     >(null);
 
-    const [solutions, invalidate] = useApi<z.output<typeof zPageSolutionResponse>>(
-        `/api/v1/solutions?page=${page}&page_size=25`
-    );
+    const [solutions, invalidate] = useApi(`/api/v1/solutions?page=${page}&page_size=25`, zPageSolutionResponse);
 
     // Use current metadata and clear missing selections so returning to a page cannot reopen the dialog.
     const metadata = dialog?.kind === 'metadata' ? solutions.items.find((item) => item.id === dialog.id) : undefined;

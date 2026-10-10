@@ -1,4 +1,4 @@
-import type { z } from 'zod';
+import { z } from 'zod';
 import { api } from '@/lib/api';
 import Registries from './Registries';
 import { OpenAI } from '@/components/OpenAI';
@@ -302,7 +302,7 @@ function MembersSection({ base, canAdminister }: { base: string; canAdminister: 
     } | null>(null);
 
     // Load and invalidate People data only while the members section is active.
-    const [{ members }, invalidateDetails] = useApi<z.output<typeof schemas.zOrganizationDetails>>(base);
+    const [{ members }, invalidateDetails] = useApi(base, schemas.zOrganizationDetails);
 
     return (
         <>
@@ -413,7 +413,7 @@ function InvitationsSection({ base, canMaintain }: { base: string; canMaintain: 
     const [inviting, setInviting] = useState(false);
 
     // Load and invalidate People data only while the invitations section is active.
-    const [{ invitations }, invalidateDetails] = useApi<z.output<typeof schemas.zOrganizationDetails>>(base);
+    const [{ invitations }, invalidateDetails] = useApi(base, schemas.zOrganizationDetails);
 
     /** Sends the validated invitation and refreshes organization access. */
     async function inviteMember() {
@@ -584,7 +584,7 @@ function InvitationsSection({ base, canMaintain }: { base: string; canMaintain: 
 
 /** Loads storage usage only while the organization section is active. */
 function StorageSection({ base }: { base: string }) {
-    const [storage] = useApi<z.output<typeof schemas.zOrganizationStorageUsageResponse>>(`${base}/storage`);
+    const [storage] = useApi(`${base}/storage`, schemas.zOrganizationStorageUsageResponse);
 
     return (
         <Stack gap={4}>
@@ -616,9 +616,7 @@ function SolutionsSection({
     const base = `/api/v1/organizations/${organization.id}`;
 
     // Keep solution refreshes scoped to the section's resource.
-    const [solutions, invalidateSolutions] = useApi<z.output<typeof schemas.zOrganizationSolutionSummary>[]>(
-        `${base}/solutions`
-    );
+    const [solutions, invalidateSolutions] = useApi(`${base}/solutions`, schemas.zOrganizationSolutionSummary.array());
 
     return (
         <>
@@ -862,7 +860,7 @@ function SolutionsSection({
 
 /** Loads pod logs only while their dialog is open. */
 function SolutionLogs({ solutionId, onClose }: { solutionId: string; onClose: () => void }) {
-    const [logs, invalidate] = useApi<string[]>(`/api/v1/solutions/${solutionId}/logs`);
+    const [logs, invalidate] = useApi(`/api/v1/solutions/${solutionId}/logs`, z.array(z.string()));
 
     // Keep log scrolling inside CodeBlock while dismissal and refresh remain visible.
     return (

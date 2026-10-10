@@ -12,6 +12,7 @@ import { TextArea } from '@astryxdesign/core/TextArea';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { Pagination } from '@astryxdesign/core/Pagination';
 import { Table, proportional } from '@astryxdesign/core/Table';
+import { DeletionDialog } from '@/platform/components/Deletion';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 
@@ -28,7 +29,7 @@ export default function Compute() {
 
     const [registrationOpen, setRegistrationOpen] = useState(false);
     const path = `/api/v1/computes?page=${page}&page_size=25`;
-    const [computes, invalidate] = useApi<z.output<typeof schemas.zPageComputeRegistryResponse>>(path);
+    const [computes, invalidate] = useApi(path, schemas.zPageComputeRegistryResponse);
 
     // Use current metadata and clear missing selections so returning to a page cannot reopen the dialog.
     const metadata = dialog?.kind === 'metadata' ? computes.items.find((item) => item.id === dialog.id) : undefined;
@@ -119,39 +120,19 @@ export default function Compute() {
                 </Dialog>
             )}
             {dialog?.kind === 'deletion' && (
-                <Dialog
-                    isOpen
-                    purpose="form"
-                    onOpenChange={(open) => {
-                        if (!open) setDialog(null);
-                    }}
-                >
-                    <DialogHeader
-                        title="Delete compute"
-                        onOpenChange={() => {
+                <DeletionDialog
+                    confirmation={{
+                        title: 'Delete compute',
+                        description: `Remove compute ${dialog.item.name} from the LongLink Platform? Its Kubernetes resources will remain unchanged.`,
+                        onDelete: async () => {
+                            // Remove the registry entry without deleting its Kubernetes resources.
+                            await api.delete(`/api/v1/computes/${dialog.item.id}`);
+                            await invalidate();
                             setDialog(null);
-                        }}
-                    />
-                    <Stack gap={3}>
-                        <Text color="secondary">
-                            Remove compute {dialog.item.name} from the LongLink Platform? Its Kubernetes resources will
-                            remain unchanged.
-                        </Text>
-                        <Stack direction="horizontal" gap={2} justify="end">
-                            <Button label="Cancel" variant="ghost" onClick={() => setDialog(null)} />
-                            <Button
-                                label="Delete"
-                                variant="destructive"
-                                clickAction={async () => {
-                                    // Remove the registry entry without deleting its Kubernetes resources.
-                                    await api.delete(`/api/v1/computes/${dialog.item.id}`);
-                                    await invalidate();
-                                    setDialog(null);
-                                }}
-                            />
-                        </Stack>
-                    </Stack>
-                </Dialog>
+                        },
+                    }}
+                    onClose={() => setDialog(null)}
+                />
             )}
         </Stack>
     );

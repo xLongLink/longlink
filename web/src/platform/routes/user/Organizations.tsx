@@ -1,4 +1,3 @@
-import type { z } from 'zod';
 import { useState } from 'react';
 import { useApi } from '@/lib/hooks/use-api';
 import { NoIndex } from '@/components/NoIndex';
@@ -13,7 +12,7 @@ import CreateOrganization from './CreateOrganization';
 import { ApiBoundary } from '@/components/ApiBoundary';
 import { PageContainer } from '@/components/PageContainer';
 import { Table, proportional } from '@astryxdesign/core/Table';
-import type * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
+import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 
 /** Lists the current user's organizations and creates new organizations. */
 export default function Organizations() {
@@ -32,8 +31,7 @@ export default function Organizations() {
 function OrganizationList() {
     const [creating, setCreating] = useState(false);
 
-    const [memberships, invalidate] =
-        useApi<z.output<typeof schemas.zUserOrganizationMembership>[]>('/api/v1/me/organizations');
+    const [memberships, invalidate] = useApi('/api/v1/me/organizations', schemas.zUserOrganizationMembership.array());
 
     // Offset the navigation and both padding layers so the empty state centers in the full viewport.
     return (
