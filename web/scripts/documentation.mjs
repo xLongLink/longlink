@@ -10,13 +10,6 @@ const root = path.resolve(import.meta.dirname, '..');
 const input = path.resolve(root, '../sdk/longlink/.static/jsx/frontend.d.ts');
 let source = await readFile(input, 'utf8');
 
-/** Parses explicit runtime sources without resolving their transitive imports. */
-async function readSource(filename) {
-    const text = await readFile(filename, 'utf8');
-
-    return ts.createSourceFile(filename, text, ts.ScriptTarget.Latest, true);
-}
-
 // Resolve exported signatures, including re-exported helpers, from the runtime's TypeScript program.
 const runtimeConfig = ts.readConfigFile(path.join(root, 'tsconfig.app.json'), ts.sys.readFile);
 if (runtimeConfig.error) throw new Error(ts.flattenDiagnosticMessageText(runtimeConfig.error.messageText, '\n'));
@@ -43,7 +36,8 @@ function editorType(text) {
 }
 
 // Generate the finite public icon contract from the same Lucide registry used by the runtime.
-const icons = await readSource(path.join(root, 'src/components/ui/Icon.tsx'));
+const icons = runtimeProgram.getSourceFile(path.join(root, 'src/components/ui/Icon.tsx'));
+if (!icons) throw new Error('Missing runtime icon source: src/components/ui/Icon.tsx');
 
 const registry = icons.statements
     .filter(ts.isVariableStatement)
@@ -207,7 +201,8 @@ replacements.push({
 });
 
 // Keep the common field contract synchronized with the wrappers that consume it.
-const fields = await readSource(path.join(root, 'src/components/ui/types.ts'));
+const fields = runtimeProgram.getSourceFile(path.join(root, 'src/components/ui/types.ts'));
+if (!fields) throw new Error('Missing runtime field types: src/components/ui/types.ts');
 
 const fieldType = fields.statements.find(
     (statement) => ts.isTypeAliasDeclaration(statement) && statement.name.text === 'FieldProps',

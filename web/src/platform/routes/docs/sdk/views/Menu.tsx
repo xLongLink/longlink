@@ -1,6 +1,7 @@
 import ViewLayout from './ViewLayout';
 import { Text } from '@astryxdesign/core/Text';
-import { Menu, MenuSection, MenuItem } from '@/components/ui/Menu';
+import { useLocation, useNavigate } from 'react-router';
+import { Menu, MenuSection, MenuItem, MenuNavigationContext } from '@/components/ui/Menu';
 
 /** Documents section navigation and selected content. */
 export default function MenuPage() {
@@ -35,17 +36,33 @@ export default function MenuPage() {
 
 /** Demonstrates the page's settings menu with switchable content. */
 function MenuExample() {
-    // Let the menu manage selection and show the chosen settings panel.
+    const location = useLocation();
+    const navigate = useNavigate();
+
+    // Keep router-backed fragment navigation local to the native preview, separate from the sandbox provider.
     return (
-        <Menu>
-            <MenuSection title="Settings">
-                <MenuItem label="Profile">
-                    <Text>Profile settings</Text>
-                </MenuItem>
-                <MenuItem label="Workflow">
-                    <Text>Workflow settings</Text>
-                </MenuItem>
-            </MenuSection>
-        </Menu>
+        <MenuNavigationContext
+            value={{
+                hash: location.hash,
+                select: (id) => {
+                    void navigate({
+                        pathname: location.pathname,
+                        search: location.search,
+                        hash: `#${id}`,
+                    });
+                },
+            }}
+        >
+            <Menu>
+                <MenuSection title="Settings">
+                    <MenuItem label="Profile">
+                        <Text>Profile settings</Text>
+                    </MenuItem>
+                    <MenuItem label="Workflow">
+                        <Text>Workflow settings</Text>
+                    </MenuItem>
+                </MenuSection>
+            </Menu>
+        </MenuNavigationContext>
     );
 }

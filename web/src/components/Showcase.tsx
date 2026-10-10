@@ -15,7 +15,7 @@ import { FileInput } from '@astryxdesign/core/FileInput';
 import { Tab, TabList } from '@astryxdesign/core/TabList';
 import { PageContainer } from '@/components/PageContainer';
 import { Step, Stepper } from '@astryxdesign/core/Stepper';
-import { PlatformFrame } from '@/platform/layouts/Platform';
+import { PlatformFrame } from '@/components/layouts/Platform';
 import { Table, proportional } from '@astryxdesign/core/Table';
 import { Layout, LayoutContent } from '@astryxdesign/core/Layout';
 import { BreadcrumbItem, Breadcrumbs } from '@astryxdesign/core/Breadcrumbs';

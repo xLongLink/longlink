@@ -1,4 +1,4 @@
-import type { NavigationTab } from '@/platform/layouts/Platform';
+import type { NavigationTab } from '@/components/layouts/Platform';
 import { AppWindow, ArrowUpDown, Building2, Settings2, Users, Wrench } from 'lucide-react';
 
 export const userNavigation = [

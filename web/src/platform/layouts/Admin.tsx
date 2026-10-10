@@ -1,11 +1,11 @@
 import { Outlet } from 'react-router';
-import { ProfileMenu } from '@/components/Profile';
-import Platform from '@/platform/layouts/Platform';
+import Platform from '@/components/layouts/Platform';
 import { adminNavigation } from '@/platform/navigation';
 import NotFoundLayout from '@/components/layouts/NotFound';
 import { PageContainer } from '@/components/PageContainer';
 import { useAuthenticatedUser } from '@/lib/hooks/use-user';
-import { PageBreadcrumb } from '@/components/breadcrumb/Page';
+import { ProfileMenu } from '@/platform/components/Profile';
+import { PageBreadcrumb } from '@/platform/components/PageBreadcrumb';
 
 /** Renders the authorized admin shell with tabbed navigation. */
 export default function Admin() {

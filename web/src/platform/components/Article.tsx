@@ -3,14 +3,14 @@ import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
 import { documentationPaths } from '@/platform/docs';
+import { Article } from '@/platform/layouts/Article';
 import { Divider } from '@astryxdesign/core/Divider';
 import { Outline } from '@astryxdesign/core/Outline';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
-import { Article } from '@/components/layouts/Article';
 import { useLocation, useNavigate } from 'react-router';
-import { Seo, articleRouteLabels } from '@/components/Seo';
 import { PathBreadcrumb } from '@/components/breadcrumb/Path';
 import { BreadcrumbItem } from '@astryxdesign/core/Breadcrumbs';
+import { Seo, articleRouteLabels } from '@/platform/components/Seo';
 import { useEffect, useEffectEvent, type ComponentProps, type ReactNode } from 'react';
 
 const dateFormatter = new Intl.DateTimeFormat('en-GB', {

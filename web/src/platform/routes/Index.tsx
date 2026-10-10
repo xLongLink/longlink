@@ -1,4 +1,3 @@
-import { Seo } from '@/components/Seo';
 import type { ReactNode } from 'react';
 import { Globe } from '@/components/Globe';
 import { siteName, siteUrl } from '@/site';
@@ -8,6 +7,7 @@ import { Grid } from '@astryxdesign/core/Grid';
 import { Icon } from '@astryxdesign/core/Icon';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
+import { Seo } from '@/platform/components/Seo';
 import { ClaudeAI } from '@/components/ClaudeAI';
 import { Showcase } from '@/components/Showcase';
 import { Stack } from '@astryxdesign/core/Stack';

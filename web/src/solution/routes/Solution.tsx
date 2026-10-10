@@ -1,6 +1,6 @@
 import { NoIndex } from '@/components/NoIndex';
 import { Link } from '@astryxdesign/core/Link';
-import Platform from '@/platform/layouts/Platform';
+import Platform from '@/components/layouts/Platform';
 import { SolutionRuntime } from '@/components/Solution';
 import { PageContainer } from '@/components/PageContainer';
 

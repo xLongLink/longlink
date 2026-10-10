@@ -12,7 +12,7 @@ export function useCurrentUser() {
     return useQuery({
         // Auth state must refresh immediately after login/logout redirects.
         queryKey: ['api', '/api/v1/me'],
-        queryFn: async ({ signal }) => zUserSummary.parse(await api('/api/v1/me', { signal }).json()),
+        queryFn: ({ signal }) => api('/api/v1/me', { signal }).json(zUserSummary),
         staleTime: 0,
         refetchOnWindowFocus: true,
         retry: false,

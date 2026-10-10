@@ -21,16 +21,16 @@ export default function McpAuthorization() {
         error,
     } = useQuery({
         queryKey: ['api', '/api/v1/mcp/consent', query, user?.id],
-        queryFn: async ({ signal }) => zConsent.parse(await api(`/api/v1/mcp/consent?${query}`, { signal }).json()),
+        queryFn: ({ signal }) => api(`/api/v1/mcp/consent?${query}`, { signal }).json(zConsent),
         enabled: !!user,
         retry: false,
     });
 
     /** Posts an explicit decision; the server validates permissions and the callback again. */
     async function decide(approve: boolean) {
-        const result = zAuthorizationRedirect.parse(
-            await api.post('/api/v1/mcp/consent', { json: { ...Object.fromEntries(params), approve } }).json()
-        );
+        const result = await api
+            .post('/api/v1/mcp/consent', { json: { ...Object.fromEntries(params), approve } })
+            .json(zAuthorizationRedirect);
 
         window.location.assign(result.url);
     }

@@ -8,7 +8,6 @@ import { NoIndex } from '@/components/NoIndex';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Avatar } from '@/components/ui/Avatar';
-import { useState, useTransition } from 'react';
 import { Badge } from '@astryxdesign/core/Badge';
 import { Button } from '@astryxdesign/core/Button';
 import { useToast } from '@astryxdesign/core/Toast';
@@ -26,11 +25,25 @@ import { Table, proportional } from '@astryxdesign/core/Table';
 import { DeletionDialog } from '@/platform/components/Deletion';
 import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
+import { useState, useTransition, type MouseEvent } from 'react';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
-import { useResolvedOrganizationMembership } from '@/lib/hooks/use-organization';
-import { Menu, MenuSection, MenuItem, MenuSubSection } from '@/components/ui/Menu';
+import { useLocation, useNavigate, useOutletContext } from 'react-router';
+import { SideNav, SideNavItem, SideNavSection } from '@astryxdesign/core/SideNav';
 import { Layout, LayoutPanel, LayoutHeader, LayoutContent } from '@astryxdesign/core/Layout';
-import { ArrowRight, ArrowUp, CheckCheck, EyeOff, Logs, Plug, RefreshCw, Trash, Wrench } from 'lucide-react';
+import {
+    ArrowRight,
+    ArrowUp,
+    Boxes,
+    Building2,
+    CheckCheck,
+    EyeOff,
+    Logs,
+    Plug,
+    RefreshCw,
+    Trash,
+    Users,
+    Wrench,
+} from 'lucide-react';
 
 type Solution = z.output<typeof schemas.zOrganizationSolutionSummary>;
 
@@ -274,14 +287,51 @@ function DeploymentReview({ update, invalidate, onClose }: DeploymentReviewProps
     );
 }
 
+const organizationSections = [
+    { id: 'general', label: 'General' },
+    { id: 'usage', label: 'Usage' },
+    { id: 'private-registries', label: 'Private registries' },
+];
+
+const peopleSections = [
+    { id: 'members', label: 'Members' },
+    { id: 'invitations', label: 'Invitations' },
+];
+
 /** Shares organization identity and permissions while sections own resource lifetimes. */
 export default function OrganizationSettings() {
-    const membership = useResolvedOrganizationMembership();
+    const membership = useOutletContext<z.output<typeof schemas.zUserOrganizationMembership>>();
     const base = `/api/v1/organizations/${membership.organization.id}`;
+    const location = useLocation();
+    const navigate = useNavigate();
+
+    // Unknown fragments select General; inactive sections never mount their queries or drafts.
+    const section =
+        [...organizationSections, ...peopleSections, { id: 'solutions', label: 'Solutions' }].find(
+            (item) => `#${item.id}` === location.hash
+        )?.id ?? 'general';
 
     // Share the layout-resolved identity and permissions without loading inactive sections.
     const canMaintain = ['maintain', 'admin', 'owner'].includes(membership.role);
     const canAdminister = ['admin', 'owner'].includes(membership.role);
+
+    /** Preserves ordinary-click history pushes while leaving modified clicks to the native link. */
+    function selectSection(event: MouseEvent, id: string) {
+        // Leave prevented and modified activations to the native link.
+        if (
+            event.defaultPrevented ||
+            event.button !== 0 ||
+            event.altKey ||
+            event.ctrlKey ||
+            event.metaKey ||
+            event.shiftKey
+        )
+            return;
+
+        // Push even when the selected fragment is already current, matching the existing Menu behavior.
+        event.preventDefault();
+        void navigate({ pathname: location.pathname, search: location.search, hash: `#${id}` });
+    }
 
     return (
         <Stack gap={8}>
@@ -295,48 +345,95 @@ export default function OrganizationSettings() {
                     <Text type="supporting">Organization</Text>
                 </Stack>
             </Stack>
-            <Menu>
-                <MenuSection title="Settings" isHeaderHidden>
-                    <MenuSubSection label="Organization" icon="building2">
-                        <MenuItem label="General">
-                            <ApiBoundary>
-                                <GeneralSection
-                                    base={base}
-                                    name={membership.organization.name}
-                                    canDelete={membership.role === 'owner'}
+            <Layout
+                height="auto"
+                start={
+                    <LayoutPanel
+                        isScrollable={false}
+                        label="Settings navigation"
+                        padding={0}
+                        role="navigation"
+                        width={260}
+                    >
+                        <SideNav className="h-auto w-full pr-4 [&>div:first-child]:pt-0 [&_.astryx-side-nav-section>div:first-child]:pt-0 [&_.astryx-side-nav-section>div:first-child]:pl-0">
+                            <SideNavSection title="Settings" isHeaderHidden className="pt-0">
+                                <SideNavItem
+                                    collapsible={{ defaultIsCollapsed: true }}
+                                    icon={<Building2 className="size-4" aria-hidden="true" />}
+                                    label="Organization"
+                                >
+                                    {organizationSections.map((item) => (
+                                        <SideNavItem
+                                            as="a"
+                                            href={`${location.pathname}${location.search}#${item.id}`}
+                                            isSelected={section === item.id}
+                                            key={item.id}
+                                            label={item.label}
+                                            onClick={(event) => selectSection(event, item.id)}
+                                        />
+                                    ))}
+                                </SideNavItem>
+                                <SideNavItem
+                                    collapsible={{ defaultIsCollapsed: true }}
+                                    icon={<Users className="size-4" aria-hidden="true" />}
+                                    label="People"
+                                >
+                                    {peopleSections.map((item) => (
+                                        <SideNavItem
+                                            as="a"
+                                            href={`${location.pathname}${location.search}#${item.id}`}
+                                            isSelected={section === item.id}
+                                            key={item.id}
+                                            label={item.label}
+                                            onClick={(event) => selectSection(event, item.id)}
+                                        />
+                                    ))}
+                                </SideNavItem>
+                                <SideNavItem
+                                    as="a"
+                                    href={`${location.pathname}${location.search}#solutions`}
+                                    icon={<Boxes className="size-4" aria-hidden="true" />}
+                                    isSelected={section === 'solutions'}
+                                    label="Solutions"
+                                    onClick={(event) => selectSection(event, 'solutions')}
                                 />
-                            </ApiBoundary>
-                        </MenuItem>
-                        <MenuItem label="Usage">
-                            <ApiBoundary key="storage">
-                                <StorageSection base={base} />
-                            </ApiBoundary>
-                        </MenuItem>
-                        <MenuItem label="Private registries">
-                            <ApiBoundary key="registries">
-                                <Registries base={base} canMaintain={canMaintain} />
-                            </ApiBoundary>
-                        </MenuItem>
-                    </MenuSubSection>
-                    <MenuSubSection label="People" icon="users">
-                        <MenuItem label="Members">
-                            <ApiBoundary key="members">
-                                <MembersSection base={base} canAdminister={canAdminister} />
-                            </ApiBoundary>
-                        </MenuItem>
-                        <MenuItem label="Invitations">
-                            <ApiBoundary key="invitations">
-                                <InvitationsSection base={base} canMaintain={canMaintain} />
-                            </ApiBoundary>
-                        </MenuItem>
-                    </MenuSubSection>
-                    <MenuItem label="Solutions" icon="boxes">
+                            </SideNavSection>
+                        </SideNav>
+                    </LayoutPanel>
+                }
+            >
+                <Stack gap={3}>
+                    {section === 'usage' ? (
+                        <ApiBoundary key="storage">
+                            <StorageSection base={base} />
+                        </ApiBoundary>
+                    ) : section === 'private-registries' ? (
+                        <ApiBoundary key="registries">
+                            <Registries base={base} canMaintain={canMaintain} />
+                        </ApiBoundary>
+                    ) : section === 'members' ? (
+                        <ApiBoundary key="members">
+                            <MembersSection base={base} canAdminister={canAdminister} />
+                        </ApiBoundary>
+                    ) : section === 'invitations' ? (
+                        <ApiBoundary key="invitations">
+                            <InvitationsSection base={base} canMaintain={canMaintain} />
+                        </ApiBoundary>
+                    ) : section === 'solutions' ? (
                         <ApiBoundary key="solutions">
                             <SolutionsSection organization={membership.organization} canMaintain={canMaintain} />
                         </ApiBoundary>
-                    </MenuItem>
-                </MenuSection>
-            </Menu>
+                    ) : (
+                        <ApiBoundary>
+                            <GeneralSection
+                                base={base}
+                                name={membership.organization.name}
+                                canDelete={membership.role === 'owner'}
+                            />
+                        </ApiBoundary>
+                    )}
+                </Stack>
+            </Layout>
         </Stack>
     );
 }
@@ -781,12 +878,9 @@ function SolutionsSection({
                                                                     // Forward async menu failures to the surrounding boundary without tracking pending state.
                                                                     startAction(async () => {
                                                                         // Fetch a fresh candidate for each review; never reuse a stale revision fence.
-                                                                        const checked =
-                                                                            schemas.zSolutionUpdateCheck.parse(
-                                                                                await api(
-                                                                                    `/api/v1/solutions/${row.id}/update`
-                                                                                ).json()
-                                                                            );
+                                                                        const checked = await api(
+                                                                            `/api/v1/solutions/${row.id}/update`
+                                                                        ).json(schemas.zSolutionUpdateCheck);
 
                                                                         setUpdate({
                                                                             key: crypto.randomUUID(),

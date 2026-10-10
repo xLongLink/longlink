@@ -1,9 +1,9 @@
 import Calculator from './Calculator';
-import { Seo } from '@/components/Seo';
 import { Card } from '@astryxdesign/core/Card';
 import { Grid } from '@astryxdesign/core/Grid';
 import { Icon } from '@astryxdesign/core/Icon';
 import { Text } from '@astryxdesign/core/Text';
+import { Seo } from '@/platform/components/Seo';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Token } from '@astryxdesign/core/Token';
 import { useCasePaths } from '@/platform/usecases';

@@ -9,7 +9,7 @@ import { Center } from '@astryxdesign/core/Center';
 import { Spinner } from '@astryxdesign/core/Spinner';
 import { skipToken, useQuery } from '@tanstack/react-query';
 import { matchRoutes, Navigate, useParams } from 'react-router';
-import type { NavigationTab } from '@/platform/layouts/Platform';
+import type { NavigationTab } from '@/components/layouts/Platform';
 import { resolveNavigationUrl, resolveRequestUrl } from '@/lib/url';
 
 type SolutionRuntimeProps = {
