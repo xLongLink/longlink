@@ -1,7 +1,8 @@
 import { z } from 'zod';
 import { api } from '@/lib/api';
-import { useState } from 'react';
 import { Info } from 'lucide-react';
+import { useApiError } from '@/lib/errors';
+import { useEffect, useState } from 'react';
 import { useApi } from '@/lib/hooks/use-api';
 import { NoIndex } from '@/components/NoIndex';
 import { Text } from '@astryxdesign/core/Text';
@@ -9,6 +10,7 @@ import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
 import { Heading } from '@astryxdesign/core/Heading';
 import { TextArea } from '@astryxdesign/core/TextArea';
+import { FileInput } from '@astryxdesign/core/FileInput';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { Pagination } from '@astryxdesign/core/Pagination';
 import { Table, proportional } from '@astryxdesign/core/Table';
@@ -17,7 +19,9 @@ import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 
 // The API also accepts raw YAML and validates its structure on the server.
-const registrationSchema = schemas.zComputeRegistryCreate.extend({ kubeconfig: z.string().min(1) });
+const registrationSchema = schemas.zComputeRegistryCreate.extend({
+    kubeconfig: z.string().refine((value) => value.trim().length > 0),
+});
 
 /** Lists registered Compute infrastructure and manages registration and removal. */
 export default function Compute() {
@@ -140,6 +144,8 @@ export default function Compute() {
 
 /** Owns a fresh registration draft for the lifetime of the form dialog. */
 function ComputeRegistration({ invalidate, onClose }: { invalidate: () => Promise<void>; onClose: () => void }) {
+    const reportApiError = useApiError();
+
     // Opening a new dialog starts with blank fields; dismissal discards this draft.
     const [registration, setRegistration] = useState<z.input<typeof registrationSchema>>({
         name: '',
@@ -148,12 +154,67 @@ function ComputeRegistration({ invalidate, onClose }: { invalidate: () => Promis
         storage_endpoint: '',
     });
 
+    const [file, setFile] = useState<File | null>(null);
+
+    const [fileRead, setFileRead] = useState<
+        { kind: 'idle' } | { kind: 'reading' } | { kind: 'error'; message: string }
+    >({ kind: 'idle' });
+
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    // Ignore an obsolete read after replacing, clearing, or dismissing the selected file.
+    useEffect(() => {
+        if (!file) return;
+
+        let canceled = false;
+
+        /** Loads the selected YAML without parsing or exposing its credentials in errors. */
+        async function readKubeconfig(selected: File) {
+            try {
+                const kubeconfig = await selected.text();
+
+                if (canceled) return;
+
+                // Preserve the original YAML text; the API owns syntax and kubeconfig validation.
+                if (!kubeconfig.trim()) {
+                    setFileRead({ kind: 'error', message: 'The kubeconfig file is empty.' });
+
+                    return;
+                }
+
+                setRegistration((draft) => ({ ...draft, kubeconfig }));
+                setFileRead({ kind: 'idle' });
+            } catch {
+                if (!canceled) {
+                    setFileRead({ kind: 'error', message: 'Unable to read the kubeconfig file. Choose another file.' });
+                }
+            }
+        }
+
+        void readKubeconfig(file);
+
+        return () => {
+            canceled = true;
+        };
+    }, [file]);
+
     /** Registers the validated Compute draft and refreshes the list. */
     async function registerCompute() {
+        // Block keyboard submission as well as button clicks until a complete draft is available.
+        if (fileRead.kind === 'reading' || isSubmitting || !registration.kubeconfig.trim()) return;
+
         // Validate the draft and refresh the list only after registration succeeds.
-        await api.post('/api/v1/computes', { json: registrationSchema.parse(registration) });
-        await invalidate();
-        onClose();
+        setIsSubmitting(true);
+
+        try {
+            await api.post('/api/v1/computes', { json: registrationSchema.parse(registration) });
+            await invalidate();
+            onClose();
+        } catch (cause) {
+            reportApiError(cause);
+        } finally {
+            setIsSubmitting(false);
+        }
     }
 
     // Preserve the existing 400px form dialog, control spacing, and dismissal behavior.
@@ -188,16 +249,39 @@ function ComputeRegistration({ invalidate, onClose }: { invalidate: () => Promis
                         isRequired
                         onChange={(storage_endpoint) => setRegistration({ ...registration, storage_endpoint })}
                     />
+                    <FileInput
+                        label="Kubeconfig file"
+                        accept=".yaml,.yml"
+                        value={file}
+                        isDisabled={isSubmitting}
+                        status={fileRead.kind === 'error' ? { type: 'error', message: fileRead.message } : undefined}
+                        onChange={(files) => {
+                            // Clear previous contents immediately so invalid or pending files cannot submit stale YAML.
+                            const selected = Array.isArray(files) ? (files[0] ?? null) : files;
+                            setFile(selected);
+                            setFileRead({ kind: selected ? 'reading' : 'idle' });
+                            setRegistration((draft) => ({ ...draft, kubeconfig: '' }));
+                        }}
+                    />
                     <TextArea
                         label="Kubeconfig"
                         value={registration.kubeconfig}
                         placeholder="Paste the Compute kubeconfig"
                         isRequired
-                        onChange={(kubeconfig) => setRegistration({ ...registration, kubeconfig })}
+                        isDisabled={fileRead.kind === 'reading' || isSubmitting}
+                        isLoading={fileRead.kind === 'reading'}
+                        hasSpellCheck={false}
+                        onChange={(kubeconfig) => setRegistration((draft) => ({ ...draft, kubeconfig }))}
                     />
                     <Stack direction="horizontal" gap={2} justify="end">
                         <Button label="Cancel" variant="ghost" onClick={onClose} />
-                        <Button label="Register" variant="primary" type="submit" />
+                        <Button
+                            label="Register"
+                            variant="primary"
+                            type="submit"
+                            isLoading={isSubmitting}
+                            isDisabled={fileRead.kind === 'reading' || !registration.kubeconfig.trim()}
+                        />
                     </Stack>
                 </Stack>
             </form>
