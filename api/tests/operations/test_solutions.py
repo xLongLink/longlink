@@ -119,9 +119,6 @@ async def test_solution_delete_removes_provider_state_and_tombstone(
     class FakeStorage(StorageKubernetes):
         """Record object-storage cleanup."""
 
-        def __init__(self, *_args: object) -> None:
-            """Accept provider configuration."""
-
         async def revoke(self, solution: UUID) -> None:
             """Record credential revocation."""
 

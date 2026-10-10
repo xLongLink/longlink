@@ -69,17 +69,6 @@ async def fetch_operations() -> Sequence[Operation]:
         return result.all()
 
 
-async def drain_operations() -> Sequence[Operation]:
-    """Claim and complete every queued Operation, returning them in claim order."""
-
-    # Keep polling ownership in one helper; each test asserts on the returned work.
-    drained: list[Operation] = []
-    while (scheduled := await claim_operation()) is not None:
-        await complete_operation(scheduled.id)
-        drained.append(scheduled)
-    return drained
-
-
 async def assert_no_new_operations(previous: Sequence[Operation]) -> None:
     """Assert no Operations were queued since the previous snapshot."""
 

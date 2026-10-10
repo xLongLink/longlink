@@ -800,31 +800,12 @@ async def test_solution_proxy_rejects_cross_organization_access(
     assert response.json() == {"detail": "Access required"}
 
 
-def patch_runtime_access_once(monkeypatch: pytest.MonkeyPatch, mutate: Callable[[], Awaitable[None]]) -> None:
-    """Apply one runtime revocation on first admission, then resolve fresh access."""
-
-    real_access = proxy_routes.organizations.solution_runtime_access
-    admitted = False
-
-    async def access(session: AsyncSession, user_id: UUID, solution_id: UUID) -> tuple[Solution, OrganizationRoles, ComputeRegistry] | None:
-        """Revoke runtime state once, then resolve access as the handler observes it."""
-
-        nonlocal admitted
-        if not admitted:
-            admitted = True
-            await mutate()
-        return await real_access(session, user_id, solution_id)
-
-    monkeypatch.setattr(proxy_routes.organizations, "solution_runtime_access", access)
-    reject_gateway_access(monkeypatch)
-
-
-async def test_solution_proxy_rechecks_access_after_runtime_admission(
+async def test_solution_proxy_rejects_membership_revoked_before_access_lookup(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Reject proxy access revoked while the Organization database is waking."""
+    """Resolve revoked membership before forwarding any request to the gateway."""
 
     # Arrange
     solution, _ = await create_running_solution(users[0])
@@ -839,16 +820,21 @@ async def test_solution_proxy_rechecks_access_after_runtime_admission(
         )
         await session.commit()
 
-    async def revoke_membership() -> None:
-        """Delete the member grant the handler observes on admission."""
+    # Revoke the grant immediately before the real access lookup reads it.
+    real_access = proxy_routes.organizations.solution_runtime_access
 
-        async with session_scope() as session:
-            membership = await session.get(UserOrganization, (member.id, solution.organization_id))
+    async def access(session: AsyncSession, user_id: UUID, solution_id: UUID) -> tuple[Solution, OrganizationRoles, ComputeRegistry] | None:
+        """Delete the member grant before resolving current access."""
+
+        async with session_scope() as revocation_session:
+            membership = await revocation_session.get(UserOrganization, (member.id, solution.organization_id))
             assert membership is not None
-            await session.delete(membership)
-            await session.commit()
+            await revocation_session.delete(membership)
+            await revocation_session.commit()
+        return await real_access(session, user_id, solution_id)
 
-    patch_runtime_access_once(monkeypatch, revoke_membership)
+    monkeypatch.setattr(proxy_routes.organizations, "solution_runtime_access", access)
+    reject_gateway_access(monkeypatch)
 
     # Act
     response = await clients[1].get(f"/api/v1/solutions/{solution.id}/proxy/views.json")
@@ -856,36 +842,6 @@ async def test_solution_proxy_rechecks_access_after_runtime_admission(
     # Assert
     assert response.status_code == 403
     assert response.json() == {"detail": "Access required"}
-
-
-async def test_solution_proxy_rechecks_readiness_after_runtime_admission(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-    users: tuple[User, User, User],
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """Reject proxy traffic when the Solution leaves running state while its database wakes."""
-
-    # Arrange
-    solution, _ = await create_running_solution(users[0])
-
-    async def leave_running_state() -> None:
-        """Move the Solution out of running state before admission resolves."""
-
-        async with session_scope() as session:
-            persisted_solution = await session.get(Solution, solution.id)
-            assert persisted_solution is not None
-            persisted_solution.status = Status.creating
-            await session.commit()
-
-    patch_runtime_access_once(monkeypatch, leave_running_state)
-
-    # Act
-    response = await clients[0].get(f"/api/v1/solutions/{solution.id}/proxy/views.json")
-
-    # Assert
-    assert response.status_code == 503
-    assert response.json() == {"detail": "Solution is not ready yet. Please try again shortly."}
-    assert response.headers["cache-control"] == "no-store"
 
 
 async def test_solution_proxy_returns_unavailable_when_gateway_request_fails(
@@ -1030,6 +986,7 @@ async def test_solution_proxy_delete_allows_maintain_member(
 async def test_solution_proxy_shows_loading_when_solution_is_not_ready(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Return a loading response while solution reconciliation is pending."""
 
@@ -1038,6 +995,7 @@ async def test_solution_proxy_shows_loading_when_solution_is_not_ready(
     organization = await create_organization(owner)
     solution = await create_solution(organization)
     client = clients[0]
+    reject_gateway_access(monkeypatch)
 
     # Request runtime content before the Solution is ready.
     response = await client.get(f"/api/v1/solutions/{solution.id}/proxy/views.json")

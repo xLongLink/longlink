@@ -3,7 +3,6 @@ import pytest
 import pytest_asyncio
 from fastapi import Request
 from pathlib import Path
-from conftest import TEST_PASSWORD
 from longlink import app
 from factories import create_solution, create_organization
 from longlink.app import LongLink
@@ -67,9 +66,8 @@ async def mcp_gateway(
     return solution, sdk
 
 
-@pytest.mark.usefixtures("database_runtime")
 async def test_mcp_proxy_supports_session_initialization_discovery_and_invocation(
-    client: httpx2.AsyncClient,
+    clients: tuple[httpx2.AsyncClient, httpx2.AsyncClient, httpx2.AsyncClient],
     users: tuple[User, User, User],
     mcp_gateway: tuple[Solution, LongLink],
 ) -> None:
@@ -77,12 +75,11 @@ async def test_mcp_proxy_supports_session_initialization_discovery_and_invocatio
 
     # Arrange
     solution, sdk = mcp_gateway
+    client = clients[0]
     path = f"/api/v1/solutions/{solution.id}/proxy/mcp"
     headers = {"accept": "application/json, text/event-stream"}
 
     # Act
-    login = await client.post("/api/v1/auth/password/login", json={"email": users[0].email, "password": TEST_PASSWORD})
-    assert login.status_code == 204, login.text
     async with sdk.router.lifespan_context(sdk):
         initialized = await client.post(
             path,

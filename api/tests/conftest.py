@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, Self, cast
 from pathlib import Path
 from contextlib import AsyncExitStack, asynccontextmanager
 from kr8s.asyncio import Api
-from collections.abc import Sequence, AsyncIterator
+from collections.abc import AsyncIterator
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 TEST_PASSWORD = "longlink-test-password"
@@ -98,15 +98,6 @@ class StorageKubernetes:
         """Return stable scoped credentials."""
 
         return Credentials("solution", "generated-secret")
-
-    async def revoke(self, solution: UUID) -> None:
-        """Accept user deletion."""
-
-    async def delete_prefix(self, organization: UUID, prefix: str) -> None:
-        """Accept owner-scoped object cleanup."""
-
-    async def delete(self, organization: UUID, solutions: Sequence[UUID]) -> None:
-        """Accept organization storage deletion."""
 
 
 class DatabaseKubernetes(AsyncKubernetes):
@@ -297,21 +288,14 @@ def kubernetes_client() -> "Kubernetes":
 
 
 class RegistryKubernetes(AsyncKubernetes):
-    """Resolve deterministic cluster identities without external Kubernetes I/O."""
+    """Supply independent synthetic cluster identities without Kubernetes I/O."""
 
     def __init__(self, kubeconfig: dict[str, object]) -> None:
-        """Retain the submitted configuration for identity resolution."""
-
-        self.kubeconfig = kubeconfig
+        """Accept cluster configuration without retaining unused state."""
 
     async def cluster_uid(self) -> str:
-        """Return the configured server or an independent test identity."""
+        """Return an independent identity for each registered test cluster."""
 
-        clusters = self.kubeconfig.get("clusters")
-        if isinstance(clusters, list) and clusters and isinstance(clusters[0], dict):
-            cluster = clusters[0].get("cluster")
-            if isinstance(cluster, dict) and isinstance(cluster.get("server"), str):
-                return cluster["server"]
         return str(uuid4())
 
 
