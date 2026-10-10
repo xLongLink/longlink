@@ -25,5 +25,11 @@ class EncryptedType(StringEncryptedType):
     def process_result_value(self, value: str | None, dialect: Dialect) -> JsonValue:
         """Decode decrypted JSON identically on PostgreSQL and SQLite."""
 
+        # Require serialized JSON text before decoding credentials.
         decrypted = super().process_result_value(value, dialect)
-        return json.loads(decrypted) if decrypted is not None else None
+        if decrypted is None:
+            return None
+        if not isinstance(decrypted, str):
+            raise TypeError("Decrypted credentials must be JSON text")
+
+        return json.loads(decrypted)
