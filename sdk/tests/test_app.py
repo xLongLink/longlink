@@ -70,7 +70,14 @@ def test_solution_test_client_replaces_development_services_with_testing_service
     # Assert
     assert user_response.status_code == 200
     assert user_response.json() == "Testing user"
-    assert app.state.longlink.storage.protocol == "memory"
+
+    # Exercise relative in-memory file operations without creating a local report.
+    storage = app.state.longlink.storage
+    assert storage.ls("", detail=False) == []
+    storage.pipe_file("report.txt", b"report")
+    assert storage.cat_file("report.txt") == b"report"
+    assert storage.ls("", detail=False) == ["report.txt"]
+    assert not Path("report.txt").exists()
     assert app.state.longlink.database._env.ENV == "testing"
 
 

@@ -40,25 +40,11 @@ export function DocumentationArticle({
     children,
     className = 'documentation-content [--font-family-heading:var(--font-family-handwritten)] [&_.astryx-heading]:uppercase [&_.astryx-heading]:tracking-wide',
 }: DocumentationArticleProps) {
-    // Preserve the 720px reading column, 224px outline, 64px header, and caller-owned typography.
+    // Keep documentation typography and reading order as wrapper-owned policy.
     return (
-        <>
-            <Seo description={article.description} hasBreadcrumbs title={article.title} />
-            <Article
-                className={className}
-                header={<PathBreadcrumb className="min-w-0 overflow-hidden" labels={articleRouteLabels} />}
-                footer={
-                    <ArticleFooter
-                        lastUpdated={article.lastUpdated}
-                        editUrl={article.editUrl}
-                        paths={documentationPaths}
-                    />
-                }
-                sidebar={article.toc.length ? <ArticleOutline items={article.toc} /> : undefined}
-            >
-                {children}
-            </Article>
-        </>
+        <ArticleRenderer article={article} className={className} paths={documentationPaths}>
+            {children}
+        </ArticleRenderer>
     );
 }
 
@@ -72,18 +58,35 @@ export function PublicArticle({
     children: ReactNode;
     paths?: readonly string[];
 }) {
-    // Preserve default typography, the 720px reading column, 224px outline, and 64px header.
+    // Keep public navigation Home-rooted without imposing typography or a reading collection.
+    return (
+        <ArticleRenderer article={article} paths={paths} root={<BreadcrumbItem href="/">Home</BreadcrumbItem>}>
+            {children}
+        </ArticleRenderer>
+    );
+}
+
+/** Renders authored articles with the typography and navigation policy selected by their wrapper. */
+function ArticleRenderer({
+    article,
+    children,
+    className,
+    paths,
+    root,
+}: {
+    article: ArticleMetadata;
+    children: ReactNode;
+    className?: string;
+    paths?: readonly string[];
+    root?: ReactNode;
+}) {
+    // Preserve shared metadata, the 720px reading column, 224px outline, and 64px header.
     return (
         <>
             <Seo description={article.description} hasBreadcrumbs title={article.title} />
             <Article
-                header={
-                    <PathBreadcrumb
-                        className="min-w-0 overflow-hidden"
-                        labels={articleRouteLabels}
-                        root={<BreadcrumbItem href="/">Home</BreadcrumbItem>}
-                    />
-                }
+                className={className}
+                header={<PathBreadcrumb className="min-w-0 overflow-hidden" labels={articleRouteLabels} root={root} />}
                 footer={<ArticleFooter lastUpdated={article.lastUpdated} editUrl={article.editUrl} paths={paths} />}
                 sidebar={article.toc.length ? <ArticleOutline items={article.toc} /> : undefined}
             >
