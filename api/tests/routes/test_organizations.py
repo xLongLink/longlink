@@ -2,7 +2,7 @@ import pytest
 from uuid import UUID, uuid4
 from httpx2 import AsyncClient
 from datetime import UTC, datetime
-from sqlmodel import select
+from sqlmodel import col, select
 from factories import create_compute, create_solution, fetch_operations, create_organization, assert_no_new_operations
 from src.utils import s3
 from sqlalchemy import func
@@ -82,14 +82,16 @@ async def test_create_organization_enforces_the_per_user_beta_limit(
     assert allowed_response.json()["name"] == "umbrella"
     async with session_scope() as session:
         owner_organization_count = await session.scalar(
-            select(func.count()).select_from(Organization).where(Organization.created_id == owner.id, Organization.deleted_at.is_(None))
+            select(func.count())
+            .select_from(Organization)
+            .where(col(Organization.created_id) == owner.id, col(Organization.deleted_at).is_(None))
         )
         other_user_organization_count = await session.scalar(
             select(func.count())
             .select_from(Organization)
             .where(
-                Organization.created_id == other_user.id,
-                Organization.deleted_at.is_(None),
+                col(Organization.created_id) == other_user.id,
+                col(Organization.deleted_at).is_(None),
             )
         )
     assert owner_organization_count == 3
@@ -568,8 +570,8 @@ async def test_get_organization_returns_invitations(
         await session.commit()
         invitation = await session.scalar(
             select(OrganizationInvitation).where(
-                OrganizationInvitation.organization_id == organization.id,
-                OrganizationInvitation.email == invitee.email,
+                col(OrganizationInvitation.organization_id) == organization.id,
+                col(OrganizationInvitation.email) == invitee.email,
             )
         )
         assert invitation is not None
@@ -764,7 +766,9 @@ async def test_organization_owner_revokes_pending_invitation(
     async with session_scope() as session:
         session.add(OrganizationInvitation(organization_id=organization.id, email=invitee.email, role=OrganizationRoles.write))
         await session.commit()
-        invitation = await session.scalar(select(OrganizationInvitation).where(OrganizationInvitation.organization_id == organization.id))
+        invitation = await session.scalar(
+            select(OrganizationInvitation).where(col(OrganizationInvitation.organization_id) == organization.id)
+        )
         assert invitation is not None
 
     # Act
@@ -789,7 +793,9 @@ async def test_organization_maintainer_cannot_revoke_invitation_above_their_role
         session.add(UserOrganization(user_id=maintainer.id, organization_id=organization.id, role=OrganizationRoles.maintain))
         session.add(OrganizationInvitation(organization_id=organization.id, email=invitee.email, role=OrganizationRoles.owner))
         await session.commit()
-        invitation = await session.scalar(select(OrganizationInvitation).where(OrganizationInvitation.organization_id == organization.id))
+        invitation = await session.scalar(
+            select(OrganizationInvitation).where(col(OrganizationInvitation.organization_id) == organization.id)
+        )
         assert invitation is not None
 
     # Act
@@ -816,7 +822,7 @@ async def test_organization_member_cannot_revoke_another_organizations_invitatio
         session.add(OrganizationInvitation(organization_id=second_organization.id, email=invitee.email, role=OrganizationRoles.write))
         await session.commit()
         invitation = await session.scalar(
-            select(OrganizationInvitation).where(OrganizationInvitation.organization_id == second_organization.id)
+            select(OrganizationInvitation).where(col(OrganizationInvitation.organization_id) == second_organization.id)
         )
         assert invitation is not None
 

@@ -1,4 +1,5 @@
 from uuid import UUID, uuid4
+from sqlmodel import col
 from src.utils import names
 from sqlalchemy import select
 from collections.abc import Sequence
@@ -64,7 +65,7 @@ async def fetch_operations() -> Sequence[Operation]:
     """Fetch queued Operations through an explicit test session."""
 
     async with session_scope() as session:
-        result = await session.scalars(select(Operation).order_by(Operation.created_at.desc()))
+        result = await session.scalars(select(Operation).order_by(col(Operation.created_at).desc()))
         return result.all()
 
 
