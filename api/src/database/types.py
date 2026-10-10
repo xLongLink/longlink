@@ -1,8 +1,17 @@
 import json
+from typing import cast
 from pydantic import JsonValue
 from sqlalchemy import Text
+from sqlalchemy.orm import InstrumentedAttribute
 from sqlalchemy.engine import Dialect
 from sqlalchemy_utils.types.encrypted.encrypted_type import StringEncryptedType
+
+
+def attr[T](value: T) -> InstrumentedAttribute[T]:
+    """Expose a SQLModel class field or relationship as an ORM attribute."""
+
+    # SQLModel class attributes are ORM descriptors despite their value annotations.
+    return cast(InstrumentedAttribute[T], value)
 
 
 class EncryptedType(StringEncryptedType):

@@ -13,6 +13,7 @@ from sqlalchemy.orm import defer, load_only
 from collections.abc import Sequence
 from src.environments import env
 from src.models.roles import OrganizationRoles
+from src.database.types import attr
 from src.database.services import users, organizations
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.mcp import MCPCode, MCPToken, MCPClient
@@ -86,7 +87,7 @@ async def _permitted_solution(session: AsyncSession, user: User, solution_id: UU
     """Require current access to the active Solution before approval or token issuance."""
 
     # Do not decrypt runtime secrets to render consent metadata.
-    solution = await session.scalar(select(Solution).options(defer(Solution.secrets)).where(Solution.id == solution_id))
+    solution = await session.scalar(select(Solution).options(defer(attr(Solution.secrets))).where(Solution.id == solution_id))
     if solution is None or solution.deleted_at is not None:
         raise ForbiddenError("Access required")
     await organizations.require_membership(session, user.id, solution.organization_id, OrganizationRoles.write)
@@ -245,7 +246,14 @@ async def tokens(session: AsyncSession, user_id: UUID) -> Sequence[MCPToken]:
 
     result = await session.scalars(
         select(MCPToken)
-        .options(load_only(MCPToken.id, MCPToken.client_id, MCPToken.expires_at, MCPToken.solution_id))
+        .options(
+            load_only(
+                attr(MCPToken.id),
+                attr(MCPToken.client_id),
+                attr(MCPToken.expires_at),
+                attr(MCPToken.solution_id),
+            )
+        )
         .where(MCPToken.user_id == user_id, MCPToken.expires_at > datetime.now(UTC))
     )
     return result.all()

@@ -9,6 +9,7 @@ from sqlalchemy.orm import defer, selectinload, contains_eager
 from collections.abc import Mapping, Sequence
 from src.models.roles import OrganizationRoles
 from src.models.types import Image, MinScale
+from src.database.types import attr
 from src.models.metadata import LongLinkMetadata
 from src.models.solutions import SolutionCreate, validate_idle_seconds, validate_environment_variables
 from src.database.services import operations, registries, organizations
@@ -28,9 +29,9 @@ async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Seq
         select(Solution)
         .join(Organization, col(Organization.id) == col(Solution.organization_id))
         .options(
-            contains_eager(Solution.organization),
-            defer(Solution.secrets),
-            selectinload(Solution.desired_revision).load_only(Revision.image, Revision.failed, raiseload=True),
+            contains_eager(attr(Solution.organization)),
+            defer(attr(Solution.secrets)),
+            selectinload(attr(Solution.desired_revision)).load_only(attr(Revision.image), attr(Revision.failed), raiseload=True),
         )
         .where(col(Solution.deleted_at).is_(None))
         .order_by(col(Organization.name), col(Solution.name), col(Solution.id))
@@ -126,7 +127,7 @@ async def access(session: AsyncSession, solution_id: UUID, user_id: UUID, *, loc
     # Serialize commands and permission changes before recording a deployment.
     statement = (
         select(Solution, col(UserOrganization.role))
-        .options(defer(Solution.secrets))
+        .options(defer(attr(Solution.secrets)))
         .join(UserOrganization, col(UserOrganization.organization_id) == col(Solution.organization_id))
         .join(Organization, col(Organization.id) == col(Solution.organization_id))
         .where(

@@ -5,6 +5,7 @@ from src.errors import ConflictError, NotFoundError
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import load_only
 from collections.abc import Sequence
+from src.database.types import attr
 from src.models.pagination import Pagination
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.computes import ComputeRegistry
@@ -19,11 +20,11 @@ async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Seq
         select(ComputeRegistry)
         .options(
             load_only(
-                ComputeRegistry.id,
-                ComputeRegistry.name,
-                ComputeRegistry.gateway_url,
-                ComputeRegistry.database_storage_class,
-                ComputeRegistry.storage_endpoint,
+                attr(ComputeRegistry.id),
+                attr(ComputeRegistry.name),
+                attr(ComputeRegistry.gateway_url),
+                attr(ComputeRegistry.database_storage_class),
+                attr(ComputeRegistry.storage_endpoint),
             )
         )
         .order_by(col(ComputeRegistry.name), col(ComputeRegistry.id))
@@ -57,7 +58,7 @@ async def delete(session: AsyncSession, registry_id: UUID) -> None:
     registry = await session.get(
         ComputeRegistry,
         registry_id,
-        options=(load_only(ComputeRegistry.id),),
+        options=(load_only(attr(ComputeRegistry.id)),),
         with_for_update=True,
     )
     if registry is None:
