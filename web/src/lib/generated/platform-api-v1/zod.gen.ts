@@ -173,6 +173,7 @@ export const zErrorResponse = z.object({
  */
 export const zLongLinkMetadata = z.object({
     image: z.string(),
+    version: z.string().nullish(),
     description: z.string().nullish(),
     environments: z.array(zEnvironmentMetadata).optional()
 });
@@ -466,6 +467,7 @@ export const zSolutionUpdateCheck = z.object({
     idle_seconds: z.int(),
     revision_id: z.uuid(),
     current_image: z.string(),
+    current_version: z.string().nullish(),
     configured_envs: z.array(z.string()),
     metadata: zLongLinkMetadata
 });

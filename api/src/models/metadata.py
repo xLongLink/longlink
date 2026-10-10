@@ -18,6 +18,7 @@ class LongLinkMetadata(BaseModel):
     image: Image
 
     # Metadata
+    version: str | None = None
     description: str | None = None
 
     # Relationships
