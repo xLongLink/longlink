@@ -1,6 +1,7 @@
 import type { z } from 'zod';
 import { api } from '@/lib/api';
 import { useState } from 'react';
+import { useApiError } from '@/lib/errors';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
@@ -29,40 +30,69 @@ export default function CreateSolution({
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
     const [envs, setEnvs] = useState<Record<string, string>>({});
+    const [pending, setPending] = useState(false);
+    const reportApiError = useApiError();
+
+    // Required environment values must be present before submitting the deployment draft.
+    const missingRequired =
+        stage.step === 2 &&
+        (stage.metadata.environments ?? []).some(
+            (environment) => environment.required && !envs[environment.name]?.length
+        );
 
     /** Inspects the chosen image before opening its configuration. */
     async function inspectImage() {
-        if (!image.trim()) return;
+        if (!image.trim() || pending) return;
 
         // Advance only when the image metadata is valid.
-        const inspected = schemas.zLongLinkMetadata.parse(
-            await api('/api/v1/image', {
-                searchParams: {
-                    image: image.trim(),
-                    organization_id: organizationId,
-                },
-            }).json()
-        );
+        setPending(true);
 
-        setImage(image.trim());
-        setDescription(inspected.description || '');
-        setEnvs({});
-        setStage({ step: 1, metadata: inspected });
+        try {
+            const inspected = schemas.zLongLinkMetadata.parse(
+                await api('/api/v1/image', {
+                    searchParams: {
+                        image: image.trim(),
+                        organization_id: organizationId,
+                    },
+                }).json()
+            );
+
+            setImage(image.trim());
+            setDescription(inspected.description || '');
+            setEnvs({});
+            setStage({ step: 1, metadata: inspected });
+        } catch (cause) {
+            // Preserve the image draft when inspection fails so the user can correct it.
+            reportApiError(cause);
+        } finally {
+            setPending(false);
+        }
     }
 
     /** Creates the configured Solution and refreshes its organization. */
     async function createSolution() {
-        // Omit blank optional environments and refresh only after creation succeeds.
-        const json = schemas.zSolutionCreate.parse({
-            description: description || null,
-            envs: Object.fromEntries(Object.entries(envs).filter(([, value]) => value.length > 0)),
-            image,
-            name: name.trim(),
-        });
+        if (stage.step !== 2 || missingRequired || pending) return;
 
-        await api.post(`/api/v1/organizations/${organizationId}/solutions`, { json });
-        await invalidate();
-        onClose();
+        // Omit blank optional environments and refresh only after creation succeeds.
+        setPending(true);
+
+        try {
+            const json = schemas.zSolutionCreate.parse({
+                description: description || null,
+                envs: Object.fromEntries(Object.entries(envs).filter(([, value]) => value.length > 0)),
+                image,
+                name: name.trim(),
+            });
+
+            await api.post(`/api/v1/organizations/${organizationId}/solutions`, { json });
+            await invalidate();
+            onClose();
+        } catch (cause) {
+            // Keep metadata and environment values editable after a rejected creation request.
+            reportApiError(cause);
+        } finally {
+            setPending(false);
+        }
     }
 
     // Keep progress above the active step and allow longer configuration forms to scroll.
@@ -201,7 +231,8 @@ export default function CreateSolution({
                                                         label="Inspect"
                                                         variant="primary"
                                                         type="submit"
-                                                        isDisabled={!image.trim()}
+                                                        isDisabled={!image.trim() || pending}
+                                                        isLoading={pending}
                                                     />
                                                 </Stack>
                                             </Stack>
@@ -268,7 +299,13 @@ export default function CreateSolution({
                                                     onClick={() => setStage({ step: 1, metadata: stage.metadata })}
                                                 />
                                                 <Stack direction="horizontal" gap={2}>
-                                                    <Button label="Create" variant="primary" type="submit" />
+                                                    <Button
+                                                        label="Create"
+                                                        variant="primary"
+                                                        type="submit"
+                                                        isDisabled={missingRequired || pending}
+                                                        isLoading={pending}
+                                                    />
                                                 </Stack>
                                             </Stack>
                                         </Stack>

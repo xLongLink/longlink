@@ -17,6 +17,7 @@ import { ApiBoundary } from '@/components/ApiBoundary';
 import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { Selector } from '@astryxdesign/core/Selector';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
+import { useMediaQuery } from '@astryxdesign/core/hooks';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { Step, Stepper } from '@astryxdesign/core/Stepper';
 import { Stack, StackItem } from '@astryxdesign/core/Stack';
@@ -304,6 +305,7 @@ export default function OrganizationSettings() {
     const base = `/api/v1/organizations/${membership.organization.id}`;
     const location = useLocation();
     const navigate = useNavigate();
+    const isNarrow = useMediaQuery('(width < 48rem)');
 
     // Unknown fragments select General; inactive sections never mount their queries or drafts.
     const section =
@@ -333,6 +335,62 @@ export default function OrganizationSettings() {
         void navigate({ pathname: location.pathname, search: location.search, hash: `#${id}` });
     }
 
+    // Move the settings navigation above full-width content below the md breakpoint.
+    const settingsNavigation = (
+        <LayoutPanel
+            isScrollable={false}
+            label="Settings navigation"
+            padding={0}
+            role="navigation"
+            width={isNarrow ? '100%' : 260}
+        >
+            <SideNav className="h-auto w-full md:pr-4 [&>div:first-child]:pt-0 [&_.astryx-side-nav-section>div:first-child]:pt-0 [&_.astryx-side-nav-section>div:first-child]:pl-0">
+                <SideNavSection title="Settings" isHeaderHidden className="pt-0">
+                    <SideNavItem
+                        collapsible={{ defaultIsCollapsed: true }}
+                        icon={<Building2 className="size-4" aria-hidden="true" />}
+                        label="Organization"
+                    >
+                        {organizationSections.map((item) => (
+                            <SideNavItem
+                                as="a"
+                                href={`${location.pathname}${location.search}#${item.id}`}
+                                isSelected={section === item.id}
+                                key={item.id}
+                                label={item.label}
+                                onClick={(event) => selectSection(event, item.id)}
+                            />
+                        ))}
+                    </SideNavItem>
+                    <SideNavItem
+                        collapsible={{ defaultIsCollapsed: true }}
+                        icon={<Users className="size-4" aria-hidden="true" />}
+                        label="People"
+                    >
+                        {peopleSections.map((item) => (
+                            <SideNavItem
+                                as="a"
+                                href={`${location.pathname}${location.search}#${item.id}`}
+                                isSelected={section === item.id}
+                                key={item.id}
+                                label={item.label}
+                                onClick={(event) => selectSection(event, item.id)}
+                            />
+                        ))}
+                    </SideNavItem>
+                    <SideNavItem
+                        as="a"
+                        href={`${location.pathname}${location.search}#solutions`}
+                        icon={<Boxes className="size-4" aria-hidden="true" />}
+                        isSelected={section === 'solutions'}
+                        label="Solutions"
+                        onClick={(event) => selectSection(event, 'solutions')}
+                    />
+                </SideNavSection>
+            </SideNav>
+        </LayoutPanel>
+    );
+
     return (
         <Stack gap={8}>
             <NoIndex title="Organization Settings | LongLink" />
@@ -347,60 +405,8 @@ export default function OrganizationSettings() {
             </Stack>
             <Layout
                 height="auto"
-                start={
-                    <LayoutPanel
-                        isScrollable={false}
-                        label="Settings navigation"
-                        padding={0}
-                        role="navigation"
-                        width={260}
-                    >
-                        <SideNav className="h-auto w-full pr-4 [&>div:first-child]:pt-0 [&_.astryx-side-nav-section>div:first-child]:pt-0 [&_.astryx-side-nav-section>div:first-child]:pl-0">
-                            <SideNavSection title="Settings" isHeaderHidden className="pt-0">
-                                <SideNavItem
-                                    collapsible={{ defaultIsCollapsed: true }}
-                                    icon={<Building2 className="size-4" aria-hidden="true" />}
-                                    label="Organization"
-                                >
-                                    {organizationSections.map((item) => (
-                                        <SideNavItem
-                                            as="a"
-                                            href={`${location.pathname}${location.search}#${item.id}`}
-                                            isSelected={section === item.id}
-                                            key={item.id}
-                                            label={item.label}
-                                            onClick={(event) => selectSection(event, item.id)}
-                                        />
-                                    ))}
-                                </SideNavItem>
-                                <SideNavItem
-                                    collapsible={{ defaultIsCollapsed: true }}
-                                    icon={<Users className="size-4" aria-hidden="true" />}
-                                    label="People"
-                                >
-                                    {peopleSections.map((item) => (
-                                        <SideNavItem
-                                            as="a"
-                                            href={`${location.pathname}${location.search}#${item.id}`}
-                                            isSelected={section === item.id}
-                                            key={item.id}
-                                            label={item.label}
-                                            onClick={(event) => selectSection(event, item.id)}
-                                        />
-                                    ))}
-                                </SideNavItem>
-                                <SideNavItem
-                                    as="a"
-                                    href={`${location.pathname}${location.search}#solutions`}
-                                    icon={<Boxes className="size-4" aria-hidden="true" />}
-                                    isSelected={section === 'solutions'}
-                                    label="Solutions"
-                                    onClick={(event) => selectSection(event, 'solutions')}
-                                />
-                            </SideNavSection>
-                        </SideNav>
-                    </LayoutPanel>
-                }
+                header={isNarrow ? <Stack paddingBlockEnd={4}>{settingsNavigation}</Stack> : undefined}
+                start={isNarrow ? undefined : settingsNavigation}
             >
                 <Stack gap={3}>
                     {section === 'usage' ? (

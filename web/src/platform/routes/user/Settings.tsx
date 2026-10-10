@@ -12,6 +12,7 @@ import { Heading } from '@astryxdesign/core/Heading';
 import { ApiBoundary } from '@/components/ApiBoundary';
 import { useQueryClient } from '@tanstack/react-query';
 import { useLocation, useNavigate } from 'react-router';
+import { useMediaQuery } from '@astryxdesign/core/hooks';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { PageContainer } from '@/components/PageContainer';
 import { useAuthenticatedUser } from '@/lib/hooks/use-user';
@@ -38,6 +39,7 @@ function SettingsPage({ user }: { user: z.output<typeof schemas.zUserSummary> })
     const queryClient = useQueryClient();
     const location = useLocation();
     const navigate = useNavigate();
+    const isNarrow = useMediaQuery('(width < 48rem)');
 
     // Unknown fragments select Account without loading organization memberships.
     const section = location.hash === '#organizations' ? 'organizations' : 'account';
@@ -69,6 +71,38 @@ function SettingsPage({ user }: { user: z.output<typeof schemas.zUserSummary> })
         await queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/me'], exact: true });
     }
 
+    // Move the settings navigation above full-width content below the md breakpoint.
+    const settingsNavigation = (
+        <LayoutPanel
+            isScrollable={false}
+            label="Settings navigation"
+            padding={0}
+            role="navigation"
+            width={isNarrow ? '100%' : 260}
+        >
+            <SideNav className="h-auto w-full md:pr-4 [&>div:first-child]:pt-0 [&_.astryx-side-nav-section>div:first-child]:pt-0 [&_.astryx-side-nav-section>div:first-child]:pl-0">
+                <SideNavSection title="Settings" isHeaderHidden className="pt-0">
+                    <SideNavItem
+                        as="a"
+                        href={`${location.pathname}${location.search}#account`}
+                        icon={<UserRound className="size-4" aria-hidden="true" />}
+                        isSelected={section === 'account'}
+                        label="Account"
+                        onClick={(event) => selectSection(event, 'account')}
+                    />
+                    <SideNavItem
+                        as="a"
+                        href={`${location.pathname}${location.search}#organizations`}
+                        icon={<Building2 className="size-4" aria-hidden="true" />}
+                        isSelected={section === 'organizations'}
+                        label="Organizations"
+                        onClick={(event) => selectSection(event, 'organizations')}
+                    />
+                </SideNavSection>
+            </SideNav>
+        </LayoutPanel>
+    );
+
     // Keep account editing independent of organization loading and failures.
     return (
         <Stack gap={8}>
@@ -83,36 +117,8 @@ function SettingsPage({ user }: { user: z.output<typeof schemas.zUserSummary> })
             </Stack>
             <Layout
                 height="auto"
-                start={
-                    <LayoutPanel
-                        isScrollable={false}
-                        label="Settings navigation"
-                        padding={0}
-                        role="navigation"
-                        width={260}
-                    >
-                        <SideNav className="h-auto w-full pr-4 [&>div:first-child]:pt-0 [&_.astryx-side-nav-section>div:first-child]:pt-0 [&_.astryx-side-nav-section>div:first-child]:pl-0">
-                            <SideNavSection title="Settings" isHeaderHidden className="pt-0">
-                                <SideNavItem
-                                    as="a"
-                                    href={`${location.pathname}${location.search}#account`}
-                                    icon={<UserRound className="size-4" aria-hidden="true" />}
-                                    isSelected={section === 'account'}
-                                    label="Account"
-                                    onClick={(event) => selectSection(event, 'account')}
-                                />
-                                <SideNavItem
-                                    as="a"
-                                    href={`${location.pathname}${location.search}#organizations`}
-                                    icon={<Building2 className="size-4" aria-hidden="true" />}
-                                    isSelected={section === 'organizations'}
-                                    label="Organizations"
-                                    onClick={(event) => selectSection(event, 'organizations')}
-                                />
-                            </SideNavSection>
-                        </SideNav>
-                    </LayoutPanel>
-                }
+                header={isNarrow ? <Stack paddingBlockEnd={4}>{settingsNavigation}</Stack> : undefined}
+                start={isNarrow ? undefined : settingsNavigation}
             >
                 <Stack gap={3}>
                     {section === 'organizations' ? (
