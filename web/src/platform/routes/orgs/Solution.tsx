@@ -1,4 +1,4 @@
-import type { z } from 'zod';
+import { z } from 'zod';
 import { ApiError } from '@/lib/api';
 import { useParams } from 'react-router';
 import { useApi } from '@/lib/hooks/use-api';
@@ -18,10 +18,7 @@ import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { PageError, PageLoading } from '@/components/Utils';
 import { useAuthenticatedUser } from '@/lib/hooks/use-user';
 import { PageBreadcrumb } from '@/components/breadcrumb/Page';
-import type {
-    zUserOrganizationMembership,
-    zOrganizationSolutionSummary,
-} from '@/lib/generated/platform-api-v1/zod.gen';
+import { zUserOrganizationMembership, zOrganizationSolutionSummary } from '@/lib/generated/platform-api-v1/zod.gen';
 
 /** Renders one proxy-backed organization solution after route authentication. */
 export default function OrganizationSolution() {
@@ -54,13 +51,15 @@ function SolutionPage() {
     const { organization = '', solution = '' } = useParams();
     const user = useAuthenticatedUser();
 
-    const [membership] = useApi<z.output<typeof zUserOrganizationMembership>>(
-        `/api/v1/organizations/slug/${encodeURIComponent(organization)}`
+    const [membership] = useApi(
+        `/api/v1/organizations/slug/${encodeURIComponent(organization)}`,
+        zUserOrganizationMembership
     );
 
     // Fetch accessible solutions after membership resolves and poll pending deployments.
-    const [solutions] = useApi<z.output<typeof zOrganizationSolutionSummary>[]>(
+    const [solutions] = useApi(
         `/api/v1/organizations/${membership.organization.id}/solutions`,
+        zOrganizationSolutionSummary.array(),
         {
             refetchInterval: (query) =>
                 query.state.data?.some((solution) => solution.status === 'creating' || solution.deployment_pending)
@@ -149,7 +148,7 @@ function SolutionPage() {
 
 /** Reads failed-deployment logs only for authorized maintainers. */
 function DeploymentLogs({ solutionId }: { solutionId: string }) {
-    const [logs] = useApi<string[]>(`/api/v1/solutions/${solutionId}/logs`);
+    const [logs] = useApi(`/api/v1/solutions/${solutionId}/logs`, z.array(z.string()));
 
     return (
         <Stack gap={2}>

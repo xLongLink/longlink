@@ -1,4 +1,3 @@
-import type { z } from 'zod';
 import { useState } from 'react';
 import { Info } from 'lucide-react';
 import { useApi } from '@/lib/hooks/use-api';
@@ -10,7 +9,7 @@ import { Heading } from '@astryxdesign/core/Heading';
 import { Pagination } from '@astryxdesign/core/Pagination';
 import { Table, proportional } from '@astryxdesign/core/Table';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
-import type { zPageOperationResponse } from '@/lib/generated/platform-api-v1/zod.gen';
+import { zPageOperationResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 
 const kinds = {
     'solution.deploy': 'Solution deployment',
@@ -26,9 +25,7 @@ export default function Operations() {
     const [page, setPage] = useState(1);
     const [metadataId, setMetadataId] = useState<string | null>(null);
 
-    const [operations] = useApi<z.output<typeof zPageOperationResponse>>(
-        `/api/v1/operations?page=${page}&page_size=25`
-    );
+    const [operations] = useApi(`/api/v1/operations?page=${page}&page_size=25`, zPageOperationResponse);
 
     // Use current metadata and clear missing selections so returning to a page cannot reopen the dialog.
     const metadata = operations.items.find((item) => item.id === metadataId);
