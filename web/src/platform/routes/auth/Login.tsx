@@ -10,6 +10,7 @@ import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Seo } from '@/platform/components/Seo';
 import { Stack } from '@astryxdesign/core/Stack';
+import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
 import { useForm, useWatch } from 'react-hook-form';
 import { Divider } from '@astryxdesign/core/Divider';
@@ -113,14 +114,27 @@ export default function Login() {
                     <form
                         action={() =>
                             form.handleSubmit(async (payload) => {
-                                // Clear previous identity data only after sign-in succeeds.
-                                await api('/api/v1/auth/password/login', { json: payload, method: 'POST' });
-                                await clearSessionQueries(queryClient);
-                                void navigate(destination, { replace: true });
+                                // Keep failed sign-in attempts in the form without discarding the entered email.
+                                try {
+                                    await api('/api/v1/auth/password/login', { json: payload, method: 'POST' });
+
+                                    // Clear previous identity data only after sign-in succeeds.
+                                    await clearSessionQueries(queryClient);
+                                    void navigate(destination, { replace: true });
+                                } catch (cause) {
+                                    if (cause instanceof ApiError && (cause.status === 400 || cause.status === 401)) {
+                                        form.setError('root', { message: cause.message });
+                                    } else {
+                                        reportApiError(cause);
+                                    }
+                                }
                             })()
                         }
                     >
                         <Stack gap={2}>
+                            {form.formState.errors.root?.message && (
+                                <Banner status="error" title={form.formState.errors.root.message} />
+                            )}
                             <Stack gap={1}>
                                 <Text type="label">Email</Text>
                                 <TextField
@@ -164,7 +178,14 @@ export default function Login() {
                                     />
                                 </Stack>
                             </Stack>
-                            <Button label="Sign In" type="submit" variant="primary" width="100%" />
+                            <Button
+                                label="Sign In"
+                                type="submit"
+                                variant="primary"
+                                width="100%"
+                                isLoading={form.formState.isSubmitting}
+                                isDisabled={form.formState.isSubmitting}
+                            />
                         </Stack>
                     </form>
                 </Stack>
