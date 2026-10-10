@@ -106,7 +106,8 @@ describe('Compute registration', () => {
         expect(submissions).toEqual([]);
     });
 
-    it.each(['replace', 'clear', 'dismiss'])('ignores a pending read after %s', async (action) => {
+    it('ignores a pending read after replacing the file', async () => {
+        // Arrange
         const user = await renderCompute();
         let finishRead: ((text: string) => void) | undefined;
 
@@ -122,25 +123,78 @@ describe('Compute registration', () => {
             }
         }
 
+        // Act
+        await act(async () => user.upload(fileInput(), new PendingFile([], 'pending.yaml')));
+        expect(button('Register').disabled).toBe(true);
+        await act(async () => user.upload(fileInput(), new File(['new YAML'], 'new.yml')));
+        await vi.waitFor(() => expect(textarea().value).toBe('new YAML'));
+        await act(async () => finishRead?.(kubeconfig));
+
+        // Assert
+        expect(textarea().value).toBe('new YAML');
+        expect(submissions).toEqual([]);
+    });
+
+    it('ignores a pending read after clearing the file', async () => {
+        // Arrange
+        const user = await renderCompute();
+        let finishRead: ((text: string) => void) | undefined;
+
+        const pending = new Promise<string>((resolve) => {
+            finishRead = resolve;
+        });
+
+        // Hold only this file's read so clearing can race with its completion.
+        class PendingFile extends File {
+            /** Resolves when the test releases the selected file read. */
+            override text(): Promise<string> {
+                return pending;
+            }
+        }
+
+        // Act
         await act(async () => user.upload(fileInput(), new PendingFile([], 'pending.yaml')));
         expect(button('Register').disabled).toBe(true);
 
-        if (action === 'replace') {
-            await act(async () => user.upload(fileInput(), new File(['new YAML'], 'new.yml')));
-            await vi.waitFor(() => expect(textarea().value).toBe('new YAML'));
-        } else if (action === 'clear') {
-            const clear = document.querySelector<HTMLButtonElement>('button[aria-label="Clear Kubeconfig file"]');
+        // Find the actual file-clear control before dismissing the pending selection.
+        const clear = document.querySelector<HTMLButtonElement>('button[aria-label="Clear Kubeconfig file"]');
 
-            if (!clear) throw new Error('Missing file clear button');
+        if (!clear) throw new Error('Missing file clear button');
 
-            await act(async () => user.click(clear));
-        } else {
-            await act(async () => user.click(button('Cancel')));
-            await act(async () => user.click(button('Register Compute')));
+        await act(async () => user.click(clear));
+        await act(async () => finishRead?.(kubeconfig));
+
+        // Assert
+        expect(textarea().value).toBe('');
+        expect(submissions).toEqual([]);
+    });
+
+    it('ignores a pending read after dismissing the dialog', async () => {
+        // Arrange
+        const user = await renderCompute();
+        let finishRead: ((text: string) => void) | undefined;
+
+        const pending = new Promise<string>((resolve) => {
+            finishRead = resolve;
+        });
+
+        // Hold only this file's read so dismissal can race with its completion.
+        class PendingFile extends File {
+            /** Resolves when the test releases the selected file read. */
+            override text(): Promise<string> {
+                return pending;
+            }
         }
 
+        // Act
+        await act(async () => user.upload(fileInput(), new PendingFile([], 'pending.yaml')));
+        expect(button('Register').disabled).toBe(true);
+        await act(async () => user.click(button('Cancel')));
+        await act(async () => user.click(button('Register Compute')));
         await act(async () => finishRead?.(kubeconfig));
-        expect(textarea().value).toBe(action === 'replace' ? 'new YAML' : '');
+
+        // Assert
+        expect(textarea().value).toBe('');
         expect(submissions).toEqual([]);
     });
 
