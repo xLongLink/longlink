@@ -5,6 +5,7 @@ from src import auth
 from uuid import UUID
 from fastapi import Depends, Response, APIRouter, HTTPException
 from src.utils import roles, images
+from src.errors import NotFoundError, ForbiddenError
 from src.logger import logger
 from src.kubernetes import solutions as solution_resources
 from src.environments import env
@@ -85,9 +86,31 @@ async def create_solution(
 async def check_update(solution_id: UUID, user: auth.CurrentUser, session: auth.Session):
     """Inspect the desired release source without changing deployment state."""
 
-    _, revision, _, metadata = await update_candidate(session, solution_id, user.id)
+    solution, revision, _, metadata = await update_candidate(session, solution_id, user.id)
+
+    # Reuse the inspected version when the candidate is the current immutable image.
+    current_version = metadata.version if metadata.image == revision.image else None
+    if metadata.image != revision.image:
+        # Release command locks before inspecting the current digest with its retained credentials.
+        current_image = Image(revision.image)
+        connection = await registries.resolve(session, solution.organization_id, revision.registry_connection_id, current_image)
+        await session.commit()
+
+        # An unavailable old image must not block review of an otherwise valid update.
+        try:
+            current_metadata = await images.required_metadata(current_image, connection)
+            current_version = current_metadata.version
+        except (NotFoundError, ForbiddenError):
+            current_version = None
+
+        # Reject stale reviews or revoked access after the additional registry lookup.
+        solution = await solutions.access(session, solution_id, user.id, lock=False)
+        if solution.desired_revision_id != revision.id:
+            raise HTTPException(status_code=409, detail="Desired revision changed during inspection. Check again.")
+
     return {
         "current_image": revision.image,
+        "current_version": current_version,
         "metadata": metadata,
         "revision_id": revision.id,
         "configured_envs": revision.configured_envs,

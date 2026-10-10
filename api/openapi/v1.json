@@ -3896,6 +3896,17 @@
             "type": "string",
             "title": "Image"
           },
+          "version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version"
+          },
           "description": {
             "anyOf": [
               {
@@ -4960,6 +4971,18 @@
             "type": "string",
             "title": "Current Image",
             "description": "Immutable image of the desired revision used for this update check."
+          },
+          "current_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current Version",
+            "description": "OCI version label of the desired image, when available."
           },
           "configured_envs": {
             "items": {

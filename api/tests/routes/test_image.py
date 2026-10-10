@@ -84,6 +84,7 @@ async def test_inspect_image_returns_declared_metadata(authenticated_client: Asy
     assert response.status_code == 200
     assert response.json() == {
         "image": "ghcr.io/longlink/dashboard@sha256:test",
+        "version": None,
         "description": None,
         "environments": [{"name": "API_KEY", "description": "API key", "required": True}],
     }

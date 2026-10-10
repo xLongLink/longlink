@@ -83,11 +83,17 @@ class SolutionPatch(BaseModel):
 class SolutionUpdateCheck(BaseModel):
     """Expose a candidate and configured names, never environment values."""
 
+    # Configuration
     min_scale: MinScale
     idle_seconds: int
+
+    # Current release
     revision_id: UUID
     current_image: str = Field(description="Immutable image of the desired revision used for this update check.")
+    current_version: str | None = Field(default=None, description="OCI version label of the desired image, when available.")
     configured_envs: list[str]
+
+    # Candidate
     metadata: LongLinkMetadata
 
 
