@@ -14,7 +14,10 @@ export const FileRequestContext = createContext<{
 export function FileViewer({
     src,
     title,
+    hidden,
 }: {
+    /** Hides the component without unmounting it. */
+    hidden?: boolean;
     /** Scoped Solution operation path returning the file to preview. */
     src: string;
     /** Attachment name used for accessible action labels and the downloaded filename. */
@@ -26,7 +29,7 @@ export function FileViewer({
 
     // Each opened attachment owns a fresh preview and its blob URL.
     return (
-        <Stack gap={2}>
+        <Stack gap={2} hidden={hidden}>
             <Stack direction="horizontal" gap={2} wrap="wrap">
                 <Button variant="ghost" label={title} onClick={() => setOpen(!open)} />
                 <Button

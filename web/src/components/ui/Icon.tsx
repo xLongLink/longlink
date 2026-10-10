@@ -92,6 +92,16 @@ export const stoneIconRegistry = Object.fromEntries(
 ) as Record<StoneIconName, ReactNode>;
 
 /** Renders a registered Lucide icon at the requested Astryx size. */
-export function Icon({ icon, size }: { icon: StoneIconName; size: 'sm' | 'md' | 'lg' }) {
-    return <AstryxIcon icon={stoneIconComponents[icon]} size={size} />;
+export function Icon({
+    icon,
+    size,
+    hidden,
+}: {
+    /** Hides the component without unmounting it. */
+    hidden?: boolean;
+    icon: StoneIconName;
+    size: 'sm' | 'md' | 'lg';
+}) {
+    // Hide the SVG directly without adding a layout wrapper.
+    return <AstryxIcon icon={stoneIconComponents[icon]} size={size} className={hidden ? 'hidden!' : undefined} />;
 }

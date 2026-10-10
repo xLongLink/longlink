@@ -8,6 +8,8 @@ export function IconButton({
     onClick,
     ...props
 }: {
+    /** Hides the component without unmounting it. */
+    hidden?: boolean;
     label: string;
     icon: StoneIconName;
     variant?: 'primary' | 'secondary' | 'ghost' | 'destructive';
@@ -23,6 +25,8 @@ export function IconButton({
     return (
         <AstryxIconButton
             {...props}
+            className={props.hidden ? 'hidden!' : undefined}
+            tooltip={props.hidden ? undefined : props.tooltip}
             icon={<Icon icon={props.icon} size={size} />}
             variant={props.variant ?? 'secondary'}
             size={size}
