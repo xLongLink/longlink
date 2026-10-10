@@ -1,5 +1,7 @@
 import ViewLayout from './ViewLayout';
 import FormPreview from './FormPreview';
+import { Stack } from '@/components/ui/Stack';
+import { FormStep } from '@/components/ui/FormStep';
 import { TextInput } from '@/components/ui/TextInput';
 import { NumberInput } from '@/components/ui/NumberInput';
 
@@ -26,6 +28,34 @@ export default function CreateItem() {
           <Button type="reset" label="Reset" />
         </Stack>
       </Stack>
+    </Form>
+  );
+}`,
+                },
+                {
+                    title: 'Multi-step form',
+                    preview: (
+                        <FormPreview stepped>
+                            <FormStep label="Identity">
+                                <Stack gap={3}>
+                                    <TextInput name="name" label="Name" required />
+                                </Stack>
+                            </FormStep>
+                            <FormStep label="Details">
+                                <NumberInput name="price" label="Price" min={0} required />
+                            </FormStep>
+                        </FormPreview>
+                    ),
+                    code: `/** Creates an item using automatic step navigation and validation. */
+export default function CreateItem() {
+  return (
+    <Form action="/api/items" submitLabel="Create item">
+      <FormStep label="Identity">
+        <TextInput name="name" label="Name" required />
+      </FormStep>
+      <FormStep label="Details">
+        <NumberInput name="price" label="Price" min={0} required />
+      </FormStep>
     </Form>
   );
 }`,

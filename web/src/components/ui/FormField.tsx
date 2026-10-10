@@ -3,6 +3,9 @@ import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { useEffect, useState, type ReactNode, type RefObject } from 'react';
 
+/** Shares a scoped validation pass between Form and its non-native controls. */
+export type FormValidation = { scope: HTMLElement; step?: number; invalid: HTMLElement[] };
+
 /** Connects themed controls to native submission and reports missing or invalid named values. */
 export function FormField({
     children,
@@ -37,6 +40,21 @@ export function FormField({
         if (!form || !name) return;
 
         const validate = (event: Event) => {
+            // Stepped forms validate explicitly, without running inactive field listeners on submit.
+            if (event.type === 'submit' && form.hasAttribute('data-form-steps')) return;
+
+            // SAFETY: Form dispatches this private event with the shared FormValidation contract.
+            const validation =
+                event.type === 'longlink:validate' ? (event as CustomEvent<FormValidation>).detail : null;
+
+            const field = fieldRef.current;
+
+            if (validation && (!field || !validation.scope.contains(field))) return;
+
+            const panel = field?.closest<HTMLElement>('[data-form-step]');
+
+            if (validation?.step !== undefined && panel && Number(panel.dataset.formStep) !== validation.step) return;
+
             const invalidControl = fieldRef.current?.querySelector<HTMLElement>('[aria-invalid="true"]');
 
             if (disabled || fieldRef.current?.closest('fieldset:disabled') || (!error && !invalidControl)) {
@@ -47,12 +65,12 @@ export function FormField({
 
             setFailure({ values, message: error ?? 'Please enter a valid value.' });
 
-            if (!event.defaultPrevented) {
-                (
-                    invalidControl ??
-                    fieldRef.current?.querySelector<HTMLElement>('input:not([type="hidden"]), textarea, button')
-                )?.focus();
-            }
+            // The wizard reveals invalid panels before focusing; ordinary forms retain native submit handling.
+            const control =
+                invalidControl ?? field?.querySelector<HTMLElement>('input:not([type="hidden"]), textarea, button');
+
+            if (validation && field) validation.invalid.push(control ?? field);
+            else if (!event.defaultPrevented) control?.focus();
 
             event.preventDefault();
         };
@@ -74,12 +92,14 @@ export function FormField({
         // Only serialized binary values need a collector; strings use native controls or hidden carriers.
         const collectFiles = serialize && values.some((value) => value instanceof Blob);
         form.addEventListener('submit', validate, true);
+        form.addEventListener('longlink:validate', validate);
 
         if (collectFiles) form.addEventListener('formdata', collect);
         form.addEventListener('reset', reset);
 
         return () => {
             form.removeEventListener('submit', validate, true);
+            form.removeEventListener('longlink:validate', validate);
 
             if (collectFiles) form.removeEventListener('formdata', collect);
             form.removeEventListener('reset', reset);
