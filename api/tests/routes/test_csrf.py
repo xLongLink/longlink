@@ -1,7 +1,7 @@
 import pytest
 from httpx2 import AsyncClient
 from conftest import UNTRUSTED_ORIGINS, assert_origin_rejected, untrusted_origin_headers
-from sqlmodel import select
+from sqlmodel import col, select
 from factories import add_member, create_compute, create_solution, fetch_operations, create_organization, assert_no_new_operations
 from sqlalchemy import func
 from src.models.roles import OrganizationRoles
@@ -208,7 +208,7 @@ async def test_authenticated_solution_creation_rejects_untrusted_origin_before_p
     # Assert
     assert_origin_rejected(response)
     async with session_scope() as session:
-        count = await session.scalar(select(func.count()).select_from(Solution).where(Solution.organization_id == organization.id))
+        count = await session.scalar(select(func.count()).select_from(Solution).where(col(Solution.organization_id) == organization.id))
     assert count == 0
 
 

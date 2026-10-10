@@ -749,7 +749,9 @@ async def test_registration_completion_accepts_pending_organization_invitation(
     )
     organizations_response = await client.get("/api/v1/me/organizations")
     async with session_scope() as session:
-        invitation = await session.scalar(select(OrganizationInvitation).where(OrganizationInvitation.organization_id == organization.id))
+        invitation = await session.scalar(
+            select(OrganizationInvitation).where(col(OrganizationInvitation.organization_id) == organization.id)
+        )
 
     # Assert
     assert response.status_code == 201
@@ -789,11 +791,13 @@ async def test_password_login_accepts_pending_organization_invitation(
         json={"email": invited_user.email, "password": TEST_PASSWORD},
     )
     async with session_scope() as session:
-        invitation = await session.scalar(select(OrganizationInvitation).where(OrganizationInvitation.organization_id == organization.id))
+        invitation = await session.scalar(
+            select(OrganizationInvitation).where(col(OrganizationInvitation.organization_id) == organization.id)
+        )
         membership = await session.scalar(
             select(UserOrganization).where(
-                UserOrganization.organization_id == organization.id,
-                UserOrganization.user_id == invited_user.id,
+                col(UserOrganization.organization_id) == organization.id,
+                col(UserOrganization.user_id) == invited_user.id,
             )
         )
 
