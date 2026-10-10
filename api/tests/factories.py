@@ -1,4 +1,5 @@
 from uuid import UUID, uuid4
+from sqlmodel import col
 from src.utils import names
 from sqlalchemy import select
 from collections.abc import Sequence
@@ -40,7 +41,10 @@ async def complete_operation(operation_id: UUID) -> Operation | None:
     """Complete one queued Operation in a committed test transaction."""
 
     async with session_scope() as session:
-        operation = await operations.complete(session, operation_id)
+        completed = await operations.complete(session, operation_id)
+
+        # Fetch the persisted outcome only when the guarded transition succeeds.
+        operation = await session.get(Operation, operation_id, populate_existing=True) if completed else None
         await session.commit()
         return operation
 
@@ -49,7 +53,10 @@ async def fail_operation(operation_id: UUID, reason: str = "Operation failed") -
     """Fail one queued Operation in a committed test transaction."""
 
     async with session_scope() as session:
-        operation = await operations.fail(session, operation_id, reason)
+        failed = await operations.fail(session, operation_id, reason)
+
+        # Fetch the persisted outcome only when the guarded transition succeeds.
+        operation = await session.get(Operation, operation_id, populate_existing=True) if failed else None
         await session.commit()
         return operation
 
@@ -58,19 +65,8 @@ async def fetch_operations() -> Sequence[Operation]:
     """Fetch queued Operations through an explicit test session."""
 
     async with session_scope() as session:
-        result = await session.scalars(select(Operation).order_by(Operation.created_at.desc()))
+        result = await session.scalars(select(Operation).order_by(col(Operation.created_at).desc()))
         return result.all()
-
-
-async def drain_operations() -> Sequence[Operation]:
-    """Claim and complete every queued Operation, returning them in claim order."""
-
-    # Keep polling ownership in one helper; each test asserts on the returned work.
-    drained: list[Operation] = []
-    while (scheduled := await claim_operation()) is not None:
-        await complete_operation(scheduled.id)
-        drained.append(scheduled)
-    return drained
 
 
 async def assert_no_new_operations(previous: Sequence[Operation]) -> None:

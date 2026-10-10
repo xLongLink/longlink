@@ -30,16 +30,6 @@ radius      # none | small | medium | large
 
 ## Release
 
-Beta release:
-
-```bash
-git fetch origin main
-git tag vX.Y.Z-beta.K origin/main
-git push origin vX.Y.Z-beta.K
-```
-
-Release:
-
 ```bash
 git fetch origin main
 git tag vX.Y.Z origin/main

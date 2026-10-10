@@ -1,7 +1,7 @@
-.PHONY: install apt check format build test up image down api web sdk seed main
+.PHONY: install apt check format build test up image down api tunnel web sdk seed main
 
-# Keep the user-installed Vite+ CLI available across separate make invocations.
-export PATH := $(HOME)/.vite-plus/bin:$(PATH)
+# Keep user-installed development tools available across separate make invocations.
+export PATH := $(HOME)/.vite-plus/bin:$(HOME)/.local/bin:$(PATH)
 
 # Install host requirements (make, docker, k3d, helm, kubectl, uv, vp) on Ubuntu.
 apt:
@@ -77,8 +77,8 @@ build:
 # Build required bundles and run all test suites.
 test:
 	cd web && vp run build:api:bundle --logLevel warn
-	cd api && uv run --locked --extra dev pytest --cov=main --cov=src --cov-report=term-missing
 	cd web && vp run build:sdk:bundle --logLevel warn
+	cd api && uv run --locked --extra dev pytest --cov=main --cov=src --cov-report=term-missing
 	cd sdk && uv run --locked --group dev pytest --cov --cov-report=term-missing
 	cd web && vp test run
 
@@ -137,6 +137,21 @@ api:
 	@umask 077; cp --update=none api/.env.sample api/.env
 	cd api && uv run --locked alembic upgrade head
 	cd api && uv run --locked uvicorn main:app --host 127.0.0.1 --port 8000 --reload
+
+
+# Install cloudflared when missing and expose the running local API through a temporary HTTPS URL.
+tunnel:
+	@set -eu; \
+	if ! command -v cloudflared >/dev/null 2>&1; then \
+		[ "$$(uname -s)-$$(uname -m)" = "Linux-x86_64" ] || { echo "Install cloudflared manually on platforms other than Linux AMD64." >&2; exit 1; }; \
+		download=$$(mktemp); \
+		trap 'rm -f "$$download"' EXIT; \
+		curl --fail --location --silent --show-error --output "$$download" https://github.com/cloudflare/cloudflared/releases/download/2026.10.0/cloudflared-linux-amd64; \
+		printf '%s  %s\n' d33ff2d14475178d2012c2c56beba87389ac5ded27649519f198a7d3134a99db "$$download" | sha256sum --check --status; \
+		install -D -m 0755 "$$download" "$(HOME)/.local/bin/cloudflared"; \
+	fi
+	@printf '%s\n' 'Temporary public API tunnel. Press Ctrl+C to stop.' 'For OAuth, set PUBLIC_URL in api/.env to the printed HTTPS URL and restart make api.'
+	cloudflared tunnel --url http://127.0.0.1:8000 --no-autoupdate
 
 
 # Run the Vite web app.

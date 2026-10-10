@@ -43,8 +43,54 @@ function findActiveTab(tabs: readonly NavigationTab[], pathname: string): string
 export default function Platform({ action, breadcrumb, children, height = 'auto', tabs }: PlatformProps) {
     const { pathname } = useLocation();
 
+    // Keep route selection outside the presentation frame so previews need no account or router state.
+    return (
+        <PlatformFrame
+            action={action}
+            breadcrumb={breadcrumb}
+            height={height}
+            navigation={
+                tabs.length > 0 ? (
+                    <TabList
+                        aria-label="Section navigation"
+                        onChange={() => undefined}
+                        size="sm"
+                        value={findActiveTab(tabs, pathname) ?? ''}
+                    >
+                        {tabs.map((tab) => {
+                            const Icon = tab.icon;
+
+                            return (
+                                <Tab
+                                    href={tab.href}
+                                    icon={Icon ? <Icon aria-hidden="true" size={16} /> : undefined}
+                                    key={tab.href}
+                                    label={tab.label}
+                                    value={tab.href}
+                                />
+                            );
+                        })}
+                    </TabList>
+                ) : undefined
+            }
+        >
+            {children}
+        </PlatformFrame>
+    );
+}
+
+/** Shares the actual Platform chrome and content frame without authentication or route-dependent navigation. */
+export function PlatformFrame({
+    action,
+    breadcrumb,
+    children,
+    className,
+    height = 'auto',
+    navigation,
+}: Omit<PlatformProps, 'tabs'> & { className?: string; navigation?: ReactNode }) {
     return (
         <AppShell
+            className={className}
             height={height}
             mobileNav={false}
             topNav={
@@ -61,28 +107,9 @@ export default function Platform({ action, breadcrumb, children, height = 'auto'
                         }
                         label="Platform navigation"
                     />
-                    {tabs.length > 0 && (
+                    {navigation && (
                         <Stack direction="horizontal" paddingInline={4} width="100%">
-                            <TabList
-                                aria-label="Section navigation"
-                                onChange={() => undefined}
-                                size="sm"
-                                value={findActiveTab(tabs, pathname) ?? ''}
-                            >
-                                {tabs.map((tab) => {
-                                    const Icon = tab.icon;
-
-                                    return (
-                                        <Tab
-                                            href={tab.href}
-                                            icon={Icon ? <Icon aria-hidden="true" size={16} /> : undefined}
-                                            key={tab.href}
-                                            label={tab.label}
-                                            value={tab.href}
-                                        />
-                                    );
-                                })}
-                            </TabList>
+                            {navigation}
                         </Stack>
                     )}
                 </Stack>
@@ -92,7 +119,8 @@ export default function Platform({ action, breadcrumb, children, height = 'auto'
             {/* Fill the available main region without adding another viewport-height budget. */}
             <Stack
                 className="relative"
-                minHeight={height === 'fill' ? '100%' : 'calc(100dvh - var(--_app-shell-header-height, 0px))'}
+                height={height === 'fill' ? '100%' : undefined}
+                minHeight={height === 'fill' ? 0 : 'calc(100dvh - var(--_app-shell-header-height, 0px))'}
             >
                 <Card
                     aria-hidden="true"
@@ -102,7 +130,12 @@ export default function Platform({ action, breadcrumb, children, height = 'auto'
                 >
                     <Card className="border-0" height="100%" width="100%" />
                 </Card>
-                <Stack className="relative z-10" padding={2}>
+                <Stack
+                    className="relative z-10"
+                    height={height === 'fill' ? '100%' : undefined}
+                    minHeight={height === 'fill' ? 0 : undefined}
+                    padding={2}
+                >
                     {children}
                 </Stack>
             </Stack>

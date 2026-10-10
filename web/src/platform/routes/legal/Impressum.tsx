@@ -2,13 +2,8 @@ import { legalPaths } from '@/platform/legal';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
-import { Button } from '@astryxdesign/core/Button';
 import { Heading } from '@astryxdesign/core/Heading';
-import { Article } from '@/components/layouts/Article';
-import { Seo, articleRouteLabels } from '@/components/Seo';
-import { PathBreadcrumb } from '@/components/breadcrumb/Path';
-import { BreadcrumbItem } from '@astryxdesign/core/Breadcrumbs';
-import { ArticleFooter, ArticleOutline } from '@/platform/components/Article';
+import { PublicArticle } from '@/platform/components/Article';
 
 const article = {
     description: 'Read the LongLink legal notice and company information.',
@@ -24,26 +19,11 @@ const article = {
 
 /** Renders the legal notice and company information. */
 export default function Impressum() {
+    // Keep the legal notice within the shared public shell and legal reading order.
     return (
-        <>
-            <Seo description={article.description} hasBreadcrumbs title={article.title} />
-            <Article
-                header={
-                    <PathBreadcrumb
-                        className="min-w-0 overflow-hidden"
-                        labels={articleRouteLabels}
-                        root={<BreadcrumbItem href="/">Home</BreadcrumbItem>}
-                    />
-                }
-                headerAction={<Button href="/login/" label="Get Started" size="sm" variant="primary" />}
-                footer={
-                    <ArticleFooter lastUpdated={article.lastUpdated} editUrl={article.editUrl} paths={legalPaths} />
-                }
-                sidebar={article.toc.length ? <ArticleOutline items={article.toc} /> : undefined}
-            >
-                <ImpressumContent />
-            </Article>
-        </>
+        <PublicArticle article={article} paths={legalPaths}>
+            <ImpressumContent />
+        </PublicArticle>
     );
 }
 

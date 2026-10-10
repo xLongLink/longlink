@@ -1,5 +1,6 @@
 import path from 'node:path';
 import ts from 'typescript';
+import * as yaml from 'yaml';
 import * as prettier from 'prettier';
 import * as astryx from '@astryxdesign/cli/api';
 import { readFile, writeFile } from 'node:fs/promises';
@@ -9,14 +10,11 @@ const root = path.resolve(import.meta.dirname, '..');
 const input = path.resolve(root, '../sdk/longlink/.static/jsx/frontend.d.ts');
 let source = await readFile(input, 'utf8');
 
-// Resolve borrowed component props against the actual Web imports before publishing standalone editor types.
+// Resolve exported signatures, including re-exported helpers, from the runtime's TypeScript program.
 const runtimeConfig = ts.readConfigFile(path.join(root, 'tsconfig.app.json'), ts.sys.readFile);
 if (runtimeConfig.error) throw new Error(ts.flattenDiagnosticMessageText(runtimeConfig.error.messageText, '\n'));
 const runtimeOptions = ts.parseJsonConfigFileContent(runtimeConfig.config, ts.sys, root).options;
 const runtimeProgram = ts.createProgram([path.join(root, 'src/views/components.ts')], runtimeOptions);
-const runtimeChecker = runtimeProgram.getTypeChecker();
-
-// Derive editor component signatures from the same runtime source snapshot used for wrapper types.
 const bindings = runtimeProgram.getSourceFile(path.join(root, 'src/views/components.ts'));
 if (!bindings) throw new Error('Missing runtime component bindings: src/views/components.ts');
 
@@ -24,6 +22,18 @@ const editor = ts.createSourceFile(input, source, ts.ScriptTarget.Latest, true);
 const replacements = [];
 const introductions = new Map();
 const propertyDefaults = new Map();
+const componentMetadata = new Map();
+const componentDeclarations = [];
+const runtimeChecker = runtimeProgram.getTypeChecker();
+
+/** Translates runtime support types to the standalone editor's existing aliases. */
+function editorType(text) {
+    return text
+        .replaceAll('ReactNode', 'ViewNode')
+        .replace(/MouseEvent<(HTMLButtonElement|HTMLElement)>/g, 'ViewMouseEvent')
+        .replaceAll('ProportionalWidth', "Extract<ColumnWidth, { type: 'proportional' }>")
+        .replaceAll('PixelWidth', "Extract<ColumnWidth, { type: 'pixel' }>");
+}
 
 // Generate editor suggestions from the complete public icon type, including Lucide's on-demand catalog.
 const icons = runtimeProgram.getSourceFile(path.join(root, 'src/components/ui/Icon.tsx'));
@@ -47,22 +57,39 @@ replacements.push({
 });
 
 for (const binding of bindings.statements) {
-    if (!ts.isExportDeclaration(binding) || !binding.moduleSpecifier || !ts.isNamedExports(binding.exportClause))
-        continue;
-    const modulePath = binding.moduleSpecifier.text;
-    if (!modulePath.startsWith('@/components/ui/')) continue;
-    const filename = path.join(root, 'src', modulePath.slice(2) + '.tsx');
-    const wrapper = runtimeProgram.getSourceFile(filename);
-    if (!wrapper) throw new Error(`Missing runtime wrapper: ${filename}`);
-    const aliases = new Map(
-        wrapper.statements.filter(ts.isTypeAliasDeclaration).map((alias) => [alias.name.text, alias.type]),
-    );
+    if (!ts.isExportDeclaration(binding)) continue;
+    if (binding.isTypeOnly) continue;
+    if (!binding.moduleSpecifier || !binding.exportClause || !ts.isNamedExports(binding.exportClause))
+        throw new Error('Public runtime bindings must use named exports');
+
+    // Keep category and group identity beside the runtime exports, including grouped children and helpers.
+    const tags = ts.getJSDocTags(binding);
+    const category = tags.find((tag) => tag.tagName.text === 'category')?.comment;
+    if (typeof category !== 'string' || !documentationCategories.includes(category))
+        throw new Error(`Unknown documentation category: ${binding.getText(bindings)}`);
+    const group = tags.find((tag) => tag.tagName.text === 'group')?.comment;
+    if (group !== undefined && (typeof group !== 'string' || !group.trim()))
+        throw new Error(`Invalid documentation group: ${binding.getText(bindings)}`);
+    const overview = binding.jsDoc
+        ?.map((comment) => comment.comment)
+        .filter((comment) => typeof comment === 'string')
+        .join(' ');
+
     for (const exported of binding.exportClause.elements) {
+        if (exported.isTypeOnly) continue;
         const name = exported.name.text;
-        const implementation = wrapper.statements.find(
-            (statement) => ts.isFunctionDeclaration(statement) && statement.name?.text === name,
+
+        // Resolve re-exported implementations too; an unsupported binding must fail rather than disappear.
+        const symbol = runtimeChecker.getSymbolAtLocation(exported.name);
+        if (!symbol) throw new Error(`Missing runtime export: ${name}`);
+        const implementation = runtimeChecker.getAliasedSymbol(symbol).valueDeclaration;
+        if (!implementation || !ts.isFunctionDeclaration(implementation))
+            throw new Error(`Unsupported runtime component declaration: ${name}`);
+        const wrapper = implementation.getSourceFile();
+        const aliases = new Map(
+            wrapper.statements.filter(ts.isTypeAliasDeclaration).map((alias) => [alias.name.text, alias.type]),
         );
-        if (!implementation) continue;
+        componentMetadata.set(name, { category, group: group?.trim() });
         const description = implementation.jsDoc
             ?.map((comment) => comment.comment)
             .filter((comment) => typeof comment === 'string')
@@ -113,95 +140,67 @@ for (const binding of bindings.statements) {
         if (props && ts.isTypeReferenceNode(props) && aliases.has(props.typeName.getText(wrapper)))
             props = aliases.get(props.typeName.getText(wrapper));
 
-        // Materialize picked upstream props without leaking unavailable imports into Solution declarations.
-        let hasBorrowedProps = false;
-        const resolved =
-            props &&
-            ts.transform(props, [
-                (context) => {
-                    /** Resolves borrowed component fields while preserving authored local prop contracts. */
-                    function visit(node) {
-                        // Only imported component projections need to become explicit editor fields.
-                        if (
-                            ts.isTypeReferenceNode(node) &&
-                            node.typeName.getText(wrapper) === 'Pick' &&
-                            node.typeArguments?.[0] &&
-                            ts.isTypeReferenceNode(node.typeArguments[0]) &&
-                            node.typeArguments[0].typeName.getText(wrapper) === 'ComponentProps'
-                        ) {
-                            hasBorrowedProps = true;
-                            const borrowed = runtimeChecker.getTypeFromTypeNode(node);
-                            return ts.factory.createTypeLiteralNode(
-                                borrowed.getProperties().map((property) => {
-                                    // Expand literal unions rather than retaining names owned by the upstream component library.
-                                    const type = runtimeChecker.getTypeOfSymbolAtLocation(property, node);
-                                    const choices = type.isUnion() ? type.types : [type];
-                                    const nodes = choices.map((choice) =>
-                                        runtimeChecker.typeToTypeNode(
-                                            choice,
-                                            undefined,
-                                            ts.NodeBuilderFlags.NoTruncation,
-                                        ),
-                                    );
-                                    return ts.factory.createPropertySignature(
-                                        undefined,
-                                        property.name,
-                                        property.flags & ts.SymbolFlags.Optional
-                                            ? ts.factory.createToken(ts.SyntaxKind.QuestionToken)
-                                            : undefined,
-                                        nodes.length === 1 ? nodes[0] : ts.factory.createUnionTypeNode(nodes),
-                                    );
-                                }),
-                            );
-                        }
-
-                        return ts.visitEachChild(node, visit, context);
-                    }
-
-                    return (node) => ts.visitNode(node, visit);
-                },
-            ]);
-        const propText = (
-            hasBorrowedProps
-                ? ts.createPrinter().printNode(ts.EmitHint.Unspecified, resolved.transformed[0], wrapper)
-                : (props?.getText(wrapper) ?? '{}')
-        )
-            .replaceAll('ReactNode', 'ViewNode')
-            .replace(/MouseEvent<(HTMLButtonElement|HTMLElement)>/g, 'ViewMouseEvent');
-        resolved?.dispose();
+        // Preserve existing public prop aliases while deriving every component signature from its implementation.
+        const propText = editorType(props?.getText(wrapper) ?? '{}');
         const generics = implementation.typeParameters?.length
             ? `<${implementation.typeParameters.map((type) => type.getText(wrapper)).join(', ')}>`
             : '';
-        const statement = editor.statements.find((statement) =>
-            ts.isFunctionDeclaration(statement)
-                ? statement.name?.text === name
-                : ts.isVariableStatement(statement) &&
-                  statement.declarationList.declarations[0].name.getText(editor) === name,
+        const alias = editor.statements.find(
+            (statement) => ts.isTypeAliasDeclaration(statement) && statement.name.text === `${name}Props`,
         );
-        const publicType = ['Button', 'Card', 'DateInput'].includes(name) ? `${name}Props` : propText;
-        if (statement)
+        if (alias)
             replacements.push({
-                start: statement.getStart(editor),
-                end: statement.end,
-                text: `declare function ${name}${generics}(props: ${publicType}): React.JSX.Element;`,
+                start: alias.type.getStart(editor),
+                end: alias.type.end,
+                text: propText,
             });
-        if (['Button', 'Card', 'DateInput'].includes(name)) {
-            const alias = editor.statements.find(
-                (statement) => ts.isTypeAliasDeclaration(statement) && statement.name.text === `${name}Props`,
-            );
-            if (alias)
-                replacements.push({
-                    start: alias.type.getStart(editor),
-                    end: alias.type.end,
-                    text: propText,
-                });
+
+        // Components keep the public JSX contract, including marker children whose implementations return null.
+        let parameters;
+        let returnType;
+        if (
+            category !== 'Runtime' &&
+            (parameter?.name.getText(wrapper) === 'props' ||
+                parameter?.name.getText(wrapper) === '_props' ||
+                (parameter && ts.isObjectBindingPattern(parameter.name)))
+        ) {
+            parameters = `props: ${alias ? alias.name.text : propText}`;
+            returnType = 'React.JSX.Element';
+        } else {
+            // Helpers retain their actual argument names, optional defaults, and explicit return contracts.
+            parameters = implementation.parameters
+                .map((parameter) => {
+                    if (!parameter.type) throw new Error(`Missing runtime parameter type: ${name}`);
+                    return `${parameter.dotDotDotToken ? '...' : ''}${parameter.name.getText(wrapper)}${
+                        parameter.questionToken || parameter.initializer ? '?' : ''
+                    }: ${editorType(parameter.type.getText(wrapper))}`;
+                })
+                .join(', ');
+            if (!implementation.type) throw new Error(`Missing runtime return type: ${name}`);
+            returnType = editorType(implementation.type.getText(wrapper));
         }
+        componentDeclarations.push(
+            `/** ${overview ? `${overview} ` : ''}@category ${category}${group ? ` @group ${group.trim()}` : ''} */\n` +
+                `declare function ${name}${generics}(${parameters}): ${returnType};`,
+        );
     }
 }
 
+// Replace the complete generated component section; editor support types and runtime APIs remain authored separately.
+const componentStart = '// BEGIN GENERATED COMPONENTS';
+const componentEnd = '// END GENERATED COMPONENTS';
+const start = source.indexOf(componentStart);
+const end = source.indexOf(componentEnd);
+if (start === -1 || end < start) throw new Error('Missing generated component section in frontend.d.ts');
+replacements.push({
+    start: start + componentStart.length,
+    end,
+    text: `\n// Generated from web/src/views/components.ts by vp run generate:docs. Do not edit.\n\n${componentDeclarations.join('\n\n')}\n\n`,
+});
+
 // Keep the common field contract synchronized with the wrappers that consume it.
 const fields = runtimeProgram.getSourceFile(path.join(root, 'src/components/ui/types.ts'));
-if (!fields) throw new Error('Missing runtime field source: src/components/ui/types.ts');
+if (!fields) throw new Error('Missing runtime field types: src/components/ui/types.ts');
 
 const fieldType = fields.statements.find(
     (statement) => ts.isTypeAliasDeclaration(statement) && statement.name.text === 'FieldProps',
@@ -236,6 +235,9 @@ const publicProps = new Map();
 const spacing = document.statements.find(
     (statement) => ts.isTypeAliasDeclaration(statement) && statement.name.text === 'Spacing',
 );
+
+// Reuse one printer for property types with the same formatting configuration.
+const printer = ts.createPrinter();
 
 /** Hides omission from prop choices while preserving empty values in callback contracts. */
 function documentedType(type) {
@@ -274,13 +276,11 @@ function documentedType(type) {
         },
     ]);
     const transformed = result.transformed[0];
-    const text = ts
-        .createPrinter()
-        .printNode(
-            ts.EmitHint.Unspecified,
-            ts.isParenthesizedTypeNode(transformed) ? transformed.type : transformed,
-            document,
-        );
+    const text = printer.printNode(
+        ts.EmitHint.Unspecified,
+        ts.isParenthesizedTypeNode(transformed) ? transformed.type : transformed,
+        document,
+    );
     result.dispose();
     return text.replace(/\s*\n\s*/g, ' ');
 }
@@ -332,7 +332,19 @@ for (const statement of document.statements) {
 if (document.parseDiagnostics.length) {
     throw new Error(ts.flattenDiagnosticMessageText(document.parseDiagnostics[0].messageText, '\n'));
 }
-const declarations = document.statements.flatMap((statement) => {
+
+// Inventory component exports directly; only runtime APIs retain separately authored editor membership.
+const catalogDeclarations = document.statements.filter((statement) =>
+    ts.getJSDocTags(statement).some((tag) => tag.tagName.text === 'category' && tag.comment === 'Runtime'),
+);
+for (const name of componentMetadata.keys()) {
+    const statement = document.statements.find(
+        (statement) => ts.isFunctionDeclaration(statement) && statement.name?.text === name,
+    );
+    if (!statement) throw new Error(`Missing generated component declaration: ${name}`);
+    catalogDeclarations.push(statement);
+}
+const declarations = catalogDeclarations.flatMap((statement) => {
     const declaration = ts.isVariableStatement(statement) ? statement.declarationList.declarations[0] : statement;
 
     // Publish runtime bindings and their documented props, not editor-only types or namespaces.
@@ -344,23 +356,27 @@ const declarations = document.statements.flatMap((statement) => {
     const tags = ts.getJSDocTags(statement);
     if (tags.some((tag) => tag.tagName.text === 'ignore')) return [];
 
-    // Read category identity from the editor declaration and retain the published category order.
-    const category = tags.find((tag) => tag.tagName.text === 'category')?.comment;
-    if (!category) throw new Error(`Missing documentation category: ${name}`);
+    // Component membership and metadata come exclusively from runtime exports; retain authored runtime APIs.
+    const metadata = componentMetadata.get(name);
+    const category = metadata?.category ?? tags.find((tag) => tag.tagName.text === 'category')?.comment;
+    if (!metadata && category !== 'Runtime') throw new Error(`Unexpected standalone component declaration: ${name}`);
     if (typeof category !== 'string' || !documentationCategories.includes(category))
         throw new Error(`Unknown documentation category: ${name}: ${category}`);
 
     // Let related runtime declarations publish one shared documentation entry.
-    const group = tags.find((tag) => tag.tagName.text === 'group')?.comment;
+    const group = metadata ? metadata.group : tags.find((tag) => tag.tagName.text === 'group')?.comment;
     if (group !== undefined && (typeof group !== 'string' || !group.trim()))
         throw new Error(`Invalid documentation group: ${name}`);
+
+    // Keep each public-props lookup with its existence check.
+    const properties = publicProps.get(name);
     return [
         {
             name: group?.trim() ?? name,
             category,
-            ...(category !== 'Runtime' && publicProps.has(name)
+            ...(category !== 'Runtime' && properties
                 ? {
-                      properties: publicProps.get(name).map((property) => ({
+                      properties: properties.map((property) => ({
                           ...property,
                           name: group && group.trim() !== name ? `${name}.${property.name}` : property.name,
                       })),
@@ -400,7 +416,6 @@ for (const entry of declarations) {
 const components = [...groups.values()].sort((left, right) => left.name.localeCompare(right.name));
 
 // Read the same authored component content used by the Astryx website, pinned to the installed library.
-const references = [];
 const componentDetails = new Map();
 
 /** Reuses successful documentation lookups for the lifetime of this generation. */
@@ -438,72 +453,98 @@ for (const entry of components) {
         property.default ??= supported.default ?? (supported.required ? undefined : upstream?.default);
     }
 
-    references.push({
-        name: entry.name,
-        introduction:
-            introductions.get(entry.name) ??
-            detail.usage?.description ??
-            detail.description ??
-            usage?.description ??
-            '',
-        practices: (usage?.bestPractices ?? []).filter(
-            (practice) =>
-                !supportedProps ||
-                !upstreamProps.some(
-                    (property) =>
-                        !supportedProps.some((supported) => supported.name === property.name) &&
-                        practice.description.includes(property.name),
-                ),
-        ),
-    });
+    entry.introduction =
+        introductions.get(entry.name) ?? detail.usage?.description ?? detail.description ?? usage?.description ?? '';
 }
 
-// Format defaults for every catalog entry, including components without upstream guidance.
+// Keep inline default labels out of descriptions when a separate default is documented.
 for (const entry of components) {
     for (const property of entry.properties ?? []) {
         if (property.default !== undefined && property.default !== '-')
-            property.description = `${property.description ?? `The ${property.name} prop.`} Default: ${property.default}.`;
+            property.description = property.description?.replace(/\s+\(default\)/gi, '');
+
+        // Describe named sizes without embedding their pixel dimensions.
+        if (property.name === 'size')
+            property.description = property.description?.replace(/\s*\([^)]*\d+(?:x\d+)?px[^)]*\)/g, '');
     }
 }
 
-// Publish property contracts only in the SDK catalog and website-only guidance separately.
+/** Converts literal JavaScript defaults to native YAML values without executing expressions. */
+function nativeDefault(value) {
+    // Parse the expression with the same TypeScript parser used for the declaration catalog.
+    const document = ts.createSourceFile('default.ts', `(${value})`, ts.ScriptTarget.Latest, true);
+    const statement = document.statements[0];
+    if (document.parseDiagnostics.length || !statement || !ts.isExpressionStatement(statement)) return value;
+
+    /** Reads literal values from the parsed tree while preserving unsupported expression text. */
+    function readLiteral(expression, fallback = expression.getText(document)) {
+        // Unwrap grouping while retaining the original text for computed defaults.
+        while (ts.isParenthesizedExpression(expression)) expression = expression.expression;
+
+        // Preserve scalar types and remove JavaScript string-literal quoting.
+        if (ts.isStringLiteral(expression) || ts.isNoSubstitutionTemplateLiteral(expression)) return expression.text;
+        if (ts.isNumericLiteral(expression)) return Number(expression.text);
+        if (expression.kind === ts.SyntaxKind.TrueKeyword) return true;
+        if (expression.kind === ts.SyntaxKind.FalseKeyword) return false;
+        if (expression.kind === ts.SyntaxKind.NullKeyword) return null;
+
+        // Visit object members directly instead of parsing their source text again.
+        if (
+            ts.isObjectLiteralExpression(expression) &&
+            expression.properties.every(
+                (property) =>
+                    ts.isPropertyAssignment(property) &&
+                    (ts.isIdentifier(property.name) || ts.isStringLiteral(property.name) || ts.isNumericLiteral(property.name))
+            )
+        )
+            return Object.fromEntries(
+                expression.properties.map((property) => [property.name.text, readLiteral(property.initializer)])
+            );
+        return fallback;
+    }
+
+    return readLiteral(statement.expression, value);
+}
+
+// Publish one YAML catalog for both the CLI and website.
+const catalog = components.map(({ properties, ...component }) => ({
+    ...component,
+    introduction: component.introduction ?? '',
+    ...(properties
+        ? {
+              properties: properties.map(({ name, type, description, default: defaultValue }) => ({
+                  name,
+                  type,
+                  description,
+                  ...(defaultValue !== undefined && defaultValue !== '-' ? { default: nativeDefault(defaultValue) } : {}),
+              })),
+          }
+        : {}),
+}));
 const outputs = [
     { filename: input, text: source },
     {
-        filename: path.resolve(root, 'src/lib/generated/components.json'),
-        data: references,
-    },
-    {
-        filename: path.resolve(root, '../sdk/longlink/.static/jsx/components.json'),
-        data: components.map(({ properties, ...component }) => ({
-            ...component,
-            ...(properties
-                ? {
-                      properties: properties.map(({ name, type, description }) => ({
-                          name,
-                          type,
-                          description,
-                      })),
-                  }
-                : {}),
-        })),
+        filename: path.resolve(root, '../sdk/longlink/.static/jsx/components.yml'),
+        text: yaml
+            .stringify(catalog)
+            .replace(/\n- name:/g, '\n\n\n- name:')
+            .replace(/(?<!  properties:)\n    - name:/g, '\n\n    - name:'),
     },
 ];
 
 // CLI and website documentation share one generated catalog; checking must not modify files.
-for (const { filename, data, text } of outputs) {
-    const output = text ?? `${JSON.stringify(data, null, 4)}\n`;
+for (const { filename, text } of outputs) {
     const current = await readFile(filename, 'utf8').catch((error) => {
         // Only a missing output is regenerable; surface permission and other I/O failures.
         if (error.code === 'ENOENT') return undefined;
         throw error;
     });
-    if (current !== output) {
+    if (current !== text) {
         if (process.argv.includes('--check')) {
             console.error(`Generated documentation is stale: ${filename}`);
             process.exitCode = 1;
         } else {
-            await writeFile(filename, output, 'utf8');
+            await writeFile(filename, text, 'utf8');
         }
     }
 }

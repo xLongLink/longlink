@@ -1,34 +1,23 @@
 import json
 import httpx2
 import asyncio
+import pydantic_core
 from pydantic import TypeAdapter
 from src.errors import NotFoundError, ForbiddenError
 from src.logger import logger
 from collections.abc import Mapping
 from src.models.types import IMAGE_DIGEST_PATTERN, Image
-from src.models.metadata import LongLinkMetadata, EnvironmentMetadata
+from src.models.metadata import LongLinkMetadata
 from src.database.models.registries import RegistryConnection
 
 IMAGE_METADATA_MAX_BYTES = 1024 * 1024
 LABELS_ADAPTER = TypeAdapter(dict[str, str])
-ENVIRONMENTS_ADAPTER = TypeAdapter(list[EnvironmentMetadata])
 MANIFEST_ACCEPT = (
     "application/vnd.docker.distribution.manifest.v2+json, application/vnd.oci.image.manifest.v1+json, "
     "application/vnd.docker.distribution.manifest.list.v2+json, application/vnd.oci.image.index.v1+json"
 )
 GHCR_ORIGIN = "https://ghcr.io"
 LOCAL_ORIGIN = "http://localhost:15000"
-
-
-def registry_base(registry: str) -> str | None:
-    """Return the fixed origin for one supported image registry host."""
-
-    # Only GHCR and the local development registry may receive image requests.
-    if registry == "ghcr.io":
-        return GHCR_ORIGIN
-    if registry == "localhost:15000":
-        return LOCAL_ORIGIN
-    return None
 
 
 def missing_envs(metadata: LongLinkMetadata, envs: Mapping[str, str]) -> list[str]:
@@ -96,31 +85,27 @@ async def registry_json(
         return payload, response.headers
 
 
-async def metadata(image: Image, connection: RegistryConnection | None = None) -> LongLinkMetadata | None:
-    """Fetch LongLink metadata from a remote image via the OCI Distribution API."""
+async def required_metadata(image: Image, connection: RegistryConnection | None = None) -> LongLinkMetadata:
+    """Fetch image metadata or raise the stable missing-image response."""
 
     # Only supported registry origins may receive image requests.
-    base = registry_base(image.registry)
+    base = {"ghcr.io": GHCR_ORIGIN, "localhost:15000": LOCAL_ORIGIN}.get(image.registry)
     if base is None:
         raise ForbiddenError("Image registry is not allowed")
     if connection is not None and connection.host != image.registry:
         raise ForbiddenError("Registry connection does not match the image host")
 
+    # Keep registry inspection and transport cleanup within one client lifetime.
     async with httpx2.AsyncClient(follow_redirects=False, timeout=5.0, trust_env=False) as client:
         try:
             # Bound the whole lookup as well as individual network reads.
             async with asyncio.timeout(20):
-                return await inspect(client, image, base, connection)
+                result = await inspect(client, image, base, connection)
         except (httpx2.HTTPError, TimeoutError, TypeError, ValueError) as exc:
             logger.warning("Failed to inspect image metadata: %s", exc)
-            return None
-
-
-async def required_metadata(image: Image, connection: RegistryConnection | None = None) -> LongLinkMetadata:
-    """Return image metadata or raise the stable missing-image response."""
+            result = None
 
     # Require declared metadata before callers mutate durable Solution state.
-    result = await metadata(image, connection)
     if result is None:
         raise NotFoundError("Image metadata not found")
     return result
@@ -219,17 +204,16 @@ async def inspect(
         raw_labels = image_config.get("Labels")
         labels: dict[str, str] = {} if raw_labels is None else LABELS_ADAPTER.validate_python(raw_labels)
 
-        result = LongLinkMetadata(
-            image=Image(f"{image.registry}/{image.repository}@{digest}"),
-            description=labels.get("org.opencontainers.image.description"),
-        )
-
         # Prefer the domain-namespaced label while supporting previously built images.
         environments = labels.get("dev.longlink.environments", labels.get("longlink.environments"))
-        if environments is not None:
-            result.environments = ENVIRONMENTS_ADAPTER.validate_json(environments)
 
-        return result
+        # Validate the complete image metadata before returning it to release workflows.
+        return LongLinkMetadata(
+            image=Image(f"{image.registry}/{image.repository}@{digest}"),
+            version=labels.get("org.opencontainers.image.version", "").strip() or None,
+            description=labels.get("org.opencontainers.image.description"),
+            environments=pydantic_core.from_json(environments) if environments is not None else [],
+        )
 
-    # The manifest traversal always returns inside the loop.
+    # Keep an explicit fallback for the bounded traversal's return contract.
     return None

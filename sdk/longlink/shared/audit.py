@@ -1,11 +1,11 @@
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from longlink.shared.models import User
 from sqlalchemy.ext.asyncio import AsyncConnection
 from sqlalchemy.dialects.postgresql import insert as postgres_insert
 
 
-async def sync(conn: AsyncConnection, rows: Sequence[User]) -> None:
-    """Upsert shared user rows; the caller owns the shared-schema connection and transaction."""
+async def sync(conn: AsyncConnection, rows: Sequence[Mapping[str, object]]) -> None:
+    """Upsert shared user mappings; the caller owns the shared-schema connection and transaction."""
 
     # An empty snapshot leaves the shared table unchanged.
     if not rows:
@@ -24,5 +24,5 @@ async def sync(conn: AsyncConnection, rows: Sequence[User]) -> None:
                 "avatar": statement.excluded.avatar,
             },
         ),
-        [row.model_dump() for row in rows],
+        rows,
     )

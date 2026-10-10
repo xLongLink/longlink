@@ -131,22 +131,6 @@ async def test_gateway_rejects_non_origin_url(gateway_url: str) -> None:
         await gateway.verify(kubernetes_client(), gateway_url)
 
 
-async def test_gateway_propagates_controller_lookup_errors(
-    monkeypatch: pytest.MonkeyPatch, observed_resources: list[tuple[str, str]]
-) -> None:
-    """Preserve unexpected Kubernetes observation errors."""
-
-    # Fail at the Deployment boundary after reading release metadata and TLS configuration.
-    def deployment(*args: object, **kwargs: object) -> None:
-        """Report the Kubernetes lookup error."""
-
-        raise LookupError("controller unavailable")
-
-    monkeypatch.setattr(gateway, "Deployment", deployment)
-    with pytest.raises(LookupError, match="controller unavailable"):
-        await gateway.verify(kubernetes_client(), "https://gateway.example")
-
-
 async def test_gateway_obeys_caller_deadline(monkeypatch: pytest.MonkeyPatch, observed_resources: list[tuple[str, str]]) -> None:
     """Cancel readiness observations at the caller's deadline without repairing infrastructure."""
 

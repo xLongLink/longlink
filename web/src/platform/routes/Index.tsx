@@ -1,4 +1,3 @@
-import { Seo } from '@/components/Seo';
 import type { ReactNode } from 'react';
 import { Globe } from '@/components/Globe';
 import { siteName, siteUrl } from '@/site';
@@ -8,7 +7,9 @@ import { Grid } from '@astryxdesign/core/Grid';
 import { Icon } from '@astryxdesign/core/Icon';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
+import { Seo } from '@/platform/components/Seo';
 import { ClaudeAI } from '@/components/ClaudeAI';
+import { Showcase } from '@/components/Showcase';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
 import { Heading } from '@astryxdesign/core/Heading';
@@ -75,7 +76,7 @@ export default function Home() {
                         <Globe />
                     </Stack>
                     <section className="relative z-10 mx-auto flex w-full max-w-5xl -translate-y-16 flex-col items-center text-center sm:-translate-y-24">
-                        <Stack gap={2} hAlign="center">
+                        <Stack gap={3} hAlign="center">
                             <Text
                                 as="p"
                                 className="text-yellow-vivid"
@@ -118,7 +119,7 @@ export default function Home() {
                                     Improve
                                 </Text>
                             </Heading>
-                            <Text as="p" className="pt-1 text-lg sm:text-2xl" color="secondary" textWrap="pretty">
+                            <Text as="p" className="text-lg sm:text-2xl" color="secondary" textWrap="pretty">
                                 <Text display="block" type="inherit">
                                     The complete business process lifecycle, defined as code
                                 </Text>
@@ -126,7 +127,7 @@ export default function Home() {
                                     One source of truth for how work gets done
                                 </Text>
                             </Text>
-                            <Stack direction="horizontal" gap={3} hAlign="center" paddingBlockStart={1} wrap="wrap">
+                            <Stack direction="horizontal" gap={3} hAlign="center" wrap="wrap">
                                 <Button
                                     className="w-44"
                                     href={`https://chatgpt.com/?q=${aiPrompt}`}
@@ -157,6 +158,7 @@ export default function Home() {
                     variant="transparent"
                 />
             </Stack>
+            <Showcase />
             <Section className="relative z-20 bg-body" variant="transparent" padding={6} paddingBlock={6}>
                 <Grid className="mx-auto" columns={{ minWidth: 320, max: 2 }} gap={0} maxWidth={1000}>
                     <CapabilityCard

@@ -2,10 +2,8 @@ import type { ReactNode } from 'react';
 import { Code } from '@astryxdesign/core/Code';
 import { Text } from '@astryxdesign/core/Text';
 import { useSearchParams } from 'react-router';
-import { Badge } from '@astryxdesign/core/Badge';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Heading } from '@astryxdesign/core/Heading';
-import references from '@/lib/generated/components.json';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { Tab, TabList } from '@astryxdesign/core/TabList';
 import { documentationLastUpdated } from '@/lib/documentation';
@@ -15,38 +13,34 @@ import { componentCatalog, componentDocumentation } from '@/platform/docs';
 
 type ViewProperty = NonNullable<(typeof componentCatalog)[number]['properties']>[number];
 
-export type ViewReference = Pick<(typeof references)[number], 'introduction' | 'practices'>;
-
-export type ViewExample = { title: string; code: string; preview: ReactNode };
+type ViewExample = { title: string; code: string; preview: ReactNode };
 
 const tabs = [
     { value: 'examples', label: 'Examples' },
     { value: 'properties', label: 'Properties' },
-    { value: 'best-practices', label: 'Best practices' },
 ];
 
 /** Provides the article shell and reference tabs for an independently authored View page. */
 export default function ViewLayout({
     name,
-    reference: authoredReference,
+    introduction: authoredIntroduction,
     examples = [],
     children,
     toc,
 }: {
     name: string;
-    reference?: ViewReference;
+    introduction?: string;
     examples?: ViewExample[];
     children?: ReactNode;
     toc?: { id: string; label: string; level: number }[];
 }) {
     const [searchParams, setSearchParams] = useSearchParams();
 
-    // Resolve the declaration catalog and optional generated reference for this explicit page.
+    // Resolve the declaration catalog and optional authored introduction for this explicit page.
     const component = componentDocumentation.find((entry) => entry.name === name);
 
     if (!component) throw new Error(`Missing View documentation: ${name}`);
-    const upstream = references.find((entry) => entry.name === name);
-    const reference = authoredReference ?? upstream;
+    const introduction = authoredIntroduction ?? component.introduction;
     const activeTab = tabs.find((tab) => tab.value === searchParams.get('tab')) ?? tabs[0];
     const runtime = component.category === 'Runtime';
 
@@ -66,7 +60,6 @@ export default function ViewLayout({
             const row = {
                 ...property,
                 name: separator < 0 ? property.name : property.name.slice(separator + 1),
-                description: property.description ?? '',
             };
 
             const properties = groups.get(group);
@@ -76,11 +69,9 @@ export default function ViewLayout({
         }
     }
 
-    const propertyGroups = [...groups].map(([name, properties]) => ({ name, properties }));
-
     // Preserve the existing documentation shell, region sizes, and table of contents.
     const article = {
-        description: reference?.introduction ?? `${name} in LongLink Views.`,
+        description: introduction,
         lastUpdated: documentationLastUpdated,
         editUrl: `https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/docs/sdk/views/${component.label.replaceAll(' ', '')}.tsx`,
         title: `${component.label} | LongLink Documentation`,
@@ -103,10 +94,10 @@ export default function ViewLayout({
                 <Heading id="introduction" level={1}>
                     {component.label}
                 </Heading>
-                <Text as="p">
-                    {reference?.introduction ?? `${name} is supplied by the isolated LongLink renderer.`}
-                </Text>
-                {authoredReference && !runtime && <Text as="p">This is a LongLink-specific component.</Text>}
+                <Text as="p">{introduction}</Text>
+                {authoredIntroduction !== undefined && !runtime && (
+                    <Text as="p">This is a LongLink-specific component.</Text>
+                )}
                 <CodeBlock
                     code={`longlink docs --component "${name}"`}
                     language="bash"
@@ -159,17 +150,17 @@ export default function ViewLayout({
                                             <CodeBlock code={example.code} language="jsx" hasLanguageLabel={false} />
                                         </Stack>
                                     ))}
-                                    {upstream && !examples.length && (
+                                    {!examples.length && (
                                         <Text as="p">No standalone examples are available for this component.</Text>
                                     )}
                                 </>
                             )}
                             {activeTab.value === 'properties' &&
-                                propertyGroups.map((group) => (
-                                    <Stack key={group.name} gap={3}>
-                                        {group.name && <Heading level={2}>{group.name}</Heading>}
+                                [...groups].map(([name, properties]) => (
+                                    <Stack key={name} gap={3}>
+                                        {name && <Heading level={2}>{name}</Heading>}
                                         <Table
-                                            data={group.properties}
+                                            data={properties}
                                             idKey="name"
                                             density="compact"
                                             columns={[
@@ -191,34 +182,6 @@ export default function ViewLayout({
                                         />
                                     </Stack>
                                 ))}
-                            {activeTab.value === 'best-practices' && reference && reference.practices.length > 0 && (
-                                <Table
-                                    data={reference.practices}
-                                    idKey="description"
-                                    density="compact"
-                                    columns={[
-                                        {
-                                            key: 'guidance',
-                                            header: 'Guidance',
-                                            width: proportional(1),
-                                            renderCell: (practice) => (
-                                                <Badge
-                                                    label={practice.guidance ? 'Do' : 'Don’t'}
-                                                    variant={practice.guidance ? 'green' : 'red'}
-                                                />
-                                            ),
-                                        },
-                                        {
-                                            key: 'description',
-                                            header: 'Description',
-                                            width: proportional(4),
-                                            renderCell: (practice) => (
-                                                <Text type="supporting">{practice.description}</Text>
-                                            ),
-                                        },
-                                    ]}
-                                />
-                            )}
                         </Stack>
                     </Stack>
                 )}

@@ -1,7 +1,7 @@
 import { useValue } from './value';
 import type { ReactNode } from 'react';
 import type { FieldProps } from './types';
-import { useSize } from '@astryxdesign/core/SizeContext';
+import { Stack } from '@astryxdesign/core/Stack';
 import { TextInput as AstryxTextInput } from '@astryxdesign/core/TextInput';
 
 type TextInputProps = FieldProps & {
@@ -20,9 +20,6 @@ type TextInputProps = FieldProps & {
 
 /** Edits themed text with optional local state and native form serialization. */
 export function TextInput(props: TextInputProps) {
-    // Preserve inherited control sizing before applying the medium fallback.
-    const size = useSize(props.size, 'md');
-
     // Let the wrapper own state only when the Solution does not provide a value.
     const { defaultValue, ...control } = props;
 
@@ -34,22 +31,23 @@ export function TextInput(props: TextInputProps) {
 
     // Use ordinary editable text without clearing controls or automatic focus.
     return (
-        <AstryxTextInput
-            {...control}
-            ref={ref}
-            value={value}
-            onChange={onChange}
-            htmlName={props.name}
-            type={props.type ?? 'text'}
-            size={size}
-            isReadOnly={false}
-            hasClear={props.hasClear ?? false}
-            hasAutoFocus={props.hasAutoFocus ?? false}
-            isLabelHidden={false}
-            isRequired={props.required ?? false}
-            isDisabled={props.disabled ?? false}
-            changeAction={undefined}
-            isLoading={false}
-        />
+        <Stack gap={0} hidden={props.hidden} className={props.hidden ? 'hidden!' : 'contents!'}>
+            <AstryxTextInput
+                {...control}
+                ref={ref}
+                value={value}
+                onChange={onChange}
+                htmlName={props.name}
+                type={props.type ?? 'text'}
+                isReadOnly={false}
+                hasClear={props.hasClear ?? false}
+                hasAutoFocus={props.hasAutoFocus ?? false}
+                isLabelHidden={false}
+                isRequired={props.required ?? false}
+                isDisabled={props.disabled ?? false}
+                changeAction={undefined}
+                isLoading={false}
+            />
+        </Stack>
     );
 }

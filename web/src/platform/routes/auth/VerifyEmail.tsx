@@ -40,16 +40,15 @@ export default function VerifyEmail() {
         resolver: zodResolver(registrationCompleteSchema),
     });
 
-    const [verification, setVerification] = useState<
-        { status: 'verified'; data: z.output<typeof zEmailPayload> } | { status: 'error' } | null
-    >(null);
-
     const [accountConflict, setAccountConflict] = useState(false);
 
-    /** Verifies the signed email claim without publishing canceled or replaced results. */
-    async function verify({ signal, token: registrationToken }: VerificationRequest) {
-        setVerification(null);
-
+    /** Returns the signed email claim while preserving cancellation of credential side effects. */
+    async function verify({
+        signal,
+        token: registrationToken,
+    }: VerificationRequest): Promise<
+        { status: 'verified'; data: z.output<typeof zEmailPayload> } | { status: 'error' } | undefined
+    > {
         // Exchange the URL credential, or recover the server-owned registration setup.
         const request = registrationToken
             ? api('/api/v1/auth/verify', {
@@ -59,22 +58,24 @@ export default function VerifyEmail() {
               }).json()
             : api('/api/v1/auth/register/setup', { signal }).json();
 
-        await request.then(
+        return request.then(
             (value) => {
                 if (signal.aborted) return;
-                setVerification({ status: 'verified', data: zEmailPayload.parse(value) });
+
+                return { status: 'verified', data: zEmailPayload.parse(value) };
             },
             (cause: unknown) => {
                 if (signal.aborted) return;
 
                 if (!(cause instanceof ApiError) || cause.status !== 400) throw cause;
                 sessionStorage.removeItem(REGISTRATION_TOKEN_KEY);
-                setVerification({ status: 'error' });
+
+                return { status: 'error' };
             }
         );
     }
 
-    const { startVerification } = useVerification(token, verify);
+    const { verification, startVerification } = useVerification(token, verify);
     const verifiedEmail = verification?.status === 'verified' ? verification.data.email : null;
 
     /** Creates the account and publishes only the new authenticated query state. */
@@ -98,7 +99,7 @@ export default function VerifyEmail() {
                     if (cause.status === 409) setAccountConflict(true);
 
                     // Expired setup cookies require recovering or replacing the registration link.
-                    if (cause.status === 400) startVerification('');
+                    if (cause.status === 400) void startVerification('');
                 }
             );
     }

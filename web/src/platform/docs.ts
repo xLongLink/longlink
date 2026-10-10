@@ -1,5 +1,5 @@
+import componentCatalog from '../lib/catalog';
 import { documentationCategories } from '../lib/documentation';
-import componentCatalog from '../../../sdk/longlink/.static/jsx/components.json';
 import {
     Database,
     FileCode2,

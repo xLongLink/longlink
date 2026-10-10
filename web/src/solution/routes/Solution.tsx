@@ -1,6 +1,6 @@
 import { NoIndex } from '@/components/NoIndex';
 import { Link } from '@astryxdesign/core/Link';
-import Platform from '@/platform/layouts/Platform';
+import Platform from '@/components/layouts/Platform';
 import { SolutionRuntime } from '@/components/Solution';
 import { PageContainer } from '@/components/PageContainer';
 
@@ -18,10 +18,11 @@ export default function Solution() {
                             Documentation
                         </Link>
                     }
+                    height="fill"
                     tabs={tabs}
                 >
                     <NoIndex title={title ? `${title} | LongLink` : 'LongLink'} />
-                    <PageContainer minHeight="100%" padding={2}>
+                    <PageContainer height="100%" minHeight={0} padding={2}>
                         {content}
                     </PageContainer>
                 </Platform>

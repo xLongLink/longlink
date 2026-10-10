@@ -1,6 +1,6 @@
-import { Seo } from '@/components/Seo';
 import { Grid } from '@astryxdesign/core/Grid';
 import { Text } from '@astryxdesign/core/Text';
+import { Seo } from '@/platform/components/Seo';
 import { Stack } from '@astryxdesign/core/Stack';
 import { useCasePages } from '@/platform/usecases';
 import { Heading } from '@astryxdesign/core/Heading';

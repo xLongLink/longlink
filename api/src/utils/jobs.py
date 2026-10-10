@@ -4,7 +4,7 @@ from datetime import UTC, datetime
 from functools import partial
 from src.errors import ServiceError
 from src.logger import logger
-from src.operations import handlers
+from src.operations import handlers, databases
 from collections.abc import Callable, Awaitable
 from src.environments import env
 from src.database.session import session_scope
@@ -13,13 +13,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.operations import Operation
 
 
-async def _finish_transition(
-    transition: Callable[[AsyncSession, UUID], Awaitable[Operation | None]], operation_id: UUID
-) -> Operation | None:
+async def _finish_transition(transition: Callable[[AsyncSession, UUID], Awaitable[bool]], operation_id: UUID) -> bool:
     """Finish one terminal transition before propagating worker cancellation."""
 
     # Run persistence independently so repeated cancellation cannot interrupt it.
-    async def persist() -> Operation | None:
+    async def persist() -> bool:
         """Persist one terminal transition in a fresh transaction."""
 
         async with session_scope() as session:
@@ -48,7 +46,7 @@ async def _finish_transition(
     return updated
 
 
-async def execute(operation: Operation) -> Operation:
+async def execute(operation: Operation) -> None:
     """Execute one claimed operation and persist the outcome that releases its lock."""
 
     # Claimed operations must carry a live worker lock.
@@ -91,10 +89,9 @@ async def execute(operation: Operation) -> Operation:
     # Finish the terminal database transition even when shutdown cancels this worker.
     updated = await _finish_transition(transition, operation.id)
 
-    # Never return a stale in-memory row when the worker could not finish its leased Operation.
-    if updated is None:
+    # Reject completion when the worker no longer owns its leased Operation.
+    if not updated:
         raise RuntimeError(f"Operation '{operation.id}' lock was lost")
-    return updated
 
 
 async def run_operation_scheduler() -> None:
@@ -129,8 +126,11 @@ async def run_administrator_reconciler() -> None:
     while True:
         try:
             async with session_scope() as session:
-                await users.ensure_administrator(session)
+                administrator = await users.ensure_administrator(session)
                 await session.commit()
+
+            # Refresh administrator profiles in place before declaring reconciliation complete.
+            await databases.sync_users(administrator.id)
         except Exception:
             logger.exception("Administrator reconciliation failed")
             await asyncio.sleep(1)

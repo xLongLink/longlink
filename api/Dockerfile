@@ -11,7 +11,7 @@ ARG VITE_SITE_URL=https://www.longlink.dev
 ENV VITE_SITE_URL=${VITE_SITE_URL}
 RUN vp run build:api:container
 
-FROM python:3.14.7-slim@sha256:51dafde81dbdb6ebde285137a295cf18a47ca95234fe388a343719cb97305b3d
+FROM python:3.14.8-slim@sha256:a2b82f3c48559aa0a8446d9af49826b6e2b2016f4cd2afabfe6013ec53729170
 
 ARG VERSION=v0.0.0
 
@@ -24,6 +24,9 @@ ENV PATH="/app/.venv/bin:${PATH}"
 ENV HOME="/tmp"
 ENV PYTHONDONTWRITEBYTECODE="1"
 
+# uv installs dependencies; remove unused pip.
+RUN /usr/local/bin/python -m pip uninstall --yes pip
+
 COPY --from=ghcr.io/astral-sh/uv:0.11.32@sha256:df4cae8f3a96d175e2e5f992e597550000edbe78fdc2594d5cd8de1a217f504c /uv /usr/local/bin/uv
 
 COPY api/pyproject.toml api/uv.lock /app/
@@ -33,7 +36,6 @@ RUN --mount=type=cache,target=/root/.cache/uv uv sync --frozen --no-dev --no-edi
     && useradd --system --uid 10001 --gid 10001 --home-dir /tmp --shell /usr/sbin/nologin longlink
 COPY sdk/ /sdk/
 RUN --mount=type=cache,target=/root/.cache/uv SETUPTOOLS_SCM_PRETEND_VERSION_FOR_LONGLINK=${VERSION} uv sync --frozen --no-dev --no-editable --no-install-project
-ENV VERSION=${VERSION}
 COPY api/ /app/
 COPY --chown=10001:10001 --from=web-builder /repo/api/src/.static/web /app/src/.static/web
 

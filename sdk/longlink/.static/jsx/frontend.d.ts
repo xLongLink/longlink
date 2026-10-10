@@ -8,7 +8,7 @@ type ViewJson = string | number | boolean | null | ViewJson[] | { [key: string]:
 type ViewData = ViewJson | Blob;
 type Spacing = 0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10;
 
-/** Supported Lucide names and LongLink aliases, generated from the runtime icon contract. @ignore */
+/** Supported LongLink Lucide icon names, generated from the runtime registry. @ignore */
 type StoneIconName =
     | 'close'
     | 'chevronDown'
@@ -4275,6 +4275,8 @@ type ViewMouseEvent = Omit<MouseEvent, 'currentTarget'> & { currentTarget: HTMLE
 
 /** @category Action @group Button */
 type ButtonProps = {
+    /** Hides the component without unmounting it. */
+    hidden?: boolean;
     /** Visible button text and accessible label. */
     label: string;
     variant?: 'primary' | 'secondary' | 'ghost' | 'destructive';
@@ -4288,7 +4290,7 @@ type ButtonProps = {
     tooltip?: string;
     width?: number | string;
     disabled?: boolean;
-    /** Solution-relative destination; sandbox links navigate through the host. */
+    /** Solution-relative destination or HTTP(S) URL to open in a new tab. */
     href?: string;
     /** Runs an action with automatic async loading and duplicate-click prevention until its promise settles. */
     onClick?: (event: ViewMouseEvent) => void | Promise<void>;
@@ -4371,7 +4373,7 @@ declare function useMemo<T>(factory: () => T, dependencies: readonly unknown[]):
 declare function useRef<T>(initial: T): { current: T };
 
 /**
- * Navigates within the current Solution using a scoped path.
+ * Navigates within the current Solution using a scoped path, or opens an HTTP(S) URL in a new tab. External URLs require user activation and open without an opener or referrer.
  * @category Runtime
  * @group Functions
  */
@@ -4399,9 +4401,131 @@ declare function request<T = unknown>(
  */
 declare function useApi<T = unknown>(path: string): readonly [T, () => Promise<void>];
 
+/** Shared props for form controls. */
+type FieldProps = {
+    /** Hides the field while keeping it mounted and enabled for form submission and validation. */
+    hidden?: boolean;
+    label: string;
+    description?: string;
+    /** Includes the themed control's value under this form submission name. */
+    name?: string;
+    /** Requires a value before native form submission. */
+    required?: boolean;
+    /** Prevents interaction and excludes the field from submission. */
+    disabled?: boolean;
+    width?: number | string;
+};
+
+/** @category Form @group DateInput */
+type ISODateString = `${number}${number}${number}${number}-${number}${number}-${number}${number}`;
+
+/** @category Form @group DateInput */
+type DateInputProps = FieldProps & {
+    value?: ISODateString;
+    defaultValue?: ISODateString;
+    onChange?: (value: ISODateString | undefined) => void;
+    min?: ISODateString;
+    max?: ISODateString;
+    /** Additional constraints applied to the themed calendar picker. */
+    dateConstraints?: readonly ((date: Date) => boolean)[];
+    placeholder?: string;
+    hasClear?: boolean;
+    size?: 'sm' | 'md' | 'lg';
+};
+
+/** @category Form @group TimeInput */
+type ISOTimeString = string & { readonly __brand: 'ISOTimeString' };
+
+/** @category Form @group Selector */
+type SelectorOptionData = {
+    value: string;
+    label?: string;
+    description?: ViewNode;
+    icon?: StoneIconName;
+    disabled?: boolean;
+};
+
+/** @category Form @group Selector */
+type SelectorOptionType =
+    | string
+    | SelectorOptionData
+    | { type: 'divider' }
+    | {
+          type: 'section';
+          title?: string;
+          options: SelectorOptionData[];
+      };
+
+/** @category Layouts @group Card */
+type CardProps = {
+    /** Hides the component without unmounting it. */
+    hidden?: boolean;
+    /** Content rendered inside the card. */
+    children?: ViewNode;
+    /** Inner spacing using the theme spacing scale. */
+    padding?: 0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10;
+    /** Background color variant, independent of the interaction mode. */
+    variant?:
+        | 'default'
+        | 'transparent'
+        | 'muted'
+        | 'blue'
+        | 'cyan'
+        | 'gray'
+        | 'green'
+        | 'orange'
+        | 'pink'
+        | 'purple'
+        | 'red'
+        | 'teal'
+        | 'yellow';
+    /** Card width; numbers are pixels and strings are CSS sizes. */
+    width?: number | string;
+    /** Card height; numbers are pixels and strings are CSS sizes. */
+    height?: number | string;
+    /** Maximum card width. */
+    maxWidth?: number | string;
+    /** Minimum card height. */
+    minHeight?: number | string;
+    /** Makes the card and its descendants non-interactive. */
+    inert?: boolean;
+    /** Hides the card from assistive technologies. */
+    'aria-hidden'?: boolean | 'true' | 'false';
+    /** Accessible label for interactive cards; supply a descriptive label. */
+    label?: string;
+    /** Makes the card clickable when its surface is activated; nested controls act independently. */
+    onClick?: (event: ViewMouseEvent) => void;
+    /** Solution-relative destination or HTTP(S) URL to open in a new tab when no selection callback is supplied. */
+    href?: string;
+    /** Native link target; isolated Views use the current Solution for relative paths and a new tab for HTTP(S) URLs. */
+    target?: string;
+    /** Disables activation of an interactive card. */
+    isDisabled?: boolean;
+    /** Selection state; supply onChange to let users toggle it. */
+    isSelected?: boolean;
+    /** Makes the card selectable and receives its next selection state; takes priority over onClick and href. */
+    onChange?: (isSelected: boolean) => void;
+};
+
+/** @category Display @group Table */
+type ColumnWidth = { type: 'proportional'; value: number; minWidth?: number } | { type: 'pixel'; value: number };
+
+// BEGIN GENERATED COMPONENTS
+// Generated from web/src/views/components.ts by vp run generate:docs. Do not edit.
+
 /** @category Layouts */
 declare function Stack(props: {
     children?: ViewNode;
+    /** Hides the stack while keeping children mounted and enabled for form submission and validation. */
+    hidden?: boolean;
+    /** Container width; numbers are pixels and strings are CSS sizes. */
+    width?: number | string;
+    /** Container height; numbers are pixels and strings are CSS sizes. */
+    height?: number | string;
+    /** Maximum container width; numbers are pixels and strings are CSS sizes. */
+    maxWidth?: number | string;
+    /** Minimum container height; numbers are pixels and strings are CSS sizes. */
+    minHeight?: number | string;
     /** Spacing between items. */
     gap?: Spacing;
     padding?: Spacing;
@@ -4411,57 +4535,88 @@ declare function Stack(props: {
     wrap?: 'nowrap' | 'wrap' | 'wrap-reverse';
 }): React.JSX.Element;
 
+/** @category Layouts @group Stack */
+declare function StackItem(props: {
+    /** Hides the component without unmounting it. */
+    hidden?: boolean;
+    /** Content rendered inside the stack item. */
+    children?: ViewNode;
+    size?: 'static' | 'fill';
+    isScrollable?: boolean;
+    /** Overrides this item's cross-axis alignment; omitted values inherit the parent alignment. */
+    crossAlignSelf?: 'start' | 'center' | 'end' | 'stretch';
+}): React.JSX.Element;
+
+/** @category Layouts */
+declare function Grid(props: {
+    /** Hides the component without unmounting it. */
+    hidden?: boolean;
+    children?: ViewNode;
+    columns?: number;
+    gap?: Spacing;
+}): React.JSX.Element;
+
+/** @category Layouts @group Grid */
+declare function GridSpan(props: {
+    /** Hides the component without unmounting it. */
+    hidden?: boolean;
+    /** Content rendered inside the grid item. */
+    children?: ViewNode;
+    /** Number of columns to occupy, or full to span the entire grid. */
+    columns?: number | 'full';
+}): React.JSX.Element;
+
+/** @category Layouts */
+declare function Collapsible(props: {
+    /** Hides the component without unmounting it. */
+    hidden?: boolean;
+    children?: ViewNode;
+    trigger: ViewNode;
+    defaultIsOpen?: boolean;
+    isOpen?: boolean;
+    isDisabled?: boolean;
+    onOpenChange?: (isOpen: boolean) => void;
+}): React.JSX.Element;
+
 /** @category Display */
-declare function Heading(props: { children?: ViewNode; level?: 1 | 2 | 3 | 4 | 5 | 6 }): React.JSX.Element;
+declare function Heading(props: {
+    /** Hides the component without unmounting it. */
+    hidden?: boolean;
+    children?: ViewNode;
+    level?: 1 | 2 | 3 | 4 | 5 | 6;
+}): React.JSX.Element;
 
 /** @category Display */
 declare function Text(props: {
+    /** Hides the component without unmounting it. */
+    hidden?: boolean;
     children?: ViewNode;
     color?: 'primary' | 'secondary';
     type?: 'body' | 'large' | 'label' | 'supporting' | 'code';
 }): React.JSX.Element;
 
-/** @category Action */
-declare function Button(props: ButtonProps): React.JSX.Element;
-
-/** @category Action */
-declare function ButtonGroup(props: {
-    children?: ViewNode;
-    label: string;
-    orientation?: 'horizontal' | 'vertical';
-    size?: 'sm' | 'md' | 'lg';
-    isDisabled?: boolean;
-}): React.JSX.Element;
-
-/** @category Action */
-declare function DropdownMenu(props: {
-    button?: {
-        label: string;
-        variant?: 'primary' | 'secondary' | 'ghost' | 'destructive';
+/** @category Display */
+declare function Avatar(
+    props: {
+        shape?: undefined | 'circle' | 'rounded' | 'square';
+    } & {
+        /** Hides the component without unmounting it. */
+        hidden?: boolean;
+        name?: string;
+        /** Stable identity for generated avatars, independent of the display name. */
+        seed?: string;
+        /** Organization owners use rounded Waves avatars; user owners retain the supplied geometry or a circle. */
+        kind?: 'user' | 'organization';
+        src?: string | null;
+        alt?: string;
         size?: 'sm' | 'md' | 'lg';
-        isDisabled?: boolean;
-    };
-    items: DropdownMenuOption[];
-    isMenuOpen?: boolean;
-    onOpenChange?: (isOpen: boolean) => void;
-}): React.JSX.Element;
-
-/** @category Action */
-declare function IconButton(props: {
-    label: string;
-    icon: StoneIconName;
-    variant?: 'primary' | 'secondary' | 'ghost' | 'destructive';
-    size?: 'sm' | 'md' | 'lg';
-    tooltip?: string;
-    isDisabled?: boolean;
-    onClick?: (event: ViewMouseEvent) => void | Promise<void>;
-}): React.JSX.Element;
-
-/** @category Action */
-declare function Link(props: { to: string; children?: ViewNode }): React.JSX.Element;
+    },
+): React.JSX.Element;
 
 /** @category Display */
 declare function Badge(props: {
+    /** Hides the component without unmounting it. */
+    hidden?: boolean;
     label?: ViewNode;
     icon?: StoneIconName;
     variant?:
@@ -4483,27 +4638,72 @@ declare function Badge(props: {
 
 /** @category Display */
 declare function StatusDot(props: {
+    /** Hides the component without unmounting it. */
+    hidden?: boolean;
     label: string;
     variant: 'success' | 'warning' | 'error' | 'accent' | 'neutral';
     tooltip?: string;
 }): React.JSX.Element;
 
-/** @category Display */
-declare function Avatar(
-    props: {
-        shape?: undefined | 'circle' | 'square' | 'rounded';
-    } & {
-        name?: string;
-        /** Organization owners use rounded Waves avatars; user owners retain the supplied geometry or a circle. */
-        kind?: 'user' | 'organization';
-        src?: string | null;
-        alt?: string;
+/** @category Layouts */
+declare function Card(props: CardProps): React.JSX.Element;
+
+/** @category Action */
+declare function Button(props: ButtonProps): React.JSX.Element;
+
+/** @category Action */
+declare function ButtonGroup(props: {
+    /** Hides the component without unmounting it. */
+    hidden?: boolean;
+    children?: ViewNode;
+    label: string;
+    orientation?: 'horizontal' | 'vertical';
+    size?: 'sm' | 'md' | 'lg';
+    isDisabled?: boolean;
+}): React.JSX.Element;
+
+/** @category Action */
+declare function DropdownMenu(props: {
+    /** Hides the trigger and closes its popup without unmounting the component. */
+    hidden?: boolean;
+    button?: {
+        label: string;
+        variant?: 'primary' | 'secondary' | 'ghost' | 'destructive';
         size?: 'sm' | 'md' | 'lg';
-    },
-): React.JSX.Element;
+        isDisabled?: boolean;
+    };
+    items: DropdownMenuOption[];
+    isMenuOpen?: boolean;
+    onOpenChange?: (isOpen: boolean) => void;
+}): React.JSX.Element;
+
+/** @category Action */
+declare function IconButton(props: {
+    /** Hides the component without unmounting it. */
+    hidden?: boolean;
+    label: string;
+    icon: StoneIconName;
+    variant?: 'primary' | 'secondary' | 'ghost' | 'destructive';
+    size?: 'sm' | 'md' | 'lg';
+    tooltip?: string;
+    isDisabled?: boolean;
+    onClick?: (event: ViewMouseEvent) => void | Promise<void>;
+}): React.JSX.Element;
+
+/** @category Display */
+declare function Divider(props: {
+    /** Hides the component without unmounting it. */
+    hidden?: boolean;
+    label?: ViewNode;
+    variant?: 'subtle' | 'strong';
+    orientation?: 'horizontal' | 'vertical';
+    isFullBleed?: boolean;
+}): React.JSX.Element;
 
 /** @category Layouts */
 declare function Dialog(props: {
+    /** Hides the modal without unmounting its fields or changing the caller's open state. */
+    hidden?: boolean;
     children?: ViewNode;
     'aria-label': string;
     isOpen: boolean;
@@ -4521,21 +4721,10 @@ declare function Dialog(props: {
     contentWidth?: number | string;
 }): React.JSX.Element;
 
-/** Shared props for form controls. */
-type FieldProps = {
-    label: string;
-    description?: string;
-    /** Includes the themed control's value under this form submission name. */
-    name?: string;
-    /** Requires a value before native form submission. */
-    required?: boolean;
-    /** Prevents interaction and excludes the field from submission. */
-    disabled?: boolean;
-    width?: number | string;
-};
-
 /** Submits named themed fields and ordinary HTML inputs to a Solution API endpoint. @category Form */
 declare function Form(props: {
+    /** Hides the form while keeping its fields mounted and enabled for submission and validation. */
+    hidden?: boolean;
     /** Named controls, ordinary HTML fields, and layout components. */
     children?: ViewNode;
     /** Solution-relative API path; external URLs are not supported. */
@@ -4548,28 +4737,23 @@ declare function Form(props: {
     onSuccess?: (data: ViewData) => void | Promise<void>;
 }): React.JSX.Element;
 
-/** @category Form @group DateInput */
-type ISODateString = `${number}${number}${number}${number}-${number}${number}-${number}${number}`;
-
-/** @category Form @group DateInput */
-type DateInputProps = FieldProps & {
-    value?: ISODateString;
-    defaultValue?: ISODateString;
-    onChange?: (value: ISODateString | undefined) => void;
-    min?: ISODateString;
-    max?: ISODateString;
-    /** Additional constraints applied to the themed calendar picker. */
-    dateConstraints?: readonly ((date: Date) => boolean)[];
-    placeholder?: string;
-    hasClear?: boolean;
-    size?: 'sm' | 'md' | 'lg';
-};
-
 /** @category Form */
 declare function DateInput(props: DateInputProps): React.JSX.Element;
 
-/** @category Form @group TimeInput */
-type ISOTimeString = string & { readonly __brand: 'ISOTimeString' };
+/** @category Form */
+declare function MultiSelector(
+    props: FieldProps & {
+        options: SelectorOptionType[];
+        value?: string[];
+        defaultValue?: string[];
+        onChange?: (value: string[]) => void;
+        placeholder?: string;
+        size?: 'sm' | 'md' | 'lg';
+        hasSelectAll?: boolean;
+        hasSearch?: boolean;
+        hasClear?: boolean;
+    },
+): React.JSX.Element;
 
 /** @category Form */
 declare function TimeInput(
@@ -4638,160 +4822,6 @@ declare function NumberInput(
         ),
 ): React.JSX.Element;
 
-/** @category Form @group Selector */
-type SelectorOptionData = {
-    value: string;
-    label?: string;
-    description?: ViewNode;
-    icon?: StoneIconName;
-    disabled?: boolean;
-};
-
-/** @category Form @group Selector */
-type SelectorOptionType =
-    | string
-    | SelectorOptionData
-    | { type: 'divider' }
-    | {
-          type: 'section';
-          title?: string;
-          options: SelectorOptionData[];
-      };
-
-/** @category Form */
-declare function MultiSelector(
-    props: FieldProps & {
-        options: SelectorOptionType[];
-        value?: string[];
-        defaultValue?: string[];
-        onChange?: (value: string[]) => void;
-        placeholder?: string;
-        size?: 'sm' | 'md' | 'lg';
-        hasSelectAll?: boolean;
-        hasSearch?: boolean;
-        hasClear?: boolean;
-    },
-): React.JSX.Element;
-
-/** @category Form */
-declare function Selector(
-    props: FieldProps & {
-        options: SelectorOptionType[];
-        defaultValue?: string;
-        hasSearch?: boolean;
-        placeholder?: string;
-        size?: 'sm' | 'md' | 'lg';
-    } & (
-            | { hasClear?: false; value?: string; onChange?: (value: string) => void }
-            | { hasClear: true; value?: string | null; onChange?: (value: string | null) => void }
-        ),
-): React.JSX.Element;
-
-/** @category Form */
-declare function FileInput(
-    props: FieldProps & {
-        value?: File | File[] | null;
-        onChange?: (value: File | File[] | null) => void;
-        accept?: string;
-        multiple?: boolean;
-        maxSize?: number;
-        maxFiles?: number;
-        placeholder?: string;
-        mode?: 'input' | 'dropzone';
-    },
-): React.JSX.Element;
-
-/** @category Display */
-declare function FileViewer(props: {
-    /** Scoped Solution operation path returning the file to preview. */
-    src: string;
-    /** Attachment name used for accessible action labels and the downloaded filename. */
-    title: string;
-}): React.JSX.Element;
-
-/** @category Layouts */
-declare function Grid(props: { children?: ViewNode; columns?: number; gap?: Spacing }): React.JSX.Element;
-
-/** @category Layouts @group Grid */
-declare function GridSpan(props: {
-    /** Content rendered inside the grid item. */
-    children?: ViewNode;
-    /** Number of columns to occupy, or full to span the entire grid. */
-    columns?: number | 'full';
-}): React.JSX.Element;
-
-/** @category Layouts @group Stack */
-declare function StackItem(props: {
-    /** Content rendered inside the stack item. */
-    children?: ViewNode;
-    size?: 'static' | 'fill';
-    isScrollable?: boolean;
-    /** Overrides this item's cross-axis alignment; omitted values inherit the parent alignment. */
-    crossAlignSelf?: 'start' | 'center' | 'end' | 'stretch';
-}): React.JSX.Element;
-
-/** @category Layouts @group Card */
-type CardProps = {
-    /** Content rendered inside the card. */
-    children?: ViewNode;
-    /** Inner spacing using the theme spacing scale. */
-    padding?: 0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10;
-    /** Background color variant, independent of the interaction mode. */
-    variant?:
-        | 'default'
-        | 'transparent'
-        | 'muted'
-        | 'blue'
-        | 'cyan'
-        | 'gray'
-        | 'green'
-        | 'orange'
-        | 'pink'
-        | 'purple'
-        | 'red'
-        | 'teal'
-        | 'yellow';
-    /** Card width; numbers are pixels and strings are CSS sizes. */
-    width?: number | string;
-    /** Card height; numbers are pixels and strings are CSS sizes. */
-    height?: number | string;
-    /** Maximum card width. */
-    maxWidth?: number | string;
-    /** Minimum card height. */
-    minHeight?: number | string;
-    /** Makes the card and its descendants non-interactive. */
-    inert?: boolean;
-    /** Hides the card from assistive technologies. */
-    'aria-hidden'?: boolean | 'true' | 'false';
-    /** Accessible label for interactive cards; supply a descriptive label. */
-    label?: string;
-    /** Makes the card clickable when its surface is activated; nested controls act independently. */
-    onClick?: (event: ViewMouseEvent) => void;
-    /** Makes the card a navigation target when no selection callback is supplied. */
-    href?: string;
-    /** Native link target; isolated Views always navigate in the host's current Solution. */
-    target?: string;
-    /** Disables activation of an interactive card. */
-    isDisabled?: boolean;
-    /** Selection state; supply onChange to let users toggle it. */
-    isSelected?: boolean;
-    /** Makes the card selectable and receives its next selection state; takes priority over onClick and href. */
-    onChange?: (isSelected: boolean) => void;
-};
-
-/** @category Layouts */
-declare function Card(props: CardProps): React.JSX.Element;
-
-/** @category Layouts */
-declare function Collapsible(props: {
-    children?: ViewNode;
-    trigger: ViewNode;
-    defaultIsOpen?: boolean;
-    isOpen?: boolean;
-    isDisabled?: boolean;
-    onOpenChange?: (isOpen: boolean) => void;
-}): React.JSX.Element;
-
 /** @category Form */
 declare function CheckboxInput(
     props: FieldProps & {
@@ -4836,6 +4866,34 @@ declare function Slider(
 ): React.JSX.Element;
 
 /** @category Form */
+declare function FileInput(
+    props: FieldProps & {
+        value?: File | File[] | null;
+        onChange?: (value: File | File[] | null) => void;
+        accept?: string;
+        multiple?: boolean;
+        maxSize?: number;
+        maxFiles?: number;
+        placeholder?: string;
+        mode?: 'input' | 'dropzone';
+    },
+): React.JSX.Element;
+
+/** @category Form */
+declare function Selector(
+    props: FieldProps & {
+        options: SelectorOptionType[];
+        defaultValue?: string;
+        hasSearch?: boolean;
+        placeholder?: string;
+        size?: 'sm' | 'md' | 'lg';
+    } & (
+            | { hasClear?: false; value?: string; onChange?: (value: string) => void }
+            | { hasClear: true; value?: string | null; onChange?: (value: string | null) => void }
+        ),
+): React.JSX.Element;
+
+/** @category Form */
 declare function RadioList(
     props: FieldProps & {
         children?: ViewNode;
@@ -4849,6 +4907,8 @@ declare function RadioList(
 
 /** @category Form @group RadioList */
 declare function RadioListItem(props: {
+    /** Hides the option without unmounting or disabling it. */
+    hidden?: boolean;
     /** Visible label identifying this choice. */
     label: string;
     /** Value passed to the surrounding RadioList when selected. */
@@ -4858,130 +4918,60 @@ declare function RadioListItem(props: {
     isDisabled?: boolean;
 }): React.JSX.Element;
 
-/** @category Action */
-declare function MoreMenu(props: {
-    items: DropdownMenuOption[];
-    label?: string;
+/** @category Display */
+declare function MetadataList(props: {
+    /** Hides the component without unmounting it. */
+    hidden?: boolean;
+    children?: ViewNode;
+    columns?: 'multi' | 'single' | number;
+    title?: ViewNode;
+}): React.JSX.Element;
+
+/** @category Display @group MetadataList */
+declare function MetadataListItem(props: {
+    /** Hides both the label and value without unmounting them. */
+    hidden?: boolean;
+    /** Value rendered beside the metadata label. */
+    children?: ViewNode;
+    /** Label identifying the metadata value. */
+    label: string;
+    /** Optional icon displayed beside the metadata label. */
     icon?: StoneIconName;
-    isDisabled?: boolean;
-    onOpenChange?: (isOpen: boolean) => void;
-}): React.JSX.Element;
-
-/** @category Layouts */
-declare function Menu(props: {
-    /** MenuSection elements defining navigation and content. */
-    children?: ViewNode;
-    gap?: 0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10;
-}): React.JSX.Element;
-
-/** @category Layouts @group Menu */
-declare function MenuSection(props: {
-    /** MenuItem elements or nested MenuSubSection groups. */
-    children?: ViewNode;
-    /** Hides the section heading; visible by default. */
-    isHeaderHidden?: boolean;
-    /** Section heading displayed in the navigation. */
-    title: string;
-}): React.JSX.Element;
-
-/** @category Layouts @group Menu */
-declare function MenuItem(props: {
-    /** Content mounted beside the navigation while this item is selected. */
-    children?: ViewNode;
-    /** Optional LongLink icon name displayed beside the label. */
-    icon?: StoneIconName;
-    /** Navigation label; its lowercase, hyphenated form identifies the item's URL fragment. */
-    label: string;
-}): React.JSX.Element;
-
-/** @category Layouts @group Menu */
-declare function MenuSubSection(props: {
-    /** MenuItem elements nested inside this collapsible group. */
-    children?: ViewNode;
-    /** Optional LongLink icon name displayed beside the group label. */
-    icon?: StoneIconName;
-    /** Label displayed on the collapsible navigation group. */
-    label: string;
 }): React.JSX.Element;
 
 /** @category Display */
-declare function Icon(props: {
-    /** Lucide kebab-case name or LongLink alias. Prefix with lucide: to bypass an existing alias, such as lucide:logs. */
-    icon: StoneIconName;
-    size: 'sm' | 'md' | 'lg';
+declare function Table<T extends Record<string, unknown>>(props: {
+    /** Hides the component without unmounting it. */
+    hidden?: boolean;
+    data: T[];
+    idKey?: (keyof T & string) | ((row: T) => string | number);
+    density?: 'compact' | 'balanced' | 'spacious';
+    hasHover?: boolean;
+    isStriped?: boolean;
+    columns?: {
+        key: string;
+        header?: ViewNode;
+        width?: ColumnWidth;
+        align?: 'start' | 'center' | 'end';
+        renderCell?: (row: T) => ViewNode;
+    }[];
 }): React.JSX.Element;
 
-/** @category Display */
-declare function CodeBlock(props: {
-    code: string;
-    language?: string;
-    title?: string;
-    isWrapped?: boolean;
-}): React.JSX.Element;
+/** @category Display @group Table */
+declare function proportional(
+    value?: number,
+    options?: {
+        minWidth?: number;
+    },
+): Extract<ColumnWidth, { type: 'proportional' }>;
 
-/** @category Display */
-declare function ProgressBar(props: {
-    label: string;
-    value?: number;
-    max?: number;
-    hasValueLabel?: boolean;
-    variant?: 'accent' | 'success' | 'warning' | 'error' | 'neutral';
-}): React.JSX.Element;
-
-/** @category Layouts */
-declare function Stepper(props: {
-    children?: ViewNode;
-    activeStep?: number;
-    orientation?: 'horizontal' | 'vertical';
-}): React.JSX.Element;
-
-/** @category Layouts @group Stepper */
-declare function Step(props: {
-    /** Zero-based index of this step in the process. */
-    step: number;
-    /** Visible label identifying the step. */
-    label: string;
-}): React.JSX.Element;
-
-/** @category Layouts */
-declare function Tabs(props: {
-    /** Tab elements defining labels and panel content. */
-    children?: ViewNode;
-    gap?: 0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10;
-    hasDivider?: boolean;
-    /** Receives the selected Tab value; use with value to control selection. */
-    onChange?: (value: string) => void;
-    /** Selected Tab value; omit for internal selection, initially choosing the first tab. */
-    value?: string;
-}): React.JSX.Element;
-
-/** @category Layouts @group Tabs */
-declare function Tab(props: {
-    /** Panel content mounted only while this tab is selected. */
-    children?: ViewNode;
-    /** Unique value identifying this tab. */
-    value: string;
-    /** Visible tab label and accessible panel name. */
-    label: string;
-    /** Whether the tab is disabled. */
-    isDisabled?: boolean;
-}): React.JSX.Element;
-
-/** @category Display */
-declare function EmptyState(props: { title: string; isCompact?: boolean }): React.JSX.Element;
-
-/** @category Display */
-declare function Currency(props: {
-    /** Amount to format in currency units. */
-    value: number;
-    /** ISO 4217 currency code, such as USD or CHF. */
-    currency: string;
-    /** Locale for formatting; omitted values use the viewer's locale. */
-    locale?: string;
-}): React.JSX.Element;
+/** @category Display @group Table */
+declare function pixel(value: number): Extract<ColumnWidth, { type: 'pixel' }>;
 
 /** @category Display */
 declare function Timestamp(props: {
+    /** Hides the component without unmounting it. */
+    hidden?: boolean;
     value: number | string;
     format?:
         | 'date'
@@ -4996,54 +4986,174 @@ declare function Timestamp(props: {
 }): React.JSX.Element;
 
 /** @category Display */
-declare function Divider(props: {
-    label?: ViewNode;
-    variant?: 'subtle' | 'strong';
-    orientation?: 'horizontal' | 'vertical';
-    isFullBleed?: boolean;
+declare function CodeBlock(props: {
+    /** Hides the component without unmounting it. */
+    hidden?: boolean;
+    code: string;
+    language?: string;
+    title?: string;
+    isWrapped?: boolean;
 }): React.JSX.Element;
 
 /** @category Display */
-declare function MetadataList(props: {
-    children?: ViewNode;
-    columns?: 'multi' | 'single' | number;
-    title?: ViewNode;
-}): React.JSX.Element;
-
-/** @category Display @group MetadataList */
-declare function MetadataListItem(props: {
-    /** Value rendered beside the metadata label. */
-    children?: ViewNode;
-    /** Label identifying the metadata value. */
+declare function ProgressBar(props: {
+    /** Hides the component without unmounting it. */
+    hidden?: boolean;
     label: string;
-    /** Optional icon displayed beside the metadata label. */
-    icon?: StoneIconName;
+    value?: number;
+    max?: number;
+    hasValueLabel?: boolean;
+    variant?: 'accent' | 'success' | 'warning' | 'error' | 'neutral';
 }): React.JSX.Element;
 
-/** @category Display @group Table */
-type ColumnWidth = { type: 'proportional'; value: number; minWidth?: number } | { type: 'pixel'; value: number };
+/** @category Layouts */
+declare function Stepper(props: {
+    /** Hides the component without unmounting it. */
+    hidden?: boolean;
+    children?: ViewNode;
+    activeStep?: number;
+    orientation?: 'horizontal' | 'vertical';
+}): React.JSX.Element;
 
-/** @category Display @group Table */
-declare function proportional(
-    value?: number,
-    options?: { minWidth?: number },
-): Extract<ColumnWidth, { type: 'proportional' }>;
+/** @category Layouts @group Stepper */
+declare function Step(props: {
+    /** Hides the step indicator and label without changing its index. */
+    hidden?: boolean;
+    /** Zero-based index of this step in the process. */
+    step: number;
+    /** Visible label identifying the step. */
+    label: string;
+}): React.JSX.Element;
 
-/** @category Display @group Table */
-declare function pixel(value: number): Extract<ColumnWidth, { type: 'pixel' }>;
+/** @category Layouts */
+declare function Tabs(props: {
+    /** Hides the tab strip and selected panel without unmounting them. */
+    hidden?: boolean;
+    /** Tab elements defining labels and panel content. */
+    children?: ViewNode;
+    gap?: 0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10;
+    hasDivider?: boolean;
+    /** Receives the selected Tab value; use with value to control selection. */
+    onChange?: (value: string) => void;
+    /** Selected Tab value; omit for internal selection, initially choosing the first tab. */
+    value?: string;
+}): React.JSX.Element;
+
+/** @category Layouts @group Tabs */
+declare function Tab(props: {
+    /** Hides this tab and its selected panel without changing the selection. */
+    hidden?: boolean;
+    /** Panel content mounted only while this tab is selected. */
+    children?: ViewNode;
+    /** Unique value identifying this tab. */
+    value: string;
+    /** Visible tab label and accessible panel name. */
+    label: string;
+    /** Whether the tab is disabled. */
+    isDisabled?: boolean;
+}): React.JSX.Element;
 
 /** @category Display */
-declare function Table<T extends Record<string, unknown>>(props: {
-    data: T[];
-    idKey?: (keyof T & string) | ((row: T) => string | number);
-    density?: 'compact' | 'balanced' | 'spacious';
-    hasHover?: boolean;
-    isStriped?: boolean;
-    columns?: {
-        key: string;
-        header?: ViewNode;
-        width?: ColumnWidth;
-        align?: 'start' | 'center' | 'end';
-        renderCell?: (row: T) => ViewNode;
-    }[];
+declare function EmptyState(props: {
+    /** Hides the component without unmounting it. */
+    hidden?: boolean;
+    title: string;
+    isCompact?: boolean;
 }): React.JSX.Element;
+
+/** @category Action */
+declare function MoreMenu(props: {
+    /** Hides the trigger and closes its popup without unmounting the component. */
+    hidden?: boolean;
+    items: DropdownMenuOption[];
+    label?: string;
+    icon?: StoneIconName;
+    isDisabled?: boolean;
+    onOpenChange?: (isOpen: boolean) => void;
+}): React.JSX.Element;
+
+/** @category Layouts */
+declare function Menu(props: {
+    /** Hides the navigation and selected content without unmounting them. */
+    hidden?: boolean;
+    /** MenuSection elements defining navigation and content. */
+    children?: ViewNode;
+    gap?: 0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10;
+}): React.JSX.Element;
+
+/** @category Layouts @group Menu */
+declare function MenuSection(props: {
+    /** Hides the section navigation and its selected content without unmounting them. */
+    hidden?: boolean;
+    /** MenuItem elements or nested MenuSubSection groups. */
+    children?: ViewNode;
+    /** Hides the section heading; visible by default. */
+    isHeaderHidden?: boolean;
+    /** Section heading displayed in the navigation. */
+    title: string;
+}): React.JSX.Element;
+
+/** @category Layouts @group Menu */
+declare function MenuItem(props: {
+    /** Hides the navigation item and its selected content without unmounting them. */
+    hidden?: boolean;
+    /** Content mounted beside the navigation while this item is selected. */
+    children?: ViewNode;
+    /** Optional LongLink icon name displayed beside the label. */
+    icon?: StoneIconName;
+    /** Navigation label; its lowercase, hyphenated form identifies the item's URL fragment. */
+    label: string;
+}): React.JSX.Element;
+
+/** @category Layouts @group Menu */
+declare function MenuSubSection(props: {
+    /** Hides the group navigation and its selected content without unmounting them. */
+    hidden?: boolean;
+    /** MenuItem elements nested inside this collapsible group. */
+    children?: ViewNode;
+    /** Optional LongLink icon name displayed beside the group label. */
+    icon?: StoneIconName;
+    /** Label displayed on the collapsible navigation group. */
+    label: string;
+}): React.JSX.Element;
+
+/** @category Display */
+declare function Icon(props: {
+    /** Hides the component without unmounting it. */
+    hidden?: boolean;
+    /** Lucide kebab-case name or LongLink alias. Prefix with lucide: to bypass an existing alias, such as lucide:logs. */
+    icon: StoneIconName;
+    size: 'sm' | 'md' | 'lg';
+}): React.JSX.Element;
+
+/** @category Action */
+declare function Link(props: {
+    /** Hides the component without unmounting it. */
+    hidden?: boolean;
+    to: string;
+    children?: ViewNode;
+}): React.JSX.Element;
+
+/** @category Display */
+declare function Currency(props: {
+    /** Hides the component without unmounting it. */
+    hidden?: boolean;
+    /** Amount to format in currency units. */
+    value: number;
+    /** ISO 4217 currency code, such as USD or CHF. */
+    currency: string;
+    /** Locale for formatting; omitted values use the viewer's locale. */
+    locale?: string;
+}): React.JSX.Element;
+
+/** @category Display */
+declare function FileViewer(props: {
+    /** Hides the component without unmounting it. */
+    hidden?: boolean;
+    /** Scoped Solution operation path returning the file to preview. */
+    src: string;
+    /** Attachment name used for accessible action labels and the downloaded filename. */
+    title: string;
+}): React.JSX.Element;
+
+// END GENERATED COMPONENTS

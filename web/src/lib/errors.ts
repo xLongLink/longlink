@@ -13,7 +13,7 @@ export const ApiErrorContext = createContext<ErrorReporter | null>(null);
 export function useApiError(): ErrorReporter {
     const reportError = useContext(ApiErrorContext);
 
-    if (reportError === null) throw new Error('API error reporting requires RootProvider');
+    if (reportError === null) throw new Error('API error reporting requires Root');
 
     return reportError;
 }

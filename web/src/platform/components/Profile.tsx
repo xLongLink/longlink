@@ -31,7 +31,7 @@ export function ProfileMenu({ user }: { user: z.output<typeof zUserSummary> }) {
                     <Item
                         description={user.email}
                         label={user.name}
-                        startContent={<Avatar src={user.avatar} name={user.name} />}
+                        startContent={<Avatar src={user.avatar} name={user.name} seed={user.id} />}
                     />
                     <Divider />
                     <List
@@ -111,7 +111,11 @@ export function ProfileMenu({ user }: { user: z.output<typeof zUserSummary> }) {
                 </Stack>
             }
         >
-            <IconButton icon={<Avatar src={user.avatar} name={user.name} />} label={user.name} variant="ghost" />
+            <IconButton
+                icon={<Avatar src={user.avatar} name={user.name} seed={user.id} />}
+                label={user.name}
+                variant="ghost"
+            />
         </Popover>
     );
 }

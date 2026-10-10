@@ -6,6 +6,8 @@ import { useSize } from '@astryxdesign/core/SizeContext';
 import { Button as AstryxButton } from '@astryxdesign/core/Button';
 
 type ButtonProps = {
+    /** Hides the component without unmounting it. */
+    hidden?: boolean;
     /** Visible button text and accessible label. */
     label: string;
     variant?: 'primary' | 'secondary' | 'ghost' | 'destructive';
@@ -19,7 +21,7 @@ type ButtonProps = {
     tooltip?: string;
     width?: number | string;
     disabled?: boolean;
-    /** Solution-relative destination; sandbox links navigate through the host. */
+    /** Solution-relative destination or HTTP(S) URL to open in a new tab. */
     href?: string;
     /** Runs an action with automatic async loading and duplicate-click prevention until its promise settles. */
     onClick?: (event: MouseEvent<HTMLButtonElement>) => void | Promise<void>;
@@ -35,6 +37,8 @@ export function Button({ onClick, ...props }: ButtonProps) {
     return (
         <AstryxButton
             {...props}
+            className={props.hidden ? 'hidden!' : undefined}
+            tooltip={props.hidden ? undefined : props.tooltip}
             icon={props.icon ? <Icon icon={props.icon} size={size} /> : undefined}
             variant={props.variant ?? 'secondary'}
             size={size}

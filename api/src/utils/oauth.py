@@ -17,6 +17,9 @@ GITHUB_TOKEN_URL = "https://github.com/login/oauth/access_token"  # noqa: S105
 GITHUB_USER_URL = "https://api.github.com/user"
 GITHUB_EMAILS_URL = "https://api.github.com/user/emails"
 
+# Compile canonical email validation once for all provider identity candidates.
+EMAIL_ADAPTER = TypeAdapter(Email)
+
 
 @dataclass(frozen=True)
 class OAuthIdentity:
@@ -26,6 +29,14 @@ class OAuthIdentity:
     email: Email
     name: str
     avatar: str
+
+
+def login_destination(value: str | None) -> str:
+    """Continue provider login only to first-party MCP approval, never an arbitrary callback."""
+
+    if value is not None and value.startswith("/mcp/authorize?") and len(value) <= 8192 and "\r" not in value and "\n" not in value:
+        return value
+    return "/user/organizations"
 
 
 def is_configured(provider: OAuthProvider) -> bool:
@@ -192,7 +203,7 @@ def _email(payload: object) -> Email | None:
     if value is None:
         return None
     try:
-        return TypeAdapter(Email).validate_python(value)
+        return EMAIL_ADAPTER.validate_python(value)
     except ValidationError:
         return None
 

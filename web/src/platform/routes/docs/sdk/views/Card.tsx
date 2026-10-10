@@ -1,30 +1,8 @@
 import { useState } from 'react';
+import ViewLayout from './ViewLayout';
 import { Card } from '@/components/ui/Card';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
-import ViewLayout, { type ViewReference } from './ViewLayout';
-
-// Describe all three card behaviors using the shared public props.
-const reference: ViewReference = {
-    introduction:
-        'Card has one shared set of props. onChange makes it selectable, onClick or href makes it clickable, and otherwise it is a plain content card. Selection takes priority when both kinds of interaction props are supplied.',
-    practices: [
-        {
-            guidance: true,
-            description:
-                'Use plain cards for independent content, clickable cards for actions or navigation, and selectable cards for choices.',
-        },
-        {
-            guidance: true,
-            description:
-                'Give interactive cards a descriptive label and keep selectable state in the parent component.',
-        },
-        {
-            guidance: false,
-            description: 'Use onClick to toggle selection, or mix navigation and selection on the same card.',
-        },
-    ],
-};
 
 /** Documents plain, clickable, and selectable cards. */
 export default function CardPage() {
@@ -32,7 +10,7 @@ export default function CardPage() {
     return (
         <ViewLayout
             name="Card"
-            reference={reference}
+            introduction="Card has one shared set of props. onChange makes it selectable, onClick or href makes it clickable, and otherwise it is a plain content card. Selection takes priority when both kinds of interaction props are supplied."
             examples={[
                 {
                     title: 'Plain card',

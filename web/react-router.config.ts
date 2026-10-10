@@ -1,8 +1,10 @@
 import path from 'node:path';
 import { siteUrl } from './src/site';
 import { legalPaths } from './src/platform/legal';
-import { useCasePaths } from './src/platform/usecases';
+// Use cases are a work in progress; exclude them from prerendering and the sitemap.
+// import { useCasePaths } from './src/platform/usecases';
 import type { Config } from '@react-router/dev/config';
+import { brandingPaths } from './src/platform/branding';
 import { documentationPaths } from './src/platform/docs';
 import { cp, mkdir, rename, rm, writeFile } from 'node:fs/promises';
 
@@ -19,11 +21,9 @@ const publicPagePaths = [
     '/',
     '/login',
     '/pricing',
-    ...useCasePaths,
+    // ...useCasePaths,
     ...legalPaths,
-    '/branding/assets',
-    '/branding/values',
-    '/branding/comunication',
+    ...brandingPaths,
     ...documentationPaths,
 ];
 
@@ -31,7 +31,7 @@ const publicPagePaths = [
 const publicPagePriorities = new Map([
     ['/', 1.0],
     ['/docs', 0.9],
-    ['/use-cases', 0.9],
+    // ['/use-cases', 0.9],
     ['/pricing', 0.6],
 ]);
 

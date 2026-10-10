@@ -3,6 +3,18 @@
 import * as z from 'zod';
 
 /**
+ * AccessToken
+ *
+ * Return a short-lived opaque MCP access credential.
+ */
+export const zAccessToken = z.object({
+    scope: z.literal('mcp').optional().default('mcp'),
+    token_type: z.literal('Bearer').optional().default('Bearer'),
+    expires_in: z.int(),
+    access_token: z.string()
+});
+
+/**
  * AdminUserSummary
  *
  * Represent a user with its creation time for platform administrators.
@@ -17,6 +29,44 @@ export const zAdminUserSummary = z.object({
 });
 
 /**
+ * Approval
+ *
+ * Bind explicit browser approval to the validated authorization request.
+ */
+export const zApproval = z.object({
+    state: z.string().min(1).max(1024),
+    scope: z.literal('mcp').optional().default('mcp'),
+    resource: z.string().max(2048),
+    client_id: z.uuid(),
+    redirect_uri: z.string().max(2048),
+    response_type: z.literal('code'),
+    code_challenge: z.string().regex(/^[A-Za-z0-9_-]{43}$/),
+    code_challenge_method: z.literal('S256'),
+    approve: z.boolean()
+});
+
+/**
+ * AuthorizationRedirect
+ *
+ * Return a validated client redirect after a browser consent decision.
+ */
+export const zAuthorizationRedirect = z.object({
+    url: z.string()
+});
+
+/**
+ * Body_exchange_api_v1_mcp_token_post
+ */
+export const zBodyExchangeApiV1McpTokenPost = z.object({
+    code: z.string().max(128),
+    resource: z.string().max(2048),
+    client_id: z.uuid(),
+    redirect_uri: z.string().max(2048),
+    code_verifier: z.string().regex(/^[A-Za-z0-9._~-]{43,128}$/),
+    grant_type: z.string().max(64)
+});
+
+/**
  * Body_request_password_reset_api_v1_auth_forgot_password_post
  */
 export const zBodyRequestPasswordResetApiV1AuthForgotPasswordPost = z.object({
@@ -28,6 +78,27 @@ export const zBodyRequestPasswordResetApiV1AuthForgotPasswordPost = z.object({
  */
 export const zBodyRequestRegistrationApiV1AuthRegisterPost = z.object({
     email: z.email()
+});
+
+/**
+ * Body_revoke_api_v1_mcp_revoke_post
+ */
+export const zBodyRevokeApiV1McpRevokePost = z.object({
+    token: z.string().max(128),
+    client_id: z.uuid()
+});
+
+/**
+ * ClientRegistration
+ *
+ * Negotiate public authorization-code clients with fixed safe callbacks.
+ */
+export const zClientRegistration = z.object({
+    client_name: z.string().min(1).max(128).optional().default('MCP client'),
+    grant_types: z.array(z.enum(['authorization_code', 'refresh_token'])).min(1).max(2).optional().default(['authorization_code']),
+    redirect_uris: z.array(z.string()).min(1).max(10),
+    response_types: z.tuple([z.literal('code')]).optional().default(['code']),
+    token_endpoint_auth_method: z.literal('none').optional().default('none')
 });
 
 /**
@@ -53,6 +124,17 @@ export const zComputeRegistryResponse = z.object({
     gateway_url: z.string(),
     database_storage_class: z.string(),
     storage_endpoint: z.string()
+});
+
+/**
+ * Consent
+ *
+ * Describe the actual client callback and selected Solution to the user.
+ */
+export const zConsent = z.object({
+    client_name: z.string(),
+    redirect_uri: z.string(),
+    solution_name: z.string()
 });
 
 /**
@@ -91,6 +173,7 @@ export const zErrorResponse = z.object({
  */
 export const zLongLinkMetadata = z.object({
     image: z.string(),
+    version: z.string().nullish(),
     description: z.string().nullish(),
     environments: z.array(zEnvironmentMetadata).optional()
 });
@@ -103,6 +186,16 @@ export const zLongLinkMetadata = z.object({
 export const zOAuthAvailability = z.object({
     github: z.boolean(),
     google: z.boolean()
+});
+
+/**
+ * OAuthFailure
+ *
+ * Describe OAuth errors without returning submitted credentials.
+ */
+export const zOAuthFailure = z.object({
+    error: z.string(),
+    error_description: z.string()
 });
 
 /**
@@ -264,6 +357,20 @@ export const zPasswordResetComplete = z.object({
 });
 
 /**
+ * RegisteredClient
+ *
+ * Return public registration metadata, never a confidential client credential.
+ */
+export const zRegisteredClient = z.object({
+    client_name: z.string().min(1).max(128).optional().default('MCP client'),
+    grant_types: z.tuple([z.literal('authorization_code')]).optional().default(['authorization_code']),
+    redirect_uris: z.array(z.string()).min(1).max(10),
+    response_types: z.tuple([z.literal('code')]).optional().default(['code']),
+    token_endpoint_auth_method: z.literal('none').optional().default('none'),
+    client_id: z.uuid()
+});
+
+/**
  * RegistrationComplete
  *
  * Validate profile and password setup after email authentication.
@@ -274,19 +381,12 @@ export const zRegistrationComplete = z.object({
 });
 
 /**
- * RegistryProvider
- *
- * Identify supported container registry authentication providers.
- */
-export const zRegistryProvider = z.enum(['ghcr']);
-
-/**
  * RegistryCreate
  *
  * Validate the registry provider and write-only credentials.
  */
 export const zRegistryCreate = z.object({
-    provider: zRegistryProvider.optional().default('ghcr')
+    provider: z.literal('ghcr').optional().default('ghcr')
 });
 
 /**
@@ -297,8 +397,38 @@ export const zRegistryCreate = z.object({
 export const zRegistryResponse = z.object({
     id: z.uuid(),
     host: z.string(),
-    provider: zRegistryProvider,
+    provider: z.literal('ghcr'),
     username: z.string()
+});
+
+/**
+ * ResourceMetadata
+ *
+ * Publish RFC 9728 resource discovery for one Solution endpoint.
+ */
+export const zResourceMetadata = z.object({
+    resource: z.string(),
+    scopes_supported: z.array(z.string()),
+    authorization_servers: z.array(z.string()),
+    bearer_methods_supported: z.array(z.string()).optional().default(['header'])
+});
+
+/**
+ * ServerMetadata
+ *
+ * Publish the supported public-client OAuth authorization flow.
+ */
+export const zServerMetadata = z.object({
+    issuer: z.string(),
+    token_endpoint: z.string(),
+    scopes_supported: z.array(z.string()),
+    revocation_endpoint: z.string(),
+    grant_types_supported: z.array(z.string()),
+    registration_endpoint: z.string(),
+    authorization_endpoint: z.string(),
+    response_types_supported: z.array(z.string()),
+    code_challenge_methods_supported: z.array(z.string()),
+    token_endpoint_auth_methods_supported: z.array(z.string())
 });
 
 /**
@@ -337,6 +467,7 @@ export const zSolutionUpdateCheck = z.object({
     idle_seconds: z.int(),
     revision_id: z.uuid(),
     current_image: z.string(),
+    current_version: z.string().nullish(),
     configured_envs: z.array(z.string()),
     metadata: zLongLinkMetadata
 });
@@ -394,15 +525,15 @@ export const zPageOrganizationIdentity = z.object({
  */
 export const zSolutionResponse = z.object({
     id: z.uuid(),
-    organization: zOrganizationIdentity,
     name: z.string(),
     slug: z.string(),
     description: z.string().nullable(),
-    image_desired: z.string(),
-    desired_revision_id: z.uuid().nullable(),
-    deployed_revision_id: z.uuid().nullable(),
     status: zStatus,
     deployment_pending: z.boolean(),
+    desired_revision_id: z.uuid().nullable(),
+    organization: zOrganizationIdentity,
+    image_desired: z.string(),
+    deployed_revision_id: z.uuid().nullable(),
     created_at: z.iso.datetime()
 });
 
@@ -421,6 +552,18 @@ export const zPageSolutionResponse = z.object({
  */
 export const zTokenPayload = z.object({
     token: z.string().min(1).max(4096)
+});
+
+/**
+ * TokenSummary
+ *
+ * Expose revocation handles without access credentials or hashes.
+ */
+export const zTokenSummary = z.object({
+    id: z.uuid(),
+    client_id: z.uuid(),
+    expires_at: z.iso.datetime(),
+    solution_id: z.uuid()
 });
 
 /**
@@ -490,353 +633,29 @@ export const zUserUpdate = z.object({
 });
 
 /**
+ * ValidationError
+ */
+export const zValidationError = z.object({
+    loc: z.array(z.union([z.string(), z.int()])),
+    msg: z.string(),
+    type: z.string(),
+    input: z.unknown().optional(),
+    ctx: z.record(z.string(), z.unknown()).optional()
+});
+
+/**
+ * HTTPValidationError
+ */
+export const zHttpValidationError = z.object({
+    detail: z.array(zValidationError).optional()
+});
+
+/**
  * RegistryCreate
  *
  * Validate the registry provider and write-only credentials.
  */
 export const zRegistryCreateWritable = z.object({
-    provider: zRegistryProvider.optional().default('ghcr'),
+    provider: z.literal('ghcr').optional().default('ghcr'),
     credential: z.string().min(1).max(4096)
 });
-
-/**
- * Successful Response
- */
-export const zGetOauthAvailabilityApiV1AuthOauthGetResponse = zOAuthAvailability;
-
-export const zPasswordLoginApiV1AuthPasswordLoginPostBody = zPasswordLogin;
-
-/**
- * Successful Response
- */
-export const zPasswordLoginApiV1AuthPasswordLoginPostResponse = z.void();
-
-export const zRequestPasswordResetApiV1AuthForgotPasswordPostBody = zBodyRequestPasswordResetApiV1AuthForgotPasswordPost;
-
-export const zVerifyPasswordResetTokenApiV1AuthResetPasswordVerifyPostBody = zTokenPayload;
-
-/**
- * Successful Response
- */
-export const zVerifyPasswordResetTokenApiV1AuthResetPasswordVerifyPostResponse = z.void();
-
-/**
- * Successful Response
- */
-export const zGetPasswordResetSetupApiV1AuthResetPasswordSetupGetResponse = z.void();
-
-export const zResetPasswordApiV1AuthResetPasswordPostBody = zPasswordResetComplete;
-
-/**
- * Successful Response
- */
-export const zResetPasswordApiV1AuthResetPasswordPostResponse = z.void();
-
-export const zRequestRegistrationApiV1AuthRegisterPostBody = zBodyRequestRegistrationApiV1AuthRegisterPost;
-
-export const zVerifyRegistrationTokenApiV1AuthVerifyPostBody = zTokenPayload;
-
-/**
- * Successful Response
- */
-export const zVerifyRegistrationTokenApiV1AuthVerifyPostResponse = zEmailPayload;
-
-/**
- * Successful Response
- */
-export const zGetRegistrationSetupApiV1AuthRegisterSetupGetResponse = zEmailPayload;
-
-export const zCompleteRegistrationApiV1AuthRegisterCompletePostBody = zRegistrationComplete;
-
-/**
- * Successful Response
- */
-export const zCompleteRegistrationApiV1AuthRegisterCompletePostResponse = zUserSummary;
-
-export const zListSolutionsApiV1SolutionsGetQuery = z.object({
-    page: z.int().gte(1).optional().default(1),
-    page_size: z.int().gte(1).lte(100).optional().default(25)
-});
-
-/**
- * Successful Response
- */
-export const zListSolutionsApiV1SolutionsGetResponse = zPageSolutionResponse;
-
-export const zGetOrganizationSolutionsApiV1OrganizationsOrganizationIdSolutionsGetPath = z.object({
-    organization_id: z.uuid()
-});
-
-/**
- * Response Get Organization Solutions Api V1 Organizations  Organization Id  Solutions Get
- *
- * Successful Response
- */
-export const zGetOrganizationSolutionsApiV1OrganizationsOrganizationIdSolutionsGetResponse = z.array(zOrganizationSolutionSummary);
-
-export const zCreateSolutionApiV1OrganizationsOrganizationIdSolutionsPostBody = zSolutionCreate;
-
-export const zCreateSolutionApiV1OrganizationsOrganizationIdSolutionsPostPath = z.object({
-    organization_id: z.uuid()
-});
-
-/**
- * Successful Response
- */
-export const zCreateSolutionApiV1OrganizationsOrganizationIdSolutionsPostResponse = z.void();
-
-export const zCheckUpdateApiV1SolutionsSolutionIdUpdateGetPath = z.object({
-    solution_id: z.uuid()
-});
-
-/**
- * Successful Response
- */
-export const zCheckUpdateApiV1SolutionsSolutionIdUpdateGetResponse = zSolutionUpdateCheck;
-
-export const zApplyUpdateApiV1SolutionsSolutionIdUpdatePostBody = zSolutionPatch;
-
-export const zApplyUpdateApiV1SolutionsSolutionIdUpdatePostPath = z.object({
-    solution_id: z.uuid()
-});
-
-/**
- * Successful Response
- */
-export const zApplyUpdateApiV1SolutionsSolutionIdUpdatePostResponse = z.void();
-
-export const zGetSolutionLogsApiV1SolutionsSolutionIdLogsGetPath = z.object({
-    solution_id: z.uuid()
-});
-
-/**
- * Response Get Solution Logs Api V1 Solutions  Solution Id  Logs Get
- *
- * Successful Response
- */
-export const zGetSolutionLogsApiV1SolutionsSolutionIdLogsGetResponse = z.array(z.string());
-
-export const zDeleteSolutionApiV1SolutionsSolutionIdDeletePath = z.object({
-    solution_id: z.uuid()
-});
-
-/**
- * Successful Response
- */
-export const zDeleteSolutionApiV1SolutionsSolutionIdDeleteResponse = z.void();
-
-export const zListComputeRegistriesApiV1ComputesGetQuery = z.object({
-    page: z.int().gte(1).optional().default(1),
-    page_size: z.int().gte(1).lte(100).optional().default(25)
-});
-
-/**
- * Successful Response
- */
-export const zListComputeRegistriesApiV1ComputesGetResponse = zPageComputeRegistryResponse;
-
-export const zCreateComputeRegistryApiV1ComputesPostBody = zComputeRegistryCreate;
-
-/**
- * Successful Response
- */
-export const zCreateComputeRegistryApiV1ComputesPostResponse = zComputeRegistryResponse;
-
-export const zDeleteComputeRegistryApiV1ComputesRegistryIdDeletePath = z.object({
-    registry_id: z.uuid()
-});
-
-/**
- * Successful Response
- */
-export const zDeleteComputeRegistryApiV1ComputesRegistryIdDeleteResponse = z.void();
-
-/**
- * Response Healthz Api V1 Healthz Get
- *
- * Successful Response
- */
-export const zHealthzApiV1HealthzGetResponse = z.record(z.string(), z.boolean());
-
-/**
- * Response Readyz Api V1 Readyz Get
- *
- * Successful Response
- */
-export const zReadyzApiV1ReadyzGetResponse = z.record(z.string(), z.boolean());
-
-export const zInspectImageApiV1ImageGetQuery = z.object({
-    image: z.string(),
-    organization_id: z.uuid().nullish()
-});
-
-/**
- * Successful Response
- */
-export const zInspectImageApiV1ImageGetResponse = zLongLinkMetadata;
-
-export const zListOperationsApiV1OperationsGetQuery = z.object({
-    page: z.int().gte(1).optional().default(1),
-    page_size: z.int().gte(1).lte(100).optional().default(25)
-});
-
-/**
- * Successful Response
- */
-export const zListOperationsApiV1OperationsGetResponse = zPageOperationResponse;
-
-export const zListOrganizationsApiV1OrganizationsGetQuery = z.object({
-    page: z.int().gte(1).optional().default(1),
-    page_size: z.int().gte(1).lte(100).optional().default(25)
-});
-
-/**
- * Successful Response
- */
-export const zListOrganizationsApiV1OrganizationsGetResponse = zPageOrganizationIdentity;
-
-export const zCreateOrganizationApiV1OrganizationsPostBody = zOrganizationCreate;
-
-/**
- * Successful Response
- */
-export const zCreateOrganizationApiV1OrganizationsPostResponse = zOrganizationIdentity;
-
-export const zGetOrganizationBySlugApiV1OrganizationsSlugOrganizationSlugGetPath = z.object({
-    organization_slug: z.string()
-});
-
-/**
- * Successful Response
- */
-export const zGetOrganizationBySlugApiV1OrganizationsSlugOrganizationSlugGetResponse = zUserOrganizationMembership;
-
-export const zDeleteOrganizationApiV1OrganizationsOrganizationIdDeletePath = z.object({
-    organization_id: z.uuid()
-});
-
-/**
- * Successful Response
- */
-export const zDeleteOrganizationApiV1OrganizationsOrganizationIdDeleteResponse = zOrganizationIdentity;
-
-export const zGetOrganizationApiV1OrganizationsOrganizationIdGetPath = z.object({
-    organization_id: z.uuid()
-});
-
-/**
- * Successful Response
- */
-export const zGetOrganizationApiV1OrganizationsOrganizationIdGetResponse = zOrganizationDetails;
-
-export const zGetOrganizationQuotasApiV1OrganizationsOrganizationIdQuotasGetPath = z.object({
-    organization_id: z.uuid()
-});
-
-/**
- * Successful Response
- */
-export const zGetOrganizationQuotasApiV1OrganizationsOrganizationIdQuotasGetResponse = zOrganizationQuotasResponse;
-
-export const zGetOrganizationStorageUsageApiV1OrganizationsOrganizationIdStorageGetPath = z.object({
-    organization_id: z.uuid()
-});
-
-/**
- * Successful Response
- */
-export const zGetOrganizationStorageUsageApiV1OrganizationsOrganizationIdStorageGetResponse = zOrganizationStorageUsageResponse;
-
-export const zCreateOrganizationInvitationApiV1OrganizationsOrganizationIdInvitationsPostBody = zOrganizationInvitationCreate;
-
-export const zCreateOrganizationInvitationApiV1OrganizationsOrganizationIdInvitationsPostPath = z.object({
-    organization_id: z.uuid()
-});
-
-/**
- * Successful Response
- */
-export const zCreateOrganizationInvitationApiV1OrganizationsOrganizationIdInvitationsPostResponse = z.void();
-
-export const zRevokeOrganizationInvitationApiV1OrganizationsOrganizationIdInvitationsInvitationIdDeletePath = z.object({
-    invitation_id: z.uuid(),
-    organization_id: z.uuid()
-});
-
-/**
- * Successful Response
- */
-export const zRevokeOrganizationInvitationApiV1OrganizationsOrganizationIdInvitationsInvitationIdDeleteResponse = z.void();
-
-export const zUpdateOrganizationMemberApiV1OrganizationsOrganizationIdMembersMemberIdPatchBody = zOrganizationMemberUpdate;
-
-export const zUpdateOrganizationMemberApiV1OrganizationsOrganizationIdMembersMemberIdPatchPath = z.object({
-    member_id: z.uuid(),
-    organization_id: z.uuid()
-});
-
-/**
- * Successful Response
- */
-export const zUpdateOrganizationMemberApiV1OrganizationsOrganizationIdMembersMemberIdPatchResponse = z.void();
-
-/**
- * Successful Response
- */
-export const zGetMeApiV1MeGetResponse = zUserSummary;
-
-export const zPatchMeApiV1MePatchBody = zUserUpdate;
-
-/**
- * Successful Response
- */
-export const zPatchMeApiV1MePatchResponse = zUserSummary;
-
-/**
- * Response Get My Organizations Api V1 Me Organizations Get
- *
- * Successful Response
- */
-export const zGetMyOrganizationsApiV1MeOrganizationsGetResponse = z.array(zUserOrganizationMembership);
-
-export const zListUsersApiV1UsersGetQuery = z.object({
-    page: z.int().gte(1).optional().default(1),
-    page_size: z.int().gte(1).lte(100).optional().default(25)
-});
-
-/**
- * Successful Response
- */
-export const zListUsersApiV1UsersGetResponse = zPageAdminUserSummary;
-
-export const zListRegistriesApiV1OrganizationsOrganizationIdRegistriesGetPath = z.object({
-    organization_id: z.uuid()
-});
-
-/**
- * Response List Registries Api V1 Organizations  Organization Id  Registries Get
- *
- * Successful Response
- */
-export const zListRegistriesApiV1OrganizationsOrganizationIdRegistriesGetResponse = z.array(zRegistryResponse);
-
-export const zCreateRegistryApiV1OrganizationsOrganizationIdRegistriesPostBody = zRegistryCreateWritable;
-
-export const zCreateRegistryApiV1OrganizationsOrganizationIdRegistriesPostPath = z.object({
-    organization_id: z.uuid()
-});
-
-/**
- * Successful Response
- */
-export const zCreateRegistryApiV1OrganizationsOrganizationIdRegistriesPostResponse = zRegistryResponse;
-
-export const zDeleteRegistryApiV1OrganizationsOrganizationIdRegistriesConnectionIdDeletePath = z.object({
-    organization_id: z.uuid(),
-    connection_id: z.uuid()
-});
-
-/**
- * Successful Response
- */
-export const zDeleteRegistryApiV1OrganizationsOrganizationIdRegistriesConnectionIdDeleteResponse = z.void();

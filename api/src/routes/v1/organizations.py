@@ -1,7 +1,7 @@
 import asyncio
+from src import auth
 from uuid import UUID
 from fastapi import Depends, APIRouter, HTTPException, BackgroundTasks
-from src.auth import authuser, authadmin, get_session, organization_access
 from src.utils import s3, mail, roles
 from src.logger import logger
 from src.models.roles import OrganizationRoles
@@ -11,7 +11,6 @@ from src.models.storages import OrganizationStorageUsageResponse
 from src.models.resources import OrganizationIdentity, OrganizationSolutionSummary
 from src.database.services import organizations
 from src.models.pagination import Page, Pagination
-from sqlalchemy.ext.asyncio import AsyncSession
 from src.kubernetes.storage import Storage
 from src.models.organizations import (
     OrganizationCreate,
@@ -20,8 +19,6 @@ from src.models.organizations import (
     OrganizationQuotasResponse,
     OrganizationInvitationCreate,
 )
-from src.database.models.users import User
-from src.database.models.association import UserOrganization
 from src.database.models.organizations import Organization
 
 router = APIRouter()
@@ -30,9 +27,9 @@ STORAGE_USAGE_TIMEOUT_SECONDS = 15
 
 @router.get("/organizations", response_model=Page[OrganizationIdentity])
 async def list_organizations(
-    _user: User = Depends(authadmin),
+    _user: auth.PlatformAdmin,
+    session: auth.Session,
     pagination: Pagination = Depends(),
-    session: AsyncSession = Depends(get_session),
 ):
     """Return all organizations for administrator views."""
 
@@ -43,8 +40,8 @@ async def list_organizations(
 @router.get("/organizations/slug/{organization_slug}", response_model=UserOrganizationMembership)
 async def get_organization_by_slug(
     organization_slug: str,
-    user: User = Depends(authuser),
-    session: AsyncSession = Depends(get_session),
+    user: auth.CurrentUser,
+    session: auth.Session,
 ):
     """Return the current user's membership for one Organization slug."""
 
@@ -55,10 +52,10 @@ async def get_organization_by_slug(
     return membership
 
 
-@router.get("/organizations/{organization_id}", response_model=OrganizationDetails)
+@router.get("/organizations/{organization_id}", response_model=OrganizationDetails)  # noqa: FAST003 - Consumed by auth.OrganizationMember.
 async def get_organization(
-    membership: UserOrganization = Depends(organization_access),
-    session: AsyncSession = Depends(get_session),
+    membership: auth.OrganizationMember,
+    session: auth.Session,
 ):
     """Return one organization and its metadata."""
 
@@ -75,10 +72,10 @@ async def get_organization(
     }
 
 
-@router.get("/organizations/{organization_id}/solutions", response_model=list[OrganizationSolutionSummary])
+@router.get("/organizations/{organization_id}/solutions", response_model=list[OrganizationSolutionSummary])  # noqa: FAST003 - Consumed by auth.OrganizationMember.
 async def get_organization_solutions(
-    membership: UserOrganization = Depends(organization_access),
-    session: AsyncSession = Depends(get_session),
+    membership: auth.OrganizationMember,
+    session: auth.Session,
 ):
     """Return solutions visible to the current organization member."""
 
@@ -88,8 +85,8 @@ async def get_organization_solutions(
 @router.get("/organizations/{organization_id}/quotas", response_model=OrganizationQuotasResponse)
 async def get_organization_quotas(
     organization_id: UUID,
-    _user: User = Depends(authadmin),
-    session: AsyncSession = Depends(get_session),
+    _user: auth.PlatformAdmin,
+    session: auth.Session,
 ):
     """Return stored Organization quotas for administrator views."""
 
@@ -101,20 +98,19 @@ async def get_organization_quotas(
 
 
 @router.get(
-    "/organizations/{organization_id}/storage",
+    "/organizations/{organization_id}/storage",  # noqa: FAST003 - Consumed by auth.OrganizationMember.
     response_model=OrganizationStorageUsageResponse,
 )
 async def get_organization_storage_usage(
-    membership: UserOrganization = Depends(organization_access),
-    session: AsyncSession = Depends(get_session),
+    membership: auth.OrganizationMember,
+    session: auth.Session,
 ):
     """Return live usage for the Organization bucket."""
 
     # Load the Organization's immutable storage assignment.
-    target = await organizations.infrastructure(session, membership.organization_id)
-    if target is None:
+    compute = await organizations.storage_infrastructure(session, membership.organization_id)
+    if compute is None:
         raise HTTPException(status_code=404, detail="Organization not found")
-    _, compute = target
     await session.commit()
 
     # Inspect the complete Organization bucket and report storage failures as unavailable.
@@ -135,13 +131,12 @@ async def get_organization_storage_usage(
     return {"space_used": usage, "quota_bytes": membership.organization.storage_quota_bytes}
 
 
-@router.post("/organizations/{organization_id}/invitations", status_code=204)
+@router.post("/organizations/{organization_id}/invitations", status_code=204)  # noqa: FAST003 - Consumed by auth.OrganizationMaintainer.
 async def create_organization_invitation(
     payload: OrganizationInvitationCreate,
     background_tasks: BackgroundTasks,
-    user: User = Depends(authuser),
-    membership: UserOrganization = Depends(organization_access),
-    session: AsyncSession = Depends(get_session),
+    membership: auth.OrganizationMaintainer,
+    session: auth.Session,
 ):
     """Create one invitation for an organization member."""
 
@@ -152,7 +147,7 @@ async def create_organization_invitation(
         session,
         membership.organization_id,
         payload,
-        user.id,
+        membership.user_id,
     )
     await session.commit()
 
@@ -160,26 +155,24 @@ async def create_organization_invitation(
     background_tasks.add_task(mail.send_organization_invitation_email, payload.email, organization_name, payload.role)
 
 
-@router.delete("/organizations/{organization_id}/invitations/{invitation_id}", status_code=204)
+@router.delete("/organizations/{organization_id}/invitations/{invitation_id}", status_code=204)  # noqa: FAST003 - Consumed by auth.OrganizationMaintainer.
 async def revoke_organization_invitation(
     invitation_id: UUID,
-    user: User = Depends(authuser),
-    membership: UserOrganization = Depends(organization_access),
-    session: AsyncSession = Depends(get_session),
+    membership: auth.OrganizationMaintainer,
+    session: auth.Session,
 ):
     """Revoke one pending Organization invitation."""
 
-    await organizations.revoke_invitation(session, membership.organization_id, invitation_id, user.id)
+    await organizations.revoke_invitation(session, membership.organization_id, invitation_id, membership.user_id)
     await session.commit()
 
 
-@router.patch("/organizations/{organization_id}/members/{member_id}", status_code=204)
+@router.patch("/organizations/{organization_id}/members/{member_id}", status_code=204)  # noqa: FAST003 - Consumed by auth.OrganizationAdmin.
 async def update_organization_member(
     member_id: UUID,
     payload: OrganizationMemberUpdate,
-    user: User = Depends(authuser),
-    membership: UserOrganization = Depends(organization_access),
-    session: AsyncSession = Depends(get_session),
+    membership: auth.OrganizationAdmin,
+    session: auth.Session,
 ):
     """Update one organization member role."""
 
@@ -189,7 +182,7 @@ async def update_organization_member(
         membership.organization_id,
         member_id,
         payload.role,
-        user.id,
+        membership.user_id,
     )
     await session.commit()
 
@@ -197,8 +190,8 @@ async def update_organization_member(
 @router.delete("/organizations/{organization_id}", status_code=202, response_model=OrganizationIdentity)
 async def delete_organization(
     organization_id: UUID,
-    user: User = Depends(authuser),
-    session: AsyncSession = Depends(get_session),
+    user: auth.CurrentUser,
+    session: auth.Session,
 ):
     """Mark one Organization absent and queue lifecycle cleanup."""
 
@@ -214,8 +207,8 @@ async def delete_organization(
 @router.post("/organizations", response_model=OrganizationIdentity, status_code=202)
 async def create_organization(
     payload: OrganizationCreate,
-    user: User = Depends(authuser),
-    session: AsyncSession = Depends(get_session),
+    user: auth.CurrentUser,
+    session: auth.Session,
 ):
     """Create Organization desired state and queue infrastructure creation."""
 

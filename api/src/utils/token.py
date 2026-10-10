@@ -18,6 +18,9 @@ OAUTH_STATE_TOKEN_AUDIENCE = "longlink:oauth"  # noqa: S105
 EMAIL_TOKEN_LIFETIME_SECONDS = 3600
 OAUTH_STATE_TOKEN_LIFETIME_SECONDS = 600
 
+# Compile canonical email validation once for all signed registration claims.
+EMAIL_ADAPTER = TypeAdapter(Email)
+
 
 def password_fingerprint(password: str) -> str:
     """Return the signed-token fingerprint for one current password hash."""
@@ -51,7 +54,7 @@ def registration_claims(token: str) -> Email:
     if not isinstance(email, str) or not email:
         raise jwt.InvalidTokenError("Invalid registration token claims")
     try:
-        return TypeAdapter(Email).validate_python(email)
+        return EMAIL_ADAPTER.validate_python(email)
     except ValidationError as exc:
         raise jwt.InvalidTokenError("Invalid registration token claims") from exc
 
@@ -72,7 +75,7 @@ def create_password_reset_token(user: User) -> str:
     )
 
 
-def create_oauth_state_token(provider: OAuthProvider, state: str, verifier: str) -> str:
+def create_oauth_state_token(provider: OAuthProvider, state: str, verifier: str, return_to: str = "/user/organizations") -> str:
     """Create browser-only OAuth state bound to one provider and PKCE verifier."""
 
     # Keep the anti-forgery state and reusable verifier out of browser-accessible storage and redirect URLs.
@@ -81,6 +84,7 @@ def create_oauth_state_token(provider: OAuthProvider, state: str, verifier: str)
             "provider": provider,
             "state": state,
             "verifier": verifier,
+            "return_to": return_to,
             "aud": OAUTH_STATE_TOKEN_AUDIENCE,
             "exp": datetime.now(UTC) + timedelta(seconds=OAUTH_STATE_TOKEN_LIFETIME_SECONDS),
         },
@@ -89,8 +93,8 @@ def create_oauth_state_token(provider: OAuthProvider, state: str, verifier: str)
     )
 
 
-def oauth_state_claims(token: str, provider: OAuthProvider) -> tuple[str, str]:
-    """Return state and verifier from one valid OAuth browser credential."""
+def _oauth_state_claims(token: str, provider: OAuthProvider) -> tuple[str, str, str]:
+    """Decode and validate OAuth callback proof and its optional continuation once."""
 
     # Bind callbacks to their initiating provider before exchanging an authorization code.
     data = jwt.decode(token, env.SESSION_KEY, audience=OAUTH_STATE_TOKEN_AUDIENCE, algorithms=[JWT_ALGORITHM])
@@ -98,7 +102,26 @@ def oauth_state_claims(token: str, provider: OAuthProvider) -> tuple[str, str]:
     verifier = data.get("verifier")
     if data.get("provider") != provider or not isinstance(state, str) or not isinstance(verifier, str):
         raise jwt.InvalidTokenError("Invalid OAuth state token claims")
+
+    # Older credentials without a navigation hint retain the standard login destination.
+    return_to = data.get("return_to")
+    return state, verifier, return_to if isinstance(return_to, str) else "/user/organizations"
+
+
+def oauth_state_claims(token: str, provider: OAuthProvider) -> tuple[str, str]:
+    """Return state and verifier from one valid OAuth browser credential."""
+
+    # Keep the callback proof contract independent of its optional navigation hint.
+    state, verifier, _ = _oauth_state_claims(token, provider)
     return state, verifier
+
+
+def oauth_return_path(credential: str, provider: OAuthProvider) -> str:
+    """Read the signed first-party continuation without changing login credentials."""
+
+    # Verify purpose and provider before returning an optional navigation hint.
+    _, _, return_to = _oauth_state_claims(credential, provider)
+    return return_to
 
 
 async def password_reset_user(session: AsyncSession, token: str) -> User:

@@ -4,6 +4,8 @@ import { Badge as AstryxBadge } from '@astryxdesign/core/Badge';
 
 /** Displays a count or enumerated state. */
 export function Badge(props: {
+    /** Hides the component without unmounting it. */
+    hidden?: boolean;
     label?: ReactNode;
     icon?: StoneIconName;
     variant?:
@@ -26,6 +28,7 @@ export function Badge(props: {
     return (
         <AstryxBadge
             {...props}
+            className={props.hidden ? 'hidden!' : undefined}
             icon={props.icon ? <Icon icon={props.icon} size="sm" /> : undefined}
             label={props.label}
             variant={props.variant ?? 'neutral'}

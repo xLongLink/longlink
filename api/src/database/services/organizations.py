@@ -9,8 +9,8 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import defer, load_only, joinedload, selectinload, contains_eager
 from collections.abc import Sequence
 from longlink.shared import audit as shared_audit
-from longlink.shared import models as shared_models
 from src.models.roles import OrganizationRoles
+from src.database.types import attr
 from src.database.services import operations
 from src.models.operations import OperationKind
 from src.models.pagination import Pagination
@@ -31,7 +31,15 @@ def _membership_query(user_id: UUID) -> Select[tuple[UserOrganization]]:
     return (
         select(UserOrganization)
         .join(Organization, col(Organization.id) == col(UserOrganization.organization_id))
-        .options(contains_eager(UserOrganization.organization))
+        .options(
+            contains_eager(attr(UserOrganization.organization)).load_only(
+                attr(Organization.id),
+                attr(Organization.name),
+                attr(Organization.slug),
+                attr(Organization.status),
+                attr(Organization.storage_quota_bytes),
+            )
+        )
         .where(
             col(UserOrganization.user_id) == user_id,
             col(Organization.deleted_at).is_(None),
@@ -45,6 +53,23 @@ async def membership(session: AsyncSession, user_id: UUID, organization_id: UUID
     # Load only the requested Organization membership and its response-ready Organization.
     statement = _membership_query(user_id).where(col(UserOrganization.organization_id) == organization_id)
     return await session.scalar(statement)
+
+
+async def require_membership(
+    session: AsyncSession,
+    user_id: UUID,
+    organization_id: UUID,
+    minimum_role: OrganizationRoles = OrganizationRoles.read,
+) -> UserOrganization:
+    """Require active Organization access with the requested minimum role without taking command locks."""
+
+    # Resolve active access before checking its minimum required role.
+    access = await membership(session, user_id, organization_id)
+    if access is None:
+        raise ForbiddenError("Access required")
+    if not roles.atleast(access.role, minimum_role):
+        raise ForbiddenError("Permission required")
+    return access
 
 
 async def membership_by_slug(session: AsyncSession, user_id: UUID, organization_slug: str) -> UserOrganization | None:
@@ -66,7 +91,7 @@ async def memberships(session: AsyncSession, user_id: UUID) -> Sequence[UserOrga
 async def solution_runtime_access(
     session: AsyncSession, user_id: UUID, solution_id: UUID
 ) -> tuple[Solution, OrganizationRoles, ComputeRegistry] | None:
-    """Return one user's active solution access with its compute registry."""
+    """Return one user's active Solution access with its gateway connection."""
 
     # Load Solution access and its gateway secret in one query.
     result = await session.execute(
@@ -74,16 +99,15 @@ async def solution_runtime_access(
         .execution_options(populate_existing=True)
         .options(
             load_only(
-                Solution.id,
-                Solution.organization_id,
-                Solution.secrets,
-                Solution.status,
+                attr(Solution.id),
+                attr(Solution.organization_id),
+                attr(Solution.secrets),
+                attr(Solution.status),
             ),
             load_only(
-                ComputeRegistry.id,
-                ComputeRegistry.kubeconfig,
-                ComputeRegistry.gateway_url,
-                ComputeRegistry.gateway_certificate,
+                attr(ComputeRegistry.id),
+                attr(ComputeRegistry.gateway_url),
+                attr(ComputeRegistry.gateway_certificate),
             ),
         )
         .join(Organization, col(Organization.id) == col(Solution.organization_id))
@@ -99,6 +123,48 @@ async def solution_runtime_access(
     return result.tuples().one_or_none()
 
 
+async def solution_logs_access(
+    session: AsyncSession, user_id: UUID, solution_id: UUID
+) -> tuple[UUID, OrganizationRoles, dict[str, object]] | None:
+    """Return active Solution log access without loading runtime or gateway credentials."""
+
+    # Resolve the Organization, current membership role, and cluster connection in one query.
+    result = await session.execute(
+        select(col(Solution.organization_id), col(UserOrganization.role), col(ComputeRegistry.kubeconfig))
+        .select_from(Solution)
+        .join(Organization, col(Organization.id) == col(Solution.organization_id))
+        .join(UserOrganization, col(UserOrganization.organization_id) == col(Organization.id))
+        .join(ComputeRegistry, col(ComputeRegistry.id) == col(Organization.compute_id))
+        .where(
+            col(Solution.id) == solution_id,
+            col(Solution.deleted_at).is_(None),
+            col(Organization.deleted_at).is_(None),
+            col(UserOrganization.user_id) == user_id,
+        )
+    )
+    return result.tuples().one_or_none()
+
+
+async def storage_infrastructure(session: AsyncSession, organization_id: UUID) -> ComputeRegistry | None:
+    """Return one Organization's assigned storage connection without lifecycle credentials."""
+
+    # Load only the Compute fields needed to inspect the Organization bucket.
+    return await session.scalar(
+        select(ComputeRegistry)
+        .options(
+            load_only(
+                attr(ComputeRegistry.id),
+                attr(ComputeRegistry.storage_endpoint),
+                attr(ComputeRegistry.storage_access_key),
+                attr(ComputeRegistry.storage_secret_key),
+                attr(ComputeRegistry.storage_certificate),
+            )
+        )
+        .join(Organization, col(Organization.compute_id) == col(ComputeRegistry.id))
+        .where(col(Organization.id) == organization_id)
+    )
+
+
 def _infrastructure_query() -> Select[tuple[Organization, ComputeRegistry]]:
     """Select one Organization's provider connections for lifecycle work."""
 
@@ -107,13 +173,13 @@ def _infrastructure_query() -> Select[tuple[Organization, ComputeRegistry]]:
         select(Organization, ComputeRegistry)
         .options(
             load_only(
-                ComputeRegistry.id,
-                ComputeRegistry.kubeconfig,
-                ComputeRegistry.database_storage_class,
-                ComputeRegistry.storage_endpoint,
-                ComputeRegistry.storage_access_key,
-                ComputeRegistry.storage_secret_key,
-                ComputeRegistry.storage_certificate,
+                attr(ComputeRegistry.id),
+                attr(ComputeRegistry.kubeconfig),
+                attr(ComputeRegistry.database_storage_class),
+                attr(ComputeRegistry.storage_endpoint),
+                attr(ComputeRegistry.storage_access_key),
+                attr(ComputeRegistry.storage_secret_key),
+                attr(ComputeRegistry.storage_certificate),
             ),
         )
         .join(ComputeRegistry, col(ComputeRegistry.id) == col(Organization.compute_id))
@@ -139,14 +205,14 @@ async def solution_infrastructure(session: AsyncSession, solution_id: UUID) -> t
         .join_from(Organization, Solution, col(Solution.organization_id) == col(Organization.id))
         .options(
             load_only(
-                Solution.id,
-                Solution.desired_revision_id,
-                Solution.deployed_revision_id,
-                Solution.secrets,
-                Solution.status,
-                Solution.deleted_at,
+                attr(Solution.id),
+                attr(Solution.desired_revision_id),
+                attr(Solution.deployed_revision_id),
+                attr(Solution.secrets),
+                attr(Solution.status),
+                attr(Solution.deleted_at),
             ),
-            selectinload(Solution.desired_revision).load_only(Revision.failed, raiseload=True),
+            selectinload(attr(Solution.desired_revision)).load_only(attr(Revision.failed), raiseload=True),
         )
         .where(col(Solution.id) == solution_id)
     )
@@ -161,9 +227,17 @@ async def solution_infrastructure(session: AsyncSession, solution_id: UUID) -> t
 async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Sequence[Organization], int]:
     """Return one ordered page of active organizations for administrator views."""
 
-    # Query active organization rows using a stable page order.
+    # Load only Organization identity fields using a stable page order.
     statement = (
         select(Organization)
+        .options(
+            load_only(
+                attr(Organization.id),
+                attr(Organization.name),
+                attr(Organization.slug),
+                attr(Organization.status),
+            )
+        )
         .where(col(Organization.deleted_at).is_(None))
         .order_by(col(Organization.name), col(Organization.id))
         .offset(pagination.offset)
@@ -183,8 +257,8 @@ async def solutions(session: AsyncSession, organization_id: UUID) -> Sequence[So
     statement = (
         select(Solution)
         .options(
-            defer(Solution.secrets),
-            selectinload(Solution.desired_revision).load_only(Revision.failed, raiseload=True),
+            defer(attr(Solution.secrets)),
+            selectinload(attr(Solution.desired_revision)).load_only(attr(Revision.failed), raiseload=True),
         )
         .where(
             col(Solution.organization_id) == organization_id,
@@ -220,7 +294,14 @@ async def members(session: AsyncSession, organization_id: UUID) -> Sequence[User
     # Load memberships with the user identity fields required by API payloads.
     statement = (
         select(UserOrganization)
-        .options(joinedload(UserOrganization.user).load_only(User.id, User.name, User.email, User.avatar))
+        .options(
+            joinedload(attr(UserOrganization.user)).load_only(
+                attr(User.id),
+                attr(User.name),
+                attr(User.email),
+                attr(User.avatar),
+            )
+        )
         .where(
             col(UserOrganization.organization_id) == organization_id,
         )
@@ -240,18 +321,7 @@ async def project_users(session: AsyncSession, organization_id: UUID, db: postgr
         .where(col(UserOrganization.organization_id) == organization_id)
     )
     result = await session.execute(statement)
-    users = result.all()
-
-    # Build the shared-schema user snapshot from Platform-authoritative memberships.
-    rows = [
-        shared_models.User(
-            id=user.id,
-            name=user.name,
-            email=user.email,
-            avatar=user.avatar,
-        )
-        for user in users
-    ]
+    rows = result.mappings().all()
 
     # Empty snapshots must not open an Organization database connection.
     if not rows:
@@ -380,9 +450,10 @@ async def create(
         raise UnavailableError("No ready compute registry available")
 
     # A no-op write serializes admission on every supported backend, including SQLite.
-    await session.execute(sql_update(ComputeRegistry).where(col(ComputeRegistry.id) == compute_id).values(name=col(ComputeRegistry.name)))
-    compute = await session.get(ComputeRegistry, compute_id, populate_existing=True)
-    if compute is None:
+    result = await session.execute(
+        sql_update(ComputeRegistry).where(col(ComputeRegistry.id) == compute_id).values(name=col(ComputeRegistry.name))
+    )
+    if result.rowcount != 1:
         raise UnavailableError("No compute registry available")
 
     # Build the Organization with its immutable infrastructure assignments.

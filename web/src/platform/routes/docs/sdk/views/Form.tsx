@@ -9,47 +9,7 @@ export default function FormPage() {
     return (
         <ViewLayout
             name="Form"
-            reference={{
-                introduction:
-                    'Form submits named fields to a Solution API without draft state, imports, or page navigation. Form validation runs before the request; Python schemas remain authoritative.',
-                practices: [
-                    {
-                        guidance: true,
-                        description:
-                            'The bridge accepts at most 32 form entries and 2,000,000 bytes of values and field names. Keep file uploads below that total; the sample uses a 1.9 MB file limit.',
-                    },
-                    {
-                        guidance: true,
-                        description:
-                            'Use name with defaultValue or defaultChecked for themed fields. Keep value and onChange only when the interface needs reactive state.',
-                    },
-                    {
-                        guidance: true,
-                        description:
-                            'Named controls retain Astryx styling, calendars, search, clear buttons, and other configured behavior. Adding name never replaces them with plain browser widgets.',
-                    },
-                    {
-                        guidance: true,
-                        description:
-                            'Receive form fields with Annotated[YourSchema, fastapi.Form()] and install python-multipart. Values are strings, repeated names stay repeated, unchecked checkboxes are omitted, and files retain their filenames.',
-                    },
-                    {
-                        guidance: true,
-                        description:
-                            'Use onSuccess to close a dialog or navigate. Writes refresh cached data automatically. Successful submission does not reset the form; a reset button restores native defaults.',
-                    },
-                    {
-                        guidance: true,
-                        description:
-                            'Use DateInput and TimeInput with separate names for appointments. They submit local values without timezone conversion. Use two DateInput fields for date ranges and validate their order in the backend schema.',
-                    },
-                    {
-                        guidance: false,
-                        description:
-                            'Do not use external actions or direct fetch. Form uses the same restricted Solution request bridge, limits, and error handling as request().',
-                    },
-                ],
-            }}
+            introduction="Form submits named fields to a Solution API without draft state, imports, or page navigation. Form validation runs before the request; Python schemas remain authoritative."
             examples={[
                 {
                     title: 'Create an item form',
@@ -76,10 +36,10 @@ export default function CreateItem() {
 }
 
 /** Shows a complete form with local submission output and native reset behavior. */
-export function FormExample() {
+function FormExample() {
     // Exercise the real Form with a local capability rather than disabling its controls.
     return (
-        <FormPreview action="/api/items">
+        <FormPreview>
             <TextInput name="name" label="Name" required />
             <NumberInput name="price" label="Price" min={0} defaultValue={0} required />
         </FormPreview>

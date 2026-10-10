@@ -1,6 +1,6 @@
 import pytest
 from datetime import UTC, datetime, timedelta
-from sqlmodel import select
+from sqlmodel import col, select
 from factories import create_organization
 from sqlalchemy import Select
 from src.models.roles import OrganizationRoles
@@ -24,7 +24,9 @@ async def test_create_replaces_existing_invitation(users: tuple[User, User, User
             session, organization.id, OrganizationInvitationCreate(email="Invited@EXAMPLE.COM", role=OrganizationRoles.write), owner.id
         )
         await session.commit()
-        invitation = await session.scalar(select(OrganizationInvitation).where(OrganizationInvitation.organization_id == organization.id))
+        invitation = await session.scalar(
+            select(OrganizationInvitation).where(col(OrganizationInvitation.organization_id) == organization.id)
+        )
         assert invitation is not None
         assert invitation.email == "invited@example.com"
         assert invitation.role == OrganizationRoles.write
@@ -41,7 +43,9 @@ async def test_create_replaces_existing_invitation(users: tuple[User, User, User
 
     # Read committed replacement values independently of the original identity map.
     async with session_scope() as session:
-        replacement = await session.scalar(select(OrganizationInvitation).where(OrganizationInvitation.organization_id == organization.id))
+        replacement = await session.scalar(
+            select(OrganizationInvitation).where(col(OrganizationInvitation.organization_id) == organization.id)
+        )
 
     # Assert
     assert replacement is not None
@@ -91,7 +95,7 @@ async def test_create_uses_concurrently_created_invitation(users: tuple[User, Us
 
     # Read the committed grant independently of the recovering session's identity map.
     async with session_scope() as session:
-        result = await session.scalars(select(OrganizationInvitation).where(OrganizationInvitation.organization_id == organization.id))
+        result = await session.scalars(select(OrganizationInvitation).where(col(OrganizationInvitation.organization_id) == organization.id))
         replacement = result.one()
 
     # Assert
@@ -124,7 +128,9 @@ async def test_accept_removes_expired_invitation_without_creating_membership(
     async with session_scope() as session:
         await invitations.accept(session, invitee)
         await session.commit()
-        invitation = await session.scalar(select(OrganizationInvitation).where(OrganizationInvitation.organization_id == organization.id))
+        invitation = await session.scalar(
+            select(OrganizationInvitation).where(col(OrganizationInvitation.organization_id) == organization.id)
+        )
         membership = await session.get(UserOrganization, (invitee.id, organization.id))
 
     # Assert
@@ -160,7 +166,9 @@ async def test_accept_preserves_active_membership_role(users: tuple[User, User, 
         await invitations.accept(session, invitee)
         await session.commit()
         membership = await session.get(UserOrganization, (invitee.id, organization.id))
-        invitation = await session.scalar(select(OrganizationInvitation).where(OrganizationInvitation.organization_id == organization.id))
+        invitation = await session.scalar(
+            select(OrganizationInvitation).where(col(OrganizationInvitation.organization_id) == organization.id)
+        )
 
     # Assert
     assert membership is not None
@@ -187,7 +195,9 @@ async def test_accept_ignores_invitations_for_deleted_organizations(users: tuple
     async with session_scope() as session:
         await invitations.accept(session, invitee)
         membership = await session.get(UserOrganization, (invitee.id, organization.id))
-        invitation = await session.scalar(select(OrganizationInvitation).where(OrganizationInvitation.organization_id == organization.id))
+        invitation = await session.scalar(
+            select(OrganizationInvitation).where(col(OrganizationInvitation.organization_id) == organization.id)
+        )
 
     # Assert
     assert membership is None

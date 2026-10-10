@@ -45,6 +45,11 @@ async def test_lifespan_starts_and_stops_background_jobs(monkeypatch: pytest.Mon
 
         events.append("dispose")
 
+    async def dispose_clients() -> None:
+        """Record shared Kubernetes transport disposal."""
+
+        events.append("kubernetes dispose")
+
     def run_background_task(name: str) -> Callable[[], Awaitable[None]]:
         """Return one task that records its startup and lifespan-shutdown cancellation."""
 
@@ -62,6 +67,7 @@ async def test_lifespan_starts_and_stops_background_jobs(monkeypatch: pytest.Mon
 
     monkeypatch.setattr(main.jobs, "run_administrator_reconciler", run_background_task("administrator"))
     monkeypatch.setattr(main.jobs, "run_operation_scheduler", run_background_task("scheduler"))
+    monkeypatch.setattr(main.client, "dispose_clients", dispose_clients)
     monkeypatch.setattr(main, "dispose_engine", dispose_engine)
 
     # Act
@@ -69,12 +75,11 @@ async def test_lifespan_starts_and_stops_background_jobs(monkeypatch: pytest.Mon
         await main.asyncio.sleep(0)
         events.append("serving")
 
-    # Assert both jobs start before serving and stop before disposing the database pool.
-    assert len(events) == 6
+    # Assert both jobs stop before the shared Kubernetes transport and database pool are disposed.
     assert set(events[:2]) == {"administrator start", "scheduler start"}
     assert events[2] == "serving"
     assert set(events[3:5]) == {"administrator cancel", "scheduler cancel"}
-    assert events[5] == "dispose"
+    assert events[5:] == ["kubernetes dispose", "dispose"]
 
 
 async def test_get_session_applies_mysql_engine_options(monkeypatch: pytest.MonkeyPatch) -> None:

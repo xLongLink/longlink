@@ -1,13 +1,12 @@
-import type { z } from 'zod';
+import { z } from 'zod';
 import { ApiError } from '@/lib/api';
 import { useParams } from 'react-router';
 import { useApi } from '@/lib/hooks/use-api';
 import { NoIndex } from '@/components/NoIndex';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
-import { ProfileMenu } from '@/components/Profile';
-import Platform from '@/platform/layouts/Platform';
 import { Center } from '@astryxdesign/core/Center';
+import Platform from '@/components/layouts/Platform';
 import { Heading } from '@astryxdesign/core/Heading';
 import { ApiBoundary } from '@/components/ApiBoundary';
 import { SolutionRuntime } from '@/components/Solution';
@@ -17,12 +16,9 @@ import { PageContainer } from '@/components/PageContainer';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { PageError, PageLoading } from '@/components/Utils';
 import { useAuthenticatedUser } from '@/lib/hooks/use-user';
-import { PageBreadcrumb } from '@/components/breadcrumb/Page';
-import type {
-    zUserOrganizationMembership,
-    zGetSolutionLogsApiV1SolutionsSolutionIdLogsGetResponse,
-    zGetOrganizationSolutionsApiV1OrganizationsOrganizationIdSolutionsGetResponse,
-} from '@/lib/generated/platform-api-v1/zod.gen';
+import { ProfileMenu } from '@/platform/components/Profile';
+import { PageBreadcrumb } from '@/platform/components/PageBreadcrumb';
+import { zUserOrganizationMembership, zOrganizationSolutionSummary } from '@/lib/generated/platform-api-v1/zod.gen';
 
 /** Renders one proxy-backed organization solution after route authentication. */
 export default function OrganizationSolution() {
@@ -55,20 +51,22 @@ function SolutionPage() {
     const { organization = '', solution = '' } = useParams();
     const user = useAuthenticatedUser();
 
-    const [membership] = useApi<z.output<typeof zUserOrganizationMembership>>(
-        `/api/v1/organizations/slug/${encodeURIComponent(organization)}`
+    const [membership] = useApi(
+        `/api/v1/organizations/slug/${encodeURIComponent(organization)}`,
+        zUserOrganizationMembership
     );
 
     // Fetch accessible solutions after membership resolves and poll pending deployments.
-    const [solutions] = useApi<
-        z.output<typeof zGetOrganizationSolutionsApiV1OrganizationsOrganizationIdSolutionsGetResponse>
-    >(`/api/v1/organizations/${membership.organization.id}/solutions`, {
-        refetchInterval: (query) =>
-            query.state.data?.some((solution) => solution.status === 'creating' || solution.deployment_pending)
-                ? 5000
-                : false,
-        meta: { polling: true },
-    });
+    const [solutions] = useApi(
+        `/api/v1/organizations/${membership.organization.id}/solutions`,
+        zOrganizationSolutionSummary.array(),
+        {
+            refetchInterval: (query) =>
+                query.state.data?.some((solution) => solution.status === 'creating' || solution.deployment_pending)
+                    ? 5000
+                    : false,
+        }
+    );
 
     // Keep the solution lookup and its existence check together.
     const solutionAccess = solutions.find((item) => item.slug === solution);
@@ -137,9 +135,9 @@ function SolutionPage() {
             viewsUrl={`/api/v1/solutions/${solutionAccess.id}/proxy/views.json`}
         >
             {({ content, tabs, title }) => (
-                <Platform action={action} breadcrumb={breadcrumb} tabs={tabs}>
+                <Platform action={action} breadcrumb={breadcrumb} height="fill" tabs={tabs}>
                     <NoIndex title={`${title ?? solutionAccess.name} | LongLink`} />
-                    <PageContainer minHeight="100%" padding={2}>
+                    <PageContainer height="100%" minHeight={0} padding={2}>
                         {content}
                     </PageContainer>
                 </Platform>
@@ -150,9 +148,7 @@ function SolutionPage() {
 
 /** Reads failed-deployment logs only for authorized maintainers. */
 function DeploymentLogs({ solutionId }: { solutionId: string }) {
-    const [logs] = useApi<z.output<typeof zGetSolutionLogsApiV1SolutionsSolutionIdLogsGetResponse>>(
-        `/api/v1/solutions/${solutionId}/logs`
-    );
+    const [logs] = useApi(`/api/v1/solutions/${solutionId}/logs`, z.array(z.string()));
 
     return (
         <Stack gap={2}>

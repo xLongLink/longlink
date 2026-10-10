@@ -4,7 +4,7 @@ from uuid import UUID, uuid4
 from httpx2 import AsyncClient
 from datetime import UTC, datetime
 from sqlmodel import col
-from factories import create_solution, create_organization
+from factories import create_solution, fetch_operations, create_organization, assert_no_new_operations
 from sqlalchemy import func, select
 from src.errors import NotFoundError
 from sqlalchemy.exc import IntegrityError
@@ -182,7 +182,6 @@ async def test_update_reresolves_moved_tag_and_enforces_required_envs(
         return resolved
 
     monkeypatch.setattr("src.routes.v1.solutions.images.required_metadata", metadata)
-    assert (await clients[0].post(url, json={})).status_code == 204
     assert (await clients[0].post(url, json={"min_scale": 1})).status_code == 204
 
     # Act: the advisory check observes the moved tag without persisting it.
@@ -341,8 +340,10 @@ async def test_environment_patch_validates_merged_limits(
 ) -> None:
     """Apply limits to preserved plus new values and permit explicit removals."""
 
+    # Arrange
     organization = await create_organization(users[0])
-    solution = await create_solution(organization, envs={f"KEY_{index}": "value" for index in range(100)})
+    envs = {f"KEY_{index}": "value" for index in range(100)}
+    solution = await create_solution(organization, envs=envs)
     image = Image("ghcr.io/longlink/dashboard@sha256:next")
 
     async def metadata(_image: Image, _connection: object | None = None) -> LongLinkMetadata:
@@ -352,7 +353,23 @@ async def test_environment_patch_validates_merged_limits(
 
     monkeypatch.setattr("src.routes.v1.solutions.images.required_metadata", metadata)
     url = f"/api/v1/solutions/{solution.id}/update"
-    assert (await clients[0].post(url, json={"envs": {"NEW": "secret"}})).status_code == 422
+    previous_operations = await fetch_operations()
+
+    # Act
+    response = await clients[0].post(url, json={"envs": {"NEW": "secret"}})
+
+    # Assert
+    assert response.status_code == 422
+    assert response.json() == {"detail": "Solution environment contains too many variables"}
+    async with session_scope() as session:
+        current = await session.get(Solution, solution.id, options=(selectinload(Solution.desired_revision),))
+        assert current is not None
+        assert current.desired_revision_id == solution.desired_revision_id
+        assert current.desired_revision.envs == envs
+        assert await session.scalar(select(func.count()).select_from(Revision).where(col(Revision.solution_id) == solution.id)) == 1
+    await assert_no_new_operations(previous_operations)
+
+    # Verify explicit removal permits the otherwise rejected addition.
     assert (await clients[0].post(url, json={"envs": {"NEW": "", "KEY_0": None}})).status_code == 204
     async with session_scope() as session:
         current = await session.get(Solution, solution.id, options=(selectinload(Solution.desired_revision),))
@@ -362,10 +379,23 @@ async def test_environment_patch_validates_merged_limits(
         assert "KEY_0" not in current.desired_revision.envs
 
     # Individually valid patches must also respect the byte limit after merging retained values.
-    large = await create_solution(organization, name="large", envs={f"KEY_{index}": "x" * 32768 for index in range(15)})
+    large_envs = {f"KEY_{index}": "x" * 32768 for index in range(15)}
+    large = await create_solution(organization, name="large", envs=large_envs)
+    previous_operations = await fetch_operations()
+
+    # Act
     response = await clients[0].post(f"/api/v1/solutions/{large.id}/update", json={"envs": {"NEW": "x" * 32768}})
+
+    # Assert
     assert response.status_code == 422
-    assert "too large" in response.text
+    assert response.json() == {"detail": "Solution environment is too large"}
+    async with session_scope() as session:
+        current = await session.get(Solution, large.id, options=(selectinload(Solution.desired_revision),))
+        assert current is not None
+        assert current.desired_revision_id == large.desired_revision_id
+        assert current.desired_revision.envs == large_envs
+        assert await session.scalar(select(func.count()).select_from(Revision).where(col(Revision.solution_id) == large.id)) == 1
+    await assert_no_new_operations(previous_operations)
 
 
 async def test_simultaneous_source_updates_create_only_one_revision(

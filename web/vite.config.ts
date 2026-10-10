@@ -1,5 +1,6 @@
 import tailwindcss from '@tailwindcss/vite';
 import { defineConfig, loadEnv } from 'vite';
+import * as catalog from './src/lib/catalog-loader';
 import { reactRouter } from '@react-router/dev/vite';
 
 const ignoredPaths = [
@@ -30,7 +31,22 @@ export default defineConfig(({ mode }) => {
     return {
         // Keep code-level test servers from replacing the running dev server's optimized dependencies.
         cacheDir: mode === 'test' ? 'node_modules/.vite-test' : 'node_modules/.vite',
-        plugins: [...tailwindcss(), ...(mode === 'test' ? [] : reactRouter())],
+        plugins: [
+            {
+                name: 'documentation-catalog',
+
+                // Bundle validated data instead of Node filesystem access or a browser YAML parser.
+                load(id) {
+                    if (id !== new URL('./src/lib/catalog.ts', import.meta.url).pathname) return;
+
+                    this.addWatchFile(new URL('../sdk/longlink/.static/jsx/components.yml', import.meta.url).pathname);
+
+                    return `export default ${JSON.stringify(catalog.loadCatalog())};`;
+                },
+            },
+            ...tailwindcss(),
+            ...(mode === 'test' ? [] : reactRouter()),
+        ],
 
         fmt: {
             arrowParens: 'always',
@@ -121,8 +137,11 @@ export default defineConfig(({ mode }) => {
         server: {
             host: devServerHost,
             port: devServerPort,
+
+            // Route API calls and canonical MCP resource discovery to the local backend.
             proxy: {
                 '/api': 'http://localhost:8000',
+                '/.well-known/oauth-protected-resource': 'http://localhost:8000',
             },
         },
 

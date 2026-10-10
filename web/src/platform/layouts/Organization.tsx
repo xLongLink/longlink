@@ -1,18 +1,16 @@
-import type { z } from 'zod';
 import { ApiError } from '@/lib/api';
 import { useApi } from '@/lib/hooks/use-api';
 import { Outlet, useParams } from 'react-router';
-import { ProfileMenu } from '@/components/Profile';
-import Platform from '@/platform/layouts/Platform';
 import { AppWindow, Settings2 } from 'lucide-react';
+import Platform from '@/components/layouts/Platform';
 import { ApiBoundary } from '@/components/ApiBoundary';
 import NotFoundLayout from '@/components/layouts/NotFound';
 import { PageContainer } from '@/components/PageContainer';
 import { PageError, PageLoading } from '@/components/Utils';
 import { useAuthenticatedUser } from '@/lib/hooks/use-user';
-import { PageBreadcrumb } from '@/components/breadcrumb/Page';
-import { OrganizationMembershipContext } from '@/lib/hooks/use-organization';
-import type { zUserOrganizationMembership } from '@/lib/generated/platform-api-v1/zod.gen';
+import { ProfileMenu } from '@/platform/components/Profile';
+import { PageBreadcrumb } from '@/platform/components/PageBreadcrumb';
+import { zUserOrganizationMembership } from '@/lib/generated/platform-api-v1/zod.gen';
 
 /** Renders the fixed navigation around organization pages. */
 export default function OrganizationLayout() {
@@ -52,8 +50,9 @@ function OrganizationPage() {
     const { organization = '' } = useParams();
     const user = useAuthenticatedUser();
 
-    const [membership] = useApi<z.output<typeof zUserOrganizationMembership>>(
-        `/api/v1/organizations/slug/${encodeURIComponent(organization)}`
+    const [membership] = useApi(
+        `/api/v1/organizations/slug/${encodeURIComponent(organization)}`,
+        zUserOrganizationMembership
     );
 
     return (
@@ -66,11 +65,9 @@ function OrganizationPage() {
             ]}
         >
             <PageContainer gap={8} padding={2}>
-                <OrganizationMembershipContext value={membership}>
-                    <ApiBoundary>
-                        <Outlet key={organization} />
-                    </ApiBoundary>
-                </OrganizationMembershipContext>
+                <ApiBoundary>
+                    <Outlet key={organization} context={membership} />
+                </ApiBoundary>
             </PageContainer>
         </Platform>
     );

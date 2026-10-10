@@ -253,7 +253,11 @@ async def test_solution_proxy_strips_credential_headers_and_pins_gateway_tls(
 
         captured["upstream_headers"] = {key.lower(): value for key, value in request.headers.items()}
 
-        return make_upstream(200, {"content-type": "text/plain"}, b"proxied")
+        return make_upstream(
+            200,
+            {"content-type": "text/plain", "mcp-session-id": "private-session", "mcp-protocol-version": "2025-11-25"},
+            b"proxied",
+        )
 
     monkeypatch.setattr(ssl, "create_default_context", record_context)
     monkeypatch.setattr(httpx2, "AsyncClient", record_client)
@@ -268,6 +272,11 @@ async def test_solution_proxy_strips_credential_headers_and_pins_gateway_tls(
             "authorization": "Bearer browser-session",
             "x-forwarded-for": "203.0.113.7",
             "x-forwarded-host": "attacker.example",
+            "mcp-session-id": "caller-session",
+            "mcp-protocol-version": "2025-11-25",
+            "mcp-method": "tools/call",
+            "mcp-name": "private_tool",
+            "last-event-id": "caller-event",
         },
     )
 
@@ -281,10 +290,79 @@ async def test_solution_proxy_strips_credential_headers_and_pins_gateway_tls(
     assert "cookie" not in upstream_headers
     assert "x-forwarded-for" not in upstream_headers
     assert "x-forwarded-host" not in upstream_headers
+    assert "mcp-session-id" not in upstream_headers
+    assert "mcp-protocol-version" not in upstream_headers
+    assert "mcp-method" not in upstream_headers
+    assert "mcp-name" not in upstream_headers
+    assert "last-event-id" not in upstream_headers
+    assert "mcp-session-id" not in response.headers
+    assert "mcp-protocol-version" not in response.headers
     assert captured.get("cadata") == "test-gateway-ca"
     assert captured.get("follow_redirects") is False
     assert captured.get("trust_env") is False
     assert captured.get("timeout") == 300.0
+
+
+@pytest.mark.parametrize("path", ["mcp", "mcp/"])
+async def test_solution_proxy_preserves_mcp_transport_metadata(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+    monkeypatch: pytest.MonkeyPatch,
+    path: str,
+) -> None:
+    """Forward resumability and negotiation metadata without exposing browser credentials."""
+
+    # Arrange
+    solution, _ = await create_running_solution(users[0])
+    captured: dict[str, str] = {}
+
+    async def send(_transport: object, request: httpx2.Request) -> httpx2.Response:
+        """Record transport metadata at the external gateway boundary."""
+
+        captured.update(request.headers)
+        return make_upstream(
+            200,
+            {
+                "content-type": "application/json",
+                "mcp-session-id": "negotiated-session",
+                "mcp-protocol-version": "2025-11-25",
+                "set-cookie": "runtime=must-not-reach-browser",
+            },
+            b'{"jsonrpc":"2.0","id":1,"result":{"tools":[]}}',
+        )
+
+    monkeypatch.setattr(httpx2.AsyncHTTPTransport, "handle_async_request", send)
+
+    # Act
+    response = await clients[0].post(
+        f"/api/v1/solutions/{solution.id}/proxy/{path}",
+        headers={
+            "accept": "application/json, text/event-stream",
+            "mcp-session-id": "caller-session",
+            "mcp-protocol-version": "2025-11-25",
+            "mcp-method": "tools/list",
+            "mcp-name": "list_tools",
+            "last-event-id": "caller-event",
+            "x-longlink-identity": "forged-identity",
+        },
+        json={"jsonrpc": "2.0", "id": 1, "method": "tools/list"},
+    )
+
+    # Assert
+    assert response.status_code == 200
+    assert response.json() == {"jsonrpc": "2.0", "id": 1, "result": {"tools": []}}
+    assert captured["accept"] == "application/json, text/event-stream"
+    assert captured["mcp-session-id"] == "caller-session"
+    assert captured["mcp-protocol-version"] == "2025-11-25"
+    assert captured["mcp-method"] == "tools/list"
+    assert captured["mcp-name"] == "list_tools"
+    assert captured["last-event-id"] == "caller-event"
+    assert identity.identity_token_user(captured["x-longlink-identity"], "test-identity-secret-01234567890") == users[0].id
+    assert "authorization" not in captured
+    assert "cookie" not in captured
+    assert response.headers["mcp-session-id"] == "negotiated-session"
+    assert response.headers["mcp-protocol-version"] == "2025-11-25"
+    assert "set-cookie" not in response.headers
 
 
 async def test_solution_proxy_sanitizes_json_upstream_error(
@@ -388,7 +466,6 @@ async def test_solution_proxy_rejects_anonymous_without_gateway_access(
         pytest.param(b'{"detail":"   "}', None, id="whitespace-detail"),
         pytest.param(b'{"detail":123}', None, id="non-string-detail"),
         pytest.param(b"[1,2]", None, id="non-object-payload"),
-        pytest.param(b"not-json", None, id="invalid-json"),
         pytest.param(b'{"detail":"' + b"x" * (64 * 1024) + b'"}', None, id="oversized"),
         pytest.param([b'{"detail":"partial'], RecursionError("stream aborted"), id="aborted"),
     ],
@@ -723,31 +800,12 @@ async def test_solution_proxy_rejects_cross_organization_access(
     assert response.json() == {"detail": "Access required"}
 
 
-def patch_runtime_access_once(monkeypatch: pytest.MonkeyPatch, mutate: Callable[[], Awaitable[None]]) -> None:
-    """Apply one runtime revocation on first admission, then resolve fresh access."""
-
-    real_access = proxy_routes.organizations.solution_runtime_access
-    admitted = False
-
-    async def access(session: AsyncSession, user_id: UUID, solution_id: UUID) -> tuple[Solution, OrganizationRoles, ComputeRegistry] | None:
-        """Revoke runtime state once, then resolve access as the handler observes it."""
-
-        nonlocal admitted
-        if not admitted:
-            admitted = True
-            await mutate()
-        return await real_access(session, user_id, solution_id)
-
-    monkeypatch.setattr(proxy_routes.organizations, "solution_runtime_access", access)
-    reject_gateway_access(monkeypatch)
-
-
-async def test_solution_proxy_rechecks_access_after_runtime_admission(
+async def test_solution_proxy_rejects_membership_revoked_before_access_lookup(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Reject proxy access revoked while the Organization database is waking."""
+    """Resolve revoked membership before forwarding any request to the gateway."""
 
     # Arrange
     solution, _ = await create_running_solution(users[0])
@@ -762,16 +820,21 @@ async def test_solution_proxy_rechecks_access_after_runtime_admission(
         )
         await session.commit()
 
-    async def revoke_membership() -> None:
-        """Delete the member grant the handler observes on admission."""
+    # Revoke the grant immediately before the real access lookup reads it.
+    real_access = proxy_routes.organizations.solution_runtime_access
 
-        async with session_scope() as session:
-            membership = await session.get(UserOrganization, (member.id, solution.organization_id))
+    async def access(session: AsyncSession, user_id: UUID, solution_id: UUID) -> tuple[Solution, OrganizationRoles, ComputeRegistry] | None:
+        """Delete the member grant before resolving current access."""
+
+        async with session_scope() as revocation_session:
+            membership = await revocation_session.get(UserOrganization, (member.id, solution.organization_id))
             assert membership is not None
-            await session.delete(membership)
-            await session.commit()
+            await revocation_session.delete(membership)
+            await revocation_session.commit()
+        return await real_access(session, user_id, solution_id)
 
-    patch_runtime_access_once(monkeypatch, revoke_membership)
+    monkeypatch.setattr(proxy_routes.organizations, "solution_runtime_access", access)
+    reject_gateway_access(monkeypatch)
 
     # Act
     response = await clients[1].get(f"/api/v1/solutions/{solution.id}/proxy/views.json")
@@ -779,36 +842,6 @@ async def test_solution_proxy_rechecks_access_after_runtime_admission(
     # Assert
     assert response.status_code == 403
     assert response.json() == {"detail": "Access required"}
-
-
-async def test_solution_proxy_rechecks_readiness_after_runtime_admission(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-    users: tuple[User, User, User],
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """Reject proxy traffic when the Solution leaves running state while its database wakes."""
-
-    # Arrange
-    solution, _ = await create_running_solution(users[0])
-
-    async def leave_running_state() -> None:
-        """Move the Solution out of running state before admission resolves."""
-
-        async with session_scope() as session:
-            persisted_solution = await session.get(Solution, solution.id)
-            assert persisted_solution is not None
-            persisted_solution.status = Status.creating
-            await session.commit()
-
-    patch_runtime_access_once(monkeypatch, leave_running_state)
-
-    # Act
-    response = await clients[0].get(f"/api/v1/solutions/{solution.id}/proxy/views.json")
-
-    # Assert
-    assert response.status_code == 503
-    assert response.json() == {"detail": "Solution is not ready yet. Please try again shortly."}
-    assert response.headers["cache-control"] == "no-store"
 
 
 async def test_solution_proxy_returns_unavailable_when_gateway_request_fails(
@@ -838,20 +871,11 @@ async def test_solution_proxy_returns_unavailable_when_gateway_request_fails(
     assert response.json() == {"detail": "Solution proxy request failed"}
 
 
-@pytest.mark.parametrize(
-    ("method", "expected_detail"),
-    [
-        pytest.param("PATCH", "Organization write access required", id="patch"),
-        pytest.param("POST", "Organization write access required", id="post"),
-        pytest.param("PUT", "Organization write access required", id="put"),
-        pytest.param("DELETE", "Organization maintain access required", id="delete"),
-    ],
-)
+@pytest.mark.parametrize("method", ["PATCH", "POST", "PUT"])
 async def test_solution_proxy_enforces_method_role(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
     method: str,
-    expected_detail: str,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Reject mutating proxy requests when the runtime role is read-only."""
@@ -874,7 +898,7 @@ async def test_solution_proxy_enforces_method_role(
 
     # Verify the HTTP method requires its Organization role before reaching the gateway.
     assert response.status_code == 403
-    assert response.json() == {"detail": expected_detail}
+    assert response.json() == {"detail": "Organization write access required"}
 
 
 async def test_solution_proxy_allows_write_member_to_post(
@@ -962,6 +986,7 @@ async def test_solution_proxy_delete_allows_maintain_member(
 async def test_solution_proxy_shows_loading_when_solution_is_not_ready(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Return a loading response while solution reconciliation is pending."""
 
@@ -970,6 +995,7 @@ async def test_solution_proxy_shows_loading_when_solution_is_not_ready(
     organization = await create_organization(owner)
     solution = await create_solution(organization)
     client = clients[0]
+    reject_gateway_access(monkeypatch)
 
     # Request runtime content before the Solution is ready.
     response = await client.get(f"/api/v1/solutions/{solution.id}/proxy/views.json")

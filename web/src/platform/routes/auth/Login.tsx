@@ -1,6 +1,5 @@
 import { z } from 'zod';
 import { TextField } from './Field';
-import { Seo } from '@/components/Seo';
 import { AuthLayout } from './AuthLayout';
 import { api, ApiError } from '@/lib/api';
 import { useApiError } from '@/lib/errors';
@@ -9,6 +8,7 @@ import { useEffect, useState } from 'react';
 import { NoIndex } from '@/components/NoIndex';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
+import { Seo } from '@/platform/components/Seo';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
 import { useForm, useWatch } from 'react-hook-form';
@@ -42,11 +42,15 @@ export default function Login() {
     const queryClient = useQueryClient();
     const reportApiError = useApiError();
     const oauthError = searchParams.get('oauth_error') === '1';
+    const requestedReturn = searchParams.get('return_to');
+
+    // Continue only to the first-party MCP approval route, never a client-supplied external URL.
+    const destination = requestedReturn?.startsWith('/mcp/authorize?') ? requestedReturn : '/user/organizations';
     const { data: user } = useCurrentUser();
 
     const { data: oauthAvailability } = useQuery({
         queryKey: ['public-api', '/api/v1/auth/oauth'],
-        queryFn: async ({ signal }) => zOAuthAvailability.parse(await api('/api/v1/auth/oauth', { signal }).json()),
+        queryFn: ({ signal }) => api('/api/v1/auth/oauth', { signal }).json(zOAuthAvailability),
         enabled: !user,
         staleTime: Infinity,
     });
@@ -73,7 +77,7 @@ export default function Login() {
         return (
             <>
                 <NoIndex title="LongLink" />
-                <Navigate replace to="/user/organizations" />
+                <Navigate replace to={destination} />
             </>
         );
     }
@@ -94,7 +98,11 @@ export default function Login() {
                                     <Button
                                         key={provider.availability}
                                         label={provider.label}
-                                        onClick={() => window.location.assign(provider.path)}
+                                        onClick={() =>
+                                            window.location.assign(
+                                                `${provider.path}?${new URLSearchParams({ return_to: destination })}`
+                                            )
+                                        }
                                         width="100%"
                                     />
                                 ))}
@@ -108,7 +116,7 @@ export default function Login() {
                                 // Clear previous identity data only after sign-in succeeds.
                                 await api('/api/v1/auth/password/login', { json: payload, method: 'POST' });
                                 await clearSessionQueries(queryClient);
-                                void navigate('/user/organizations', { replace: true });
+                                void navigate(destination, { replace: true });
                             })()
                         }
                     >

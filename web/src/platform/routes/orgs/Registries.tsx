@@ -20,22 +20,26 @@ type RegistryAction = { kind: 'create' } | { kind: 'delete'; connection: Registr
 
 /** Lists organization-owned registry connections without loading credentials. */
 export default function Registries({ base, canMaintain }: { base: string; canMaintain: boolean }) {
-    const [connections, invalidate] = useApi<Registry[]>(`${base}/registries`);
+    const [connections, invalidate] = useApi(`${base}/registries`, schemas.zRegistryResponse.array());
     const [action, setAction] = useState<RegistryAction | null>(null);
 
     // Retain the settings shell's 260px navigation and show dense, edge-to-edge rows.
     return (
         <>
             <Stack gap={4}>
-                <Stack direction="horizontal" justify="between" align="center" wrap="wrap">
-                    <Stack gap={1}>
-                        <Heading level={2}>Connections</Heading>
-                        <Text color="secondary">Manage access to private container registries.</Text>
-                    </Stack>
+                <Stack
+                    direction="horizontal"
+                    justify="between"
+                    align="end"
+                    wrap="wrap"
+                    minHeight="var(--size-element-md)"
+                >
+                    <Heading level={2} hasCapsize>
+                        Private registries
+                    </Heading>
                     {canMaintain && <Button label="Add registry" onClick={() => setAction({ kind: 'create' })} />}
                 </Stack>
                 <Divider />
-                <Heading level={3}>Registries</Heading>
                 <Table
                     data={connections}
                     idKey="id"
@@ -55,7 +59,7 @@ export default function Registries({ base, canMaintain }: { base: string; canMai
                                           <Button
                                               label="Delete"
                                               size="sm"
-                                              variant="ghost"
+                                              variant="destructive"
                                               onClick={() => setAction({ kind: 'delete', connection: row })}
                                           />
                                       ),
@@ -64,9 +68,6 @@ export default function Registries({ base, canMaintain }: { base: string; canMai
                             : []),
                     ]}
                 />
-                {connections.length === 0 && (
-                    <Text color="secondary">No registry connections yet. Public images do not need a connection.</Text>
-                )}
             </Stack>
             {action?.kind === 'create' && (
                 <RegistryForm base={base} invalidate={invalidate} onClose={() => setAction(null)} />

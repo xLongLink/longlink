@@ -6,6 +6,8 @@ export function Text({
     children,
     ...props
 }: {
+    /** Hides the component without unmounting it. */
+    hidden?: boolean;
     children?: ReactNode;
     color?: 'primary' | 'secondary';
     type?: 'body' | 'large' | 'label' | 'supporting' | 'code';
@@ -14,6 +16,7 @@ export function Text({
     return (
         <AstryxText
             {...props}
+            className={props.hidden ? 'hidden!' : undefined}
             type={props.type ?? 'body'}
             color={props.color ?? (props.type === 'supporting' ? 'secondary' : 'primary')}
         >

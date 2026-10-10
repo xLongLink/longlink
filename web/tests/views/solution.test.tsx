@@ -1,6 +1,5 @@
 // @vitest-environment happy-dom
 import { act, Suspense } from 'react';
-import { webcrypto } from 'node:crypto';
 import { createRoot } from 'react-dom/client';
 import { SolutionRuntime } from '@/components/Solution';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -29,23 +28,52 @@ describe('SolutionRuntime', () => {
         vi.useRealTimers();
     });
 
-    it('renders a manifest failure', async () => {
+    it.each([
+        {
+            name: 'a manifest failure',
+            response: () => Response.json({ detail: 'Manifest unavailable' }, { status: 503 }),
+            initialPath: '/',
+            title: 'Unable to load this solution',
+            description: 'The solution definition could not be loaded.',
+        },
+        {
+            name: 'an empty manifest response',
+            response: () => Response.json([]),
+            initialPath: '/',
+            title: 'Unexpected solution response',
+            description: 'The solution did not expose any views to render.',
+        },
+        {
+            name: 'a view failure after loading the manifest',
+            response: (url: string) => {
+                if (url.endsWith('/views.json')) return Response.json([{ path: 'home.jsx', route: '/home' }]);
+
+                return Response.json({ detail: 'View unavailable' }, { status: 503 });
+            },
+            initialPath: '/home',
+            title: 'Unable to load this view',
+            description: 'The view could not be loaded.',
+        },
+    ])('renders $name', async ({ response, initialPath, title, description }) => {
         // Arrange
-        stubFetch(() => Response.json({ detail: 'Manifest unavailable' }, { status: 503 }));
+        stubFetch(response);
 
         // Act
-        const output = await renderRuntime();
+        const output = await renderRuntime(initialPath);
 
         // Assert
-        await act(async () => vi.waitFor(() => expect(output.textContent).toContain('Unable to load this solution')));
-        expect(output.textContent).toContain('The solution definition could not be loaded.');
+        await act(async () => vi.waitFor(() => expect(output.textContent).toContain(title)));
+        expect(output.textContent).toContain(description);
     });
 
     it('redirects the solution base to the first tab', async () => {
         // Arrange
         stubFetch((url) =>
             url.endsWith('/views.json')
-                ? Response.json([view('index.jsx', '/'), view('home.jsx', '/home')])
+                ? Response.json([
+                      { path: 'index.jsx', route: '/' },
+                      { path: 'home.jsx', route: '/home' },
+                  ])
                 : sourceResponse('export default function Home() { return <Text>Home</Text>; }')
         );
 
@@ -59,38 +87,11 @@ describe('SolutionRuntime', () => {
         await vi.waitFor(() => expect(output.querySelector('iframe')?.srcdoc).toContain('Content-Security-Policy'));
     });
 
-    it('renders an empty manifest response', async () => {
-        // Arrange
-        stubFetch(() => Response.json([]));
-
-        // Act
-        const output = await renderRuntime();
-
-        // Assert
-        await act(async () => vi.waitFor(() => expect(output.textContent).toContain('Unexpected solution response')));
-        expect(output.textContent).toContain('The solution did not expose any views to render.');
-    });
-
-    it('renders a view failure after loading the manifest', async () => {
-        // Arrange
-        stubFetch((url) => {
-            if (url.endsWith('/views.json')) return Response.json([view('home.jsx', '/home')]);
-
-            return Response.json({ detail: 'View unavailable' }, { status: 503 });
-        });
-
-        // Act
-        const output = await renderRuntime('/home');
-
-        // Assert
-        await act(async () => vi.waitFor(() => expect(output.textContent).toContain('Unable to load this view')));
-        expect(output.textContent).toContain('The view could not be loaded.');
-    });
-
     it('rejects an external manifest view path before fetching the view', async () => {
         // Arrange
         const fetchRequest = vi.fn((url: string) => {
-            if (url.endsWith('/views.json')) return Response.json([view('https://example.com/view.jsx', '/home')]);
+            if (url.endsWith('/views.json'))
+                return Response.json([{ path: 'https://example.com/view.jsx', route: '/home' }]);
             throw new Error('View fetch must not occur');
         });
 
@@ -108,7 +109,8 @@ describe('SolutionRuntime', () => {
         // Arrange
         vi.useFakeTimers();
         stubFetch((url) => {
-            if (url.endsWith('/views.json')) return Response.json([view('views/issues/[item]', '/issues/:issueId')]);
+            if (url.endsWith('/views.json'))
+                return Response.json([{ path: 'views/issues/[item]', route: '/issues/:issueId' }]);
 
             return sourceResponse(
                 'export default function Issue({ params }) { return <Text>{params.issueId}</Text>; }'
@@ -123,25 +125,73 @@ describe('SolutionRuntime', () => {
         const frame = output.querySelector('iframe');
 
         if (!frame?.contentWindow) throw new Error('Missing isolated frame');
-        const initialization = vi.fn<(event: MessageEvent<unknown>) => void>();
-        frame.contentWindow.addEventListener('message', initialization, { once: true });
         const session = frame.srcdoc.match(/__VIEW_SESSION__="([^"]+)"/)?.[1];
 
+        // Observe the real initialization transfer without owning another message listener.
+        const transfer = vi.spyOn(frame.contentWindow, 'postMessage');
+
         try {
-            // Observe the handshake with a bounded wait rather than an unresolved promise.
+            // Authenticated window dispatch transfers the route parameters synchronously.
             window.dispatchEvent(
                 new MessageEvent('message', { source: frame.contentWindow, origin: 'null', data: session })
             );
-            await vi.waitFor(() => expect(initialization).toHaveBeenCalledOnce());
-            expect(initialization.mock.calls[0]?.[0].data).toHaveProperty('params', { issueId: '42' });
+            expect(transfer).toHaveBeenCalledOnce();
+            expect(transfer.mock.calls[0]?.[0]).toHaveProperty('params', { issueId: '42' });
             expect(output.querySelector('[data-title]')?.getAttribute('data-title')).toBe('Item');
 
             // A successful handshake cancels the startup deadline without removing the frame.
             await act(async () => vi.advanceTimersByTimeAsync(10_000));
             expect(output.querySelector('iframe')).not.toBeNull();
         } finally {
-            // Release the observer even when initialization never arrives or an assertion fails.
-            frame.contentWindow.removeEventListener('message', initialization);
+            // Restore the transport observer even if an initialization assertion fails.
+            transfer.mockRestore();
+        }
+    });
+
+    it.each([
+        { name: 'source window', overrides: { source: window } },
+        { name: 'origin', overrides: { origin: 'https://attacker.example' } },
+        { name: 'session', overrides: { data: 'wrong-session' } },
+    ])('rejects a handshake with the wrong $name without consuming a valid handshake', async ({ overrides }) => {
+        // Arrange
+        vi.useFakeTimers();
+        const source = 'export default function Home() { return <Text>Home</Text>; }';
+        stubFetch((url) =>
+            url.endsWith('/views.json') ? Response.json([{ path: 'home.jsx', route: '/home' }]) : sourceResponse(source)
+        );
+        const output = await renderRuntime('/home');
+        await vi.waitFor(async () => {
+            await act(async () => {});
+            expect(output.querySelector('iframe')?.srcdoc).toContain('Content-Security-Policy');
+        });
+        const frame = output.querySelector('iframe');
+
+        if (!frame?.contentWindow) throw new Error('Missing isolated frame');
+        const session = frame.srcdoc.match(/__VIEW_SESSION__="([^"]+)"/)?.[1];
+
+        if (!session) throw new Error('Missing bootstrap session');
+
+        // Observe the real capability transfer without replacing its implementation.
+        const transfer = vi.spyOn(frame.contentWindow, 'postMessage');
+        const handshake = { source: frame.contentWindow, origin: 'null', data: session };
+
+        try {
+            // Act
+            window.dispatchEvent(new MessageEvent('message', { ...handshake, ...overrides }));
+
+            // Assert
+            // Window dispatch is synchronous, so rejection must not transfer a capability.
+            expect(transfer).not.toHaveBeenCalled();
+
+            // A correctly authenticated bootstrap must still acquire its port and cancel the deadline.
+            window.dispatchEvent(new MessageEvent('message', handshake));
+            expect(transfer).toHaveBeenCalledOnce();
+            expect(transfer.mock.calls[0]?.[0]).toEqual({ session, source, params: {} });
+            await act(async () => vi.advanceTimersByTimeAsync(10_000));
+            expect(output.querySelector('iframe')).toBe(frame);
+        } finally {
+            // Restore the transport observer even if a security assertion fails.
+            transfer.mockRestore();
         }
     });
 
@@ -151,7 +201,8 @@ describe('SolutionRuntime', () => {
         stubFetch((url, request) => {
             requests.push(request);
 
-            if (url.endsWith('/proxy/views.json?version=1#manifest')) return Response.json([view('home.jsx', '/home')]);
+            if (url.endsWith('/proxy/views.json?version=1#manifest'))
+                return Response.json([{ path: 'home.jsx', route: '/home' }]);
 
             if (url.endsWith('/proxy/home.jsx'))
                 return sourceResponse('export default function Welcome() { return <Text>Welcome</Text>; }');
@@ -185,7 +236,7 @@ describe('SolutionRuntime', () => {
         vi.useFakeTimers();
         stubFetch((url) =>
             url.endsWith('/views.json')
-                ? Response.json([view('home.jsx', '/home')])
+                ? Response.json([{ path: 'home.jsx', route: '/home' }])
                 : sourceResponse('export default function Home() { return <Text>Home</Text>; }')
         );
 
@@ -202,7 +253,7 @@ describe('SolutionRuntime', () => {
     it('rejects unmatched routes', async () => {
         // Arrange
         const response = vi.fn((url: string) => {
-            if (url.endsWith('/views.json')) return Response.json([view('issue.jsx', '/issues/:issueId')]);
+            if (url.endsWith('/views.json')) return Response.json([{ path: 'issue.jsx', route: '/issues/:issueId' }]);
             throw new Error('View fetch must not occur for an unmatched route');
         });
 
@@ -224,7 +275,6 @@ describe('SolutionRuntime', () => {
         const mountedRoot = createRoot(container);
         root = mountedRoot;
         vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
-        vi.stubGlobal('crypto', webcrypto);
         const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
         mountedClient = client;
 
@@ -274,20 +324,16 @@ function Location({ tabs, title }: { tabs: string; title?: string }) {
     );
 }
 
-/** Creates a minimal manifest view. */
-function view(path: string, route: string) {
-    return { path, route };
-}
-
 /** Stubs fetch at the runtime's HTTP boundary. */
 function stubFetch(response: (url: string, request: Request) => Response): void {
-    vi.stubGlobal('fetch', async (input: RequestInfo | URL) => {
-        if (!(input instanceof Request)) throw new Error('Expected a Request at the HTTP boundary');
-        const url = input.url;
+    vi.stubGlobal('fetch', async (input: RequestInfo | URL, init?: RequestInit) => {
+        // Normalize standard fetch inputs without depending on Ky's argument representation.
+        const request = input instanceof Request ? input : new Request(input, init);
+        const url = request.url;
 
         if (url.endsWith('/views/runtime.js') || url.endsWith('/views/runtime.css')) return sourceResponse('');
 
-        return response(url, input);
+        return response(url, request);
     });
 }
 

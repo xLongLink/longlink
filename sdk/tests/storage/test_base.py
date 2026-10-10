@@ -2,6 +2,7 @@ import pytest
 from s3fs import S3FileSystem
 from pathlib import Path
 from pydantic import ValidationError
+from contextlib import suppress
 from longlink.storage import base as storage_base
 from longlink.utils.settings import Envs
 from fsspec.implementations.dirfs import DirFileSystem
@@ -38,6 +39,39 @@ def test_storage_requires_safe_bucket_scope(monkeypatch: pytest.MonkeyPatch, buc
     # Act and assert
     with pytest.raises(ValueError, match=message):
         storage_base.create_fs(settings)
+
+
+def test_testing_storage_isolates_files_across_simultaneous_instances() -> None:
+    """Keep writes and deletions inside the testing filesystem that owns them."""
+
+    # Arrange
+    settings = Envs(
+        ENV="testing",
+        STORAGE_BUCKET=None,
+        STORAGE_PREFIX=None,
+    )
+    first_storage = storage_base.create_fs(settings)
+    second_storage = storage_base.create_fs(settings)
+
+    try:
+        # Act
+        first_storage.pipe_file("report.txt", b"first report")
+        second_storage.pipe_file("report.txt", b"second report")
+
+        # Assert
+        assert first_storage.cat_file("report.txt") == b"first report"
+        assert second_storage.cat_file("report.txt") == b"second report"
+
+        # Deleting one runtime's file must not remove another runtime's file.
+        first_storage.rm("report.txt")
+        assert not first_storage.exists("report.txt")
+        assert second_storage.cat_file("report.txt") == b"second report"
+    finally:
+        # Remove only these files without clearing fsspec's process-global store.
+        with suppress(FileNotFoundError):
+            first_storage.rm("report.txt")
+        with suppress(FileNotFoundError):
+            second_storage.rm("report.txt")
 
 
 def test_production_storage_scopes_paths_to_configured_bucket_prefix(production_settings: dict[str, str | int]) -> None:

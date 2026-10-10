@@ -1,8 +1,8 @@
 import pytest
 import asyncio
 from uuid import UUID
-from conftest import OperationKubernetes
-from factories import claim_operation, create_solution, drain_operations, complete_operation, create_organization
+from conftest import DatabaseKubernetes
+from factories import claim_operation, create_solution, fetch_operations, complete_operation, create_organization
 from sqlalchemy.orm import selectinload
 from src.operations import solutions as runtime
 from src.utils.jobs import execute
@@ -16,6 +16,8 @@ from src.models.operations import OperationKind
 from src.database.models.users import User
 from src.database.models.solutions import Revision, Solution
 from src.database.models.operations import Operation
+
+pytestmark = pytest.mark.usefixtures("database_runtime")
 
 
 @pytest.mark.parametrize(
@@ -39,48 +41,51 @@ async def test_failed_update_recovery(users: tuple[User, User, User], monkeypatc
     rollout_finalized = asyncio.Event()
     failing = failure == "initial"
 
-    class Kubernetes(OperationKubernetes):
-        """Control rollout readiness at the external-system boundary."""
+    async def apply(
+        client: object,
+        _organization_id: UUID,
+        _id: UUID,
+        image: str,
+        secrets: dict[str, str],
+        *,
+        revision_id: UUID,
+        min_scale: int,
+        idle_seconds: int = 60,
+        migrate: bool,
+        registry_connection_id: UUID | None = None,
+    ) -> None:
+        """Capture the exact snapshot and simulate rollout outcomes."""
 
-        async def apply(
-            self,
-            _organization_id: UUID,
-            _id: UUID,
-            image: str,
-            secrets: dict[str, str],
-            *,
-            revision_id: UUID,
-            min_scale: int,
-            idle_seconds: int = 60,
-            migrate: bool,
-            registry_connection_id: UUID | None = None,
-        ) -> None:
-            """Capture the exact snapshot and simulate rollout outcomes."""
+        calls.append((image, secrets, migrate))
+        assert min_scale == (1 if image.endswith("@sha256:new") else 0)
+        if not failing:
+            return
+        if failure == "deleted_during_rollout":
+            async with session_scope() as session:
+                await solutions.delete(session, solution.id, owner.id)
+                await session.commit()
+        if not migrate and failure != "restoration":
+            return
+        if failure == "shutdown":
+            raise asyncio.CancelledError
+        if failure == "timeout":
+            # Suspend rollout until the real worker timeout cancels and finalizes it.
+            try:
+                await asyncio.Event().wait()
+            finally:
+                rollout_finalized.set()
+        raise RuntimeError("rollout failed")
 
-            calls.append((image, secrets, migrate))
-            assert min_scale == (1 if image.endswith("@sha256:new") else 0)
-            if not failing:
-                return
-            if failure == "deleted_during_rollout":
-                async with session_scope() as session:
-                    await solutions.delete(session, solution.id, owner.id)
-                    await session.commit()
-            if not migrate and failure != "restoration":
-                return
-            if failure == "shutdown":
-                raise asyncio.CancelledError
-            if failure == "timeout":
-                # Suspend rollout until the real worker timeout cancels and finalizes it.
-                try:
-                    await asyncio.Event().wait()
-                finally:
-                    rollout_finalized.set()
-            raise RuntimeError("rollout failed")
-
-    monkeypatch.setattr(runtime, "Kubernetes", Kubernetes)
+    monkeypatch.setattr(runtime, "Kubernetes", DatabaseKubernetes)
+    monkeypatch.setattr(runtime.solution_resources, "apply", apply)
     initial = await claim_operation()
     assert initial is not None
-    result = await execute(initial)
+    await execute(initial)
+
+    # Read the committed worker outcome before checking deployment behavior.
+    async with session_scope() as session:
+        result = await session.get(Operation, initial.id)
+        assert result is not None
     if failure == "initial":
         assert result.failed is not None
         async with session_scope() as session:
@@ -89,8 +94,10 @@ async def test_failed_update_recovery(users: tuple[User, User, User], monkeypatc
             assert current.status == Status.failed
             assert current.deployed_revision_id is None
             assert current.desired_revision.failed
-        drained = await drain_operations()
-        assert all(scheduled.kind != OperationKind.solution_deploy for scheduled in drained)
+
+        # Inspect pending recovery without claiming or completing unrelated work.
+        scheduled = await fetch_operations()
+        assert all(operation.kind != OperationKind.solution_deploy or operation.finished_at is not None for operation in scheduled)
         return
     assert result.failed is None
     good_id = initial.target_id
@@ -124,17 +131,16 @@ async def test_failed_update_recovery(users: tuple[User, User, User], monkeypatc
     with monkeypatch.context() as timeout:
         if failure == "timeout":
             timeout.setattr(env, "OPERATION_TIMEOUT_SECONDS", 0.5)
-        failed = await execute(update)
+        await execute(update)
 
     # Assert: rollout finalization and the exact persisted timeout precede worker return.
+    async with session_scope() as session:
+        failed = await session.get(Operation, update.id)
+        assert failed is not None
     assert failed.failed is not None
     if failure == "timeout":
         assert rollout_finalized.is_set()
         assert failed.failed == "Operation timed out after 0.5 seconds"
-        async with session_scope() as session:
-            persisted = await session.get(Operation, update.id)
-            assert persisted is not None
-            assert persisted.failed == "Operation timed out after 0.5 seconds"
 
     # Tombstones suppress both new recovery requests and already queued recovery work.
     if failure in {"deleted_during_rollout", "deleted_before_recovery"}:
@@ -145,7 +151,13 @@ async def test_failed_update_recovery(users: tuple[User, User, User], monkeypatc
             recovery = await claim_operation()
             assert recovery is not None
             assert recovery.kind == OperationKind.solution_deploy
-            assert (await execute(recovery)).failed is None
+            await execute(recovery)
+
+            # Read the committed outcome for the tombstoned recovery target.
+            async with session_scope() as session:
+                recovered = await session.get(Operation, recovery.id)
+                assert recovered is not None
+                assert recovered.failed is None
         deletion = await claim_operation()
         assert deletion is not None
         assert deletion.kind == OperationKind.solution_delete
@@ -174,8 +186,13 @@ async def test_failed_update_recovery(users: tuple[User, User, User], monkeypatc
     recovery = await claim_operation()
     assert recovery is not None
     assert (recovery.kind, recovery.target_id) == (OperationKind.solution_deploy, good_id)
-    restored = await execute(recovery)
-    assert (restored.failed is not None) == (failure == "restoration")
+    await execute(recovery)
+
+    # Read the committed recovery outcome independently of worker execution.
+    async with session_scope() as session:
+        restored = await session.get(Operation, recovery.id)
+        assert restored is not None
+        assert (restored.failed is not None) == (failure == "restoration")
 
     # Failed desired/history survives successful fallback; failed fallback cannot claim running.
     async with session_scope() as session:
@@ -224,44 +241,42 @@ async def test_queued_deployments_keep_exact_targets(users: tuple[User, User, Us
         "third": "ghcr.io/longlink/dashboard@sha256:third",
     }
 
-    class Kubernetes(OperationKubernetes):
-        """Capture which queued snapshot reaches the runtime."""
+    async def apply(
+        client: object,
+        _organization_id: UUID,
+        _id: UUID,
+        image: str,
+        secrets: dict[str, str],
+        *,
+        revision_id: UUID,
+        min_scale: int,
+        idle_seconds: int = 60,
+        migrate: bool,
+        registry_connection_id: UUID | None = None,
+    ) -> None:
+        """Capture immutable image and environment pairs."""
 
-        async def apply(
-            self,
-            _organization_id: UUID,
-            _id: UUID,
-            image: str,
-            secrets: dict[str, str],
-            *,
-            revision_id: UUID,
-            min_scale: int,
-            idle_seconds: int = 60,
-            migrate: bool,
-            registry_connection_id: UUID | None = None,
-        ) -> None:
-            """Capture immutable image and environment pairs."""
+        nonlocal second_id, third_id
+        applied.append(secrets["KEY"])
+        assert image == expected_images[secrets["KEY"]]
+        assert revision_id == {"first": initial.target_id, "second": second_id, "third": third_id}[secrets["KEY"]]
+        if second_id is None:
+            # A newer request during an active rollout must not change its captured target.
+            async with session_scope() as session:
+                current = await solutions.access(session, solution.id, users[0].id)
+                await solutions.deploy(session, current, users[0].id, second, {"KEY": "second"}, source=second.image)
+                await session.commit()
+                second_id = current.desired_revision_id
+        elif third_id is None:
+            # The second rollout still uses its snapshot while a third revision becomes desired.
+            async with session_scope() as session:
+                current = await solutions.access(session, solution.id, users[0].id)
+                await solutions.deploy(session, current, users[0].id, third, {"KEY": "third"}, source=third.image)
+                await session.commit()
+                third_id = current.desired_revision_id
 
-            nonlocal second_id, third_id
-            applied.append(secrets["KEY"])
-            assert image == expected_images[secrets["KEY"]]
-            assert revision_id == {"first": initial.target_id, "second": second_id, "third": third_id}[secrets["KEY"]]
-            if second_id is None:
-                # A newer request during an active rollout must not change its captured target.
-                async with session_scope() as session:
-                    current = await solutions.access(session, solution.id, users[0].id)
-                    await solutions.deploy(session, current, users[0].id, second, {"KEY": "second"}, source=second.image)
-                    await session.commit()
-                    second_id = current.desired_revision_id
-            elif third_id is None:
-                # The second rollout still uses its snapshot while a third revision becomes desired.
-                async with session_scope() as session:
-                    current = await solutions.access(session, solution.id, users[0].id)
-                    await solutions.deploy(session, current, users[0].id, third, {"KEY": "third"}, source=third.image)
-                    await session.commit()
-                    third_id = current.desired_revision_id
-
-    monkeypatch.setattr(runtime, "Kubernetes", Kubernetes)
+    monkeypatch.setattr(runtime, "Kubernetes", DatabaseKubernetes)
+    monkeypatch.setattr(runtime.solution_resources, "apply", apply)
     await execute(initial)
     async with session_scope() as session:
         current = await session.get(Solution, solution.id)
@@ -271,11 +286,23 @@ async def test_queued_deployments_keep_exact_targets(users: tuple[User, User, Us
     second_operation = await claim_operation()
     assert second_operation is not None
     assert second_operation.target_id == second_id
-    assert (await execute(second_operation)).failed is None
+    await execute(second_operation)
+
+    # Read the committed outcome before consuming the next queued deployment.
+    async with session_scope() as session:
+        completed = await session.get(Operation, second_operation.id)
+        assert completed is not None
+        assert completed.failed is None
     third_operation = await claim_operation()
     assert third_operation is not None
     assert third_operation.target_id == third_id
-    assert (await execute(third_operation)).failed is None
+    await execute(third_operation)
+
+    # Read the final committed outcome before checking deployment order.
+    async with session_scope() as session:
+        completed = await session.get(Operation, third_operation.id)
+        assert completed is not None
+        assert completed.failed is None
     assert applied == ["first", "second", "third"]
     assert await claim_operation() is None
     async with session_scope() as session:

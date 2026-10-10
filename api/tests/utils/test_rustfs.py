@@ -8,8 +8,8 @@ from src.utils.rustfs import Error, RustFS
 pytestmark = pytest.mark.no_db
 
 
-def test_policy_scopes_solution_object_access() -> None:
-    """Grant object reads and writes only under the solution's private prefix."""
+def test_policy_scopes_solution_access_and_denies_acl_grants() -> None:
+    """Scope object access and bucket listing while denying ACL grants."""
 
     # Arrange
     solution = uuid4()
@@ -27,46 +27,21 @@ def test_policy_scopes_solution_object_access() -> None:
     assert reads["Resource"] == ["arn:aws:s3:::org-bucket/shared", "arn:aws:s3:::org-bucket/shared/*", prefix, f"{prefix}/*"]
     assert writes["Resource"] == [f"{prefix}/*"]
 
-
-def test_policy_denies_acl_grants() -> None:
-    """Prevent upload-time ACL grants from widening solution access."""
-
-    # Arrange
-    solution = uuid4()
-
-    # Act
-    policy = RustFS.policy("org-bucket", solution)
-
-    # Assert
-    statements = policy["Statement"]
-    assert isinstance(statements, list)
+    # Prevent upload-time ACL grants from widening Solution access.
     denies = [statement for statement in statements if statement["Effect"] == "Deny"]
     assert [statement["Condition"]["StringLike"] for statement in denies] == [
         {f"s3:x-amz-grant-{header}": "?*"} for header in ("read", "write", "read-acp", "write-acp", "full-control")
     ]
 
-
-def test_policy_restricts_list_bucket_to_owned_prefixes() -> None:
-    """Limit bucket listing to shared data and the solution's own prefix."""
-
-    # Arrange
-    solution = uuid4()
-
-    # Act
-    policy = RustFS.policy("org-bucket", solution)
-
-    # Assert
-    statements = policy["Statement"]
-    assert isinstance(statements, list)
+    # Restrict bucket listing to shared data and the Solution's own prefix.
     listing = next(statement for statement in statements if statement["Effect"] == "Allow" and "s3:ListBucket" in statement["Action"])
     assert listing["Condition"] == {"StringLike": {"s3:prefix": ["shared/*", f"solutions/{solution.hex}/*"]}}
 
 
-async def test_service_account_replaces_abandoned_credentials(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_service_account_replaces_abandoned_credentials() -> None:
     """Retry account creation after revoking a conflicting abandoned account."""
 
     # Arrange
-    storage = RustFS("https://storage.example.com", s3.Credentials("owner", "secret"))
     solution = uuid4()
     calls: list[str] = []
 
@@ -81,10 +56,21 @@ async def test_service_account_replaces_abandoned_credentials(monkeypatch: pytes
         return next(responses)
 
     transport = httpx2.MockTransport(respond)
-    monkeypatch.setattr(httpx2.AsyncHTTPTransport, "handle_async_request", transport.handle_async_request)
+    client = httpx2.AsyncClient(
+        transport=transport,
+        trust_env=False,
+        timeout=30,
+        follow_redirects=False,
+    )
 
     # Act
-    credentials = await storage.service_account("org-bucket", solution)
+    async with client:
+        storage = RustFS(
+            "https://storage.example.com",
+            s3.Credentials("owner", "secret"),
+            client,
+        )
+        credentials = await storage.service_account("org-bucket", solution)
 
     # Assert
     assert credentials.access_key == f"solution-{solution.hex}"
@@ -95,11 +81,10 @@ async def test_service_account_replaces_abandoned_credentials(monkeypatch: pytes
     ]
 
 
-async def test_service_account_reraises_unexpected_error(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_service_account_reraises_unexpected_error() -> None:
     """Surface administrative failures instead of revoking unrelated credentials."""
 
     # Arrange
-    storage = RustFS("https://storage.example.com", s3.Credentials("owner", "secret"))
     requests: list[tuple[str, str]] = []
 
     def respond(request: httpx2.Request) -> httpx2.Response:
@@ -111,11 +96,22 @@ async def test_service_account_reraises_unexpected_error(monkeypatch: pytest.Mon
         return httpx2.Response(500, text="internal error")
 
     transport = httpx2.MockTransport(respond)
-    monkeypatch.setattr(httpx2.AsyncHTTPTransport, "handle_async_request", transport.handle_async_request)
+    client = httpx2.AsyncClient(
+        transport=transport,
+        trust_env=False,
+        timeout=30,
+        follow_redirects=False,
+    )
 
     # Act
-    with pytest.raises(Error) as captured:
-        await storage.service_account("org-bucket", uuid4())
+    async with client:
+        storage = RustFS(
+            "https://storage.example.com",
+            s3.Credentials("owner", "secret"),
+            client,
+        )
+        with pytest.raises(Error) as captured:
+            await storage.service_account("org-bucket", uuid4())
 
     # Assert
     assert captured.value.status_code == 500
@@ -130,11 +126,10 @@ REVOKE_ERROR_CASES = [
 
 
 @pytest.mark.parametrize(("status_code", "message", "ignored"), REVOKE_ERROR_CASES)
-async def test_revoke_handles_administrative_errors(monkeypatch: pytest.MonkeyPatch, status_code: int, message: str, ignored: bool) -> None:
+async def test_revoke_handles_administrative_errors(status_code: int, message: str, ignored: bool) -> None:
     """Tolerate missing accounts while preserving unexpected revocation errors."""
 
     # Arrange
-    storage = RustFS("https://storage.example.com", s3.Credentials("owner", "secret"))
     solution = uuid4()
     requests: list[tuple[str, str]] = []
 
@@ -147,7 +142,12 @@ async def test_revoke_handles_administrative_errors(monkeypatch: pytest.MonkeyPa
         return httpx2.Response(status_code, text=message)
 
     transport = httpx2.MockTransport(respond)
-    monkeypatch.setattr(httpx2.AsyncHTTPTransport, "handle_async_request", transport.handle_async_request)
+    client = httpx2.AsyncClient(
+        transport=transport,
+        trust_env=False,
+        timeout=30,
+        follow_redirects=False,
+    )
 
     # Act
     expectation = (
@@ -161,8 +161,14 @@ async def test_revoke_handles_administrative_errors(monkeypatch: pytest.MonkeyPa
             ),
         )
     )
-    with expectation:
-        await storage.revoke(solution)
+    async with client:
+        storage = RustFS(
+            "https://storage.example.com",
+            s3.Credentials("owner", "secret"),
+            client,
+        )
+        with expectation:
+            await storage.revoke(solution)
 
     # Assert
     assert requests == [("DELETE", f"/rustfs/admin/v3/delete-service-account?accessKey=solution-{solution.hex}")]

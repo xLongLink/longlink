@@ -2,11 +2,12 @@ import jwt
 import hmac
 import asyncio
 import secrets
+from src import auth
 from typing import Annotated
-from fastapi import Body, Query, Cookie, Header, Depends, Response, APIRouter, HTTPException, BackgroundTasks
-from src.auth import get_session
+from fastapi import Body, Query, Cookie, Header, Response, APIRouter, HTTPException, BackgroundTasks
 from src.utils import mail, oauth, token, cookies
 from sqlalchemy.exc import IntegrityError
+from src.operations import databases
 from src.models.auth import EmailPayload, TokenPayload, PasswordLogin, OAuthAvailability, RegistrationComplete, PasswordResetComplete
 from src.environments import env
 from src.models.users import UserSummary
@@ -23,10 +24,18 @@ INVALID_REGISTRATION_LINK = "This registration link is invalid or expired. Reque
 INVALID_PASSWORD_RESET_LINK = "This password reset link is invalid or has expired. Please request a new one."  # noqa: S105
 
 
-def set_auth_session(response: Response, user: User) -> None:
-    """Create and publish one browser session for an authenticated user."""
+async def set_auth_session(session: AsyncSession, response: Response, user: User) -> None:
+    """Commit accepted access before publishing one authenticated browser session."""
 
-    # Publish authentication as a private, browser-only session.
+    # Attribute accepted invitations and pending account changes to the authenticated user.
+    with audit.actor(user.id):
+        await invitations.accept(session, user)
+        await session.commit()
+
+    # Synchronize committed memberships before issuing authentication, including retries after a failed sync.
+    await databases.sync_users(user.id)
+
+    # Publish authentication as a private, browser-only session only after persistence succeeds.
     cookies.set_browser_cookie(
         response,
         cookies.AUTH_COOKIE,
@@ -78,7 +87,7 @@ async def get_oauth_availability():
 
 
 @router.get("/auth/oauth/{provider}", include_in_schema=False)
-async def start_oauth_login(provider: oauth.OAuthProvider):
+async def start_oauth_login(provider: oauth.OAuthProvider, return_to: Annotated[str | None, Query(max_length=8192)] = None):
     """Start one provider sign-in flow with browser-bound state and PKCE proof."""
 
     # Enabled providers require their complete server-only confidential client configuration.
@@ -86,7 +95,7 @@ async def start_oauth_login(provider: oauth.OAuthProvider):
         raise HTTPException(status_code=404, detail="OAuth provider is not configured")
     state = secrets.token_urlsafe(32)
     verifier = secrets.token_urlsafe(64)
-    credential = token.create_oauth_state_token(provider, state, verifier)
+    credential = token.create_oauth_state_token(provider, state, verifier, oauth.login_destination(return_to))
     response = RedirectResponse(oauth.authorization_url(provider, state, verifier), status_code=302)
 
     # Store callback proof outside browser-readable storage and restrict it to OAuth endpoints.
@@ -99,7 +108,7 @@ async def start_oauth_login(provider: oauth.OAuthProvider):
 @router.get("/auth/oauth/{provider}/callback", include_in_schema=False)
 async def complete_oauth_login(
     provider: oauth.OAuthProvider,
-    session: AsyncSession = Depends(get_session),
+    session: auth.Session,
     code: Annotated[str | None, Query(max_length=4096)] = None,
     state: Annotated[str | None, Query(max_length=512)] = None,
     error: Annotated[str | None, Query(max_length=128)] = None,
@@ -140,26 +149,23 @@ async def complete_oauth_login(
     # Deleted accounts remain inaccessible even if their provider identity is still valid.
     if user.deleted_at is not None:
         return oauth_failure_response()
-    # Attribute profile linking and accepted invitations to the verified external identity.
-    with audit.actor(user.id):
-        try:
-            await invitations.accept(session, user)
-            await session.commit()
-        except IntegrityError:
-            return oauth_failure_response()
 
-    # Publish the signed browser credential only after durable projection demand commits.
-    response = RedirectResponse(f"{env.PUBLIC_URL}/user/organizations", status_code=302)
+    # Commit verified identity changes before publishing browser authentication.
+    destination = oauth.login_destination(token.oauth_return_path(oauth_state or "", provider))
+    response = RedirectResponse(f"{env.PUBLIC_URL}{destination}", status_code=302)
+    try:
+        await set_auth_session(session, response, user)
+    except IntegrityError:
+        return oauth_failure_response()
 
-    # Publish authentication only after all persistent OAuth login effects commit.
-    set_auth_session(response, user)
+    # Remove callback proof after the browser session is published.
     cookies.delete_browser_cookie(response, cookies.OAUTH_STATE_COOKIE, "/api/v1/auth/oauth")
     return response
 
 
 # Deployment rate limiting bounds unauthenticated credential work before it reaches the API.
 @router.post("/auth/password/login", status_code=204)
-async def password_login(payload: PasswordLogin, response: Response, session: AsyncSession = Depends(get_session)):
+async def password_login(payload: PasswordLogin, response: Response, session: auth.Session):
     """Authenticate a local account and create one signed browser session."""
 
     # Load the canonical account identity before verifying its credential.
@@ -174,12 +180,7 @@ async def password_login(payload: PasswordLogin, response: Response, session: As
         raise HTTPException(status_code=400, detail="Invalid email or password.")
 
     # Accept email-bound Organization access before issuing its signed browser session.
-    with audit.actor(user.id):
-        await invitations.accept(session, user)
-        await session.commit()
-
-    # Publish authentication only after all persistent login effects commit.
-    set_auth_session(response, user)
+    await set_auth_session(session, response, user)
 
 
 @router.post("/auth/logout", status_code=204, include_in_schema=False)
@@ -202,7 +203,7 @@ async def logout(
 async def request_password_reset(
     email: Annotated[Email, Body(embed=True)],
     background_tasks: BackgroundTasks,
-    session: AsyncSession = Depends(get_session),
+    session: auth.Session,
 ):
     """Queue password reset delivery without disclosing account existence."""
 
@@ -221,7 +222,7 @@ async def request_password_reset(
 
 
 @router.post("/auth/reset-password/verify", status_code=204)
-async def verify_password_reset_token(payload: TokenPayload, response: Response, session: AsyncSession = Depends(get_session)):
+async def verify_password_reset_token(payload: TokenPayload, response: Response, session: auth.Session):
     """Exchange an emailed reset bearer token for browser-only proof."""
 
     # Validate the bearer credential before moving it into a restricted cookie.
@@ -232,8 +233,8 @@ async def verify_password_reset_token(payload: TokenPayload, response: Response,
 @router.get("/auth/reset-password/setup", status_code=204)
 async def get_password_reset_setup(
     response: Response,
+    session: auth.Session,
     password_reset_token: str | None = Cookie(default=None, alias=cookies.PASSWORD_RESET_COOKIE),
-    session: AsyncSession = Depends(get_session),
 ):
     """Restore password reset state from browser-only proof."""
 
@@ -246,8 +247,8 @@ async def get_password_reset_setup(
 async def reset_password(
     payload: PasswordResetComplete,
     response: Response,
+    session: auth.Session,
     password_reset_token: str | None = Cookie(default=None, alias=cookies.PASSWORD_RESET_COOKIE),
-    session: AsyncSession = Depends(get_session),
 ):
     """Replace a password using browser-only reset proof."""
 
@@ -266,9 +267,7 @@ async def reset_password(
 
 # Deployment rate limiting bounds unauthenticated email delivery requests before they reach the API.
 @router.post("/auth/register", status_code=202)
-async def request_registration(
-    email: Annotated[Email, Body(embed=True)], background_tasks: BackgroundTasks, session: AsyncSession = Depends(get_session)
-):
+async def request_registration(email: Annotated[Email, Body(embed=True)], background_tasks: BackgroundTasks, session: auth.Session):
     """Send a stateless registration link when the email has no account."""
 
     # Keep the response non-enumerating while avoiding registration mail for existing accounts.
@@ -308,27 +307,24 @@ async def get_registration_setup(
 async def complete_registration(
     payload: RegistrationComplete,
     response: Response,
+    session: auth.Session,
     registration_token: str | None = Cookie(default=None, alias=cookies.REGISTRATION_COOKIE),
-    session: AsyncSession = Depends(get_session),
 ):
     """Create and authenticate an account after stateless email verification."""
 
     # Bind account creation to the signed email rather than any client-supplied identity.
     email = registration_email(registration_token or "")
 
-    # Persist the user before its FK-dependent token and treat uniqueness races uniformly.
+    # Commit account creation and accepted access before publishing browser authentication.
     try:
         user = await users.register(session, payload.name, email, payload.password)
-        with audit.actor(user.id):
-            await invitations.accept(session, user)
-            await session.commit()
+        await set_auth_session(session, response, user)
     except IntegrityError as exc:
         raise HTTPException(
             status_code=409,
             detail="An account with this email already exists. Sign in or reset your password to continue.",
         ) from exc
 
-    # Publish browser authentication only after both persistent records commit.
-    set_auth_session(response, user)
+    # Remove email verification proof only after account creation commits.
     cookies.delete_browser_cookie(response, cookies.REGISTRATION_COOKIE, "/api/v1/auth/register")
     return user

@@ -22,10 +22,9 @@ deployments, and supporting infrastructure.
 The API is published as a Linux AMD64 container image on GitHub Container
 Registry.
 
-| Name   | Image                        | Tag                               |
-| ------ | ---------------------------- | --------------------------------- |
-| Stable | `ghcr.io/xlonglink/longlink` | `v<major>.<minor>.<patch>`        |
-| Beta   | `ghcr.io/xlonglink/longlink` | `v<major>.<minor>.<patch>-beta.N` |
+| Name   | Image                        | Tag                        |
+| ------ | ---------------------------- | -------------------------- |
+| Stable | `ghcr.io/xlonglink/longlink` | `v<major>.<minor>.<patch>` |
 
 <br />
 

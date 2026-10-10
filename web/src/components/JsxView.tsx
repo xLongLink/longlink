@@ -113,6 +113,25 @@ export function JsxView({
 
             if (command.type === 'navigate') {
                 try {
+                    // Open web destinations only during user activation, without exposing the host to the new page.
+                    const path = command.path.trim();
+
+                    if (URL.canParse(path) || path.startsWith('//')) {
+                        const url = new URL(path, window.location.origin);
+
+                        if (
+                            (url.protocol === 'https:' || url.protocol === 'http:') &&
+                            !url.username &&
+                            !url.password &&
+                            navigator.userActivation.isActive
+                        ) {
+                            window.open(url.href, '_blank', 'noopener,noreferrer');
+                        }
+
+                        return;
+                    }
+
+                    // Keep relative navigation scoped to the current Solution.
                     host.requestUrl(navigationBaseUrl, command.path);
                     const destination = resolveNavigationUrl(navigationBaseUrl, command.path);
 
@@ -205,8 +224,8 @@ export function JsxView({
         );
 
     return (
-        // The View owns one viewport and scroll region; overlays no longer depend on normal-flow content height.
-        <Stack height="calc(100dvh - var(--_app-shell-header-height, 0px) - var(--spacing-8))" gap={0}>
+        // Fill the host shell's allocated region; scrolling and overlays stay inside the isolated View.
+        <Stack height="100%" minHeight={0} gap={0}>
             <iframe
                 ref={frame}
                 title="Solution View"

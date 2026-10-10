@@ -5,7 +5,9 @@ from datetime import UTC, datetime, timedelta
 from sqlmodel import col
 from src.utils import postgres
 from sqlalchemy import text, delete, select, update
+from src.errors import ForbiddenError
 from dataclasses import dataclass
+from src.kubernetes import databases as database_resources
 from src.kubernetes import namespace
 from collections.abc import AsyncIterator
 from src.models.types import DatabaseSSLMode
@@ -15,6 +17,7 @@ from src.database.services import organizations
 from src.kubernetes.client import Kubernetes
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.models.organizations import DatabaseState
+from src.database.models.association import UserOrganization
 from src.database.models.organizations import Organization, OrganizationActivity
 
 LEASE_SECONDS = 180
@@ -38,7 +41,7 @@ async def connection(organization: Organization, cluster: Kubernetes) -> postgre
     port = await cluster.forward_database(organization.id)
 
     # Preserve the cluster DNS hostname for certificate verification even through a local tunnel.
-    certificate = await cluster.databases.certificate(organization.id)
+    certificate = await database_resources.certificate(cluster, organization.id)
     return postgres.Postgres(
         host=namespace.database_hostname(organization.id),
         port=port,
@@ -151,22 +154,15 @@ async def _claim(session: AsyncSession, organization_id: UUID) -> Lease | None:
 async def deleting(organization_id: UUID) -> AsyncIterator[None]:
     """Drain admitted work and fence database transitions during destructive cleanup."""
 
+    # Serialize deletion eligibility and lease admission under the same Organization lock.
     while True:
         async with session_scope() as session:
             organization = await lock(session, organization_id)
             if organization is None:
                 break
             if organization.deleted_at is None:
-                raise RuntimeError("Active Organizations cannot be deleted")
-            active = await session.scalar(
-                select(col(OrganizationActivity.organization_id))
-                .where(
-                    col(OrganizationActivity.organization_id) == organization_id,
-                    col(OrganizationActivity.expires_at) > datetime.now(UTC),
-                )
-                .limit(1)
-            )
-            lease = None if active is not None else await _claim(session, organization_id)
+                raise ForbiddenError("Active Organizations cannot be deleted by lifecycle cleanup")
+            lease = await _claim(session, organization_id)
             await session.commit()
         if lease is not None:
             async with lease.maintain():
@@ -174,6 +170,45 @@ async def deleting(organization_id: UUID) -> AsyncIterator[None]:
             return
         await asyncio.sleep(0.5)
     yield
+
+
+async def sync_users(user_id: UUID) -> None:
+    """Synchronize a user's Organization profiles in place after Platform changes commit."""
+
+    # Resolve active memberships without holding a request transaction during database provisioning.
+    async with session_scope() as session:
+        result = await session.scalars(
+            select(col(UserOrganization.organization_id))
+            .join(Organization, col(Organization.id) == col(UserOrganization.organization_id))
+            .where(col(UserOrganization.user_id) == user_id, col(Organization.deleted_at).is_(None))
+        )
+        organization_ids = result.all()
+
+    # Wait for the shared schema before refreshing each Organization's user snapshot.
+    for organization_id in organization_ids:
+        if not await ready(organization_id):
+            continue
+
+        # Serialize snapshots with concurrent syncs and deletion, then read fresh committed profiles.
+        async with session_scope() as session:
+            organization = await lock(session, organization_id)
+            if organization is None or organization.deleted_at is not None:
+                continue
+
+            # Load the assigned Compute only while the Organization remains locked and active.
+            target = await organizations.infrastructure(session, organization_id)
+            if target is None:
+                continue
+            organization, compute = target
+            cluster = Kubernetes(
+                compute.kubeconfig,
+            )
+
+            # Upsert shared profiles without removing records referenced by historical Solution audits.
+            async with cluster:
+                database = await connection(organization, cluster)
+                await organizations.project_users(session, organization_id, database)
+            await session.commit()
 
 
 async def ready(organization_id: UUID) -> bool:
@@ -207,7 +242,8 @@ async def ready(organization_id: UUID) -> bool:
                 async with cluster:
                     await lease.check()
                     if organization.status != Status.running:
-                        await cluster.databases.apply(
+                        await database_resources.apply(
+                            cluster,
                             organization_id,
                             organization.database_password,
                             compute.database_storage_class,
@@ -216,7 +252,7 @@ async def ready(organization_id: UUID) -> bool:
                         )
                     else:
                         # Reassert the desired annotation even after an expired worker's interrupted sleep.
-                        await cluster.databases.resume(organization_id)
+                        await database_resources.resume(cluster, organization_id)
                     database = await connection(organization, cluster)
                     if organization.status != Status.running:
                         await lease.check()

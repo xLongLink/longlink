@@ -1,31 +1,13 @@
 import type { ReactNode } from 'react';
 import { Root } from '@/components/Root';
-import { useLocation, useNavigate } from 'react-router';
 import { Document } from '@/components/layouts/Document';
-import { MenuNavigationContext } from '@/components/ui/Menu';
+// Handwritten fonts belong only to native Platform pages, not the embedded SDK application.
+import '@fontsource/kalam';
+import '@fontsource/kalam/700.css';
 
-/** Supplies native Platform Menus with router-owned fragment navigation. */
+/** Provides the shared runtime and native Platform fonts. */
 export default function PlatformRoot() {
-    const location = useLocation();
-    const navigate = useNavigate();
-
-    // Keep this host adapter out of the SDK application and its sandbox-local Menu provider.
-    return (
-        <MenuNavigationContext
-            value={{
-                hash: location.hash,
-                select: (id) => {
-                    void navigate({
-                        pathname: location.pathname,
-                        search: location.search,
-                        hash: `#${id}`,
-                    });
-                },
-            }}
-        >
-            <Root />
-        </MenuNavigationContext>
-    );
+    return <Root />;
 }
 
 /** Adds website analytics only to the Platform document. */

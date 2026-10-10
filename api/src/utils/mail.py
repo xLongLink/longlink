@@ -28,10 +28,6 @@ def render_mjml_template(template_name: str, **context: object) -> str:
 async def send_mail(recipient: str, subject: str, text: str, html: str) -> None:
     """Deliver one multipart email through the configured SMTP server."""
 
-    # Never silently discard authentication mail when delivery is unavailable.
-    if env.SMTP_HOST is None:
-        raise RuntimeError("SMTP_HOST is not configured")
-
     # Build a multipart email with an HTML body and plain-text fallback.
     message = EmailMessage()
     message["From"] = f"LongLink <{env.SMTP_FROM}>"

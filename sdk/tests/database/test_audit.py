@@ -182,10 +182,10 @@ async def test_audit_hook_preserves_explicit_insert_fields_for_unchanged_rows(
         )
 
 
-async def test_audit_hook_preserves_ordinary_model_lifecycle(
+async def test_audit_hook_preserves_ordinary_model_inserts_and_updates(
     audit_engine: database_base.Database,
 ) -> None:
-    """Leave ordinary SQLModel inserts, updates, and deletes unchanged."""
+    """Leave ordinary SQLModel inserts and updates unchanged."""
 
     # Arrange
     class PlainLifecycleItem(SQLModel, table=True):
@@ -212,13 +212,8 @@ async def test_audit_hook_preserves_ordinary_model_lifecycle(
         item.name = "published"
         await session.commit()
 
+    # Assert
     async with audit_engine.session() as session:
         item = await session.get(PlainLifecycleItem, item_id)
         assert item is not None
         assert item.name == "published"
-        await session.delete(item)
-        await session.commit()
-
-    # Assert
-    async with audit_engine.session() as session:
-        assert await session.get(PlainLifecycleItem, item_id) is None

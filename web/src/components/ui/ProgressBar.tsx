@@ -2,6 +2,8 @@ import { ProgressBar as AstryxProgressBar } from '@astryxdesign/core/ProgressBar
 
 /** Displays determinate progress with a semantic state. */
 export function ProgressBar(props: {
+    /** Hides the component without unmounting it. */
+    hidden?: boolean;
     label: string;
     value?: number;
     max?: number;
@@ -12,6 +14,7 @@ export function ProgressBar(props: {
     return (
         <AstryxProgressBar
             {...props}
+            className={props.hidden ? 'hidden!' : undefined}
             value={props.value ?? 0}
             max={props.max ?? 100}
             isLabelHidden={false}

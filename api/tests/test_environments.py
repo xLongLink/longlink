@@ -23,7 +23,7 @@ ENVIRONMENT_SETTINGS = {
 
 INVALID_AUTHENTICATION_SETTINGS = [
     pytest.param({"SMTP_USERNAME": "mailer"}, "SMTP_USERNAME and SMTP_PASSWORD must be configured together", id="username-only"),
-    pytest.param({"SMTP_HOST": None}, "SMTP_HOST is required", id="without-host"),
+    pytest.param({"SMTP_HOST": None}, "Input should be a valid string", id="without-host"),
     pytest.param({"PUBLIC_URL": "http://platform.example"}, "PUBLIC_URL must use HTTPS except on loopback", id="insecure-origin"),
     pytest.param(
         {"GOOGLE_OAUTH_CLIENT_ID": "google-client"},

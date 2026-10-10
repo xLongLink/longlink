@@ -4,18 +4,18 @@ import contextlib
 from src import errors
 from fastapi import FastAPI, Request, Response
 from pathlib import Path
+from src.mcp import MCPMiddleware
 from longlink import errors as solution_errors
 from src.utils import jobs
-from src.routes import v1, branding
+from src.routes import v1, mcp, branding
+from src.kubernetes import client
 from collections.abc import Callable, Awaitable, AsyncGenerator
 from longlink.logger import ApiAccessFilter
 from src.environments import env
 from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
 from src.utils.cookies import AUTH_COOKIE, OAUTH_STATE_COOKIE, REGISTRATION_COOKIE, PASSWORD_RESET_COOKIE
-from fastapi.exceptions import RequestValidationError
 from longlink.middleware import FrontendMiddleware
 from src.database.session import dispose_engine
-from starlette.exceptions import HTTPException
 
 # Keep successful Kubernetes probes out of the Platform API access log.
 logging.getLogger("uvicorn.access").addFilter(ApiAccessFilter())
@@ -37,14 +37,22 @@ async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:
         yield
     finally:
         try:
-            # Always stop database work before releasing its shared database pool.
+            # Always stop background consumers before releasing their shared transports and database pool.
             for task in tasks:
                 task.cancel()
-            for task in tasks:
-                with contextlib.suppress(asyncio.CancelledError):
-                    await task
+
+            # Join every worker before propagating failure so another worker's cleanup can still finish.
+            results = await asyncio.gather(*tasks, return_exceptions=True)
+            for result in results:
+                if isinstance(result, BaseException) and not isinstance(result, asyncio.CancelledError):
+                    raise result
         finally:
-            await dispose_engine()
+            try:
+                # Kubernetes requests and port forwards have finished before their shared transport closes.
+                await client.dispose_clients()
+            finally:
+                # A transport cleanup failure must not prevent database pool disposal.
+                await dispose_engine()
 
 
 app = FastAPI(
@@ -88,9 +96,7 @@ async def prevent_cross_origin_authenticated_writes(
 
 # Apply the same public contract to domain, HTTP, validation, and unexpected failures.
 app.exception_handler(errors.ServiceError)(errors.service_error_response)
-app.exception_handler(HTTPException)(solution_errors.http_error_response)
-app.exception_handler(RequestValidationError)(solution_errors.validation_error_response)
-app.add_exception_handler(Exception, solution_errors.unexpected_error_response)
+solution_errors.install_error_handlers(app)
 
 
 @app.middleware("http")
@@ -110,6 +116,7 @@ async def prevent_authenticated_response_caching(
 
 
 app.add_middleware(FrontendMiddleware)
+app.add_middleware(MCPMiddleware)
 
 
 @app.middleware("http")
@@ -132,6 +139,7 @@ async def redirect_public_hostname(
 # Register the versioned Platform API after constructing the application.
 app.include_router(v1.router)
 app.include_router(branding.router)
+app.include_router(mcp.router)
 static_dir = Path(__file__).resolve().parent / "src" / ".static" / "web"
 if static_dir.exists():
     # Serve the prerendered home document before registering the generic SPA fallback.

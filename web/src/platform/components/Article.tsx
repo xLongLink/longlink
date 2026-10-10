@@ -3,13 +3,14 @@ import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
 import { documentationPaths } from '@/platform/docs';
+import { Article } from '@/platform/layouts/Article';
 import { Divider } from '@astryxdesign/core/Divider';
 import { Outline } from '@astryxdesign/core/Outline';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
-import { Article } from '@/components/layouts/Article';
 import { useLocation, useNavigate } from 'react-router';
-import { Seo, articleRouteLabels } from '@/components/Seo';
 import { PathBreadcrumb } from '@/components/breadcrumb/Path';
+import { BreadcrumbItem } from '@astryxdesign/core/Breadcrumbs';
+import { Seo, articleRouteLabels } from '@/platform/components/Seo';
 import { useEffect, useEffectEvent, type ComponentProps, type ReactNode } from 'react';
 
 const dateFormatter = new Intl.DateTimeFormat('en-GB', {
@@ -19,14 +20,16 @@ const dateFormatter = new Intl.DateTimeFormat('en-GB', {
     timeZone: 'UTC',
 });
 
+type ArticleMetadata = {
+    title: string;
+    description: string;
+    lastUpdated: string;
+    editUrl: string;
+    toc: ComponentProps<typeof Outline>['items'];
+};
+
 type DocumentationArticleProps = {
-    article: {
-        title: string;
-        description: string;
-        lastUpdated: string;
-        editUrl: string;
-        toc: ComponentProps<typeof Outline>['items'];
-    };
+    article: ArticleMetadata;
     children: ReactNode;
     className?: string;
 };
@@ -37,21 +40,54 @@ export function DocumentationArticle({
     children,
     className = 'documentation-content [--font-family-heading:var(--font-family-handwritten)] [&_.astryx-heading]:uppercase [&_.astryx-heading]:tracking-wide',
 }: DocumentationArticleProps) {
-    // Preserve the 720px reading column, 224px outline, 64px header, and caller-owned typography.
+    // Keep documentation typography and reading order as wrapper-owned policy.
+    return (
+        <ArticleRenderer article={article} className={className} paths={documentationPaths}>
+            {children}
+        </ArticleRenderer>
+    );
+}
+
+/** Publishes public articles with Home-rooted navigation and optional collection reading order. */
+export function PublicArticle({
+    article,
+    children,
+    paths,
+}: {
+    article: ArticleMetadata;
+    children: ReactNode;
+    paths?: readonly string[];
+}) {
+    // Keep public navigation Home-rooted without imposing typography or a reading collection.
+    return (
+        <ArticleRenderer article={article} paths={paths} root={<BreadcrumbItem href="/">Home</BreadcrumbItem>}>
+            {children}
+        </ArticleRenderer>
+    );
+}
+
+/** Renders authored articles with the typography and navigation policy selected by their wrapper. */
+function ArticleRenderer({
+    article,
+    children,
+    className,
+    paths,
+    root,
+}: {
+    article: ArticleMetadata;
+    children: ReactNode;
+    className?: string;
+    paths?: readonly string[];
+    root?: ReactNode;
+}) {
+    // Preserve shared metadata, the 720px reading column, 224px outline, and 64px header.
     return (
         <>
             <Seo description={article.description} hasBreadcrumbs title={article.title} />
             <Article
                 className={className}
-                header={<PathBreadcrumb className="min-w-0 overflow-hidden" labels={articleRouteLabels} />}
-                headerAction={<Button href="/login/" label="Get Started" size="sm" variant="primary" />}
-                footer={
-                    <ArticleFooter
-                        lastUpdated={article.lastUpdated}
-                        editUrl={article.editUrl}
-                        paths={documentationPaths}
-                    />
-                }
+                header={<PathBreadcrumb className="min-w-0 overflow-hidden" labels={articleRouteLabels} root={root} />}
+                footer={<ArticleFooter lastUpdated={article.lastUpdated} editUrl={article.editUrl} paths={paths} />}
                 sidebar={article.toc.length ? <ArticleOutline items={article.toc} /> : undefined}
             >
                 {children}
@@ -61,7 +97,7 @@ export function DocumentationArticle({
 }
 
 /** Renders the Platform article's authored table of contents. */
-export function ArticleOutline({ items }: { items: ComponentProps<typeof Outline>['items'] }) {
+function ArticleOutline({ items }: { items: ComponentProps<typeof Outline>['items'] }) {
     // Keep the heading and navigation within the same labelled landmark.
     return (
         <Stack as="aside" aria-label="On this page" gap={3}>

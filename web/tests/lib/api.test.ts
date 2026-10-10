@@ -7,9 +7,27 @@ afterEach(() => {
 });
 
 describe('api error mapping', () => {
-    it('returns the server detail message with status and url', async () => {
+    it.each([
+        {
+            name: 'returns the server detail message with status and url',
+            detail: 'Name too short',
+            message: 'Name too short',
+        },
+        {
+            name: 'reports validation locations and messages without submitted values or error context',
+            detail: [
+                {
+                    loc: ['body', 'envs', 'API_KEY'],
+                    msg: 'Invalid API key',
+                    input: 'submitted-secret',
+                    ctx: { error: 'sensitive internal diagnostic' },
+                },
+            ],
+            message: 'envs.API_KEY: Invalid API key',
+        },
+    ])('$name', async ({ detail, message }) => {
         // Arrange
-        vi.stubGlobal('fetch', async () => Response.json({ detail: 'Name too short' }, { status: 422 }));
+        vi.stubGlobal('fetch', async () => Response.json({ detail }, { status: 422 }));
 
         // Act
         const request = api.get('https://api.example/organizations');
@@ -17,7 +35,7 @@ describe('api error mapping', () => {
         // Assert
         await expect(request).rejects.toBeInstanceOf(ApiError);
         await expect(request).rejects.toMatchObject({
-            message: 'Name too short',
+            message,
             status: 422,
             url: 'https://api.example/organizations',
         });

@@ -2,7 +2,7 @@ import pytest
 from uuid import UUID, uuid4
 from httpx2 import AsyncClient
 from datetime import UTC, datetime
-from sqlmodel import select
+from sqlmodel import col, select
 from factories import create_compute, create_solution, fetch_operations, create_organization, assert_no_new_operations
 from src.utils import s3
 from sqlalchemy import func
@@ -82,14 +82,16 @@ async def test_create_organization_enforces_the_per_user_beta_limit(
     assert allowed_response.json()["name"] == "umbrella"
     async with session_scope() as session:
         owner_organization_count = await session.scalar(
-            select(func.count()).select_from(Organization).where(Organization.created_id == owner.id, Organization.deleted_at.is_(None))
+            select(func.count())
+            .select_from(Organization)
+            .where(col(Organization.created_id) == owner.id, col(Organization.deleted_at).is_(None))
         )
         other_user_organization_count = await session.scalar(
             select(func.count())
             .select_from(Organization)
             .where(
-                Organization.created_id == other_user.id,
-                Organization.deleted_at.is_(None),
+                col(Organization.created_id) == other_user.id,
+                col(Organization.deleted_at).is_(None),
             )
         )
     assert owner_organization_count == 3
@@ -183,13 +185,11 @@ async def test_get_organization_returns_member_payload(
     # Arrange
     owner = users[0]
     organization = await create_organization(owner)
-    solution = await create_solution(organization)
 
     client = clients[0]
 
     # Act
     response = await client.get(f"/api/v1/organizations/{organization.id}")
-    solutions_response = await client.get(f"/api/v1/organizations/{organization.id}/solutions")
 
     # Assert
     assert response.status_code == 200
@@ -200,11 +200,6 @@ async def test_get_organization_returns_member_payload(
     assert payload["organization"]["name"] == "acme"
     assert payload["members"][0]["user"]["id"] == str(owner.id)
     assert payload["members"][0]["role"] == "owner"
-    assert solutions_response.status_code == 200
-    assert solutions_response.headers["cache-control"] == "no-store"
-    solutions_payload = solutions_response.json()
-    assert len(solutions_payload) == 1
-    assert solutions_payload[0]["id"] == str(solution.id)
 
 
 async def test_get_organization_solutions_omits_deleted_solutions(
@@ -228,6 +223,7 @@ async def test_get_organization_solutions_omits_deleted_solutions(
 
     # Assert
     assert response.status_code == 200
+    assert response.headers["cache-control"] == "no-store"
     assert [item["id"] for item in response.json()] == [str(active.id)]
 
 
@@ -378,14 +374,18 @@ async def test_delete_organization_requires_owner_or_platform_admin(
     async with session_scope() as session:
         session.add(UserOrganization(user_id=org_admin.id, organization_id=owned_organization.id, role=OrganizationRoles.admin))
         await session.commit()
+    previous_operations = await fetch_operations()
 
     # Act
     non_owner_response = await clients[1].delete(f"/api/v1/organizations/{owned_organization.id}")
-    platform_admin_response = await clients[0].delete(f"/api/v1/organizations/{admin_owned_organization.id}")
 
     # Assert
     assert non_owner_response.status_code == 403
     assert non_owner_response.json() == {"detail": "Permission required"}
+    await assert_no_new_operations(previous_operations)
+
+    # Verify a platform administrator can delete without Organization membership.
+    platform_admin_response = await clients[0].delete(f"/api/v1/organizations/{admin_owned_organization.id}")
     assert platform_admin_response.status_code == 202
     async with session_scope() as session:
         protected_organization = await session.get(Organization, owned_organization.id)
@@ -568,8 +568,8 @@ async def test_get_organization_returns_invitations(
         await session.commit()
         invitation = await session.scalar(
             select(OrganizationInvitation).where(
-                OrganizationInvitation.organization_id == organization.id,
-                OrganizationInvitation.email == invitee.email,
+                col(OrganizationInvitation.organization_id) == organization.id,
+                col(OrganizationInvitation.email) == invitee.email,
             )
         )
         assert invitation is not None
@@ -764,7 +764,9 @@ async def test_organization_owner_revokes_pending_invitation(
     async with session_scope() as session:
         session.add(OrganizationInvitation(organization_id=organization.id, email=invitee.email, role=OrganizationRoles.write))
         await session.commit()
-        invitation = await session.scalar(select(OrganizationInvitation).where(OrganizationInvitation.organization_id == organization.id))
+        invitation = await session.scalar(
+            select(OrganizationInvitation).where(col(OrganizationInvitation.organization_id) == organization.id)
+        )
         assert invitation is not None
 
     # Act
@@ -789,7 +791,9 @@ async def test_organization_maintainer_cannot_revoke_invitation_above_their_role
         session.add(UserOrganization(user_id=maintainer.id, organization_id=organization.id, role=OrganizationRoles.maintain))
         session.add(OrganizationInvitation(organization_id=organization.id, email=invitee.email, role=OrganizationRoles.owner))
         await session.commit()
-        invitation = await session.scalar(select(OrganizationInvitation).where(OrganizationInvitation.organization_id == organization.id))
+        invitation = await session.scalar(
+            select(OrganizationInvitation).where(col(OrganizationInvitation.organization_id) == organization.id)
+        )
         assert invitation is not None
 
     # Act
@@ -816,7 +820,7 @@ async def test_organization_member_cannot_revoke_another_organizations_invitatio
         session.add(OrganizationInvitation(organization_id=second_organization.id, email=invitee.email, role=OrganizationRoles.write))
         await session.commit()
         invitation = await session.scalar(
-            select(OrganizationInvitation).where(OrganizationInvitation.organization_id == second_organization.id)
+            select(OrganizationInvitation).where(col(OrganizationInvitation.organization_id) == second_organization.id)
         )
         assert invitation is not None
 

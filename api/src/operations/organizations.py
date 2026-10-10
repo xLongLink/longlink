@@ -5,6 +5,7 @@ from sqlalchemy import delete as sql_delete
 from sqlalchemy import select, update
 from src.errors import ForbiddenError
 from src.logger import logger
+from src.kubernetes import databases as database_resources
 from src.kubernetes import organizations
 from src.operations import databases, registries
 from src.models.statuses import Status
@@ -63,17 +64,7 @@ async def reconcile(organization_id: UUID) -> None:
 async def delete(organization_id: UUID) -> None:
     """Drain runtime activity before destroying the Organization's boundaries."""
 
-    # Reject active targets before waiting for their admitted runtime work.
-    async with session_scope() as session:
-        result = await session.execute(
-            select(col(Organization.id), col(Organization.deleted_at)).where(col(Organization.id) == organization_id)
-        )
-        target = result.tuples().one_or_none()
-    if target is None:
-        return
-    _, deleted_at = target
-    if deleted_at is None:
-        raise ForbiddenError("Active Organizations cannot be deleted by lifecycle cleanup")
+    # Delegate deletion eligibility and lease admission to the locked database scope.
     async with databases.deleting(organization_id):
         # An absent tombstone means a previous execution completed cleanup.
         async with session_scope() as session:
@@ -96,7 +87,7 @@ async def delete(organization_id: UUID) -> None:
         async with cluster:
             await organizations.delete(cluster, organization.id)
             # Delete the dedicated CNPG boundary only after compute Pods have terminated.
-            await cluster.databases.delete(organization.id)
+            await database_resources.delete(cluster, organization.id)
             logger.info("Deleting object storage for Organization %s", organization.id)
             storage = Storage(compute, cluster)
             await storage.delete(organization.id, solution_ids)

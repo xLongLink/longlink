@@ -3,6 +3,8 @@ import { Divider as AstryxDivider } from '@astryxdesign/core/Divider';
 
 /** Separates View content with an optional label and configurable line presentation. */
 export function Divider(props: {
+    /** Hides the component without unmounting it. */
+    hidden?: boolean;
     label?: ReactNode;
     variant?: 'subtle' | 'strong';
     orientation?: 'horizontal' | 'vertical';
@@ -12,6 +14,7 @@ export function Divider(props: {
     return (
         <AstryxDivider
             {...props}
+            className={props.hidden ? 'hidden!' : undefined}
             variant={props.variant ?? 'subtle'}
             orientation={props.orientation ?? 'horizontal'}
             isFullBleed={props.isFullBleed ?? false}

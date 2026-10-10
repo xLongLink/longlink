@@ -1,10 +1,12 @@
 import jwt
 import hmac
 from uuid import UUID
+from typing import Annotated
 from fastapi import Cookie, Depends, Request, HTTPException
 from src.utils import token
 from src.database import session as database
-from collections.abc import AsyncIterator
+from collections.abc import Callable, Awaitable, AsyncIterator
+from src.models.roles import OrganizationRoles
 from longlink.database import audit
 from src.utils.cookies import AUTH_COOKIE
 from src.database.services import users as user_service
@@ -22,12 +24,15 @@ async def get_session() -> AsyncIterator[AsyncSession]:
         yield session  # noqa: ASYNC119
 
 
+Session = Annotated[AsyncSession, Depends(get_session)]
+
+
 async def authuser(
     request: Request,
+    session: Session,
     credential: str | None = Cookie(default=None, alias=AUTH_COOKIE),
-    session: AsyncSession = Depends(get_session),
 ) -> AsyncIterator[User]:
-    """Return the authenticated user with current LongLink resource access."""
+    """Authenticate a browser session and bind its user to the request audit scope."""
 
     # Convert missing, expired, and invalidated sessions into one stable authentication error.
     if credential is None:
@@ -52,7 +57,10 @@ async def authuser(
         yield user  # noqa: ASYNC119
 
 
-def authadmin(user: User = Depends(authuser)) -> User:
+CurrentUser = Annotated[User, Depends(authuser)]
+
+
+def authadmin(user: CurrentUser) -> User:
     """Authenticate a platform administrator."""
 
     # Only administrator accounts can continue past this check.
@@ -61,15 +69,22 @@ def authadmin(user: User = Depends(authuser)) -> User:
     return user
 
 
-async def organization_access(
-    organization_id: UUID,
-    user: User = Depends(authuser),
-    session: AsyncSession = Depends(get_session),
-) -> UserOrganization:
-    """Return required active Organization access for one authenticated user."""
+PlatformAdmin = Annotated[User, Depends(authadmin)]
 
-    # Convert absent membership and deleted Organizations into the existing access response.
-    membership = await organization_service.membership(session, user.id, organization_id)
-    if membership is None:
-        raise HTTPException(status_code=403, detail="Access required")
-    return membership
+
+def require_organization_role(minimum_role: OrganizationRoles) -> Callable[[UUID, User, AsyncSession], Awaitable[UserOrganization]]:
+    """Create a FastAPI dependency requiring the specified Organization role."""
+
+    # Parameterize route access while keeping membership policy in the Organization service.
+    async def dependency(organization_id: UUID, user: CurrentUser, session: Session) -> UserOrganization:
+        """Resolve active membership for the Organization identified by the route."""
+
+        # Resolve the required role before supplying membership data to the handler.
+        return await organization_service.require_membership(session, user.id, organization_id, minimum_role)
+
+    return dependency
+
+
+OrganizationMember = Annotated[UserOrganization, Depends(require_organization_role(OrganizationRoles.read))]
+OrganizationMaintainer = Annotated[UserOrganization, Depends(require_organization_role(OrganizationRoles.maintain))]
+OrganizationAdmin = Annotated[UserOrganization, Depends(require_organization_role(OrganizationRoles.admin))]

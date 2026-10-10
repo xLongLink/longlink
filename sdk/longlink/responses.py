@@ -17,6 +17,7 @@ class FileResponse(StreamingResponse):
         storage: AbstractFileSystem,
         path: str,
         *,
+        status_code: int = 200,
         filename: str | None = None,
         media_type: str | None = None,
         content_disposition_type: Literal["inline", "attachment"] = "inline",
@@ -40,7 +41,14 @@ class FileResponse(StreamingResponse):
             if encoded_name != filename
             else f'{content_disposition_type}; filename="{filename}"'
         )
-        super().__init__((), media_type=media_type, headers={"content-disposition": disposition})
+
+        # Expose the standard status default to FastAPI and preserve it when streaming.
+        super().__init__(
+            (),
+            status_code=status_code,
+            media_type=media_type,
+            headers={"content-disposition": disposition},
+        )
 
     async def stream_response(self, send: Send) -> None:
         """Own the file outside the iterator so interrupted sends also release it."""

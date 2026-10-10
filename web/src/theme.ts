@@ -60,6 +60,11 @@ export const stoneTheme = defineTheme({
     localTokens: {
         '--font-family-handwritten': 'Kalam, "Segoe Print", "Bradley Hand", cursive',
         '--color-background-success-inverted': ['#2e6b33', '#2e7d32'],
+
+        // Keep decorative window controls saturated and opaque in both color modes.
+        '--color-window-close': '#ff5f57',
+        '--color-window-minimize': '#ff9f0a',
+        '--color-window-maximize': '#28c840',
     },
 
     tokens: {

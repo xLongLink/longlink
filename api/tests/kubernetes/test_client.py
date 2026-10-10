@@ -10,7 +10,13 @@ async def test_kubernetes_api_is_lazy_and_cached(monkeypatch: pytest.MonkeyPatch
     # Arrange
     kubeconfig = {"apiVersion": "v1", "clusters": []}
     created: list[dict[str, object]] = []
-    api = object()
+
+    class Api:
+        """Represent an acquired API before it opens an HTTP session."""
+
+        _session = None
+
+    api = Api()
 
     async def create_api(**kwargs: object) -> object:
         """Record one kr8s client construction."""
@@ -23,13 +29,17 @@ async def test_kubernetes_api_is_lazy_and_cached(monkeypatch: pytest.MonkeyPatch
     assert created == []
 
     # Act
-    first = await kubernetes.api()
-    second = await kubernetes.api()
+    try:
+        first = await kubernetes.api()
+        second = await kubernetes.api()
 
-    # Assert
-    assert first is api
-    assert second is api
-    assert created == [{"kubeconfig": kubeconfig, "serviceaccount": ""}]
+        # Assert
+        assert first is api
+        assert second is api
+        assert created == [{"kubeconfig": kubeconfig, "serviceaccount": ""}]
+    finally:
+        # Release this test loop's acquired client through the same owner as the Platform lifespan.
+        await kubernetes_client.dispose_clients()
 
 
 @pytest.mark.parametrize("metadata", [None, {"uid": ""}, {"uid": 123}])
@@ -63,8 +73,8 @@ async def test_cluster_uid_rejects_unavailable_namespace_identity(monkeypatch: p
         await kubernetes.cluster_uid()
 
 
-async def test_kubernetes_client_closes_its_cached_http_session(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Close tunnels before their cached HTTP session exactly once across repeated closes."""
+async def test_kubernetes_clients_leave_shared_http_session_to_lifespan(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Close operation-local tunnels without disrupting another borrower, then dispose the shared transport once."""
 
     # Arrange
     closed: list[str] = []
@@ -89,14 +99,18 @@ async def test_kubernetes_client_closes_its_cached_http_session(monkeypatch: pyt
 
         _session = Session()
 
-    async def create_api(**_kwargs: object) -> Api:
-        """Return one API with a closeable session."""
+    api = Api()
 
-        return Api()
+    async def create_api(**_kwargs: object) -> Api:
+        """Share the same API between wrappers, matching the kr8s factory."""
+
+        return api
 
     monkeypatch.setattr(kubernetes_client.kr8s.asyncio, "api", create_api)
     kubernetes = kubernetes_client.Kubernetes({"apiVersion": "v1"})
+    other = kubernetes_client.Kubernetes({"apiVersion": "v1"})
     await kubernetes.api()
+    assert await other.api() is api
     kubernetes._connections.push_async_callback(close_tunnel)
 
     # Act
@@ -104,10 +118,17 @@ async def test_kubernetes_client_closes_its_cached_http_session(monkeypatch: pyt
         pass
 
     # Assert
-    assert closed == ["tunnel", "http"]
+    assert closed == ["tunnel"]
+    assert await other.api() is api
 
     # Act
     await kubernetes.aclose()
+    await other.aclose()
 
     # Assert
+    assert closed == ["tunnel"]
+
+    # Shut down only after both borrowers have finished, then repeat disposal to check idempotency.
+    await kubernetes_client.dispose_clients()
+    await kubernetes_client.dispose_clients()
     assert closed == ["tunnel", "http"]

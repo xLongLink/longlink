@@ -168,7 +168,7 @@ async function download(path: string, filename: string): Promise<void> {
     await exchange(command);
 }
 
-/** Requests navigation inside the host's Solution route prefix. */
+/** Requests scoped Solution navigation or opens an HTTP(S) URL in a new tab during user activation. */
 function navigate(path: string): void {
     port.postMessage({ type: 'navigate', path });
 }

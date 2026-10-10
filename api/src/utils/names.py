@@ -5,7 +5,7 @@ from src.errors import ConflictError
 def slugify(value: str) -> str:
     """Convert a string to a URL-safe slug."""
 
-    slug = text_slugify(value, lowercase=True, regex_pattern=r"[^a-z0-9]+", separator="-").strip("-")
+    slug = text_slugify(value, regex_pattern=r"[^a-z0-9]+")
 
     # Keep generated slugs non-empty and within Platform limits.
     if not slug or len(slug) > 63:
