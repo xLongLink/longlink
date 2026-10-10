@@ -1,89 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
+import { createContext, useContext } from 'react';
+import { stoneIconComponents } from '@/lib/glyphs';
 import type { IconName } from 'lucide-react/dynamic';
 import { Icon as AstryxIcon } from '@astryxdesign/core/Icon';
-import { createContext, createElement, useContext, type ReactNode } from 'react';
-import {
-    X,
-    AlertTriangle,
-    ArrowDown,
-    ArrowUp,
-    ArrowUpDown,
-    Boxes,
-    Building2,
-    Calendar,
-    Check,
-    CheckCheck,
-    CheckCircle,
-    ChevronDown,
-    ChevronLeft,
-    ChevronRight,
-    ChevronsLeft,
-    ChevronsRight,
-    Clock,
-    Columns,
-    Copy,
-    Database,
-    ExternalLink,
-    EyeOff,
-    Filter,
-    HardDrive,
-    Info,
-    Menu,
-    Mic,
-    MoreHorizontal,
-    RefreshCw,
-    ScrollText,
-    Search,
-    Square,
-    Trash2,
-    UserRound,
-    Users,
-    Wrench,
-    XCircle,
-    createLucideIcon,
-    type LucideIcon,
-    type LucideIconData,
-} from 'lucide-react';
-
-const stoneIconComponents = {
-    close: X,
-    chevronDown: ChevronDown,
-    chevronLeft: ChevronLeft,
-    chevronRight: ChevronRight,
-    chevronsLeft: ChevronsLeft,
-    chevronsRight: ChevronsRight,
-    check: Check,
-    success: CheckCircle,
-    error: XCircle,
-    warning: AlertTriangle,
-    info: Info,
-    calendar: Calendar,
-    clock: Clock,
-    externalLink: ExternalLink,
-    menu: Menu,
-    moreHorizontal: MoreHorizontal,
-    refresh: RefreshCw,
-    search: Search,
-    arrowUp: ArrowUp,
-    arrowDown: ArrowDown,
-    arrowsUpDown: ArrowUpDown,
-    boxes: Boxes,
-    building2: Building2,
-    database: Database,
-    funnel: Filter,
-    eyeSlash: EyeOff,
-    viewColumns: Columns,
-    copy: Copy,
-    checkDouble: CheckCheck,
-    wrench: Wrench,
-    stop: Square,
-    microphone: Mic,
-    logs: ScrollText,
-    trash: Trash2,
-    hardDrive: HardDrive,
-    userRound: UserRound,
-    users: Users,
-} satisfies Record<string, LucideIcon>;
+import { AlertTriangle, createLucideIcon, type LucideIconData } from 'lucide-react';
 
 export type StoneIconName = keyof typeof stoneIconComponents | IconName | `lucide:${IconName}`;
 
@@ -92,14 +12,6 @@ export const IconRequestContext = createContext<((name: string) => Promise<Lucid
 
 // A blank Lucide glyph retains the requested Astryx dimensions while an icon loads.
 const emptyIcon = createLucideIcon({ size: 24, node: [] });
-
-// SAFETY: Every registry entry is created from the bundled component map without filtering keys.
-export const stoneIconRegistry = Object.fromEntries(
-    Object.entries(stoneIconComponents).map(([name, IconComponent]) => [
-        name,
-        createElement(IconComponent, { 'aria-hidden': true, size: '1em' }),
-    ])
-) as Record<keyof typeof stoneIconComponents, ReactNode>;
 
 /** Renders any Lucide icon by its kebab-case name. Existing LongLink aliases remain immediate; other icons load on demand and are cached without blocking the View or changing icon dimensions. */
 export function Icon({

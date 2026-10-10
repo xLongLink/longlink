@@ -363,12 +363,14 @@
 
     - name: defaultIsOpen
       type: boolean
-      description: Default open state (uncontrolled).
+      description: Default open state for standalone uncontrolled usage. Ignored when
+        value binds the item to a surrounding CollapsibleGroup.
       default: true
 
     - name: isOpen
       type: boolean
-      description: Controlled open state.
+      description: Controlled open state for standalone usage. Ignored when value
+        binds the item to a surrounding CollapsibleGroup.
 
     - name: isDisabled
       type: boolean
@@ -379,7 +381,8 @@
 
     - name: onOpenChange
       type: "(isOpen: boolean) => void"
-      description: Callback invoked when the open state changes.
+      description: Callback invoked when standalone open state changes. A surrounding
+        CollapsibleGroup owns grouped state and calls its onChange instead.
 
 
 - name: Currency
@@ -584,18 +587,21 @@
       type: '{ label: string; variant?: "primary" | "secondary" | "ghost" |
         "destructive"; size?: "sm" | "md" | "lg"; isDisabled?: boolean; }'
       description: Props for the trigger button (Button props except onClick).
+        Mutually exclusive with `trigger`.
       default:
         label: Menu
 
     - name: items
       type: DropdownMenuOption[]
       description: "Array of menu entries. Each entry is one of: an action item
-        `{label, onClick?, icon?, description?, endContent?, isDisabled?,
-        variant?, hasCloseOnSelect?, id?}` (variant `\"destructive\"` renders it
-        in the error color; `endContent` holds trailing content such as a
-        keyboard-shortcut hint; `id` is the row's stable React key, needed only
-        when the array reorders or filters), a divider `{type: \"divider\"}`, or
-        a section `{type: \"section\", title?, id?, items: [...action items]}`."
+        `{label, onClick?, href?, target?, rel?, icon?, description?,
+        endContent?, isDisabled?, variant?, hasCloseOnSelect?, id?}` (`href`
+        makes the row a real link, so a modified click keeps the browser's
+        meaning; variant `\"destructive\"` renders it in the error color;
+        `endContent` holds trailing content such as a keyboard-shortcut hint;
+        `id` is the row's stable React key, needed only when the array reorders
+        or filters), a divider `{type: \"divider\"}`, or a section `{type:
+        \"section\", title?, id?, items: [...action items]}`."
 
     - name: isMenuOpen
       type: boolean
@@ -1136,7 +1142,12 @@
     - name: options
       type: SelectorOptionType[]
       description: "Array of items: strings, objects with value/label/icon/disabled,
-        dividers, or sections."
+        dividers, or sections. An option may carry `action`: one node — an
+        IconButton, a Button, a menu trigger — the caller renders and names.
+        Once any option does, the popup is a grid whose rows pair the option
+        with its action: Up/Down move rows, the inline-end arrow reaches the
+        action, Enter fires it, pointer and touch press it directly, and
+        pressing it never changes the selection."
 
     - name: value
       type: string[]
@@ -1148,7 +1159,11 @@
 
     - name: onChange
       type: "(value: string[]) => void"
-      description: Callback fired when the selection changes.
+      description: 'Called when the selection changes. A creation (hasCreate) arrives
+        with `{type: "create", query}` as the second argument and the query
+        appended to value; the caller adds the matching option in that same
+        update. Every other change passes no descriptor, so a one-argument
+        handler keeps working.'
 
     - name: placeholder
       type: string
@@ -1422,7 +1437,10 @@
       type: string | number
       description: Width of the field (number = pixels, string used as-is, e.g.
         "100%"). Sizes the whole field (label, control, and status) so they stay
-        aligned.
+        aligned. Without a width the field follows its displayed value and can
+        shrink with its row (the value truncates) instead of overflowing it; use
+        `<HStack wrap="wrap">` for filter bars so selectors move to a second
+        line on phones.
 
     - name: options
       type: SelectorOptionType[]
@@ -1782,9 +1800,12 @@
         renderCell?}. The `header` field sets the column heading text. If
         omitted, columns are auto-generated from data object keys. The `width`
         field is typed as `ColumnWidth` (not a number); use `proportional(n)` or
-        `pixel(n)` helpers imported from `@astryxdesign/core/Table`. Example:
-        `width: pixel(120)` for 120px fixed, `width: proportional(1)` for flex
-        distribution."
+        `pixel(n)` helpers imported from `@astryxdesign/core/Table`. Omitting
+        `width` keeps an equal flexible share with a compact 60px readability
+        floor. To give one column a different floor, set `width: proportional(1,
+        {minWidth: 80})`; its `minWidth` replaces the 60px floor for that
+        column. Example: `width: pixel(120)` for 120px fixed, `width:
+        proportional(1)` for a flexible column with a 120px default minimum."
 
 
 - name: Tabs
@@ -1976,7 +1997,9 @@
       type: string | number
       description: Width of the field (number = pixels, string used as-is, e.g.
         "100%"). Sizes the whole field (label, control, and status) so they stay
-        aligned.
+        aligned. Without a width the field can shrink with its row, so a filter
+        bar never overflows; use `<HStack wrap="wrap">` when the controls should
+        move to a second line instead.
 
     - name: value
       type: string

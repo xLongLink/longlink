@@ -1,7 +1,8 @@
+import * as menus from './menus';
 import { useState } from 'react';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Icon, type StoneIconName } from './Icon';
-import type { DropdownMenuOption } from './DropdownMenu';
+import type { DropdownMenuOption } from './menus';
 import { MoreMenu as AstryxMoreMenu } from '@astryxdesign/core/MoreMenu';
 
 /** Opens additional actions without exposing popup geometry or presentation modes. */
@@ -22,6 +23,7 @@ export function MoreMenu(props: {
         <Stack as="span" hidden={props.hidden} className={props.hidden ? 'hidden!' : 'contents!'}>
             <AstryxMoreMenu
                 {...props}
+                items={menus.icons(props.items)}
                 className={props.hidden ? 'hidden!' : undefined}
                 isMenuOpen={open && !props.hidden}
                 onOpenChange={(isOpen) => {
