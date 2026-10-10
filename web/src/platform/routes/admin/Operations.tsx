@@ -18,7 +18,7 @@ const kinds = {
     'organization.delete': 'Organization deletion',
 };
 
-const statuses = { scheduled: 'Scheduled', active: 'Active', completed: 'Completed', failed: 'Failed' };
+const statuses = { scheduled: 'Planned', active: 'Active', completed: 'Completed', failed: 'Failed' };
 
 /** Lists operation history and exposes its metadata. */
 export default function Operations() {
@@ -51,9 +51,8 @@ export default function Operations() {
                                 <Stack align="start">
                                     <Text>{kinds[row.kind]}</Text>
                                     <Text type="supporting">
-                                        {row.finished_at
-                                            ? `${statuses[row.status]} - ${row.finished_at}`
-                                            : `Started - ${row.created_at}`}
+                                        {statuses[row.status]}
+                                        {row.finished_at && ` - ${row.finished_at}`}
                                     </Text>
                                 </Stack>
                             ),
