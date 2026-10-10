@@ -10,7 +10,7 @@ from sqlalchemy.exc import OperationalError
 from longlink.database import base as database_base
 from longlink.database import urls as database_urls
 from sqlalchemy.engine import URL, make_url
-from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncConnection, create_async_engine
 from longlink.utils.settings import Envs
 
 
@@ -260,3 +260,81 @@ async def test_session_disposes_sqlite_engine_after_schema_initialization_failur
     finally:
         # Release resources even if the disposal regression assertions fail.
         await engine.dispose()
+
+
+async def test_session_disposes_sqlite_engine_after_initialization_timeout(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Clean up cancelled schema initialization and allow the same database to retry."""
+
+    # Arrange
+    engine = database_base.create_engine(Envs(ENV="testing"))
+    original_pool = engine.pool
+    closed_connections: list[object] = []
+    schema_started = asyncio.Event()
+    schema_release = asyncio.Event()
+    schema_connection: AsyncConnection | None = None
+    body_entered = False
+    initialization_timeout = asyncio.timeout(None)
+    database = database_base.Database(Envs(ENV="testing"))
+
+    def record_connection_close(connection: object, _record: object) -> None:
+        """Observe real SQLite connection closure without replacing cleanup."""
+
+        # Record disposal through SQLAlchemy's real pool event.
+        closed_connections.append(connection)
+
+    async def suspend_schema_creation(connection: AsyncConnection, create_all: object) -> None:
+        """Suspend only schema creation after the real connection has opened."""
+
+        # Keep the transaction and all cancellation cleanup real.
+        nonlocal schema_connection
+        assert create_all == SQLModel.metadata.create_all
+        schema_connection = connection
+        schema_started.set()
+        await schema_release.wait()
+
+    async def open_session() -> None:
+        """Apply a real timeout to database initialization before yielding a session."""
+
+        # Leave the deadline unarmed until initialization reaches the suspension.
+        nonlocal body_entered
+        async with initialization_timeout:
+            async with database.session():
+                body_entered = True
+
+    event.listen(engine.sync_engine, "close", record_connection_close)
+
+    try:
+        # Act with a scoped suspension seam and a bounded diagnostic watchdog.
+        with monkeypatch.context() as suspended_initialization:
+            suspended_initialization.setattr(database_base, "create_engine", lambda _env: engine)
+            suspended_initialization.setattr(AsyncConnection, "run_sync", suspend_schema_creation)
+            task = asyncio.create_task(open_session())
+            try:
+                async with asyncio.timeout(5):
+                    await schema_started.wait()
+                    initialization_timeout.reschedule(asyncio.get_running_loop().time())
+                    with pytest.raises(TimeoutError) as error:
+                        await task
+
+                # Assert cleanup happened before any test finalizer could dispose the engine.
+                assert initialization_timeout.expired()
+                assert isinstance(error.value.__cause__, asyncio.CancelledError)
+                assert not body_entered
+                assert schema_connection is not None
+                assert schema_connection.closed
+                assert len(closed_connections) == 1
+                assert engine.pool is not original_pool
+            finally:
+                # Reap the initialization task even if a diagnostic assertion fails.
+                task.cancel()
+                await asyncio.gather(task, return_exceptions=True)
+
+        # Restore schema creation and prove the same Database can initialize and query.
+        async with database.session() as database_session:
+            assert await database_session.scalar(text("SELECT 1")) == 1
+    finally:
+        # Release failed and recovered engines even when the test fails.
+        await engine.dispose()
+        await database.dispose()
