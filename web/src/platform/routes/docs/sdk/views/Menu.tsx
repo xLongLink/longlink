@@ -8,17 +8,7 @@ export default function MenuPage() {
     return (
         <ViewLayout
             name="Menu"
-            reference={{
-                introduction:
-                    'Menu is a LongLink component that combines section navigation with the selected section’s content. It uses Astryx SideNav internally.',
-                practices: [
-                    {
-                        guidance: true,
-                        description:
-                            'Use unique labels for items. Labels become URL fragments with spaces and punctuation replaced by hyphens. Put nested items inside MenuSubSection.',
-                    },
-                ],
-            }}
+            introduction="Menu is a LongLink component that combines section navigation with the selected section’s content. It uses Astryx SideNav internally."
             examples={[
                 {
                     title: 'Menu',

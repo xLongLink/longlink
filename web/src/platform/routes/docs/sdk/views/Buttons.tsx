@@ -3,20 +3,7 @@ import ViewLayout from './ViewLayout';
 import { Text } from '@astryxdesign/core/Text';
 import { Button } from '@/components/ui/Button';
 import { Stack } from '@astryxdesign/core/Stack';
-import references from '@/lib/generated/components.json';
 import { ButtonGroup } from '@/components/ui/ButtonGroup';
-
-// Preserve the narrower LongLink button contract rather than upstream-only props.
-const upstream = references.find((reference) => reference.name === 'Button');
-
-if (!upstream) throw new Error('Missing Button documentation reference');
-
-// Keep page-specific guidance separate from the generated Button and ButtonGroup contracts.
-const reference = {
-    introduction:
-        'Button triggers an action, submits a form, or opens a link. Buttons are flat. Use onClick for actions: loading feedback and duplicate-click prevention are automatic while an asynchronous handler is pending.',
-    practices: upstream.practices.filter((practice) => !practice.description.includes('icon-only')),
-};
 
 /** Documents buttons and grouped button actions in LongLink Views. */
 export default function ButtonsPage() {
@@ -24,7 +11,7 @@ export default function ButtonsPage() {
     return (
         <ViewLayout
             name="Button"
-            reference={reference}
+            introduction="Button triggers an action, submits a form, or opens a link. Buttons are flat. Use onClick for actions: loading feedback and duplicate-click prevention are automatic while an asynchronous handler is pending."
             examples={[
                 {
                     title: 'Button',

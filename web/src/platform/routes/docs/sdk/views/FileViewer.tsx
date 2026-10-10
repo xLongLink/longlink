@@ -8,17 +8,7 @@ export default function FileViewerPage() {
     return (
         <ViewLayout
             name="FileViewer"
-            reference={{
-                introduction:
-                    'FileViewer previews images and downloads attachments through the scoped Solution API. Other documents, including PDFs, are downloaded rather than executed inside the View.',
-                practices: [
-                    {
-                        guidance: true,
-                        description:
-                            'Set title to the attachment filename and src to its Solution endpoint. Downloads and previews are bounded to 2,000,000 bytes. Unsupported image types use the download action.',
-                    },
-                ],
-            }}
+            introduction="FileViewer previews images and downloads attachments through the scoped Solution API. Other documents, including PDFs, are downloaded rather than executed inside the View."
             examples={[
                 {
                     title: 'FileViewer',

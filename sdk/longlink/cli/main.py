@@ -5,7 +5,6 @@ from longlink.cli.dev import dev_command
 from longlink.cli.docs import docs_command
 from longlink.cli.init import init_command
 from longlink.cli.build import build_command
-from longlink.cli.errors import CliError
 from longlink.cli.migrate import migrate_command
 
 
@@ -19,7 +18,7 @@ def handle_errors[**Parameters](command: Callable[Parameters, None]) -> Callable
         # Preserve the established error text and exit code at the CLI boundary.
         try:
             command(*args, **kwargs)
-        except CliError as error:
+        except typer.TyperException as error:
             typer.echo(f"Error: {error}", err=True)
             raise typer.Exit(code=1) from error
 

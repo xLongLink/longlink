@@ -22,7 +22,7 @@ describe('shared View documentation layout', () => {
         vi.unstubAllGlobals();
     });
 
-    it.each(['', '?tab=unknown'])('defaults to examples for query %s', async (query) => {
+    it.each(['', '?tab=unknown', '?tab=best-practices'])('defaults to examples for query %s', async (query) => {
         // Render the shared owner rather than repeating shell assertions in individual pages.
         const output = await renderLayout(query);
 
@@ -32,18 +32,6 @@ describe('shared View documentation layout', () => {
         expect(output.querySelector('iframe')).toBeNull();
         expect(output.querySelector('#component-properties')).toBeNull();
         expect(output.querySelector('#component-best-practices')).toBeNull();
-    });
-
-    it('renders the URL-selected best-practices panel', async () => {
-        // Select a reference tab directly through its public URL.
-        const output = await renderLayout('?tab=best-practices');
-        const panel = output.querySelector('[role="tabpanel"]');
-
-        // The real reference table renders its content without mounting examples.
-        expect(panel?.id).toBe('component-best-practices');
-        expect(panel?.textContent).toContain('Do');
-        expect(panel?.textContent).toContain('Use a descriptive label');
-        expect(output.querySelector('[aria-label="Greeting preview"]')).toBeNull();
     });
 
     it('changes tabs without discarding other query parameters', async () => {
@@ -100,10 +88,7 @@ describe('shared View documentation layout', () => {
                     <Location />
                     <ViewLayout
                         name="Button"
-                        reference={{
-                            introduction: 'An authored action reference.',
-                            practices: [{ guidance: true, description: 'Use a descriptive label' }],
-                        }}
+                        introduction="An authored action reference."
                         examples={[
                             { title: 'Greeting', code: '<Text>Native preview</Text>', preview: <p>Native preview</p> },
                         ]}

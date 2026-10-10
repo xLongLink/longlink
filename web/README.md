@@ -10,7 +10,7 @@
 
 Frontend runtime, docs, and platform UI for LongLink.
 
-<br/>
+<br />
 
 ## Development
 

@@ -11,7 +11,6 @@ from longlink.shared import audit as shared_audit
 from longlink.shared import migrations as shared_migrations
 from sqlalchemy.engine import URL
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncConnection, create_async_engine
-from longlink.shared.migrations import migrate_database, migration_config
 
 
 @pytest.fixture
@@ -43,7 +42,7 @@ def test_migration_config_rejects_non_async_postgresql_urls() -> None:
 
     # Act and assert
     with pytest.raises(ValueError, match="Shared migrations require an async PostgreSQL database URL"):
-        migration_config("postgresql://db/longlink")
+        shared_migrations.migration_config("postgresql://db/longlink")
 
 
 def test_migration_config_preserves_percent_encoded_credentials() -> None:
@@ -53,7 +52,7 @@ def test_migration_config_preserves_percent_encoded_credentials() -> None:
     database_url = "postgresql+asyncpg://control:se%25cret@db/longlink"
 
     # Act
-    config = migration_config(database_url)
+    config = shared_migrations.migration_config(database_url)
 
     # Assert
     script_location = config.get_main_option("script_location")
@@ -120,8 +119,8 @@ async def test_shared_migrations_isolate_schema_and_sync_user_profiles(
         )
 
     # Exercise migration idempotency through the SDK-owned async entrypoint.
-    await migrate_database(postgresql_url)
-    await migrate_database(postgresql_url)
+    await shared_migrations.migrate_database(postgresql_url)
+    await shared_migrations.migrate_database(postgresql_url)
 
     # Verify both SDK-owned tables exist only in the shared schema.
     async with postgres_engine.begin() as connection:
@@ -184,7 +183,7 @@ def test_shared_migration_environment_emits_offline_schema_bootstrap() -> None:
 
     # Arrange
     output = StringIO()
-    config = migration_config("postgresql+asyncpg://db/organization")
+    config = shared_migrations.migration_config("postgresql+asyncpg://db/organization")
     config.output_buffer = output
 
     # Act
@@ -204,7 +203,7 @@ def test_shared_migration_environment_rejects_missing_online_url() -> None:
     """Require the control plane to provide an organization database URL."""
 
     # Arrange
-    config = migration_config("postgresql+asyncpg://db/organization")
+    config = shared_migrations.migration_config("postgresql+asyncpg://db/organization")
     config.remove_main_option("sqlalchemy.url")
 
     # Act and assert
@@ -217,7 +216,7 @@ def test_initial_shared_migration_downgrade_drops_only_audit_table() -> None:
 
     # Arrange
     output = StringIO()
-    config = migration_config("postgresql+asyncpg://db/organization")
+    config = shared_migrations.migration_config("postgresql+asyncpg://db/organization")
     config.output_buffer = output
 
     # Act

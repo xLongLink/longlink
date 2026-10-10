@@ -14,11 +14,7 @@ export default function FunctionsPage() {
     return (
         <ViewLayout
             name="Functions"
-            reference={{
-                introduction:
-                    'LongLink supplies these functions directly in Views, without imports. Requests and navigation are scoped to the current Solution.',
-                practices: [],
-            }}
+            introduction="LongLink supplies these functions directly in Views, without imports. Requests and navigation are scoped to the current Solution."
             toc={[{ id: 'functions', label: 'Functions', level: 2 }]}
         >
             <Heading id="functions" level={2}>
