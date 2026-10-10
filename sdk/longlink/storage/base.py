@@ -1,11 +1,20 @@
 import fsspec
 import weakref
+from uuid import uuid4
 from pathlib import PurePosixPath
 from contextlib import ExitStack
 from fsspec.spec import AbstractFileSystem
 from longlink.storage import tls
 from longlink.utils.settings import Envs
 from fsspec.implementations.dirfs import DirFileSystem
+
+
+def _remove_memory_directory(filesystem: AbstractFileSystem, directory: str) -> None:
+    """Remove only the in-memory directory owned by a collected testing filesystem."""
+
+    # A Solution may have already removed its storage root before runtime cleanup.
+    if filesystem.exists(directory):
+        filesystem.rm(directory, recursive=True)
 
 
 def create_fs(settings: Envs) -> AbstractFileSystem:
@@ -40,9 +49,22 @@ def create_fs(settings: Envs) -> AbstractFileSystem:
             )
             if certificate is not None:
                 weakref.finalize(filesystem, files.pop_all().close)
+    elif settings.ENV == "testing":
+        # fsspec memory storage is process-global, so each runtime owns a separate directory.
+        memory = fsspec.filesystem("memory")
+        directory = f"/longlink-testing-{uuid4()}"
+        memory.mkdir(directory)
+        filesystem = DirFileSystem(
+            path=directory,
+            fs=memory,
+            skip_instance_cache=True,
+        )
+
+        # Release only this namespace when its owning runtime filesystem is collected.
+        weakref.finalize(filesystem, _remove_memory_directory, memory, directory)
     else:
-        # Tests use memory storage while development keeps generated files locally inspectable.
-        filesystem = fsspec.filesystem("memory" if settings.ENV == "testing" else "file")
+        # Development keeps generated files locally inspectable.
+        filesystem = fsspec.filesystem("file")
 
     # Scope paths without letting the wrapper cache retain the backend and its CA file.
     if bucket_path is not None:
