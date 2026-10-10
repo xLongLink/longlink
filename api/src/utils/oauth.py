@@ -31,6 +31,14 @@ class OAuthIdentity:
     avatar: str
 
 
+def login_destination(value: str | None) -> str:
+    """Continue provider login only to first-party MCP approval, never an arbitrary callback."""
+
+    if value is not None and value.startswith("/mcp/authorize?") and len(value) <= 8192 and "\r" not in value and "\n" not in value:
+        return value
+    return "/user/organizations"
+
+
 def is_configured(provider: OAuthProvider) -> bool:
     """Return whether one OAuth provider has complete runtime credentials."""
 

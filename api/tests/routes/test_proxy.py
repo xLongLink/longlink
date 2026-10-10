@@ -343,7 +343,6 @@ async def test_solution_proxy_preserves_mcp_transport_metadata(
             "mcp-method": "tools/list",
             "mcp-name": "list_tools",
             "last-event-id": "caller-event",
-            "authorization": "Bearer must-not-reach-solution",
             "x-longlink-identity": "forged-identity",
         },
         json={"jsonrpc": "2.0", "id": 1, "method": "tools/list"},

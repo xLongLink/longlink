@@ -4,9 +4,10 @@ import contextlib
 from src import errors
 from fastapi import FastAPI, Request, Response
 from pathlib import Path
+from src.mcp import MCPMiddleware
 from longlink import errors as solution_errors
 from src.utils import jobs
-from src.routes import v1, branding
+from src.routes import v1, mcp, branding
 from src.kubernetes import client
 from collections.abc import Callable, Awaitable, AsyncGenerator
 from longlink.logger import ApiAccessFilter
@@ -115,6 +116,7 @@ async def prevent_authenticated_response_caching(
 
 
 app.add_middleware(FrontendMiddleware)
+app.add_middleware(MCPMiddleware)
 
 
 @app.middleware("http")
@@ -137,6 +139,7 @@ async def redirect_public_hostname(
 # Register the versioned Platform API after constructing the application.
 app.include_router(v1.router)
 app.include_router(branding.router)
+app.include_router(mcp.router)
 static_dir = Path(__file__).resolve().parent / "src" / ".static" / "web"
 if static_dir.exists():
     # Serve the prerendered home document before registering the generic SPA fallback.

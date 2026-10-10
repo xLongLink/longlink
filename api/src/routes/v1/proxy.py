@@ -2,7 +2,7 @@ import ssl
 import json
 import httpx2
 import asyncio
-from src import auth
+from src import mcp, auth
 from uuid import UUID
 from fastapi import Depends, Request, Response, APIRouter, HTTPException
 from longlink import identity
@@ -35,7 +35,7 @@ async def runtime_scope() -> AsyncIterator[AsyncExitStack]:
 async def proxy_solution_request(
     request: Request,
     solution_id: UUID,
-    user: auth.CurrentUser,
+    user: mcp.ProxyUser,
     session: auth.Session,
     path: str = "",
     runtime: AsyncExitStack = Depends(runtime_scope, scope="request"),
@@ -47,7 +47,7 @@ async def proxy_solution_request(
 
     required_role = SOLUTION_PROXY_METHOD_ROLES[request.method]
 
-    # Limit MCP transport metadata to the Solution's protocol endpoint.
+    # Preserve protocol metadata only on the scoped MCP transport, never ordinary Solution routes.
     is_mcp = path.rstrip("/") == "mcp"
 
     # Release the request snapshot before independent runtime transactions begin.
@@ -97,7 +97,7 @@ async def proxy_solution_request(
                 if content_type is not None:
                     headers["content-type"] = content_type
 
-                # Preserve protocol negotiation and session continuity, never caller credentials.
+                # Keep negotiated sessions intact without forwarding bearer tokens or browser credentials.
                 if is_mcp:
                     for name in ("accept", "mcp-session-id", "mcp-protocol-version", "mcp-method", "mcp-name", "last-event-id"):
                         value = request.headers.get(name)
@@ -129,7 +129,7 @@ async def proxy_solution_request(
         "x-content-type-options": "nosniff",
     }
 
-    # Return negotiated MCP metadata so clients can continue their initialized session.
+    # Return only explicitly allowed MCP negotiation metadata to the authenticated client.
     if is_mcp:
         for name in ("mcp-session-id", "mcp-protocol-version"):
             value = upstream.headers.get(name)

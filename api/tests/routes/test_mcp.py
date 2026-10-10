@@ -4,6 +4,7 @@ import pytest_asyncio
 from fastapi import Request
 from pathlib import Path
 from conftest import TEST_PASSWORD
+from longlink import app
 from factories import create_solution, create_organization
 from longlink.app import LongLink
 from longlink.database import audit
@@ -30,6 +31,12 @@ async def mcp_gateway(
         assert persisted is not None
         persisted.status = Status.running
         await session.commit()
+
+    # Supply a test-local frontend artifact without requiring an existing SDK build.
+    frontend = tmp_path / ".static" / "web" / "index.html"
+    frontend.parent.mkdir(parents=True)
+    frontend.write_text("<!doctype html><html></html>", encoding="utf-8")
+    monkeypatch.setattr(app, "ROOT", tmp_path)
 
     # The SDK discovers Solution sources from the current directory and process settings.
     (tmp_path / "src" / "views").mkdir(parents=True)
@@ -71,7 +78,7 @@ async def test_mcp_proxy_supports_session_initialization_discovery_and_invocatio
     # Arrange
     solution, sdk = mcp_gateway
     path = f"/api/v1/solutions/{solution.id}/proxy/mcp"
-    headers = {"accept": "application/json, text/event-stream", "authorization": "Bearer must-not-reach-solution"}
+    headers = {"accept": "application/json, text/event-stream"}
 
     # Act
     login = await client.post("/api/v1/auth/password/login", json={"email": users[0].email, "password": TEST_PASSWORD})

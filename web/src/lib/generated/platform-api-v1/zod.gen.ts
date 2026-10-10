@@ -3,6 +3,18 @@
 import * as z from 'zod';
 
 /**
+ * AccessToken
+ *
+ * Return a short-lived opaque MCP access credential.
+ */
+export const zAccessToken = z.object({
+    scope: z.literal('mcp').optional().default('mcp'),
+    token_type: z.literal('Bearer').optional().default('Bearer'),
+    expires_in: z.int(),
+    access_token: z.string()
+});
+
+/**
  * AdminUserSummary
  *
  * Represent a user with its creation time for platform administrators.
@@ -17,6 +29,44 @@ export const zAdminUserSummary = z.object({
 });
 
 /**
+ * Approval
+ *
+ * Bind explicit browser approval to the validated authorization request.
+ */
+export const zApproval = z.object({
+    state: z.string().min(1).max(1024),
+    scope: z.literal('mcp').optional().default('mcp'),
+    resource: z.string().max(2048),
+    client_id: z.uuid(),
+    redirect_uri: z.string().max(2048),
+    response_type: z.literal('code'),
+    code_challenge: z.string().regex(/^[A-Za-z0-9_-]{43}$/),
+    code_challenge_method: z.literal('S256'),
+    approve: z.boolean()
+});
+
+/**
+ * AuthorizationRedirect
+ *
+ * Return a validated client redirect after a browser consent decision.
+ */
+export const zAuthorizationRedirect = z.object({
+    url: z.string()
+});
+
+/**
+ * Body_exchange_api_v1_mcp_token_post
+ */
+export const zBodyExchangeApiV1McpTokenPost = z.object({
+    code: z.string().max(128),
+    resource: z.string().max(2048),
+    client_id: z.uuid(),
+    redirect_uri: z.string().max(2048),
+    code_verifier: z.string().regex(/^[A-Za-z0-9._~-]{43,128}$/),
+    grant_type: z.string().max(64)
+});
+
+/**
  * Body_request_password_reset_api_v1_auth_forgot_password_post
  */
 export const zBodyRequestPasswordResetApiV1AuthForgotPasswordPost = z.object({
@@ -28,6 +78,27 @@ export const zBodyRequestPasswordResetApiV1AuthForgotPasswordPost = z.object({
  */
 export const zBodyRequestRegistrationApiV1AuthRegisterPost = z.object({
     email: z.email()
+});
+
+/**
+ * Body_revoke_api_v1_mcp_revoke_post
+ */
+export const zBodyRevokeApiV1McpRevokePost = z.object({
+    token: z.string().max(128),
+    client_id: z.uuid()
+});
+
+/**
+ * ClientRegistration
+ *
+ * Negotiate public authorization-code clients with fixed safe callbacks.
+ */
+export const zClientRegistration = z.object({
+    client_name: z.string().min(1).max(128).optional().default('MCP client'),
+    grant_types: z.array(z.enum(['authorization_code', 'refresh_token'])).min(1).max(2).optional().default(['authorization_code']),
+    redirect_uris: z.array(z.string()).min(1).max(10),
+    response_types: z.tuple([z.literal('code')]).optional().default(['code']),
+    token_endpoint_auth_method: z.literal('none').optional().default('none')
 });
 
 /**
@@ -53,6 +124,17 @@ export const zComputeRegistryResponse = z.object({
     gateway_url: z.string(),
     database_storage_class: z.string(),
     storage_endpoint: z.string()
+});
+
+/**
+ * Consent
+ *
+ * Describe the actual client callback and selected Solution to the user.
+ */
+export const zConsent = z.object({
+    client_name: z.string(),
+    redirect_uri: z.string(),
+    solution_name: z.string()
 });
 
 /**
@@ -103,6 +185,16 @@ export const zLongLinkMetadata = z.object({
 export const zOAuthAvailability = z.object({
     github: z.boolean(),
     google: z.boolean()
+});
+
+/**
+ * OAuthFailure
+ *
+ * Describe OAuth errors without returning submitted credentials.
+ */
+export const zOAuthFailure = z.object({
+    error: z.string(),
+    error_description: z.string()
 });
 
 /**
@@ -264,6 +356,20 @@ export const zPasswordResetComplete = z.object({
 });
 
 /**
+ * RegisteredClient
+ *
+ * Return public registration metadata, never a confidential client credential.
+ */
+export const zRegisteredClient = z.object({
+    client_name: z.string().min(1).max(128).optional().default('MCP client'),
+    grant_types: z.tuple([z.literal('authorization_code')]).optional().default(['authorization_code']),
+    redirect_uris: z.array(z.string()).min(1).max(10),
+    response_types: z.tuple([z.literal('code')]).optional().default(['code']),
+    token_endpoint_auth_method: z.literal('none').optional().default('none'),
+    client_id: z.uuid()
+});
+
+/**
  * RegistrationComplete
  *
  * Validate profile and password setup after email authentication.
@@ -292,6 +398,36 @@ export const zRegistryResponse = z.object({
     host: z.string(),
     provider: z.literal('ghcr'),
     username: z.string()
+});
+
+/**
+ * ResourceMetadata
+ *
+ * Publish RFC 9728 resource discovery for one Solution endpoint.
+ */
+export const zResourceMetadata = z.object({
+    resource: z.string(),
+    scopes_supported: z.array(z.string()),
+    authorization_servers: z.array(z.string()),
+    bearer_methods_supported: z.array(z.string()).optional().default(['header'])
+});
+
+/**
+ * ServerMetadata
+ *
+ * Publish the supported public-client OAuth authorization flow.
+ */
+export const zServerMetadata = z.object({
+    issuer: z.string(),
+    token_endpoint: z.string(),
+    scopes_supported: z.array(z.string()),
+    revocation_endpoint: z.string(),
+    grant_types_supported: z.array(z.string()),
+    registration_endpoint: z.string(),
+    authorization_endpoint: z.string(),
+    response_types_supported: z.array(z.string()),
+    code_challenge_methods_supported: z.array(z.string()),
+    token_endpoint_auth_methods_supported: z.array(z.string())
 });
 
 /**
@@ -417,6 +553,18 @@ export const zTokenPayload = z.object({
 });
 
 /**
+ * TokenSummary
+ *
+ * Expose revocation handles without access credentials or hashes.
+ */
+export const zTokenSummary = z.object({
+    id: z.uuid(),
+    client_id: z.uuid(),
+    expires_at: z.iso.datetime(),
+    solution_id: z.uuid()
+});
+
+/**
  * UserIdentity
  *
  * Represent a user identity in nested API responses.
@@ -480,6 +628,24 @@ export const zUserSummary = z.object({
 export const zUserUpdate = z.object({
     name: z.string().min(1).max(255).nullish(),
     avatar: z.string().max(2048).nullish()
+});
+
+/**
+ * ValidationError
+ */
+export const zValidationError = z.object({
+    loc: z.array(z.union([z.string(), z.int()])),
+    msg: z.string(),
+    type: z.string(),
+    input: z.unknown().optional(),
+    ctx: z.record(z.string(), z.unknown()).optional()
+});
+
+/**
+ * HTTPValidationError
+ */
+export const zHttpValidationError = z.object({
+    detail: z.array(zValidationError).optional()
 });
 
 /**
