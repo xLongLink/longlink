@@ -4,7 +4,7 @@ import { createContext, useContext, type ReactNode } from 'react';
 // The sandbox supplies a host navigation capability; native previews use ordinary links.
 export const LinkNavigationContext = createContext<((path: string) => void) | null>(null);
 
-/** Displays a destination without granting a View top-level browser navigation. */
+/** Navigates within the Solution or opens an external HTTP(S) URL in a new tab. */
 export function Link({ to, children }: { to: string; children?: ReactNode }) {
     const navigate = useContext(LinkNavigationContext);
 

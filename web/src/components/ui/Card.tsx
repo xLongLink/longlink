@@ -41,9 +41,9 @@ type CardProps = {
     label?: string;
     /** Makes the card clickable when its surface is activated; nested controls act independently. */
     onClick?: (event: MouseEvent<HTMLElement>) => void;
-    /** Makes the card a navigation target when no selection callback is supplied. */
+    /** Solution-relative destination or HTTP(S) URL to open in a new tab when no selection callback is supplied. */
     href?: string;
-    /** Native link target; isolated Views always navigate in the host's current Solution. */
+    /** Native link target; isolated Views use the current Solution for relative paths and a new tab for HTTP(S) URLs. */
     target?: string;
     /** Disables activation of an interactive card. */
     isDisabled?: boolean;
