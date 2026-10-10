@@ -71,7 +71,11 @@ describe('shared View documentation layout', () => {
     /** Mounts the real shared layout with a small authored reference and real routing. */
     async function renderLayout(
         query: string,
-        overrides: Partial<ComponentProps<typeof ViewLayout>> = {}
+        props: ComponentProps<typeof ViewLayout> = {
+            name: 'Button',
+            introduction: 'An authored action reference.',
+            examples: [{ title: 'Greeting', code: '<Text>Native preview</Text>', preview: <p>Native preview</p> }],
+        }
     ): Promise<HTMLDivElement> {
         // Own each render and its cleanup within this suite.
         const output = document.createElement('div');
@@ -86,14 +90,7 @@ describe('shared View documentation layout', () => {
             mountedRoot.render(
                 <MemoryRouter initialEntries={[`/docs/sdk/views/buttons/${query}`]}>
                     <Location />
-                    <ViewLayout
-                        name="Button"
-                        introduction="An authored action reference."
-                        examples={[
-                            { title: 'Greeting', code: '<Text>Native preview</Text>', preview: <p>Native preview</p> },
-                        ]}
-                        {...overrides}
-                    />
+                    <ViewLayout {...props} />
                 </MemoryRouter>
             );
         });

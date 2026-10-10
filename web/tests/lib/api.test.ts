@@ -7,39 +7,27 @@ afterEach(() => {
 });
 
 describe('api error mapping', () => {
-    it('returns the server detail message with status and url', async () => {
-        // Arrange
-        vi.stubGlobal('fetch', async () => Response.json({ detail: 'Name too short' }, { status: 422 }));
-
-        // Act
-        const request = api.get('https://api.example/organizations');
-
-        // Assert
-        await expect(request).rejects.toBeInstanceOf(ApiError);
-        await expect(request).rejects.toMatchObject({
+    it.each([
+        {
+            name: 'returns the server detail message with status and url',
+            detail: 'Name too short',
             message: 'Name too short',
-            status: 422,
-            url: 'https://api.example/organizations',
-        });
-    });
-
-    it('reports validation locations and messages without submitted values or error context', async () => {
-        // Arrange
-        vi.stubGlobal('fetch', async () =>
-            Response.json(
+        },
+        {
+            name: 'reports validation locations and messages without submitted values or error context',
+            detail: [
                 {
-                    detail: [
-                        {
-                            loc: ['body', 'envs', 'API_KEY'],
-                            msg: 'Invalid API key',
-                            input: 'submitted-secret',
-                            ctx: { error: 'sensitive internal diagnostic' },
-                        },
-                    ],
+                    loc: ['body', 'envs', 'API_KEY'],
+                    msg: 'Invalid API key',
+                    input: 'submitted-secret',
+                    ctx: { error: 'sensitive internal diagnostic' },
                 },
-                { status: 422 }
-            )
-        );
+            ],
+            message: 'envs.API_KEY: Invalid API key',
+        },
+    ])('$name', async ({ detail, message }) => {
+        // Arrange
+        vi.stubGlobal('fetch', async () => Response.json({ detail }, { status: 422 }));
 
         // Act
         const request = api.get('https://api.example/organizations');
@@ -47,7 +35,7 @@ describe('api error mapping', () => {
         // Assert
         await expect(request).rejects.toBeInstanceOf(ApiError);
         await expect(request).rejects.toMatchObject({
-            message: 'envs.API_KEY: Invalid API key',
+            message,
             status: 422,
             url: 'https://api.example/organizations',
         });
