@@ -58,7 +58,7 @@
         "@types/react-dom": "^19.3.0",
         "eslint-plugin-perfectionist": "^5.12.1",
         "happy-dom": "^21.0.1",
-        "prettier": "^3.9.9",
+        "prettier": "^3.9.10",
         "tailwindcss": "^4.3.3",
         "typescript": "5.9.3",
         "vite": "npm:@voidzero-dev/vite-plus-core@0.3.1",
