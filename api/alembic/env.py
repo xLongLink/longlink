@@ -3,6 +3,7 @@ import logging.config
 from alembic import context
 from src.utils import urls
 from sqlalchemy import Enum, pool
+from src.database import rotation
 from src.environments import env
 from sqlalchemy.engine import Connection
 from src.database.models import registry
@@ -48,6 +49,10 @@ def run_migrations_offline() -> None:
         include_name=include_name,
     )
 
+    # Rotation requires live ciphertext and cannot be represented by an offline SQL script.
+    if env.OLD_ENCRYPTION_KEY is not None and context.get_context().opts.get("destination_rev") == "head":
+        raise RuntimeError("Encryption key rotation requires online alembic upgrade head; --sql is not supported")
+
     # Emit all pending migrations within one Alembic transaction.
     with context.begin_transaction():
         context.run_migrations()
@@ -78,9 +83,14 @@ def run_migrations_online() -> None:
             with context.begin_transaction():
                 context.run_migrations()
 
+                # Rotate only upgrades to head, including runs with no pending schema revisions.
+                if env.OLD_ENCRYPTION_KEY is not None and context.get_context().opts.get("destination_rev") == "head":
+                    rotated = rotation.rotate(sync_connection, target_metadata, env.OLD_ENCRYPTION_KEY, env.ENCRYPTION_KEY)
+                    logging.getLogger("alembic").info("Rotated %s encrypted credential values", rotated)
+
         try:
             # Run synchronous Alembic operations through the async connection.
-            async with connectable.connect() as connection:
+            async with connectable.begin() as connection:
                 await connection.run_sync(do_run_migrations)
         finally:
             # Release engine resources after every migration attempt.
