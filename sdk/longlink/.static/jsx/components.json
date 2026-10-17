@@ -2431,6 +2431,11 @@
                     "name": "Step.description",
                     "type": "string",
                     "description": "Supporting text displayed below the step label."
+                },
+                {
+                    "name": "Step.actions",
+                    "type": "ReactNode",
+                    "description": "Right-aligned controls for this step in vertical steppers; using them never activates the step. Compact horizontal steppers hide them."
                 }
             ]
         },
