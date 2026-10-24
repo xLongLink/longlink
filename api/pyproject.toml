@@ -31,7 +31,7 @@ dependencies = [
     'sqlalchemy>=2.0.51',
     'sqlalchemy-utils>=0.43.0',
     'sqlmodel>=0.0.45',
-    'stripe[async]>=14,<15',
+    'stripe[async]>=14,<17',
     'kr8s>=0.20.15',
     'longlink',
     'uvicorn>=0.52.1',
