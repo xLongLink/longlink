@@ -1,0 +1,6 @@
+[submodule "ext/finance"]
+	path = ext/finance
+	url = https://github.com/xLongLink/finance.git
+[submodule "ext/inventory"]
+	path = ext/inventory
+	url = https://github.com/xLongLink/inventory.git
