@@ -10,6 +10,8 @@ export type AppearanceMessage = z.output<typeof appearanceMessageSchema>;
 // Allow the Platform's 120-second Solution proxy timeout to finish, including cold starts.
 export const REQUEST_TIMEOUT = 130_000;
 
+export const MAX_MODAL_DEPTH = 8;
+
 export const parametersSchema = z.record(z.string(), z.string());
 
 export const requestSchema = z
@@ -94,6 +96,7 @@ export const commandSchema = z.discriminatedUnion('type', [
     requestSchema,
     // Only bounded dimensions cross the sandbox boundary; the host owns page scrolling.
     z.object({ type: z.literal('resize'), height: z.number().int().min(1).max(1_000_000) }).strict(),
+    z.object({ type: z.literal('modal'), depth: z.number().int().min(0).max(MAX_MODAL_DEPTH) }).strict(),
     z.object({ type: z.literal('navigate'), path: z.string().min(1), newTab: z.boolean().optional() }).strict(),
     downloadSchema,
     iconSchema,

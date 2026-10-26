@@ -2,8 +2,11 @@ import type { Spacing } from './types';
 import type { ReactNode } from 'react';
 import { DialogClose } from './DialogClose';
 import { Stack } from '@astryxdesign/core/Stack';
+import { createContext, use, useEffect } from 'react';
 import { DialogHeader } from '@astryxdesign/core/Dialog';
 import { Dialog as AstryxDialog } from '@astryxdesign/core/Dialog';
+
+export const DialogActivityContext = createContext<((open: boolean) => void) | null>(null);
 
 /** Displays an accessible modal that closes with Escape or its close button, not backdrop clicks. */
 export function Dialog(props: {
@@ -15,6 +18,16 @@ export function Dialog(props: {
     /** Spacing between the title and content; defaults to 3. */
     gap?: Spacing;
 }) {
+    const activity = use(DialogActivityContext);
+
+    // Let an isolated runtime extend the backdrop without moving the native dialog out of its document.
+    useEffect(() => {
+        if (!props.isOpen || !activity) return;
+        activity(true);
+
+        return () => activity(false);
+    }, [props.isOpen, activity]);
+
     // Keep the header fixed while bounding the content to the available viewport height.
     return (
         <AstryxDialog
@@ -35,6 +48,7 @@ export function Dialog(props: {
                 {props.title && <DialogHeader title={props.title} className="p-4 pe-12" />}
                 <Stack
                     minHeight={0}
+                    paddingInline={4}
                     paddingBlockStart={props.title ? (props.gap ?? 3) : 0}
                     isScrollable
                     className="flex-1"
