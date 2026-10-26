@@ -3485,7 +3485,7 @@
     "/api/v1/organizations/{organization_id}/usage": {
       "get": {
         "summary": "Get Organization Usage",
-        "description": "Show current accepted users and the same monthly rates used for invoicing.",
+        "description": "Show current users, Solutions, and the same monthly rates used for invoicing.",
         "operationId": "get_organization_usage_api_v1_organizations__organization_id__usage_get",
         "parameters": [
           {
@@ -5078,6 +5078,16 @@
             "minimum": 0.0,
             "title": "Users"
           },
+          "solutions": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Solutions"
+          },
+          "max_solutions": {
+            "type": "integer",
+            "title": "Max Solutions",
+            "default": 9
+          },
           "stripe_enabled": {
             "type": "boolean",
             "title": "Stripe Enabled"
@@ -5090,11 +5100,12 @@
         "type": "object",
         "required": [
           "users",
+          "solutions",
           "stripe_enabled",
           "has_payment_method"
         ],
         "title": "OrganizationUsage",
-        "description": "Describe current membership usage and its month-end pricing."
+        "description": "Describe current Organization usage, limits, and month-end pricing."
       },
       "Page_AdminUserSummary_": {
         "properties": {

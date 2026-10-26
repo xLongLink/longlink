@@ -56,6 +56,13 @@ export default function Usage({ base }: { base: string }) {
                     <Divider />
                     <Stack gap={4} padding={4}>
                         <ProgressBar
+                            label="Solutions"
+                            value={usage.solutions}
+                            max={usage.max_solutions}
+                            hasValueLabel
+                            formatValueLabel={() => `${usage.solutions} / ${usage.max_solutions}`}
+                        />
+                        <ProgressBar
                             label="Users"
                             value={usage.users}
                             max={userScale}

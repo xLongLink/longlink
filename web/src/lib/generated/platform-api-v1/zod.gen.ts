@@ -354,7 +354,7 @@ export const zOrganizationTagMove = z.object({
 /**
  * OrganizationUsage
  *
- * Describe current membership usage and its month-end pricing.
+ * Describe current Organization usage, limits, and month-end pricing.
  */
 export const zOrganizationUsage = z.object({
     free_users: z.int().optional().default(5),
@@ -364,6 +364,8 @@ export const zOrganizationUsage = z.object({
     storage_mib_monthly_price: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/).optional().default('0.02'),
     database_mib_monthly_price: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/).optional().default('0.1'),
     users: z.int().gte(0),
+    solutions: z.int().gte(0),
+    max_solutions: z.int().optional().default(9),
     stripe_enabled: z.boolean(),
     has_payment_method: z.boolean()
 });
