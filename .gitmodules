@@ -1,0 +1,3 @@
+[submodule "ext/finance"]
+	path = ext/finance
+	url = https://github.com/xLongLink/finance.git
