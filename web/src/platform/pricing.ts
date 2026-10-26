@@ -2,7 +2,7 @@ import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 
 // Schema defaults come from the same constants used to calculate monthly invoices.
 const rates = schemas.zOrganizationUsage
-    .omit({ users: true, stripe_enabled: true, has_payment_method: true })
+    .omit({ users: true, solutions: true, max_solutions: true, stripe_enabled: true, has_payment_method: true })
     .parse({});
 
 export const resources = [
