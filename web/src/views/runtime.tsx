@@ -15,6 +15,7 @@ import { IconRequestContext } from '@/components/ui/Icon';
 import { LinkNavigationContext } from '@/components/ui/Link';
 import { MenuNavigationContext } from '@/components/ui/Menu';
 import { FileRequestContext } from '@/components/ui/preview';
+import { DialogActivityContext } from '@/components/ui/Dialog';
 import { Layout, LayoutContent } from '@astryxdesign/core/Layout';
 import { appearanceSchema, type Appearance } from '@/lib/appearance';
 import { QueryClient, QueryClientProvider, QueryErrorResetBoundary, useSuspenseQuery } from '@tanstack/react-query';
@@ -22,6 +23,7 @@ import {
     requestSchema,
     parametersSchema,
     REQUEST_TIMEOUT,
+    MAX_MODAL_DEPTH,
     type RequestCommand,
     type DownloadCommand,
     type IconCommand,
@@ -250,6 +252,14 @@ function initialize(event: MessageEvent<unknown>): void {
     }
 
     const root = createRoot(mount);
+    let modalDepth = 0;
+
+    /** Report bounded modal nesting without granting the sandbox control over host geometry or styles. */
+    function modalActivity(open: boolean): void {
+        if (lifetime.signal.aborted) return;
+        modalDepth += open ? 1 : -1;
+        port.postMessage({ type: 'modal', depth: Math.min(MAX_MODAL_DEPTH, Math.max(0, modalDepth)) });
+    }
 
     // Report natural content height, including async data and wrapping, over the private channel.
     const observer = new ResizeObserver(() => {
@@ -265,6 +275,7 @@ function initialize(event: MessageEvent<unknown>): void {
     window.addEventListener(
         'pagehide',
         () => {
+            port.postMessage({ type: 'modal', depth: 0 });
             lifetime.abort();
             observer.disconnect();
 
@@ -357,9 +368,11 @@ function initialize(event: MessageEvent<unknown>): void {
                                             >
                                                 <MenuNavigationProvider>
                                                     <FileRequestContext value={fileRequests}>
-                                                        <FormRequestContext value={request}>
-                                                            <View params={params} />
-                                                        </FormRequestContext>
+                                                        <DialogActivityContext value={modalActivity}>
+                                                            <FormRequestContext value={request}>
+                                                                <View params={params} />
+                                                            </FormRequestContext>
+                                                        </DialogActivityContext>
                                                     </FileRequestContext>
                                                 </MenuNavigationProvider>
                                             </LinkNavigationContext>

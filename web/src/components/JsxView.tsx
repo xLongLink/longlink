@@ -8,6 +8,7 @@ import { useQuery } from '@tanstack/react-query';
 import type { ViewRuntime } from '@/views/manifest';
 import { useEffect, useRef, useState } from 'react';
 import { useAppearance } from '@/components/Appearance';
+import { ViewBackdrop } from '@/components/ViewBackdrop';
 import { PageError, PageLoading } from '@/components/Utils';
 import { commandSchema, parametersSchema, iconDataSchema, type ViewData } from '@/views/protocol';
 
@@ -42,6 +43,7 @@ export function JsxView({
     const navigate = useNavigate();
     const reportError = useApiError();
     const [height, setHeight] = useState(1);
+    const [modalDepth, setModalDepth] = useState(0);
 
     const [bootstrapState, setBootstrapState] = useState<
         | { status: 'preparing' }
@@ -120,6 +122,7 @@ export function JsxView({
         /** Revokes the attempt's capabilities and startup deadline on failure or unmount. */
         function dispose(): void {
             controller.abort();
+            setModalDepth(0);
             clearTimeout(handshakeTimer);
             window.removeEventListener('message', ready);
 
@@ -178,6 +181,13 @@ export function JsxView({
             // Size the isolated document without creating a second page scrollport.
             if (command.type === 'resize') {
                 setHeight(command.height);
+
+                return;
+            }
+
+            // Extend only the visual backdrop; native modality and View code stay inside the sandbox.
+            if (command.type === 'modal') {
+                setModalDepth(command.depth);
 
                 return;
             }
@@ -266,7 +276,7 @@ export function JsxView({
                 handshakeTimer = setTimeout(() => fail('readiness'), BOOTSTRAP_TIMEOUT_MS);
                 const appearance = currentAppearance.current;
                 const mode = appearance.theme === 'system' ? '' : ` data-theme="${appearance.theme}"`;
-                const document = `<!doctype html><html data-astryx-theme="stone" data-accent="${appearance.accent}"${mode}><head><meta http-equiv="Content-Security-Policy" content="${policy}"><meta name="referrer" content="no-referrer"><style>${styles.replace(/<\/style/gi, '<\\/style')}</style></head><body class="overflow-hidden bg-transparent text-primary"><main id="view"></main><script>${code}</script></body></html>`;
+                const document = `<!doctype html><html class="overflow-hidden [scrollbar-gutter:auto]" data-astryx-theme="stone" data-accent="${appearance.accent}"${mode}><head><meta http-equiv="Content-Security-Policy" content="${policy}"><meta name="referrer" content="no-referrer"><style>${styles.replace(/<\/style/gi, '<\\/style')}</style></head><body class="overflow-hidden bg-transparent text-primary"><main id="view"></main><script>${code}</script></body></html>`;
 
                 // Keep startup failure latched until the route owner mounts a fresh View.
                 setBootstrapState((current) =>
@@ -290,16 +300,22 @@ export function JsxView({
     if (bootstrapState.status === 'preparing') return <PageLoading label="Preparing View" />;
 
     return (
-        // Grow with the isolated content so the same page scrollport serves native pages and Views.
-        <iframe
-            ref={frame}
-            title="Solution View"
-            // Open native links without passing sandbox restrictions to their destinations; the View stays isolated.
-            sandbox="allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox"
-            referrerPolicy="no-referrer"
-            srcDoc={bootstrapState.document}
-            className="block w-full shrink-0 border-0 bg-transparent"
-            style={{ height }}
-        />
+        <>
+            {modalDepth > 0 && <ViewBackdrop frame={frame} depth={modalDepth} />}
+            {/* Keep modal viewport units usable on short Views while retaining page-owned scrolling for long content. */}
+            <iframe
+                ref={frame}
+                title="Solution View"
+                // Open native links without passing sandbox restrictions to their destinations; the View stays isolated.
+                sandbox="allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox"
+                referrerPolicy="no-referrer"
+                srcDoc={bootstrapState.document}
+                className="block w-full shrink-0 border-0 bg-transparent"
+                style={{
+                    height,
+                    minHeight: 'calc(100dvh - var(--_app-shell-header-height, 0px) - var(--spacing-2) * 4)',
+                }}
+            />
+        </>
     );
 }
