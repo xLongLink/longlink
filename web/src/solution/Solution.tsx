@@ -1,4 +1,5 @@
 import { Link } from '@astryxdesign/core/Link';
+import { Wordmark } from '@/components/Wordmark';
 import Platform from '@/components/layouts/Platform';
 import { SolutionRuntime } from '@/components/Solution';
 import { PageContainer } from '@/components/PageContainer';
@@ -17,6 +18,7 @@ export default function Solution() {
                             Documentation
                         </Link>
                     }
+                    breadcrumb={<Wordmark />}
                     tabs={tabs}
                 >
                     <title>{title ? `${title} | LongLink` : 'LongLink'}</title>
