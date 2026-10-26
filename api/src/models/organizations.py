@@ -8,6 +8,8 @@ from src.models.users import UserIdentity
 from src.models.pricing import UsageRates
 from src.models.resources import OrganizationIdentity
 
+MAX_SOLUTIONS = 9
+
 
 class DatabaseState(StrEnum):
     """Describe the availability of an Organization's CNPG database."""
@@ -24,10 +26,12 @@ class OrganizationCreate(BaseModel):
 
 
 class OrganizationUsage(UsageRates):
-    """Describe current membership usage and its month-end pricing."""
+    """Describe current Organization usage, limits, and month-end pricing."""
 
     # Usage and payments
     users: int = Field(ge=0)
+    solutions: int = Field(ge=0)
+    max_solutions: int = MAX_SOLUTIONS
     stripe_enabled: bool
     has_payment_method: bool
 
