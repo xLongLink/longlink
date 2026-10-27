@@ -52,7 +52,7 @@ async def test_solution_delete_failure_stops_before_provider_credential_cleanup(
     setup_operation = await claim_operation()
     assert setup_operation is not None
     assert (setup_operation.kind, setup_operation.target_id) == (OperationKind.solution_deploy, solution.desired_revision_id)
-    assert await complete_operation(setup_operation.id) is not None
+    assert await complete_operation(setup_operation.id) is True
 
     claimed = await claim_operation()
     assert claimed is not None

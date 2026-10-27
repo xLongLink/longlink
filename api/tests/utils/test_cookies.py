@@ -16,7 +16,7 @@ def test_set_browser_cookie_marks_secure_only_on_https(monkeypatch: pytest.Monke
 
     # Act
     response = Response()
-    cookies.set_browser_cookie(response, cookies.AUTH_COOKIE, "value", "/", 60)
+    cookies.set_browser_cookie(response, cookies.AUTH_COOKIE, "value", 60)
     header = response.headers["set-cookie"]
 
     # Assert
@@ -34,9 +34,9 @@ def test_delete_browser_cookie_mirrors_registration_path(monkeypatch: pytest.Mon
 
     # Act
     set_response = Response()
-    cookies.set_browser_cookie(set_response, cookies.REGISTRATION_COOKIE, "value", "/api/v1/auth/register", 60)
+    cookies.set_browser_cookie(set_response, cookies.REGISTRATION_COOKIE, "value", 60)
     delete_response = Response()
-    cookies.delete_browser_cookie(delete_response, cookies.REGISTRATION_COOKIE, "/api/v1/auth/register")
+    cookies.delete_browser_cookie(delete_response, cookies.REGISTRATION_COOKIE)
 
     # Assert
     set_cookie = SimpleCookie()

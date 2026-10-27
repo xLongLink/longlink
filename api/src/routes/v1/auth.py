@@ -31,7 +31,7 @@ async def set_auth_session(session: AsyncSession, response: Response, user: User
         await session.commit()
 
     # Publish authentication as a private, browser-only session only after persistence succeeds.
-    cookies.set_browser_cookie(response, cookies.AUTH_COOKIE, token.create_auth_token(user), "/", 2592000)
+    cookies.set_browser_cookie(response, cookies.AUTH_COOKIE, token.create_auth_token(user), 2592000)
 
 
 def oauth_failure_response() -> RedirectResponse:
@@ -40,7 +40,7 @@ def oauth_failure_response() -> RedirectResponse:
     # Do not expose provider or account details through the browser-facing failure response.
     response = RedirectResponse(f"{env.PUBLIC_URL}/login?oauth_error=1", status_code=302)
     response.headers["Cache-Control"] = "no-store"
-    cookies.delete_browser_cookie(response, cookies.OAUTH_STATE_COOKIE, "/api/v1/auth/oauth")
+    cookies.delete_browser_cookie(response, cookies.OAUTH_STATE_COOKIE)
     return response
 
 
@@ -85,9 +85,7 @@ async def start_oauth_login(provider: oauth.OAuthProvider, return_to: Annotated[
     response = RedirectResponse(oauth.authorization_url(provider, state, verifier), status_code=302)
 
     # Store callback proof outside browser-readable storage and restrict it to OAuth endpoints.
-    cookies.set_browser_cookie(
-        response, cookies.OAUTH_STATE_COOKIE, credential, "/api/v1/auth/oauth", token.OAUTH_STATE_TOKEN_LIFETIME_SECONDS
-    )
+    cookies.set_browser_cookie(response, cookies.OAUTH_STATE_COOKIE, credential, token.OAUTH_STATE_TOKEN_LIFETIME_SECONDS)
     return response
 
 
@@ -140,7 +138,7 @@ async def complete_oauth_login(
         return oauth_failure_response()
 
     # Remove callback proof after the browser session is published.
-    cookies.delete_browser_cookie(response, cookies.OAUTH_STATE_COOKIE, "/api/v1/auth/oauth")
+    cookies.delete_browser_cookie(response, cookies.OAUTH_STATE_COOKIE)
     return response
 
 
@@ -173,7 +171,7 @@ async def logout(response: Response, origin: str | None = Header(default=None)):
         raise HTTPException(status_code=403, detail="Origin required")
 
     # Match the authentication-cookie scope so browsers reliably remove the credential.
-    cookies.delete_browser_cookie(response, cookies.AUTH_COOKIE, "/")
+    cookies.delete_browser_cookie(response, cookies.AUTH_COOKIE)
 
 
 # Deployment rate limiting bounds unauthenticated email delivery requests before they reach the API.
@@ -197,7 +195,7 @@ async def verify_password_reset_token(ctx: Context, payload: TokenPayload):
 
     # Validate the bearer credential before moving it into a restricted cookie.
     await password_reset_user(ctx.database, payload.token)
-    cookies.set_browser_cookie(ctx.response, cookies.PASSWORD_RESET_COOKIE, payload.token, "/api/v1/auth/reset-password", 900)
+    cookies.set_browser_cookie(ctx.response, cookies.PASSWORD_RESET_COOKIE, payload.token, 900)
 
 
 @router.get("/auth/reset-password/setup", status_code=204)
@@ -229,7 +227,7 @@ async def reset_password(
 
     # Remove reset proof only after the replacement password commits.
     ctx.response.headers["Cache-Control"] = "no-store"
-    cookies.delete_browser_cookie(ctx.response, cookies.PASSWORD_RESET_COOKIE, "/api/v1/auth/reset-password")
+    cookies.delete_browser_cookie(ctx.response, cookies.PASSWORD_RESET_COOKIE)
 
 
 # Deployment rate limiting bounds unauthenticated email delivery requests before they reach the API.
@@ -252,9 +250,7 @@ async def verify_registration_token(response: Response, payload: TokenPayload):
 
     # Convert invalid and expired tokens into one stable authentication error.
     email = registration_email(payload.token)
-    cookies.set_browser_cookie(
-        response, cookies.REGISTRATION_COOKIE, payload.token, "/api/v1/auth/register", token.EMAIL_TOKEN_LIFETIME_SECONDS
-    )
+    cookies.set_browser_cookie(response, cookies.REGISTRATION_COOKIE, payload.token, token.EMAIL_TOKEN_LIFETIME_SECONDS)
     return {"email": email}
 
 
@@ -289,5 +285,5 @@ async def complete_registration(
         )
 
     # Remove email verification proof only after account creation commits.
-    cookies.delete_browser_cookie(ctx.response, cookies.REGISTRATION_COOKIE, "/api/v1/auth/register")
+    cookies.delete_browser_cookie(ctx.response, cookies.REGISTRATION_COOKIE)
     return user

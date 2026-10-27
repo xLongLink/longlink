@@ -36,28 +36,22 @@ async def claim_operation() -> Operation | None:
         return operation
 
 
-async def complete_operation(operation_id: UUID) -> Operation | None:
+async def complete_operation(operation_id: UUID) -> bool:
     """Complete one queued Operation in a committed test transaction."""
 
     async with session_scope() as session:
         completed = await operations.complete(session, operation_id)
-
-        # Fetch the persisted outcome only when the guarded transition succeeds.
-        operation = await session.get(Operation, operation_id, populate_existing=True) if completed else None
         await session.commit()
-        return operation
+        return completed
 
 
-async def fail_operation(operation_id: UUID, reason: str = "Operation failed") -> Operation | None:
+async def fail_operation(operation_id: UUID, reason: str = "Operation failed") -> bool:
     """Fail one queued Operation in a committed test transaction."""
 
     async with session_scope() as session:
         failed = await operations.fail(session, operation_id, reason)
-
-        # Fetch the persisted outcome only when the guarded transition succeeds.
-        operation = await session.get(Operation, operation_id, populate_existing=True) if failed else None
         await session.commit()
-        return operation
+        return failed
 
 
 async def fetch_operations() -> Sequence[Operation]:

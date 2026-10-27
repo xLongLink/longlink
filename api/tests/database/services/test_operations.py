@@ -44,7 +44,7 @@ async def test_operations_service_create_coalesces_and_reopens_completed_work() 
     completed = await complete_operation(claimed.id)
     replacement = await queue(kind=OperationKind.solution_deploy, target_id=first_solution_id)
 
-    assert completed is not None
+    assert completed is True
     assert replacement.id != solution.id
 
 
@@ -131,8 +131,8 @@ async def test_operations_service_expired_leases_cannot_finish() -> None:
     row = next(item for item in await fetch_operations() if item.id == operation.id)
 
     # Verify an expired worker cannot finish work it no longer owns.
-    assert expired_completion is None
-    assert expired_failure is None
+    assert expired_completion is False
+    assert expired_failure is False
     assert row.status == OperationStatus.scheduled
     assert row.finished_at is None
 
@@ -149,14 +149,13 @@ async def test_operations_service_records_bounded_failure_reason() -> None:
     failed = await fail_operation(operation.id, "migration job failed" * 100)
 
     # Assert
-    assert failed is not None
-    assert failed.failed == ("migration job failed" * 100)[:500]
+    assert failed is True
 
-    # Verify the bounded reason was committed independently of the returned object.
+    # Verify the bounded reason was committed independently of the transition result.
     async with session_scope() as session:
         persisted = await session.get(Operation, operation.id)
     assert persisted is not None
-    assert persisted.failed == failed.failed
+    assert persisted.failed == ("migration job failed" * 100)[:500]
 
 
 async def test_operations_service_failed_creation_updates_targets_and_resolves_resource_names() -> None:
@@ -181,13 +180,13 @@ async def test_operations_service_failed_creation_updates_targets_and_resolves_r
     organization_claim = await claim_operation()
     assert organization_claim is not None
     assert organization_claim.id == organization_operation.id
-    assert await fail_operation(organization_operation.id, "organization creation failed") is not None
+    assert await fail_operation(organization_operation.id, "organization creation failed") is True
 
     solution_operation = await queue(kind=OperationKind.solution_deploy, target_id=solution.desired_revision_id)
     solution_claim = await claim_operation()
     assert solution_claim is not None
     assert solution_claim.id == solution_operation.id
-    assert await fail_operation(solution_operation.id, "solution creation failed") is not None
+    assert await fail_operation(solution_operation.id, "solution creation failed") is True
 
     # Act
     async with session_scope() as session:
@@ -270,7 +269,7 @@ async def test_operations_service_complete_reenqueues_stale_effective_revision()
     completed = await complete_operation(outdated.id)
 
     # Assert
-    assert completed is not None
+    assert completed is True
     follow_ups = [item for item in await fetch_operations() if item.target_id == desired_revision.id]
     assert len(follow_ups) == 1
     assert follow_ups[0].kind == OperationKind.solution_deploy
