@@ -4,13 +4,19 @@ import secrets
 from uuid import UUID
 from typing import Literal
 from pathlib import Path
+from datetime import UTC, datetime
 from pydantic import Field, BaseModel
+from src.utils import stripe
 from sqlalchemy import select
+from src.models import pricing
 from src.database import session
+from src.operations import invoices
+from src.environments import env
 from src.models.roles import OrganizationRoles
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from src.database.services import users, organizations
+from src.database.services import users, payments, organizations
 from src.models.organizations import OrganizationInvitationCreate
+from src.database.models.invoices import Invoice
 from src.database.models.association import UserOrganization
 from src.database.models.organizations import Organization
 
@@ -244,8 +250,91 @@ async def create_invited_organization(settings: SeedSettings) -> None:
     print(f"Pending invitation to ACME Studio ready: {settings.PUBLIC_URL}/orgs")
 
 
+async def register_card(organization_id: UUID) -> None:
+    """Register a reusable Stripe test Visa for the development Organization."""
+
+    # Leave unconfigured development environments on the free allowance.
+    if not env.stripe_enabled:
+        print("Skipping test card: Stripe is not configured.")
+        return
+
+    # Preserve an existing card instead of creating another on every seed run.
+    async with stripe.client() as connection, session.session_scope() as database:
+        organization = await organizations.lock(database, organization_id)
+        if organization.stripe_payment_method_id is not None:
+            print("Development Organization already has a registered card.")
+            return
+
+        # Persist the customer before setup so interrupted runs reuse the same Stripe identity.
+        if organization.stripe_customer_id is None:
+            customer = await connection.v1.customers.create_async(
+                {"name": organization.name, "metadata": {"organization_id": str(organization.id)}},
+                options={"idempotency_key": f"customer:{organization.id}"},
+            )
+            organization.stripe_customer_id = customer.id
+            await database.commit()
+            organization = await organizations.lock(database, organization_id)
+            if organization.stripe_payment_method_id is not None:
+                return
+
+        # Stripe's test fixture completes setup without card details, Checkout, or a charge.
+        intent = await connection.v1.setup_intents.create_async(
+            {
+                "customer": organization.stripe_customer_id,
+                "confirm": True,
+                "usage": "off_session",
+                "payment_method": "pm_card_visa",
+                "payment_method_types": ["card"],
+                "metadata": {"organization_id": str(organization.id)},
+            },
+            options={"idempotency_key": f"seed-card:{organization.id}"},
+        )
+        await payments.save_setup_intent(database, organization, intent, connection)
+        await database.commit()
+
+    print("Stripe test Visa ending in 4242 registered for ACME Ink.")
+
+
+async def create_invoice(organization_id: UUID) -> None:
+    """Issue a reusable test invoice from illustrative usage, not measured resources."""
+
+    # Invoice fixtures require the same test-mode Stripe configuration as the saved card.
+    if not env.stripe_enabled:
+        print("Skipping example invoice: Stripe is not configured.")
+        return
+
+    # Retain one invoice across seed runs and let normal issuance recover interrupted Stripe requests.
+    async with session.session_scope() as database:
+        organization = await organizations.lock(database, organization_id)
+        invoice = await database.scalar(
+            select(Invoice).where(Invoice.organization_id == organization_id).order_by(Invoice.period_end).limit(1)
+        )
+        if invoice is None:
+            if organization.stripe_customer_id is None or organization.stripe_payment_method_id is None:
+                raise RuntimeError("Register the development test card before creating an example invoice")
+            invoice = Invoice(
+                organization_id=organization_id,
+                customer_id=organization.stripe_customer_id,
+                period_end=datetime.now(UTC).replace(day=1, hour=0, minute=0, second=0, microsecond=0),
+                users=pricing.FREE_USERS + 2,
+                database_bytes=pricing.FREE_DATABASE_BYTES + 1024**3,
+                storage_bytes=pricing.FREE_STORAGE_BYTES + 1024**3,
+            )
+            database.add(invoice)
+            await database.commit()
+
+        # Use the published rates, free-tier discount, and Stripe-hosted documents.
+        await invoices.issue(database, invoice.id)
+
+    print("Example Stripe test invoice ready for ACME Ink.")
+
+
 async def seed(settings: SeedSettings) -> None:
     """Reuse local infrastructure and recreate the seeded sample Solution."""
+
+    # Never provision development payment fixtures with live Stripe credentials.
+    if env.STRIPE_SECRET_KEY is not None and not env.STRIPE_SECRET_KEY.startswith(("sk_test_", "rk_test_")):
+        raise RuntimeError("Development seeding requires a Stripe test-mode key; live-mode credentials are refused")
 
     # Own the API client for the complete provisioning workflow.
     async with httpx2.AsyncClient(
@@ -263,6 +352,8 @@ async def seed(settings: SeedSettings) -> None:
             await create_invited_organization(settings)
 
             organization = await create_organization(client)
+            await register_card(organization.id)
+            await create_invoice(organization.id)
             await create_sample(client, settings, organization)
         finally:
             await session.dispose_engine()
