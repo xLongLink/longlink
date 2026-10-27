@@ -156,18 +156,15 @@ function Wizard(props: StepperProps) {
     useEffect(() => {
         const root = rootRef.current;
         const form = root?.closest('form');
-        const onSubmit = (event: SubmitEvent) => interceptSubmit(event);
-        const onReveal = (event: Event) => reveal(event);
-        const onReset = (event: Event) => reset(event);
 
-        root?.addEventListener('longlink:reveal', onReveal);
-        form?.addEventListener('submit', onSubmit, true);
-        form?.addEventListener('reset', onReset);
+        root?.addEventListener('longlink:reveal', reveal);
+        form?.addEventListener('submit', interceptSubmit, true);
+        form?.addEventListener('reset', reset);
 
         return () => {
-            root?.removeEventListener('longlink:reveal', onReveal);
-            form?.removeEventListener('submit', onSubmit, true);
-            form?.removeEventListener('reset', onReset);
+            root?.removeEventListener('longlink:reveal', reveal);
+            form?.removeEventListener('submit', interceptSubmit, true);
+            form?.removeEventListener('reset', reset);
         };
     }, []);
 

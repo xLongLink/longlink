@@ -138,12 +138,11 @@ async def issue(session: AsyncSession, invoice_id: UUID) -> None:
                 gross = (quantity * unit_price).quantize(Decimal("1"), rounding=ROUND_HALF_UP)
                 net = (billable * unit_price).quantize(Decimal("1"), rounding=ROUND_HALF_UP)
                 description = label if resource == "users" else f"{label} ({unit})"
-                lines.append((resource, description, quantity, unit_price))
+                lines.append((resource, description, quantity, unit_price, int(gross)))
                 discount += int(gross - net)
                 total += int(net)
 
-            for resource, label, quantity, rate in lines:
-                amount = int((quantity * rate).quantize(Decimal("1"), rounding=ROUND_HALF_UP))
+            for resource, label, quantity, rate, amount in lines:
                 matched = [item for item in existing_items if (item.metadata or {}).get("resource") == resource]
                 if matched:
                     if (
