@@ -28,14 +28,28 @@ async def save_card(
     ):
         return
     intent = await connection.v1.setup_intents.retrieve_async(hosted.setup_intent)
-    if intent.status != "succeeded" or intent.customer != organization.stripe_customer_id or not isinstance(intent.payment_method, str):
+    await save_setup_intent(session, organization, intent, connection)
+
+
+async def save_setup_intent(
+    session: AsyncSession, organization: Organization, intent: stripe.SetupIntent, connection: stripe.StripeClient
+) -> None:
+    """Apply a completed card setup to its Organization's billing and capacity."""
+
+    # Only a successful setup for this customer authorizes future invoice payments.
+    if (
+        organization.stripe_customer_id is None
+        or intent.status != "succeeded"
+        or intent.customer != organization.stripe_customer_id
+        or not isinstance(intent.payment_method, str)
+    ):
         raise HTTPException(status_code=409, detail="Card registration is not complete")
 
     # Stripe retains payment details; the local reference permits usage beyond the free allowance.
     await connection.v1.customers.update_async(
         organization.stripe_customer_id,
         {"invoice_settings": {"default_payment_method": intent.payment_method}},
-        options={"idempotency_key": f"card:{hosted.id}"},
+        options={"idempotency_key": f"card:{intent.id}"},
     )
 
     # First registration cannot charge for months before payment authorization.
