@@ -13,7 +13,6 @@
         "typecheck:api": "react-router typegen --mode api && tsc -b",
         "typecheck:sdk": "react-router typegen --mode sdk && tsc -b",
         "build:api": "vp run theme && vp run typecheck:api && react-router build --mode api",
-        "build:api:container": "vp run theme && vp run typecheck:api && react-router build --mode api",
         "build:api:bundle": "vp run theme && react-router build --mode api",
         "build:sdk": "vp run build:views && vp run typecheck:sdk && react-router build --mode sdk",
         "build:sdk:bundle": "vp run build:views && react-router build --mode sdk",

@@ -249,9 +249,12 @@ def build_command(query: str, /) -> None:
     # Reuse API search and rank authored patterns by explicit intent only.
     query = validate_query(query)
     documentation = catalog()
-    ranked = [(score(query, pattern.name, pattern.keywords, ""), pattern) for pattern in documentation.patterns]
-    ranked.sort(key=lambda match: -match[0])
-    pattern = ranked[0][1] if ranked and ranked[0][0] >= 70 else None
+    best = max(
+        ((score(query, pattern.name, pattern.keywords, ""), pattern) for pattern in documentation.patterns),
+        key=lambda match: match[0],
+        default=None,
+    )
+    pattern = best[1] if best is not None and best[0] >= 70 else None
     print(f'Build guidance for "{query}"')
 
     # Use only verified pattern references; unknown ideas get search results, not invented guidance.
