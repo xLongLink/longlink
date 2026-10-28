@@ -98,7 +98,7 @@ async def issue(session: AsyncSession, invoice_id: UUID) -> None:
         else:
             existing = await connection.v1.invoices.list_async({"customer": invoice.customer_id, "limit": 100})
             async for candidate in existing.auto_paging_iter():
-                if (candidate.metadata or {}).get("longlink_invoice_id") == str(invoice.id):
+                if (candidate.to_dict().get("metadata") or {}).get("longlink_invoice_id") == str(invoice.id):
                     if remote is not None:
                         raise HTTPException(status_code=409, detail="Duplicate Stripe invoices require administrator review")
                     remote = candidate
@@ -132,12 +132,12 @@ async def issue(session: AsyncSession, invoice_id: UUID) -> None:
             ):
                 if amount == 0:
                     continue
-                matched = [item for item in existing_items if (item.metadata or {}).get("resource") == resource]
+                matched = [item for item in existing_items if (item.to_dict().get("metadata") or {}).get("resource") == resource]
                 if matched:
                     if (
                         len(matched) != 1
                         or matched[0].amount != amount
-                        or (matched[0].metadata or {}).get("longlink_invoice_id") != str(invoice.id)
+                        or (matched[0].to_dict().get("metadata") or {}).get("longlink_invoice_id") != str(invoice.id)
                     ):
                         raise HTTPException(status_code=409, detail="Stripe invoice items require administrator review")
                     continue

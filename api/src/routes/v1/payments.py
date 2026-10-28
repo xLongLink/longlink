@@ -34,7 +34,8 @@ async def receive_webhook(ctx: Context, request: Request):
     # Checkout identity and Stripe idempotency make repeated events safe without an event ledger.
     if event.type != "checkout.session.completed":
         return
-    customer_id = event.data.object.get("customer")
+    checkout = event.data.object.to_dict()
+    customer_id = checkout.get("customer")
     if not isinstance(customer_id, str) or not customer_id.startswith("cus_") or len(customer_id) > 255:
         return
     organization_id = await ctx.database.scalar(select(col(Organization.id)).where(col(Organization.stripe_customer_id) == customer_id))
@@ -44,7 +45,7 @@ async def receive_webhook(ctx: Context, request: Request):
     if (
         organization.deleted_at is None
         and organization.stripe_checkout_id is not None
-        and event.data.object.get("id") == organization.stripe_checkout_id
+        and checkout.get("id") == organization.stripe_checkout_id
     ):
         async with stripe.client() as connection:
             hosted = await connection.v1.checkout.sessions.retrieve_async(organization.stripe_checkout_id)

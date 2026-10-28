@@ -103,9 +103,10 @@ async def checkout(session: AsyncSession, organization: Organization, user_id: U
     hosted = await connection.v1.checkout.sessions.create_async(
         {
             "mode": "setup",
+            "currency": "chf",
             "customer": organization.stripe_customer_id,
             "client_reference_id": str(organization.id),
-            "payment_method_types": ["card"],
+            "allowed_payment_method_types": ["card"],
             "setup_intent_data": {"metadata": {"organization_id": str(organization.id)}},
             "custom_text": {
                 "submit": {

@@ -1595,7 +1595,7 @@ requires-dist = [
     { name = "sqlalchemy", specifier = ">=2.0.51" },
     { name = "sqlalchemy-utils", specifier = ">=0.43.0" },
     { name = "sqlmodel", specifier = ">=0.0.45" },
-    { name = "stripe", extras = ["async"], specifier = ">=14,<17" },
+    { name = "stripe", extras = ["async"], specifier = ">=16,<17" },
     { name = "testcontainers", marker = "extra == 'dev'", specifier = ">=4.15.0" },
     { name = "ty", marker = "extra == 'dev'", specifier = ">=0.0.69" },
     { name = "types-aiobotocore-s3", marker = "extra == 'dev'", specifier = "==3.9.2" },

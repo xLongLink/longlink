@@ -28,7 +28,7 @@ async def get_cards(ctx: Context, membership: auth.OrganizationOwner):
     # Read current Stripe details rather than persisting duplicate card metadata.
     async with stripe.client() as connection:
         customer = await connection.v1.customers.retrieve_async(customer_id)
-        if customer.get("deleted", False):
+        if customer.to_dict().get("deleted", False):
             return []
         default = customer.invoice_settings.default_payment_method if customer.invoice_settings is not None else None
         methods = await connection.v1.payment_methods.list_async({"customer": customer_id, "type": "card", "limit": 100})
