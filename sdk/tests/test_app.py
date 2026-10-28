@@ -12,7 +12,7 @@ from sqlalchemy import event
 from longlink.app import LongLink
 from longlink.logger import ApiAccessFilter
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from longlink.database import audit
+from longlink.database import audit, migrations
 from sqlalchemy.engine import Engine
 from fastapi.testclient import TestClient
 from longlink.database.base import Database
@@ -26,6 +26,9 @@ def test_longlink_solution_serves_runtime_routes_and_frontend(monkeypatch: pytes
 
     # Arrange
     monkeypatch.setenv("LONGLINK_ENV", environment)
+    if environment == "development":
+        migrations.make_migrations()
+        migrations.apply_migrations()
     app = LongLink()
     disposed: list[Engine] = []
 
@@ -336,6 +339,10 @@ def initialize_mcp(client: TestClient) -> None:
 
 def test_mcp_discovers_late_routes_and_invokes_with_context(solution_source: Path) -> None:
     """Discover Solution operations without exposing Views or SDK infrastructure."""
+
+    # Apply the development schema before starting the runtime.
+    migrations.make_migrations()
+    migrations.apply_migrations()
 
     # Register a View, decorator route, and included router before the lifespan starts.
     (solution_source / "views" / "index.jsx").write_text("export default function Index() { return <Text>Home</Text>; }", encoding="utf-8")

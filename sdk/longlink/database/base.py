@@ -109,14 +109,12 @@ class Database:
                     # Initialize the database without publishing partially initialized resources.
                     try:
                         async with engine.begin() as conn:
-                            # Testing creates all tables; other environments bootstrap SDK-owned users.
+                            # Testing creates all tables; other environments use committed migrations.
                             if self._env.ENV == "testing":
                                 await conn.run_sync(SQLModel.metadata.create_all)
-                            else:
-                                await conn.run_sync(SQLModel.metadata.tables["users"].create, checkfirst=True)
 
                             if self._env.ENV != "production":
-                                # Seed the local user within the schema bootstrap's connection and transaction.
+                                # Seed the local user within the initialization transaction.
                                 users = SQLModel.metadata.tables["users"]
                                 user_id = await conn.scalar(sqlalchemy.select(users.c.id).where(users.c.id == LOCAL_USER_ID))
                                 if user_id is None:

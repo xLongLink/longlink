@@ -95,8 +95,8 @@ def test_initialized_project_applies_bundled_migration_through_deployment_entryp
         # Assert
         with closing(sqlite3.connect(target / "dev.db")) as connection:
             tables = connection.execute(
-                "SELECT name FROM sqlite_master WHERE type = 'table' AND name IN ('alembic_version', 'project') ORDER BY name"
+                "SELECT name FROM sqlite_master WHERE type = 'table' AND name IN ('alembic_version', 'project', 'users') ORDER BY name"
             ).fetchall()
             revision = connection.execute("SELECT version_num FROM alembic_version").fetchone()
-        assert tables == [("alembic_version",), ("project",)]
+        assert tables == [("alembic_version",), ("project",), ("users",)]
         assert revision == ("20260713_0001",)
