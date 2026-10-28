@@ -22,6 +22,7 @@ async def create_solution(ctx: Context, payload: SolutionCreate, membership: aut
         envs=payload.envs,
         user_id=membership.user_id,
         description=payload.description,
+        # Retain the credential that successfully resolved this image.
         registry_connection_id=connection_id,
     )
     await ctx.database.commit()

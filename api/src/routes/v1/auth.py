@@ -20,7 +20,7 @@ from src.database.models.users import User
 router = APIRouter(tags=["auth"])
 
 INVALID_REGISTRATION_LINK = "This registration link is invalid or expired. Request a new link to continue."
-INVALID_PASSWORD_RESET_LINK = "This password reset link is invalid or has expired. Please request a new one."  # noqa: S105
+INVALID_PASSWORD_RESET_LINK = "This password reset link is invalid or has expired. Please request a new one."
 
 
 async def set_auth_session(session: AsyncSession, response: Response, user: User) -> None:
@@ -89,7 +89,7 @@ async def start_oauth_login(provider: oauth.OAuthProvider, return_to: Annotated[
     return response
 
 
-@router.get("/auth/oauth/{provider}/callback", include_in_schema=False)
+@router.get("/auth/oauth/{provider}/callback", response_class=RedirectResponse, response_model=None, include_in_schema=False)
 async def complete_oauth_login(
     ctx: Context,
     provider: oauth.OAuthProvider,
@@ -119,6 +119,8 @@ async def complete_oauth_login(
         user = await users.by_email(ctx.database, identity.email)
         if user is None:
             user = await users.register(ctx.database, identity.name, identity.email, secrets.token_urlsafe(48), identity.avatar)
+
+        # Persist the provider subject only after resolving the local account.
         if provider == "google":
             user.google_id = identity.subject
         else:
@@ -175,7 +177,7 @@ async def logout(response: Response, origin: str | None = Header(default=None)):
 
 
 # Deployment rate limiting bounds unauthenticated email delivery requests before they reach the API.
-@router.post("/auth/forgot-password", status_code=202)
+@router.post("/auth/forgot-password", response_model=None, status_code=202)
 async def request_password_reset(ctx: Context, email: Annotated[Email, Body(embed=True)], background_tasks: BackgroundTasks):
     """Queue password reset delivery without disclosing account existence."""
 
@@ -231,7 +233,7 @@ async def reset_password(
 
 
 # Deployment rate limiting bounds unauthenticated email delivery requests before they reach the API.
-@router.post("/auth/register", status_code=202)
+@router.post("/auth/register", response_model=None, status_code=202)
 async def request_registration(ctx: Context, email: Annotated[Email, Body(embed=True)], background_tasks: BackgroundTasks):
     """Send a stateless registration link when the email has no account."""
 

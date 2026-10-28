@@ -74,6 +74,8 @@ async def test_membership_mutation_services_revalidate_demoted_administrator_acc
             assert cached_membership is not None
 
         async with session_scope() as concurrent_session:
+
+            # Revoke privileges through another transaction before the command resumes.
             membership = await concurrent_session.get(UserOrganization, (administrator.id, organization.id))
             assert membership is not None
             membership.role = OrganizationRoles.read
@@ -87,6 +89,8 @@ async def test_membership_mutation_services_revalidate_demoted_administrator_acc
                 OrganizationInvitationCreate(email="blocked-invited@example.com", role=OrganizationRoles.read),
                 administrator.id,
             )
+
+        # Cached membership must not authorize a command after demotion.
         with pytest.raises(HTTPException, match="403: Permission required"):
             await organizations.revoke_invitation(revoke_invitation_session, organization.id, invitation_id, administrator.id)
         with pytest.raises(HTTPException, match="403: Permission required"):
@@ -124,6 +128,8 @@ async def test_soft_delete_revalidates_demoted_owner_access(users: tuple[User, U
     async with session_scope() as session:
         persisted = await session.get(Organization, organization.id)
     assert persisted is not None
+
+    # Rejected deletion must leave the Organization active.
     assert persisted.deleted_at is None
 
 
@@ -181,6 +187,7 @@ async def test_soft_delete_tombstones_solutions_and_retains_memberships(users: t
             LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:test")),
             name="Dashboard",
             envs={},
+            # Attribute the child Solution to the Organization owner.
             user_id=owner.id,
         )
         session.add(OrganizationInvitation(organization_id=organization.id, email="invited@example.com", role=OrganizationRoles.write))
@@ -194,6 +201,8 @@ async def test_soft_delete_tombstones_solutions_and_retains_memberships(users: t
         deleted_organization = await session.get(Organization, organization.id)
         deleted_solution = await session.get(Solution, solution.id)
         second_delete = await organizations.soft_delete(session, organization.id, owner)
+
+        # A genuinely missing Organization remains distinguishable from a repeated deletion.
         with pytest.raises(HTTPException) as missing_delete:
             await organizations.soft_delete(session, uuid4(), owner)
         await session.commit()
@@ -208,6 +217,8 @@ async def test_soft_delete_tombstones_solutions_and_retains_memberships(users: t
         assert all(operation.target_id != solution.id for operation in await fetch_operations())
     assert {member.user_id for member in members} == {owner.id, member.id}
     assert deleted_solution is not None
+
+    # Parent deletion also tombstones the owned Solution exactly once.
     assert deleted_solution.deleted_at is not None
     assert second_delete is not None
     assert second_delete.id == result.id

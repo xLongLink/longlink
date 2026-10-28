@@ -29,6 +29,7 @@ async def pending(session: AsyncSession, user: User) -> Sequence[OrganizationInv
         )
         .where(
             col(OrganizationInvitation.email) == user.email,
+            # Expired invitations and deleted Organizations cannot grant access.
             col(OrganizationInvitation.created_at) > datetime.now(UTC) - timedelta(days=7),
             col(Organization.deleted_at).is_(None),
         )

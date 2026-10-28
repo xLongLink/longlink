@@ -66,6 +66,8 @@ async def test_registry_creation_rejects_maintainer_demoted_during_github_lookup
         persisted_user = await session.get(User, maintainer.id)
         assert persisted_user is not None
         assert not persisted_user.administrator
+
+        # Verify registry access comes from tenant membership, not Platform administration.
         membership = await session.get(UserOrganization, (maintainer.id, organization.id))
         assert membership is not None
         assert membership.role == OrganizationRoles.read
@@ -88,6 +90,8 @@ async def test_registry_list_is_tenant_scoped_and_redacts_credentials(
     foreign_connection = RegistryConnection(
         organization_id=foreign_organization.id, username="foreign-account", credential="foreign-credential-must-not-leak"
     )
+
+    # Persist both tenant-owned and foreign credentials before the lookup.
     async with session_scope() as session:
         session.add_all([connection, foreign_connection])
         await session.commit()
@@ -120,6 +124,8 @@ async def test_registry_delete_preserves_credentials_used_by_historical_revision
     async with session_scope() as session:
         session.add(connection)
         await session.flush()
+
+        # Historical releases keep their own credential reference.
         session.add(historical)
         await session.commit()
     previous_operations = await fetch_operations()
@@ -137,6 +143,8 @@ async def test_registry_delete_preserves_credentials_used_by_historical_revision
         persisted_revision = await session.get(Revision, historical.id)
         assert persisted_revision is not None
         assert persisted_revision.registry_connection_id == connection.id
+
+        # Credential changes must preserve the Solution's current release ownership.
         persisted_solution = await session.get(Solution, solution.id)
         assert persisted_solution is not None
         assert historical.id not in (persisted_solution.desired_revision_id, persisted_solution.deployed_revision_id)
@@ -182,6 +190,8 @@ async def test_registry_create_commits_credentials_and_fresh_reconciliation(
         assert connection.organization_id == organization.id
         assert connection.username == "registry-maintainer"
         assert connection.credential == credential
+
+    # Registry updates schedule reconciliation through the real operation queue.
     current_operations = await fetch_operations()
     assert len(current_operations) == 2
     assert previous_operations[0].id in {operation.id for operation in current_operations}
@@ -207,6 +217,8 @@ async def test_registry_delete_commits_removal_and_fresh_reconciliation(
     await claim_operation()
     previous_operations = await fetch_operations()
     assert len(previous_operations) == 1
+
+    # Existing leased work remains active when reconciliation is requested again.
     assert previous_operations[0].finished_at is None
     assert previous_operations[0].lease_expires_at is not None
 
@@ -223,6 +235,8 @@ async def test_registry_delete_commits_removal_and_fresh_reconciliation(
     assert previous_operations[0].id in {operation.id for operation in current_operations}
     new_operations = [operation for operation in current_operations if operation.id != previous_operations[0].id]
     assert len(new_operations) == 1
+
+    # Reconciliation targets the owning Organization rather than an individual release.
     assert new_operations[0].kind == OperationKind.organization_create
     assert new_operations[0].target_id == organization.id
     assert new_operations[0].finished_at is None

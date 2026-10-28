@@ -36,6 +36,8 @@ async def card_organization(users: tuple[User, User, User], configured_stripe: N
         organization.stripe_customer_id = "cus_acme"
         organization.stripe_checkout_id = "cs_acme"
         await session.commit()
+
+    # Expose the persisted fixture after payment metadata commits.
     return organization
 
 
@@ -48,6 +50,7 @@ PAYMENT_ENDPOINTS = [
     ),
     pytest.param(
         "GET",
+        # Exercise the Stripe invoice-list endpoint, not local invoice snapshots.
         "invoices",
         [
             {
@@ -96,6 +99,7 @@ async def test_payment_endpoints_require_the_organizations_owner_before_stripe(
                     {
                         "id": "pm_acme",
                         "object": "payment_method",
+                        # Only display-safe card metadata is returned by the provider boundary.
                         "card": {"brand": "visa", "last4": "4242", "exp_year": 2030, "exp_month": 12},
                     }
                 ],
@@ -117,6 +121,7 @@ async def test_payment_endpoints_require_the_organizations_owner_before_stripe(
                         "status": "paid",
                         "currency": "usd",
                         "created": 1767225600,
+                        # Provider invoices expose their display and download links.
                         "invoice_pdf": "https://stripe.example/invoice.pdf",
                         "hosted_invoice_url": "https://stripe.example/invoice",
                     }
@@ -125,6 +130,8 @@ async def test_payment_endpoints_require_the_organizations_owner_before_stripe(
             None,
         )
     )
+
+    # Owner-only reads may resolve the Organization's outstanding hosted checkout.
     connection.v1.checkout.sessions.retrieve_async = AsyncMock(
         return_value=stripe.checkout.Session.construct_from(
             {"id": "cs_acme", "status": "open", "url": "https://stripe.example/checkout"}, None
@@ -159,6 +166,8 @@ async def test_payment_endpoints_require_the_organizations_owner_before_stripe(
         assert persisted is not None
         assert persisted.stripe_customer_id == "cus_acme"
         assert persisted.stripe_checkout_id == "cs_acme"
+
+        # A hosted checkout is not yet a completed payment-method registration.
         assert persisted.stripe_checkout_key is None
         assert persisted.stripe_payment_method_id is None
     await assert_no_new_operations(previous_operations)
@@ -175,7 +184,10 @@ def signed_webhook(*, livemode: bool = False, secret: str = "whsec_payments") ->
             "livemode": livemode,
             "data": {"object": {"id": "cs_acme", "object": "checkout.session", "customer": "cus_acme"}},
         }
+        # Stripe signs the exact encoded JSON body.
     ).encode()
+
+    # Sign the exact webhook bytes using Stripe's timestamped signature format.
     timestamp = int(time.time())
     signature = hmac.new(secret.encode(), str(timestamp).encode() + b"." + body, hashlib.sha256).hexdigest()
     return body, f"t={timestamp},v1={signature}"
@@ -191,6 +203,8 @@ async def assert_card_registration_unchanged(organization: Organization) -> None
         assert persisted.stripe_checkout_id == organization.stripe_checkout_id
         assert persisted.stripe_payment_method_id is None
         assert persisted.invoice_due_at is None
+
+        # Ignored events must not expand infrastructure quotas.
         assert persisted.database_size_mib == organization.database_size_mib
         assert persisted.storage_quota_bytes == organization.storage_quota_bytes
 

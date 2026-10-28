@@ -32,7 +32,7 @@ def test_context_middleware_treats_untrusted_identity_as_anonymous(secret: str, 
     app = FastAPI()
     app.add_middleware(IdentityMiddleware, identity_secret=secret, require_identity=False, local_user_id=None)
 
-    @app.get("/")
+    @app.get("/", response_model=dict[str, bool])
     async def get_identity() -> dict[str, bool]:
         """Expose whether the middleware accepted the supplied identity."""
 
@@ -62,14 +62,14 @@ def production_client() -> Iterator[TestClient]:
     app.state.longlink = SimpleNamespace(database=database)
     app.add_middleware(IdentityMiddleware, identity_secret=IDENTITY_SECRET, require_identity=True, local_user_id=None)
 
-    @app.get("/views.json")
+    @app.get("/views.json", response_model=dict[str, bool])
     async def views() -> dict[str, bool]:
         """Expose whether the request carried a verified user."""
 
         return {"authenticated": audit.current_actor.get() is not None}
 
-    @app.get("/health")
-    @app.get("/ready")
+    @app.get("/health", response_model=dict[str, bool])
+    @app.get("/ready", response_model=dict[str, bool])
     async def probe() -> dict[str, bool]:
         """Provide anonymous liveness and readiness probes."""
 
@@ -91,6 +91,7 @@ def production_client() -> Iterator[TestClient]:
             client.portal.call(database.dispose)
 
 
+# Production requests require a valid assertion signed by the configured Platform.
 HTTP_IDENTITY_CASES = [
     pytest.param({}, None, 401, {"detail": "Authentication required"}, id="missing"),
     pytest.param({"x-longlink-identity": "invalid-token"}, None, 401, {"detail": "Authentication required"}, id="malformed"),
@@ -159,7 +160,7 @@ async def test_context_middleware_isolates_concurrent_audit_identities() -> None
     app.state.longlink = SimpleNamespace(database=database)
     app.add_middleware(IdentityMiddleware, identity_secret=IDENTITY_SECRET, require_identity=False, local_user_id=None)
 
-    @app.get("/")
+    @app.get("/", response_model=dict[str, str | None])
     async def current_user() -> dict[str, str | None]:
         """Return the audit identity after both requests reach the handler."""
 
@@ -185,6 +186,8 @@ async def test_context_middleware_isolates_concurrent_audit_identities() -> None
     try:
         async with client:
             async with asyncio.timeout(5):
+
+                # Overlap both handlers to exercise task-local identity isolation.
                 first_response, second_response = await asyncio.gather(
                     request(first_id, first_outer_id), request(second_id, second_outer_id)
                 )

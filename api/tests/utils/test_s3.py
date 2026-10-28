@@ -25,7 +25,11 @@ async def s3(monkeypatch: pytest.MonkeyPatch) -> AsyncIterator[tuple[S3, AioStub
         aws_secret_access_key="secret",
         aws_session_token="dummy",
     ) as client:
+
+        # Keep the real storage adapter while replacing its network client.
         storage = S3("http://127.0.0.1:1", Credentials("access", "secret"))
+
+        # Stub S3 operations while retaining the real botocore request contract.
         stubber = AioStubber(client)
 
         # Replace only the transport lifetime; production operations and paginators remain real.
@@ -61,6 +65,7 @@ async def test_create_bucket_protects_new_and_existing_buckets(s3: tuple[S3, Aio
             "PublicAccessBlockConfiguration": {
                 "BlockPublicAcls": True,
                 "IgnorePublicAcls": True,
+                # Bucket policies and public grants remain blocked on replay too.
                 "BlockPublicPolicy": True,
                 "RestrictPublicBuckets": True,
             },
@@ -151,7 +156,10 @@ async def test_delete_prefix_batches_thousand_identifiers(s3: tuple[S3, AioStubb
     )
     stubber.add_response("abort_multipart_upload", {}, {"Bucket": "org-bucket", "Key": "solutions/abc/upload", "UploadId": "upload-1"})
     stubber.add_response(
-        "list_object_versions", {"Versions": versions, "DeleteMarkers": [marker]}, {"Bucket": "org-bucket", "Prefix": "solutions/abc/"}
+        # Prefix deletion must include historical versions and delete markers.
+        "list_object_versions",
+        {"Versions": versions, "DeleteMarkers": [marker]},
+        {"Bucket": "org-bucket", "Prefix": "solutions/abc/"},
     )
     stubber.add_response("delete_objects", {}, {"Bucket": "org-bucket", "Delete": {"Objects": versions[:1000], "Quiet": True}})
     stubber.add_response("delete_objects", {}, {"Bucket": "org-bucket", "Delete": {"Objects": [versions[1000], marker], "Quiet": True}})
@@ -173,6 +181,7 @@ async def test_delete_prefix_raises_on_partial_failures(s3: tuple[S3, AioStubber
     )
     stubber.add_response(
         "delete_objects",
+        # S3 can report per-object deletion failure in an otherwise successful response.
         {"Errors": [{"Key": "solutions/abc/file", "Code": "AccessDenied"}]},
         {"Bucket": "org-bucket", "Delete": {"Objects": [{"Key": "solutions/abc/file", "VersionId": "v1"}], "Quiet": True}},
     )

@@ -79,6 +79,8 @@ def score(query: str, name: str, keywords: list[str], description: str) -> float
         return 1000
     if query in phrases:
         return 900
+
+    # Prefer full multiword phrases to individual term matches.
     if any(len(phrase.split()) >= 2 and f" {phrase} " in f" {query} " for phrase in [*names, *phrases]):
         return 600
 
@@ -90,12 +92,18 @@ def score(query: str, name: str, keywords: list[str], description: str) -> float
     for term in terms:
         if term in words:
             weights.append(100)
+
+        # Partial words rank below exact terms and above prose-only matches.
         elif len(term) >= 3 and any(word.startswith(term) for word in words):
             weights.append(70)
+
+        # Prose-only matches rank below names and explicit keywords.
         elif term in prose:
             weights.append(20)
         else:
             weights.append(0)
+
+    # Reward queries whose every term matches a name or keyword.
     relevance = sum(weights) / len(terms)
     if all(weight >= 70 for weight in weights):
         relevance += 200
@@ -129,6 +137,8 @@ def search(query: str, components: Sequence[Component]) -> list[Component]:
         relevance = score(query, component.name, keywords, description)
         if relevance >= 15:
             ranked.append((relevance, component))
+
+    # Resolve equal relevance deterministically before limiting suggestions.
     ranked.sort(key=lambda match: (-match[0], match[1].name))
     return [component for _, component in ranked[:6]]
 
@@ -182,6 +192,8 @@ def component_command(name: str, /) -> None:
     print(f"{component.name} [{component.category}]")
     if component.introduction:
         print(component.introduction)
+
+    # Keep usage guidance separate from the component introduction.
     if component.guidance:
         print(f"\nUsage: {component.guidance}")
 
@@ -192,6 +204,8 @@ def component_command(name: str, /) -> None:
         print(f"\n- {prop.name} ({prop.type}):\n  {prop.description}")
         if "default" in prop.model_fields_set:
             print(f"  Default: {prop.default!r}")
+
+    # Distinguish a prop-free component from missing documentation.
     if not component.members and not component.properties:
         print("No props.")
 
@@ -264,6 +278,8 @@ def build_command(query: str, /) -> None:
             print(f"{index}. {step}")
         matches = [next(component for component in documentation.components if component.name == name) for name in pattern.components]
     else:
+
+        # Search results are useful even when no curated workflow matches.
         print("\nNo specific workflow guidance matches this idea. These are documentation matches, not a complete implementation plan.")
         matches = search(query, documentation.components)
     print("\nRelevant APIs")

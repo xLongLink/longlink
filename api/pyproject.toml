@@ -83,6 +83,18 @@ ignore = ["D100", "D104", "D202"]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["ARG", "N803", "S"]
+# FastAPI dependencies and streaming responses own these generators' cleanup.
+"src/auth.py" = ["ASYNC119"]
+"src/mcp.py" = ["ASYNC119"]
+"src/routes/v1/proxy.py" = ["ASYNC119"]
+# These values name protocol fields, endpoints, cookie scopes, and public messages, not secrets.
+"src/models/mcp.py" = ["S105"]
+"src/routes/v1/auth.py" = ["S105"]
+"src/utils/cookies.py" = ["S105"]
+"src/utils/oauth.py" = ["S105", "S106"]
+"src/utils/token.py" = ["S105"]
+# The development image builder intentionally executes a resolved UV binary without a shell.
+"**/dev/scripts/image.py" = ["S404", "S603"]
 
 [tool.ruff.lint.isort]
 no-sections = true

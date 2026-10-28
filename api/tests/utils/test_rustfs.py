@@ -66,7 +66,7 @@ async def test_service_account_replaces_abandoned_credentials() -> None:
 
     client = create_client(respond)
 
-    # Act
+    # Act through the real HTTP client lifecycle around administrative requests.
     async with client:
         storage = RustFS("https://storage.example.com", s3.Credentials("owner", "secret"), client)
         credentials = await storage.service_account("org-bucket", solution)
@@ -140,12 +140,15 @@ async def test_revoke_handles_administrative_errors(status_code: int, message: s
             Error,
             check=lambda exception: (
                 exception.status_code == status_code
+                # Provider errors retain their bounded administrative error message.
                 and str(exception) == f"RustFS administration failed with HTTP {status_code}: {message}"
             ),
         )
     )
     async with client:
         storage = RustFS("https://storage.example.com", s3.Credentials("owner", "secret"), client)
+
+        # Exercise revocation against the controlled administrative response.
         with expectation:
             await storage.revoke(solution)
 

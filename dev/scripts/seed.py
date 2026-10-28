@@ -163,6 +163,7 @@ async def create_sample(client: httpx2.AsyncClient, settings: SeedSettings, orga
         None,
     )
     if solution is not None:
+
         # Request normal lifecycle cleanup so the old schema, credentials, and attachments are removed together.
         print("Removing the local sample Solution, including its database and attachments.")
         response = await client.delete(f"/api/v1/solutions/{solution.id}")
@@ -174,10 +175,16 @@ async def create_sample(client: httpx2.AsyncClient, settings: SeedSettings, orga
                 response = await client.get("/api/v1/operations", params={"search": "solution.delete", "page_size": 100})
                 response.raise_for_status()
                 operations = OperationPage.model_validate(response.json()).items
+
+                # Wait for the actual deletion operation before recreating the sample.
                 operation = next((operation for operation in operations if operation.target_id == solution.id), None)
                 if operation is not None:
+
+                    # Failed cleanup must not be mistaken for permission to recreate the sample.
                     if operation.status == "failed":
                         raise RuntimeError(f"Sample cleanup failed: {operation.failed}")
+
+                    # Recreate the sample only after cleanup is terminally acknowledged.
                     if operation.status == "completed":
                         break
                 await asyncio.sleep(1)
@@ -193,6 +200,8 @@ async def create_sample(client: httpx2.AsyncClient, settings: SeedSettings, orga
             "description": "Track building projects and construction phases for ACME Ink.",
         },
     )
+
+    # A missing local image requires the separate image-build workflow.
     if response.status_code == 404:
         raise RuntimeError("Sample image 'localhost:15000/sample:latest' was not found in the local registry; run 'make image' first")
     response.raise_for_status()
@@ -205,14 +214,19 @@ async def create_sample(client: httpx2.AsyncClient, settings: SeedSettings, orga
             solution = next(
                 (
                     solution
+                    # Validate response entries before selecting the recreated sample.
                     for solution in (Resource.model_validate(payload) for payload in response.json())
                     if solution.slug == SAMPLE_SOLUTION
                 ),
                 None,
             )
             if solution is not None:
+
+                # Surface a failed sample deployment instead of polling forever.
                 if solution.status == "failed":
                     raise RuntimeError("Sample deployment failed. Review its logs in the Platform.")
+
+                # Return only after the sample deployment becomes available.
                 if solution.status == "running":
                     break
             await asyncio.sleep(1)
@@ -274,6 +288,8 @@ async def register_card(organization_id: UUID) -> None:
             organization.stripe_customer_id = customer.id
             await database.commit()
             organization = await organizations.lock(database, organization_id)
+
+            # A competing setup attempt may already have registered the card.
             if organization.stripe_payment_method_id is not None:
                 return
 
@@ -287,6 +303,7 @@ async def register_card(organization_id: UUID) -> None:
                 "payment_method_types": ["card"],
                 "metadata": {"organization_id": str(organization.id)},
             },
+            # Repeated seeds reuse the same provider setup attempt.
             options={"idempotency_key": f"seed-card:{organization.id}"},
         )
         await payments.save_setup_intent(database, organization, intent, connection)
@@ -310,6 +327,8 @@ async def create_invoice(organization_id: UUID) -> None:
             select(Invoice).where(Invoice.organization_id == organization_id).order_by(Invoice.period_end).limit(1)
         )
         if invoice is None:
+
+            # Example invoicing requires completed development payment setup.
             if organization.stripe_customer_id is None or organization.stripe_payment_method_id is None:
                 raise RuntimeError("Register the development test card before creating an example invoice")
             invoice = Invoice(
@@ -317,6 +336,7 @@ async def create_invoice(organization_id: UUID) -> None:
                 customer_id=organization.stripe_customer_id,
                 period_end=datetime.now(UTC).replace(day=1, hour=0, minute=0, second=0, microsecond=0),
                 users=pricing.FREE_USERS + 2,
+                # Example usage deliberately exceeds each free allowance.
                 database_bytes=pricing.FREE_DATABASE_BYTES + 1024**3,
                 storage_bytes=pricing.FREE_STORAGE_BYTES + 1024**3,
             )
@@ -340,8 +360,10 @@ async def seed(settings: SeedSettings) -> None:
     async with httpx2.AsyncClient(
         base_url=settings.API_URL, headers={"Origin": settings.PUBLIC_URL}, timeout=10, trust_env=False
     ) as client:
+
         # Release the fixture database connection even when API provisioning fails.
         try:
+
             # Authenticate with the administrator that the API initializes during startup.
             response = await client.post(
                 "/api/v1/auth/password/login", json={"email": settings.ADMIN_EMAIL, "password": settings.ADMIN_PASSWORD}
@@ -355,6 +377,8 @@ async def seed(settings: SeedSettings) -> None:
             await register_card(organization.id)
             await create_invoice(organization.id)
             await create_sample(client, settings, organization)
+
+        # Release the seed process's database pool after all API workflows finish.
         finally:
             await session.dispose_engine()
 

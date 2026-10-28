@@ -54,6 +54,8 @@ async def save(
     # Preserve assignments and translate backend-specific collation conflicts.
     try:
         async with session.begin_nested():
+
+            # New tags belong to the locked Organization.
             if tag is None:
                 tag = OrganizationTag(
                     organization_id=organization_id,
@@ -61,6 +63,8 @@ async def save(
                     icon=icon,
                     position=max((item.position for item in existing), default=-1) + 1,
                 )
+
+                # Publish new tag metadata within the savepoint.
                 session.add(tag)
             else:
                 tag.name = name
@@ -126,6 +130,8 @@ async def assign(session: AsyncSession, organization_id: UUID, user_id: UUID, so
                 col(OrganizationTag.id).in_(unique_ids),
             )
         )
+
+        # Every requested identifier must resolve within this Organization.
         if set(result.all()) != unique_ids:
             raise HTTPException(status_code=404, detail="Tag not found")
 

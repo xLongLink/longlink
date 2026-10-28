@@ -29,6 +29,7 @@ from longlink.utils.settings import Envs
                 "pool_use_lifo": True,
                 "connect_args": {"server_settings": {"timezone": "UTC", "search_path": '"solution"'}},
             },
+            # Production connections receive schema and TLS configuration.
             id="production",
         ),
     ],
@@ -63,6 +64,7 @@ async def test_create_engine_selects_database_url_and_options(
     engine = database_base.create_engine(env)
 
     try:
+
         # Assert the real engine uses the selected URL and preserve its forwarded options.
         assert engine.url == expected_url
         [engine_kwargs] = captured
@@ -77,12 +79,15 @@ async def test_create_engine_selects_database_url_and_options(
             certificate_context = connect_args.pop("ssl")
             assert isinstance(certificate_context, ssl.SSLContext)
             assert certificate_context.verify_mode == ssl.CERT_REQUIRED
+
+            # Custom trust must not disable hostname verification.
             assert certificate_context.check_hostname is True
             assert ssl.PEM_cert_to_DER_cert(ca_certificate) in certificate_context.get_ca_certs(binary_form=True)
 
         # Verify the remaining connection options.
         assert engine_kwargs == expected_kwargs
     finally:
+
         # Release the real engine even when an assertion fails.
         await engine.dispose()
 
@@ -102,6 +107,7 @@ async def test_concurrent_sessions_share_a_usable_engine_until_disposal() -> Non
             return session.bind
 
     try:
+
         # Act
         first_engine, second_engine = await asyncio.gather(open_session(), open_session())
 
@@ -130,16 +136,21 @@ async def test_session_retries_initialization_after_database_connection_failure(
     create_engine = database_base.create_engine
 
     try:
+
         # Act and assert
         with monkeypatch.context() as failing_engine:
             failing_engine.setattr(database_base, "create_engine", lambda _env: engine)
             with pytest.raises(OperationalError, match="unable to open database file") as error:
+
+                # Failed initialization must not publish a usable session.
                 async with database.session():
                     pass
 
         # Assert the real connection error survives cleanup and disposal replaces the pool.
         assert isinstance(error.value.orig, sqlite3.OperationalError)
         assert error.value.orig.args == ("unable to open database file",)
+
+        # Disposal replaces the old connection pool instead of retaining stale handles.
         assert engine.pool is not original_pool
 
         # Retry the production connection path against a real isolated SQLite engine.
@@ -148,6 +159,7 @@ async def test_session_retries_initialization_after_database_connection_failure(
             async with database.session() as database_session:
                 assert await database_session.scalar(text("SELECT 1")) == 1
     finally:
+
         # Release both engines even if the disposal regression assertions fail.
         await engine.dispose()
         await database.dispose()
@@ -180,14 +192,18 @@ async def test_session_disposes_sqlite_engine_after_schema_initialization_failur
     database = database_base.Database(Envs(ENV="testing"))
 
     try:
+
         # Act and assert
         with pytest.raises(RuntimeError, match="schema unavailable") as error:
             async with database.session():
                 pass
         assert error.value is failure
+
+        # Failed initialization closes its connections and replaces the old pool.
         assert len(closed_connections) == 1
         assert engine.pool is not original_pool
     finally:
+
         # Release resources even if the disposal regression assertions fail.
         await engine.dispose()
 
@@ -234,15 +250,20 @@ async def test_session_disposes_sqlite_engine_after_initialization_timeout(monke
     event.listen(engine.sync_engine, "close", record_connection_close)
 
     try:
+
         # Act with a scoped suspension seam and a bounded diagnostic watchdog.
         with monkeypatch.context() as suspended_initialization:
             suspended_initialization.setattr(database_base, "create_engine", lambda _env: engine)
             suspended_initialization.setattr(AsyncConnection, "run_sync", suspend_schema_creation)
             task = asyncio.create_task(open_session())
             try:
+
+                # Cancel only after schema creation has actually started.
                 async with asyncio.timeout(5):
                     await schema_started.wait()
                     initialization_timeout.reschedule(asyncio.get_running_loop().time())
+
+                    # Await the real cancelled initialization task and preserve its timeout error.
                     with pytest.raises(TimeoutError) as error:
                         await task
 
@@ -255,6 +276,7 @@ async def test_session_disposes_sqlite_engine_after_initialization_timeout(monke
                 assert len(closed_connections) == 1
                 assert engine.pool is not original_pool
             finally:
+
                 # Reap the initialization task even if a diagnostic assertion fails.
                 task.cancel()
                 await asyncio.gather(task, return_exceptions=True)
@@ -263,6 +285,7 @@ async def test_session_disposes_sqlite_engine_after_initialization_timeout(monke
         async with database.session() as database_session:
             assert await database_session.scalar(text("SELECT 1")) == 1
     finally:
+
         # Release failed and recovered engines even when the test fails.
         await engine.dispose()
         await database.dispose()

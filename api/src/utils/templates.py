@@ -8,9 +8,8 @@ def readyml_list(template_path: Traversable, **context: object) -> list[dict[str
 
     docs: list[dict[str, object]] = []
 
-    # Parse each rendered YAML document separately.
+    # Parse each non-empty rendered YAML document separately.
     for document in yaml.safe_load_all(Template(template_path.read_text(encoding="utf-8")).substitute(**context)):
-        # Ignore empty YAML documents from separators.
         if document is None:
             continue
 

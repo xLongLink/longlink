@@ -40,6 +40,7 @@ def create_fs(settings: Envs) -> AbstractFileSystem:
 
     # Production uses remote object storage supplied by the platform.
     if settings.ENV == "production":
+
         # s3fs connects lazily, so transfer CA cleanup only after constructing its owning filesystem.
         with ExitStack() as files:
             certificate = files.enter_context(tls.verified_location(settings.STORAGE_CERTIFICATE))
@@ -49,13 +50,15 @@ def create_fs(settings: Envs) -> AbstractFileSystem:
                 key=settings.STORAGE_USERNAME,
                 secret=settings.STORAGE_PASSWORD,
                 client_kwargs={"region_name": settings.STORAGE_REGION, **({"verify": certificate} if certificate is not None else {})},
+                # Keep the runtime's TLS-aware transport and path-style bucket addressing.
                 config_kwargs={"s3": {"addressing_style": "path"}, "http_session_cls": tls.Session},
                 skip_instance_cache=True,
             )
             if certificate is not None:
                 weakref.finalize(filesystem, files.pop_all().close)
+
+    # fsspec memory storage is process-global, so each runtime owns a separate directory.
     elif settings.ENV == "testing":
-        # fsspec memory storage is process-global, so each runtime owns a separate directory.
         memory = fsspec.filesystem("memory")
         directory = f"/longlink-testing-{uuid4()}"
         memory.mkdir(directory)
@@ -70,6 +73,7 @@ def create_fs(settings: Envs) -> AbstractFileSystem:
         weakref.finalize(filesystem, _remove_memory_directory, memory, directory)
         return filesystem
     else:
+
         # Development keeps generated files inside a dedicated local directory.
         storage_path = Path.cwd() / ".storage"
         if scope is not None:

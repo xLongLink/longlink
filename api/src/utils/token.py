@@ -11,10 +11,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.users import User
 
 JWT_ALGORITHM = "HS256"
-AUTH_TOKEN_AUDIENCE = "longlink:auth"  # noqa: S105
-REGISTRATION_TOKEN_AUDIENCE = "longlink:register"  # noqa: S105
-PASSWORD_RESET_TOKEN_AUDIENCE = "longlink:reset-password"  # noqa: S105
-OAUTH_STATE_TOKEN_AUDIENCE = "longlink:oauth"  # noqa: S105
+AUTH_TOKEN_AUDIENCE = "longlink:auth"
+REGISTRATION_TOKEN_AUDIENCE = "longlink:register"
+PASSWORD_RESET_TOKEN_AUDIENCE = "longlink:reset-password"
+OAUTH_STATE_TOKEN_AUDIENCE = "longlink:oauth"
 EMAIL_TOKEN_LIFETIME_SECONDS = 3600
 OAUTH_STATE_TOKEN_LIFETIME_SECONDS = 600
 
@@ -59,6 +59,8 @@ def registration_claims(token: str) -> Email:
     email = data.get("email")
     if not isinstance(email, str) or not email:
         raise jwt.InvalidTokenError("Invalid registration token claims")
+
+    # Signed claims still need domain-level email validation.
     try:
         return EMAIL_ADAPTER.validate_python(email)
     except ValidationError as exc:
@@ -91,6 +93,7 @@ def create_oauth_state_token(provider: OAuthProvider, state: str, verifier: str,
             "state": state,
             "verifier": verifier,
             "return_to": return_to,
+            # OAuth proof cannot be reused as a browser session or email token.
             "aud": OAUTH_STATE_TOKEN_AUDIENCE,
             "exp": datetime.now(UTC) + timedelta(seconds=OAUTH_STATE_TOKEN_LIFETIME_SECONDS),
         },
@@ -123,6 +126,8 @@ async def password_reset_user(session: AsyncSession, token: str) -> User:
     fingerprint = data.get("password_fingerprint")
     if not isinstance(raw_user_id, str) or not isinstance(fingerprint, str):
         raise jwt.InvalidTokenError("Invalid password reset token claims")
+
+    # Reject malformed subject identifiers before querying a reset account.
     try:
         user_id = UUID(raw_user_id)
     except ValueError as exc:
@@ -145,6 +150,7 @@ def create_auth_token(user: User) -> str:
             "sub": str(user.id),
             "password_fingerprint": password_fingerprint(user.password),
             "aud": AUTH_TOKEN_AUDIENCE,
+            # Browser sessions remain bounded even when the password does not change.
             "iat": issued_at,
             "exp": issued_at + timedelta(days=30),
         },
@@ -162,6 +168,8 @@ def auth_token_claims(token: str) -> tuple[UUID, str]:
     fingerprint = data.get("password_fingerprint")
     if not isinstance(raw_user_id, str) or not isinstance(fingerprint, str):
         raise jwt.InvalidTokenError("Invalid browser session claims")
+
+    # Parse the verified subject before resolving the local browser identity.
     try:
         return UUID(raw_user_id), fingerprint
     except ValueError as exc:

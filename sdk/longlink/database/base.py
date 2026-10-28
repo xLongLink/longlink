@@ -82,6 +82,8 @@ def create_engine(env: Envs) -> AsyncEngine:
         connect_args: dict[str, object] = {"server_settings": server_settings}
         if env.DATABASE_CERTIFICATE is not None:
             connect_args["ssl"] = ssl.create_default_context(cadata=env.DATABASE_CERTIFICATE)
+
+        # Forward schema and TLS settings through the PostgreSQL driver's connection options.
         engine_kwargs["connect_args"] = connect_args
 
     return create_async_engine(dburl, **engine_kwargs)
@@ -108,22 +110,31 @@ class Database:
 
                     # Initialize the database without publishing partially initialized resources.
                     try:
+
+                        # Schema setup and local-user seeding commit together.
                         async with engine.begin() as conn:
+
                             # Testing creates all tables; other environments use committed migrations.
                             if self._env.ENV == "testing":
                                 await conn.run_sync(SQLModel.metadata.create_all)
 
+                            # Production identities arrive through signed Platform requests.
                             if self._env.ENV != "production":
+
                                 # Seed the local user within the initialization transaction.
                                 users = SQLModel.metadata.tables["users"]
                                 user_id = await conn.scalar(sqlalchemy.select(users.c.id).where(users.c.id == LOCAL_USER_ID))
                                 if user_id is None:
+
+                                    # Seed only the fixed local identity, preserving existing profile changes.
                                     name = "Development user" if self._env.ENV == "development" else "Testing user"
                                     await conn.execute(
                                         sqlalchemy.insert(users).values(
                                             id=LOCAL_USER_ID, name=name, email="local@example.com", avatar="", updated_at=datetime.now(UTC)
                                         )
                                     )
+
+                    # Failed or cancelled initialization must dispose the unpublished engine.
                     except BaseException:
                         await engine.dispose()
                         raise
@@ -167,6 +178,7 @@ class Database:
                 statement.on_conflict_do_update(
                     index_elements=[users.c.id],
                     set_={name: statement.excluded[name] for name in ("name", "email", "avatar", "updated_at")},
+                    # Older assertions must not overwrite a newer local profile.
                     where=users.c.updated_at < statement.excluded.updated_at,
                 )
             )

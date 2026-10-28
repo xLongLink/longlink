@@ -18,6 +18,7 @@ async def test_user_relationships_persist_required_and_optional_roles() -> None:
     mapper_registry = registry(metadata=SQLModel.metadata, class_registry={"User": User})
     database = database_base.Database(Envs(ENV="testing"))
     try:
+
         # Arrange postponed annotations for both required and optional user roles.
         class RelationshipModel(Model, registry=mapper_registry):
             """Own only this test's temporary mapper while sharing real table metadata."""
@@ -37,6 +38,7 @@ async def test_user_relationships_persist_required_and_optional_roles() -> None:
 
         owner = User(id=UUID("00000000-0000-0000-0000-000000000002"), name="Owner", email="owner@example.com")
         approver = User(id=UUID("00000000-0000-0000-0000-000000000003"), name="Approver", email="approver@example.com")
+
         # Act
         async with database.session() as session:
             session.add_all([owner, approver])
@@ -56,8 +58,11 @@ async def test_user_relationships_persist_required_and_optional_roles() -> None:
             assert getattr(unapproved, "approved_by_id") is None
             assert unapproved.approved_by is None
 
+            # Inspect a second row with an explicitly assigned optional approver.
             approved = await session.get(UserRoleItem, approved_id)
             assert approved is not None
+
+            # Generated foreign keys must retain their independently assigned user identities.
             assert getattr(approved, "owner_id") == owner.id
             assert approved.owner.id == owner.id
             assert getattr(approved, "approved_by_id") == approver.id
@@ -70,17 +75,23 @@ async def test_user_relationships_persist_required_and_optional_roles() -> None:
         assert table.c.approved_by_id.nullable
         async with database.session() as session:
             session.add(UserRoleItem())
+
+            # Required user relations remain enforced by the database.
             with pytest.raises(IntegrityError, match="NOT NULL constraint failed: test_user_role_items.owner_id"):
                 await session.commit()
             await session.rollback()
     finally:
+
         # Release each local resource even if another cleanup step fails.
         try:
             await database.dispose()
         finally:
             try:
+
+                # Release this test's mapper registry before removing table metadata.
                 mapper_registry.dispose()
             finally:
+
                 # Remove only the test table, including a partially configured declaration.
                 table = SQLModel.metadata.tables.get("test_user_role_items")
                 if table is not None:

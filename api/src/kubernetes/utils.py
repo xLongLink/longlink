@@ -23,5 +23,7 @@ async def delete_namespace(api: Api, name: str) -> None:
         await resource.delete()
     except NotFoundError:
         return
+
+    # Deletion acknowledgement does not imply the resource is already gone.
     async with asyncio.timeout(600):
         await resource.wait("delete")

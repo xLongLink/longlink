@@ -34,6 +34,7 @@ async def fetch(session: AsyncSession, pagination: Pagination, search: str = "")
                 col(Solution.name).icontains(search, autoescape=True),
                 col(Solution.slug).icontains(search, autoescape=True),
                 col(Solution.description).icontains(search, autoescape=True),
+                # Administrators can also locate Solutions by their owning Organization.
                 col(Organization.name).icontains(search, autoescape=True),
             )
         )
@@ -49,6 +50,7 @@ async def fetch(session: AsyncSession, pagination: Pagination, search: str = "")
             selectinload(attr(Solution.deployed_revision)).load_only(attr(Revision.version), raiseload=True),
             selectinload(attr(Solution.tag_assignments)),
         )
+        # Use the identity as a tie-breaker for stable pagination.
         .order_by(col(Solution.created_at).desc(), col(Solution.id).desc())
         .offset(pagination.offset)
         .limit(pagination.page_size)
@@ -69,6 +71,7 @@ async def create(
     envs: Mapping[str, str],
     user_id: UUID,
     description: str | None = None,
+    # Private images retain their Organization-owned registry connection.
     registry_connection_id: UUID | None = None,
 ) -> Solution:
     """Create an Organization-owned LongLink Solution."""
@@ -78,6 +81,8 @@ async def create(
         await session.execute(
             update(Organization).where(col(Organization.id) == organization_id).values(updated_at=col(Organization.updated_at))
         )
+
+    # Serialize creation against Organization deletion and capacity checks.
     organization = await session.scalar(select(Organization).where(col(Organization.id) == organization_id).with_for_update())
     if organization is None:
         raise HTTPException(status_code=404, detail="Organization not found")
@@ -95,6 +100,8 @@ async def create(
         .limit(1)
         .with_for_update()
     )
+
+    # Reject creation before allocating a Solution or release snapshot.
     if solution_limit_result.scalar_one_or_none() is not None:
         raise HTTPException(
             status_code=409, detail="Solution limit reached during the beta. Contact LongLink to request additional solutions."
@@ -108,6 +115,8 @@ async def create(
         async with session.begin_nested():
             session.add(solution)
             await session.flush()
+
+    # Expose slug collisions without discarding the surrounding transaction.
     except IntegrityError:
         raise HTTPException(status_code=409, detail="Solution slug already exists")
 
@@ -134,8 +143,10 @@ async def access(session: AsyncSession, solution_id: UUID, user_id: UUID, *, loc
             col(Solution.id) == solution_id,
             col(Solution.deleted_at).is_(None),
             col(Organization.deleted_at).is_(None),
+            # Authorization is scoped to the requesting Organization member.
             col(UserOrganization.user_id) == user_id,
         )
+        # Refresh any identity-map state before a command takes its lock.
         .execution_options(populate_existing=True)
     )
     if lock:
@@ -144,6 +155,8 @@ async def access(session: AsyncSession, solution_id: UUID, user_id: UUID, *, loc
     row = result.one_or_none()
     if row is None:
         raise HTTPException(status_code=403, detail="Access required")
+
+    # Read access does not imply permission to change releases.
     solution, role = row
     if not roles.atleast(role, OrganizationRoles.maintain):
         raise HTTPException(status_code=403, detail="Permission required")
@@ -182,11 +195,15 @@ async def deploy(
             merged.pop(name, None)
         else:
             merged[name] = value
+
+    # Validate the resulting environment, including unchanged variables.
     try:
         validate_environment_variables(merged)
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc))
     missing = images.missing_envs(metadata, merged)
+
+    # Required image variables must exist in the complete merged environment.
     if missing:
         raise HTTPException(status_code=422, detail=f"Solution environment does not satisfy required image variables: {', '.join(missing)}")
 
@@ -201,6 +218,8 @@ async def deploy(
     )
     session.add(revision)
     await session.flush()
+
+    # Publish and enqueue the immutable snapshot in the caller's transaction.
     solution.desired_revision_id = revision.id
     await operations.enqueue(session, kind=OperationKind.solution_deploy, target_id=revision.id)
 

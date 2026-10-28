@@ -38,6 +38,7 @@ async def test_kubernetes_api_is_lazy_and_cached(monkeypatch: pytest.MonkeyPatch
         assert second is api
         assert created == [{"kubeconfig": kubeconfig, "serviceaccount": ""}]
     finally:
+
         # Release this test loop's acquired client through the same owner as the Platform lifespan.
         await kubernetes_client.dispose_clients()
 

@@ -11,6 +11,7 @@ def test_init_copies_github_project_scaffold_with_custom_name(tmp_path: Path) ->
     """Copy the project scaffold with requested GitHub workflows and package name."""
 
     with chdir(tmp_path):
+
         # Act
         main(["init", "--folder", "sample-solution", "--ci", "github", "--name", "sample"])
 
@@ -30,6 +31,8 @@ def test_init_copies_github_project_scaffold_with_custom_name(tmp_path: Path) ->
         assert "app = LongLink()" in main_source
         assert "app.include_router(projects.router)" in main_source
         pyproject = (target / "pyproject.toml").read_text(encoding="utf-8")
+
+        # Generated project metadata is ready for the documented CLI workflow.
         assert 'name = "sample"' in pyproject
         assert "[tool.longlink]" in pyproject
         assert 'environments = "src.envs:Env"' in pyproject

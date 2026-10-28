@@ -39,6 +39,8 @@ async def test_metadata_fetches_digest_image_references(monkeypatch: pytest.Monk
             return httpx2.Response(200, json={"token": "pull-token"})
         if "/manifests/" in request.url.path:
             return httpx2.Response(200, json={"config": {"digest": "sha256:config"}}, headers=manifest_headers)
+
+        # Return registry data through the actual HTTP response boundary.
         return httpx2.Response(
             200,
             json={
@@ -89,6 +91,8 @@ async def test_metadata_rejects_mismatched_registry_digest(monkeypatch: pytest.M
             return httpx2.Response(
                 200, json={"config": {"digest": "sha256:config"}}, headers={"Docker-Content-Digest": f"sha256:{'b' * 64}"}
             )
+
+        # Stop inspection before reading metadata from the wrong immutable image.
         raise AssertionError("Mismatched registry digests must not fetch config blobs")
 
     mock_async_client(monkeypatch, respond)
@@ -113,6 +117,8 @@ async def test_metadata_follows_config_blob_redirects(monkeypatch: pytest.Monkey
         if "/manifests/" in request.url.path:
             return httpx2.Response(200, json={"config": {"digest": "sha256:config"}}, headers={"Docker-Content-Digest": "sha256:deadbeef"})
         if request.url.host == "ghcr.io":
+
+            # Registry authentication must be present before the trusted CDN redirect.
             assert request.headers["Authorization"] == "Bearer pull-token"
             return httpx2.Response(307, headers={"Location": "https://pkg-containers.githubusercontent.com/config"})
         assert request.url == "https://pkg-containers.githubusercontent.com/config"
@@ -189,6 +195,7 @@ async def test_registry_json_rejects_streamed_metadata_larger_than_limit() -> No
         pytest.param(
             [httpx2.Response(200, json={"token": "pull-token"}), httpx2.Response(503)],
             ["/token", "/v2/longlink/dashboard/manifests/latest"],
+            # Failed manifests cannot provide a trusted config descriptor.
             id="failed-manifest",
         ),
         pytest.param(
@@ -199,6 +206,7 @@ async def test_registry_json_rejects_streamed_metadata_larger_than_limit() -> No
         pytest.param(
             [
                 httpx2.Response(200, json={"token": "pull-token"}),
+                # Invalid config digests must stop inspection before blob fetching.
                 httpx2.Response(200, json={"config": {"digest": "invalid"}}, headers={"Docker-Content-Digest": "sha256:deadbeef"}),
             ],
             ["/token", "/v2/longlink/dashboard/manifests/latest"],
@@ -207,9 +215,11 @@ async def test_registry_json_rejects_streamed_metadata_larger_than_limit() -> No
         pytest.param(
             [
                 httpx2.Response(200, json={"token": "pull-token"}),
+                # A successful registry response can still omit the required config descriptor.
                 httpx2.Response(200, json={}, headers={"Docker-Content-Digest": "sha256:deadbeef"}),
             ],
             ["/token", "/v2/longlink/dashboard/manifests/latest"],
+            # A successful manifest response still requires a config descriptor.
             id="missing-manifest-config",
         ),
         pytest.param(
@@ -219,6 +229,7 @@ async def test_registry_json_rejects_streamed_metadata_larger_than_limit() -> No
                 httpx2.Response(503),
             ],
             ["/token", "/v2/longlink/dashboard/manifests/latest", "/v2/longlink/dashboard/blobs/sha256:config"],
+            # Metadata lookup must fail when the selected image's config blob is unavailable.
             id="failed-config-blob",
         ),
     ],
@@ -278,9 +289,12 @@ async def test_metadata_accepts_config_without_labels(monkeypatch: pytest.Monkey
         pytest.param({"config": {"Labels": []}}, id="invalid-labels"),
         pytest.param({"config": {"Labels": {"org.opencontainers.image.description": 1}}}, id="invalid-label-value"),
         pytest.param({"config": {"Labels": {"dev.longlink.environments": "not-json"}}}, id="invalid-environments-json"),
+        # The environment declaration must be a list of typed entries.
         pytest.param({"config": {"Labels": {"dev.longlink.environments": "{}"}}}, id="invalid-environments-shape"),
         pytest.param(
-            {"config": {"Labels": {"dev.longlink.environments": '[{"name":"API_KEY","required":[]}]'}}}, id="invalid-environment-entry"
+            # Metadata entries must validate their individual field types too.
+            {"config": {"Labels": {"dev.longlink.environments": '[{"name":"API_KEY","required":[]}]'}}},
+            id="invalid-environment-entry",
         ),
     ],
 )
@@ -299,7 +313,11 @@ async def test_metadata_rejects_malformed_config_metadata(monkeypatch: pytest.Mo
         if "/manifests/" in request.url.path:
             assert request.headers["Authorization"] == "Bearer pull-token"
             return httpx2.Response(200, json={"config": {"digest": "sha256:config"}}, headers={"Docker-Content-Digest": "sha256:deadbeef"})
+
+        # Config blob requests retain registry authorization.
         assert request.headers["Authorization"] == "Bearer pull-token"
+
+        # Return the image's actual config blob after manifest resolution.
         return httpx2.Response(200, json=config_blob)
 
     mock_async_client(monkeypatch, respond)
@@ -380,6 +398,8 @@ async def test_local_registry_selects_amd64_child_without_authentication(monkeyp
         assert "Authorization" not in request.headers
         paths.append(request.url.path)
         if request.url.path.endswith("/dev"):
+
+            # Keep the index digest separate from the selected platform manifest.
             return httpx2.Response(
                 200,
                 headers={"Docker-Content-Digest": "sha256:index"},
@@ -391,8 +411,12 @@ async def test_local_registry_selects_amd64_child_without_authentication(monkeyp
                     ],
                 },
             )
+
+        # Resolve the selected architecture's manifest before reading its config.
         if request.url.path.endswith("/sha256:amd"):
             return httpx2.Response(200, json={"config": {"digest": "sha256:config"}})
+
+        # Read only the config selected by the accepted platform manifest.
         assert request.url.path.endswith("/blobs/sha256:config")
         return httpx2.Response(
             200,
@@ -405,9 +429,13 @@ async def test_local_registry_selects_amd64_child_without_authentication(monkeyp
 
     mock_async_client(monkeypatch, respond)
     result = await images.required_metadata(Image("localhost:15000/sample:dev"))
+
+    # Multi-platform inspection returns metadata from the selected immutable architecture image.
     assert result == LongLinkMetadata(
         image=Image("localhost:15000/sample@sha256:amd"), environments=[EnvironmentMetadata(name="NEW", required=True)]
     )
+
+    # The real request sequence must follow index, selected manifest, then config blob.
     assert paths == ["/v2/sample/manifests/dev", "/v2/sample/manifests/sha256:amd", "/v2/sample/blobs/sha256:config"]
 
 
@@ -436,7 +464,10 @@ async def test_registry_rejects_arbitrary_blob_redirects(monkeypatch: pytest.Mon
             return httpx2.Response(200, headers={"Docker-Content-Digest": "sha256:manifest"}, json={"config": {"digest": "sha256:config"}})
         return httpx2.Response(307, headers={"Location": location})
 
+    # Redirect policy is enforced by real inspection against the controlled HTTP boundary.
     mock_async_client(monkeypatch, respond)
+
+    # Invalid metadata must fail through the public image-inspection boundary.
     with pytest.raises(HTTPException, match=r"^404: Image metadata not found$"):
         await images.required_metadata(Image("ghcr.io/owner/sample:latest"))
 

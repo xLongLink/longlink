@@ -61,6 +61,8 @@ class Envs(BaseSettings):
             )
             if (value := getattr(self, name)) is None or (isinstance(value, str) and not value.strip())
         ]
+
+        # Report every missing production setting in one validation error.
         if missing_settings:
             raise ValueError(f"Production settings are required: {', '.join(missing_settings)}")
 

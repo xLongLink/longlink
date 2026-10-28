@@ -60,6 +60,7 @@ def test_render_mjml_template_preserves_escaped_context_in_html() -> None:
     [
         pytest.param("plain", False, False, id="plain"),
         pytest.param("starttls", False, True, id="starttls"),
+        # Implicit TLS disables STARTTLS negotiation.
         pytest.param("tls", True, False, id="tls"),
     ],
 )
@@ -90,6 +91,8 @@ async def test_send_mail_delivers_multipart_message_with_configured_smtp(
     assert html_body is not None
     assert plain_body.get_content() == "Plain message\n"
     assert html_body.get_content() == "<p>HTML message</p>\n"
+
+    # Verify the real SMTP configuration passed to the transport boundary.
     assert options == {
         "hostname": "smtp.example.com",
         "port": 465,
@@ -147,6 +150,8 @@ async def test_organization_invitation_email_prefills_the_recipient(
     text = plain_body.get_content()
     html = html_body.get_content()
     assert 'href="https://longlink.dev/login?email=user%2Bteam%40example.com"' in html
+
+    # Both message alternatives retain the invitation context and encoded login link.
     assert "Join Engineering with maintain access." in html
     assert "https://longlink.dev/login?email=user%2Bteam%40example.com" in text
     assert "Role: maintain\n" in text

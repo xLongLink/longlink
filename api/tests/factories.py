@@ -95,6 +95,7 @@ async def create_compute() -> ComputeRegistry:
             gateway_url="https://gateway.example",
             database_storage_class="local-path",
             storage_endpoint="https://storage.example",
+            # Fixture credentials are scoped to the synthetic storage endpoint.
             storage_access_key="controller",
             storage_secret_key="controller-secret",
         )
@@ -133,6 +134,8 @@ async def create_solution(
 
     parsed_image = Image(image)
     resolved_image = parsed_image if "@" in image else Image(f"{parsed_image.registry}/{parsed_image.repository}@sha256:test")
+
+    # Release fixtures need a real creator for audit attribution.
     if organization.created_id is None:
         raise ValueError("Test organization must have a creator")
 
@@ -142,6 +145,7 @@ async def create_solution(
             organization.id,
             name=name,
             envs=envs or {},
+            # Attribute release creation to the fixture Organization's actual creator.
             user_id=organization.created_id,
             metadata=LongLinkMetadata(image=resolved_image),
         )

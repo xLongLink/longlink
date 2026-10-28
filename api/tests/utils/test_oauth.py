@@ -31,6 +31,7 @@ def test_google_identity_accepts_verified_profile() -> None:
     "payload",
     [
         {"sub": "google-subject-1", "email": "user@example.com", "email_verified": False},
+        # An email claim without verified ownership cannot link an account.
         {"sub": "google-subject-1", "email": "user@example.com"},
         [],
         None,
@@ -89,6 +90,7 @@ def test_github_identity_selects_primary_verified_email() -> None:
         pytest.param(True, True, "primary@example.com", id="boolean-subject"),
         pytest.param("123456", True, "primary@example.com", id="string-subject"),
         pytest.param(None, True, "primary@example.com", id="missing-subject"),
+        # GitHub requires one address that is both primary and verified.
         pytest.param(123456, False, "secondary@example.com", id="no-primary-verified-email"),
         pytest.param(123456, True, "not-an-email", id="invalid-primary-email"),
     ],

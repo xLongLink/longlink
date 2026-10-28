@@ -39,11 +39,12 @@ async def _data(request: Request) -> AsyncGenerator[_ContextData, None]:
         if user_id is None:
             raise HTTPException(status_code=401, detail="Authentication required")
 
+        # Signed identity must resolve to the request database's local user record.
         user = await database.get(User, user_id)
         if user is None:
             raise HTTPException(status_code=401, detail="User not found")
 
-        yield _ContextData(user=user, storage=request.app.state.longlink.storage, database=database)  # noqa: ASYNC119
+        yield _ContextData(user=user, storage=request.app.state.longlink.storage, database=database)
 
 
 Context = Annotated[_ContextData, Depends(_data)]

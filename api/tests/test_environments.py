@@ -28,8 +28,10 @@ INVALID_AUTHENTICATION_SETTINGS = [
     pytest.param(
         {"GOOGLE_OAUTH_CLIENT_ID": "google-client"},
         "GOOGLE_OAUTH_CLIENT_ID and GOOGLE_OAUTH_CLIENT_SECRET must be configured together",
+        # A client identifier alone must not enable the provider.
         id="google-client-only",
     ),
+    # Provider credentials must be configured in complete pairs.
     pytest.param(
         {"GITHUB_OAUTH_CLIENT_SECRET": "github-secret"},
         "GITHUB_OAUTH_CLIENT_ID and GITHUB_OAUTH_CLIENT_SECRET must be configured together",

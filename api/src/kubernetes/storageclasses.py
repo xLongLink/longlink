@@ -20,6 +20,8 @@ async def resolve(cluster: "Kubernetes") -> str:
         annotations = storage_class.metadata.get("annotations", {})
         if not isinstance(name, str) or not name:
             raise ValueError("StorageClass must have a name")
+
+        # Kubernetes marks the default class with a string-valued annotation.
         is_default = isinstance(annotations, dict) and annotations.get(DEFAULT_CLASS_ANNOTATION) == "true"
         classes.append((name, is_default))
 
@@ -28,6 +30,7 @@ async def resolve(cluster: "Kubernetes") -> str:
     if len(classes) == 1:
         return classes[0][0]
 
+    # Ambiguous storage listings require one explicitly declared default.
     defaults = [name for name, is_default in classes if is_default]
     if len(defaults) == 1:
         return defaults[0]

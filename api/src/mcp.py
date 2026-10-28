@@ -27,6 +27,8 @@ async def proxyuser(request: Request, solution_id: UUID, session: auth.Session, 
         user = (
             await mcp.authenticate(session, credential, solution_id) if scheme.lower() == "bearer" and 0 < len(credential) <= 128 else None
         )
+
+        # Invalid bearer proof must retain the resource discovery challenge.
         if user is None:
             raise HTTPException(
                 status_code=401, detail="Not authenticated", headers={"WWW-Authenticate": f'{challenge}, error="invalid_token"'}
@@ -35,7 +37,7 @@ async def proxyuser(request: Request, solution_id: UUID, session: auth.Session, 
         # Keep the admitted identity bound until FastAPI finishes the dependency's request lifetime.
         request.state.user = user
         with audit.actor(user.id):
-            yield user  # noqa: ASYNC119
+            yield user
         return
 
     # Delegate browser sessions with deterministic cleanup; never fall back after invalid bearer proof.
@@ -44,9 +46,10 @@ async def proxyuser(request: Request, solution_id: UUID, session: auth.Session, 
         raise HTTPException(status_code=401, detail="Not authenticated", headers={"WWW-Authenticate": challenge})
     async with aclosing(auth.authuser(request, session, credential)) as authenticated:
         async for user in authenticated:
-            yield user  # noqa: ASYNC119
+            yield user
 
 
+# Share the browser-or-bearer authentication dependency with proxy routes.
 ProxyUser = Annotated[User, Depends(proxyuser)]
 
 
@@ -71,6 +74,7 @@ class MCPMiddleware:
                 "MCP-Name",
                 "Last-Event-Id",
             ],
+            # Browser clients need discovery and session headers from the proxy.
             expose_headers=["WWW-Authenticate", "MCP-Session-Id", "MCP-Protocol-Version"],
         )
 
@@ -109,4 +113,5 @@ class MCPMiddleware:
                 headers["Content-Security-Policy"] = "frame-ancestors 'none'"
             await send(message)
 
+        # Apply response policy without buffering the upstream body.
         await self.app(scope, receive, send_headers)

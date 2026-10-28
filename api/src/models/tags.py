@@ -18,6 +18,8 @@ class TagIcon(StrEnum):
     book = "book-open"
     users = "users"
     folder = "folder"
+
+    # Additional process-category icons use Lucide names.
     layers = "layers"
     wrench = "wrench"
     calendar = "calendar"

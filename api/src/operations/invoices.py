@@ -52,6 +52,8 @@ async def snapshot(session: AsyncSession, organization_id: UUID, period_end: dat
     target = await organizations.infrastructure(session, organization_id)
     if target is None or organization.database_state != DatabaseState.available:
         raise HTTPException(status_code=503, detail="Organization usage is unavailable for invoicing")
+
+    # Measure members and infrastructure against the locked Organization.
     organization, compute = target
     users = await organizations.member_count(session, organization_id)
 
@@ -74,6 +76,8 @@ async def snapshot(session: AsyncSession, organization_id: UUID, period_end: dat
         storage_bytes=storage_bytes,
     )
     session.add(invoice)
+
+    # Advance the billing boundary atomically with the captured usage.
     organization.invoice_due_at = dates.next_month(period_end)
     await session.commit()
 
@@ -94,11 +98,17 @@ async def issue(session: AsyncSession, invoice_id: UUID) -> None:
             remote = await connection.v1.invoices.retrieve_async(invoice.stripe_invoice_id)
         else:
             existing = await connection.v1.invoices.list_async({"customer": invoice.customer_id, "limit": 100})
+
+            # Recover an already-created invoice after a local commit interruption.
             async for candidate in existing.auto_paging_iter():
                 if (candidate.to_dict().get("metadata") or {}).get("longlink_invoice_id") == str(invoice.id):
+
+                    # Multiple remote matches require manual review, not another charge.
                     if remote is not None:
                         raise HTTPException(status_code=409, detail="Duplicate Stripe invoices require administrator review")
                     remote = candidate
+
+        # Create only when no previously issued remote invoice can be recovered.
         if remote is None:
             remote = await connection.v1.invoices.create_async(
                 {
@@ -107,6 +117,7 @@ async def issue(session: AsyncSession, invoice_id: UUID) -> None:
                     "auto_advance": False,
                     "collection_method": "charge_automatically",
                     "pending_invoice_items_behavior": "exclude",
+                    # Stable metadata recovers the same remote invoice after interruptions.
                     "metadata": {"longlink_invoice_id": str(invoice.id), "period_end": invoice.period_end.isoformat()},
                 },
                 options={"idempotency_key": f"invoice:{invoice.id}"},
@@ -114,6 +125,8 @@ async def issue(session: AsyncSession, invoice_id: UUID) -> None:
         invoice.stripe_invoice_id = remote.id
         if remote.customer != invoice.customer_id or remote.currency != "chf":
             raise HTTPException(status_code=409, detail="Stripe invoice customer or currency does not match")
+
+        # Unexpected provider states require review instead of automatic issuance.
         if remote.status not in {"draft", "open", "paid", "void", "uncollectible"}:
             raise HTTPException(status_code=409, detail="Stripe invoice state requires administrator review")
 
@@ -125,7 +138,7 @@ async def issue(session: AsyncSession, invoice_id: UUID) -> None:
             discount = 0
             total = 0
 
-            # Apply current pricing to the measured usage and cap free-tier credits at usage charges.
+            # Apply current pricing; storage quantities use MiB while users remain whole seats.
             for resource, label, used, included, rate, unit in (
                 ("users", "Users", invoice.users, pricing.FREE_USERS, pricing.USER_MONTHLY_PRICE, "users"),
                 ("database", "Database", invoice.database_bytes, pricing.FREE_DATABASE_BYTES, pricing.DATABASE_MIB_MONTHLY_PRICE, "MiB"),
@@ -133,6 +146,8 @@ async def issue(session: AsyncSession, invoice_id: UUID) -> None:
             ):
                 quantity = used if resource == "users" else storage_quantity(used)
                 excess = max(0, used - included)
+
+                # Bill only usage beyond each resource's free allowance.
                 billable = excess if resource == "users" else storage_quantity(excess)
                 unit_price = Decimal(rate)
                 gross = (quantity * unit_price).quantize(Decimal("1"), rounding=ROUND_HALF_UP)
@@ -142,13 +157,19 @@ async def issue(session: AsyncSession, invoice_id: UUID) -> None:
                 discount += int(gross - net)
                 total += int(net)
 
+            # Recover each resource line independently to avoid duplicate charges.
             for resource, label, quantity, rate, amount in lines:
                 matched = [item for item in existing_items if (item.to_dict().get("metadata") or {}).get("resource") == resource]
+
+                # Recovered items must match the expected price and quantity exactly.
                 if matched:
+
+                    # Refuse ambiguous or modified invoice items instead of charging again.
                     if (
                         len(matched) != 1
                         or matched[0].amount != amount
                         or matched[0].quantity != quantity
+                        # Resource matches must still belong to this exact measured invoice.
                         or (matched[0].to_dict().get("metadata") or {}).get("longlink_invoice_id") != str(invoice.id)
                     ):
                         raise HTTPException(status_code=409, detail="Stripe invoice items require administrator review")
@@ -165,19 +186,27 @@ async def issue(session: AsyncSession, invoice_id: UUID) -> None:
                         "description": label,
                         "metadata": {"longlink_invoice_id": str(invoice.id), "resource": resource},
                     },
+                    # Retried issuance must not duplicate a resource's line item.
                     options={"idempotency_key": f"invoice:{invoice.id}:{resource}"},
                 )
 
             # Recover the same invoice-specific discount after interrupted requests.
             if discount > 0:
                 coupon_id = f"free_{invoice.id.hex}"
+
+                # A previous issuance attempt may already own this discount.
                 try:
                     coupon = await connection.v1.coupons.retrieve_async(coupon_id)
+
+                # Only a missing coupon permits creation during retry recovery.
                 except InvalidRequestError as error:
+
+                    # Authentication and provider failures must not trigger coupon creation.
                     if error.code != "resource_missing":
                         raise
                     coupon = await connection.v1.coupons.create_async(
                         {
+                            # One invoice-specific coupon represents its free-tier allowance.
                             "id": coupon_id,
                             "name": "Free-tier discount",
                             "currency": "chf",
@@ -187,15 +216,21 @@ async def issue(session: AsyncSession, invoice_id: UUID) -> None:
                         },
                         options={"idempotency_key": f"invoice:{invoice.id}:coupon"},
                     )
+
+                # Recovered discounts must match the expected free-tier credit.
                 if (
                     coupon.amount_off != discount
                     or coupon.currency != "chf"
                     or (coupon.to_dict().get("metadata") or {}).get("longlink_invoice_id") != str(invoice.id)
                 ):
                     raise HTTPException(status_code=409, detail="Stripe invoice discount does not match measured usage")
+
+                # Apply only the verified invoice-specific allowance coupon.
                 await connection.v1.invoices.update_async(
                     remote.id, {"discounts": [{"coupon": coupon.id}]}, options={"idempotency_key": f"invoice:{invoice.id}:discount"}
                 )
+
+            # Remove a recovered discount when no free-tier credit applies.
             else:
                 await connection.v1.invoices.update_async(
                     remote.id, {"discounts": ""}, options={"idempotency_key": f"invoice:{invoice.id}:discount"}
@@ -209,6 +244,7 @@ async def issue(session: AsyncSession, invoice_id: UUID) -> None:
                 remote.id, {"auto_advance": True}, options={"idempotency_key": f"invoice:{invoice.id}:finalize"}
             )
 
+    # Mark issuance complete only after Stripe accepts the invoice.
     invoice.issued_at = datetime.now(UTC)
     await session.commit()
 
@@ -219,29 +255,42 @@ async def run() -> None:
     if not env.stripe_enabled:
         return
     while True:
+
+        # Use the latest closed UTC month; outages never fabricate several months of historical usage.
         with contextlib.suppress(Exception):
-            # Use the latest closed UTC month; outages never fabricate several months of historical usage.
             period_end = datetime.now(UTC).replace(day=1, hour=0, minute=0, second=0, microsecond=0)
             async with session_scope() as session:
                 result = await session.scalars(
                     select(col(Organization.id)).where(
+                        # Deleted Organizations never enter a new billing capture.
                         col(Organization.deleted_at).is_(None),
                         col(Organization.status) == Status.running,
+                        # Capture only Organizations whose current period has closed.
                         col(Organization.invoice_due_at) <= period_end,
                     )
                 )
                 organization_ids = result.all()
+
+            # Isolate usage capture failures to their owning Organization.
             for organization_id in organization_ids:
                 with contextlib.suppress(Exception):
+
+                    # Keep one failed capture from rolling back another Organization's usage.
                     async with session_scope() as session:
+
+                        # Commit each Organization's captured usage independently.
                         await snapshot(session, organization_id, period_end)
 
             # Measured usage retries independently of later membership, storage changes, or deleted Organizations.
             async with session_scope() as session:
                 result = await session.scalars(select(col(Invoice.id)).where(col(Invoice.issued_at).is_(None)))
                 invoice_ids = result.all()
+
+            # One failed Stripe request must not block other pending invoices.
             for invoice_id in invoice_ids:
                 with contextlib.suppress(Exception):
+
+                    # Each pending invoice gets an independent issuance transaction.
                     async with session_scope() as session:
                         await issue(session, invoice_id)
         await asyncio.sleep(60)

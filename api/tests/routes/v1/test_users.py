@@ -34,6 +34,7 @@ async def test_get_me_returns_authenticated_user_profile_and_separate_org_member
         "email": user.email,
         "avatar": user.avatar,
         "administrator": user.administrator,
+        # Profile responses include the default personal appearance settings.
         "theme": "system",
         "accent": "neutral",
     }
@@ -127,6 +128,7 @@ async def test_patch_me_persists_without_organization_database_access(
         "email": user.email,
         "avatar": user.avatar,
         "administrator": user.administrator,
+        # Name changes leave personal appearance settings intact.
         "theme": "system",
         "accent": "neutral",
     }
@@ -149,9 +151,12 @@ async def test_accept_my_invitation_adds_membership(
     invitation_id = invitation.id
     async with session_scope() as session:
         session.add(invitation)
+
+        # Persist active and expired invitations to verify response filtering.
         session.add(OrganizationInvitation(organization_id=organization.id, email=other_user.email, role=OrganizationRoles.read))
         session.add(
             OrganizationInvitation(
+                # Expired invitations do not grant active Organization access.
                 organization_id=expired_organization.id,
                 email=invitee.email,
                 role=OrganizationRoles.read,
@@ -241,6 +246,8 @@ async def test_accept_my_invitation_reports_free_member_limit(
     async with session_scope() as session:
         for index in range(FREE_USERS - 1):
             member = User(name=f"Member {index}", email=f"member-{index}@example.com", password=owner.password)
+
+            # Persist each member before returning paginated membership summaries.
             session.add(member)
             session.add(UserOrganization(user_id=member.id, organization_id=organization.id, role=OrganizationRoles.read))
         session.add(invitation)

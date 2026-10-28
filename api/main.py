@@ -34,6 +34,7 @@ async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:
         tasks: tuple[asyncio.Task[None], ...] = ()
 
         try:
+
             # Start database work independently so static routes remain available during database outages.
             tasks = (
                 asyncio.create_task(jobs.run_administrator_reconciler()),
@@ -43,6 +44,7 @@ async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:
 
             yield
         finally:
+
             # Always stop background consumers before releasing their shared transports and database pool.
             for task in tasks:
                 task.cancel()
@@ -50,6 +52,8 @@ async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:
             # Join every worker before propagating failure so another worker's cleanup can still finish.
             results = await asyncio.gather(*tasks, return_exceptions=True)
             for result in results:
+
+                # Worker cancellation is expected; other cleanup failures must propagate.
                 if isinstance(result, BaseException) and not isinstance(result, asyncio.CancelledError):
                     raise result
 
@@ -114,6 +118,7 @@ app.include_router(v1.router)
 app.include_router(mcp.router)
 static_dir = Path(__file__).resolve().parent / "src" / ".static" / "web"
 if static_dir.exists():
+
     # Serve the prerendered home document before registering the generic SPA fallback.
     @app.api_route("/", methods=["GET", "HEAD"], include_in_schema=False)
     def frontend_root():

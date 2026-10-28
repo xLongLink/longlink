@@ -59,6 +59,7 @@ def test_mysql_database_url_removes_tls_query_parameters_and_preserves_options()
         pytest.param("ssl_ca=first&ssl_ca=second", "one ssl_ca value", id="duplicate-ca"),
         pytest.param("ssl_key=key.pem", "requires ssl_cert", id="key-without-certificate"),
         pytest.param("ssl_check_hostname=yes", "invalid ssl_check_hostname", id="invalid-hostname-policy"),
+        # Explicit TLS settings cannot contradict their selected verification mode.
         pytest.param("ssl-mode=VERIFY_CA&ssl_check_hostname=true", "conflicts with ssl-mode", id="conflicting-hostname-policy"),
         pytest.param("ssl-mode=DISABLED&ssl_cert=cert.pem", "cannot include certificates", id="disabled-with-certificate"),
         pytest.param("ssl_cert=first&ssl_cert=second", "one ssl_cert value", id="duplicate-certificate"),
@@ -82,9 +83,12 @@ def test_mysql_database_url_rejects_invalid_tls_configuration(query: str, messag
     [
         pytest.param("", True, ssl.CERT_REQUIRED, id="default-identity-verification"),
         pytest.param("?ssl-mode=REQUIRED", False, ssl.CERT_NONE, id="required-tls"),
+        # CA-only verification validates trust without matching the server hostname.
         pytest.param("?ssl-mode=VERIFY_CA", False, ssl.CERT_REQUIRED, id="verify-ca"),
     ],
 )
+
+# Verify actual SSLContext behavior for each supported MySQL verification mode.
 def test_mysql_database_url_builds_tls_context_for_verification_mode(query: str, check_hostname: bool, verify_mode: ssl.VerifyMode) -> None:
     """Build the configured TLS context without passing mode options to the driver."""
 
@@ -129,6 +133,7 @@ def test_mysql_database_url_loads_optional_client_certificate(monkeypatch: pytes
     [
         pytest.param("sslmode=require", "lowercase ssl parameter", id="libpq-sslmode"),
         pytest.param("SSL=require", "lowercase ssl parameter", id="uppercase-ssl"),
+        # Unsupported SSL modes must fail before opening a connection.
         pytest.param("ssl=invalid", "invalid SSL mode", id="invalid-mode"),
     ],
 )

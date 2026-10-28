@@ -17,7 +17,6 @@ def validate_environment_variables(envs: dict[str, str]) -> dict[str, str]:
 
     # Validate each environment name and value independently.
     for name, value in envs.items():
-        # Bound environment variable names to the supported label size.
         if len(name) > 253:
             raise ValueError(f"Environment variable '{name}' is too long")
 
@@ -43,9 +42,10 @@ def validate_environment_variables(envs: dict[str, str]) -> dict[str, str]:
 class SolutionCreate(BaseModel):
     """Validate solution creation metadata and release configuration."""
 
+    # Release configuration
     envs: Annotated[dict[str, str], AfterValidator(validate_environment_variables)] = Field(default_factory=dict)
-    image: Image
     name: str = Field(min_length=1, max_length=100)
+    image: Image
     description: str | None = Field(default=None, max_length=255)
 
 

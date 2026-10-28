@@ -10,10 +10,10 @@ from authlib.integrations.httpx_client import AsyncOAuth2Client
 
 OAuthProvider = Literal["google", "github"]
 GOOGLE_AUTHORIZATION_URL = "https://accounts.google.com/o/oauth2/v2/auth"
-GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"  # noqa: S105
+GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
 GOOGLE_USERINFO_URL = "https://openidconnect.googleapis.com/v1/userinfo"
 GITHUB_AUTHORIZATION_URL = "https://github.com/login/oauth/authorize"
-GITHUB_TOKEN_URL = "https://github.com/login/oauth/access_token"  # noqa: S105
+GITHUB_TOKEN_URL = "https://github.com/login/oauth/access_token"
 GITHUB_USER_URL = "https://api.github.com/user"
 GITHUB_EMAILS_URL = "https://api.github.com/user/emails"
 
@@ -66,6 +66,8 @@ def authorization_url(provider: OAuthProvider, state: str, verifier: str) -> str
         redirect_uri=redirect_uri(provider),
         code_challenge_method="S256",
     )
+
+    # Bind browser state and PKCE proof to the provider authorization request.
     url, _ = client.create_authorization_url(
         GOOGLE_AUTHORIZATION_URL if provider == "google" else GITHUB_AUTHORIZATION_URL, state=state, code_verifier=verifier
     )
@@ -81,15 +83,17 @@ async def identity(provider: OAuthProvider, code: str, verifier: str) -> OAuthId
 
     # Exchange the single-use authorization code through the provider's fixed HTTPS endpoint.
     try:
+
+        # Reject HTTP failures even when a provider returns a token-shaped error body.
         async with AsyncOAuth2Client(
             client_id=env.GOOGLE_OAUTH_CLIENT_ID if provider == "google" else env.GITHUB_OAUTH_CLIENT_ID,
             client_secret=env.GOOGLE_OAUTH_CLIENT_SECRET if provider == "google" else env.GITHUB_OAUTH_CLIENT_SECRET,
-            token_endpoint_auth_method="client_secret_post",  # noqa: S106
+            token_endpoint_auth_method="client_secret_post",
             redirect_uri=redirect_uri(provider),
             follow_redirects=False,
+            # Bound provider I/O without inheriting redirect behavior.
             timeout=10.0,
         ) as client:
-            # Reject HTTP failures even when a provider returns a token-shaped error body.
             client.register_compliance_hook("access_token_response", httpx2.Response.raise_for_status)
             token = await client.fetch_token(
                 GOOGLE_TOKEN_URL if provider == "google" else GITHUB_TOKEN_URL,
@@ -97,6 +101,8 @@ async def identity(provider: OAuthProvider, code: str, verifier: str) -> OAuthId
                 code=code,
                 code_verifier=verifier,
             )
+
+            # Do not accept a token-shaped error response as provider authentication.
             if _text(token, "access_token", 4096) is None:
                 return None
             token.setdefault("token_type", "Bearer")
@@ -109,6 +115,8 @@ async def identity(provider: OAuthProvider, code: str, verifier: str) -> OAuthId
             github_headers = {"Accept": "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28"}
             profile_response = await client.get(GITHUB_USER_URL, headers=github_headers)
             profile_response.raise_for_status()
+
+            # GitHub email ownership comes from its verified-email endpoint.
             emails_response = await client.get(GITHUB_EMAILS_URL, headers=github_headers)
             emails_response.raise_for_status()
             return _github_identity(profile_response.json(), emails_response.json())
@@ -144,6 +152,8 @@ def _github_identity(profile: object, emails: object) -> OAuthIdentity | None:
     for item in emails:
         if not isinstance(item, dict) or item.get("primary") is not True or item.get("verified") is not True:
             continue
+
+        # Link only a validated primary, verified email address.
         email = _email(item)
         if email is not None:
             return OAuthIdentity(subject=subject, email=email, name=_name(profile, email), avatar=_text(profile, "avatar_url", 2048) or "")
@@ -157,6 +167,8 @@ def _email(payload: object) -> Email | None:
     value = _text(payload, "email", 254)
     if value is None:
         return None
+
+    # Normalize provider email data through the shared address validator.
     try:
         return EMAIL_ADAPTER.validate_python(value)
     except ValidationError:

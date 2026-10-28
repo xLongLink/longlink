@@ -66,6 +66,8 @@ class Env(BaseSettings):
                 raise ValueError("Stripe requires STRIPE_SECRET_KEY and STRIPE_WEBHOOK_SECRET")
             if not self.STRIPE_SECRET_KEY.startswith(("sk_test_", "sk_live_", "rk_test_", "rk_live_")):
                 raise ValueError("STRIPE_SECRET_KEY must be a Stripe secret or restricted key")
+
+            # Webhooks use a separate signing secret, not the API key.
             if not self.STRIPE_WEBHOOK_SECRET.startswith("whsec_"):
                 raise ValueError("STRIPE_WEBHOOK_SECRET must be a Stripe signing secret")
 

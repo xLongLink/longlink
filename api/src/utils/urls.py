@@ -28,6 +28,7 @@ def database(database_url: str) -> DatabaseConnection:
         if unsupported:
             raise ValueError(f"MySQL database URL has unsupported TLS parameters: {', '.join(sorted(unsupported))}")
 
+        # Default MySQL connections to certificate and hostname verification.
         sslmode = parsed_url.query.get("ssl-mode", "VERIFY_IDENTITY")
         if not isinstance(sslmode, str) or sslmode not in {"DISABLED", "REQUIRED", "VERIFY_CA", "VERIFY_IDENTITY"}:
             raise ValueError("MySQL database URL has an invalid ssl-mode")
@@ -36,6 +37,7 @@ def database(database_url: str) -> DatabaseConnection:
         if ssl_ca is not None and not isinstance(ssl_ca, str):
             raise ValueError("MySQL database URL must define one ssl_ca value")
 
+        # Client certificate paths are scalar query values, never repeated parameters.
         ssl_cert = parsed_url.query.get("ssl_cert")
         if ssl_cert is not None and not isinstance(ssl_cert, str):
             raise ValueError("MySQL database URL must define one ssl_cert value")
@@ -43,12 +45,16 @@ def database(database_url: str) -> DatabaseConnection:
         ssl_key = parsed_url.query.get("ssl_key")
         if ssl_key is not None and not isinstance(ssl_key, str):
             raise ValueError("MySQL database URL must define one ssl_key value")
+
+        # A client private key has no meaning without its certificate.
         if ssl_key is not None and ssl_cert is None:
             raise ValueError("MySQL database URL requires ssl_cert with ssl_key")
 
         ssl_check_hostname = parsed_url.query.get("ssl_check_hostname")
         if ssl_check_hostname is not None and (not isinstance(ssl_check_hostname, str) or ssl_check_hostname not in {"true", "false"}):
             raise ValueError("MySQL database URL has an invalid ssl_check_hostname")
+
+        # Hostname policy must agree with the selected MySQL verification mode.
         if ssl_check_hostname is not None and (ssl_check_hostname == "true") != (sslmode == "VERIFY_IDENTITY"):
             raise ValueError("MySQL ssl_check_hostname conflicts with ssl-mode")
 
@@ -65,6 +71,8 @@ def database(database_url: str) -> DatabaseConnection:
         if sslmode == "REQUIRED":
             if ssl_ca is not None:
                 raise ValueError("MySQL ssl_ca requires VERIFY_CA or VERIFY_IDENTITY")
+
+            # REQUIRED encrypts traffic without authenticating a server certificate.
             context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
             context.check_hostname = False
             context.verify_mode = ssl.CERT_NONE

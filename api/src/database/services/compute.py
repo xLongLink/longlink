@@ -36,6 +36,7 @@ async def fetch(session: AsyncSession, pagination: Pagination, search: str = "")
                 attr(ComputeRegistry.storage_endpoint),
             )
         )
+        # Keep pagination deterministic when registrations share a timestamp.
         .order_by(col(ComputeRegistry.created_at).desc(), col(ComputeRegistry.id).desc())
         .offset(pagination.offset)
         .limit(pagination.page_size)

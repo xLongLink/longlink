@@ -21,6 +21,8 @@ async def test_reconcile_prepares_providers_namespace_and_publishes_organization
 
     # Arrange an unpublished Organization with ready immutable infrastructure.
     organization = await create_organization(users[0])
+
+    # Observe cleanup ordering at external infrastructure boundaries.
     calls: list[str] = []
 
     class Database(DatabasePostgres):
@@ -158,7 +160,11 @@ async def test_delete_stops_when_namespace_deletion_fails(users: tuple[User, Use
     async with session_scope() as session:
         row = await session.get(Organization, organization.id)
         assert row is not None
+
+        # Persist a tombstone before invoking lifecycle cleanup.
         row.deleted_at = datetime.now(UTC)
+
+        # Commit deletion eligibility before observing external cleanup calls.
         await session.commit()
 
     async def delete(client: object, organization_id: UUID) -> None:
@@ -189,6 +195,8 @@ async def test_delete_tears_down_organization_boundaries_in_order(users: tuple[U
         row = await session.get(Organization, organization.id)
         assert row is not None
         row.deleted_at = datetime.now(UTC)
+
+        # Publish the deletion tombstone before starting external cleanup.
         await session.commit()
     calls: list[str] = []
 

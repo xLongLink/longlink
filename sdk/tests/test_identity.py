@@ -62,6 +62,7 @@ INVALID_SIGNED_TOKENS = [
     pytest.param("other-identity-secret-01234567890", {}, jwt.InvalidSignatureError, id="wrong-secret"),
     pytest.param(IDENTITY_SECRET, {"profile": None}, jwt.InvalidTokenError, id="invalid-profile"),
     pytest.param(IDENTITY_SECRET, {"profile": {}}, jwt.InvalidTokenError, id="missing-profile-timestamp"),
+    # Signed profiles still require valid domain fields.
     pytest.param(
         IDENTITY_SECRET,
         {"profile": {"name": "User", "email": "invalid", "updated_at": "2026-10-18T00:00:00Z"}},
@@ -72,6 +73,7 @@ INVALID_SIGNED_TOKENS = [
         IDENTITY_SECRET,
         {"profile": {"name": "User", "email": "user@example.com", "updated_at": "2026-10-18T00:00:00"}},
         jwt.InvalidTokenError,
+        # Profile update ordering requires an explicit timezone.
         id="naive-profile-timestamp",
     ),
 ]

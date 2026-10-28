@@ -63,6 +63,7 @@ class FileResponse(StreamingResponse):
             self.body_iterator = content()
             await super().stream_response(send)
         finally:
+
             # Finish cleanup even when Starlette cancels streaming on disconnect.
             with CancelScope(shield=True):
                 await to_thread.run_sync(stored_file.close)

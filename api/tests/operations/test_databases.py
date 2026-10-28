@@ -94,6 +94,8 @@ async def test_ready_interrupts_provisioning_without_releasing_replacement_lease
     try:
         async with asyncio.timeout(5):
             await started.wait()
+
+            # Inspect the real activity lease while its owner is still running.
             async with session_scope() as session:
                 activity = await session.get(OrganizationActivity, organization.id)
                 assert activity is not None
@@ -107,6 +109,7 @@ async def test_ready_interrupts_provisioning_without_releasing_replacement_lease
                 await provisioning
         assert interrupted.is_set()
     finally:
+
         # Reap the owner even if renewal or lease cleanup stops making progress.
         provisioning.cancel()
         async with asyncio.timeout(3):
@@ -157,6 +160,7 @@ async def test_ready_cancellation_releases_owned_lease_and_allows_retry(
                 await asyncio.wait_for(asyncio.shield(provisioning), timeout=5)
             assert interrupted.is_set()
         finally:
+
             # Always await cancellation and its real lease-release transaction.
             provisioning.cancel()
             async with asyncio.timeout(3):

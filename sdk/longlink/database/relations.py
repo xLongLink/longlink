@@ -9,7 +9,7 @@ class _UserRelationship:
     """Mark a user relationship for expansion before SQLModel maps a table."""
 
 
-def UserRelationship() -> User:  # noqa: N802
+def UserRelationship() -> User:
     """Declare a local user relationship; a User | None annotation makes it optional."""
 
     return cast(User, _UserRelationship())
@@ -42,6 +42,7 @@ class _ModelMetaclass(SQLModelMetaclass):
             if column in namespace or column in annotations:
                 raise ValueError(f"{column} is managed by UserRelationship()")
 
+            # Match the generated foreign key's nullability to the relationship annotation.
             if optional:
                 annotations[column] = UUID | None
                 namespace[column] = Field(default=None, foreign_key="users.id")
@@ -50,6 +51,7 @@ class _ModelMetaclass(SQLModelMetaclass):
                 namespace[column] = Field(foreign_key="users.id")
             namespace[relation] = Relationship(sa_relationship_kwargs={"foreign_keys": f"[{name}.{column}]", "lazy": "selectin"})
 
+        # SQLModel must see the expanded annotations before mapping the table.
         namespace["__annotations__"] = annotations
         return super().__new__(cls, name, bases, namespace, **kwargs)
 

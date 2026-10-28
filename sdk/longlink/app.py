@@ -115,6 +115,7 @@ class LongLink(FastAPI):
 
         # Production containers attach API access filtering here.
         if settings.ENV == "production":
+
             # Built Solution containers run plain uvicorn, so attach the SDK access filter here.
             access_logger = logging.getLogger("uvicorn.access")
 
@@ -175,6 +176,7 @@ class LongLink(FastAPI):
 
             async with runtime_lifespan(app) as state:
                 try:
+
                     # Use a fresh schema, including routes registered after an earlier OpenAPI request.
                     schema = get_openapi(
                         title=self.title,
@@ -183,6 +185,8 @@ class LongLink(FastAPI):
                         description=self.description,
                         routes=self.routes,
                     )
+
+                    # Keep MCP calls inside this application with request-scoped credentials.
                     transport = httpx2.ASGITransport(app=self, raise_app_exceptions=False)
                     client = httpx2.AsyncClient(
                         transport=transport, base_url="http://solution", timeout=10.0, event_hooks={"request": [forward_credentials]}
@@ -194,13 +198,17 @@ class LongLink(FastAPI):
                         mcp_app = mcp.http_app(path="/mcp", json_response=True)
                         self.router.routes[0:0] = mcp_app.routes
                         try:
+
+                            # Enter the public MCP lifespan before accepting Solution traffic.
                             async with mcp_app.lifespan(mcp_app):
                                 yield state or {}
                         finally:
+
                             # Remove only these routes so later lifespans cannot reuse a closed transport.
                             for route in mcp_app.routes:
                                 self.router.routes.remove(route)
                 finally:
+
                     # Close the active services after MCP, including when initialization fails.
                     await self.state.longlink.database.dispose()
 
@@ -258,7 +266,7 @@ class LongLink(FastAPI):
         return RedirectResponse(first_route)
 
     # FastAPI accepts framework-defined router options with heterogeneous values.
-    def include_router(self, router: APIRouter, **kwargs: Any) -> None:  # noqa: ANN401
+    def include_router(self, router: APIRouter, **kwargs: Any) -> None:
         """Include Solution routes after validating them against View endpoints."""
 
         # Snapshot routes so a colliding include leaves no partial registration.
@@ -269,7 +277,7 @@ class LongLink(FastAPI):
         self._validate_added_routes(added)
 
     # FastAPI accepts framework-defined route arguments with heterogeneous values.
-    def add_api_route(self, *args: Any, **kwargs: Any) -> None:  # noqa: ANN401
+    def add_api_route(self, *args: Any, **kwargs: Any) -> None:
         """Register a Solution route after validating it against View endpoints."""
 
         # Snapshot routes so a colliding registration leaves no partial registration.
@@ -284,11 +292,14 @@ class LongLink(FastAPI):
 
         # Remove the complete registration without handling framework errors.
         try:
+
             # Solution routes added after startup respect the same View endpoint contract.
             routes = self.router.routes[added:]
             for definition in self._views:
                 view_path = f"/{definition.path}"
                 scope = {"type": "http", "method": "GET", "path": view_path}
+
+                # Reject full route matches before they shadow a registered View.
                 if any(route.matches(scope)[0] is Match.FULL for route in routes):
                     raise ValueError(f"View endpoint '{view_path}' overlaps a Solution route")
         except ValueError:

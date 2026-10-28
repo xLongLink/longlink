@@ -38,6 +38,7 @@ async def authorization_request(
     request = {
         "client_id": registration.json()["client_id"],
         "redirect_uri": "https://client.example/callback?keep=1",
+        # Authorization is scoped to one canonical Solution resource.
         "resource": mcp.resource(solution.id),
         "response_type": "code",
         "code_challenge_method": "S256",
@@ -64,6 +65,7 @@ async def authorization(
     exchange = {
         "grant_type": "authorization_code",
         "code": query["code"][0],
+        # Exchange proof must match the approved public client and callback.
         "client_id": request["client_id"],
         "redirect_uri": request["redirect_uri"],
         "resource": request["resource"],
@@ -140,6 +142,7 @@ async def test_mcp_authorization_navigates_to_first_party_approval_and_loads_con
     assert "location" not in invalid.headers
 
 
+# Discovery cannot authorize arbitrary origins or non-MCP runtime paths.
 @pytest.mark.parametrize(
     "resource", ["https://attacker.example/mcp", "not-a-resource", f"{env.PUBLIC_URL}/api/v1/solutions/{UUID(int=2)}/proxy/api/data"]
 )
@@ -195,6 +198,8 @@ async def test_mcp_code_exchange_rechecks_identity_and_membership(
         else:
             user = await session.get(User, users[0].id)
             assert user is not None
+
+            # Change account state after authorization proof has already been issued.
             if invalidation == "password":
                 user.password = "changed-password-hash"
             else:
@@ -254,6 +259,8 @@ async def test_mcp_exchange_is_single_use_and_stores_only_hashes(
     assert replay.json()["error"] == "invalid_grant"
     async with session_scope() as session:
         grants = await session.scalars(select(MCPToken))
+
+        # Storage retains only the opaque token digest.
         grant = grants.one()
         assert grant.hash == access_hash
         assert grant.solution_id == solution.id
@@ -265,6 +272,7 @@ async def test_mcp_exchange_is_single_use_and_stores_only_hashes(
 
 
 @pytest.mark.parametrize(
+    # Exchanges remain bound to the approved code, callback, and resource.
     ("field", "value"),
     [
         ("code_verifier", "x" * 43),
@@ -372,15 +380,21 @@ async def test_mcp_grants_recheck_expiry_revocation_identity_and_permissions(
         assert response.status_code == 200
     else:
         async with session_scope() as session:
+
+            # Invalidate a previously accepted token through persisted grant state.
             if invalidation == "expiry":
                 grant = await session.scalar(select(MCPToken))
                 assert grant is not None
                 grant.expires_at = datetime.now(UTC) - timedelta(seconds=1)
+
+            # Revoked membership invalidates access independently of token expiry.
             elif invalidation == "membership":
                 await session.execute(delete(UserOrganization).where(UserOrganization.user_id == users[0].id))
             else:
                 user = await session.get(User, users[0].id)
                 assert user is not None
+
+                # Password replacement invalidates the grant's captured fingerprint.
                 if invalidation == "password":
                     user.password = "changed-password-hash"
                 else:
@@ -450,6 +464,8 @@ async def test_mcp_browser_revocation_is_owner_only(
         assert await session.get(MCPToken, UUID(grant_id)) is not None
     assert (await client.post(f"/api/v1/solutions/{solution.id}/proxy/mcp", headers=headers)).status_code == 503
     owner_revocation = await clients[0].delete(f"/api/v1/mcp/tokens/{grant_id}")
+
+    # The token owner can revoke the grant independently of the client.
     assert owner_revocation.status_code == 204
     async with session_scope() as session:
         assert await session.get(MCPToken, UUID(grant_id)) is None
@@ -475,6 +491,8 @@ async def test_oauth_mcp_session_discovers_and_calls_real_sdk_tools(
         persisted.secrets = {"LONGLINK_IDENTITY_SECRET": secret}
         await session.commit()
     issued = await client.post("/api/v1/mcp/token", data=exchange)
+
+    # Use the credential returned by the real authorization-code exchange.
     assert issued.status_code == 200, issued.text
 
     # Route signed gateway requests into an isolated real SDK application.
@@ -496,7 +514,11 @@ async def test_oauth_mcp_session_discovers_and_calls_real_sdk_tools(
         )
         assert initialized.status_code == 200, initialized.text
         headers["mcp-session-id"] = initialized.headers["mcp-session-id"]
+
+        # Subsequent calls must use the protocol actually negotiated by initialization.
         headers["mcp-protocol-version"] = initialized.json()["result"]["protocolVersion"]
+
+        # Continue the negotiated MCP session before invoking tools.
         ready = await client.post(path, headers=headers, json={"jsonrpc": "2.0", "method": "notifications/initialized"})
         assert ready.status_code == 202, ready.text
         discovery = await client.post(path, headers=headers, json={"jsonrpc": "2.0", "id": 2, "method": "tools/list"})
@@ -507,6 +529,8 @@ async def test_oauth_mcp_session_discovers_and_calls_real_sdk_tools(
             headers=headers,
             json={"jsonrpc": "2.0", "id": 3, "method": "tools/call", "params": {"name": "current_identity", "arguments": {}}},
         )
+
+        # Verify the gateway tool result rather than merely successful session admission.
         assert result.status_code == 200, result.text
         assert result.json()["result"]["structuredContent"] == {"user": str(users[0].id), "authorization": None, "cookie": None}
 
@@ -556,6 +580,8 @@ async def test_mcp_proxy_supports_session_initialization_discovery_and_invocatio
             },
         )
         assert initialized.status_code == 200, initialized.text
+
+        # Preserve session identity and protocol negotiation for subsequent calls.
         assert initialized.headers.get("mcp-session-id")
         headers["mcp-session-id"] = initialized.headers["mcp-session-id"]
         headers["mcp-protocol-version"] = initialized.json()["result"]["protocolVersion"]
@@ -597,6 +623,7 @@ async def test_mcp_proxy_supports_current_protocol_without_a_session(
         )
         invocation = await clients[0].post(
             path,
+            # Supply protocol routing headers without changing the signed user identity.
             headers={**headers, "mcp-method": "tools/call", "mcp-name": "current_identity"},
             json={
                 "jsonrpc": "2.0",

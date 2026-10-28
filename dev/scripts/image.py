@@ -2,7 +2,7 @@ import os
 import sys
 import shutil
 import tempfile
-import subprocess  # noqa: S404
+import subprocess
 from pathlib import Path
 from importlib.metadata import version
 from longlink.cli.build import CONTEXT_IGNORE_PATTERNS
@@ -20,6 +20,7 @@ def main() -> None:
     with tempfile.TemporaryDirectory(prefix="longlink-image-") as directory:
         solution = Path(directory)
         shutil.copytree(
+            # Build the development sample from a disposable source copy.
             sdk / "dev",
             solution,
             dirs_exist_ok=True,
@@ -30,16 +31,12 @@ def main() -> None:
             sdk,
             solution / "sdk",
             symlinks=True,
+            # Exclude local credentials, caches, and nested development artifacts.
             ignore=shutil.ignore_patterns(*CONTEXT_IGNORE_PATTERNS, "dev"),
         )
 
         # Point only the staged sample at its contained SDK copy and refresh its lockfile.
-        subprocess.run(  # noqa: S603
-            [uv, "add", "--editable", "--no-workspace", "--no-sync", "./sdk"],
-            cwd=solution,
-            env=environment,
-            check=True,
-        )
+        subprocess.run([uv, "add", "--editable", "--no-workspace", "--no-sync", "./sdk"], cwd=solution, env=environment, check=True)
 
         # Use the installed SDK CLI to build and push through the normal context filtering.
         subprocess.run(

@@ -8,7 +8,7 @@ def router(manifest: ViewManifest) -> APIRouter:
 
     routes = APIRouter()
 
-    @routes.get("/health", include_in_schema=False)
+    @routes.get("/health", response_model=dict[str, bool], include_in_schema=False)
     async def health() -> dict[str, bool]:
         """Return process liveness without accessing runtime dependencies."""
 

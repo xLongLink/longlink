@@ -28,7 +28,7 @@ async def runtime_scope() -> AsyncGenerator[AsyncExitStack]:
     """Keep runtime activity alive until FastAPI finishes sending the response."""
 
     async with AsyncExitStack() as stack:
-        yield stack  # noqa: ASYNC119
+        yield stack
 
 
 @router.api_route("/solutions/{solution_id}/proxy", methods=list(SOLUTION_PROXY_METHOD_ROLES), include_in_schema=False)
@@ -75,8 +75,9 @@ async def proxy_solution_request(
     # Proxy authenticated API requests through the trusted HTTPS compute gateway boundary.
     try:
         async with asyncio.timeout(PROXY_REQUEST_TIMEOUT_SECONDS):
+
+            # Register resources directly with the request scope, in acquisition order.
             try:
-                # Register resources directly with the request scope, in acquisition order.
                 tls = ssl.create_default_context(cadata=registry.gateway_certificate)
                 client = httpx2.AsyncClient(follow_redirects=False, trust_env=False, timeout=300.0, verify=tls)
                 runtime.push_async_callback(client.aclose)
@@ -88,18 +89,26 @@ async def proxy_solution_request(
                         users.User.model_validate(user, update={"updated_at": user.updated_at.replace(tzinfo=UTC)}), identity_secret
                     ),
                 }
+
+                # Preserve body encoding without forwarding arbitrary browser headers.
                 content_type = request.headers.get("content-type")
                 if content_type is not None:
                     headers["content-type"] = content_type
 
                 # Keep negotiated sessions intact without forwarding bearer tokens or browser credentials.
                 if is_mcp:
+
+                    # MCP forwards an explicit allowlist, never arbitrary browser credentials.
                     for name in ("accept", "mcp-session-id", "mcp-protocol-version", "mcp-method", "mcp-name", "last-event-id"):
                         value = request.headers.get(name)
+
+                        # Missing optional negotiation headers remain absent upstream.
                         if value is not None:
                             headers[name] = value
 
                 query = request.url.query
+
+                # Build the upstream request with the original method, path, and query.
                 upstream_request = client.build_request(
                     request.method,
                     f"{registry.gateway_url.rstrip('/')}/{path}{'?' + query if query else ''}",
@@ -113,6 +122,8 @@ async def proxy_solution_request(
             except BaseException:
                 await runtime.aclose()
                 raise
+
+    # Keep transport failures behind stable browser-facing errors.
     except TimeoutError:
         raise HTTPException(status_code=504, detail="Solution proxy request timed out")
     except httpx2.HTTPError:
@@ -131,6 +142,8 @@ async def proxy_solution_request(
         for name in ("mcp-session-id", "mcp-protocol-version"):
             value = upstream.headers.get(name)
             if value is not None:
+
+                # Preserve only the negotiated protocol response header.
                 response_headers[name] = value
 
     if upstream.status_code >= 400:
@@ -144,15 +157,23 @@ async def proxy_solution_request(
         try:
             async with asyncio.timeout(5):
                 body = bytearray()
+
+                # Bound upstream error buffering independently of normal response streaming.
                 async for chunk in upstream.aiter_bytes():
+
+                    # Oversized diagnostics are discarded instead of buffered indefinitely.
                     if len(body) + len(chunk) > 64 * 1024:
                         break
                     body.extend(chunk)
                 else:
                     payload = json.loads(body)
+
+                    # Forward only a non-empty textual public error detail.
                     if isinstance(payload, dict) and isinstance(payload.get("detail"), str) and payload["detail"].strip():
                         payload["detail"].encode("utf-8")
                         detail = payload["detail"]
+
+        # Malformed or interrupted error bodies fall back to the generic public detail.
         except (TimeoutError, httpx2.HTTPError, ValueError, RecursionError):
             pass
 
@@ -179,6 +200,6 @@ async def proxy_solution_request(
         # The request-scoped exit stack owns upstream resources through completion or disconnect.
         async with asyncio.timeout(PROXY_RESPONSE_TIMEOUT_SECONDS):
             async for chunk in upstream.aiter_bytes():
-                yield chunk  # noqa: ASYNC119
+                yield chunk
 
     return StreamingResponse(response_content(), status_code=upstream.status_code, headers=response_headers)

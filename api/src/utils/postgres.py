@@ -25,6 +25,7 @@ class Postgres:
         sslmode: DatabaseSSLMode,
         certificate: str | None = None,
         *,
+        # Tunnels can override the socket address without changing TLS identity.
         hostaddr: str | None = None,
     ) -> None:
         """Configure organization SQL provisioning.
@@ -39,6 +40,7 @@ class Postgres:
             hostaddr: Optional transport IP; host remains the PostgreSQL TLS identity.
 
         """
+
         # Configure the immutable cluster URL without acquiring certificate files or connections.
         query = {"sslmode": "verify-full" if certificate is not None else sslmode.value, "options": "-c timezone=UTC"}
 
@@ -75,9 +77,8 @@ class Postgres:
         with self.url(database) as url:
             engine = create_async_engine(url, hide_parameters=True, **({"isolation_level": "AUTOCOMMIT"} if autocommit else {}))
 
-            # Ensure the operation-scoped engine is disposed before removing its CA file.
+            # Use explicit connections for autocommit operations and transactions otherwise.
             try:
-                # Use explicit connections for autocommit operations and transactions for normal operations.
                 async with engine.connect() if autocommit else engine.begin() as conn:
                     yield conn
 
@@ -101,9 +102,9 @@ class Postgres:
 
         # Create the organization database from the maintenance database when it is missing.
         async with self.connection("postgres", autocommit=True) as conn:
-            # Create the database only when PostgreSQL does not already list it.
+
+            # CREATE DATABASE needs an identifier quoted by SQLAlchemy's dialect preparer.
             if await conn.scalar(text("SELECT 1 FROM pg_database WHERE datname = :name"), {"name": organization.hex}) is None:
-                # CREATE DATABASE needs a quoted identifier, so compile it with SQLAlchemy's dialect preparer.
                 quoted_database_name = conn.engine.sync_engine.dialect.identifier_preparer.quote(organization.hex)
                 await conn.exec_driver_sql(f"CREATE DATABASE {quoted_database_name}")
 
@@ -160,7 +161,6 @@ class Postgres:
 
         # Skip cleanup when the organization database was already removed.
         async with self.connection("postgres", autocommit=True) as conn:
-            # Stop once PostgreSQL confirms the organization database is absent.
             if await conn.scalar(text("SELECT 1 FROM pg_database WHERE datname = :name"), {"name": organization.hex}) is None:
                 return
 

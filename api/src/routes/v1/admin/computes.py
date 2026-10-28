@@ -24,19 +24,29 @@ async def create_compute_registry(ctx: Context, payload: ComputeRegistryCreate) 
     cluster = Kubernetes(payload.kubeconfig)
     try:
         async with asyncio.timeout(7):
+
+            # Verify the cluster identity before accepting its service endpoints.
             async with cluster:
                 cluster_uid = await cluster.cluster_uid()
                 try:
+
+                    # Reject unusable storage and trust configuration before persisting a Compute.
                     database_storage_class = await storageclasses.resolve(cluster)
                     credentials = await Storage.controller_credentials(cluster)
                     gateway_certificate = await tls.certificate(cluster, "knative-serving", "longlink-gateway-tls")
                     storage_certificate = await tls.certificate(cluster, "rustfs", "longlink-storage-tls")
+
+                # Invalid candidate configuration is a validation error, not a connectivity outage.
                 except ValueError as exc:
                     raise HTTPException(status_code=422, detail=str(exc))
+
+                # Missing or unreachable cluster services reject the candidate Compute.
                 except (NotFoundError, ServerError, TimeoutError, OSError):
                     raise HTTPException(
                         status_code=503, detail="Compute infrastructure is unavailable; verify endpoints, credentials, and certificates"
                     )
+
+                # Retain verified endpoint metadata for the remaining infrastructure checks.
                 candidate = ComputeRegistry(
                     **payload.model_dump(),
                     database_storage_class=database_storage_class,
@@ -51,12 +61,17 @@ async def create_compute_registry(ctx: Context, payload: ComputeRegistryCreate) 
                 try:
                     await gateway.verify(cluster, candidate.gateway_url, candidate.gateway_certificate)
                     storage = Storage(candidate, cluster)
+
+                    # Storage must be reachable through the candidate cluster too.
                     await storage.verify()
+
+                # Any verification failure means unreachable infrastructure.
                 except Exception:
-                    # Any verification failure means unreachable infrastructure.
                     raise HTTPException(
                         status_code=503, detail="Compute infrastructure is unavailable; verify endpoints, credentials, and certificates"
                     )
+
+    # Bound candidate verification independently of individual service timeouts.
     except TimeoutError:
         raise HTTPException(
             status_code=503, detail="Compute infrastructure is unavailable; verify endpoints, credentials, and certificates"

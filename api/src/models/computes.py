@@ -12,6 +12,8 @@ def kubeconfig_mapping(value: object) -> dict[str, object]:
     if isinstance(value, str):
         try:
             value = yaml.safe_load(value)
+
+        # Normalize parser errors into model validation failures.
         except yaml.YAMLError as exc:
             raise ValueError("Kubernetes kubeconfig must be valid YAML") from exc
 
@@ -34,6 +36,7 @@ def kubeconfig_mapping(value: object) -> dict[str, object]:
         not isinstance(clusters, list)
         or not isinstance(contexts, list)
         or not isinstance(users, list)
+        # The selected context must be named explicitly.
         or not isinstance(current_context, str)
     ):
         raise ValueError("Kubernetes kubeconfig requires clusters, contexts, users, and current-context")
@@ -43,22 +46,29 @@ def kubeconfig_mapping(value: object) -> dict[str, object]:
         for entry in clusters
         if isinstance(entry, dict) and isinstance(entry.get("name"), str) and isinstance(entry.get("cluster"), dict)
     }
+
+    # Context authentication references must resolve to named user mappings.
     user_names = {
         entry.get("name")
         for entry in users
         if isinstance(entry, dict) and isinstance(entry.get("name"), str) and isinstance(entry.get("user"), dict)
     }
     selected_context: dict[str, object] | None = None
+
+    # Validate references only for the selected kubeconfig context.
     for entry in contexts:
         if not isinstance(entry, dict) or entry.get("name") != current_context:
             continue
         context = entry.get("context")
+
+        # Only a mapping can provide selected cluster and user references.
         if isinstance(context, dict):
             selected_context = cast(dict[str, object], context)
             break
     if (
         not cluster_names
         or not user_names
+        # The chosen context must provide scalar cluster and user references.
         or selected_context is None
         or not isinstance(selected_context.get("cluster"), str)
         or not isinstance(selected_context.get("user"), str)
@@ -71,6 +81,8 @@ def kubeconfig_mapping(value: object) -> dict[str, object]:
     for entry in users:
         if not isinstance(entry, dict):
             continue
+
+        # Stored kubeconfig data must never launch local authentication programs.
         user = entry.get("user")
         if isinstance(user, dict) and "exec" in user:
             raise ValueError("Kubernetes kubeconfig exec authentication is not allowed")
@@ -102,6 +114,7 @@ class ComputeRegistryCreate(BaseModel):
             or url.password is not None
             or url.path not in (None, "/")
             or url.query is not None
+            # Persist only an origin; resource paths and fragments have no routing meaning.
             or url.fragment is not None
         ):
             raise ValueError("Endpoint must be an HTTPS origin without credentials, path, query, or fragment")

@@ -23,6 +23,7 @@ def _deployment_is_ready(deployment: Deployment) -> bool:
         and status.get("observedGeneration") == generation
         and status.get("replicas") == replicas
         and status.get("updatedReplicas") == replicas
+        # Ready and available counts must match the current generation's rollout.
         and status.get("readyReplicas") == replicas
         and status.get("availableReplicas") == replicas
     )
@@ -40,6 +41,7 @@ async def verify(client: "Kubernetes", gateway_url: str, gateway_certificate: st
         or endpoint.password is not None
         or endpoint.path not in {"", "/"}
         or endpoint.query
+        # Gateway configuration identifies an origin, never a resource or redirect.
         or endpoint.fragment
     ):
         raise ValueError("Gateway endpoint must be an HTTPS origin")
@@ -62,6 +64,8 @@ async def verify(client: "Kubernetes", gateway_url: str, gateway_certificate: st
         ("cnpg-system", "cnpg-controller-manager"),
     ):
         deployment = Deployment(name, namespace=namespace, api=api)
+
+        # Wait for each gateway deployment's observed rollout.
         while True:
             await deployment.refresh()
             if _deployment_is_ready(deployment):
@@ -72,11 +76,17 @@ async def verify(client: "Kubernetes", gateway_url: str, gateway_certificate: st
     http_client = httpx2.AsyncClient(verify=context, trust_env=False, timeout=10, follow_redirects=False)
     async with http_client:
         while True:
+
+            # Probe routing only after the deployment checks succeed.
             try:
                 response = await http_client.get(f"{gateway_url.rstrip('/')}/ready", headers={"Host": "internalkourier"})
+
+            # Transient connection failures remain retryable during readiness polling.
             except httpx2.TransportError:
                 await asyncio.sleep(5)
                 continue
+
+            # Only a successful gateway probe completes readiness.
             if response.status_code == 200:
                 return
             await asyncio.sleep(5)

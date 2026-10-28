@@ -70,6 +70,8 @@ def test_solution_template_constrains_workloads() -> None:
         pod_template = workload_spec["template"]
         assert isinstance(pod_template, dict)
         pod_spec = pod_template["spec"]
+
+        # Every rendered workload uses the supported runtime architecture.
         assert isinstance(pod_spec, dict)
         assert pod_spec["nodeSelector"] == {"kubernetes.io/os": "linux", "kubernetes.io/arch": "amd64"}
         containers = pod_spec["containers"]
@@ -79,6 +81,8 @@ def test_solution_template_constrains_workloads() -> None:
         assert isinstance(container, dict)
         resources = container["resources"]
         assert isinstance(resources, dict)
+
+        # Inspect the actual workload's resource requests.
         requests = resources["requests"]
         assert isinstance(requests, dict)
         limits = resources["limits"]
@@ -132,6 +136,8 @@ async def test_solution_apply_stops_after_failed_migration_job(monkeypatch: pyte
             {},
             revision_id=UUID(int=1),
         )
+
+    # A failed migration must prevent application Service publication.
     assert applied == ["Secret", "Job"]
 
 
@@ -188,6 +194,8 @@ async def test_solution_apply_waits_for_deployment_and_route_readiness(
 
     monkeypatch.setattr(solutions.Job, "patch", patch)
     monkeypatch.setattr(solutions.Job, "refresh", refresh_job)
+
+    # Observe controller state while keeping manifest application local to this test.
     monkeypatch.setattr(solutions.KnativeServiceResource, "refresh", refresh_service)
     monkeypatch.setattr(solutions.utils, "apply", apply)
 
@@ -233,7 +241,9 @@ async def test_solution_apply_reports_quota_admission_failure(monkeypatch: pytes
                 ORGANIZATION_ID,
                 UUID("00000000-0000-4000-8000-000000000001"),
                 "ghcr.io/longlink/dashboard:latest",
+                # Supply an empty environment so rollout control is tested independently.
                 {},
+                # Keep the rendered release identity deterministic.
                 revision_id=UUID(int=1),
                 migrate=False,
             )
@@ -264,6 +274,7 @@ async def test_solution_apply_reports_disappeared_deployment(monkeypatch: pytest
             "ghcr.io/longlink/dashboard:latest",
             {},
             revision_id=UUID(int=1),
+            # Recovery of an already-migrated release must not rerun its Job.
             migrate=False,
         )
 
@@ -342,7 +353,9 @@ async def test_solution_apply_waits_for_route_after_deployment_readiness(monkeyp
             "migration",
             "migration failed",
             {"tail_lines": 200},
+            # Failing migration diagnostics replace unavailable application logs.
             ["Migration Pod migration-123 failed:", "migration failed"],
+            # When no application Pod exists, expose useful migration diagnostics.
             id="failed-migration",
         ),
         pytest.param(
@@ -351,6 +364,7 @@ async def test_solution_apply_waits_for_route_after_deployment_readiness(monkeyp
             "solution started",
             {"tail_lines": 200, "container": "solution"},
             ["solution started"],
+            # Live application logs take precedence over retained migration output.
             id="running-solution",
         ),
     ],

@@ -26,8 +26,11 @@ async def test_create_replaces_existing_invitation(users: tuple[User, User, User
         )
         await session.commit()
         invitation = await session.scalar(
+            # Resolve the invitation persisted by the service under test.
             select(OrganizationInvitation).where(col(OrganizationInvitation.organization_id) == organization.id)
         )
+
+        # Inspect persisted invitation state rather than only the service response.
         assert invitation is not None
         assert invitation.email == "invited@example.com"
         assert invitation.role == OrganizationRoles.write
@@ -86,6 +89,7 @@ async def test_create_uses_concurrently_created_invitation(users: tuple[User, Us
         await organizations.create_invitation(
             session,
             organization.id,
+            # A concurrent invitation must be updated through the same public service.
             OrganizationInvitationCreate(email=concurrent_invitation.email, role=OrganizationRoles.admin),
             users[0].id,
         )
@@ -116,6 +120,8 @@ async def test_accept_rejects_expired_invitation(users: tuple[User, User, User])
         created_at=datetime.now(UTC) - timedelta(days=7, seconds=1),
     )
     invitation_id = expired_invitation.id
+
+    # Persist expired proof before requesting its replacement.
     async with session_scope() as session:
         session.add(expired_invitation)
         await session.commit()
@@ -171,6 +177,8 @@ async def test_accept_rejects_invitations_for_deleted_organizations(users: tuple
         invitation_id = original_invitation.id
         organization_row = await session.get(Organization, organization.id)
         assert organization_row is not None
+
+        # Tombstoned Organizations must not remain available through invitation proof.
         organization_row.deleted_at = datetime.now(UTC)
         await session.commit()
 

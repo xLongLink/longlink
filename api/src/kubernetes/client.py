@@ -26,6 +26,7 @@ async def dispose_clients() -> None:
                 connections.push_async_callback(api._session.aclose)
 
 
+# Keep shared API connections separate from operation-owned tunnels.
 class Kubernetes:
     """Borrow one Compute API connection and own operation-local Kubernetes tunnels.
 

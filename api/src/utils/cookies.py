@@ -4,7 +4,7 @@ from src.environments import env
 
 AUTH_COOKIE = "longlink_auth"
 OAUTH_STATE_COOKIE = "longlink_oauth"
-PASSWORD_RESET_COOKIE = "longlink_password_reset"  # noqa: S105
+PASSWORD_RESET_COOKIE = "longlink_password_reset"
 REGISTRATION_COOKIE = "longlink_registration"
 
 _COOKIE_PATHS = {
@@ -15,6 +15,7 @@ _COOKIE_PATHS = {
 }
 
 
+# Share the same policy between cookie creation and deletion.
 class CookiePolicy(TypedDict):
     """Shared browser-credential security parameters for setting and deleting one cookie."""
 

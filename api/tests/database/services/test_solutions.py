@@ -43,7 +43,9 @@ async def test_create_rejects_tombstoned_organization(users: tuple[User, User, U
                 organization.id,
                 metadata=LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:test")),
                 name="Dashboard",
+                # No environment values are needed to exercise creation authorization.
                 envs={},
+                # The authenticated owner supplies audit attribution.
                 user_id=owner.id,
             )
 
@@ -65,7 +67,9 @@ async def test_create_rejects_missing_organization() -> None:
                 uuid4(),
                 metadata=LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:test")),
                 name="Dashboard",
+                # The rejected command must not allocate a release snapshot.
                 envs={},
+                # An unrelated identity must not gain creation access.
                 user_id=uuid4(),
             )
 
@@ -99,8 +103,11 @@ async def test_create_refreshes_cached_maintainer_access_before_authorizing(user
                 metadata=LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:test")),
                 name="Blocked dashboard",
                 envs={},
+                # Maintenance access cannot bypass Organization creation policy.
                 user_id=maintainer.id,
             )
+
+        # An authorized creator can proceed after the rejected command.
         solution = await solutions.create(
             session,
             organization.id,
@@ -149,6 +156,8 @@ async def test_revision_ownership_constraints_and_cleanup(monkeypatch: pytest.Mo
     try:
         session_factory = async_sessionmaker(engine, expire_on_commit=False)
         monkeypatch.setattr(database_session, "Session", session_factory)
+
+        # Exercise tenant constraints with persisted PostgreSQL users and Solutions.
         async with session_factory() as session:
             owner = User(name="Owner", email="owner@example.com", password="unused")
             session.add(owner)
@@ -170,6 +179,8 @@ async def test_revision_ownership_constraints_and_cleanup(monkeypatch: pytest.Mo
         async with create_client(owner) as client:
             url = f"/api/v1/solutions/{first.id}/update"
             responses = await asyncio.gather(client.post(url, json={}), client.post(url, json={}))
+
+            # Competing updates must yield one winner and one revision conflict.
             assert sorted(response.status_code for response in responses) == [204, 409]
             async with session_factory() as session:
                 current = await session.get(Solution, first.id)
@@ -181,12 +192,15 @@ async def test_revision_ownership_constraints_and_cleanup(monkeypatch: pytest.Mo
         # The actual migrated schema independently enforces same-Solution pointers.
         for reference in ("desired_revision_id", "deployed_revision_id"):
             async with session_factory() as session:
+
                 # Accept constraint violations raised by either the UPDATE or its commit.
-                with pytest.raises(IntegrityError):  # noqa: PT012
-                    await session.execute(
-                        update(Solution).where(col(Solution.id) == first.id).values({reference: second.desired_revision_id})
-                    )
-                    await session.commit()
+                with pytest.raises(IntegrityError):
+
+                    # Commit-time and statement-time constraint failures share this transaction boundary.
+                    async with session.begin():
+                        await session.execute(
+                            update(Solution).where(col(Solution.id) == first.id).values({reference: second.desired_revision_id})
+                        )
 
         # PostgreSQL cascades parent deletion through only its owned snapshots.
         async with session_factory() as session:
@@ -195,5 +209,6 @@ async def test_revision_ownership_constraints_and_cleanup(monkeypatch: pytest.Mo
             assert await session.get(Revision, first.desired_revision_id) is None
             assert await session.get(Revision, second.desired_revision_id) is not None
     finally:
+
         # Dispose database connections before the fixture removes the database.
         await engine.dispose()

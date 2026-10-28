@@ -64,6 +64,7 @@ async def test_audit_hook_persists_fields_and_leaves_deletes_hard(audit_engine: 
     creator_id = UUID("00000000-0000-0000-0000-000000000002")
     updater_id = UUID("00000000-0000-0000-0000-000000000003")
     deleter_id = UUID("00000000-0000-0000-0000-000000000005")
+
     # Insert through AsyncSession so the registered sync before_flush listener runs.
     async with audit_engine.session() as session:
         item = AuditLifecycleItem(name="draft")
@@ -73,6 +74,8 @@ async def test_audit_hook_persists_fields_and_leaves_deletes_hard(audit_engine: 
 
         assert item.id is not None
         item_id = item.id
+
+        # Inspect audit defaults written by the actual flush listener.
         assert item.created_at is not None
         assert item.updated_at is not None
         assert item.created_at.tzinfo is UTC
@@ -125,9 +128,13 @@ async def test_audit_hook_preserves_explicit_insert_fields_for_unchanged_rows(au
     updater_id = UUID("00000000-0000-0000-0000-000000000003")
 
     async with audit_engine.session() as session:
+
+        # Explicit audit fields must survive the real flush listener unchanged.
         item = ExplicitAuditItem(name="draft", created_at=created_at, updated_at=updated_at, created_id=creator_id, updated_id=updater_id)
         session.add(item)
         await session.commit()
+
+        # The initial commit supplies the identity used by later lifecycle transitions.
         assert item.id is not None
         item_id = item.id
 
@@ -168,8 +175,12 @@ async def test_audit_hook_preserves_ordinary_model_inserts_and_updates(audit_eng
         item_id = item.id
 
     async with audit_engine.session() as session:
+
+        # Plain lifecycle models do not opt into actor-attribution updates.
         item = await session.get(PlainLifecycleItem, item_id)
         assert item is not None
+
+        # Exercise a normal update without opting the model into audit behavior.
         item.name = "published"
         await session.commit()
 

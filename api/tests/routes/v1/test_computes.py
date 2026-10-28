@@ -56,6 +56,8 @@ async def test_compute_list_returns_ordered_page_and_total(clients: tuple[AsyncC
         storage_secret_key="controller-secret",
         **expected_item,
     )
+
+    # Insert a second registry to exercise response ordering and filtering.
     alpha = ComputeRegistry(
         name="Alpha Registry",
         cluster_uid="alpha-cluster",
@@ -65,6 +67,8 @@ async def test_compute_list_returns_ordered_page_and_total(clients: tuple[AsyncC
         **expected_item,
     )
     async with session_scope() as session:
+
+        # Persist fixtures out of display order to exercise the API's ordering.
         session.add_all([beta, alpha])
         await session.commit()
     beta_id = str(beta.id)
@@ -109,6 +113,8 @@ async def test_compute_registry_creation_redacts_credentials_and_rejects_duplica
         registry = await session.get(ComputeRegistry, UUID(created["id"]))
     assert registry is not None
     assert registry.cluster_uid
+
+    # Verified gateway and storage trust material must survive persistence.
     assert registry.gateway_certificate == "gateway-certificate"
     assert registry.storage_certificate == "storage-certificate"
     assert registry.storage_access_key == "controller"
@@ -232,6 +238,7 @@ async def test_compute_registry_creation_rejects_failed_inline_verification(
             "clusters": [{"name": "cluster", "cluster": {}}],
             "contexts": [{"name": "context", "context": {"cluster": "cluster", "user": "user"}}],
             "current-context": "context",
+            # Keep the kubeconfig structurally valid so the intended boundary is exercised.
             "users": [{"name": "user", "user": {}}],
         },
     }

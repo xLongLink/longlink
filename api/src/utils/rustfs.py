@@ -45,6 +45,7 @@ class RustFS:
                 "Action": reads,
                 "Resource": [f"{arn}/shared", f"{arn}/shared/*", f"{arn}/{prefix.rstrip('/')}", f"{arn}/{prefix}*"],
             },
+            # A Solution may modify only its own prefix.
             {"Effect": "Allow", "Action": writes, "Resource": [f"{arn}/{prefix}*"]},
             {
                 "Effect": "Allow",
@@ -91,6 +92,8 @@ class RustFS:
         if not response.content:
             return {}
         value = response.json()
+
+        # Administrative operations require object-shaped responses.
         if not isinstance(value, dict):
             raise RuntimeError("RustFS administration returned a non-object response")
         return value
@@ -107,11 +110,15 @@ class RustFS:
         }
         try:
             await self._request("PUT", "/rustfs/admin/v3/add-service-account", payload)
+
+        # Replays may encounter the service account created by an earlier attempt.
         except Error as error:
             if error.status_code != 409 and "access key is already in use" not in str(error):
                 raise
             await self.revoke(solution)
             await self._request("PUT", "/rustfs/admin/v3/add-service-account", payload)
+
+        # Reuse the deterministic service-account credentials after idempotent creation.
         return credentials
 
     async def revoke(self, solution: UUID) -> None:
@@ -120,6 +127,8 @@ class RustFS:
         # Missing accounts are already converged during failed provisioning and cleanup retries.
         try:
             await self._request("DELETE", f"/rustfs/admin/v3/delete-service-account?accessKey=solution-{solution.hex}")
+
+        # Revocation is idempotent when the service account is already absent.
         except Error as error:
             if error.status_code != 404 and "service account not exist" not in str(error):
                 raise
@@ -131,13 +140,19 @@ class RustFS:
         await self._request("PUT", f"/rustfs/admin/v3/quota/{bucket}", {"quota": quota_bytes, "quota_type": "HARD"})
         async with asyncio.timeout(300):
             while True:
+
+                # Wait for RustFS to publish the requested hard quota.
                 try:
                     current = await self._request("GET", f"/rustfs/admin/v3/quota/{bucket}")
                 except Error as error:
+
+                    # Only temporary quota unavailability should be retried.
                     if error.status_code != 503:
                         raise
                     await asyncio.sleep(2)
                     continue
+
+                # Acknowledgement must match the requested byte quota exactly.
                 if current.get("quota") == quota_bytes:
                     return
                 await asyncio.sleep(2)

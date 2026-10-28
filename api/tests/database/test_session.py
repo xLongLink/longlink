@@ -37,6 +37,8 @@ async def test_get_session_applies_mysql_engine_options(monkeypatch: pytest.Monk
         assert kwargs["pool_use_lifo"] is True
     finally:
         await session.dispose_engine()
+
+    # Disposal clears the published session factory as well as the engine.
     assert session.Session is None
 
 

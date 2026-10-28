@@ -27,6 +27,7 @@ class OrganizationTag(PlatformModel, table=True):
                 native_enum=False,
                 create_constraint=True,
                 validate_strings=True,
+                # Persist public icon values rather than Python enum member names.
                 values_callable=lambda icons: [icon.value for icon in icons],
             ),
             nullable=False,
@@ -51,12 +52,15 @@ class OrganizationTag(PlatformModel, table=True):
 class SolutionTag(PlatformModel, table=True):
     """Assign a tag only to a Solution in the same Organization."""
 
+    # Composite references enforce the assignment's tenant boundary.
     __tablename__: ClassVar[str] = "solution_tags"
     __table_args__ = (
         Index("ix_solution_tags_organization_solution", "organization_id", "solution_id"),
         Index("ix_solution_tags_organization_tag", "organization_id", "tag_id"),
         ForeignKeyConstraint(["organization_id", "solution_id"], ["solutions.organization_id", "solutions.id"], ondelete="CASCADE"),
-        ForeignKeyConstraint(["organization_id", "tag_id"], ["organization_tags.organization_id", "organization_tags.id"], ondelete="CASCADE"),
+        ForeignKeyConstraint(
+            ["organization_id", "tag_id"], ["organization_tags.organization_id", "organization_tags.id"], ondelete="CASCADE"
+        ),
     )
 
     # Assignment

@@ -34,7 +34,7 @@ async def test_administrator_dependency_requires_platform_role(administrator: bo
 
     app.dependency_overrides[auth.authuser] = current_user
 
-    @app.get("/admin")
+    @app.get("/admin", response_model=dict[str, bool])
     async def administrator_only(user: auth.PlatformAdmin) -> dict[str, bool]:
         """Expose the identity admitted by the administrator dependency."""
 
@@ -70,7 +70,7 @@ async def test_organization_role_dependencies_reuse_router_membership() -> None:
 
     app.dependency_overrides[auth.authmember] = current_membership
 
-    @router.get("/organization")
+    @router.get("/organization", response_model=dict[str, bool])
     async def organization_roles(
         member: auth.OrganizationMember,
         maintainer: auth.OrganizationMaintainer,
@@ -113,7 +113,7 @@ async def test_organization_role_dependencies_reject_insufficient_privileges(
 
     app.dependency_overrides[auth.authmember] = current_membership
 
-    @app.get("/organization")
+    @app.get("/organization", response_model=dict[str, str])
     async def privileged_organization(member: Annotated[UserOrganization, Depends(dependency)]) -> dict[str, str]:
         """Expose the role only if the privilege dependency accepts it."""
 

@@ -26,8 +26,9 @@ class OAuthRoute(APIRoute):
 
             try:
                 return await handler(request)
+
+            # Translate validation failures only for this versioned OAuth router.
             except RequestValidationError as exc:
-                # Translate validation failures only for this versioned OAuth router.
                 code = "invalid_client_metadata" if request.url.path == "/api/v1/mcp/register" else "invalid_request"
                 description = "Invalid request parameters"
 
@@ -38,9 +39,12 @@ class OAuthRoute(APIRoute):
                         for issue in exc.errors()
                         if len(issue["loc"]) > 1 and issue["loc"][1] in models.ClientRegistration.model_fields
                     )
+
+                    # Describe invalid fields without echoing submitted credentials.
                     description = f"Invalid client metadata: {details or 'request body'}"
+
+            # Preserve the domain-authored OAuth error fields.
             except mcp.OAuthError as exc:
-                # Preserve the domain-authored OAuth error fields.
                 code = exc.error
                 description = exc.description
 

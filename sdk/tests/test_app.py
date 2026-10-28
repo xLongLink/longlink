@@ -60,6 +60,8 @@ def test_longlink_solution_serves_runtime_routes_and_frontend(monkeypatch: pytes
     assert ready_response.json() == {"ok": True}
     assert user_response.status_code == 200
     assert user_response.json() == name
+
+    # Application shutdown releases the database runtime exactly once.
     assert len(disposed) == 1
 
 
@@ -272,7 +274,7 @@ def test_solution_router_serves_prefixed_route_before_frontend_fallback() -> Non
     # Arrange
     solution_router = APIRouter(prefix="/api")
 
-    @solution_router.get("/settings")
+    @solution_router.get("/settings", response_model=dict[str, str])
     async def settings_get_endpoint() -> dict[str, str]:
         """Return Solution-owned settings."""
 
@@ -334,6 +336,8 @@ def initialize_mcp(client: TestClient) -> None:
     client.headers["mcp-session-id"] = response.headers["mcp-session-id"]
     client.headers["mcp-protocol-version"] = response.json()["result"]["protocolVersion"]
     response = client.post("/mcp", json={"jsonrpc": "2.0", "method": "notifications/initialized"})
+
+    # Initialization notifications acknowledge the negotiated MCP session without a body.
     assert response.status_code == 202
 
 
@@ -374,9 +378,13 @@ def test_mcp_discovers_late_routes_and_invokes_with_context(solution_source: Pat
         invocation = client.post(
             "/mcp", json={"jsonrpc": "2.0", "id": 3, "method": "tools/call", "params": {"name": "get_item", "arguments": {"item_id": 7}}}
         )
+
+        # Request context tools must observe the same local identity as direct routes.
         context = client.post(
             "/mcp", json={"jsonrpc": "2.0", "id": 4, "method": "tools/call", "params": {"name": "current_user", "arguments": {}}}
         )
+
+        # Rejected tool calls must not alter the identity of later valid requests.
         invalid = client.post(
             "/mcp",
             json={"jsonrpc": "2.0", "id": 5, "method": "tools/call", "params": {"name": "get_item", "arguments": {"item_id": "bad"}}},
@@ -396,6 +404,8 @@ def test_mcp_discovers_late_routes_and_invokes_with_context(solution_source: Pat
     assert direct.json() == {"id": 7}
     assert frontend.status_code == 200
     assert "text/html" in frontend.headers["content-type"]
+
+    # Native View source remains available alongside the frontend document.
     assert view.status_code == 200
     assert "export default" in view.text
 
@@ -432,6 +442,8 @@ def test_mcp_preserves_identity_and_endpoint_authorization(monkeypatch: pytest.M
             User(id=allowed_user, name="Allowed", email="allowed@example.com"), secret
         )
         client.headers["authorization"] = "Bearer allowed-bearer"
+
+        # Legacy negotiation uses the event-stream-compatible Accept header.
         if protocol_version == "2026-07-28":
             client.headers["accept"] = "application/json, text/event-stream"
             client.headers["mcp-protocol-version"] = protocol_version
@@ -439,6 +451,7 @@ def test_mcp_preserves_identity_and_endpoint_authorization(monkeypatch: pytest.M
             client.headers["mcp-name"] = "private_data"
             request["params"]["_meta"] = {
                 "io.modelcontextprotocol/protocolVersion": protocol_version,
+                # Legacy clients carry negotiated capabilities in tool-call metadata.
                 "io.modelcontextprotocol/clientCapabilities": {},
             }
         else:
@@ -448,6 +461,8 @@ def test_mcp_preserves_identity_and_endpoint_authorization(monkeypatch: pytest.M
         del client.headers["authorization"]
         missing_bearer = client.post("/mcp", json=request)
         client.headers["authorization"] = "Bearer allowed-bearer"
+
+        # A valid session must still enforce the next tool call's signed user identity.
         client.headers["x-longlink-identity"] = identity.create_identity_token(
             User(id=denied_user, name="Denied", email="denied@example.com"), secret
         )
@@ -469,6 +484,7 @@ def test_mcp_preserves_identity_and_endpoint_authorization(monkeypatch: pytest.M
     assert missing.status_code == 401
 
 
+# SDK-internal routes must never become public MCP tools.
 @pytest.mark.usefixtures("solution_source")
 def test_empty_mcp_catalog_does_not_allow_internal_tools() -> None:
     """Keep SDK operations unavailable even when there are no Solution tools."""
@@ -477,6 +493,8 @@ def test_empty_mcp_catalog_does_not_allow_internal_tools() -> None:
     app = LongLink()
     client = TestClient(app)
     with client:
+
+        # Initialize a real MCP session for the first application lifespan.
         initialize_mcp(client)
         discovery = client.post("/mcp", json={"jsonrpc": "2.0", "id": 2, "method": "tools/list"})
         invocation = client.post(
@@ -506,9 +524,12 @@ def test_mcp_can_restart_without_duplicate_routes_or_stale_sessions(monkeypatch:
             event.listen(engine, "engine_disposed", disposed.append)
             return engine
 
+    # Start the first real MCP lifespan before observing its disposal and restart.
     client = TestClient(app)
     with client:
         initialize_mcp(client)
+
+        # Retain the first lifespan's session identity to probe stale-session rejection.
         first_session = client.headers["mcp-session-id"]
         assert client.portal is not None
         first_engine = client.portal.call(database_engine)
@@ -532,6 +553,8 @@ def test_mcp_can_restart_without_duplicate_routes_or_stale_sessions(monkeypatch:
         second_engine = client.portal.call(database_engine)
         assert second_engine is not first_engine
         discovery = client.post("/mcp", json={"jsonrpc": "2.0", "id": 2, "method": "tools/list"})
+
+        # A session from the previous lifespan must not join the replacement runtime.
         stale = client.post("/mcp", json={"jsonrpc": "2.0", "id": 3, "method": "tools/list"}, headers={"mcp-session-id": first_session})
 
     # Old sessions are unavailable and only current Solution operations are discoverable.
@@ -566,6 +589,7 @@ def test_mcp_supports_current_protocol_without_a_legacy_handshake() -> None:
         invocation = client.post(
             "/mcp",
             json={"jsonrpc": "2.0", "id": 2, "method": "tools/call", "params": {"name": "value", "arguments": {}, "_meta": metadata}},
+            # Protocol routing metadata is separate from user-supplied tool metadata.
             headers={"mcp-method": "tools/call", "mcp-name": "value"},
         )
 
@@ -599,7 +623,11 @@ def test_tool_arguments_cannot_override_request_credentials(monkeypatch: pytest.
         return {"user": str(audit.current_actor.get()), "authorization": authorization, "cookie": cookie}
 
     actual_user = UUID(int=2)
+
+    # Give this application its own real in-memory database.
     app.state.longlink.database = Database(Envs(ENV="testing"))
+
+    # The signed HTTP identity must override any credentials embedded in tool metadata.
     actual_identity = identity.create_identity_token(User(id=actual_user, name="Actual", email="actual@example.com"), secret)
     other_identity = identity.create_identity_token(User(id=UUID(int=1), name="Other", email="other@example.com"), secret)
     client = TestClient(app, headers={"x-longlink-identity": actual_identity, "authorization": "Bearer actual", "cookie": "user=actual"})
@@ -613,6 +641,7 @@ def test_tool_arguments_cannot_override_request_credentials(monkeypatch: pytest.
         request = {
             "jsonrpc": "2.0",
             "id": 3,
+            # Attempt metadata spoofing through the public MCP tool-call envelope.
             "method": "tools/call",
             "params": {
                 "name": "credentials",
@@ -636,6 +665,7 @@ def test_tool_arguments_cannot_override_request_credentials(monkeypatch: pytest.
     }
 
 
+# Static and dynamic route registration must both respect View ownership.
 @pytest.mark.usefixtures("solution_source")
 @pytest.mark.parametrize("route", [pytest.param("/views/dashboard", id="static-route"), pytest.param("/views/{view}", id="dynamic-route")])
 def test_solution_router_include_rolls_back_routes_before_a_view_collision(solution_source: Path, route: str) -> None:
@@ -647,7 +677,7 @@ def test_solution_router_include_rolls_back_routes_before_a_view_collision(solut
     )
     router = APIRouter()
 
-    @router.get("/safe")
+    @router.get("/safe", response_model=dict[str, str])
     async def safe_endpoint() -> dict[str, str]:
         """Return a route that must be rolled back with the colliding route."""
 

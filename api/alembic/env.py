@@ -75,10 +75,12 @@ def run_migrations_online() -> None:
                 context.run_migrations()
 
         try:
+
             # Run synchronous Alembic operations through the async connection.
             async with connectable.connect() as connection:
                 await connection.run_sync(do_run_migrations)
         finally:
+
             # Release engine resources after every migration attempt.
             await connectable.dispose()
 

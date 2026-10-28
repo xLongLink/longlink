@@ -21,15 +21,21 @@ def accepts_gzip(value: str) -> bool:
         if normalized_encoding not in {"gzip", "*"}:
             continue
 
+        # Accept-Encoding defaults each listed encoding to full quality.
         quality = 1.0
         for parameter in parameters:
             name, separator, raw_quality = parameter.partition("=")
+
+            # Explicit quality values override the encoding's default preference.
             if separator and name.strip().lower() == "q":
                 try:
                     quality = float(raw_quality.strip())
+
+                # Invalid quality values disable the encoding instead of enabling compression.
                 except ValueError:
                     quality = 0.0
 
+        # Invalid quality ranges must not enable compression through the wildcard fallback.
         if not 0.0 <= quality <= 1.0:
             quality = 0.0
         if normalized_encoding == "gzip":
@@ -37,6 +43,7 @@ def accepts_gzip(value: str) -> bool:
         else:
             wildcard_quality = quality
 
+    # An explicit gzip preference overrides the wildcard encoding preference.
     return (gzip_quality if gzip_quality is not None else wildcard_quality) > 0.0
 
 
@@ -89,9 +96,13 @@ class FrontendMiddleware:
                 if headers.get("content-type", "").startswith("text/html") and status in CACHEABLE_RESPONSE_STATUSES:
                     headers["cache-control"] = "no-cache"
                 elif HASHED_ASSET_PATH.fullmatch(path) and status in CACHEABLE_RESPONSE_STATUSES:
+
+                    # Content-hashed assets remain immutable across deployments.
                     headers["cache-control"] = "public, max-age=31536000, immutable"
                 elif path.startswith("/assets/"):
                     headers["cache-control"] = "no-store" if status >= 400 else "no-cache"
+
+                # The unversioned favicon uses bounded rather than immutable caching.
                 elif path == "/favicon.ico" and status in CACHEABLE_RESPONSE_STATUSES:
                     headers["cache-control"] = "public, max-age=86400"
 

@@ -21,6 +21,7 @@ READY_STATUS = {"observedGeneration": 3, "replicas": 2, "updatedReplicas": 2, "r
         pytest.param(3, None, READY_STATUS, False, id="missing-replicas"),
         pytest.param(3, 2, READY_STATUS | {"observedGeneration": 2}, False, id="stale-generation"),
         pytest.param(3, 2, READY_STATUS | {"replicas": 1}, False, id="pending-replicas"),
+        # Partial rollouts cannot satisfy gateway readiness.
         pytest.param(3, 2, READY_STATUS | {"updatedReplicas": 1}, False, id="stale-replicas"),
         pytest.param(3, 2, READY_STATUS | {"readyReplicas": 1}, False, id="unready-replicas"),
         pytest.param(3, 2, READY_STATUS | {"availableReplicas": 1}, False, id="unavailable-replicas"),
@@ -106,6 +107,7 @@ async def test_gateway_verifies_installed_controllers(observed_resources: list[t
         pytest.param("https://user@gateway.example", id="username"),
         pytest.param("https://:secret@gateway.example", id="password"),
         pytest.param("https://gateway.example/ready", id="path"),
+        # Endpoint configuration accepts origins, not resource-specific URLs.
         pytest.param("https://gateway.example?next=1", id="query"),
         pytest.param("https://gateway.example#ready", id="fragment"),
     ],
@@ -185,6 +187,8 @@ def test_compute_package_keeps_gateway_tls_and_infrastructure_boundaries(rendere
     assert any(document["kind"] == "Secret" and document["metadata"]["name"] == "longlink-gateway-tls" for document in documents)
 
     rustfs = next(document for document in documents if document["kind"] == "StatefulSet" and document["metadata"]["name"] == "rustfs")
+
+    # RustFS keeps a stable single-instance StatefulSet identity.
     assert rustfs["spec"]["selector"] == {"matchLabels": {"app.kubernetes.io/name": "rustfs"}}
     assert rustfs["spec"]["replicas"] == 1
     assert rustfs["spec"]["volumeClaimTemplates"] == [
@@ -212,6 +216,8 @@ def test_compute_package_keeps_gateway_tls_and_infrastructure_boundaries(rendere
     }
     assert next(environment["value"] for environment in container["env"] if environment["name"] == "RUSTFS_VOLUMES") == "/data"
     assert container["envFrom"] == [{"secretRef": {"name": "longlink-rustfs"}}]
+
+    # Persistent data and logs retain their distinct mounted volumes.
     assert container["volumeMounts"] == [{"name": "data", "mountPath": "/data"}, {"name": "logs", "mountPath": "/logs"}]
     assert rustfs["spec"]["template"]["spec"]["volumes"] == [{"name": "logs", "emptyDir": {}}]
 

@@ -71,6 +71,8 @@ async def get_organization_usage(ctx: Context, membership: auth.OrganizationMemb
     payment_method_id = await ctx.database.scalar(
         select(col(Organization.stripe_payment_method_id)).where(col(Organization.id) == membership.organization_id)
     )
+
+    # Return counts and billing availability without payment credentials.
     return {
         "users": users,
         "solutions": solutions,
@@ -87,15 +89,18 @@ async def get_organization_storage_usage(ctx: Context, membership: auth.Organiza
     compute = await organizations.storage_infrastructure(ctx.database, membership.organization_id)
     await ctx.database.commit()
 
-    # Inspect the complete Organization bucket and report storage failures as unavailable.
+    # Bound member-triggered full-bucket scans so slow storage cannot exhaust request capacity.
     try:
-        # Bound member-triggered full-bucket scans so slow storage cannot exhaust API request capacity.
         async with asyncio.timeout(15):
             credentials = s3.Credentials(compute.storage_access_key, compute.storage_secret_key)
             storage = s3.S3(compute.storage_endpoint, credentials, compute.storage_certificate)
             usage = await storage.usage(Storage.bucket_name(membership.organization_id))
+
+    # Storage outages share one stable API error without provider diagnostics.
     except (TimeoutError, BotoCoreError, ClientError):
         raise HTTPException(status_code=503, detail="Storage resources unavailable")
+
+    # Report the measured usage alongside the tenant's configured quota.
     return {"space_used": usage, "quota_bytes": membership.organization.storage_quota_bytes}
 
 
@@ -115,11 +120,14 @@ async def get_organization_database_usage(ctx: Context, membership: auth.Organiz
     try:
         async with asyncio.timeout(15):
             cluster = Kubernetes(compute.kubeconfig)
+
+            # Measure PostgreSQL through its cluster-owned connection.
             async with cluster:
                 database = await databases.connection(organization, cluster)
                 usage = await database.usage(organization.id)
     except (
         TimeoutError,
+        # Network and cluster lookup failures all make database usage unavailable.
         OSError,
         RuntimeError,
         SQLAlchemyError,
@@ -131,6 +139,7 @@ async def get_organization_database_usage(ctx: Context, membership: auth.Organiz
     ):
         raise HTTPException(status_code=503, detail="Database usage unavailable")
 
+    # Convert provisioned MiB capacity to the usage response's byte unit.
     return {"space_used": usage, "quota_bytes": organization.database_size_mib * 1024 * 1024}
 
 

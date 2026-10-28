@@ -11,7 +11,7 @@ class ClientMetadata(BaseModel):
     client_name: str = Field(default="MCP client", min_length=1, max_length=128)
     redirect_uris: list[str] = Field(min_length=1, max_length=10)
     response_types: list[Literal["code"]] = Field(default=["code"], min_length=1, max_length=1)
-    token_endpoint_auth_method: Literal["none"] = "none"  # noqa: S105
+    token_endpoint_auth_method: Literal["none"] = "none"
 
     @field_validator("redirect_uris")
     @classmethod
@@ -26,6 +26,7 @@ class ClientMetadata(BaseModel):
                 or any(character.isspace() or ord(character) < 32 for character in value)
                 or "\\" in value
                 or parsed.username is not None
+                # Registered callbacks cannot carry credentials or fragments.
                 or parsed.password is not None
                 or parsed.fragment is not None
                 or (parsed.scheme != "https" and not (parsed.scheme == "http" and parsed.host in {"localhost", "127.0.0.1", "[::1]"}))
@@ -125,7 +126,7 @@ class AccessToken(BaseModel):
 
     # Token response
     scope: Literal["mcp"] = "mcp"
-    token_type: Literal["Bearer"] = "Bearer"  # noqa: S105
+    token_type: Literal["Bearer"] = "Bearer"
     expires_in: int
     access_token: str
 

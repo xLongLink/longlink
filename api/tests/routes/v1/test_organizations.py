@@ -43,7 +43,11 @@ async def test_create_organization_persists_desired_state_and_queues_creation(
         memberships = await organizations.members(session, organization.id)
     assert organization.name == "acme"
     assert organization.slug == "acme"
+
+    # Creation persists an active Organization before asynchronous provisioning.
     assert organization.deleted_at is None
+
+    # Creation assigns infrastructure without marking the Organization deleted.
     assert organization.compute_id == compute.id
     assert organization.database_state == DatabaseState.failed
     assert organization.status == Status.creating
@@ -80,8 +84,11 @@ async def test_create_organization_enforces_the_per_user_beta_limit(
         owner_organization_count = await session.scalar(
             select(func.count())
             .select_from(Organization)
+            # Count only this creator's active Organizations for the beta limit.
             .where(col(Organization.created_id) == owner.id, col(Organization.deleted_at).is_(None))
         )
+
+        # The beta limit is per creator, not a global Organization count.
         other_user_organization_count = await session.scalar(
             select(func.count())
             .select_from(Organization)
@@ -399,8 +406,10 @@ async def test_other_organization_user_cannot_delete_solution(
 
 
 @pytest.mark.parametrize(
+    # Usage measurement failures return a stable unavailable response.
     ("usage", "expected_status", "expected_usage"),
     [
+        # Usage responses distinguish successful measurement from unavailable storage.
         pytest.param(4096, 200, 4096, id="available"),
         pytest.param(
             ClientError({"Error": {"Code": "InternalError"}, "ResponseMetadata": {"HTTPStatusCode": 500}}, "ListObjectsV2"),
@@ -409,6 +418,7 @@ async def test_other_organization_user_cannot_delete_solution(
             id="backend-unavailable",
         ),
         pytest.param(TimeoutError(), 503, None, id="timeout"),
+        # Provider SDK failures are unavailable measurements, not zero usage.
         pytest.param(BotoCoreError(), 503, None, id="botocore-error"),
     ],
 )
@@ -519,6 +529,7 @@ async def test_get_organization_returns_invitations(
             OrganizationInvitation(
                 organization_id=organization.id,
                 email="expired@example.com",
+                # Expired invitations must not be returned as active access.
                 role=OrganizationRoles.write,
                 created_at=datetime(2020, 1, 1, tzinfo=UTC),
             )
@@ -876,6 +887,8 @@ async def test_update_organization_member_keeps_unchanged_role_without_persisten
         persisted.database_state = DatabaseState.available
         session.add(UserOrganization(user_id=member.id, organization_id=organization.id, role=OrganizationRoles.write))
         await session.commit()
+
+    # Capture persisted membership metadata before attempting the change.
     async with session_scope() as session:
         original = next(item for item in await organizations.members(session, organization.id) if item.user_id == member.id)
         original_updated_at = original.updated_at
@@ -1022,6 +1035,7 @@ async def test_update_organization_member_returns_403_for_regular_member(
         session.add(UserOrganization(user_id=target_member.id, organization_id=organization.id, role=OrganizationRoles.read))
         await session.commit()
 
+    # Observe the target's audit state before the protected role transition.
     async with session_scope() as session:
         original = next(item for item in await organizations.members(session, organization.id) if item.user_id == target_member.id)
         original_updated_at = original.updated_at
@@ -1043,6 +1057,7 @@ async def test_update_organization_member_returns_403_for_regular_member(
         assert persisted.database_state == DatabaseState.available
 
 
+# Role checks distinguish absent access from insufficient privilege.
 @pytest.mark.parametrize(
     ("caller_role", "expected_detail"),
     [
