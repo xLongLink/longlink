@@ -534,8 +534,8 @@ export const zServerMetadata = z.object({
  */
 export const zSolutionCreate = z.object({
     envs: z.record(z.string(), z.string()).optional(),
-    image: z.string(),
     name: z.string().min(1).max(100),
+    image: z.string(),
     description: z.string().max(255).nullish()
 });
 

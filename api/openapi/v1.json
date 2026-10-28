@@ -5665,15 +5665,15 @@
             "type": "object",
             "title": "Envs"
           },
-          "image": {
-            "type": "string",
-            "title": "Image"
-          },
           "name": {
             "type": "string",
             "maxLength": 100,
             "minLength": 1,
             "title": "Name"
+          },
+          "image": {
+            "type": "string",
+            "title": "Image"
           },
           "description": {
             "anyOf": [
@@ -5690,8 +5690,8 @@
         },
         "type": "object",
         "required": [
-          "image",
-          "name"
+          "name",
+          "image"
         ],
         "title": "SolutionCreate",
         "description": "Validate solution creation metadata and release configuration."
