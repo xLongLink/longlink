@@ -23,6 +23,7 @@ CONTEXT_IGNORE_PATTERNS = (
     ".env",
     ".env.*",
     ".envrc",
+    ".storage",
     ".venv",
     "venv",
     ".direnv",
