@@ -32,7 +32,6 @@ LongLink is an open-source platform for building and running custom business too
 - 🤖 **AI integration**: Expose your applications to AI agents through an MCP server.
 - 📦 **Portable**: Applications run as standard containers.
 
-![Invoice approvals in the sample Solution](sample.png)
 
 
 <br />
