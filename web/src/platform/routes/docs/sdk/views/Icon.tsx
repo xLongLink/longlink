@@ -14,14 +14,12 @@ export default function IconPage() {
                 {
                     name: 'icon',
                     type: 'StoneIconName',
-                    description:
-                        'Lucide kebab-case name or LongLink alias. Prefix with lucide: to bypass an existing alias, such as lucide:logs.',
+                    description: 'Lucide icon name or LongLink alias; prefix with lucide: to bypass aliases.',
                 },
                 {
                     name: 'size',
                     type: '"sm" | "lg" | "md"',
-                    description:
-                        'Icon size. An explicit value wins. When omitted, Icon uses the nearest default supplied by an owning Astryx component for its icon slot, then falls back to md when no contextual default exists.',
+                    description: 'Icon size; inherits the parent default or falls back to md.',
                 },
             ]}
             examples={[

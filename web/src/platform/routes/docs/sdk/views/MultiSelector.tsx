@@ -36,16 +36,9 @@ export default function MultiSelectorPage() {
                     description: 'Prevents interaction and excludes the field from submission.',
                 },
                 {
-                    name: 'width',
-                    type: 'string | number',
-                    description:
-                        'Width of the field (number = pixels, string used as-is, e.g. "100%"). Sizes the whole field (label, control, and status) so they stay aligned.',
-                },
-                {
                     name: 'options',
                     type: 'SelectorOptionType[]',
-                    description:
-                        'Array of items: strings, objects with value/label/icon/disabled, dividers, or sections. An option may carry `action`: one node — an IconButton, a Button, a menu trigger — the caller renders and names. Once any option does, the popup is a grid whose rows pair the option with its action: Up/Down move rows, the inline-end arrow reaches the action, Enter fires it, pointer and touch press it directly, and pressing it never changes the selection.',
+                    description: 'Options, dividers, or sections, with optional per-option actions.',
                 },
                 {
                     name: 'value',
@@ -55,23 +48,17 @@ export default function MultiSelectorPage() {
                 {
                     name: 'defaultValue',
                     type: 'string[]',
-                    description: 'The defaultValue prop.',
+                    description: 'Initial value.',
                 },
                 {
                     name: 'onChange',
                     type: '(value: string[]) => void',
-                    description:
-                        'Called when the selection changes. A creation (hasCreate) arrives with `{type: "create", query}` as the second argument and the query appended to value; the caller adds the matching option in that same update. Every other change passes no descriptor, so a one-argument handler keeps working.',
+                    description: 'Receives selected values and an optional descriptor when creating an option.',
                 },
                 {
                     name: 'placeholder',
                     type: 'string',
                     description: 'Placeholder text shown when no value is selected.',
-                },
-                {
-                    name: 'size',
-                    type: '"sm" | "lg" | "md"',
-                    description: 'Size variant for the selector.',
                 },
                 {
                     name: 'hasSelectAll',
@@ -81,13 +68,7 @@ export default function MultiSelectorPage() {
                 {
                     name: 'hasSearch',
                     type: 'boolean',
-                    description:
-                        'Whether to show a search input for filtering options. As the user types, the match count (or "No results found") is announced to screen readers via a polite live region. The search field has built-in affordances: a leading magnifier icon and, once a query is typed, a trailing clear (✕) button that resets the query and returns focus to the input.',
-                },
-                {
-                    name: 'hasClear',
-                    type: 'boolean',
-                    description: 'Shows a clear button when values are selected.',
+                    description: 'Shows a search field for filtering options.',
                 },
             ]}
             examples={[

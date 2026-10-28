@@ -2,13 +2,13 @@ from src import auth
 from uuid import UUID
 from fastapi import Depends, APIRouter
 from src.context import Context
-from src.models.users import UserUpdate, UserSummary, UserOrganizationInvitation, UserOrganizationMembership
+from src.models.users import UserUpdate, CurrentUser, UserOrganizationInvitation, UserOrganizationMembership
 from src.database.services import invitations, organizations
 
 router = APIRouter(dependencies=[Depends(auth.authuser)])
 
 
-@router.get("/me", response_model=UserSummary)
+@router.get("/me", response_model=CurrentUser)
 async def get_me(user: auth.CurrentUser):
     """Return the authenticated user's details."""
 
@@ -49,7 +49,7 @@ async def decline_my_invitation(ctx: Context, invitation_id: UUID, user: auth.Cu
     await ctx.database.commit()
 
 
-@router.patch("/me", response_model=UserSummary)
+@router.patch("/me", response_model=CurrentUser)
 async def patch_me(ctx: Context, payload: UserUpdate, user: auth.CurrentUser):
     """Update the authenticated user's details."""
 
@@ -58,6 +58,12 @@ async def patch_me(ctx: Context, payload: UserUpdate, user: auth.CurrentUser):
         user.name = payload.name
     if payload.avatar is not None:
         user.avatar = payload.avatar
+
+    # Keep appearance changes personal and independent of Organization settings.
+    if payload.theme is not None:
+        user.theme = payload.theme
+    if payload.accent is not None:
+        user.accent = payload.accent
 
     await ctx.database.commit()
 

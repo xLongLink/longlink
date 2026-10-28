@@ -1,3 +1,4 @@
+import re
 import httpx2
 import logging
 from typing import Any, Self
@@ -101,7 +102,7 @@ class LongLink(FastAPI):
         view_definitions = [definition for definition, _ in discovered_views]
 
         # Declare the pinned runtime once for the complete Solution catalog.
-        view_manifest = views.ViewManifest(views=view_definitions, runtime=view_runtime)
+        self._view_manifest = views.ViewManifest(views=view_definitions, runtime=view_runtime)
 
         # Initialize Solution storage and database connections.
         runtime = RuntimeState.from_settings(settings)
@@ -122,7 +123,7 @@ class LongLink(FastAPI):
                 access_logger.addFilter(ApiAccessFilter())
 
         # Mount SDK-managed routes before user-facing assets.
-        runtime_router = router(view_manifest)
+        runtime_router = router(self._view_manifest)
         self.include_router(runtime_router)
         runtime_operation_ids = {route.unique_id for route in runtime_router.routes if isinstance(route, APIRoute)}
 
@@ -140,17 +141,11 @@ class LongLink(FastAPI):
         for definition, content in discovered_views:
             self.add_api_route(f"/{definition.path}", _view_handler(content), methods=["GET"], include_in_schema=False)
 
-        # Make the browser root URL resolve to the first navigable View.
-        first_tab_view = next(
-            (definition for definition in view_definitions if definition.route != "/" and ":" not in definition.route), None
-        )
-        if first_tab_view is not None:
-
-            @self.get("/", include_in_schema=False)
-            async def redirect_root() -> RedirectResponse:
-                """Redirect the Solution root to its first static tab."""
-
-                return RedirectResponse(first_tab_view.route)
+        # Reserve the root redirect only when automatic navigation has a target.
+        if any(
+            definition.route != "/" and "/" not in definition.route[1:] and ":" not in definition.route for definition in view_definitions
+        ):
+            self.add_api_route("/", self._redirect_root, methods=["GET"], include_in_schema=False)
 
         # Share the manifest catalog after registering Views so they cannot collide with themselves.
         self._views = view_definitions
@@ -213,6 +208,54 @@ class LongLink(FastAPI):
 
         # Serve the embedded frontend as low-priority routes so Solution routes take precedence.
         self.frontend("/", directory=frontend_assets.index.parent)
+
+    def include_view(self, path: str, *, label: str | None = None, icon: str | None = None) -> None:
+        """Include a discovered JSX View as a tab, in registration order, with an optional label and Lucide icon name."""
+
+        # Accept only canonical JSX paths relative to the Solution's Views directory.
+        if not isinstance(path, str) or not path.endswith(".jsx"):
+            raise ValueError("View path must be a relative .jsx file name")
+
+        definition = next((view for view in self._views if f"{view.path.removeprefix('views/')}.jsx" == path), None)
+        if definition is None:
+            raise ValueError(f"Unknown View: {path}")
+
+        # Navigation targets must resolve without route parameters or a root redirect loop.
+        if definition.route == "/" or ":" in definition.route:
+            raise ValueError("Tabs must target a non-root static View")
+
+        if label is not None and (not isinstance(label, str) or not label.strip()):
+            raise ValueError("Tab label must contain non-whitespace text")
+
+        if icon is not None and (not isinstance(icon, str) or re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", icon) is None):
+            raise ValueError("Tab icon must be a Lucide kebab-case name")
+
+        # Validate before switching from automatic tabs to explicit navigation.
+        tabs = self._view_manifest.tabs
+        if tabs is not None and any(tab.route == definition.route for tab in tabs):
+            raise ValueError(f"View is already included: {path}")
+
+        if tabs is None:
+            tabs = []
+            self._view_manifest.tabs = tabs
+
+        tab = views.ViewTab(route=definition.route, label=label.strip() if label is not None else None, icon=icon)
+        tabs.append(tab)
+
+        # Explicit nested tabs need a redirect even when there were no automatic root tabs.
+        if len(tabs) == 1 and not any(view.route != "/" and "/" not in view.route[1:] and ":" not in view.route for view in self._views):
+            self.add_api_route("/", self._redirect_root, methods=["GET"], include_in_schema=False)
+
+    async def _redirect_root(self) -> RedirectResponse:
+        """Resolve the first tab after Solution navigation registration is complete."""
+
+        # A root redirect is registered only when automatic or explicit tabs exist.
+        tabs = self._view_manifest.tabs
+        if tabs is not None:
+            return RedirectResponse(tabs[0].route)
+
+        first_route = next(view.route for view in self._views if view.route != "/" and "/" not in view.route[1:] and ":" not in view.route)
+        return RedirectResponse(first_route)
 
     # FastAPI accepts framework-defined router options with heterogeneous values.
     def include_router(self, router: APIRouter, **kwargs: Any) -> None:  # noqa: ANN401

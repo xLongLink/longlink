@@ -10,9 +10,9 @@ import { Heading } from '@astryxdesign/core/Heading';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { componentDocumentation } from '@/platform/routes';
 import { Blockquote } from '@astryxdesign/core/Blockquote';
-import { DocumentationArticle } from '@/components/Article';
 import { Table, proportional } from '@/components/ui/Table';
 import { documentationLastUpdated } from '@/lib/documentation';
+import { DocumentationArticle } from '@/components/layouts/Article';
 import { Layout, LayoutContent, LayoutHeader } from '@astryxdesign/core/Layout';
 
 type ViewProperty = { name: string; type: string; description?: string };
@@ -162,7 +162,7 @@ export default function ViewLayout({
                                 <Text as="p">No standalone example is available for this component.</Text>
                             )}
                         </Stack>
-                        <Stack as="section" gap={0} aria-labelledby="component-properties">
+                        <Stack as="section" gap={5} aria-labelledby="component-properties">
                             <Heading id="component-properties" level={2}>
                                 Properties
                             </Heading>

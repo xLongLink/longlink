@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 import { it, expect } from 'vitest';
-import { renderStatic } from '../render';
-import { ArticleFooter } from '@/components/Article';
+import { renderStatic } from '../../render';
+import { ArticleFooter } from '@/components/layouts/Article';
 
 it('does not offer unrelated collection navigation for an unlisted article', () => {
     // Act

@@ -2,10 +2,8 @@ import pytest
 import pytest_asyncio
 from httpx2 import AsyncClient
 from fastapi import HTTPException
-from conftest import create_client
 from factories import create_organization
 from src.utils import images
-from collections.abc import AsyncIterator
 from src.models.types import Image
 from src.models.metadata import LongLinkMetadata, EnvironmentMetadata
 from src.database.models.users import User
@@ -17,15 +15,6 @@ async def organization(users: tuple[User, User, User]) -> Organization:
     """Provide an Organization owned by the authenticated image inspector."""
 
     return await create_organization(users[0])
-
-
-@pytest_asyncio.fixture
-async def authenticated_client(users: tuple[User, User, User]) -> AsyncIterator[AsyncClient]:
-    """Provide the single authenticated identity used by image inspection tests."""
-
-    # Own only the administrator client needed by the authenticated route cases.
-    async with create_client(users[0]) as client:
-        yield client
 
 
 @pytest.mark.no_db
@@ -51,7 +40,7 @@ async def test_inspect_image_requires_authentication_before_metadata_inspection(
 
 
 async def test_inspect_image_returns_404_when_metadata_missing(
-    authenticated_client: AsyncClient, organization: Organization, monkeypatch: pytest.MonkeyPatch
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient], organization: Organization, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Return a not-found error when the image has no LongLink metadata."""
 
@@ -65,7 +54,7 @@ async def test_inspect_image_returns_404_when_metadata_missing(
     monkeypatch.setattr(images, "required_metadata", missing_metadata)
 
     # Act
-    response = await authenticated_client.get(f"/api/v1/organizations/{organization.id}/image?image=ghcr.io/longlink/dashboard:latest")
+    response = await clients[0].get(f"/api/v1/organizations/{organization.id}/image?image=ghcr.io/longlink/dashboard:latest")
 
     # Assert
     assert response.status_code == 404
@@ -73,7 +62,7 @@ async def test_inspect_image_returns_404_when_metadata_missing(
 
 
 async def test_inspect_image_returns_declared_metadata(
-    authenticated_client: AsyncClient, organization: Organization, monkeypatch: pytest.MonkeyPatch
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient], organization: Organization, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Return the immutable image and declared runtime environment metadata."""
 
@@ -90,7 +79,7 @@ async def test_inspect_image_returns_declared_metadata(
     monkeypatch.setattr(images, "required_metadata", fake_metadata)
 
     # Act
-    response = await authenticated_client.get(f"/api/v1/organizations/{organization.id}/image?image=ghcr.io/longlink/dashboard:latest")
+    response = await clients[0].get(f"/api/v1/organizations/{organization.id}/image?image=ghcr.io/longlink/dashboard:latest")
 
     # Assert
     assert response.status_code == 200
@@ -102,13 +91,13 @@ async def test_inspect_image_returns_declared_metadata(
     }
 
 
-async def test_inspect_image_rejects_disallowed_registry(authenticated_client: AsyncClient, organization: Organization) -> None:
+async def test_inspect_image_rejects_disallowed_registry(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient], organization: Organization
+) -> None:
     """Reject image inspection for a well-formed reference from an unconfigured registry."""
 
     # Act
-    response = await authenticated_client.get(
-        f"/api/v1/organizations/{organization.id}/image?image=registry.example.com/longlink/dashboard:latest"
-    )
+    response = await clients[0].get(f"/api/v1/organizations/{organization.id}/image?image=registry.example.com/longlink/dashboard:latest")
 
     # Assert
     assert response.status_code == 403

@@ -36,12 +36,6 @@ export default function TimeInputPage() {
                     description: 'Prevents interaction and excludes the field from submission.',
                 },
                 {
-                    name: 'width',
-                    type: 'string | number',
-                    description:
-                        'Width of the field (number = pixels, string used as-is, e.g. "100%"). Sizes the whole field (label, control, and status) so they stay aligned.',
-                },
-                {
                     name: 'value',
                     type: 'ISOTimeString',
                     description: 'Controlled time value in ISO format (HH:MM or HH:MM:SS).',
@@ -49,7 +43,7 @@ export default function TimeInputPage() {
                 {
                     name: 'defaultValue',
                     type: 'ISOTimeString',
-                    description: 'The defaultValue prop.',
+                    description: 'Initial value.',
                 },
                 {
                     name: 'onChange',
@@ -72,15 +66,9 @@ export default function TimeInputPage() {
                     description: 'Includes seconds in the time display and parsing.',
                 },
                 {
-                    name: 'hasClear',
-                    type: 'boolean',
-                    description: 'Shows a clear button when a value is set and the input is not disabled.',
-                },
-                {
                     name: 'hourFormat',
                     type: '"12h" | "24h"',
-                    description:
-                        "Controls the display format. '12h' shows AM/PM (e.g. '2:30 PM'); '24h' uses 24-hour notation (e.g. '14:30').",
+                    description: '12-hour or 24-hour time display.',
                 },
                 {
                     name: 'increment',
@@ -90,13 +78,7 @@ export default function TimeInputPage() {
                 {
                     name: 'placeholder',
                     type: 'string',
-                    description:
-                        'Placeholder text shown when no time is selected. When the input is focused and empty, a format hint overrides this text.',
-                },
-                {
-                    name: 'size',
-                    type: '"sm" | "lg" | "md"',
-                    description: 'Controls the height of the input element.',
+                    description: 'Empty-field text, replaced by a format hint on focus.',
                 },
             ]}
             examples={[

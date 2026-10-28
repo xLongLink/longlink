@@ -29,24 +29,16 @@ async def test_metadata_fetches_digest_image_references(monkeypatch: pytest.Monk
     expected_metadata = LongLinkMetadata(
         image=Image(image), description="Demo app", environments=[EnvironmentMetadata(name="API_KEY", required=True)]
     )
-    captured: list[tuple[str, dict[str, str]]] = []
+    captured: list[httpx2.Request] = []
 
     def respond(request: httpx2.Request) -> httpx2.Response:
         """Capture GHCR requests and return the matching public image resource."""
 
+        captured.append(request)
         if request.url.path == "/token":
-            assert "Authorization" not in request.headers
-            captured.append(("token", {"url": str(request.url)}))
             return httpx2.Response(200, json={"token": "pull-token"})
         if "/manifests/" in request.url.path:
-            captured.append(
-                (
-                    "manifest",
-                    {"url": str(request.url), "accept": request.headers["Accept"], "authorization": request.headers["Authorization"]},
-                )
-            )
             return httpx2.Response(200, json={"config": {"digest": "sha256:config"}}, headers=manifest_headers)
-        captured.append(("blob", {"url": str(request.url), "authorization": request.headers["Authorization"]}))
         return httpx2.Response(
             200,
             json={
@@ -66,18 +58,16 @@ async def test_metadata_fetches_digest_image_references(monkeypatch: pytest.Monk
 
     # Assert
     assert image_metadata == expected_metadata
-    assert captured == [
-        ("token", {"url": "https://ghcr.io/token?service=ghcr.io&scope=repository%3Alonglink%2Fdashboard%3Apull"}),
-        (
-            "manifest",
-            {
-                "url": "https://ghcr.io/v2/longlink/dashboard/manifests/sha256:deadbeef",
-                "accept": images.MANIFEST_ACCEPT,
-                "authorization": "Bearer pull-token",
-            },
-        ),
-        ("blob", {"url": "https://ghcr.io/v2/longlink/dashboard/blobs/sha256:config", "authorization": "Bearer pull-token"}),
+    assert [str(request.url) for request in captured] == [
+        "https://ghcr.io/token?service=ghcr.io&scope=repository%3Alonglink%2Fdashboard%3Apull",
+        "https://ghcr.io/v2/longlink/dashboard/manifests/sha256:deadbeef",
+        "https://ghcr.io/v2/longlink/dashboard/blobs/sha256:config",
     ]
+    token_request, manifest_request, blob_request = captured
+    assert "Authorization" not in token_request.headers
+    assert manifest_request.headers["Accept"] == images.MANIFEST_ACCEPT
+    assert manifest_request.headers["Authorization"] == "Bearer pull-token"
+    assert blob_request.headers["Authorization"] == "Bearer pull-token"
 
 
 async def test_metadata_rejects_mismatched_registry_digest(monkeypatch: pytest.MonkeyPatch) -> None:

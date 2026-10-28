@@ -2,6 +2,7 @@ import type { z } from 'zod';
 import { api } from '@/lib/api';
 import { useState } from 'react';
 import { useLocation } from 'react-router';
+import AppearanceSettings from './Appearance';
 import { Text } from '@astryxdesign/core/Text';
 import { Avatar } from '@/components/ui/Avatar';
 import { Stack } from '@astryxdesign/core/Stack';
@@ -33,7 +34,7 @@ export default function Settings() {
 }
 
 /** Edits the authenticated profile and manages owned organizations. */
-function SettingsPage({ user }: { user: z.output<typeof schemas.zUserSummary> }) {
+function SettingsPage({ user }: { user: z.output<typeof schemas.zCurrentUser> }) {
     const [name, setName] = useState(user.name);
     const queryClient = useQueryClient();
     const location = useLocation();
@@ -102,25 +103,28 @@ function SettingsPage({ user }: { user: z.output<typeof schemas.zUserSummary> })
                             <OrganizationManagement presentation="settings" />
                         </ApiBoundary>
                     ) : (
-                        <form action={saveAccount}>
-                            <Stack gap={4}>
-                                <Stack justify="end" minHeight="var(--size-element-md)">
-                                    <Heading level={2} hasCapsize>
-                                        Account
-                                    </Heading>
+                        <Stack gap={8}>
+                            <form action={saveAccount}>
+                                <Stack gap={4}>
+                                    <Stack justify="end" minHeight="var(--size-element-md)">
+                                        <Heading level={2} hasCapsize>
+                                            Account
+                                        </Heading>
+                                    </Stack>
+                                    <Divider />
+                                    <TextInput label="Username" value={name} isRequired onChange={setName} />
+                                    <Stack direction="horizontal" justify="end">
+                                        <Button
+                                            label="Save account"
+                                            variant="primary"
+                                            type="submit"
+                                            isDisabled={!name.trim()}
+                                        />
+                                    </Stack>
                                 </Stack>
-                                <Divider />
-                                <TextInput label="Username" value={name} isRequired onChange={setName} />
-                                <Stack direction="horizontal" justify="end">
-                                    <Button
-                                        label="Save account"
-                                        variant="primary"
-                                        type="submit"
-                                        isDisabled={!name.trim()}
-                                    />
-                                </Stack>
-                            </Stack>
-                        </form>
+                            </form>
+                            <AppearanceSettings />
+                        </Stack>
                     )}
                 </Stack>
             </Layout>

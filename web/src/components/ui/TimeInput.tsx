@@ -12,11 +12,9 @@ export function TimeInput(
         min?: ISOTimeString;
         max?: ISOTimeString;
         hasSeconds?: boolean;
-        hasClear?: boolean;
         hourFormat?: '12h' | '24h';
         increment?: number;
         placeholder?: string;
-        size?: 'sm' | 'md' | 'lg';
     }
 ) {
     // Keep editing and reset state behind Astryx's themed time picker.
@@ -40,12 +38,14 @@ export function TimeInput(
             {/* Only the canonical ISO carrier owns the submission name, not the formatted display input. */}
             <AstryxTimeInput
                 {...control}
+                width="100%"
                 value={field.value}
                 onChange={field.onChange}
                 presentation="adaptive-bottom-sheet"
                 placeholder={props.placeholder ?? 'Select a time'}
                 hasSeconds={props.hasSeconds ?? false}
-                hasClear={props.hasClear ?? false}
+                hasClear
+                size="md"
                 hourFormat={props.hourFormat ?? '12h'}
                 increment={props.increment ?? 1}
                 isLabelHidden={false}

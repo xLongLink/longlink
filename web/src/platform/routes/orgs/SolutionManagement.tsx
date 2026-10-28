@@ -16,6 +16,7 @@ import { Heading } from '@astryxdesign/core/Heading';
 import { ApiBoundary } from '@/components/ApiBoundary';
 import { DeletionDialog } from '@/components/Deletion';
 import { MoreMenu } from '@astryxdesign/core/MoreMenu';
+import { Illustration } from '@/components/Illustration';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { Stack, StackItem } from '@astryxdesign/core/Stack';
 import { Table, proportional } from '@astryxdesign/core/Table';
@@ -136,7 +137,7 @@ export default function SolutionManagement({
                     </Text>
                 ) : onboarding ? (
                     <Stack gap={6} align="center">
-                        <img
+                        <Illustration
                             src="/images/solution.png"
                             alt=""
                             className="size-20 object-contain"
@@ -369,7 +370,7 @@ export default function SolutionManagement({
                             end={
                                 <LayoutPanel width="50%" padding={0} className="hidden bg-muted md:flex">
                                     <Stack width="100%" height="100%" align="center" justify="center" padding={6}>
-                                        <img
+                                        <Illustration
                                             src="/images/mcp.png"
                                             alt="Hand-drawn globe surrounded by orbiting spheres."
                                             className="h-full w-full object-contain"

@@ -22,30 +22,26 @@ export type SelectorOptionType =
 
 type SelectorProps = FieldProps & {
     options: SelectorOptionType[];
+    value?: string | null;
     defaultValue?: string;
+    onChange?: (value: string | null) => void;
     hasSearch?: boolean;
     placeholder?: string;
-    size?: 'sm' | 'md' | 'lg';
-} & (
-        | { hasClear?: false; value?: string; onChange?: (value: string) => void }
-        | { hasClear: true; value?: string | null; onChange?: (value: string | null) => void }
-    );
+};
 
 /** Selects one value without custom option rendering or popup geometry. */
 export function Selector(props: SelectorProps) {
     // Retain search, option presentation, and clearing while adapting optional local state.
     const { defaultValue, ...control } = props;
 
-    const field = useValue<string | null>(props.value, defaultValue ?? null, (value) => {
-        if (props.hasClear) props.onChange?.(value);
-        else if (value !== null) props.onChange?.(value);
-    });
+    const field = useValue<string | null>(props.value, defaultValue ?? null, props.onChange);
 
     // Default presentation without overriding the clearable-value callback contract.
     return (
         <FormField {...props} fieldRef={field.ref} values={[field.value ?? '']}>
             <AstryxSelector
                 {...control}
+                width="100%"
                 options={props.options.map((option) => {
                     // Preserve plain labels and dividers without adding a glyph.
                     if (isString(option) || ('type' in option && option.type === 'divider')) return option;
@@ -63,17 +59,10 @@ export function Selector(props: SelectorProps) {
                     // Keep the selected value and its menu row on the same icon-loading path.
                     return { ...option, icon: option.icon ? <Icon icon={option.icon} size="sm" /> : undefined };
                 })}
-                {...(props.hasClear
-                    ? {
-                          hasClear: true,
-                          value: field.value,
-                          onChange: field.onChange,
-                      }
-                    : {
-                          hasClear: false,
-                          value: field.value ?? undefined,
-                          onChange: field.onChange,
-                      })}
+                hasClear
+                size="md"
+                value={field.value}
+                onChange={field.onChange}
                 htmlName={props.name}
                 placeholder={props.placeholder ?? 'Select...'}
                 hasSearch={props.hasSearch ?? false}

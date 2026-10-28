@@ -8,9 +8,10 @@ import { useCasePaths } from '@/platform/routes';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Token } from '@astryxdesign/core/Token';
 import { Button } from '@astryxdesign/core/Button';
-import { ArticleFooter } from '@/components/Article';
 import { Heading } from '@astryxdesign/core/Heading';
+import { Illustration } from '@/components/Illustration';
 import { PageContainer } from '@/components/PageContainer';
+import { ArticleFooter } from '@/components/layouts/Article';
 import { ArrowRight, ClipboardCheck, FolderInput, ListChecks, Mail } from 'lucide-react';
 
 // Record the authored page's actual revision date and repository source location.
@@ -36,7 +37,7 @@ export default function Screening() {
                             padding={4}
                             className="hidden size-40 shrink-0 overflow-hidden rounded-lg border border-border bg-surface md:flex"
                         >
-                            <img
+                            <Illustration
                                 src="/images/property-screening.png"
                                 alt="Property screening illustration with a house, magnifying glass, checklist, map, and financial chart."
                                 className="w-full object-contain"

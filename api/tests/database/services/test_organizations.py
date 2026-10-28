@@ -1,7 +1,7 @@
 import pytest
 from uuid import uuid4
 from fastapi import HTTPException
-from factories import create_compute, fetch_operations, create_organization
+from factories import add_member, create_compute, fetch_operations, create_organization, assert_no_new_operations
 from src.models.roles import OrganizationRoles
 from src.models.types import Image
 from src.models.metadata import LongLinkMetadata
@@ -41,9 +41,7 @@ async def test_update_member_role_rejects_owner_changes_from_non_owners(users: t
     # Arrange
     owner, administrator = users[0], users[1]
     organization = await create_organization(owner)
-    async with session_scope() as session:
-        session.add(UserOrganization(user_id=administrator.id, organization_id=organization.id, role=OrganizationRoles.admin))
-        await session.commit()
+    await add_member(user=administrator, organization=organization, role=OrganizationRoles.admin)
 
     # Act and assert
     async with session_scope() as session:
@@ -57,9 +55,7 @@ async def test_membership_mutation_services_revalidate_demoted_administrator_acc
     # Arrange an owner and a current administrator with access to every remaining membership mutation.
     owner, administrator = users[1], users[2]
     organization = await create_organization(owner)
-    async with session_scope() as session:
-        session.add(UserOrganization(user_id=administrator.id, organization_id=organization.id, role=OrganizationRoles.admin))
-        await session.commit()
+    await add_member(user=administrator, organization=organization, role=OrganizationRoles.admin)
 
     # Preserve legitimate owner invitation access before revoking the administrator.
     async with session_scope() as session:
@@ -115,9 +111,7 @@ async def test_soft_delete_revalidates_demoted_owner_access(users: tuple[User, U
     # Arrange another owner so the initiating owner can be demoted through the supported role workflow.
     owner, second_owner = users[1], users[2]
     organization = await create_organization(owner)
-    async with session_scope() as session:
-        session.add(UserOrganization(user_id=second_owner.id, organization_id=organization.id, role=OrganizationRoles.owner))
-        await session.commit()
+    await add_member(user=second_owner, organization=organization, role=OrganizationRoles.owner)
     async with session_scope() as session:
         await organizations.update_member_role(session, organization.id, owner.id, OrganizationRoles.read, second_owner.id)
         await session.commit()
@@ -171,7 +165,7 @@ async def test_create_rejects_duplicate_organization_name(users: tuple[User, Use
     assert [item.id for item in fetched] == [organization.id]
     assert total == 1
     assert [(membership.user_id, membership.role) for membership in memberships] == [(users[0].id, OrganizationRoles.owner)]
-    assert [operation.id for operation in await fetch_operations()] == [operation.id for operation in previous_operations]
+    await assert_no_new_operations(previous_operations)
 
 
 async def test_soft_delete_tombstones_solutions_and_retains_memberships(users: tuple[User, User, User]) -> None:

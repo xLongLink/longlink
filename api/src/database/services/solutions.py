@@ -15,6 +15,7 @@ from src.database.services import operations, registries, organizations
 from src.models.operations import OperationKind
 from src.models.pagination import Pagination
 from sqlalchemy.ext.asyncio import AsyncSession
+from src.models.organizations import MAX_SOLUTIONS
 from src.database.models.solutions import Revision, Solution
 from src.database.models.association import UserOrganization
 from src.database.models.organizations import Organization
@@ -90,7 +91,7 @@ async def create(
     solution_limit_result = await session.execute(
         select(col(Solution.id))
         .where(col(Solution.organization_id) == organization_id, col(Solution.deleted_at).is_(None))
-        .offset(2)
+        .offset(MAX_SOLUTIONS)
         .limit(1)
         .with_for_update()
     )

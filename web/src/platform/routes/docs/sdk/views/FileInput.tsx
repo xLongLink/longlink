@@ -36,12 +36,6 @@ export default function FileInputPage() {
                     description: 'Prevents interaction and excludes the field from submission.',
                 },
                 {
-                    name: 'width',
-                    type: 'string | number',
-                    description:
-                        'Width of the field (number = pixels, string used as-is, e.g. "100%"). Sizes the whole field (label, control, and status) so they stay aligned.',
-                },
-                {
                     name: 'value',
                     type: 'File | File[] | null',
                     description: 'Currently selected file(s). Controlled component.',
@@ -60,7 +54,7 @@ export default function FileInputPage() {
                 {
                     name: 'multiple',
                     type: 'boolean',
-                    description: 'The multiple prop.',
+                    description: 'Allows selecting multiple files.',
                 },
                 {
                     name: 'maxSize',
@@ -70,7 +64,7 @@ export default function FileInputPage() {
                 {
                     name: 'maxFiles',
                     type: 'number',
-                    description: 'Maximum number of files (only applies when isMultiple is true).',
+                    description: 'Maximum file count when multiple selection is enabled.',
                 },
                 {
                     name: 'placeholder',
@@ -80,8 +74,7 @@ export default function FileInputPage() {
                 {
                     name: 'mode',
                     type: '"input" | "dropzone"',
-                    description:
-                        "Visual mode. 'input' is a compact inline style; 'dropzone' is a larger area with drag-and-drop support.",
+                    description: 'Compact input or drag-and-drop area.',
                 },
             ]}
             examples={[

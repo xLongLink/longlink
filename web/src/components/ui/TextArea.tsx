@@ -11,7 +11,6 @@ type TextAreaProps = FieldProps & {
     rows?: number;
     /** Maximum Unicode code points, matching Python string length. Validates without truncating input. */
     maxLength?: number;
-    hasAutoFocus?: boolean;
     autoComplete?: string;
 };
 
@@ -37,13 +36,14 @@ export function TextArea(props: TextAreaProps) {
         >
             <AstryxTextArea
                 {...control}
+                width="100%"
                 value={field.value}
                 onChange={field.onChange}
                 htmlName={props.name}
                 rows={props.rows ?? 3}
                 isReadOnly={false}
                 hasSpellCheck
-                hasAutoFocus={props.hasAutoFocus ?? false}
+                hasAutoFocus={false}
                 isLabelHidden={false}
                 isRequired={props.required ?? false}
                 isDisabled={props.disabled ?? false}

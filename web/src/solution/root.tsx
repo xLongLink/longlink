@@ -1,32 +1,28 @@
 import * as icons from '@/lib/icons';
 import type { ReactNode } from 'react';
 import { PageLoading } from '@/components/Utils';
-import { Theme } from '@astryxdesign/core/theme';
 import { Link as RouterLink } from 'react-router';
-import { stoneTheme } from '@/lib/generated/stone.js';
 import { ApiBoundary } from '@/components/ApiBoundary';
 import { ApiProvider } from '@/components/ApiProvider';
+import { appearanceBootstrap } from '@/lib/appearance';
 import { LinkProvider } from '@astryxdesign/core/Link';
 import { LayerProvider } from '@astryxdesign/core/Layer';
 import { IconRequestContext } from '@/components/ui/Icon';
+import { AppearanceProvider } from '@/components/Appearance';
 import { Links, Meta, Outlet, Scripts, ScrollRestoration } from 'react-router';
 import '@/index.css';
 
 /** Shows the themed loading state while the initial route modules load. */
 export function HydrateFallback() {
-    // The route provider has not mounted yet, so the fallback owns only its theme.
-    return (
-        <Theme theme={stoneTheme} mode="dark">
-            <PageLoading label="Loading" />
-        </Theme>
-    );
+    // The document's startup theme styles the fallback before providers mount.
+    return <PageLoading label="Loading" />;
 }
 
 /** Provides isolated runtime state around the active Solution route. */
 export default function SolutionRoot() {
     // Keep theme, link, layer, and API ownership around the active route.
     return (
-        <Theme theme={stoneTheme} mode="dark">
+        <AppearanceProvider>
             <LinkProvider component={RouterLink}>
                 <LayerProvider toast={{ position: 'bottomEnd' }}>
                     <IconRequestContext value={icons.load}>
@@ -38,17 +34,18 @@ export default function SolutionRoot() {
                     </IconRequestContext>
                 </LayerProvider>
             </LinkProvider>
-        </Theme>
+        </AppearanceProvider>
     );
 }
 
 /** Renders the Solution HTML document shell. */
 export function Layout({ children }: { children: ReactNode }) {
     return (
-        <html lang="en">
+        <html lang="en" data-astryx-theme="stone" suppressHydrationWarning>
             <head>
                 <meta charSet="utf-8" />
                 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+                <script dangerouslySetInnerHTML={{ __html: appearanceBootstrap }} />
                 <meta name="robots" content="noindex, nofollow" />
                 <Meta />
                 <Links />

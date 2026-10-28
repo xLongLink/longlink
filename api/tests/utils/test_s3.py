@@ -39,6 +39,9 @@ async def s3(monkeypatch: pytest.MonkeyPatch) -> AsyncIterator[tuple[S3, AioStub
         with stubber:
             yield storage, stubber
 
+            # Require every test to consume its complete expected request sequence.
+            stubber.assert_no_pending_responses()
+
 
 @pytest.mark.parametrize("creation_error_code", [None, "BucketAlreadyOwnedByYou"], ids=["new-bucket", "owned-bucket"])
 async def test_create_bucket_protects_new_and_existing_buckets(s3: tuple[S3, AioStubber], creation_error_code: str | None) -> None:
@@ -66,9 +69,6 @@ async def test_create_bucket_protects_new_and_existing_buckets(s3: tuple[S3, Aio
 
     # Act
     await storage.create_bucket("org-bucket")
-
-    # Assert
-    stubber.assert_no_pending_responses()
 
 
 async def test_create_bucket_propagates_public_access_block_errors(s3: tuple[S3, AioStubber]) -> None:
@@ -98,7 +98,6 @@ async def test_create_bucket_propagates_public_access_block_errors(s3: tuple[S3,
     # Assert
     assert error.value.operation_name == "PutPublicAccessBlock"
     assert error.value.response["Error"]["Code"] == "BucketAlreadyOwnedByYou"
-    stubber.assert_no_pending_responses()
 
 
 async def test_create_bucket_propagates_unexpected_creation_errors(s3: tuple[S3, AioStubber]) -> None:
@@ -114,7 +113,6 @@ async def test_create_bucket_propagates_unexpected_creation_errors(s3: tuple[S3,
 
     # Assert
     assert error.value.response["Error"]["Code"] == "AccessDenied"
-    stubber.assert_no_pending_responses()
 
 
 DELETE_PREFIX_ERRORS = [pytest.param("NoSuchBucket", False, id="missing-bucket"), pytest.param("AccessDenied", True, id="unexpected-error")]
@@ -137,9 +135,6 @@ async def test_delete_prefix_tolerates_only_missing_bucket(s3: tuple[S3, AioStub
         assert error.value.response["Error"]["Code"] == "AccessDenied"
     else:
         await storage.delete_prefix("org-bucket", "solutions/abc/")
-
-    # Assert
-    stubber.assert_no_pending_responses()
 
 
 async def test_delete_prefix_batches_thousand_identifiers(s3: tuple[S3, AioStubber]) -> None:
@@ -164,9 +159,6 @@ async def test_delete_prefix_batches_thousand_identifiers(s3: tuple[S3, AioStubb
     # Act
     await storage.delete_prefix("org-bucket", "solutions/abc/")
 
-    # Assert
-    stubber.assert_no_pending_responses()
-
 
 async def test_delete_prefix_raises_on_partial_failures(s3: tuple[S3, AioStubber]) -> None:
     """Report partial S3 deletions instead of returning success."""
@@ -188,7 +180,6 @@ async def test_delete_prefix_raises_on_partial_failures(s3: tuple[S3, AioStubber
     # Act and assert
     with pytest.raises(RuntimeError, match="S3 failed to delete 1 objects"):
         await storage.delete_prefix("org-bucket", "solutions/abc/")
-    stubber.assert_no_pending_responses()
 
 
 async def test_usage_sums_all_listing_pages(s3: tuple[S3, AioStubber]) -> None:
@@ -210,4 +201,3 @@ async def test_usage_sums_all_listing_pages(s3: tuple[S3, AioStubber]) -> None:
 
     # Assert
     assert total == 35
-    stubber.assert_no_pending_responses()

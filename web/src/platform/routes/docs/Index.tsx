@@ -4,8 +4,8 @@ import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Heading } from '@astryxdesign/core/Heading';
 import { Code2, Lightbulb, ServerCog } from 'lucide-react';
-import { DocumentationArticle } from '@/components/Article';
 import { ClickableCard } from '@astryxdesign/core/ClickableCard';
+import { DocumentationArticle } from '@/components/layouts/Article';
 
 const article = {
     title: 'Documentation | LongLink',

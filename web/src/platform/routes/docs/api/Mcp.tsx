@@ -3,7 +3,7 @@ import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Heading } from '@astryxdesign/core/Heading';
 import { Blockquote } from '@astryxdesign/core/Blockquote';
-import { DocumentationArticle } from '@/components/Article';
+import { DocumentationArticle } from '@/components/layouts/Article';
 
 const article = {
     title: 'MCP | LongLink Platform Documentation',

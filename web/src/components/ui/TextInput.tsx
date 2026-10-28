@@ -12,11 +12,7 @@ type TextInputProps = FieldProps & {
     /** Maximum Unicode code points, matching Python string length. Validates without truncating input. */
     maxLength?: number;
     type?: 'text' | 'password' | 'email';
-    size?: 'sm' | 'md' | 'lg';
     autoComplete?: string;
-    hasClear?: boolean;
-    hasAutoFocus?: boolean;
-    isLabelHidden?: boolean;
     startIcon?: ReactNode;
     onEnter?: () => void;
 };
@@ -44,14 +40,16 @@ export function TextInput(props: TextInputProps) {
         >
             <AstryxTextInput
                 {...control}
+                width="100%"
                 value={field.value}
                 onChange={field.onChange}
                 htmlName={props.name}
                 type={props.type ?? 'text'}
                 isReadOnly={false}
-                hasClear={props.hasClear ?? false}
-                hasAutoFocus={props.hasAutoFocus ?? false}
-                isLabelHidden={props.isLabelHidden ?? false}
+                hasClear
+                size="md"
+                hasAutoFocus={false}
+                isLabelHidden={false}
                 isRequired={props.required ?? false}
                 isDisabled={props.disabled ?? false}
                 changeAction={undefined}

@@ -12,8 +12,7 @@ export default function DividerPage() {
                 {
                     name: 'label',
                     type: 'ReactNode',
-                    description:
-                        'Optional label centered on the divider. Numeric zero is preserved; null, booleans, and empty strings render no label.',
+                    description: 'Optional label centered on the divider.',
                 },
                 {
                     name: 'variant',

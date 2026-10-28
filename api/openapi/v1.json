@@ -2189,7 +2189,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UserSummary"
+                  "$ref": "#/components/schemas/CurrentUser"
                 }
               }
             }
@@ -2244,7 +2244,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UserSummary"
+                  "$ref": "#/components/schemas/CurrentUser"
                 }
               }
             }
@@ -3053,6 +3053,73 @@
         }
       }
     },
+    "/api/v1/organizations/{organization_id}/invoices/{invoice_id}/pdf": {
+      "get": {
+        "summary": "Get Invoice Pdf",
+        "description": "Display an owner's invoice PDF inline without forwarding Stripe's download headers.",
+        "operationId": "get_invoice_pdf_api_v1_organizations__organization_id__invoices__invoice_id__pdf_get",
+        "parameters": [
+          {
+            "name": "invoice_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Invoice Id"
+            }
+          },
+          {
+            "name": "organization_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Organization Id"
+            }
+          },
+          {
+            "name": "longlink_auth",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Longlink Auth"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/pdf": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/organizations/{organization_id}/cards/checkout": {
       "post": {
         "summary": "Create Checkout",
@@ -3418,7 +3485,7 @@
     "/api/v1/organizations/{organization_id}/usage": {
       "get": {
         "summary": "Get Organization Usage",
-        "description": "Show current accepted users and the same monthly rates used for invoicing.",
+        "description": "Show current users, Solutions, and the same monthly rates used for invoicing.",
         "operationId": "get_organization_usage_api_v1_organizations__organization_id__usage_get",
         "parameters": [
           {
@@ -4287,6 +4354,77 @@
         "title": "Consent",
         "description": "Describe the actual client callback and selected Solution to the user."
       },
+      "CurrentUser": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email"
+          },
+          "avatar": {
+            "type": "string",
+            "title": "Avatar"
+          },
+          "administrator": {
+            "type": "boolean",
+            "title": "Administrator"
+          },
+          "theme": {
+            "type": "string",
+            "enum": [
+              "system",
+              "light",
+              "dark"
+            ],
+            "title": "Theme"
+          },
+          "accent": {
+            "type": "string",
+            "enum": [
+              "neutral",
+              "red",
+              "orange",
+              "amber",
+              "yellow",
+              "lime",
+              "green",
+              "emerald",
+              "teal",
+              "cyan",
+              "sky",
+              "blue",
+              "indigo",
+              "violet",
+              "purple",
+              "fuchsia",
+              "pink",
+              "rose"
+            ],
+            "title": "Accent"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "email",
+          "avatar",
+          "administrator",
+          "theme",
+          "accent"
+        ],
+        "title": "CurrentUser",
+        "description": "Include personal preferences only in the account's own profile."
+      },
       "EmailPayload": {
         "properties": {
           "email": {
@@ -4921,35 +5059,53 @@
           "user_monthly_price": {
             "type": "integer",
             "title": "User Monthly Price",
-            "default": 500
+            "default": 1000
           },
-          "storage_gib_monthly_price": {
-            "type": "integer",
-            "title": "Storage Gib Monthly Price",
-            "default": 10
+          "storage_mib_monthly_price": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Storage Mib Monthly Price",
+            "default": "0.02"
           },
-          "database_gib_monthly_price": {
-            "type": "integer",
-            "title": "Database Gib Monthly Price",
-            "default": 100
+          "database_mib_monthly_price": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Database Mib Monthly Price",
+            "default": "0.1"
           },
           "users": {
             "type": "integer",
             "minimum": 0.0,
             "title": "Users"
           },
+          "solutions": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Solutions"
+          },
+          "max_solutions": {
+            "type": "integer",
+            "title": "Max Solutions",
+            "default": 9
+          },
           "stripe_enabled": {
             "type": "boolean",
             "title": "Stripe Enabled"
+          },
+          "has_payment_method": {
+            "type": "boolean",
+            "title": "Has Payment Method"
           }
         },
         "type": "object",
         "required": [
           "users",
-          "stripe_enabled"
+          "solutions",
+          "stripe_enabled",
+          "has_payment_method"
         ],
         "title": "OrganizationUsage",
-        "description": "Describe current membership usage and its month-end pricing."
+        "description": "Describe current Organization usage, limits, and month-end pricing."
       },
       "Page_AdminUserSummary_": {
         "properties": {
@@ -6009,6 +6165,53 @@
               }
             ],
             "title": "Avatar"
+          },
+          "theme": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "system",
+                  "light",
+                  "dark"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Theme"
+          },
+          "accent": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "neutral",
+                  "red",
+                  "orange",
+                  "amber",
+                  "yellow",
+                  "lime",
+                  "green",
+                  "emerald",
+                  "teal",
+                  "cyan",
+                  "sky",
+                  "blue",
+                  "indigo",
+                  "violet",
+                  "purple",
+                  "fuchsia",
+                  "pink",
+                  "rose"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Accent"
           }
         },
         "type": "object",

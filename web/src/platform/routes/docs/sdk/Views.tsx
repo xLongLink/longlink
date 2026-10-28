@@ -10,7 +10,6 @@ import { TableExample } from './views/Table';
 import { TokenExample } from './views/Token';
 import { AvatarExample } from './views/Avatar';
 import { DialogExample } from './views/Dialog';
-import { LayoutExample } from './views/Layout';
 import { SliderExample } from './views/Slider';
 import { SwitchExample } from './views/Switch';
 import { Code } from '@astryxdesign/core/Code';
@@ -47,12 +46,12 @@ import { DropdownMenuExample } from './views/DropdownMenu';
 import { MetadataListExample } from './views/MetadataList';
 import { componentDocumentation } from '@/platform/routes';
 import { Blockquote } from '@astryxdesign/core/Blockquote';
-import { DocumentationArticle } from '@/components/Article';
 import { CheckboxInputExample } from './views/CheckboxInput';
 import { MultiSelectorExample } from './views/MultiSelector';
 import { Collapsible } from '@astryxdesign/core/Collapsible';
 import { documentationCategories } from '@/lib/documentation';
 import { Table, proportional } from '@astryxdesign/core/Table';
+import { DocumentationArticle } from '@/components/layouts/Article';
 import { SideNav, SideNavItem, SideNavSection } from '@astryxdesign/core/SideNav';
 
 const article = {
@@ -104,7 +103,6 @@ const previews = new Map(
         Icon: <IconExample />,
         IconButton: <IconButtonExample />,
         Link: <LinkExample />,
-        Layout: <LayoutExample />,
         // Show only the navigation in the thumbnail; the full Menu has a fixed-width sidebar and content panel.
         Menu: (
             <SideNav className="h-auto w-full">

@@ -1,5 +1,4 @@
 import { Wordmark } from '@/components/Wordmark';
-import { useCasePages } from '@/platform/routes';
 import { Button } from '@astryxdesign/core/Button';
 import { Outlet, useLocation } from 'react-router';
 import Platform from '@/components/layouts/Platform';
@@ -9,7 +8,7 @@ import { BreadcrumbItem, Breadcrumbs } from '@astryxdesign/core/Breadcrumbs';
 export default function UseCases() {
     // Keep the detail breadcrumb and header-aware scrolling without section tabs.
     const { pathname } = useLocation();
-    const isDetail = pathname.replace(/\/+$/, '') === useCasePages[0].path;
+    const isDetail = pathname.replace(/\/+$/, '') === '/use-cases/real-estate/property-acquisition-screening';
 
     // Preserve the shared Platform navigation and standalone action.
     return (
@@ -21,7 +20,7 @@ export default function UseCases() {
                             <Wordmark />
                         </BreadcrumbItem>
                         <BreadcrumbItem href="/use-cases/">Use Cases</BreadcrumbItem>
-                        <BreadcrumbItem isCurrent>{useCasePages[0].label}</BreadcrumbItem>
+                        <BreadcrumbItem isCurrent>Property Acquisition Screening</BreadcrumbItem>
                     </Breadcrumbs>
                 ) : undefined
             }

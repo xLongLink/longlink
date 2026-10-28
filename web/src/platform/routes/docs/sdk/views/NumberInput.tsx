@@ -36,12 +36,6 @@ export default function NumberInputPage() {
                     description: 'Prevents interaction and excludes the field from submission.',
                 },
                 {
-                    name: 'width',
-                    type: 'string | number',
-                    description:
-                        'Width of the field (number = pixels, string used as-is, e.g. "100%"). Sizes the whole field (label, control, and status) so they stay aligned.',
-                },
-                {
                     name: 'value',
                     type: 'number | null',
                     description: 'Current value of the input.',
@@ -49,7 +43,7 @@ export default function NumberInputPage() {
                 {
                     name: 'defaultValue',
                     type: 'number',
-                    description: 'The defaultValue prop.',
+                    description: 'Initial value.',
                 },
                 {
                     name: 'min',
@@ -72,11 +66,6 @@ export default function NumberInputPage() {
                     description: 'Placeholder text.',
                 },
                 {
-                    name: 'size',
-                    type: '"sm" | "lg" | "md"',
-                    description: 'Size variant.',
-                },
-                {
                     name: 'units',
                     type: 'string | null',
                     description: 'Units text to display at the end of the input (e.g., "%" or "GB").',
@@ -92,16 +81,9 @@ export default function NumberInputPage() {
                     description: 'HTML autocomplete attribute.',
                 },
                 {
-                    name: 'hasClear',
-                    type: '(false) | (true)',
-                    description:
-                        'Shows a clear (×) button when the input has a value. When true, the onChange callback also accepts null to signal the user cleared the input.',
-                },
-                {
                     name: 'onChange',
-                    type: '((value: number) => void) | ((value: number | null) => void)',
-                    description:
-                        'Callback fired when a valid text edit commits on blur or Enter, or when a step or clear control changes the value.',
+                    type: '(value: number | null) => void',
+                    description: 'Receives committed edits, step changes, or cleared values.',
                 },
             ]}
             examples={[

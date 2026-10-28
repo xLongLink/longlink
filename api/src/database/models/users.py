@@ -16,6 +16,10 @@ class User(AuditTable, table=True):
     email: str = Field(unique=True, index=True, max_length=254)
     avatar: str = Field(default="", max_length=2048)
 
+    # Appearance
+    theme: str = Field(default="system", max_length=6)
+    accent: str = Field(default="neutral", max_length=7)
+
     # Authentication
     password: str = Field(max_length=128)
     google_id: str | None = Field(default=None, unique=True, index=True, max_length=255)

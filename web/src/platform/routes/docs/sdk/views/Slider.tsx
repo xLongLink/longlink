@@ -36,12 +36,6 @@ export default function SliderPage() {
                     description: 'Prevents interaction and excludes the field from submission.',
                 },
                 {
-                    name: 'width',
-                    type: 'string | number',
-                    description:
-                        'Width of the field (number = pixels, string used as-is, e.g. "100%"). Sizes the whole field (label, control, and status) so they stay aligned.',
-                },
-                {
                     name: 'min',
                     type: 'number',
                     description: 'Minimum value.',
@@ -65,7 +59,7 @@ export default function SliderPage() {
                 {
                     name: 'defaultValue',
                     type: '(number) | ([number, number])',
-                    description: 'The defaultValue prop.',
+                    description: 'Initial value.',
                 },
                 {
                     name: 'onChange',

@@ -12,8 +12,7 @@ export default function TablePage() {
                 {
                     name: 'data',
                     type: 'T[]',
-                    description:
-                        'Array of data items to render as rows. T must extend Record<string, unknown> (use `interface MyRow extends Record<string, unknown>` for custom types).',
+                    description: 'Data objects displayed as rows.',
                 },
                 {
                     name: 'hasHover',
@@ -28,8 +27,7 @@ export default function TablePage() {
                 {
                     name: 'columns',
                     type: '{ key: string; header?: ReactNode; width?: ColumnWidth; align?: "start" | "center" | "end"; renderCell?: ((row: T) => ReactNode); }[]',
-                    description:
-                        'Column definitions: each column has {key, header, width?, align?, renderCell?}. The `header` field sets the column heading text. If omitted, columns are auto-generated from data object keys. The `width` field is typed as `ColumnWidth` (not a number); use `proportional(n)` or `pixel(n)` helpers imported from `@astryxdesign/core/Table`. Omitting `width` keeps an equal flexible share with a compact 60px readability floor. To give one column a different floor, set `width: proportional(1, {minWidth: 80})`; its `minWidth` replaces the 60px floor for that column. Example: `width: pixel(120)` for 120px fixed, `width: proportional(1)` for a flexible column with a 120px default minimum.',
+                    description: 'Columns with custom cells and proportional() or pixel() widths.',
                 },
             ]}
             examples={[

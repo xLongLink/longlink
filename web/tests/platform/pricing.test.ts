@@ -9,21 +9,21 @@ it('publishes CHF monthly excess rates with the public and documentation allowan
             resource: 'Users',
             included: '5 users',
             publicIncluded: 'First 5 users',
-            rate: 'CHF 5.00 per additional user',
+            rate: 'CHF 10.00 per additional user',
         },
         {
             id: 'database',
             resource: 'Database',
             included: '100 MiB',
             publicIncluded: '100 MiB database storage',
-            rate: 'CHF 1.00 per additional GiB',
+            rate: 'CHF 0.001 per additional MiB',
         },
         {
             id: 'storage',
             resource: 'File storage',
             included: '1 GiB',
             publicIncluded: '1 GiB file storage',
-            rate: 'CHF 0.10 per additional GiB',
+            rate: 'CHF 0.0002 per additional MiB',
         },
     ]);
 });

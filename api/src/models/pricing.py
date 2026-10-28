@@ -1,16 +1,17 @@
+from decimal import Decimal
 from pydantic import BaseModel
 
 # Included monthly usage and rates in CHF centimes.
 FREE_USERS = 5
 FREE_DATABASE_BYTES = 100 * 1024**2
 FREE_STORAGE_BYTES = 1024**3
-USER_MONTHLY_PRICE = 500
-DATABASE_GIB_MONTHLY_PRICE = 100
-STORAGE_GIB_MONTHLY_PRICE = 10
+USER_MONTHLY_PRICE = 1000
+DATABASE_MIB_MONTHLY_PRICE = Decimal("0.1")
+STORAGE_MIB_MONTHLY_PRICE = Decimal("0.02")
 
 # Provisioned capacity after a payment method is registered, independent of pricing allowances.
-REGISTERED_DATABASE_SIZE_MIB = 5 * 1024
-REGISTERED_STORAGE_QUOTA_BYTES = 25 * 1024**3
+REGISTERED_DATABASE_SIZE_MIB = 25 * 1024
+REGISTERED_STORAGE_QUOTA_BYTES = 100 * 1024**3
 
 
 class UsageRates(BaseModel):
@@ -23,5 +24,5 @@ class UsageRates(BaseModel):
 
     # Monthly prices
     user_monthly_price: int = USER_MONTHLY_PRICE
-    storage_gib_monthly_price: int = STORAGE_GIB_MONTHLY_PRICE
-    database_gib_monthly_price: int = DATABASE_GIB_MONTHLY_PRICE
+    storage_mib_monthly_price: Decimal = STORAGE_MIB_MONTHLY_PRICE
+    database_mib_monthly_price: Decimal = DATABASE_MIB_MONTHLY_PRICE

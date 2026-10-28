@@ -6,28 +6,22 @@ import { NumberInput as AstryxNumberInput } from '@astryxdesign/core/NumberInput
 type NumberInputProps = FieldProps & {
     value?: number | null;
     defaultValue?: number;
+    onChange?: (value: number | null) => void;
     min?: number | null;
     max?: number | null;
     step?: number | null;
     placeholder?: string;
-    size?: 'sm' | 'md' | 'lg';
     units?: string | null;
     isIntegerOnly?: boolean;
     autoComplete?: string;
-} & (
-        | { hasClear?: false; onChange?: (value: number) => void }
-        | { hasClear: true; onChange?: (value: number | null) => void }
-    );
+};
 
 /** Edits a constrained number without wheel editing or custom value formatting. */
 export function NumberInput(props: NumberInputProps) {
     // Keep optional draft state inside the themed numeric control.
     const { defaultValue, ...control } = props;
 
-    const field = useValue<number | null>(props.value, defaultValue ?? null, (value) => {
-        if (value !== null) props.onChange?.(value);
-        else if (props.hasClear) props.onChange?.(null);
-    });
+    const field = useValue<number | null>(props.value, defaultValue ?? null, props.onChange);
 
     // Keep number editing unconstrained unless bounds or integer-only behavior are requested.
     return (
@@ -47,8 +41,11 @@ export function NumberInput(props: NumberInputProps) {
         >
             <AstryxNumberInput
                 {...control}
+                width="100%"
                 value={field.value}
                 onChange={field.onChange}
+                hasClear
+                size="md"
                 htmlName={props.name}
                 step={props.step === undefined ? 1 : props.step}
                 isReadOnly={false}

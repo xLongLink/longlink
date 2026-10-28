@@ -1,10 +1,11 @@
 import pytest
 import asyncio
 from uuid import UUID
-from typing import ClassVar, Protocol
+from typing import ClassVar
 from conftest import kubernetes_client
 from src.utils import templates
 from src.kubernetes import solutions
+from collections.abc import AsyncIterator
 from importlib.resources import files
 
 pytestmark = pytest.mark.no_db
@@ -12,23 +13,36 @@ ORGANIZATION_ID = UUID("00000000-0000-4000-8000-000000000002")
 COMPUTE_NAMESPACE = "longlink-compute-00000000000040008000000000000002"
 
 
-class AppliedResource(Protocol):
-    """Expose the desired manifest sent to Kubernetes."""
+@pytest.fixture
+def listed_jobs(monkeypatch: pytest.MonkeyPatch) -> list[solutions.Job]:
+    """Supply real migration Jobs at the Kubernetes listing boundary."""
 
-    raw: dict[str, object]
+    jobs: list[solutions.Job] = []
 
-
-class MigrationJobs:
-    """Provide the existing migration Jobs for workload adapter tests."""
-
-    jobs: ClassVar[list[object]] = []
-
-    @classmethod
-    async def list(cls, **_kwargs: object):
+    async def list_jobs(**_kwargs: object) -> AsyncIterator[solutions.Job]:
         """Yield existing Jobs without contacting Kubernetes."""
 
-        for job in cls.jobs:
+        for job in jobs:
             yield job
+
+    monkeypatch.setattr(solutions.Job, "list", list_jobs)
+    return jobs
+
+
+@pytest.fixture
+def listed_pods(monkeypatch: pytest.MonkeyPatch) -> list[solutions.Pod]:
+    """Supply real Pod observations at the Kubernetes listing boundary."""
+
+    pods: list[solutions.Pod] = []
+
+    async def list_pods(**_kwargs: object) -> AsyncIterator[solutions.Pod]:
+        """Yield the Pods selected by the test without contacting Kubernetes."""
+
+        for pod in pods:
+            yield pod
+
+    monkeypatch.setattr(solutions.Pod, "list", list_pods)
+    return pods
 
 
 def test_solution_template_constrains_workloads() -> None:
@@ -88,39 +102,24 @@ def test_solution_template_constrains_workloads() -> None:
             }
 
 
+@pytest.mark.usefixtures("listed_jobs")
 async def test_solution_apply_stops_after_failed_migration_job(monkeypatch: pytest.MonkeyPatch) -> None:
     """Avoid creating runtime resources when the Solution migration fails."""
 
     # Arrange
     applied: list[str] = []
 
-    class MigrationJob(MigrationJobs):
-        """Report a terminally failed migration Job."""
+    async def refresh(job: solutions.Job) -> None:
+        """Supply the failed status returned by Kubernetes."""
 
-        def __init__(self, raw: dict[str, object], *, api: object) -> None:
-            """Keep the desired Job and expose its rendered identity."""
+        job.raw["status"] = {"conditions": [{"type": "Failed", "status": "True"}]}
 
-            metadata = raw.get("metadata")
-            assert isinstance(metadata, dict)
-            assert isinstance(metadata.get("name"), str)
-            assert isinstance(metadata.get("namespace"), str)
-            self.raw = raw
-            self.api = api
-            self.name = metadata["name"]
-            self.namespace = metadata["namespace"]
-
-        async def refresh(self) -> None:
-            """Supply the failed status returned by Kubernetes."""
-
-            self.raw["status"] = {"conditions": [{"type": "Failed", "status": "True"}]}
-
-    async def apply(resource: AppliedResource) -> None:
+    async def apply(resource: solutions.APIObject) -> None:
         """Record the resources accepted by Kubernetes."""
 
         applied.append(str(resource.raw.get("kind", "Secret")))
 
-    monkeypatch.setattr(solutions, "Job", MigrationJob)
-    monkeypatch.setattr(solutions, "Pod", MigrationJobs)
+    monkeypatch.setattr(solutions.Job, "refresh", refresh)
     monkeypatch.setattr(solutions.utils, "apply", apply)
 
     # Act and assert
@@ -137,71 +136,48 @@ async def test_solution_apply_stops_after_failed_migration_job(monkeypatch: pyte
 
 
 @pytest.mark.parametrize("migrate", [True, False])
-async def test_solution_apply_waits_for_deployment_and_route_readiness(monkeypatch: pytest.MonkeyPatch, migrate: bool) -> None:
+@pytest.mark.usefixtures("listed_pods")
+async def test_solution_apply_waits_for_deployment_and_route_readiness(
+    monkeypatch: pytest.MonkeyPatch, listed_jobs: list[solutions.Job], migrate: bool
+) -> None:
     """Stop interrupted migrations, isolate secrets, and skip migrations on rollback."""
 
     # Arrange
     applied: list[str] = []
 
-    class InterruptedJob:
-        """Retain an interrupted migration while stopping its schema mutations."""
+    client = kubernetes_client()
+    interrupted = solutions.Job({"metadata": {"name": "interrupted"}, "status": {}}, api=await client.api())
+    listed_jobs.append(interrupted)
 
-        name = "interrupted"
+    async def patch(job: solutions.Job, patch: dict[str, object]) -> None:
+        """Suspend the old migration before applying any new workload."""
 
-        def __init__(self) -> None:
-            """Expose pending status before suspension is acknowledged."""
+        assert job is interrupted
+        assert patch == {"spec": {"suspend": True}}
+        applied.append("suspend")
 
-            self.raw: dict[str, object] = {"status": {}}
+    async def refresh_job(job: solutions.Job) -> None:
+        """Acknowledge suspension or completion of the selected migration Job."""
 
-        async def patch(self, patch: dict[str, object]) -> None:
-            """Suspend the old migration before applying any new workload."""
-
-            assert patch == {"spec": {"suspend": True}}
-            applied.append("suspend")
-
-        async def refresh(self) -> None:
-            """Acknowledge suspension before checking for remaining Pods."""
-
+        if job is interrupted:
             applied.append("suspended")
-            self.raw = {"status": {"conditions": [{"type": "Suspended", "status": "True"}]}}
-
-    class Resource:
-        """Supply Kubernetes-generated rollout state for desired resources."""
-
-        def __init__(self, raw: dict[str, object], **_kwargs: object) -> None:
-            """Expose the resource fields queried during rollout."""
-
-            metadata = raw.get("metadata")
-            spec = raw.get("spec")
-            assert isinstance(metadata, dict)
-            assert isinstance(spec, dict)
-            self.raw = raw
-            self.metadata = metadata
-
-        async def refresh(self) -> None:
-            """Supply ready controller status for the committed manifest."""
-
-            if self.raw.get("apiVersion") == "serving.knative.dev/v1":
-                self.metadata["generation"] = 1
-                self.raw["status"] = {
-                    "observedGeneration": 1,
-                    "latestCreatedRevisionName": "revision",
-                    "latestReadyRevisionName": "revision",
-                    "conditions": [{"type": "Ready", "status": "True"}],
-                }
-
-    class MigrationJob(Resource, MigrationJobs):
-        """Report a completed migration Job."""
-
-        jobs: ClassVar[list[object]] = [InterruptedJob()]
-
-        async def refresh(self) -> None:
-            """Supply the completed status returned by Kubernetes."""
-
+            job.raw["status"] = {"conditions": [{"type": "Suspended", "status": "True"}]}
+        else:
             assert migrate
-            self.raw["status"] = {"conditions": [{"type": "Complete", "status": "True"}]}
+            job.raw["status"] = {"conditions": [{"type": "Complete", "status": "True"}]}
 
-    async def apply(resource: AppliedResource) -> None:
+    async def refresh_service(service: solutions.APIObject) -> None:
+        """Supply ready controller status for the committed manifest."""
+
+        service.metadata["generation"] = 1
+        service.raw["status"] = {
+            "observedGeneration": 1,
+            "latestCreatedRevisionName": "revision",
+            "latestReadyRevisionName": "revision",
+            "conditions": [{"type": "Ready", "status": "True"}],
+        }
+
+    async def apply(resource: solutions.APIObject) -> None:
         """Record the resources accepted by Kubernetes."""
 
         applied.append(str(resource.raw.get("kind", "Secret")))
@@ -210,14 +186,14 @@ async def test_solution_apply_waits_for_deployment_and_route_readiness(monkeypat
             assert isinstance(spec, dict)
             assert spec["template"]["spec"]["containers"][0]["envFrom"] == [{"secretRef": {"name": f"revision-{UUID(int=1)}"}}]
 
-    monkeypatch.setattr(solutions, "Job", MigrationJob)
-    monkeypatch.setattr(solutions, "Pod", MigrationJobs)
-    monkeypatch.setattr(solutions, "KnativeServiceResource", Resource)
+    monkeypatch.setattr(solutions.Job, "patch", patch)
+    monkeypatch.setattr(solutions.Job, "refresh", refresh_job)
+    monkeypatch.setattr(solutions.KnativeServiceResource, "refresh", refresh_service)
     monkeypatch.setattr(solutions.utils, "apply", apply)
 
     # Act
     await solutions.apply(
-        kubernetes_client(),
+        client,
         ORGANIZATION_ID,
         UUID("00000000-0000-4000-8000-000000000001"),
         "ghcr.io/longlink/dashboard:latest",
@@ -230,31 +206,23 @@ async def test_solution_apply_waits_for_deployment_and_route_readiness(monkeypat
     assert applied == ["suspend", "suspended", "Secret", *(["Job"] if migrate else []), "Service"]
 
 
+@pytest.mark.usefixtures("listed_jobs")
 async def test_solution_apply_reports_quota_admission_failure(monkeypatch: pytest.MonkeyPatch) -> None:
     """Stop rollout polling when Kubernetes rejects Pods for exceeding quota."""
 
     # Arrange
-    class Resource:
-        """Supply Kubernetes-generated quota failure state."""
+    async def refresh(resource: solutions.APIObject) -> None:
+        """Supply the quota admission failure returned by Kubernetes."""
 
-        def __init__(self, raw: dict[str, object], **_kwargs: object) -> None:
-            """Expose the resource fields queried during rollout."""
+        resource.metadata["generation"] = 1
+        resource.raw["status"] = {
+            "conditions": [{"type": "Ready", "status": "False", "reason": "RevisionFailed", "message": "exceeded quota: solution Pods"}]
+        }
 
-            self.raw = raw
-            self.metadata = {"generation": 1}
-
-        async def refresh(self) -> None:
-            """Supply the quota admission failure returned by Kubernetes."""
-
-            self.raw["status"] = {
-                "conditions": [{"type": "Ready", "status": "False", "reason": "RevisionFailed", "message": "exceeded quota: solution Pods"}]
-            }
-
-    async def apply(_resource: AppliedResource) -> None:
+    async def apply(_resource: solutions.APIObject) -> None:
         """Accept a resource without contacting Kubernetes."""
 
-    monkeypatch.setattr(solutions, "Job", MigrationJobs)
-    monkeypatch.setattr(solutions, "KnativeServiceResource", Resource)
+    monkeypatch.setattr(solutions.KnativeServiceResource, "refresh", refresh)
     monkeypatch.setattr(solutions.utils, "apply", apply)
 
     # Act and assert
@@ -271,28 +239,20 @@ async def test_solution_apply_reports_quota_admission_failure(monkeypatch: pytes
             )
 
 
+@pytest.mark.usefixtures("listed_jobs")
 async def test_solution_apply_reports_disappeared_deployment(monkeypatch: pytest.MonkeyPatch) -> None:
     """Stop rollout polling when the Knative Solution Service disappears."""
 
     # Arrange
-    class Resource:
-        """Represent a Kubernetes resource without reaching a cluster."""
+    async def refresh(_resource: solutions.APIObject) -> None:
+        """Report that the Knative Service disappeared before rollout completed."""
 
-        def __init__(self, raw: dict[str, object], **_kwargs: object) -> None:
-            """Keep the resource manifest."""
+        raise solutions.NotFoundError("Knative Service missing")
 
-            self.raw = raw
-
-        async def refresh(self) -> None:
-            """Report that the Knative Service disappeared before rollout completed."""
-
-            raise solutions.NotFoundError("Knative Service missing")
-
-    async def apply(_resource: AppliedResource) -> None:
+    async def apply(_resource: solutions.APIObject) -> None:
         """Accept a resource without contacting Kubernetes."""
 
-    monkeypatch.setattr(solutions, "Job", MigrationJobs)
-    monkeypatch.setattr(solutions, "KnativeServiceResource", Resource)
+    monkeypatch.setattr(solutions.KnativeServiceResource, "refresh", refresh)
     monkeypatch.setattr(solutions.utils, "apply", apply)
 
     # Act and assert
@@ -308,53 +268,42 @@ async def test_solution_apply_reports_disappeared_deployment(monkeypatch: pytest
         )
 
 
+@pytest.mark.usefixtures("listed_jobs")
 async def test_solution_apply_waits_for_route_after_deployment_readiness(monkeypatch: pytest.MonkeyPatch) -> None:
     """Retry rollout polling until Knative reports the current revision ready."""
 
     # Arrange
     sleeps: list[float] = []
 
-    class Resource:
-        """Represent a Kubernetes resource without reaching a cluster."""
+    rollout_states = iter(
+        [
+            {},
+            {
+                "status": {
+                    "observedGeneration": 1,
+                    "latestCreatedRevisionName": "new-revision",
+                    "latestReadyRevisionName": "old-revision",
+                    "conditions": [{"type": "Ready", "status": "True"}],
+                }
+            },
+            {
+                "status": {
+                    "observedGeneration": 1,
+                    "latestCreatedRevisionName": "new-revision",
+                    "latestReadyRevisionName": "new-revision",
+                    "conditions": [{"type": "Ready", "status": "True"}],
+                }
+            },
+        ]
+    )
 
-        def __init__(self, raw: dict[str, object], **_kwargs: object) -> None:
-            """Keep one committed manifest for generated status updates."""
+    async def refresh(resource: solutions.APIObject) -> None:
+        """Supply missing status, an old ready revision, then the current revision."""
 
-            metadata = raw.get("metadata")
-            spec = raw.get("spec")
-            assert isinstance(metadata, dict)
-            assert isinstance(spec, dict)
-            self.raw = raw
-            self.metadata = metadata
-            self.metadata["generation"] = 1
-            self.rollout_states = iter(
-                [
-                    {},
-                    {
-                        "status": {
-                            "observedGeneration": 1,
-                            "latestCreatedRevisionName": "new-revision",
-                            "latestReadyRevisionName": "old-revision",
-                            "conditions": [{"type": "Ready", "status": "True"}],
-                        }
-                    },
-                    {
-                        "status": {
-                            "observedGeneration": 1,
-                            "latestCreatedRevisionName": "new-revision",
-                            "latestReadyRevisionName": "new-revision",
-                            "conditions": [{"type": "Ready", "status": "True"}],
-                        }
-                    },
-                ]
-            )
+        resource.metadata["generation"] = 1
+        resource.raw.update(next(rollout_states))
 
-        async def refresh(self) -> None:
-            """Supply missing status, an old ready revision, then the current revision."""
-
-            self.raw.update(next(self.rollout_states))
-
-    async def apply(_resource: AppliedResource) -> None:
+    async def apply(_resource: solutions.APIObject) -> None:
         """Accept a resource without contacting Kubernetes."""
 
     class Clock:
@@ -366,8 +315,7 @@ async def test_solution_apply_waits_for_route_after_deployment_readiness(monkeyp
 
             sleeps.append(delay)
 
-    monkeypatch.setattr(solutions, "Job", MigrationJobs)
-    monkeypatch.setattr(solutions, "KnativeServiceResource", Resource)
+    monkeypatch.setattr(solutions.KnativeServiceResource, "refresh", refresh)
     monkeypatch.setattr(solutions.utils, "apply", apply)
     monkeypatch.setattr(solutions, "asyncio", Clock)
 
@@ -408,99 +356,72 @@ async def test_solution_apply_waits_for_route_after_deployment_readiness(monkeyp
     ],
 )
 async def test_solution_logs_returns_pod_output(
-    monkeypatch: pytest.MonkeyPatch, phase: str, component: str, line: str, log_kwargs: dict[str, object], expected: list[str]
+    monkeypatch: pytest.MonkeyPatch,
+    listed_pods: list[solutions.Pod],
+    phase: str,
+    component: str,
+    line: str,
+    log_kwargs: dict[str, object],
+    expected: list[str],
 ) -> None:
     """Return recent Pod output with the component-specific log options and context."""
 
     # Arrange
-    class PodResource:
-        """Represent the selected Solution or migration Pod."""
+    client = kubernetes_client()
+    pod = solutions.Pod(
+        {"metadata": {"labels": {"longlink.io/component": component}, "name": "migration-123"}, "status": {"phase": phase}},
+        api=await client.api(),
+    )
+    listed_pods.append(pod)
 
-        raw: ClassVar[dict[str, object]] = {"status": {"phase": phase}}
-        metadata: ClassVar[dict[str, object]] = {"labels": {"longlink.io/component": component}, "name": "migration-123"}
+    async def logs(_pod: solutions.Pod, **kwargs: object) -> AsyncIterator[str]:
+        """Verify the exact log options before yielding the configured output."""
 
-        @classmethod
-        async def list(cls, **_kwargs: object):
-            """Yield the configured Pod."""
+        assert kwargs == log_kwargs
+        yield line
 
-            yield cls()
-
-        async def logs(self, **kwargs: object):
-            """Verify the exact log options before yielding the configured output."""
-
-            assert kwargs == log_kwargs
-            yield line
-
-    monkeypatch.setattr(solutions, "Pod", PodResource)
+    monkeypatch.setattr(solutions.Pod, "logs", logs)
 
     # Act
-    logs = await solutions.logs(kubernetes_client(), ORGANIZATION_ID, UUID("00000000-0000-4000-8000-000000000001"))
+    output = await solutions.logs(client, ORGANIZATION_ID, UUID("00000000-0000-4000-8000-000000000001"))
 
     # Assert
-    assert logs == expected
+    assert output == expected
 
 
-async def test_solution_logs_reports_completed_migration_when_solution_pod_is_unavailable(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_solution_logs_reports_completed_migration_when_solution_pod_is_unavailable(listed_pods: list[solutions.Pod]) -> None:
     """Return migration context when the Solution Pod has not started."""
 
     # Arrange
-    class PodResource:
-        """Represent a completed migration Pod."""
-
-        raw: ClassVar[dict[str, object]] = {"status": {"phase": "Succeeded"}}
-        metadata: ClassVar[dict[str, object]] = {"labels": {"longlink.io/component": "migration"}, "name": "migration-123"}
-
-        @classmethod
-        async def list(cls, **_kwargs: object):
-            """Yield the completed migration Pod."""
-
-            yield cls()
-
-    monkeypatch.setattr(solutions, "Pod", PodResource)
+    client = kubernetes_client()
+    pod = solutions.Pod(
+        {"metadata": {"labels": {"longlink.io/component": "migration"}, "name": "migration-123"}, "status": {"phase": "Succeeded"}},
+        api=await client.api(),
+    )
+    listed_pods.append(pod)
 
     # Act
-    logs = await solutions.logs(kubernetes_client(), ORGANIZATION_ID, UUID("00000000-0000-4000-8000-000000000001"))
+    logs = await solutions.logs(client, ORGANIZATION_ID, UUID("00000000-0000-4000-8000-000000000001"))
 
     # Assert
     assert logs == ["Migration Pod migration-123 is Succeeded; Solution Pod unavailable"]
 
 
-@pytest.mark.parametrize(
-    "pods",
-    [[], [{"raw": {"status": {"phase": "Succeeded"}}, "metadata": {"labels": {"longlink.io/component": "solution"}}}]],
-    ids=["no-pod", "terminal-solution-pod"],
-)
-async def test_solution_logs_reports_unavailable_without_usable_pods(
-    monkeypatch: pytest.MonkeyPatch, pods: list[dict[str, object]]
-) -> None:
+@pytest.mark.parametrize("phase", [None, "Succeeded"], ids=["no-pod", "terminal-solution-pod"])
+async def test_solution_logs_reports_unavailable_without_usable_pods(listed_pods: list[solutions.Pod], phase: str | None) -> None:
     """Report unavailable logs when no running or failed migration Pod exists."""
 
     # Arrange
-    class PodResource:
-        """Return configured Solution Pods from Kubernetes."""
-
-        def __init__(self, raw: dict[str, object], metadata: dict[str, object]) -> None:
-            """Expose the Pod fields queried during log selection."""
-
-            self.raw = raw
-            self.metadata = metadata
-
-        @classmethod
-        async def list(cls, **_kwargs: object):
-            """Yield configured Pods without contacting Kubernetes."""
-
-            for pod in pods:
-                raw = pod["raw"]
-                metadata = pod["metadata"]
-                assert isinstance(raw, dict)
-                assert isinstance(metadata, dict)
-                yield cls(raw, metadata)
-
-    monkeypatch.setattr(solutions, "Pod", PodResource)
+    client = kubernetes_client()
+    if phase is not None:
+        pod = solutions.Pod(
+            {"metadata": {"labels": {"longlink.io/component": "solution"}}, "status": {"phase": phase}}, api=await client.api()
+        )
+        listed_pods.append(pod)
 
     # Act and assert
     with pytest.raises(RuntimeError, match="Solution logs unavailable"):
-        await solutions.logs(kubernetes_client(), ORGANIZATION_ID, UUID("00000000-0000-4000-8000-000000000001"))
+        await solutions.logs(client, ORGANIZATION_ID, UUID("00000000-0000-4000-8000-000000000001"))
 
 
 async def test_solution_logs_translates_kubernetes_api_errors(monkeypatch: pytest.MonkeyPatch) -> None:

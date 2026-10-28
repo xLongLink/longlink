@@ -12,6 +12,7 @@ import { Button } from '@astryxdesign/core/Button';
 import { Divider } from '@astryxdesign/core/Divider';
 import { Heading } from '@astryxdesign/core/Heading';
 import CreateOrganization from './CreateOrganization';
+import { Illustration } from '@/components/Illustration';
 import { Table, proportional } from '@astryxdesign/core/Table';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
@@ -85,7 +86,7 @@ export default function OrganizationManagement({ presentation }: { presentation:
                 ) : null}
                 {onboarding ? (
                     <Stack gap={6} align="center">
-                        <img
+                        <Illustration
                             src="/images/organization.png"
                             alt=""
                             className="size-20 object-contain"

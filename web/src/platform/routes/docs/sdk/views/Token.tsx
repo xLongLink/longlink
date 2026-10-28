@@ -29,7 +29,7 @@ export default function TokenPage() {
                 {
                     name: 'disabled',
                     type: 'boolean',
-                    description: 'The disabled prop.',
+                    description: 'Disables the token.',
                 },
                 {
                     name: 'description',

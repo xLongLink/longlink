@@ -36,12 +36,6 @@ export default function CheckboxInputPage() {
                     description: 'Prevents interaction and excludes the field from submission.',
                 },
                 {
-                    name: 'width',
-                    type: 'string | number',
-                    description:
-                        'Width of the field (number = pixels, string used as-is, e.g. "100%"). Sizes the whole field (label, control, and status) so they stay aligned.',
-                },
-                {
                     name: 'value',
                     type: 'boolean | "indeterminate"',
                     description: 'Whether the checkbox is checked, unchecked, or indeterminate.',
@@ -49,7 +43,7 @@ export default function CheckboxInputPage() {
                 {
                     name: 'defaultChecked',
                     type: 'boolean',
-                    description: 'The defaultChecked prop.',
+                    description: 'Initial checked state.',
                 },
                 {
                     name: 'onChange',

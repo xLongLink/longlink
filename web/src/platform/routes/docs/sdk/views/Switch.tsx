@@ -36,12 +36,6 @@ export default function SwitchPage() {
                     description: 'Prevents interaction and excludes the field from submission.',
                 },
                 {
-                    name: 'width',
-                    type: 'string | number',
-                    description:
-                        'Width of the field (number = pixels, string used as-is, e.g. "100%"). Sizes the whole field (label, control, and status) so they stay aligned.',
-                },
-                {
                     name: 'value',
                     type: 'boolean',
                     description: 'Whether the switch is on or off.',
@@ -49,18 +43,12 @@ export default function SwitchPage() {
                 {
                     name: 'defaultChecked',
                     type: 'boolean',
-                    description: 'The defaultChecked prop.',
+                    description: 'Initial checked state.',
                 },
                 {
                     name: 'onChange',
                     type: '(value: boolean) => void',
                     description: 'Callback fired when the switch state changes.',
-                },
-                {
-                    name: 'size',
-                    type: '"sm" | "md"',
-                    description:
-                        'Size variant controlling track and thumb dimensions. sm matches sm checkbox/radio vertical rhythm; md matches md checkbox/radio vertical rhythm.',
                 },
             ]}
             examples={[

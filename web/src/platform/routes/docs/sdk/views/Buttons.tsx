@@ -51,30 +51,22 @@ export default function ButtonsPage() {
                 {
                     name: 'icon',
                     type: 'StoneIconName',
-                    description:
-                        'Icon element rendered before the label text. An Astryx Icon with no explicit size defaults to sm for sm/md buttons and md for lg buttons.',
+                    description: 'Icon displayed before the label.',
                 },
                 {
                     name: 'endContent',
                     type: 'ReactNode',
-                    description:
-                        'Trailing icon or badge rendered after the label. Ignored when isIconOnly is true. Color is inherited from the button variant.',
-                },
-                {
-                    name: 'tooltip',
-                    type: 'string',
-                    description: 'Tooltip text shown on hover.',
+                    description: 'Content displayed after the label.',
                 },
                 {
                     name: 'width',
                     type: 'string | number',
-                    description:
-                        "Width of the button. Numbers are treated as pixels, strings are used as-is (e.g., '100%' for a full-width button). By default the button sizes to its content, never grows past its container, and truncates its label with an ellipsis when a row is too narrow; icon-only buttons stay square.",
+                    description: 'Button width in pixels or CSS units.',
                 },
                 {
                     name: 'disabled',
                     type: 'boolean',
-                    description: 'The disabled prop.',
+                    description: 'Disables the button.',
                 },
                 {
                     name: 'href',
@@ -84,8 +76,7 @@ export default function ButtonsPage() {
                 {
                     name: 'onClick',
                     type: '(event: ViewMouseEvent) => void | Promise<void>',
-                    description:
-                        'Runs an action with automatic async loading and duplicate-click prevention until its promise settles.',
+                    description: 'Runs an action with automatic loading and duplicate-click prevention.',
                 },
                 {
                     type: 'ReactNode',

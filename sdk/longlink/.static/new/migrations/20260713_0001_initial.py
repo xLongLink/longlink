@@ -1,4 +1,5 @@
 import sqlalchemy as sa
+import sqlmodel.sql.sqltypes
 from alembic import op
 
 revision = "20260713_0001"
@@ -10,7 +11,19 @@ depends_on = None
 def upgrade() -> None:
     """Create the project schema and seed twelve example building projects."""
 
-    # Create only the Solution-owned project table, without attributing fictional contacts to Platform users.
+    # Preserve profiles in databases previously bootstrapped by the SDK.
+    op.create_table(
+        "users",
+        sa.Column("id", sa.Uuid(), nullable=False),
+        sa.Column("name", sqlmodel.sql.sqltypes.AutoString(length=255), nullable=False),
+        sa.Column("email", sqlmodel.sql.sqltypes.AutoString(length=254), nullable=False),
+        sa.Column("avatar", sqlmodel.sql.sqltypes.AutoString(length=2048), nullable=False),
+        sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
+        sa.PrimaryKeyConstraint("id"),
+        if_not_exists=True,
+    )
+
+    # Create the project table without attributing fictional contacts to Platform users.
     op.create_table(
         "project",
         sa.Column("id", sa.Integer(), nullable=False),
@@ -137,7 +150,8 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    """Remove the Solution-owned project schema."""
+    """Remove the Solution schema."""
 
-    # Leave SDK-owned users intact.
+    # Drop dependent tables before users.
     op.drop_table("project")
+    op.drop_table("users")

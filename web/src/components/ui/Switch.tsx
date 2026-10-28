@@ -8,7 +8,6 @@ export function Switch(
         value?: boolean;
         defaultChecked?: boolean;
         onChange?: (value: boolean) => void;
-        size?: 'sm' | 'md';
     }
 ) {
     // Use the themed switch's real checkbox rather than substituting an unstyled control.
@@ -19,9 +18,10 @@ export function Switch(
     return (
         <AstryxSwitch
             {...control}
+            width="100%"
             {...field}
             htmlName={props.name}
-            size={props.size ?? 'md'}
+            size="md"
             isLabelHidden={false}
             isRequired={props.required ?? false}
             isDisabled={props.disabled ?? false}

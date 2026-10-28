@@ -58,11 +58,6 @@ export default function CardPage() {
                     description: 'Makes the card and its descendants non-interactive.',
                 },
                 {
-                    name: 'aria-hidden',
-                    type: 'boolean | "true" | "false"',
-                    description: 'Hides the card from assistive technologies.',
-                },
-                {
                     name: 'label',
                     type: 'string',
                     description: 'Accessible label for interactive cards; supply a descriptive label.',
@@ -70,20 +65,17 @@ export default function CardPage() {
                 {
                     name: 'onClick',
                     type: '(event: ViewMouseEvent) => void',
-                    description:
-                        'Makes the card clickable when its surface is activated; nested controls act independently.',
+                    description: 'Runs when the card surface is activated.',
                 },
                 {
                     name: 'href',
                     type: 'string',
-                    description:
-                        'Solution-relative destination or HTTP(S) URL to open in a new tab when no selection callback is supplied.',
+                    description: 'Link destination, used when onChange is absent.',
                 },
                 {
                     name: 'target',
                     type: 'string',
-                    description:
-                        'Native link target; isolated Views use the current Solution for relative paths and a new tab for HTTP(S) URLs.',
+                    description: 'Link target; external URLs open in a new tab in Views.',
                 },
                 {
                     name: 'isDisabled',
@@ -93,13 +85,12 @@ export default function CardPage() {
                 {
                     name: 'isSelected',
                     type: 'boolean',
-                    description: 'Selection state; supply onChange to let users toggle it.',
+                    description: 'Whether the card is selected.',
                 },
                 {
                     name: 'onChange',
                     type: '(isSelected: boolean) => void',
-                    description:
-                        'Makes the card selectable and receives its next selection state; takes priority over onClick and href.',
+                    description: 'Enables selection and receives its next state, overriding onClick and href.',
                 },
             ]}
             introduction="Card has one shared set of props. onChange makes it selectable, onClick or href makes it clickable, and otherwise it is a plain content card. Selection takes priority when both kinds of interaction props are supplied."

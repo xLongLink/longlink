@@ -18,14 +18,12 @@ export default function GridPage() {
                 {
                     name: 'columns',
                     type: 'number | { minWidth: number; max?: number; repeat?: "fill" | "fit"; }',
-                    description:
-                        'Fixed columns or responsive tracks with a minimum width in pixels and optional column cap. Use one-column or full spans with responsive tracks.',
+                    description: 'Fixed column count or responsive columns with minWidth and an optional max.',
                 },
                 {
                     name: 'collapseBelow',
                     type: 'number',
-                    description:
-                        'Collapse to one column at or below this View viewport width in pixels, including all GridSpan children.',
+                    description: 'View width in pixels at or below which all items use one column.',
                 },
                 {
                     name: 'gap',

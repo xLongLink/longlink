@@ -108,16 +108,16 @@ def registration_verification_token(captured_mail: list[tuple[str, str, str, str
     return extract_fragment_token(verification_url)
 
 
-async def register_and_verify(
-    client: AsyncClient, captured_mail: list[tuple[str, str, str, str | None]], email: str
-) -> tuple[httpx2.Response, httpx2.Response, str]:
-    """Register an email address and return its setup responses with the verified token."""
+async def register_and_verify(client: AsyncClient, captured_mail: list[tuple[str, str, str, str | None]], email: str) -> str:
+    """Register and verify an email address, returning its reusable setup token."""
 
-    # Return both responses so each test owns its status assertions.
+    # Require successful setup before testing profile completion.
     register_response = await client.post("/api/v1/auth/register", json={"email": email})
+    assert register_response.status_code == 202
     verification_token = registration_verification_token(captured_mail)
     verify_response = await client.post("/api/v1/auth/verify", json={"token": verification_token})
-    return register_response, verify_response, verification_token
+    assert verify_response.status_code == 200
+    return verification_token
 
 
 def password_reset_token(captured_mail: list[tuple[str, str, str, str | None]]) -> str:
@@ -235,8 +235,15 @@ async def test_oauth_callback_rejects_invalid_state_without_provider_exchange(
 
 @pytest.mark.no_db
 @pytest.mark.parametrize("provider", OAUTH_PROVIDERS)
+@pytest.mark.parametrize(
+    "parameters",
+    [
+        pytest.param({"code": "provider-code", "state": "expected-state", "error": "access_denied"}, id="cancelled"),
+        pytest.param({"state": "expected-state"}, id="missing-code"),
+    ],
+)
 async def test_oauth_callback_rejects_provider_error_and_missing_code_without_exchange(
-    client: AsyncClient, monkeypatch: pytest.MonkeyPatch, provider: oauth.OAuthProvider
+    client: AsyncClient, monkeypatch: pytest.MonkeyPatch, provider: oauth.OAuthProvider, parameters: dict[str, str]
 ) -> None:
     """Reject provider-cancelled and code-less callbacks before any code exchange."""
 
@@ -258,21 +265,11 @@ async def test_oauth_callback_rejects_provider_error_and_missing_code_without_ex
     monkeypatch.setattr("src.routes.v1.auth.oauth.identity", unexpected_identity)
 
     # Act
-    cancelled_response = await client.get(
-        f"/api/v1/auth/oauth/{provider}/callback",
-        params={"code": "provider-code", "state": "expected-state", "error": "access_denied"},
-        follow_redirects=False,
-    )
-    client.cookies.set("longlink_oauth", credential, domain="testserver.local", path="/api/v1/auth/oauth")
-    missing_code_response = await client.get(
-        f"/api/v1/auth/oauth/{provider}/callback", params={"state": "expected-state"}, follow_redirects=False
-    )
+    response = await client.get(f"/api/v1/auth/oauth/{provider}/callback", params=parameters, follow_redirects=False)
 
     # Assert
-    assert cancelled_response.status_code == 302
-    assert cancelled_response.headers["location"] == f"{env.PUBLIC_URL}/login?oauth_error=1"
-    assert missing_code_response.status_code == 302
-    assert missing_code_response.headers["location"] == f"{env.PUBLIC_URL}/login?oauth_error=1"
+    assert response.status_code == 302
+    assert response.headers["location"] == f"{env.PUBLIC_URL}/login?oauth_error=1"
     assert client.cookies.get("longlink_oauth") is None
     assert client.cookies.get("longlink_auth") is None
 
@@ -599,9 +596,7 @@ async def test_registration_completion_creates_authenticated_account(
     email = "registered@example.com"
     completion_payload = {"name": "Registered User", "password": TEST_PASSWORD}
     login_payload = {"email": email, "password": TEST_PASSWORD}
-    register_response, verify_response, _ = await register_and_verify(client, captured_mail, email)
-    assert register_response.status_code == 202
-    assert verify_response.status_code == 200
+    await register_and_verify(client, captured_mail, email)
 
     # Act
     unauthenticated_login = await client.post("/api/v1/auth/password/login", json=login_payload)
@@ -686,9 +681,7 @@ async def test_registration_completion_keeps_pending_organization_invitation(
         session.add(OrganizationInvitation(organization_id=organization.id, email=email, role=OrganizationRoles.write))
         await session.commit()
 
-    register_response, verify_response, _ = await register_and_verify(client, captured_mail, email)
-    assert register_response.status_code == 202
-    assert verify_response.status_code == 200
+    await register_and_verify(client, captured_mail, email)
 
     # Act
     response = await client.post(
@@ -742,9 +735,7 @@ async def test_registration_completion_rejects_duplicate_account(
     # Arrange
     email = "registered@example.com"
     completion_payload = {"name": "Registered User", "password": TEST_PASSWORD}
-    register_response, verify_response, verification_token = await register_and_verify(client, captured_mail, email)
-    assert register_response.status_code == 202
-    assert verify_response.status_code == 200
+    verification_token = await register_and_verify(client, captured_mail, email)
     first_completion = await client.post("/api/v1/auth/register/complete", json=completion_payload, headers={"Origin": env.PUBLIC_URL})
     assert first_completion.status_code == 201
 

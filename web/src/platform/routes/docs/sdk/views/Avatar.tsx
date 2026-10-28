@@ -12,8 +12,7 @@ export default function AvatarPage() {
                 {
                     name: 'shape',
                     type: '"circle" | "square" | "rounded"',
-                    description:
-                        "Shape variant of the avatar. 'circle' stays fully round. 'rounded' uses the element radius token so it matches UI corner rounding and can be set globally via theme. 'square' has no radius. Status dot positioning adapts automatically: 4-o'clock on circle, bottom-right corner on rounded/square.",
+                    description: 'Avatar shape: circle, rounded, or square.',
                 },
                 {
                     name: 'name',
@@ -28,8 +27,7 @@ export default function AvatarPage() {
                 {
                     name: 'kind',
                     type: '"user" | "organization"',
-                    description:
-                        'Organization owners use rounded Waves avatars; user owners retain the supplied geometry or a circle.',
+                    description: 'Avatar style for a user or organization.',
                 },
                 {
                     name: 'src',
@@ -44,8 +42,7 @@ export default function AvatarPage() {
                 {
                     name: 'size',
                     type: '"sm" | "lg" | "md"',
-                    description:
-                        "Avatar size. Use a named size or a numeric pixel value. Avatar shares Icon's abbreviated scale, but its tiers are larger because avatars align with media rather than glyphs. Inside an AvatarGroup the group's size wins and this prop is ignored.",
+                    description: 'Avatar size.',
                 },
             ]}
             examples={[

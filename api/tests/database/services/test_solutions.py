@@ -5,7 +5,7 @@ from alembic import command
 from fastapi import HTTPException
 from conftest import create_client
 from sqlmodel import col
-from factories import create_solution, create_organization
+from factories import add_member, create_solution, create_organization
 from src.utils import images
 from sqlalchemy import delete, update
 from src.database import session as database_session
@@ -76,9 +76,7 @@ async def test_create_refreshes_cached_maintainer_access_before_authorizing(user
     # Arrange a current owner and a maintainer whose request authorization could become stale.
     owner, maintainer = users[1], users[2]
     organization = await create_organization(owner)
-    async with session_scope() as session:
-        session.add(UserOrganization(user_id=maintainer.id, organization_id=organization.id, role=OrganizationRoles.maintain))
-        await session.commit()
+    await add_member(user=maintainer, organization=organization, role=OrganizationRoles.maintain)
 
     # Cache the maintainer as the route dependency does before awaiting external image metadata.
     async with session_scope() as session:
@@ -123,9 +121,7 @@ async def test_delete_rejects_read_member_without_mutating_solution(users: tuple
     owner, caller = users[0], users[1]
     organization = await create_organization(owner)
     solution = await create_solution(organization)
-    async with session_scope() as session:
-        session.add(UserOrganization(user_id=caller.id, organization_id=organization.id, role=OrganizationRoles.read))
-        await session.commit()
+    await add_member(user=caller, organization=organization, role=OrganizationRoles.read)
 
     # Act and assert
     async with session_scope() as session:

@@ -5,7 +5,9 @@ from src import auth
 from kr8s import ServerError, NotFoundError, APITimeoutError, ConnectionClosedError
 from uuid import UUID
 from fastapi import APIRouter, HTTPException
+from sqlmodel import col
 from src.utils import s3, mail, roles
+from sqlalchemy import func, select
 from src.context import Context
 from sqlalchemy.exc import SQLAlchemyError
 from src.kubernetes import databases
@@ -25,6 +27,8 @@ from src.models.organizations import (
     OrganizationMemberUpdate,
     OrganizationInvitationCreate,
 )
+from src.database.models.solutions import Solution
+from src.database.models.organizations import Organization
 
 router = APIRouter()
 
@@ -54,12 +58,25 @@ async def get_organization_solutions(ctx: Context, membership: auth.Organization
 
 
 @router.get("/organizations/{organization_id}/usage", response_model=OrganizationUsage)
-async def get_organization_usage(ctx: Context, organization_id: UUID):
-    """Show current accepted users and the same monthly rates used for invoicing."""
+async def get_organization_usage(ctx: Context, membership: auth.OrganizationMember):
+    """Show current users, Solutions, and the same monthly rates used for invoicing."""
 
-    # Read accepted membership counts after router-level authorization.
-    users = await organizations.member_count(ctx.database, organization_id)
-    return {"users": users, "stripe_enabled": env.stripe_enabled}
+    # Read membership counts and payment authorization for this Organization.
+    users = await organizations.member_count(ctx.database, membership.organization_id)
+    solutions = await ctx.database.scalar(
+        select(func.count())
+        .select_from(Solution)
+        .where(col(Solution.organization_id) == membership.organization_id, col(Solution.deleted_at).is_(None))
+    )
+    payment_method_id = await ctx.database.scalar(
+        select(col(Organization.stripe_payment_method_id)).where(col(Organization.id) == membership.organization_id)
+    )
+    return {
+        "users": users,
+        "solutions": solutions,
+        "stripe_enabled": env.stripe_enabled,
+        "has_payment_method": payment_method_id is not None,
+    }
 
 
 @router.get("/organizations/{organization_id}/storage", response_model=OrganizationStorageUsageResponse)

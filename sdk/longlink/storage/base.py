@@ -1,7 +1,7 @@
 import fsspec
 import weakref
 from uuid import uuid4
-from pathlib import PurePosixPath
+from pathlib import Path, PurePosixPath
 from contextlib import ExitStack
 from fsspec.spec import AbstractFileSystem
 from longlink.storage import tls
@@ -33,6 +33,11 @@ def create_fs(settings: Envs) -> AbstractFileSystem:
     if prefix_path is not None and bucket_path is None:
         raise ValueError("Storage prefixes require a bucket")
 
+    # Compose the validated scope once for every storage backend.
+    scope = bucket_path
+    if scope is not None and prefix_path is not None:
+        scope /= prefix_path
+
     # Production uses remote object storage supplied by the platform.
     if settings.ENV == "production":
         # s3fs connects lazily, so transfer CA cleanup only after constructing its owning filesystem.
@@ -57,23 +62,24 @@ def create_fs(settings: Envs) -> AbstractFileSystem:
 
         # Combine the namespace and optional bucket scope without nesting filesystem wrappers.
         storage_path = PurePosixPath(directory)
-        if bucket_path is not None:
-            storage_path /= bucket_path
-            if prefix_path is not None:
-                storage_path /= prefix_path
+        if scope is not None:
+            storage_path /= scope
         filesystem = DirFileSystem(path=storage_path.as_posix(), fs=memory, skip_instance_cache=True)
 
         # Release only this namespace when its owning runtime filesystem is collected.
         weakref.finalize(filesystem, _remove_memory_directory, memory, directory)
         return filesystem
     else:
-        # Development keeps generated files locally inspectable.
+        # Development keeps generated files inside a dedicated local directory.
+        storage_path = Path.cwd() / ".storage"
+        if scope is not None:
+            storage_path /= scope
+        storage_path.mkdir(parents=True, exist_ok=True)
         filesystem = fsspec.filesystem("file")
+        return DirFileSystem(path=storage_path.as_posix(), fs=filesystem, skip_instance_cache=True)
 
     # Scope paths without letting the wrapper cache retain the backend and its CA file.
-    if bucket_path is not None:
-        return DirFileSystem(
-            path=(bucket_path / prefix_path if prefix_path is not None else bucket_path).as_posix(), fs=filesystem, skip_instance_cache=True
-        )
+    if scope is not None:
+        return DirFileSystem(path=scope.as_posix(), fs=filesystem, skip_instance_cache=True)
 
     return filesystem

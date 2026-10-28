@@ -22,11 +22,21 @@ class ViewDefinition:
 
 
 @dataclass(slots=True)
+class ViewTab:
+    """Declare an explicitly included navigation tab."""
+
+    route: str
+    label: str | None = None
+    icon: str | None = None
+
+
+@dataclass(slots=True)
 class ViewManifest:
     """Declare the Solution's complete View catalog and its shared runtime."""
 
     views: list[ViewDefinition]
     runtime: ViewRuntime
+    tabs: list[ViewTab] | None = None
 
 
 def view_stem_route(view_stem: str) -> str:

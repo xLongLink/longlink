@@ -21,9 +21,10 @@ export function CheckboxInput(
     return (
         <AstryxCheckboxInput
             {...control}
+            width="100%"
             {...field}
             htmlName={props.name}
-            size="sm"
+            size="md"
             isReadOnly={false}
             isLabelHidden={false}
             isRequired={props.required ?? false}

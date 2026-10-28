@@ -56,7 +56,7 @@ type CardProps = {
     minHeight?: number | string;
     /** Makes the card and its descendants non-interactive. */
     inert?: boolean;
-    /** Hides the card from assistive technologies. */
+    /** Accessible by default; set true only for decorative or redundant, non-interactive content. */
     'aria-hidden'?: boolean | 'true' | 'false';
     /** Accessible label for interactive cards; supply a descriptive label. */
     label?: string;

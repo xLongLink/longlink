@@ -23,8 +23,7 @@ export default function PaginationPage() {
                 {
                     name: 'totalItems',
                     type: 'number',
-                    description:
-                        'Total number of items. Used to calculate page count. Takes precedence over totalPages if both provided.',
+                    description: 'Total item count used to calculate pages, overriding totalPages.',
                 },
                 {
                     name: 'pageSize',

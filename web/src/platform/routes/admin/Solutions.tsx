@@ -41,11 +41,9 @@ export default function Solutions() {
             <Heading level={1}>Solutions</Heading>
             <TextInput
                 label="Search solutions"
-                isLabelHidden
                 placeholder="Search by name, slug, description, or organization"
                 value={filters.search}
                 startIcon={<Search />}
-                hasClear
                 onChange={(search) => setFilters({ search, page: 1 })}
             />
             <Stack gap={1}>

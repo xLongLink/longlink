@@ -15,8 +15,67 @@
 @import '@astryxdesign/core/reset.css';
 @import '@astryxdesign/core/astryx.css';
 @import './lib/generated/stone.css';
+@import './accents.css';
 @import '@astryxdesign/core/tailwind-theme.css';
 @import 'tailwindcss/utilities.css' layer(utilities);
+
+@keyframes technology-float {
+    to {
+        transform: translateY(calc(var(--spacing) * -2));
+    }
+}
+
+@utility technology-float {
+    animation: technology-float calc(var(--duration-slow) * 8) ease-in-out infinite alternate;
+
+    &:nth-of-type(even) {
+        animation-direction: alternate-reverse;
+        animation-delay: calc(var(--duration-slow) * -3);
+    }
+}
+
+@keyframes foundation-drift {
+    from {
+        transform: translateX(calc(-100% / 6));
+    }
+    to {
+        transform: translateX(-50%);
+    }
+}
+
+@utility foundation-scroll {
+    transform: translateX(var(--foundation-scroll, 0px));
+
+    @media (prefers-reduced-motion: reduce) {
+        transform: none;
+    }
+}
+
+@utility foundation-scroll-reverse {
+    transform: translateX(calc(var(--foundation-scroll, 0px) * -1));
+
+    @media (prefers-reduced-motion: reduce) {
+        transform: none;
+    }
+}
+
+@utility foundation-track {
+    width: max-content;
+    animation: foundation-drift var(--foundation-drift-duration, calc(var(--duration-slow) * 240)) linear infinite;
+
+    [data-paused='true'] &,
+    [data-paused]:focus-within & {
+        animation-play-state: paused;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        animation: none;
+    }
+}
+
+@utility foundation-track-reverse {
+    animation-direction: reverse;
+}
 
 @layer base {
     body {

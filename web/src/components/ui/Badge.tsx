@@ -12,6 +12,7 @@ export function Badge(props: {
     return (
         <AstryxBadge
             {...props}
+            className="w-fit"
             icon={props.icon ? <Icon icon={props.icon} size="sm" /> : undefined}
             label={props.label}
             variant={props.variant ?? 'neutral'}

@@ -108,8 +108,12 @@ async def assign(session: AsyncSession, organization_id: UUID, user_id: UUID, so
 
     # Lock the Organization before resolving the active Solution and its categories.
     await lock(session, organization_id, user_id)
-    solution = await session.get(Solution, solution_id, populate_existing=True)
-    if solution is None or solution.organization_id != organization_id or solution.deleted_at is not None:
+    active_solution_id = await session.scalar(
+        select(col(Solution.id)).where(
+            col(Solution.id) == solution_id, col(Solution.organization_id) == organization_id, col(Solution.deleted_at).is_(None)
+        )
+    )
+    if active_solution_id is None:
         raise HTTPException(status_code=404, detail="Solution not found")
 
     # Validate every identity before removing any previous assignment.

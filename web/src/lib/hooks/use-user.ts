@@ -2,17 +2,17 @@ import type { z } from 'zod';
 import { api } from '@/lib/api';
 import { useQuery } from '@tanstack/react-query';
 import { createContext, useContext } from 'react';
-import { zUserSummary } from '@/lib/generated/platform-api-v1/zod.gen';
+import { zCurrentUser } from '@/lib/generated/platform-api-v1/zod.gen';
 
 // Share the user validated by the authenticated route boundary.
-export const AuthenticatedUserContext = createContext<z.output<typeof zUserSummary> | undefined>(undefined);
+export const AuthenticatedUserContext = createContext<z.output<typeof zCurrentUser> | undefined>(undefined);
 
 /** Reads the current authenticated user without loading organization memberships. */
 export function useCurrentUser() {
     return useQuery({
         // Auth state must refresh immediately after login/logout redirects.
         queryKey: ['api', '/api/v1/me'],
-        queryFn: ({ signal }) => api('/api/v1/me', { signal }).json(zUserSummary),
+        queryFn: ({ signal }) => api('/api/v1/me', { signal }).json(zCurrentUser),
         staleTime: 0,
         refetchOnWindowFocus: true,
         retry: false,

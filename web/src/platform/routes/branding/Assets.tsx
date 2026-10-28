@@ -4,10 +4,10 @@ import { Text } from '@astryxdesign/core/Text';
 import { Wordmark } from '@/components/Wordmark';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Theme } from '@astryxdesign/core/theme';
-import { PublicArticle } from '@/components/Article';
 import { Heading } from '@astryxdesign/core/Heading';
 import { stoneTheme } from '@/lib/generated/stone.js';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
+import { PublicArticle } from '@/components/layouts/Article';
 import { AspectRatio } from '@astryxdesign/core/AspectRatio';
 
 const article = {

@@ -67,10 +67,13 @@ def upgrade() -> None:
         sa.column("kind", sa.String(3)),
     )
     organization_ids = op.get_bind().execute(sa.select(organizations.c.id)).scalars().all()
-    for organization_id in organization_ids:
+    if organization_ids:
         op.bulk_insert(
             tags,
-            [{"id": uuid4(), "organization_id": organization_id, "name": "All", "kind": "all", "icon": "app-window"}],
+            [
+                {"id": uuid4(), "organization_id": organization_id, "name": "All", "kind": "all", "icon": "app-window"}
+                for organization_id in organization_ids
+            ],
         )
 
     # Category assignments remain constrained to the Solution's Organization.
@@ -82,7 +85,9 @@ def upgrade() -> None:
         sa.Index("ix_solution_tags_organization_solution", "organization_id", "solution_id"),
         sa.Index("ix_solution_tags_organization_tag", "organization_id", "tag_id"),
         sa.ForeignKeyConstraint(["organization_id", "solution_id"], ["solutions.organization_id", "solutions.id"], ondelete="CASCADE"),
-        sa.ForeignKeyConstraint(["organization_id", "tag_id"], ["organization_tags.organization_id", "organization_tags.id"], ondelete="CASCADE"),
+        sa.ForeignKeyConstraint(
+            ["organization_id", "tag_id"], ["organization_tags.organization_id", "organization_tags.id"], ondelete="CASCADE"
+        ),
     )
 
 

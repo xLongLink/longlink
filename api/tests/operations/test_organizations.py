@@ -13,47 +13,6 @@ from src.database.models.solutions import Solution
 from src.database.models.organizations import Organization
 
 
-def install_recording_delete(
-    monkeypatch: pytest.MonkeyPatch, organization_id: UUID, solution_ids: Sequence[UUID] = (), *, fail_namespace: bool = False
-) -> list[str]:
-    """Install recording delete doubles for one tombstoned Organization."""
-
-    # Keep the delete-path provider double in one owner; tests assert on the returned calls.
-    calls: list[str] = []
-
-    async def delete_database(client: object, target_organization_id: UUID) -> None:
-        """Record Organization database and scoped runtime-role deletion."""
-
-        assert target_organization_id == organization_id
-        calls.append("database")
-
-    class Storage:
-        def __init__(self, *args: object) -> None:
-            """Accept registry connection settings."""
-
-        async def delete(self, target_organization_id: UUID, solutions: Sequence[UUID]) -> None:
-            """Record Organization bucket and identity deletion."""
-
-            assert target_organization_id == organization_id
-            assert list(solutions) == list(solution_ids)
-            calls.append("bucket")
-
-    async def delete(client: object, target_organization_id: UUID) -> None:
-        """Record namespace deletion or fail it when requested."""
-
-        if fail_namespace:
-            raise RuntimeError("namespace deletion failed")
-
-        assert target_organization_id == organization_id
-        calls.append("namespace")
-
-    monkeypatch.setattr(organization_operations, "Kubernetes", DatabaseKubernetes)
-    monkeypatch.setattr(organization_operations.database_resources, "delete", delete_database)
-    monkeypatch.setattr(organization_operations, "Storage", Storage)
-    monkeypatch.setattr(organization_operations.organizations, "delete", delete)
-    return calls
-
-
 @pytest.mark.usefixtures("database_runtime")
 async def test_reconcile_prepares_providers_namespace_and_publishes_organization(
     users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch
@@ -201,12 +160,20 @@ async def test_delete_stops_when_namespace_deletion_fails(users: tuple[User, Use
         assert row is not None
         row.deleted_at = datetime.now(UTC)
         await session.commit()
-    calls = install_recording_delete(monkeypatch, organization.id, fail_namespace=True)
+
+    async def delete(client: object, organization_id: UUID) -> None:
+        """Fail namespace deletion before destructive provider cleanup."""
+
+        assert organization_id == organization.id
+        raise RuntimeError("namespace deletion failed")
+
+    monkeypatch.setattr(organization_operations, "Kubernetes", DatabaseKubernetes)
+    monkeypatch.setattr(organization_operations.organizations, "delete", delete)
+    reject_provider_construction(monkeypatch, (organization_operations.database_resources, "delete"), (organization_operations, "Storage"))
 
     # Namespace failure must prevent destructive provider cleanup.
     with pytest.raises(RuntimeError, match="namespace deletion failed"):
         await organization_operations.delete(organization.id)
-    assert calls == []
 
 
 async def test_delete_tears_down_organization_boundaries_in_order(users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch) -> None:
@@ -223,7 +190,35 @@ async def test_delete_tears_down_organization_boundaries_in_order(users: tuple[U
         assert row is not None
         row.deleted_at = datetime.now(UTC)
         await session.commit()
-    calls = install_recording_delete(monkeypatch, organization.id, [solution.id])
+    calls: list[str] = []
+
+    async def delete_database(client: object, organization_id: UUID) -> None:
+        """Record Organization database and scoped runtime-role deletion."""
+
+        assert organization_id == organization.id
+        calls.append("database")
+
+    class Storage:
+        def __init__(self, *args: object) -> None:
+            """Accept registry connection settings."""
+
+        async def delete(self, organization_id: UUID, solutions: Sequence[UUID]) -> None:
+            """Record Organization bucket and identity deletion."""
+
+            assert organization_id == organization.id
+            assert list(solutions) == [solution.id]
+            calls.append("bucket")
+
+    async def delete(client: object, organization_id: UUID) -> None:
+        """Record namespace deletion."""
+
+        assert organization_id == organization.id
+        calls.append("namespace")
+
+    monkeypatch.setattr(organization_operations, "Kubernetes", DatabaseKubernetes)
+    monkeypatch.setattr(organization_operations.database_resources, "delete", delete_database)
+    monkeypatch.setattr(organization_operations, "Storage", Storage)
+    monkeypatch.setattr(organization_operations.organizations, "delete", delete)
 
     # Complete cleanup and inspect irreversible resource deletion order.
     assert await organization_operations.delete(organization.id) is None

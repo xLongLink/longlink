@@ -156,6 +156,20 @@ jobs:
               working-directory: sdk
               run: uv run --isolated --no-project --with ./dist/*.whl python -I -c "from importlib.resources import files; assert files('longlink').joinpath('.static/web/index.html').is_file()"
 
+            - name: Build scaffold image with SDK distribution
+              if: matrix.python-version == '3.14.6'
+              run: |
+                  set -euo pipefail
+                  export SETUPTOOLS_SCM_PRETEND_VERSION_FOR_LONGLINK=0.0.0
+
+                  uv run --locked --project sdk longlink init --folder "$RUNNER_TEMP/sample" --ci github
+                  mkdir "$RUNNER_TEMP/sample/sdk"
+                  tar --extract --gzip --file sdk/dist/*.tar.gz --directory "$RUNNER_TEMP/sample/sdk" --strip-components=1
+                  printf '\n[tool.uv.sources]\nlonglink = { path = "sdk" }\n' >> "$RUNNER_TEMP/sample/pyproject.toml"
+                  uv lock --project "$RUNNER_TEMP/sample"
+                  cd "$RUNNER_TEMP/sample"
+                  uv run --locked longlink build --tag ci
+
     # Build the production image independently so publishing cannot discover Docker-only failures.
     api-image:
         runs-on: ubuntu-24.04

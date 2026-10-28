@@ -26,7 +26,7 @@ it('does not complete creation before image inspection', async () => {
 
             // Assert
             expect(dialog?.textContent).toContain('Choose a Solution image');
-            expect(dialog?.querySelector('[data-form-step="0"]')?.hasAttribute('hidden')).toBe(false);
+            expect(dialog?.querySelector('[data-step-panel="0"]')?.hasAttribute('hidden')).toBe(false);
             expect(completions).toEqual([]);
         }
     );

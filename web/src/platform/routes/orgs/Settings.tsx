@@ -20,6 +20,7 @@ import { ApiBoundary } from '@/components/ApiBoundary';
 import { DeletionDialog } from '@/components/Deletion';
 import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { Selector } from '@astryxdesign/core/Selector';
+import { Illustration } from '@/components/Illustration';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { SideNavItem } from '@/components/ui/SideNavItem';
 import { useLocation, useOutletContext } from 'react-router';
@@ -201,7 +202,7 @@ function GeneralSection({
             {canDelete && (
                 <Stack gap={3}>
                     <Stack className="text-red-600 dark:text-red-400">
-                        <Heading level={3} color="inherit">
+                        <Heading level={4} accessibilityLevel={3} color="inherit">
                             Danger zone
                         </Heading>
                     </Stack>
@@ -467,7 +468,7 @@ function InvitationsSection({ base, canMaintain }: { base: string; canMaintain: 
                         end={
                             <LayoutPanel width="50%" padding={0} className="hidden bg-muted md:flex">
                                 <Stack width="100%" height="100%" align="center" justify="center" padding={6}>
-                                    <img
+                                    <Illustration
                                         src="/images/invitation.png"
                                         alt="Hand-drawn envelopes."
                                         className="h-full w-full object-contain"
@@ -490,7 +491,7 @@ function InvitationsSection({ base, canMaintain }: { base: string; canMaintain: 
                                     <form action={inviteMember}>
                                         <Stack gap={10}>
                                             <Stack gap={2} align="center">
-                                                <img
+                                                <Illustration
                                                     src="/images/organization.png"
                                                     alt=""
                                                     className="size-20 object-contain"

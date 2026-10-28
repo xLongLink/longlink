@@ -5,6 +5,7 @@ import { Dialog } from '@/components/ui/Dialog';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
 import { Heading } from '@astryxdesign/core/Heading';
+import { Illustration } from '@/components/Illustration';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { zOrganizationCreate } from '@/lib/generated/platform-api-v1/zod.gen';
 import { Layout, LayoutPanel, LayoutContent } from '@astryxdesign/core/Layout';
@@ -43,7 +44,7 @@ export default function CreateOrganization({
                     end={
                         <LayoutPanel width="50%" padding={0} className="hidden bg-muted md:flex">
                             <Stack width="100%" height="100%" align="center" justify="center" padding={6}>
-                                <img
+                                <Illustration
                                     src="/images/organization-city.png"
                                     alt="Hand-drawn city skyline reflected in water."
                                     className="h-full w-full object-contain"
@@ -66,7 +67,7 @@ export default function CreateOrganization({
                                 <form action={createOrganization}>
                                     <Stack gap={10}>
                                         <Stack gap={2} align="center">
-                                            <img
+                                            <Illustration
                                                 src="/images/organization.png"
                                                 alt=""
                                                 className="size-20 object-contain"

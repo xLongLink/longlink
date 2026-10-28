@@ -12,7 +12,7 @@ export default function ProgressBarPage() {
                 {
                     name: 'label',
                     type: 'string',
-                    description: 'accessible label',
+                    description: 'Accessible label.',
                 },
                 {
                     name: 'value',
@@ -42,8 +42,7 @@ export default function ProgressBarPage() {
                 {
                     name: 'marks',
                     type: 'readonly { value: number; label: string; }[]',
-                    description:
-                        "Fixed target marks drawn on the track at values in the same 0..max scale as value (e.g. a goal line). They stay visible whether progress is below or past them, and take their color from what they sit on: a mark inside the filled area uses the fill variant's on-color (on-accent, on-warning, on-error, and so on), a mark still out on the bare track uses the primary text color (the secondary one on a disabled bar, which dims everything it draws). Each mark requires a label: it is the mark's accessible name and the text revealed via a tooltip on hover/focus. Ignored when indeterminate.",
+                    description: 'Labeled target marks on the 0-to-max scale, hidden when indeterminate.',
                 },
                 {
                     name: 'isDisabled',

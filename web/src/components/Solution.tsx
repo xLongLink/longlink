@@ -5,17 +5,15 @@ import { JsxView } from '@/components/JsxView';
 import { PageError } from '@/components/Utils';
 import { manifestSchema } from '@/views/manifest';
 import { Center } from '@astryxdesign/core/Center';
+import { DeferredIcon } from '@/components/ui/Icon';
 import { Spinner } from '@astryxdesign/core/Spinner';
 import { skipToken, useQuery } from '@tanstack/react-query';
 import { matchRoutes, Navigate, useParams } from 'react-router';
+import type { NavigationTab } from '@/components/layouts/Platform';
 import { RELATIVE_URL_ORIGIN, resolveNavigationUrl, resolveRequestUrl } from '@/lib/url';
 
 type SolutionRuntimeProps = {
-    children: (solution: {
-        content: ReactNode;
-        tabs: readonly { href: string; label: string }[];
-        title?: string;
-    }) => ReactNode;
+    children: (solution: { content: ReactNode; tabs: readonly NavigationTab[]; title?: string }) => ReactNode;
     navigationBaseUrl?: string;
     viewsUrl?: string;
 };
@@ -59,11 +57,19 @@ export function SolutionRuntime({ children, navigationBaseUrl = '/', viewsUrl = 
         `/${routePath}`
     )?.[0];
 
-    const tabViews = views.filter((view) => view.route !== '/' && !view.route.includes('/:'));
+    // Only top-level static Views appear in root navigation.
+    const tabViews = views.filter(
+        (view) => view.route !== '/' && !view.route.includes('/', 1) && !view.route.includes('/:')
+    );
 
-    // Let dynamic detail views share a tab with their matching list view.
-    const activeView = routePath || tabViews.length === 0 ? match?.route.view : undefined;
-    const activeViewTitle = activeView ? viewLabel(activeView.path) : undefined;
+    // Let nested and dynamic detail Views share their parent tab.
+    const navigationTabs = manifest?.tabs ?? tabViews;
+    const activeView = routePath || navigationTabs.length === 0 ? match?.route.view : undefined;
+
+    const activeViewTitle = activeView
+        ? (manifest?.tabs?.find((tab) => tab.route === activeView.route)?.label ?? viewLabel(activeView.path))
+        : undefined;
+
     const isNotFound = manifest !== undefined && routePath.length > 0 && match == null;
 
     const { data: activeViewSource, error: activeViewError } = useQuery({
@@ -80,9 +86,13 @@ export function SolutionRuntime({ children, navigationBaseUrl = '/', viewsUrl = 
     });
 
     // Build one static navigation target per solution tab.
-    const tabs = tabViews.map((view) => ({
+    const tabs = navigationTabs.map((view) => ({
         href: resolveNavigationUrl(navigationBaseUrl, view.route),
-        label: viewLabel(view.path),
+        label:
+            'label' in view && view.label
+                ? view.label
+                : viewLabel(views.find((entry) => entry.route === view.route)?.path ?? view.route),
+        icon: 'icon' in view && view.icon ? <DeferredIcon icon={view.icon} size="sm" /> : undefined,
     }));
 
     let content: ReactNode;

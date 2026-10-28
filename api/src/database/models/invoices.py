@@ -7,7 +7,7 @@ from src.database.models.base import PlatformModel
 
 
 class Invoice(PlatformModel, table=True):
-    """Freeze one Organization's month-end usage and charges before contacting Stripe."""
+    """Retain one Organization's month-end usage before contacting Stripe."""
 
     __tablename__: ClassVar[str] = "invoices"
     __table_args__ = (UniqueConstraint("organization_id", "period_end", name="uq_invoices_organization_period"),)
@@ -23,10 +23,7 @@ class Invoice(PlatformModel, table=True):
     period_end: datetime
     measured_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
-    # Immutable usage and line amounts in CHF centimes
+    # Month-end usage
     users: int = Field(ge=0)
-    user_amount: int = Field(ge=0)
     storage_bytes: int = Field(ge=0, sa_type=BigInteger)
     database_bytes: int = Field(ge=0, sa_type=BigInteger)
-    storage_amount: int = Field(ge=0)
-    database_amount: int = Field(ge=0)

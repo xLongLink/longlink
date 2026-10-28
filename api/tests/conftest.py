@@ -95,12 +95,11 @@ class DatabasePostgres:
         """Accept the private Organization connection settings."""
 
     @asynccontextmanager
-    async def connection(self, database: str, *, search_path: str | None = None) -> AsyncGenerator["DatabasePostgres"]:
+    async def connection(self, database: str) -> AsyncGenerator["DatabasePostgres"]:
         """Scope readiness probes to their Organization database."""
 
         # Record the connection target forwarded by database coordination.
         self.database = database
-        self.search_path = search_path
         yield self
 
     async def execute(self, statement: object) -> None:

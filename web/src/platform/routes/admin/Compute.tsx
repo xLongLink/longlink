@@ -1,17 +1,18 @@
 import { z } from 'zod';
 import { api, ApiError } from '@/lib/api';
 import { useApiError } from '@/lib/errors';
+import { Form } from '@/components/ui/Form';
 import { Info, Search } from 'lucide-react';
 import { useApi } from '@/lib/hooks/use-api';
 import { Text } from '@astryxdesign/core/Text';
 import { Dialog } from '@/components/ui/Dialog';
 import { Stack } from '@astryxdesign/core/Stack';
-import { Form, FormStep } from '@/components/Form';
 import { Button } from '@astryxdesign/core/Button';
 import { Heading } from '@astryxdesign/core/Heading';
 import { TextInput } from '@/components/ui/TextInput';
 import { DeletionDialog } from '@/components/Deletion';
 import { TextArea } from '@astryxdesign/core/TextArea';
+import { Step, Stepper } from '@/components/ui/Stepper';
 import { FileInput } from '@astryxdesign/core/FileInput';
 import { Pagination } from '@astryxdesign/core/Pagination';
 import { useDeferredValue, useEffect, useState } from 'react';
@@ -53,11 +54,9 @@ export default function Compute() {
             </Stack>
             <TextInput
                 label="Search compute"
-                isLabelHidden
                 placeholder="Search by name or endpoint"
                 value={filters.search}
                 startIcon={<Search />}
-                hasClear
                 onChange={(search) => setFilters({ search, page: 1 })}
             />
             <Stack gap={1}>
@@ -255,70 +254,74 @@ function ComputeRegistration({ invalidate, onClose }: { invalidate: () => Promis
                 if (!open) onClose();
             }}
         >
-            <Form
-                height="min(560px, calc(100dvh - var(--spacing-10) * 4))"
-                action={registerCompute}
-                submitLabel="Register"
-                submitDisabled={fileRead.kind === 'reading' || !kubeconfig.trim()}
-                backVariant="ghost"
-            >
-                <FormStep label="Metadata">
-                    <Stack gap={8}>
-                        <Heading level={2} justify="center">
-                            Register Compute
-                        </Heading>
-                        <Stack gap={3}>
-                            <TextInput label="Name" name="name" required />
-                            <TextInput
-                                label="Gateway URL"
-                                name="gateway_url"
-                                placeholder="https://<nightly_gateway_floating_ip>"
-                                required
-                            />
-                            <TextInput
-                                label="Storage endpoint"
-                                name="storage_endpoint"
-                                placeholder="https://<nightly_storage_floating_ip>"
-                                required
-                            />
+            <Form action={registerCompute} submitDisabled={fileRead.kind === 'reading' || !kubeconfig.trim()}>
+                <Stepper variant="wizard" height="min(560px, calc(100dvh - var(--spacing-10) * 4))" backVariant="ghost">
+                    <Step label="Metadata">
+                        <Stack gap={8}>
+                            <Heading level={2} justify="center">
+                                Register Compute
+                            </Heading>
+                            <Stack gap={3}>
+                                <TextInput label="Name" name="name" required />
+                                <TextInput
+                                    label="Gateway URL"
+                                    name="gateway_url"
+                                    placeholder="https://<nightly_gateway_floating_ip>"
+                                    required
+                                />
+                                <TextInput
+                                    label="Storage endpoint"
+                                    name="storage_endpoint"
+                                    placeholder="https://<nightly_storage_floating_ip>"
+                                    required
+                                />
+                            </Stack>
                         </Stack>
-                    </Stack>
-                </FormStep>
-                <FormStep label="Kubeconfig">
-                    <Stack gap={8}>
-                        <Heading level={2} justify="center">
-                            Connect your cluster
-                        </Heading>
-                        <Stack gap={3}>
-                            <FileInput
-                                label="Kubeconfig file"
-                                accept=".yaml,.yml"
-                                value={file}
-                                status={
-                                    fileRead.kind === 'error' ? { type: 'error', message: fileRead.message } : undefined
-                                }
-                                onChange={(files) => {
-                                    // Clear previous contents immediately so invalid or pending files cannot submit stale YAML.
-                                    const selected = Array.isArray(files) ? (files[0] ?? null) : files;
-                                    setFile(selected);
-                                    setFileRead({ kind: selected ? 'reading' : 'idle' });
-                                    setKubeconfig('');
-                                }}
-                            />
-                            <TextArea
-                                label="Kubeconfig"
-                                rows={8}
-                                value={kubeconfig}
-                                placeholder="Paste the Compute kubeconfig"
-                                isRequired
-                                isDisabled={fileRead.kind === 'reading'}
-                                isLoading={fileRead.kind === 'reading'}
-                                hasSpellCheck={false}
-                                onChange={setKubeconfig}
-                            />
+                    </Step>
+                    <Step label="Kubeconfig">
+                        <Stack gap={8}>
+                            <Heading level={2} justify="center">
+                                Connect your cluster
+                            </Heading>
+                            <Stack gap={3}>
+                                <FileInput
+                                    label="Kubeconfig file"
+                                    accept=".yaml,.yml"
+                                    value={file}
+                                    status={
+                                        fileRead.kind === 'error'
+                                            ? { type: 'error', message: fileRead.message }
+                                            : undefined
+                                    }
+                                    onChange={(files) => {
+                                        // Clear previous contents immediately so invalid or pending files cannot submit stale YAML.
+                                        const selected = Array.isArray(files) ? (files[0] ?? null) : files;
+                                        setFile(selected);
+                                        setFileRead({ kind: selected ? 'reading' : 'idle' });
+                                        setKubeconfig('');
+                                    }}
+                                />
+                                <TextArea
+                                    label="Kubeconfig"
+                                    rows={8}
+                                    value={kubeconfig}
+                                    placeholder="Paste the Compute kubeconfig"
+                                    isRequired
+                                    isDisabled={fileRead.kind === 'reading'}
+                                    isLoading={fileRead.kind === 'reading'}
+                                    hasSpellCheck={false}
+                                    onChange={setKubeconfig}
+                                />
+                            </Stack>
                         </Stack>
-                    </Stack>
-                </FormStep>
+                        <Button
+                            type="submit"
+                            label="Register"
+                            variant="primary"
+                            isDisabled={fileRead.kind === 'reading' || !kubeconfig.trim()}
+                        />
+                    </Step>
+                </Stepper>
             </Form>
         </Dialog>
     );

@@ -1,7 +1,5 @@
-import componentCatalog from '../lib/catalog';
 import type { RouteConfig } from '@react-router/dev/routes';
 import { documentationCategories } from '../lib/documentation';
-import type { NavigationTab } from '@/components/layouts/Platform';
 import {
     AppWindow,
     ArrowUpDown,
@@ -26,7 +24,6 @@ import {
     Layers,
     List,
     Menu,
-    MessageSquare,
     Package,
     PanelTop,
     Plug,
@@ -36,7 +33,6 @@ import {
     Users,
     Type,
     Waypoints,
-    Wrench,
     type LucideIcon,
 } from 'lucide-react';
 
@@ -47,94 +43,72 @@ type DocumentationPage = {
     children?: Array<{ path: string; label: string; icon: LucideIcon }>;
 };
 
-// Keep branding routes, navigation, and publication in their established reading order.
-export const brandingPages = [
-    { path: '/branding/assets', module: './routes/branding/Assets.tsx', label: 'Brand assets', icon: Image },
-    { path: '/branding/values', module: './routes/branding/Values.tsx', label: 'Values', icon: Gem },
-    {
-        path: '/branding/comunication',
-        module: './routes/branding/Communication.tsx',
-        label: 'Communication',
-        icon: MessageSquare,
-    },
-] as const;
+// Keep branding publication paths in their established reading order.
+export const brandingPaths: string[] = ['/branding/assets', '/branding/values', '/branding/comunication'];
 
-export const brandingPaths: string[] = brandingPages.map(({ path }) => path);
+// Keep legal publication paths in their established reading order.
+export const legalPaths: string[] = ['/terms', '/impressum', '/privacy'];
 
-// Keep legal routes, navigation, and publication in their established reading order.
-export const legalPages = [
-    { path: '/terms', module: './routes/legal/Terms.tsx', label: 'Terms', icon: FileText },
-    { path: '/impressum', module: './routes/legal/Impressum.tsx', label: 'Impressum', icon: Building2 },
-    { path: '/privacy', module: './routes/legal/Privacy.tsx', label: 'Privacy', icon: ShieldCheck },
-] as const;
+// Keep the use-case collection's reading order explicit.
+export const useCasePaths: string[] = ['/use-cases', '/use-cases/real-estate/property-acquisition-screening'];
 
-export const legalPaths: string[] = legalPages.map(({ path }) => path);
-
-export const userNavigation = [
-    { href: '/user/organizations', icon: Building2, label: 'Organizations' },
-    { href: '/user/settings', icon: Settings2, label: 'Settings' },
-] as const satisfies readonly NavigationTab[];
-
-export const adminPages = [
-    { id: 'admin-users', path: 'users', module: './routes/admin/Users.tsx', icon: Users, label: 'Users' },
-    {
-        id: 'admin-solutions',
-        path: 'solutions',
-        module: './routes/admin/Solutions.tsx',
-        icon: AppWindow,
-        label: 'Solutions',
-    },
-    {
-        id: 'admin-organizations',
-        path: 'organizations',
-        module: './routes/admin/Organizations.tsx',
-        icon: Building2,
-        label: 'Organizations',
-    },
-    { id: 'admin-compute', path: 'compute', module: './routes/admin/Compute.tsx', icon: Wrench, label: 'Compute' },
-    {
-        id: 'admin-operations',
-        path: 'operations',
-        module: './routes/admin/Operations.tsx',
-        icon: ArrowUpDown,
-        label: 'Operations',
-    },
-] as const;
-
-export const adminNavigation = adminPages.map(({ icon, label, path }) => ({
-    href: `/admin/${path}`,
-    icon,
-    label,
-})) satisfies readonly NavigationTab[];
-
-// Keep showcase routes and public page metadata in a build-safe catalog.
-export const useCasePages = [
-    {
-        path: '/use-cases/real-estate/property-acquisition-screening',
-        module: './routes/usecases/Screening.tsx',
-        label: 'Property Acquisition Screening',
-    },
-] as const;
-
-export const useCasePaths: string[] = ['/use-cases', ...useCasePages.map(({ path }) => path)];
-
-// Keep companion components available without adding standalone navigation entries.
-export { componentCatalog };
-
-// Derive website route identity from names without storing it in the SDK documentation catalog.
-export const componentDocumentation = componentCatalog
-    .filter((component) => !['ButtonGroup', 'CodeBlock'].includes(component.name))
-    .map((component) => ({
-        ...component,
-        label: component.name === 'Button' ? 'Buttons' : component.name,
-        slug:
-            component.name === 'Button'
-                ? 'buttons'
-                : component.name
-                      .replace(/([a-z])([A-Z])/g, '$1-$2')
-                      .replace(/\s+/g, '-')
-                      .toLowerCase(),
-    }));
+// Derive route identity from the website's published component pages.
+export const componentDocumentation = [
+    { name: 'Avatar', category: 'Display' },
+    { name: 'Badge', category: 'Display' },
+    { name: 'Button', category: 'Action' },
+    { name: 'Card', category: 'Layouts' },
+    { name: 'CheckboxInput', category: 'Form' },
+    { name: 'Collapsible', category: 'Layouts' },
+    { name: 'Currency', category: 'Display' },
+    { name: 'DateInput', category: 'Form' },
+    { name: 'Dialog', category: 'Layouts' },
+    { name: 'Divider', category: 'Display' },
+    { name: 'DropdownMenu', category: 'Action' },
+    { name: 'EmptyState', category: 'Display' },
+    { name: 'FileInput', category: 'Form' },
+    { name: 'FileViewer', category: 'Display' },
+    { name: 'Form', category: 'Form' },
+    { name: 'Functions', category: 'Runtime' },
+    { name: 'Grid', category: 'Layouts' },
+    { name: 'Heading', category: 'Display' },
+    { name: 'Hooks', category: 'Runtime' },
+    { name: 'Icon', category: 'Display' },
+    { name: 'IconButton', category: 'Action' },
+    { name: 'Image', category: 'Display' },
+    { name: 'Link', category: 'Action' },
+    { name: 'Menu', category: 'Layouts' },
+    { name: 'MetadataList', category: 'Display' },
+    { name: 'MoreMenu', category: 'Action' },
+    { name: 'MultiSelector', category: 'Form' },
+    { name: 'NumberInput', category: 'Form' },
+    { name: 'Pagination', category: 'Action' },
+    { name: 'ProgressBar', category: 'Display' },
+    { name: 'RadioList', category: 'Form' },
+    { name: 'Selector', category: 'Form' },
+    { name: 'Slider', category: 'Form' },
+    { name: 'Stack', category: 'Layouts' },
+    { name: 'Stepper', category: 'Layouts' },
+    { name: 'Switch', category: 'Form' },
+    { name: 'Table', category: 'Display' },
+    { name: 'Tabs', category: 'Layouts' },
+    { name: 'Text', category: 'Display' },
+    { name: 'TextArea', category: 'Form' },
+    { name: 'TextInput', category: 'Form' },
+    { name: 'TimeInput', category: 'Form' },
+    { name: 'Timestamp', category: 'Display' },
+    { name: 'Token', category: 'Display' },
+].map((component) => ({
+    ...component,
+    label: component.name === 'Button' ? 'Buttons' : component.name,
+    slug:
+        component.name === 'Button'
+            ? 'buttons'
+            : component.name
+                  .replace(/([a-z])([A-Z])/g, '$1-$2')
+                  .replace(/\s+/g, '-')
+                  .toLowerCase(),
+}));
 
 const componentIcons = new Map<string, LucideIcon>(
     Object.entries({
@@ -153,13 +127,11 @@ const componentIcons = new Map<string, LucideIcon>(
         FileInput: FileCode2,
         FileViewer: FileText,
         Form: FileText,
-        FormStep: Waypoints,
         Grid: Grip,
         Heading: Type,
         Icon: Gem,
         IconButton: Circle,
         Image,
-        Layout: AppWindow,
         Link: Globe,
         Menu,
         MetadataList: List,
@@ -217,13 +189,17 @@ export const documentationSections: Array<{ title: string; pages: Array<Document
             children:
                 category === 'Runtime'
                     ? undefined
-                    : componentDocumentation
-                          .filter((component) => component.category === category)
-                          .map((component) => ({
-                              path: `/docs/sdk/views/${component.slug}`,
-                              label: component.label,
-                              icon: componentIcons.get(component.name) ?? FileCode2,
-                          })),
+                    : componentDocumentation.flatMap((component) =>
+                          component.category === category
+                              ? [
+                                    {
+                                        path: `/docs/sdk/views/${component.slug}`,
+                                        label: component.label,
+                                        icon: componentIcons.get(component.name) ?? FileCode2,
+                                    },
+                                ]
+                              : []
+                      ),
         })),
     },
     {
@@ -246,9 +222,9 @@ export const documentationSections: Array<{ title: string; pages: Array<Document
 const viewDocumentationPaths = [
     '/docs/sdk/views',
     ...documentationCategories.flatMap((category) =>
-        componentDocumentation
-            .filter((component) => component.category === category)
-            .map(({ slug }) => `/docs/sdk/views/${slug}`)
+        componentDocumentation.flatMap((component) =>
+            component.category === category ? [`/docs/sdk/views/${component.slug}`] : []
+        )
     ),
 ];
 
@@ -271,7 +247,10 @@ export default [
     {
         file: './layouts/UseCases.tsx',
         children: [
-            ...useCasePages.map(({ path, module }) => ({ path: path.slice(1), file: module })),
+            {
+                path: 'use-cases/real-estate/property-acquisition-screening',
+                file: './routes/usecases/Screening.tsx',
+            },
             { path: 'use-cases/*', file: '../components/layouts/NotFound.tsx', id: 'use-cases-not-found' },
         ],
     },
@@ -307,8 +286,12 @@ export default [
     {
         file: './layouts/Legal.tsx',
         children: [
-            ...legalPages.map(({ path, module }) => ({ path: path.slice(1), file: module })),
-            ...brandingPages.map(({ path, module }) => ({ path: path.slice(1), file: module })),
+            { path: 'terms', file: './routes/legal/Terms.tsx' },
+            { path: 'impressum', file: './routes/legal/Impressum.tsx' },
+            { path: 'privacy', file: './routes/legal/Privacy.tsx' },
+            { path: 'branding/assets', file: './routes/branding/Assets.tsx' },
+            { path: 'branding/values', file: './routes/branding/Values.tsx' },
+            { path: 'branding/comunication', file: './routes/branding/Communication.tsx' },
         ],
     },
     {
@@ -336,7 +319,17 @@ export default [
             },
             {
                 file: './layouts/Admin.tsx',
-                children: adminPages.map(({ id, path, module }) => ({ id, path: `admin/${path}`, file: module })),
+                children: [
+                    { id: 'admin-users', path: 'admin/users', file: './routes/admin/Users.tsx' },
+                    { id: 'admin-solutions', path: 'admin/solutions', file: './routes/admin/Solutions.tsx' },
+                    {
+                        id: 'admin-organizations',
+                        path: 'admin/organizations',
+                        file: './routes/admin/Organizations.tsx',
+                    },
+                    { id: 'admin-compute', path: 'admin/compute', file: './routes/admin/Compute.tsx' },
+                    { id: 'admin-operations', path: 'admin/operations', file: './routes/admin/Operations.tsx' },
+                ],
             },
             {
                 file: './layouts/OrganizationAccess.tsx',

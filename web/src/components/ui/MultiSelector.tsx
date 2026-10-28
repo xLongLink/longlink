@@ -12,28 +12,28 @@ export function MultiSelector(
         defaultValue?: string[];
         onChange?: (value: string[]) => void;
         placeholder?: string;
-        size?: 'sm' | 'md' | 'lg';
         hasSelectAll?: boolean;
         hasSearch?: boolean;
-        hasClear?: boolean;
     }
 ) {
     // Astryx's hidden carriers already preserve repeated names and the themed option picker.
     const { defaultValue, ...control } = props;
     const field = useValue(props.value, defaultValue ?? [], props.onChange);
 
-    // Start with a plain multi-select; extra controls remain opt-in.
+    // Enable clearing while keeping search and select-all controls opt-in.
     return (
         <FormField {...props} fieldRef={field.ref} values={field.value}>
             <AstryxMultiSelector
                 {...control}
+                width="100%"
                 value={field.value}
                 onChange={field.onChange}
                 htmlName={props.name}
                 placeholder={props.placeholder ?? 'Select...'}
                 hasSelectAll={props.hasSelectAll ?? false}
                 hasSearch={props.hasSearch ?? false}
-                hasClear={props.hasClear ?? false}
+                hasClear
+                size="md"
                 isReadOnly={false}
                 isLabelHidden={false}
                 isRequired={props.required ?? false}

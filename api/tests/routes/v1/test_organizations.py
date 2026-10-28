@@ -512,8 +512,9 @@ async def test_get_organization_returns_invitations(
     # Arrange
     owner, invitee, regular_member = users
     organization = await create_organization(owner)
+    invitation = OrganizationInvitation(organization_id=organization.id, email=invitee.email, role=OrganizationRoles.write)
     async with session_scope() as session:
-        session.add(OrganizationInvitation(organization_id=organization.id, email=invitee.email, role=OrganizationRoles.write))
+        session.add(invitation)
         session.add(
             OrganizationInvitation(
                 organization_id=organization.id,
@@ -524,12 +525,6 @@ async def test_get_organization_returns_invitations(
         )
         session.add(UserOrganization(user_id=regular_member.id, organization_id=organization.id, role=OrganizationRoles.write))
         await session.commit()
-        invitation = await session.scalar(
-            select(OrganizationInvitation).where(
-                col(OrganizationInvitation.organization_id) == organization.id, col(OrganizationInvitation.email) == invitee.email
-            )
-        )
-        assert invitation is not None
 
     # Act
     response = await clients[0].get(f"/api/v1/organizations/{organization.id}")
@@ -719,13 +714,10 @@ async def test_organization_owner_revokes_pending_invitation(
     # Arrange
     owner, invitee = users[0], users[1]
     organization = await create_organization(owner)
+    invitation = OrganizationInvitation(organization_id=organization.id, email=invitee.email, role=OrganizationRoles.write)
     async with session_scope() as session:
-        session.add(OrganizationInvitation(organization_id=organization.id, email=invitee.email, role=OrganizationRoles.write))
+        session.add(invitation)
         await session.commit()
-        invitation = await session.scalar(
-            select(OrganizationInvitation).where(col(OrganizationInvitation.organization_id) == organization.id)
-        )
-        assert invitation is not None
 
     # Act
     response = await clients[0].delete(f"/api/v1/organizations/{organization.id}/invitations/{invitation.id}")
@@ -744,14 +736,11 @@ async def test_organization_maintainer_cannot_revoke_invitation_above_their_role
     # Arrange
     owner, maintainer, invitee = users
     organization = await create_organization(owner)
+    invitation = OrganizationInvitation(organization_id=organization.id, email=invitee.email, role=OrganizationRoles.owner)
     async with session_scope() as session:
         session.add(UserOrganization(user_id=maintainer.id, organization_id=organization.id, role=OrganizationRoles.maintain))
-        session.add(OrganizationInvitation(organization_id=organization.id, email=invitee.email, role=OrganizationRoles.owner))
+        session.add(invitation)
         await session.commit()
-        invitation = await session.scalar(
-            select(OrganizationInvitation).where(col(OrganizationInvitation.organization_id) == organization.id)
-        )
-        assert invitation is not None
 
     # Act
     response = await clients[1].delete(f"/api/v1/organizations/{organization.id}/invitations/{invitation.id}")
@@ -772,13 +761,10 @@ async def test_organization_member_cannot_revoke_another_organizations_invitatio
     first_owner, second_owner, invitee = users
     first_organization = await create_organization(first_owner, name="first")
     second_organization = await create_organization(second_owner, name="second")
+    invitation = OrganizationInvitation(organization_id=second_organization.id, email=invitee.email, role=OrganizationRoles.write)
     async with session_scope() as session:
-        session.add(OrganizationInvitation(organization_id=second_organization.id, email=invitee.email, role=OrganizationRoles.write))
+        session.add(invitation)
         await session.commit()
-        invitation = await session.scalar(
-            select(OrganizationInvitation).where(col(OrganizationInvitation.organization_id) == second_organization.id)
-        )
-        assert invitation is not None
 
     # Act
     response = await clients[0].delete(f"/api/v1/organizations/{first_organization.id}/invitations/{invitation.id}")

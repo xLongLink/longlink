@@ -5,6 +5,7 @@ from sqlalchemy import event
 from longlink.app import LongLink
 from sqlalchemy.engine import Engine
 from longlink.testclient import TestClient as SolutionTestClient
+from fsspec.implementations.dirfs import DirFileSystem
 
 
 @pytest.mark.usefixtures("solution_source")
@@ -14,7 +15,10 @@ def test_solution_test_client_replaces_development_services_with_testing_service
     # Arrange
     monkeypatch.setenv("LONGLINK_ENV", "development")
     app = LongLink()
-    assert "file" in app.state.longlink.storage.protocol
+    assert isinstance(app.state.longlink.storage, DirFileSystem)
+    assert "file" in app.state.longlink.storage.fs.protocol
+    assert Path(app.state.longlink.storage.path) == Path.cwd() / ".storage"
+    assert Path(".storage").is_dir()
     disposed: list[Engine] = []
 
     @app.get("/api/me", response_model=str)

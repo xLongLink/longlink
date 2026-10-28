@@ -1,6 +1,5 @@
 import src.database.services.organizations
 from uuid import UUID
-from fastapi import HTTPException
 from sqlmodel import col
 from src.utils import stripe
 from sqlalchemy import delete as sql_delete
@@ -63,34 +62,26 @@ async def reconcile(organization_id: UUID) -> None:
 async def delete(organization_id: UUID) -> None:
     """Drain runtime activity before destroying the Organization's boundaries."""
 
-    # Expire hosted card-registration attempts before removing the Organization.
-    async with session_scope() as session:
-        existing = await session.get(Organization, organization_id)
-        if existing is None:
-            return
-        if existing.deleted_at is None:
-            raise HTTPException(status_code=403, detail="Active Organizations cannot be deleted by lifecycle cleanup")
-        if existing.stripe_customer_id is not None:
-            async with stripe.client() as connection:
-                checkouts = await connection.v1.checkout.sessions.list_async({"customer": existing.stripe_customer_id, "limit": 100})
-                async for hosted in checkouts.auto_paging_iter():
-                    if hosted.status == "open":
-                        await connection.v1.checkout.sessions.expire_async(hosted.id)
-
     # Delegate deletion eligibility and lease admission to the locked database scope.
     async with databases.deleting(organization_id):
         # An absent tombstone means a previous execution completed cleanup.
         async with session_scope() as session:
             target = await src.database.services.organizations.infrastructure(session, organization_id)
-
-            # Validate the tombstone before collecting every retained Solution account.
             if target is None:
                 return
             organization, compute = target
-            if organization.deleted_at is None:
-                raise HTTPException(status_code=403, detail="Active Organizations cannot be deleted by lifecycle cleanup")
+
+            # Collect every retained Solution account before external cleanup.
             result = await session.scalars(select(col(Solution.id)).where(col(Solution.organization_id) == organization_id))
             solution_ids = result.all()
+
+        # Expire hosted card-registration attempts before removing the Organization.
+        if organization.stripe_customer_id is not None:
+            async with stripe.client() as connection:
+                checkouts = await connection.v1.checkout.sessions.list_async({"customer": organization.stripe_customer_id, "limit": 100})
+                async for hosted in checkouts.auto_paging_iter():
+                    if hosted.status == "open":
+                        await connection.v1.checkout.sessions.expire_async(hosted.id)
 
         # Release the read session before acquiring external cleanup resources.
         cluster = Kubernetes(compute.kubeconfig)

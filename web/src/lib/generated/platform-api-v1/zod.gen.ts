@@ -126,6 +126,44 @@ export const zConsent = z.object({
 });
 
 /**
+ * CurrentUser
+ *
+ * Include personal preferences only in the account's own profile.
+ */
+export const zCurrentUser = z.object({
+    id: z.uuid(),
+    name: z.string(),
+    email: z.email(),
+    avatar: z.string(),
+    administrator: z.boolean(),
+    theme: z.enum([
+        'system',
+        'light',
+        'dark'
+    ]),
+    accent: z.enum([
+        'neutral',
+        'red',
+        'orange',
+        'amber',
+        'yellow',
+        'lime',
+        'green',
+        'emerald',
+        'teal',
+        'cyan',
+        'sky',
+        'blue',
+        'indigo',
+        'violet',
+        'purple',
+        'fuchsia',
+        'pink',
+        'rose'
+    ])
+});
+
+/**
  * EmailPayload
  *
  * Return one verified email address.
@@ -316,17 +354,20 @@ export const zOrganizationTagMove = z.object({
 /**
  * OrganizationUsage
  *
- * Describe current membership usage and its month-end pricing.
+ * Describe current Organization usage, limits, and month-end pricing.
  */
 export const zOrganizationUsage = z.object({
     free_users: z.int().optional().default(5),
     free_storage_bytes: z.int().optional().default(1073741824),
     free_database_bytes: z.int().optional().default(104857600),
-    user_monthly_price: z.int().optional().default(500),
-    storage_gib_monthly_price: z.int().optional().default(10),
-    database_gib_monthly_price: z.int().optional().default(100),
+    user_monthly_price: z.int().optional().default(1000),
+    storage_mib_monthly_price: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/).optional().default('0.02'),
+    database_mib_monthly_price: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/).optional().default('0.1'),
     users: z.int().gte(0),
-    stripe_enabled: z.boolean()
+    solutions: z.int().gte(0),
+    max_solutions: z.int().optional().default(9),
+    stripe_enabled: z.boolean(),
+    has_payment_method: z.boolean()
 });
 
 /**
@@ -765,7 +806,32 @@ export const zUserSummary = z.object({
  */
 export const zUserUpdate = z.object({
     name: z.string().min(1).max(255).nullish(),
-    avatar: z.string().max(2048).nullish()
+    avatar: z.string().max(2048).nullish(),
+    theme: z.enum([
+        'system',
+        'light',
+        'dark'
+    ]).nullish(),
+    accent: z.enum([
+        'neutral',
+        'red',
+        'orange',
+        'amber',
+        'yellow',
+        'lime',
+        'green',
+        'emerald',
+        'teal',
+        'cyan',
+        'sky',
+        'blue',
+        'indigo',
+        'violet',
+        'purple',
+        'fuchsia',
+        'pink',
+        'rose'
+    ]).nullish()
 });
 
 /**

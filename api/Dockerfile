@@ -1,4 +1,4 @@
-FROM ghcr.io/voidzero-dev/vite-plus:1.2.0@sha256:72da2a35e67d6d73fb5110466ee21741c847a1929777e6ca1499862d2f0db5e8 AS web-builder
+FROM ghcr.io/voidzero-dev/vite-plus:1.4.0@sha256:5dfa2031f7d014b6376407fd99e0747bed329d792c79c184a65ec9a0765bee0e AS web-builder
 
 WORKDIR /repo/web
 COPY --chown=vp:vp web/package.json web/bun.lock ./
@@ -9,7 +9,7 @@ ARG VERSION=v0.0.0
 ENV VERSION=${VERSION}
 ARG VITE_SITE_URL=https://www.longlink.dev
 ENV VITE_SITE_URL=${VITE_SITE_URL}
-RUN vp run build:api:container
+RUN vp run build:api
 
 FROM python:3.14.8-slim@sha256:a2b82f3c48559aa0a8446d9af49826b6e2b2016f4cd2afabfe6013ec53729170
 
@@ -24,12 +24,15 @@ ENV PATH="/app/.venv/bin:${PATH}"
 ENV HOME="/tmp"
 ENV PYTHONDONTWRITEBYTECODE="1"
 
-# Remove unused pip, system utilities, and their unused libraries.
+# Refresh certificate trust and remove unused pip, system utilities, and their unused libraries.
 RUN /usr/local/bin/python -m pip uninstall --yes pip \
+    && apt-get update \
+    && apt-get install --yes --no-install-recommends ca-certificates \
     && apt-get remove --yes --no-auto-remove --allow-remove-essential \
-        libblkid1 liblastlog2-2 libmount1 libsmartcols1 mount ncurses-bin util-linux
+        libblkid1 liblastlog2-2 libmount1 libsmartcols1 mount ncurses-bin util-linux \
+    && rm -rf /var/lib/apt/lists/*
 
-COPY --from=ghcr.io/astral-sh/uv:0.11.32@sha256:df4cae8f3a96d175e2e5f992e597550000edbe78fdc2594d5cd8de1a217f504c /uv /usr/local/bin/uv
+COPY --from=ghcr.io/astral-sh/uv:0.13.4@sha256:9f130421e930bfbdc563c00740466603f8723158e90297d07957c2294640262b /uv /usr/local/bin/uv
 
 COPY api/pyproject.toml api/uv.lock /app/
 COPY sdk/pyproject.toml sdk/README.md sdk/LICENSE /sdk/

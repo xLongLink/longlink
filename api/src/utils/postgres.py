@@ -51,13 +51,11 @@ class Postgres:
         self._certificate = certificate
 
     @contextlib.contextmanager
-    def url(self, database: str, search_path: str | None = None) -> Generator[URL]:
+    def url(self, database: str) -> Generator[URL]:
         """Yield a libpq URL whose CA file lives until exit; dispose all consuming engines inside this context."""
 
         # Derive operation-local settings without accumulating changes on the cluster URL.
         url = self._url.set(database=database)
-        if search_path is not None:
-            url = url.update_query_dict({"options": f"{self._url.query['options']} -c search_path={search_path}"})
 
         # Local connections need no certificate file; hosted connections must verify the server hostname and CA.
         if self._certificate is None:
@@ -67,16 +65,14 @@ class Postgres:
                 yield url.update_query_dict({"sslrootcert": name})
 
     @contextlib.asynccontextmanager
-    async def connection(
-        self, database: str, *, autocommit: bool = False, search_path: str | None = None
-    ) -> AsyncGenerator[AsyncConnection, None]:
+    async def connection(self, database: str, *, autocommit: bool = False) -> AsyncGenerator[AsyncConnection, None]:
         """Open one managed SQLAlchemy connection for a database.
 
         The provisioning utility owns the engine lifecycle and disposes it after every operation.
         """
 
         # Build a short-lived engine with autocommit only for PostgreSQL database lifecycle statements.
-        with self.url(database, search_path=search_path) as url:
+        with self.url(database) as url:
             engine = create_async_engine(url, hide_parameters=True, **({"isolation_level": "AUTOCOMMIT"} if autocommit else {}))
 
             # Ensure the operation-scoped engine is disposed before removing its CA file.

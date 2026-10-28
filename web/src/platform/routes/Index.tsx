@@ -1,172 +1,157 @@
-import type { ReactNode } from 'react';
 import { Page } from '@/components/Page';
-import { Card } from '@astryxdesign/core/Card';
 import { Grid } from '@astryxdesign/core/Grid';
-import { Icon } from '@astryxdesign/core/Icon';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
-import { Showcase } from '@/components/Showcase';
+import { ArrowRight, Mail } from 'lucide-react';
+import { Docker } from '@/components/svg/Docker';
+import { Python } from '@/components/svg/Python';
 import { Stack } from '@astryxdesign/core/Stack';
+import { Fastapi } from '@/components/svg/Fastapi';
 import { Button } from '@astryxdesign/core/Button';
+import { Foundation } from '@/components/Foundation';
 import { Heading } from '@astryxdesign/core/Heading';
 import { Section } from '@astryxdesign/core/Section';
-import { ArrowRight, Code2, Minimize2, ServerCog, ShieldCheck, Split } from 'lucide-react';
+import { ReactDark } from '@/components/svg/ReactDark';
+import { Kubernetes } from '@/components/svg/Kubernetes';
+import { Postgresql } from '@/components/svg/Postgresql';
+import { Typescript } from '@/components/svg/Typescript';
+import { Tailwindcss } from '@/components/svg/Tailwindcss';
 
 const homeDescription =
     'LongLink is the open-source foundation for building, deploying, and operating dedicated business software in Python.';
 
-/** Renders a platform capability card. */
-function CapabilityCard({ title, description, icon }: { title: string; description: ReactNode; icon: typeof Code2 }) {
-    return (
-        <Card className="rounded-none bg-transparent" minHeight={240} padding={6}>
-            <Stack gap={8} height="100%" justify="between">
-                <Icon color="tertiary" icon={icon} size="lg" />
-                <Stack gap={3}>
-                    <Heading className="font-(family-name:--font-family-handwritten) tracking-wide uppercase" level={2}>
-                        {title}
-                    </Heading>
-                    <Text as="p" color="secondary" textWrap="pretty">
-                        {description}
-                    </Text>
-                </Stack>
-            </Stack>
-        </Card>
-    );
-}
+const technologies = [
+    { name: 'Python', logo: Python, position: 'top-6 left-2 sm:top-16 sm:left-10' },
+    { name: 'FastAPI', logo: Fastapi, position: 'top-6 right-2 sm:top-10 sm:right-16' },
+    { name: 'React', logo: ReactDark, position: 'bottom-6 left-2 sm:bottom-12 sm:left-20' },
+    { name: 'PostgreSQL', logo: Postgresql, position: 'right-2 bottom-6 sm:right-10 sm:bottom-16' },
+    { name: 'Docker', logo: Docker, position: 'top-6 left-1/3 sm:top-0 sm:left-1/4' },
+    { name: 'Kubernetes', logo: Kubernetes, position: 'top-6 right-1/3 sm:top-0 sm:right-1/4' },
+    { name: 'TypeScript', logo: Typescript, position: 'bottom-6 left-1/3 sm:bottom-0 sm:left-1/3' },
+    { name: 'Tailwind CSS', logo: Tailwindcss, position: 'right-1/3 bottom-6 sm:right-1/4 sm:bottom-0' },
+];
 
 /** Renders the public home page. */
 export default function Home() {
     return (
         <Page description={homeDescription} title="LongLink | Build and Operate business solutions">
             <Stack as="main">
-                <Section className="pt-16 sm:pt-24" paddingInline={6} paddingBlockEnd={10} variant="transparent">
-                    <Stack className="mx-auto text-center" maxWidth={1000} width="100%" gap={6} hAlign="center">
+                <Section
+                    className="relative isolate -mt-(--public-navigation-height) flex flex-col overflow-hidden"
+                    padding={0}
+                    variant="transparent"
+                >
+                    <img
+                        alt=""
+                        className="absolute inset-0 size-full object-cover"
+                        fetchPriority="high"
+                        height={1086}
+                        src="/images/landing-skyline.webp"
+                        width={1448}
+                    />
+                    <Stack
+                        className="relative flex-1 bg-linear-to-t from-black via-black/50 to-transparent p-6 sm:p-10"
+                        hAlign="start"
+                        justify="end"
+                        minHeight="100svh"
+                    >
+                        <Stack className="max-w-xl text-left" gap={6} hAlign="start">
+                            <Heading
+                                className="text-4xl tracking-tight text-white sm:text-6xl"
+                                justify="start"
+                                level={1}
+                                textWrap="balance"
+                                type="display-2"
+                            >
+                                Your business.
+                                <br />
+                                Defined as code.
+                            </Heading>
+                            <Text as="p" className="max-w-md text-lg text-white/80 sm:text-xl" textWrap="pretty">
+                                Design, build, operate, and improve.
+                                <br />
+                                One source of truth for how work gets done.
+                            </Text>
+                            <Text as="p" className="text-white/80" type="supporting">
+                                Currently in testing Beta.{' '}
+                                <Link
+                                    as="a"
+                                    color="inherit"
+                                    href="https://github.com/xLongLink/longlink"
+                                    hasUnderline
+                                    isExternalLink
+                                    type="inherit"
+                                >
+                                    Star LongLink on GitHub.
+                                </Link>
+                            </Text>
+                        </Stack>
+                    </Stack>
+                </Section>
+                <Foundation />
+                <Section paddingInline={6} paddingBlock={10} variant="transparent">
+                    <Stack className="mx-auto" maxWidth={1200} gap={8} hAlign="center">
+                        <img
+                            alt="An architectural drawing of an orderly library with connected workspaces and sweeping staircases."
+                            className="aspect-2/1 w-full object-cover sm:aspect-5/2"
+                            height={941}
+                            loading="lazy"
+                            src="/images/organized-work.webp"
+                            width={1672}
+                        />
                         <Text
                             as="p"
-                            className="text-yellow-vivid"
-                            justify="center"
-                            textWrap="balance"
-                            type="supporting"
+                            className="max-w-3xl text-center text-xl sm:text-2xl"
+                            color="secondary"
+                            textWrap="pretty"
+                            type="large"
                         >
-                            Currently in testing Beta.{' '}
-                            <Link
-                                as="a"
-                                color="inherit"
-                                href="https://github.com/xLongLink/longlink"
-                                hasUnderline
-                                isExternalLink
-                                type="inherit"
-                            >
-                                Star LongLink on GitHub.
-                            </Link>
-                        </Text>
-                        <Heading
-                            className="flex flex-wrap items-center justify-center gap-2 font-(family-name:--font-family-handwritten) text-3xl tracking-wide uppercase sm:text-5xl"
-                            justify="center"
-                            level={1}
-                            textWrap="balance"
-                            type="display-2"
-                        >
-                            <Text hasCapsize type="inherit">
-                                Design
-                            </Text>
-                            <ArrowRight aria-hidden="true" className="size-6 shrink-0 sm:size-8" />
-                            <Text hasCapsize type="inherit">
-                                Build
-                            </Text>
-                            <ArrowRight aria-hidden="true" className="size-6 shrink-0 sm:size-8" />
-                            <Text hasCapsize type="inherit">
-                                Operate
-                            </Text>
-                            <ArrowRight aria-hidden="true" className="size-6 shrink-0 sm:size-8" />
-                            <Text hasCapsize type="inherit">
-                                Improve
-                            </Text>
-                        </Heading>
-                        <Text as="p" className="text-lg sm:text-2xl" color="secondary" textWrap="pretty">
-                            <Text display="block" type="inherit">
-                                The complete business process lifecycle, defined as code
-                            </Text>
-                            <Text display="block" type="inherit">
-                                One source of truth for how work gets done
-                            </Text>
+                            Think about how easy it is to find a book in a library.
+                            <br />
+                            We create the tools you need to organize and validate your data, documents, and processes.
                         </Text>
                     </Stack>
                 </Section>
-                <Showcase />
-                <Section variant="transparent" paddingInline={6} paddingBlock={10}>
-                    <Stack className="mx-auto" maxWidth={1000} gap={4}>
-                        <Heading
-                            level={2}
-                            justify="center"
-                            textWrap="balance"
-                            className="font-(family-name:--font-family-handwritten)"
-                        >
-                            Create the tools your business needs
-                        </Heading>
-                        <Grid columns={{ minWidth: 280, max: 2 }} gap={4}>
-                            <CapabilityCard
-                                description="Complete solutions using python and your favorite developer tools"
-                                icon={Code2}
-                                title="Build"
-                            />
-                            <CapabilityCard
-                                description={
-                                    <>
-                                        All your solutions in one place,
-                                        <br />
-                                        with clear boundaries and a complete overview
-                                    </>
-                                }
-                                icon={ServerCog}
-                                title="Operate"
-                            />
-                        </Grid>
-                        <Grid columns={{ minWidth: 240, max: 3 }} gap={4}>
-                            <CapabilityCard
-                                description="Processes are clear, easy to operate, and cheap to maintain"
-                                icon={Minimize2}
-                                title="Keep it Simple"
-                            />
-                            <CapabilityCard
-                                description="Full transparency over the process and its data"
-                                icon={ShieldCheck}
-                                title="Own the Process"
-                            />
-                            <CapabilityCard
-                                description="Clear distinction between a human decision and a machine task"
-                                icon={Split}
-                                title="Clear Boundaries"
-                            />
-                        </Grid>
-                    </Stack>
-                </Section>
-                <Section padding={6} paddingBlock={10} variant="transparent">
+                <Section className="py-16 sm:py-24" paddingInline={6} variant="transparent">
                     <Stack
-                        className="mx-auto text-center"
+                        className="relative mx-auto py-32 text-center sm:py-40"
                         gap={6}
                         hAlign="center"
                         maxWidth={1000}
-                        paddingBlock={8}
                         width="100%"
                     >
+                        {technologies.map((technology) => (
+                            <technology.logo
+                                key={technology.name}
+                                aria-label={technology.name}
+                                role="img"
+                                className={`absolute size-10 opacity-80 motion-safe:technology-float sm:size-14 ${technology.position}`}
+                                height={56}
+                                width={56}
+                            />
+                        ))}
                         <Text aria-hidden="true" className="text-xl leading-none">
                             🇨🇭
                         </Text>
-                        <Heading
-                            className="font-(family-name:--font-family-handwritten) tracking-wide uppercase"
-                            level={2}
-                            textWrap="balance"
-                            justify="center"
-                        >
-                            Made in Switzerland
-                        </Heading>
+                        <Stack gap={0} hAlign="center">
+                            <Heading
+                                className="font-(family-name:--font-family-handwritten) tracking-wide uppercase"
+                                level={2}
+                                textWrap="balance"
+                                justify="center"
+                            >
+                                Made in Switzerland
+                            </Heading>
+                            <Text as="p" color="secondary" textWrap="balance">
+                                Using open-source technologies
+                            </Text>
+                        </Stack>
                         <Grid columns={2} gap={3}>
                             <Button
                                 className="w-full"
-                                endContent={<ArrowRight aria-hidden="true" size={16} />}
-                                href="/blog/why-longlink/"
-                                label="Why LongLink"
+                                endContent={<Mail aria-hidden="true" size={16} />}
+                                href="mailto:info@longlink.dev"
+                                label="Contact Us"
                                 variant="secondary"
                             />
                             <Button

@@ -24,7 +24,7 @@ def router(manifest: ViewManifest) -> APIRouter:
 
         return {"ok": True}
 
-    @routes.get("/views.json", response_model=ViewManifest)
+    @routes.get("/views.json", response_model=ViewManifest, response_model_exclude_none=True)
     async def get_views() -> ViewManifest:
         """Return the registered SDK runtime views."""
 

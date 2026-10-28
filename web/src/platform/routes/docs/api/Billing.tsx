@@ -4,8 +4,8 @@ import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Heading } from '@astryxdesign/core/Heading';
 import { Blockquote } from '@astryxdesign/core/Blockquote';
-import { DocumentationArticle } from '@/components/Article';
 import { Table, proportional } from '@astryxdesign/core/Table';
+import { DocumentationArticle } from '@/components/layouts/Article';
 
 const article = {
     title: 'Billing | LongLink Platform Documentation',
@@ -64,12 +64,18 @@ export default function Billing() {
                     Invoices
                 </Heading>
                 <Text as="p">
-                    Stripe charges your default card monthly in CHF for usage above the free amounts. If everything
-                    stays within those amounts, no invoice is created.
+                    Once a card is registered, a monthly invoice is created in CHF. Stripe charges your default card for
+                    usage above the free amounts. If everything stays within those amounts, the invoice shows CHF 0 and
+                    no payment is taken.
+                </Text>
+                <Text as="p">
+                    Invoices list month-end user counts and storage quantities with their unit prices. Billable database
+                    and file storage are rounded up to whole MiB after subtracting the free allowances. A free-tier
+                    discount below the subtotal keeps usage within the free allowances at CHF 0.
                 </Text>
                 <Text as="p">
                     Owners can open Billing → Invoices to view invoices and payment status. Select an invoice number to
-                    open it, or PDF to download a copy when available.
+                    open it, or PDF to view a copy in a new tab when available.
                 </Text>
                 <Text as="p">
                     Contact{' '}

@@ -38,12 +38,6 @@ export default function TextAreaPage() {
                     description: 'Prevents interaction and excludes the field from submission.',
                 },
                 {
-                    name: 'width',
-                    type: 'string | number',
-                    description:
-                        'Width of the field (number = pixels, string used as-is, e.g. "100%"). Sizes the whole field (label, control, and status) so they stay aligned.',
-                },
-                {
                     name: 'value',
                     type: 'string',
                     description: 'Current value of the textarea.',
@@ -51,7 +45,7 @@ export default function TextAreaPage() {
                 {
                     name: 'defaultValue',
                     type: 'string',
-                    description: 'The defaultValue prop.',
+                    description: 'Initial value.',
                 },
                 {
                     name: 'onChange',
@@ -75,15 +69,9 @@ export default function TextAreaPage() {
                         'Maximum Unicode code points, matching Python string length. Validates without truncating input.',
                 },
                 {
-                    name: 'hasAutoFocus',
-                    type: 'boolean',
-                    description: 'Automatically focuses the textarea on mount.',
-                },
-                {
                     name: 'autoComplete',
                     type: 'string',
-                    description:
-                        'The native autocomplete attribute, forwarded to the textarea unchanged. Does not affect the controlled value.',
+                    description: 'Native autocomplete hint.',
                 },
             ]}
             examples={[

@@ -1,9 +1,10 @@
 import asyncio
 import contextlib
 from uuid import UUID
+from stripe import InvalidRequestError
 from decimal import ROUND_HALF_UP, Decimal
 from fastapi import HTTPException
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 from sqlmodel import col
 from src.utils import s3, dates, stripe
 from sqlalchemy import select, update
@@ -21,12 +22,12 @@ from src.database.models.invoices import Invoice
 from src.database.models.organizations import Organization
 
 
-def storage_amount(used: int, included: int, rate: int) -> int:
-    """Round excess bytes to CHF centimes using the monthly GiB rate."""
+def storage_quantity(used: int) -> int:
+    """Round nonnegative storage bytes up to whole MiB."""
 
     if used < 0:
         raise ValueError("Storage usage cannot be negative")
-    return int((Decimal(max(0, used - included)) * rate / 1024**3).quantize(Decimal("1"), rounding=ROUND_HALF_UP))
+    return (used + 1024**2 - 1) // 1024**2
 
 
 async def snapshot(session: AsyncSession, organization_id: UUID, period_end: datetime) -> None:
@@ -63,7 +64,7 @@ async def snapshot(session: AsyncSession, organization_id: UUID, period_end: dat
         database_bytes = await database.usage(organization_id)
         storage_bytes = await storage.usage(Storage.bucket_name(organization_id))
 
-    # Freeze monetary amounts as well as measurements so later price changes cannot alter retries.
+    # Retain measured usage for issuance and retries.
     invoice = Invoice(
         organization_id=organization_id,
         customer_id=customer_id,
@@ -71,12 +72,8 @@ async def snapshot(session: AsyncSession, organization_id: UUID, period_end: dat
         users=users,
         database_bytes=database_bytes,
         storage_bytes=storage_bytes,
-        user_amount=max(0, users - pricing.FREE_USERS) * pricing.USER_MONTHLY_PRICE,
-        database_amount=storage_amount(database_bytes, pricing.FREE_DATABASE_BYTES, pricing.DATABASE_GIB_MONTHLY_PRICE),
-        storage_amount=storage_amount(storage_bytes, pricing.FREE_STORAGE_BYTES, pricing.STORAGE_GIB_MONTHLY_PRICE),
     )
-    if invoice.user_amount + invoice.database_amount + invoice.storage_amount > 0:
-        session.add(invoice)
+    session.add(invoice)
     organization.invoice_due_at = dates.next_month(period_end)
     await session.commit()
 
@@ -122,21 +119,36 @@ async def issue(session: AsyncSession, invoice_id: UUID) -> None:
 
         # Already finalized invoices remain Stripe's responsibility; never create a replacement charge.
         if remote.status == "draft":
-            items = await connection.v1.invoice_items.list_async({"customer": invoice.customer_id, "invoice": remote.id, "limit": 100})
+            items = await connection.v1.invoice_items.list_async({"invoice": remote.id, "limit": 100})
             existing_items = [item async for item in items.auto_paging_iter()]
-            period_start = (invoice.period_end - timedelta(days=1)).replace(day=1)
-            for resource, label, amount in (
-                ("users", "Additional users", invoice.user_amount),
-                ("database", "Excess database storage", invoice.database_amount),
-                ("storage", "Excess file storage", invoice.storage_amount),
+            lines = []
+            discount = 0
+            total = 0
+
+            # Apply current pricing to the measured usage and cap free-tier credits at usage charges.
+            for resource, label, used, included, rate, unit in (
+                ("users", "Users", invoice.users, pricing.FREE_USERS, pricing.USER_MONTHLY_PRICE, "users"),
+                ("database", "Database", invoice.database_bytes, pricing.FREE_DATABASE_BYTES, pricing.DATABASE_MIB_MONTHLY_PRICE, "MiB"),
+                ("storage", "File storage", invoice.storage_bytes, pricing.FREE_STORAGE_BYTES, pricing.STORAGE_MIB_MONTHLY_PRICE, "MiB"),
             ):
-                if amount == 0:
-                    continue
+                quantity = used if resource == "users" else storage_quantity(used)
+                excess = max(0, used - included)
+                billable = excess if resource == "users" else storage_quantity(excess)
+                unit_price = Decimal(rate)
+                gross = (quantity * unit_price).quantize(Decimal("1"), rounding=ROUND_HALF_UP)
+                net = (billable * unit_price).quantize(Decimal("1"), rounding=ROUND_HALF_UP)
+                description = label if resource == "users" else f"{label} ({unit})"
+                lines.append((resource, description, quantity, unit_price, int(gross)))
+                discount += int(gross - net)
+                total += int(net)
+
+            for resource, label, quantity, rate, amount in lines:
                 matched = [item for item in existing_items if (item.to_dict().get("metadata") or {}).get("resource") == resource]
                 if matched:
                     if (
                         len(matched) != 1
                         or matched[0].amount != amount
+                        or matched[0].quantity != quantity
                         or (matched[0].to_dict().get("metadata") or {}).get("longlink_invoice_id") != str(invoice.id)
                     ):
                         raise HTTPException(status_code=409, detail="Stripe invoice items require administrator review")
@@ -148,17 +160,50 @@ async def issue(session: AsyncSession, invoice_id: UUID) -> None:
                         "customer": invoice.customer_id,
                         "invoice": remote.id,
                         "currency": "chf",
-                        "amount": amount,
-                        "description": f"{label} — {period_start:%B %Y} (month-end usage)",
-                        "period": {"start": int(period_start.timestamp()), "end": int(invoice.period_end.timestamp())},
+                        "quantity": quantity,
+                        "unit_amount_decimal": str(rate),
+                        "description": label,
                         "metadata": {"longlink_invoice_id": str(invoice.id), "resource": resource},
                     },
                     options={"idempotency_key": f"invoice:{invoice.id}:{resource}"},
                 )
 
-            # Unexpected edits must not silently change the amount authorized by the usage snapshot.
+            # Recover the same invoice-specific discount after interrupted requests.
+            if discount > 0:
+                coupon_id = f"free_{invoice.id.hex}"
+                try:
+                    coupon = await connection.v1.coupons.retrieve_async(coupon_id)
+                except InvalidRequestError as error:
+                    if error.code != "resource_missing":
+                        raise
+                    coupon = await connection.v1.coupons.create_async(
+                        {
+                            "id": coupon_id,
+                            "name": "Free-tier discount",
+                            "currency": "chf",
+                            "duration": "once",
+                            "amount_off": discount,
+                            "metadata": {"longlink_invoice_id": str(invoice.id)},
+                        },
+                        options={"idempotency_key": f"invoice:{invoice.id}:coupon"},
+                    )
+                if (
+                    coupon.amount_off != discount
+                    or coupon.currency != "chf"
+                    or (coupon.to_dict().get("metadata") or {}).get("longlink_invoice_id") != str(invoice.id)
+                ):
+                    raise HTTPException(status_code=409, detail="Stripe invoice discount does not match measured usage")
+                await connection.v1.invoices.update_async(
+                    remote.id, {"discounts": [{"coupon": coupon.id}]}, options={"idempotency_key": f"invoice:{invoice.id}:discount"}
+                )
+            else:
+                await connection.v1.invoices.update_async(
+                    remote.id, {"discounts": ""}, options={"idempotency_key": f"invoice:{invoice.id}:discount"}
+                )
+
+            # Reject unexpected edits that change the calculated invoice total.
             remote = await connection.v1.invoices.retrieve_async(remote.id)
-            if remote.total != invoice.user_amount + invoice.database_amount + invoice.storage_amount:
+            if remote.total != total:
                 raise HTTPException(status_code=409, detail="Stripe invoice total does not match measured usage")
             await connection.v1.invoices.finalize_invoice_async(
                 remote.id, {"auto_advance": True}, options={"idempotency_key": f"invoice:{invoice.id}:finalize"}
@@ -191,7 +236,7 @@ async def run() -> None:
                     async with session_scope() as session:
                         await snapshot(session, organization_id, period_end)
 
-            # Frozen invoices retry independently of later membership, storage changes, or deleted Organizations.
+            # Measured usage retries independently of later membership, storage changes, or deleted Organizations.
             async with session_scope() as session:
                 result = await session.scalars(select(col(Invoice.id)).where(col(Invoice.issued_at).is_(None)))
                 invoice_ids = result.all()

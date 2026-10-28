@@ -23,26 +23,22 @@ export default function CollapsiblePage() {
                 {
                     name: 'defaultIsOpen',
                     type: 'boolean',
-                    description:
-                        'Default open state for standalone uncontrolled usage. Ignored when value binds the item to a surrounding CollapsibleGroup.',
+                    description: 'Initial open state.',
                 },
                 {
                     name: 'isOpen',
                     type: 'boolean',
-                    description:
-                        'Controlled open state for standalone usage. Ignored when value binds the item to a surrounding CollapsibleGroup.',
+                    description: 'Controlled open state.',
                 },
                 {
                     name: 'isDisabled',
                     type: 'boolean',
-                    description:
-                        "Disable the item so its trigger can't be toggled (dimmed, aria-disabled, and out of the tab order). Doesn't collapse an already-open item.",
+                    description: 'Prevents toggling without changing the open state.',
                 },
                 {
                     name: 'onOpenChange',
                     type: '(isOpen: boolean) => void',
-                    description:
-                        'Callback invoked when standalone open state changes. A surrounding CollapsibleGroup owns grouped state and calls its onChange instead.',
+                    description: 'Runs when the open state changes.',
                 },
             ]}
             examples={[

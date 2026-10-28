@@ -15,8 +15,6 @@ export function DateInput(
         /** Additional constraints applied to the themed calendar picker. */
         dateConstraints?: readonly ((date: Date) => boolean)[];
         placeholder?: string;
-        hasClear?: boolean;
-        size?: 'sm' | 'md' | 'lg';
     }
 ) {
     // Keep optional draft state inside the themed picker and synchronize native form resets.
@@ -40,11 +38,13 @@ export function DateInput(
             {/* Only the canonical ISO carrier owns the submission name, not the formatted display input. */}
             <AstryxDateInput
                 {...control}
+                width="100%"
                 value={field.value}
                 onChange={field.onChange}
                 presentation="adaptive-bottom-sheet"
                 placeholder={props.placeholder ?? 'Select a date'}
-                hasClear={props.hasClear ?? false}
+                hasClear
+                size="md"
                 isLabelHidden={false}
                 isRequired={props.required ?? false}
                 isDisabled={props.disabled ?? false}

@@ -1,7 +1,8 @@
 import ViewLayout from './ViewLayout';
 import { Text } from '@astryxdesign/core/Text';
+import { Stack } from '@astryxdesign/core/Stack';
 import { useLocation, useNavigate } from 'react-router';
-import { Menu, MenuSection, MenuItem, MenuNavigationContext } from '@/components/ui/Menu';
+import { Menu, MenuSection, MenuSubSection, MenuItem, MenuNavigationContext } from '@/components/ui/Menu';
 
 /** Documents section navigation and selected content. */
 export default function MenuPage() {
@@ -73,16 +74,31 @@ export default function MenuPage() {
                     preview: <MenuExample />,
                     code: `function Example() {
   return (
-    <Menu>
-      <MenuSection title="Settings">
-        <MenuItem label="Profile">
-          <Text>Profile settings</Text>
-        </MenuItem>
-        <MenuItem label="Workflow">
-          <Text>Workflow settings</Text>
-        </MenuItem>
-      </MenuSection>
-    </Menu>
+    <Stack padding={4}>
+      <Menu>
+        <MenuSection title="Settings">
+          <MenuItem label="Profile" icon="userRound">
+            <Text>Profile settings</Text>
+          </MenuItem>
+          <MenuSubSection label="Workflow" icon="wrench">
+            <MenuItem label="Automation" icon="refresh">
+              <Text>Automation settings</Text>
+            </MenuItem>
+            <MenuItem label="Schedule" icon="calendar">
+              <Text>Schedule settings</Text>
+            </MenuItem>
+          </MenuSubSection>
+          <MenuSubSection label="Workspace" icon="building2">
+            <MenuItem label="Members" icon="users">
+              <Text>Workspace members</Text>
+            </MenuItem>
+            <MenuItem label="Data" icon="database">
+              <Text>Workspace data</Text>
+            </MenuItem>
+          </MenuSubSection>
+        </MenuSection>
+      </Menu>
+    </Stack>
   );
 }`,
                 },
@@ -110,16 +126,31 @@ function MenuExample() {
                 },
             }}
         >
-            <Menu>
-                <MenuSection title="Settings">
-                    <MenuItem label="Profile">
-                        <Text>Profile settings</Text>
-                    </MenuItem>
-                    <MenuItem label="Workflow">
-                        <Text>Workflow settings</Text>
-                    </MenuItem>
-                </MenuSection>
-            </Menu>
+            <Stack padding={4}>
+                <Menu>
+                    <MenuSection title="Settings">
+                        <MenuItem label="Profile" icon="userRound">
+                            <Text>Profile settings</Text>
+                        </MenuItem>
+                        <MenuSubSection label="Workflow" icon="wrench">
+                            <MenuItem label="Automation" icon="refresh">
+                                <Text>Automation settings</Text>
+                            </MenuItem>
+                            <MenuItem label="Schedule" icon="calendar">
+                                <Text>Schedule settings</Text>
+                            </MenuItem>
+                        </MenuSubSection>
+                        <MenuSubSection label="Workspace" icon="building2">
+                            <MenuItem label="Members" icon="users">
+                                <Text>Workspace members</Text>
+                            </MenuItem>
+                            <MenuItem label="Data" icon="database">
+                                <Text>Workspace data</Text>
+                            </MenuItem>
+                        </MenuSubSection>
+                    </MenuSection>
+                </Menu>
+            </Stack>
         </MenuNavigationContext>
     );
 }

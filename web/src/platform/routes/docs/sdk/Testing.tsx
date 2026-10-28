@@ -4,7 +4,7 @@ import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Heading } from '@astryxdesign/core/Heading';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
-import { DocumentationArticle } from '@/components/Article';
+import { DocumentationArticle } from '@/components/layouts/Article';
 
 const article = {
     description: 'Test LongLink projects and their Views.',

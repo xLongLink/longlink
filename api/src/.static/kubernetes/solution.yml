@@ -74,9 +74,9 @@ spec:
             annotations:
                 longlink.io/runtime-revision: '$runtime_revision'
                 autoscaling.knative.dev/min-scale: '0'
-                autoscaling.knative.dev/max-scale: '2'
+                autoscaling.knative.dev/max-scale: '1'
                 autoscaling.knative.dev/window: '60s'
-                autoscaling.knative.dev/scale-to-zero-pod-retention-period: '1m'
+                autoscaling.knative.dev/scale-to-zero-pod-retention-period: '5m'
             labels:
                 longlink.io/solution-id: $solution_id
                 longlink.io/component: solution

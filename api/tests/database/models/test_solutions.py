@@ -8,32 +8,6 @@ from src.database.models.users import User
 from src.database.models.solutions import Revision, Solution
 
 
-async def test_persisted_revision_rejects_snapshot_mutation(users: tuple[User, User, User]) -> None:
-    """Reject release rewrites even when callers bypass command services."""
-
-    # Arrange
-    owner, _, _ = users
-    organization = await create_organization(owner)
-    solution = await create_solution(organization)
-    revision_id = solution.desired_revision_id
-
-    # Act / Assert
-    async with session_scope() as session:
-        revision = await session.get(Revision, revision_id)
-        assert revision is not None
-        original = revision.image
-        revision.image = "ghcr.io/acme/replaced:latest"
-        with pytest.raises(ValueError, match="Revision snapshots are immutable"):
-            await session.flush()
-        await session.rollback()
-
-    # Assert
-    async with session_scope() as session:
-        persisted = await session.get(Revision, revision_id)
-    assert persisted is not None
-    assert persisted.image == original
-
-
 @pytest.mark.parametrize("reference", ["desired_revision_id", "deployed_revision_id"])
 async def test_revision_references_require_same_solution(users: tuple[User, User, User], reference: str) -> None:
     """Database constraints reject cross-Solution references independently of routes."""
@@ -61,13 +35,23 @@ IMMUTABLE_REVISION_FIELDS = [
 
 @pytest.mark.parametrize(("field", "replacement"), IMMUTABLE_REVISION_FIELDS)
 async def test_revision_snapshot_cannot_be_modified(users: tuple[User, User, User], field: str, replacement: object) -> None:
-    """Persist observed state but reject rewriting an existing release snapshot."""
+    """Reject release rewrites and preserve the persisted snapshot."""
 
+    # Arrange
     organization = await create_organization(users[0])
     solution = await create_solution(organization)
+
+    # Act / Assert
     async with session_scope() as session:
         revision = await session.get(Revision, solution.desired_revision_id)
         assert revision is not None
+        original = getattr(revision, field)
         setattr(revision, field, replacement)
-        with pytest.raises(ValueError, match="immutable"):
+        with pytest.raises(ValueError, match="Revision snapshots are immutable"):
             await session.commit()
+
+    # Assert
+    async with session_scope() as session:
+        persisted = await session.get(Revision, solution.desired_revision_id)
+    assert persisted is not None
+    assert getattr(persisted, field) == original

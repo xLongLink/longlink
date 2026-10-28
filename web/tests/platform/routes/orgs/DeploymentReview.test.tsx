@@ -153,11 +153,11 @@ describe('DeploymentReview', () => {
         vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
         await act(async () =>
             mountedRoot.render(
-                <MemoryRouter>
+                <MemoryRouter initialEntries={['/orgs/acme']}>
                     <Routes>
                         <Route element={<PlatformRoot />}>
                             <Route
-                                path="/"
+                                path="/orgs/:organization"
                                 element={
                                     <DeploymentReview
                                         update={{ key: 'review', item: { id: solutionId, name: 'Sample' } }}

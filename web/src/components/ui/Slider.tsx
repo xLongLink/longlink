@@ -47,6 +47,7 @@ export function Slider(props: SliderProps) {
     return (
         <AstryxSlider
             {...props}
+            width="100%"
             ref={ref}
             {...(Array.isArray(value)
                 ? {

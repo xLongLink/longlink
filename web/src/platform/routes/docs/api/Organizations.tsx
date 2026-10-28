@@ -1,11 +1,11 @@
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
-import { RoleTable } from '@/components/RoleTable';
 import { Heading } from '@astryxdesign/core/Heading';
 import { Blockquote } from '@astryxdesign/core/Blockquote';
-import { DocumentationArticle } from '@/components/Article';
+import { DocumentationArticle } from '@/components/layouts/Article';
 import { ArrowUp, CheckCheck, CheckCircle, EyeOff, Wrench } from 'lucide-react';
+import { Table, TableBody, TableCell, TableHeader, TableHeaderCell, TableRow } from '@astryxdesign/core/Table';
 
 const organizationRoles = [
     { name: 'read', access: 'View organization data and access assigned resources', icon: EyeOff },
@@ -57,7 +57,30 @@ export default function Organizations() {
                 </Text>
                 <Stack as="aside" className="border-s border-accent ps-4" gap={0}>
                     <Text weight="semibold">User permissions</Text>
-                    <RoleTable roles={organizationRoles} />
+                    <Table density="compact">
+                        <TableHeader>
+                            <TableRow>
+                                <TableHeaderCell>Roles</TableHeaderCell>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {organizationRoles.map(({ access, icon: RoleIcon, name }) => (
+                                <TableRow key={name}>
+                                    <TableCell>
+                                        <Stack gap={0}>
+                                            <Stack direction="horizontal" gap={2} align="center">
+                                                <RoleIcon aria-hidden="true" className="text-accent" size={16} />
+                                                <Text className="capitalize" weight="semibold">
+                                                    {name}
+                                                </Text>
+                                            </Stack>
+                                            <Text type="supporting">{access}</Text>
+                                        </Stack>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
                 </Stack>
             </Stack>
         </DocumentationArticle>

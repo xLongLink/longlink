@@ -36,27 +36,19 @@ export default function SelectorPage() {
                     description: 'Prevents interaction and excludes the field from submission.',
                 },
                 {
-                    name: 'width',
-                    type: 'string | number',
-                    description:
-                        'Width of the field (number = pixels, string used as-is, e.g. "100%"). Sizes the whole field (label, control, and status) so they stay aligned. Without a width the field follows its displayed value and can shrink with its row (the value truncates) instead of overflowing it; use `<HStack wrap="wrap">` for filter bars so selectors move to a second line on phones.',
-                },
-                {
                     name: 'options',
                     type: 'SelectorOptionType[]',
-                    description:
-                        'Array of items: strings, objects with value/label/description/icon/disabled, dividers ({type: "divider"}), or sections ({type: "section", title, options}).',
+                    description: 'Selectable options, dividers, or titled sections.',
                 },
                 {
                     name: 'defaultValue',
                     type: 'string',
-                    description: 'The defaultValue prop.',
+                    description: 'Initial value.',
                 },
                 {
                     name: 'hasSearch',
                     type: 'boolean',
-                    description:
-                        'Whether to show a search input for filtering options. As the user types, the match count (or "No results found") is announced to screen readers via a polite live region. The search field has built-in affordances: a leading magnifier icon and, once a query is typed, a trailing clear (✕) button that resets the query and returns focus to the input.',
+                    description: 'Shows a search field for filtering options.',
                 },
                 {
                     name: 'placeholder',
@@ -64,24 +56,13 @@ export default function SelectorPage() {
                     description: 'Placeholder text shown when no value is selected.',
                 },
                 {
-                    name: 'size',
-                    type: '"sm" | "lg" | "md"',
-                    description: 'Size variant for the selector.',
-                },
-                {
-                    name: 'hasClear',
-                    type: '(false) | (true)',
-                    description:
-                        'Shows a clear (×) button when a value is selected. When true, onChange also accepts null to signal the user cleared the selection.',
-                },
-                {
                     name: 'value',
-                    type: '(string) | (string | null)',
+                    type: 'string | null',
                     description: 'Currently selected value.',
                 },
                 {
                     name: 'onChange',
-                    type: '((value: string) => void) | ((value: string | null) => void)',
+                    type: '(value: string | null) => void',
                     description: 'Callback fired when the selection changes.',
                 },
             ]}

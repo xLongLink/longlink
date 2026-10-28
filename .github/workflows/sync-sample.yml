@@ -90,11 +90,9 @@ jobs:
                   : "${GH_TOKEN:?Set the SAMPLE_REPOSITORY_TOKEN repository secret.}"
 
                   gh auth setup-git
-                  git clone --depth 1 https://github.com/xlongLink/sample.git sample
-                  cd sample
-                  git switch --orphan scaffold
-                  git rm -rf --ignore-unmatch .
-                  cp -a "$RUNNER_TEMP/sample/." .
+                  cd "$RUNNER_TEMP/sample"
+                  git init --initial-branch=scaffold
+                  git remote add origin https://github.com/xlongLink/sample.git
                   git add --all
                   git -c user.name="longlink-bot" -c user.email="bot@longlink.dev" commit -m "chore: sync LongLink scaffold"
                   git push --force origin HEAD:main

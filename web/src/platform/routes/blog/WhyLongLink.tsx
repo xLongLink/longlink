@@ -1,8 +1,8 @@
 import { Card } from '@astryxdesign/core/Card';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
-import { PublicArticle } from '@/components/Article';
 import { Heading } from '@astryxdesign/core/Heading';
+import { PublicArticle } from '@/components/layouts/Article';
 
 const article = {
     description:

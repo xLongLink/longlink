@@ -17,7 +17,6 @@ type ButtonProps = {
     form?: string;
     icon?: StoneIconName;
     endContent?: ReactNode;
-    tooltip?: string;
     width?: number | string;
     disabled?: boolean;
     /** Solution-relative destination or HTTP(S) URL to open in a new tab. */
@@ -36,7 +35,7 @@ export function Button({ onClick, ...props }: ButtonProps) {
     return (
         <AstryxButton
             {...props}
-            tooltip={props.tooltip}
+            tooltip={undefined}
             icon={props.icon ? <Icon icon={props.icon} size={size} /> : undefined}
             variant={props.variant ?? 'secondary'}
             size={size}

@@ -1,8 +1,8 @@
 import type { z } from 'zod';
 import { api } from '@/lib/api';
 import * as tabs from '@/platform/tabs';
-import { Form } from '@/components/Form';
 import { useApiError } from '@/lib/errors';
+import { Form } from '@/components/ui/Form';
 import { useApi } from '@/lib/hooks/use-api';
 import { Text } from '@astryxdesign/core/Text';
 import { Dialog } from '@/components/ui/Dialog';
@@ -60,7 +60,9 @@ export default function TabsSection({ base, canMaintain }: { base: string; canMa
         <>
             <Stack gap={3}>
                 <Stack direction="horizontal" justify="between" align="center" wrap="wrap">
-                    <Heading level={3}>Tabs</Heading>
+                    <Heading level={4} accessibilityLevel={3}>
+                        Tabs
+                    </Heading>
                     {canMaintain && <Button label="New tab" size="sm" onClick={() => setEditing('create')} />}
                 </Stack>
                 <Table

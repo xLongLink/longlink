@@ -2,6 +2,7 @@ import json
 import pytest
 import stripe
 from uuid import UUID
+from decimal import ROUND_HALF_UP, Decimal
 from conftest import DatabaseKubernetes
 from datetime import UTC, datetime
 from factories import create_organization
@@ -85,7 +86,6 @@ async def test_snapshot_measurement_failure_preserves_deadline_until_complete_re
         assert invoice.customer_id == "cus_usage"
         assert invoice.period_end == period_end
         assert (invoice.users, invoice.database_bytes, invoice.storage_bytes) == (1, 100 * 1024**2 + 1024**3, 2 * 1024**3)
-        assert (invoice.user_amount, invoice.database_amount, invoice.storage_amount) == (0, 100, 10)
         persisted = await session.get(Organization, organization.id)
         assert persisted is not None
         assert persisted.invoice_due_at == invoices.dates.next_month(period_end)
@@ -103,10 +103,7 @@ async def test_issue_recovers_remote_success_after_crash_without_duplicate_charg
         period_end=datetime.now(UTC).replace(day=1, hour=0, minute=0, second=0, microsecond=0),
         users=7,
         database_bytes=100 * 1024**2 + 1024**3,
-        storage_bytes=2 * 1024**3,
-        user_amount=1000,
-        database_amount=100,
-        storage_amount=10,
+        storage_bytes=2 * 1024**3 + 1,
     )
     async with session_scope() as session:
         session.add(invoice)
@@ -114,8 +111,8 @@ async def test_issue_recovers_remote_success_after_crash_without_duplicate_charg
 
     remote_invoices: list[dict] = []
     remote_items: list[dict] = []
+    remote_coupons: dict[str, dict] = {}
     finalized_totals: list[int] = []
-    creations: list[str] = []
     monkeypatch.setattr(env, "STRIPE_SECRET_KEY", "sk_test_invoices")
     monkeypatch.setattr(env, "STRIPE_WEBHOOK_SECRET", "whsec_invoices")
 
@@ -144,7 +141,6 @@ async def test_issue_recovers_remote_success_after_crash_without_duplicate_charg
                 "total": 0,
             }
             remote_invoices.append(remote)
-            creations.append("invoice")
             payload = remote
             event = "invoice"
         elif method == "get" and path == "/v1/invoiceitems":
@@ -155,7 +151,11 @@ async def test_issue_recovers_remote_success_after_crash_without_duplicate_charg
             item = {
                 "id": f"ii_{len(remote_items) + 1}",
                 "object": "invoiceitem",
-                "amount": int(params["amount"][0]),
+                "amount": int(
+                    (Decimal(params["unit_amount_decimal"][0]) * int(params["quantity"][0])).quantize(Decimal("1"), rounding=ROUND_HALF_UP)
+                ),
+                "quantity": int(params["quantity"][0]),
+                "unit_amount_decimal": params["unit_amount_decimal"][0],
                 "metadata": {
                     "longlink_invoice_id": params["metadata[longlink_invoice_id]"][0],
                     "resource": params["metadata[resource]"][0],
@@ -163,9 +163,31 @@ async def test_issue_recovers_remote_success_after_crash_without_duplicate_charg
             }
             remote_items.append(item)
             remote_invoices[0]["total"] += item["amount"]
-            creations.append("item")
             payload = item
             event = "item"
+        elif method == "get" and path.startswith("/v1/coupons/"):
+            coupon_id = path.rsplit("/", 1)[1]
+            if coupon_id not in remote_coupons:
+                error = {"error": {"type": "invalid_request_error", "code": "resource_missing", "message": "No such coupon", "param": "id"}}
+                return json.dumps(error).encode(), 404, {}
+            payload = remote_coupons[coupon_id]
+        elif method == "post" and path == "/v1/coupons":
+            coupon_id = params["id"][0]
+            assert coupon_id not in remote_coupons
+            payload = {
+                "id": coupon_id,
+                "object": "coupon",
+                "name": params["name"][0],
+                "amount_off": int(params["amount_off"][0]),
+                "currency": params["currency"][0],
+                "duration": params["duration"][0],
+                "metadata": {"longlink_invoice_id": params["metadata[longlink_invoice_id]"][0]},
+            }
+            remote_coupons[coupon_id] = payload
+        elif method == "post" and path == "/v1/invoices/in_1":
+            coupon = remote_coupons[params["discounts[0][coupon]"][0]]
+            remote_invoices[0]["total"] = sum(item["amount"] for item in remote_items) - coupon["amount_off"]
+            payload = remote_invoices[0]
         elif method == "get" and path == "/v1/invoices/in_1":
             payload = remote_invoices[0]
         elif method == "post" and path == "/v1/invoices/in_1/finalize":
@@ -210,11 +232,24 @@ async def test_issue_recovers_remote_success_after_crash_without_duplicate_charg
         assert persisted is not None
         assert persisted.stripe_invoice_id == "in_1"
         assert persisted.issued_at is not None
-    assert creations == ["invoice", "item", "item", "item"]
-    assert finalized_totals == [1110]
+    assert len(remote_invoices) == 1
+    assert finalized_totals == [2123]
     assert [(item["metadata"]["resource"], item["amount"]) for item in remote_items] == [
-        ("users", 1000),
-        ("database", 100),
-        ("storage", 10),
+        ("users", 7000),
+        ("database", 112),
+        ("storage", 41),
+    ]
+    assert [item["quantity"] for item in remote_items] == [7, 1124, 2049]
+    assert [item["unit_amount_decimal"] for item in remote_items] == ["1000", "0.1", "0.02"]
+    assert list(remote_coupons.values()) == [
+        {
+            "id": f"free_{invoice.id.hex}",
+            "object": "coupon",
+            "name": "Free-tier discount",
+            "amount_off": 5030,
+            "currency": "chf",
+            "duration": "once",
+            "metadata": {"longlink_invoice_id": str(invoice.id)},
+        }
     ]
     assert all(item["metadata"]["longlink_invoice_id"] == str(invoice.id) for item in remote_items)

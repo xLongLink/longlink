@@ -137,7 +137,7 @@ async def test_create_app_persists_desired_state_and_queues_reconciliation(
 async def test_create_app_enforces_the_per_organization_beta_limit(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient], users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Allow three solutions per organization and reject the fourth."""
+    """Allow ten solutions per organization and reject the eleventh."""
 
     # Arrange one Organization with image metadata available for every creation request.
     organization = await create_organization(users[0])
@@ -149,16 +149,16 @@ async def test_create_app_enforces_the_per_organization_beta_limit(
             f"/api/v1/organizations/{organization.id}/solutions",
             json={"name": f"dashboard-{number}", "image": "ghcr.io/longlink/dashboard:latest"},
         )
-        for number in range(4)
+        for number in range(11)
     ]
 
     # Assert
-    assert [response.status_code for response in responses] == [204, 204, 204, 409]
+    assert [response.status_code for response in responses] == [204] * 10 + [409]
     assert responses[-1].json() == {"detail": "Solution limit reached during the beta. Contact LongLink to request additional solutions."}
     async with session_scope() as session:
         result = await session.scalars(select(Solution).where(col(Solution.organization_id) == organization.id))
         solutions = result.all()
-    assert len(solutions) == 3
+    assert len(solutions) == 10
 
 
 @pytest.mark.parametrize(

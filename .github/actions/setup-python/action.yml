@@ -24,4 +24,4 @@ runs:
           with:
               enable-cache: true
               cache-dependency-glob: ${{ inputs.cache-dependency-glob }}
-              version: '0.11.32'
+              version: '0.13.4'

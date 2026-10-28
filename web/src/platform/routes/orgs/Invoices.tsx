@@ -90,7 +90,7 @@ function InvoiceTable({ base }: { base: string }) {
                     width: proportional(1),
                     renderCell: (invoice) =>
                         invoice.invoice_pdf ? (
-                            <Link href={invoice.invoice_pdf} hasUnderline isExternalLink>
+                            <Link href={`${base}/invoices/${invoice.id}/pdf`} hasUnderline isExternalLink>
                                 PDF
                             </Link>
                         ) : null,

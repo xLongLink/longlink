@@ -134,9 +134,14 @@ it('does not request private invoices until the section is owner-accessible, the
             expect(output.querySelector('a[href="https://example.com/invoices/acme"]')?.textContent).toContain(
                 'ACME-001'
             );
-            expect(output.querySelector('a[href="https://example.com/invoices/acme.pdf"]')?.textContent).toContain(
-                'PDF'
-            );
+            expect(
+                output.querySelector('a[href$="/api/v1/organizations/acme/invoices/in_acme/pdf"]')?.textContent
+            ).toContain('PDF');
+            expect(
+                output
+                    .querySelector('a[href$="/api/v1/organizations/acme/invoices/in_acme/pdf"]')
+                    ?.getAttribute('target')
+            ).toBe('_blank');
             expect(requests).toHaveLength(1);
         }
     );

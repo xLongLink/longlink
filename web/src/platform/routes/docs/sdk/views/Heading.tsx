@@ -17,8 +17,7 @@ export default function HeadingPage() {
                 {
                     name: 'level',
                     type: '1 | 2 | 3 | 4 | 5 | 6',
-                    description:
-                        'Heading level. Determines the semantic HTML element (h1-h6) and the visual styling from the theme (unless `type` is set).',
+                    description: 'Heading level from h1 to h6.',
                 },
             ]}
             examples={[

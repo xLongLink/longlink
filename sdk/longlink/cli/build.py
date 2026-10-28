@@ -23,6 +23,7 @@ CONTEXT_IGNORE_PATTERNS = (
     ".env",
     ".env.*",
     ".envrc",
+    ".storage",
     ".venv",
     "venv",
     ".direnv",
@@ -58,12 +59,17 @@ DOCKER_CONTEXT_IGNORE_RULES = ("Dockerfile", ".dockerignore")
 
 DOCKERFILE_TEMPLATE = """FROM buildpack-deps:bookworm@sha256:88c9154b6b438be20b616e2e74c158cfd79feafc6bcf1d9a3b47874b38c91992 AS builder
 
-COPY --from=ghcr.io/astral-sh/uv:0.11.32@sha256:df4cae8f3a96d175e2e5f992e597550000edbe78fdc2594d5cd8de1a217f504c /uv /uvx /usr/local/bin/
+COPY --from=ghcr.io/astral-sh/uv:0.13.4@sha256:9f130421e930bfbdc563c00740466603f8723158e90297d07957c2294640262b /uv /uvx /usr/local/bin/
+
+# Refresh system trust before downloading Python and dependencies.
+RUN apt-get update \\
+    && apt-get install --yes --no-install-recommends ca-certificates \\
+    && rm -rf /var/lib/apt/lists/*
 
 # Install the benchmarked Astral build at a path preserved in the runtime image.
 ENV UV_PYTHON=3.12.13
 ENV UV_PYTHON_INSTALL_DIR=/opt/python
-ENV UV_PYTHON_CPYTHON_BUILD=20260718
+ENV UV_PYTHON_CPYTHON_BUILD=20260807
 RUN uv python install 3.12.13
 ENV UV_PYTHON_DOWNLOADS=never
 
@@ -83,9 +89,9 @@ RUN --mount=type=cache,target=/root/.cache/uv uv sync --locked --no-dev
 
 FROM debian:bookworm-slim@sha256:7c7b2c966bc9ee8cedfeef67e0e279108992c77681fa595db4a9d65c06ccc587
 
-# Retain certificate trust, network defaults, and timezone data for Solution code.
+# Refresh certificate trust and retain network defaults and timezone data for Solution code.
 RUN apt-get update \\
-    && apt-get install -y --no-install-recommends ca-certificates netbase tzdata \\
+    && apt-get install --yes --no-install-recommends ca-certificates netbase tzdata \\
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR {workdir}

@@ -16,6 +16,7 @@ it('ignores a mismatched session and releases an admitted port when its mount is
             source: 'export default function View() { return null; }',
             params: {},
             navigationBaseUrl: 'https://platform.example/',
+            appearance: { theme: 'system', accent: 'neutral' },
         };
 
         window.dispatchEvent(
@@ -91,6 +92,7 @@ it('loads gallery images concurrently without a request cap', async () => {
                     source: "export default function View() { return <>{Array.from({ length: 12 }, (_, index) => <Image key={index} src={'/api/photos/' + index} alt={'Photo ' + index} />)}</>; }",
                     params: {},
                     navigationBaseUrl: 'https://platform.example/',
+                    appearance: { theme: 'system', accent: 'neutral' },
                 },
             })
         );

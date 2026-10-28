@@ -73,14 +73,14 @@ async def test_operations_endpoint_serializes_failed_organization_operation(
     operation = await claim_operation()
     assert operation is not None
     failed = await fail_operation(operation.id, "Compute provisioning failed")
-    assert failed is not None
+    assert failed is True
 
     # Act
     response = await clients[0].get("/api/v1/operations")
 
     # Assert
     assert response.status_code == 200
-    item = next(item for item in response.json()["items"] if item["id"] == str(failed.id))
+    item = next(item for item in response.json()["items"] if item["id"] == str(operation.id))
     assert item["target_id"] == str(organization.id)
     assert item["resource_name"] == organization.name
     assert item["status"] == "failed"

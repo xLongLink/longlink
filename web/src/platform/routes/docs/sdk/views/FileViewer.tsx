@@ -24,8 +24,7 @@ export default function FileViewerPage() {
                 {
                     name: 'size',
                     type: '"sm" | "lg" | "md"',
-                    description:
-                        'Size of preview and download actions; use sm in compact tables. Omitted values retain inherited sizing.',
+                    description: 'Preview and download action size; inherits sizing when omitted.',
                 },
             ]}
             introduction={

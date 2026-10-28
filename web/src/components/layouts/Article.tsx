@@ -6,12 +6,12 @@ import { Button } from '@astryxdesign/core/Button';
 import { Divider } from '@astryxdesign/core/Divider';
 import { Outline } from '@astryxdesign/core/Outline';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
+import { documentationPaths } from '@/platform/routes';
 import { useLocation, useNavigate } from 'react-router';
 import { PageContainer } from '@/components/PageContainer';
 import { PathBreadcrumb } from '@/components/breadcrumb/Path';
 import { BreadcrumbItem } from '@astryxdesign/core/Breadcrumbs';
 import { Layout, LayoutContent, LayoutHeader } from '@astryxdesign/core/Layout';
-import { documentationPaths, useCasePages, brandingPages } from '@/platform/routes';
 import { useEffect, useEffectEvent, type ComponentProps, type ReactNode } from 'react';
 
 /** Labels for public article route segments shared with visible breadcrumbs. */
@@ -24,14 +24,10 @@ const articleRouteLabels = {
     sdk: 'Solutions',
     'use-cases': 'Use cases',
     views: 'Views',
-
-    // Keep authored page labels in their navigation catalogs without replacing section labels.
-    ...Object.fromEntries(
-        brandingPages.map(({ path, label }) => [path.slice(path.lastIndexOf('/') + 1), label] as const)
-    ),
-    ...Object.fromEntries(
-        useCasePages.map(({ path, label }) => [path.slice(path.lastIndexOf('/') + 1), label] as const)
-    ),
+    assets: 'Brand assets',
+    values: 'Values',
+    comunication: 'Communication',
+    'property-acquisition-screening': 'Property Acquisition Screening',
 } satisfies Record<string, string>;
 
 const dateFormatter = new Intl.DateTimeFormat('en-GB', {
@@ -59,7 +55,7 @@ type DocumentationArticleProps = {
 export function DocumentationArticle({
     article,
     children,
-    className = '[--text-body-size:var(--font-size-lg)] [--article-heading-spacing:calc(var(--spacing-9)*2)] [--font-family-heading:var(--font-family-handwritten)] [&_.astryx-heading]:uppercase [&_.astryx-heading]:tracking-wide',
+    className = '[--text-body-size:var(--font-size-lg)] [--article-heading-spacing:calc(var(--spacing-9)*2)] [--font-family-heading:var(--font-family-handwritten)] [&_.astryx-heading:not(dialog_*)]:uppercase [&_.astryx-heading:not(dialog_*)]:tracking-wide',
 }: DocumentationArticleProps) {
     // Keep documentation typography and reading order as wrapper-owned policy.
     return (
@@ -133,7 +129,7 @@ function ArticleRenderer({
                         <Stack className="mx-auto" direction="horizontal" gap={6} maxWidth={1016} width="100%">
                             <PageContainer className="min-w-0" maxWidth={720}>
                                 <article
-                                    className={`space-y-7 [&_:is(h2,h3,h4,h5,h6)]:[margin-block-start:var(--article-heading-spacing,var(--spacing-8))] [&_p]:opacity-90${className ? ` ${className}` : ''}`}
+                                    className={`space-y-7 [&_:is(h2,h3,h4,h5,h6):not(dialog_*)]:[margin-block-start:var(--article-heading-spacing,var(--spacing-8))] [&_p]:opacity-90${className ? ` ${className}` : ''}`}
                                 >
                                     {children}
                                     <Stack as="footer" className="pb-30" gap={3} paddingBlockStart={8}>

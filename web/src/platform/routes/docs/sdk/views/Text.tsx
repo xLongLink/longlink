@@ -19,20 +19,17 @@ export default function TextPage() {
                 {
                     name: 'color',
                     type: '"primary" | "secondary" | "disabled" | "placeholder" | "accent" | "inherit"',
-                    description:
-                        "Text color. Defaults to 'secondary' for the 'supporting' type, 'primary' for all others. Themes may add custom colors.",
+                    description: 'Text color; defaults to secondary for supporting text and primary otherwise.',
                 },
                 {
                     name: 'type',
                     type: '"code" | "inherit" | "body" | "large" | "label" | "supporting" | "display-1" | "display-2" | "display-3"',
-                    description:
-                        "Semantic text type. Determines size, weight, and line-height from the theme. 'inherit' takes all three from the surrounding text instead. Themes may add custom types. Note: this prop is called `type`, not `variant`.",
+                    description: 'Theme text style, or inherit to match surrounding text.',
                 },
                 {
                     name: 'size',
                     type: '"4xs" | "3xs" | "2xs" | "xsm" | "sm" | "base" | "lg" | "xl" | "2xl" | "3xl" | "4xl"',
-                    description:
-                        'Explicit font size override. Overrides the size from `type` but preserves other type properties. Prefer using `type` alone.',
+                    description: 'Font size override for the selected text style.',
                 },
                 {
                     name: 'weight',
@@ -53,20 +50,17 @@ export default function TextPage() {
                 {
                     name: 'maxLines',
                     type: 'number',
-                    description:
-                        'Maximum lines before truncation. 0 means no truncation. When set, shows a tooltip on hover if content is truncated.',
+                    description: 'Maximum visible lines before truncation; 0 disables truncation.',
                 },
                 {
                     name: 'hasTruncateTooltip',
                     type: 'boolean | "start" | "end" | "above" | "below"',
-                    description:
-                        "Controls tooltip behavior for truncated text. true shows the tooltip at the default position, false disables it, or a placement string ('above' | 'below' | 'start' | 'end') sets a specific position.",
+                    description: 'Enables, disables, or positions the tooltip for truncated text.',
                 },
                 {
                     name: 'wordBreak',
                     type: '"break-word" | "break-all"',
-                    description:
-                        "Word break behavior when truncating. Defaults to 'break-all' for single-line truncation, 'break-word' otherwise.",
+                    description: 'Word breaking for truncated text.',
                 },
                 {
                     name: 'textWrap',

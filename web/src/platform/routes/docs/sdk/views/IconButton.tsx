@@ -20,8 +20,7 @@ export default function IconButtonPage() {
                 {
                     name: 'icon',
                     type: 'StoneIconName',
-                    description:
-                        'Icon element rendered inside the button. An Astryx Icon with no explicit size defaults to sm for sm/md buttons and md for lg buttons.',
+                    description: 'Icon displayed inside the button.',
                 },
                 {
                     name: 'variant',
@@ -32,11 +31,6 @@ export default function IconButtonPage() {
                     name: 'size',
                     type: '"sm" | "lg" | "md"',
                     description: 'Size variant.',
-                },
-                {
-                    name: 'tooltip',
-                    type: 'string',
-                    description: 'Tooltip text shown on hover.',
                 },
                 {
                     name: 'isDisabled',
@@ -77,7 +71,7 @@ export function IconButtonExample() {
     // Report the close action without dismissing the documentation.
     return (
         <Stack gap={2}>
-            <IconButton icon="close" label="Close" size="sm" tooltip="Close" onClick={() => setAction('Closed')} />
+            <IconButton icon="close" label="Close" size="sm" onClick={() => setAction('Closed')} />
             {action && <Text role="status">{action}</Text>}
         </Stack>
     );

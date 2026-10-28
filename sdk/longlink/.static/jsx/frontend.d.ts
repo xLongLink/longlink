@@ -4473,21 +4473,21 @@ type CardProps = {
     minHeight?: number | string;
     /** Makes the card and its descendants non-interactive. */
     inert?: boolean;
-    /** Hides the card from assistive technologies. */
+    /** Accessible by default; set true only for decorative or redundant, non-interactive content. */
     'aria-hidden'?: boolean | 'true' | 'false';
     /** Accessible label for interactive cards; supply a descriptive label. */
     label?: string;
-    /** Makes the card clickable when its surface is activated; nested controls act independently. */
+    /** Runs when the card surface is activated. */
     onClick?: (event: ViewMouseEvent) => void;
-    /** Solution-relative destination or HTTP(S) URL to open in a new tab when no selection callback is supplied. */
+    /** Link destination, used when onChange is absent. */
     href?: string;
-    /** Native link target; isolated Views use the current Solution for relative paths and a new tab for HTTP(S) URLs. */
+    /** Link target; external URLs open in a new tab in Views. */
     target?: string;
     /** Disables activation of an interactive card. */
     isDisabled?: boolean;
-    /** Selection state; supply onChange to let users toggle it. */
+    /** Whether the card is selected. */
     isSelected?: boolean;
-    /** Makes the card selectable and receives its next selection state; takes priority over onClick and href. */
+    /** Enables selection and receives its next state, overriding onClick and href. */
     onChange?: (isSelected: boolean) => void;
 };
 
@@ -4503,12 +4503,11 @@ type ButtonProps = {
     form?: string;
     icon?: StoneIconName;
     endContent?: ViewNode;
-    tooltip?: string;
     width?: number | string;
     disabled?: boolean;
     /** Solution-relative destination or HTTP(S) URL to open in a new tab. */
     href?: string;
-    /** Runs an action with automatic async loading and duplicate-click prevention until its promise settles. */
+    /** Runs an action with automatic loading and duplicate-click prevention. */
     onClick?: (event: ViewMouseEvent) => void | Promise<void>;
 };
 
@@ -4522,8 +4521,6 @@ type DateInputProps = FieldProps & {
     /** Additional constraints applied to the themed calendar picker. */
     dateConstraints?: readonly ((date: Date) => boolean)[];
     placeholder?: string;
-    hasClear?: boolean;
-    size?: 'sm' | 'md' | 'lg';
 };
 
 /** Shared props for form controls. */
@@ -4536,78 +4533,7 @@ type FieldProps = {
     required?: boolean;
     /** Prevents interaction and excludes the field from submission. */
     disabled?: boolean;
-    width?: number | string;
 };
-
-/** @category Layouts */
-declare function Layout(props: {
-    /** Main content; shorthand for the content slot. */
-    children?: ViewNode;
-    content?: ViewNode;
-    header?: ViewNode;
-    footer?: ViewNode;
-    start?: ViewNode;
-    end?: ViewNode;
-    /** Fill a bounded container or grow with content. */
-    height?: 'fill' | 'auto';
-    /** Maximum aligned content width; numbers are pixels and strings are CSS sizes. */
-    contentWidth?: number | string;
-    /** Insets this layout's regions using the spacing scale. Omit to retain Astryx's contextual padding. */
-    padding?: Spacing;
-    /** Default for header and footer dividers; omitted values inherit the surrounding layout. */
-    defaultHasDividers?: boolean;
-}): React.JSX.Element;
-
-/** @category Layouts @group Layout */
-declare function LayoutContent(props: {
-    children?: ViewNode;
-    padding?: Spacing;
-    /** Enables independent scrolling; defaults to true. */
-    isScrollable?: boolean;
-    /** Accessible name for the region; distinguish repeated landmarks with labels. */
-    label?: string;
-    role?: 'main' | 'region';
-}): React.JSX.Element;
-
-/** @category Layouts @group Layout */
-declare function LayoutHeader(props: {
-    children?: ViewNode;
-    /** Overrides the surrounding layout's divider default when provided. */
-    hasDivider?: boolean;
-    /** Header height; numbers are pixels and strings are CSS sizes. */
-    height?: number | string;
-    padding?: Spacing;
-    paddingBlockEnd?: Spacing;
-    label?: string;
-    /** Use banner only for a site-wide header, not a nested View section. */
-    role?: 'banner' | 'region';
-}): React.JSX.Element;
-
-/** @category Layouts @group Layout */
-declare function LayoutFooter(props: {
-    children?: ViewNode;
-    /** Overrides the surrounding layout's divider default when provided. */
-    hasDivider?: boolean;
-    /** Footer height; numbers are pixels and strings are CSS sizes. */
-    height?: number | string;
-    padding?: Spacing;
-    label?: string;
-    /** Use contentinfo only for a site-wide footer, not a nested View section. */
-    role?: 'contentinfo' | 'region';
-}): React.JSX.Element;
-
-/** @category Layouts @group Layout */
-declare function LayoutPanel(props: {
-    children?: ViewNode;
-    hasDivider?: boolean;
-    padding?: Spacing;
-    /** Enables independent scrolling; defaults to true. */
-    isScrollable?: boolean;
-    label?: string;
-    role?: 'complementary' | 'navigation' | 'region';
-    /** Panel width; numbers are pixels and strings are CSS sizes. */
-    width?: number | string;
-}): React.JSX.Element;
 
 /** @category Layouts */
 declare function Stack(props: {
@@ -4648,9 +4574,9 @@ declare function StackItem(props: {
 /** @category Layouts */
 declare function Grid(props: {
     children?: ViewNode;
-    /** Fixed columns or responsive tracks with a minimum width in pixels and optional column cap. Use one-column or full spans with responsive tracks. */
+    /** Fixed column count or responsive columns with minWidth and an optional max. */
     columns?: number | { minWidth: number; max?: number; repeat?: 'fill' | 'fit' };
-    /** Collapse to one column at or below this View viewport width in pixels, including all GridSpan children. */
+    /** View width in pixels at or below which all items use one column. */
     collapseBelow?: number;
     gap?: Spacing;
     rowGap?: Spacing;
@@ -4711,7 +4637,7 @@ declare function Avatar(
         name?: string;
         /** Stable identity for generated avatars, independent of the display name. */
         seed?: string;
-        /** Organization owners use rounded Waves avatars; user owners retain the supplied geometry or a circle. */
+        /** Avatar style for a user or organization. */
         kind?: 'user' | 'organization';
         src?: string | null;
         alt?: string;
@@ -4783,7 +4709,6 @@ declare function IconButton(props: {
     icon: StoneIconName;
     variant?: 'primary' | 'secondary' | 'ghost' | 'destructive';
     size?: 'sm' | 'md' | 'lg';
-    tooltip?: string;
     isDisabled?: boolean;
     onClick?: (event: ViewMouseEvent) => void | Promise<void>;
 }): React.JSX.Element;
@@ -4809,7 +4734,7 @@ declare function Dialog(props: {
 
 /** Submits named themed fields and ordinary HTML inputs to a Solution API endpoint. @category Form */
 declare function Form(props: {
-    /** Named controls and layout, or direct FormStep children for automatic navigation. Next validates the current step and shared fields; final submission validates all steps and reveals the first invalid field. Inactive fields remain mounted and enabled. */
+    /** Named fields and layout, including a Stepper in wizard mode. */
     children?: ViewNode;
     /** Solution-relative API path; external URLs are not supported. */
     action: string;
@@ -4817,20 +4742,10 @@ declare function Form(props: {
     method?: 'post' | 'put' | 'patch' | 'delete';
     /** Native form ID for associating external submit or reset buttons. */
     id?: string;
-    /** Bounds the form height. With FormStep children, pins progress above centered, independently scrollable fields, including inside a Dialog. */
+    /** Optional form height. Stepper owns its wizard panel layout. */
     height?: number | string;
-    /** Label for the automatic final submit button when using FormStep children; defaults to Save. */
-    submitLabel?: string;
     /** Runs after a successful write and automatic cached-data refresh. */
     onSuccess?: (data: ViewData) => void | Promise<void>;
-}): React.JSX.Element;
-
-/** @category Form */
-declare function FormStep(props: {
-    /** Visible label identifying this step in the progress indicator. */
-    label: string;
-    /** Fields arranged vertically with spacing step 3. Use an explicit layout child for custom grouping. */
-    children?: ViewNode;
 }): React.JSX.Element;
 
 /** @category Form */
@@ -4844,10 +4759,8 @@ declare function MultiSelector(
         defaultValue?: string[];
         onChange?: (value: string[]) => void;
         placeholder?: string;
-        size?: 'sm' | 'md' | 'lg';
         hasSelectAll?: boolean;
         hasSearch?: boolean;
-        hasClear?: boolean;
     }
 ): React.JSX.Element;
 
@@ -4860,11 +4773,9 @@ declare function TimeInput(
         min?: ISOTimeString;
         max?: ISOTimeString;
         hasSeconds?: boolean;
-        hasClear?: boolean;
         hourFormat?: '12h' | '24h';
         increment?: number;
         placeholder?: string;
-        size?: 'sm' | 'md' | 'lg';
     }
 ): React.JSX.Element;
 
@@ -4878,11 +4789,7 @@ declare function TextInput(
         /** Maximum Unicode code points, matching Python string length. Validates without truncating input. */
         maxLength?: number;
         type?: 'text' | 'password' | 'email';
-        size?: 'sm' | 'md' | 'lg';
         autoComplete?: string;
-        hasClear?: boolean;
-        hasAutoFocus?: boolean;
-        isLabelHidden?: boolean;
         startIcon?: ViewNode;
         onEnter?: () => void;
     }
@@ -4898,7 +4805,6 @@ declare function TextArea(
         rows?: number;
         /** Maximum Unicode code points, matching Python string length. Validates without truncating input. */
         maxLength?: number;
-        hasAutoFocus?: boolean;
         autoComplete?: string;
     }
 ): React.JSX.Element;
@@ -4908,18 +4814,15 @@ declare function NumberInput(
     props: FieldProps & {
         value?: number | null;
         defaultValue?: number;
+        onChange?: (value: number | null) => void;
         min?: number | null;
         max?: number | null;
         step?: number | null;
         placeholder?: string;
-        size?: 'sm' | 'md' | 'lg';
         units?: string | null;
         isIntegerOnly?: boolean;
         autoComplete?: string;
-    } & (
-            | { hasClear?: false; onChange?: (value: number) => void }
-            | { hasClear: true; onChange?: (value: number | null) => void }
-        )
+    }
 ): React.JSX.Element;
 
 /** @category Form */
@@ -4928,7 +4831,6 @@ declare function CheckboxInput(
         value?: boolean | 'indeterminate';
         defaultChecked?: boolean;
         onChange?: (value: boolean) => void;
-        size?: 'sm' | 'md';
     }
 ): React.JSX.Element;
 
@@ -4938,7 +4840,6 @@ declare function Switch(
         value?: boolean;
         defaultChecked?: boolean;
         onChange?: (value: boolean) => void;
-        size?: 'sm' | 'md';
     }
 ): React.JSX.Element;
 
@@ -4983,14 +4884,12 @@ declare function FileInput(
 declare function Selector(
     props: FieldProps & {
         options: SelectorOptionType[];
+        value?: string | null;
         defaultValue?: string;
+        onChange?: (value: string | null) => void;
         hasSearch?: boolean;
         placeholder?: string;
-        size?: 'sm' | 'md' | 'lg';
-    } & (
-            | { hasClear?: false; value?: string; onChange?: (value: string) => void }
-            | { hasClear: true; value?: string | null; onChange?: (value: string | null) => void }
-        )
+    }
 ): React.JSX.Element;
 
 /** @category Form */
@@ -5001,7 +4900,6 @@ declare function RadioList(
         defaultValue?: string;
         onChange?: (value: string) => void;
         orientation?: 'vertical' | 'horizontal';
-        size?: 'sm' | 'md';
     }
 ): React.JSX.Element;
 
@@ -5123,19 +5021,26 @@ declare function Stepper(props: {
     children?: ViewNode;
     activeStep?: number;
     orientation?: 'horizontal' | 'vertical';
-    /** Enables step activation and receives the clicked step's zero-based index. */
+    /** Enables progress step activation, or receives wizard selection changes. */
     onStepClick?: (index: number) => void;
+    /** Defaults to progress. Wizard mode owns persistent panels and Next/Back navigation. */
+    variant?: 'progress' | 'wizard';
+    height?: number | string;
+    /** Runs intermediate work after validation. Returning false prevents advancement. */
+    next?: (step: number) => { label: string; action: () => void | boolean | Promise<void | boolean> } | undefined;
+    onCancel?: () => void;
+    backVariant?: 'secondary' | 'ghost';
 }): React.JSX.Element;
 
 /** @category Layouts @group Stepper */
 declare function Step(props: {
-    /** Zero-based index of this step in the process. */
-    step: number;
+    /** Optional progress index; defaults to child order. Wizards always use child order. */
+    step?: number;
     /** Visible label identifying the step. */
     label: string;
     /** Supporting text displayed below the step label. */
     description?: string;
-    /** Content below the label and description, outside the step's activation button. Compact horizontal steppers hide it without unmounting. */
+    /** Persistent panel content in wizard mode; inline content in progress mode. */
     children?: ViewNode;
 }): React.JSX.Element;
 
@@ -5214,7 +5119,7 @@ declare function MenuSubSection(props: {
 
 /** @category Display */
 declare function Icon(props: {
-    /** Lucide kebab-case name or LongLink alias. Prefix with lucide: to bypass an existing alias, such as lucide:logs. */
+    /** Lucide icon name or LongLink alias; prefix with lucide: to bypass aliases. */
     icon: StoneIconName;
     size: 'sm' | 'md' | 'lg';
 }): React.JSX.Element;
@@ -5238,6 +5143,6 @@ declare function FileViewer(props: {
     src: string;
     /** Attachment name used for accessible action labels and the downloaded filename. */
     title: string;
-    /** Size of preview and download actions; use sm in compact tables. Omitted values retain inherited sizing. */
+    /** Preview and download action size; inherits sizing when omitted. */
     size?: 'sm' | 'md' | 'lg';
 }): React.JSX.Element;

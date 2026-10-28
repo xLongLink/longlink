@@ -36,12 +36,6 @@ export default function RadioListPage() {
                     description: 'Prevents interaction and excludes the field from submission.',
                 },
                 {
-                    name: 'width',
-                    type: 'string | number',
-                    description:
-                        'Width of the field (number = pixels, string used as-is, e.g. "100%"). Sizes the whole field (label, control, and status) so they stay aligned.',
-                },
-                {
                     name: 'children',
                     type: 'ReactNode',
                     description: 'RadioListItem elements.',
@@ -54,7 +48,7 @@ export default function RadioListPage() {
                 {
                     name: 'defaultValue',
                     type: 'string',
-                    description: 'The defaultValue prop.',
+                    description: 'Initial value.',
                 },
                 {
                     name: 'onChange',
@@ -65,11 +59,6 @@ export default function RadioListPage() {
                     name: 'orientation',
                     type: '"horizontal" | "vertical"',
                     description: 'Layout direction of the radio items.',
-                },
-                {
-                    name: 'size',
-                    type: '"sm" | "md"',
-                    description: 'Size of the radio controls.',
                 },
                 {
                     name: 'RadioListItem.label',

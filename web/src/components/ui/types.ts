@@ -10,5 +10,4 @@ export type FieldProps = {
     required?: boolean;
     /** Prevents interaction and excludes the field from submission. */
     disabled?: boolean;
-    width?: number | string;
 };

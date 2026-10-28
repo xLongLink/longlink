@@ -12,7 +12,7 @@ export default function LinkPage() {
                 {
                     name: 'to',
                     type: 'string',
-                    description: 'The to prop.',
+                    description: 'Link destination.',
                 },
                 {
                     name: 'children',

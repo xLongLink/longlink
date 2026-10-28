@@ -27,6 +27,7 @@ export function FileInput(
         <FormField {...control} name={name} required={required} fieldRef={field.ref} values={files} serialize>
             <AstryxFileInput
                 {...control}
+                width="100%"
                 value={field.value}
                 onChange={field.onChange}
                 isMultiple={multiple}

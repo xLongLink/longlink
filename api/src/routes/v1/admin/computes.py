@@ -67,10 +67,9 @@ async def create_compute_registry(ctx: Context, payload: ComputeRegistryCreate) 
 
     # Translate duplicate names or physical clusters to one stable API conflict.
     try:
-        await ctx.database.flush()
+        await ctx.database.commit()
     except IntegrityError:
         raise HTTPException(status_code=409, detail="Compute registry already exists")
-    await ctx.database.commit()
     return candidate
 
 

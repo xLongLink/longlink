@@ -1,3 +1,4 @@
+import ssl
 import asyncio
 import sqlalchemy
 from uuid import UUID
@@ -8,7 +9,6 @@ from contextlib import asynccontextmanager
 from sqlalchemy.orm import relationship, declared_attr
 from collections.abc import AsyncGenerator
 from sqlmodel._compat import SQLModelConfig
-from longlink.database import urls
 from sqlalchemy.engine import URL, make_url
 from sqlalchemy.dialects import sqlite, postgresql
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
@@ -76,7 +76,13 @@ def create_engine(env: Envs) -> AsyncEngine:
         engine_kwargs["pool_use_lifo"] = True
 
         # Verify the Platform CA and configure UTC PostgreSQL sessions.
-        engine_kwargs["connect_args"] = urls.connect_args(dburl, schema=env.DATABASE_SCHEMA, certificate=env.DATABASE_CERTIFICATE)
+        server_settings = {"timezone": "UTC"}
+        if env.DATABASE_SCHEMA is not None:
+            server_settings["search_path"] = f'"{env.DATABASE_SCHEMA}"'
+        connect_args: dict[str, object] = {"server_settings": server_settings}
+        if env.DATABASE_CERTIFICATE is not None:
+            connect_args["ssl"] = ssl.create_default_context(cadata=env.DATABASE_CERTIFICATE)
+        engine_kwargs["connect_args"] = connect_args
 
     return create_async_engine(dburl, **engine_kwargs)
 
@@ -103,14 +109,12 @@ class Database:
                     # Initialize the database without publishing partially initialized resources.
                     try:
                         async with engine.begin() as conn:
-                            # Testing creates all tables; other environments bootstrap SDK-owned users.
+                            # Testing creates all tables; other environments use committed migrations.
                             if self._env.ENV == "testing":
                                 await conn.run_sync(SQLModel.metadata.create_all)
-                            else:
-                                await conn.run_sync(SQLModel.metadata.tables["users"].create, checkfirst=True)
 
                             if self._env.ENV != "production":
-                                # Seed the local user within the schema bootstrap's connection and transaction.
+                                # Seed the local user within the initialization transaction.
                                 users = SQLModel.metadata.tables["users"]
                                 user_id = await conn.scalar(sqlalchemy.select(users.c.id).where(users.c.id == LOCAL_USER_ID))
                                 if user_id is None:

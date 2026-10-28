@@ -43,11 +43,9 @@ export default function Operations() {
             <Heading level={1}>Operations</Heading>
             <TextInput
                 label="Search operations"
-                isLabelHidden
                 placeholder="Search by operation kind or resource name"
                 value={filters.search}
                 startIcon={<Search />}
-                hasClear
                 onChange={(search) => setFilters({ search, page: 1 })}
             />
             <Stack gap={1}>

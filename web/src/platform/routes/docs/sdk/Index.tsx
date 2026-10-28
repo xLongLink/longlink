@@ -5,7 +5,7 @@ import { Tabs, Tab } from '@/components/ui/Tabs';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Heading } from '@astryxdesign/core/Heading';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
-import { DocumentationArticle } from '@/components/Article';
+import { DocumentationArticle } from '@/components/layouts/Article';
 
 const article = {
     description: 'Build LongLink Solutions as standard Python and FastAPI services with the Solution SDK.',
@@ -68,19 +68,13 @@ export default function DocsArticleRoute() {
                     Create a Solution
                 </Heading>
                 <Tabs hasDivider>
-                    <Tab label="Standalone" value="standalone">
-                        <CodeBlock code="uvx --from longlink longlink init --folder ." language="bash" />
-                    </Tab>
                     <Tab label="GitHub" value="github">
                         <CodeBlock code="uvx --from longlink longlink init --folder . --ci github" language="bash" />
                     </Tab>
+                    <Tab label="Standalone" value="standalone">
+                        <CodeBlock code="uvx --from longlink longlink init --folder ." language="bash" />
+                    </Tab>
                 </Tabs>
-                <Stack as="aside" className="border-s border-accent ps-4" gap={0}>
-                    <Text weight="semibold">Example</Text>
-                    <Link href="https://github.com/xLongLink/sample" hasUnderline isExternalLink>
-                        LongLink sample repository
-                    </Link>
-                </Stack>
                 <Heading id="local-development" level={2}>
                     Local Development
                 </Heading>

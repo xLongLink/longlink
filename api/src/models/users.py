@@ -1,9 +1,32 @@
 from uuid import UUID
+from typing import Literal
 from datetime import datetime
 from pydantic import Field, BaseModel, ConfigDict
 from longlink.types import Email
 from src.models.roles import OrganizationRoles
 from src.models.resources import OrganizationIdentity
+
+ThemeMode = Literal["system", "light", "dark"]
+AccentColor = Literal[
+    "neutral",
+    "red",
+    "orange",
+    "amber",
+    "yellow",
+    "lime",
+    "green",
+    "emerald",
+    "teal",
+    "cyan",
+    "sky",
+    "blue",
+    "indigo",
+    "violet",
+    "purple",
+    "fuchsia",
+    "pink",
+    "rose",
+]
 
 
 class UserUpdate(BaseModel):
@@ -12,6 +35,10 @@ class UserUpdate(BaseModel):
     # Metadata
     name: str | None = Field(default=None, min_length=1, max_length=255)
     avatar: str | None = Field(default=None, max_length=2048)
+
+    # Appearance
+    theme: ThemeMode | None = None
+    accent: AccentColor | None = None
 
 
 class UserIdentity(BaseModel):
@@ -60,6 +87,14 @@ class UserSummary(UserIdentity):
 
     # State
     administrator: bool
+
+
+class CurrentUser(UserSummary):
+    """Include personal preferences only in the account's own profile."""
+
+    # Appearance
+    theme: ThemeMode
+    accent: AccentColor
 
 
 class AdminUserSummary(UserSummary):

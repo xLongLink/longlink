@@ -1,4 +1,3 @@
-import type { ReactNode } from 'react';
 import { useLocation } from 'react-router';
 import { Card } from '@astryxdesign/core/Card';
 import { Link } from '@astryxdesign/core/Link';
@@ -8,10 +7,11 @@ import { Stack } from '@astryxdesign/core/Stack';
 import { TopNav } from '@astryxdesign/core/TopNav';
 import { AppShell } from '@astryxdesign/core/AppShell';
 import { Tab, TabList } from '@astryxdesign/core/TabList';
+import { isValidElement, type ReactElement, type ReactNode } from 'react';
 
 export type NavigationTab = {
     href: string;
-    icon?: LucideIcon;
+    icon?: LucideIcon | ReactElement;
     label: string;
 };
 
@@ -64,7 +64,13 @@ export default function Platform({ action, activeTab, breadcrumb, children, heig
                             return (
                                 <Tab
                                     href={tab.href}
-                                    icon={Icon ? <Icon aria-hidden="true" size={16} /> : undefined}
+                                    icon={
+                                        isValidElement(Icon) ? (
+                                            Icon
+                                        ) : Icon ? (
+                                            <Icon aria-hidden="true" size={16} />
+                                        ) : undefined
+                                    }
                                     key={tab.href}
                                     label={tab.label}
                                     value={tab.href}

@@ -28,11 +28,9 @@ export default function Users() {
             <Heading level={1}>Users</Heading>
             <TextInput
                 label="Search users"
-                isLabelHidden
                 placeholder="Search by name or email"
                 value={filters.search}
                 startIcon={<Search />}
-                hasClear
                 onChange={(search) => setFilters({ search, page: 1 })}
             />
             <Stack gap={1}>

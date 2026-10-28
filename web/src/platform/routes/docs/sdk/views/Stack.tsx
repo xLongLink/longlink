@@ -42,8 +42,7 @@ export default function StackPage() {
                 {
                     name: 'padding',
                     type: '0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10',
-                    description:
-                        'Inner padding on all sides, using the spacing scale. Pass as a JSX number expression e.g. padding={3}.',
+                    description: 'Inner padding using the spacing scale.',
                 },
                 {
                     name: 'paddingInline',
@@ -63,14 +62,12 @@ export default function StackPage() {
                 {
                     name: 'direction',
                     type: '"horizontal" | "vertical"',
-                    description:
-                        "Direction of the stack layout. 'horizontal' flows items left-to-right (like HStack), 'vertical' flows top-to-bottom (like VStack). Note: the value is 'horizontal', NOT 'row'.",
+                    description: 'Horizontal or vertical layout direction.',
                 },
                 {
                     name: 'justify',
                     type: '"start" | "center" | "end" | "between" | "around" | "evenly"',
-                    description:
-                        "Main-axis alignment alias. Resolves to hAlign (horizontal) or vAlign (vertical). Note: use 'between', NOT 'space-between'.",
+                    description: 'Main-axis alignment.',
                 },
                 {
                     name: 'align',

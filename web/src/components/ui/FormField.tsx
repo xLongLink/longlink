@@ -1,10 +1,13 @@
 import type { FieldProps } from './types';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
-import { useEffect, useState, type ReactNode, type RefObject } from 'react';
+import { createContext, useEffect, useState, type ReactNode, type RefObject } from 'react';
 
 /** Shares a scoped validation pass between Form and its non-native controls. */
-export type FormValidation = { scope: HTMLElement; step?: number; invalid: HTMLElement[] };
+export type FormValidation = { scope: HTMLElement; panel?: HTMLElement; invalid: HTMLElement[] };
+
+// Form exposes validation without owning the navigation of its descendants.
+export const FormValidationContext = createContext<((panel?: HTMLElement) => boolean) | null>(null);
 
 /** Connects themed controls to native submission and reports missing or invalid named values. */
 export function FormField({
@@ -39,8 +42,8 @@ export function FormField({
         if (!form || !name) return;
 
         const validate = (event: Event) => {
-            // Stepped forms validate explicitly, without running inactive field listeners on submit.
-            if (event.type === 'submit' && form.hasAttribute('data-form-steps')) return;
+            // Managed forms run one ordered validation pass for native and themed controls.
+            if (event.type === 'submit' && form.hasAttribute('data-longlink-form')) return;
 
             // SAFETY: Form dispatches this private event with the shared FormValidation contract.
             const validation =
@@ -50,9 +53,9 @@ export function FormField({
 
             if (validation && (!field || !validation.scope.contains(field))) return;
 
-            const panel = field?.closest<HTMLElement>('[data-form-step]');
+            const panel = field?.closest<HTMLElement>('[data-step-panel]');
 
-            if (validation?.step !== undefined && panel && Number(panel.dataset.formStep) !== validation.step) return;
+            if (validation?.panel && panel && panel !== validation.panel) return;
 
             const invalidControl = fieldRef.current?.querySelector<HTMLElement>('[aria-invalid="true"]');
 
@@ -107,7 +110,7 @@ export function FormField({
 
     // Leave control presentation to Astryx and expose submission errors accessibly.
     return (
-        <Stack ref={fieldRef} gap={2}>
+        <Stack ref={fieldRef} gap={2} width="100%">
             {children}
             {serialize &&
                 name &&

@@ -867,6 +867,34 @@ def test_build_command_reports_docker_failure(
     assert not Path(commands[0][-1]).exists()
 
 
+def test_generated_python_build_is_available_in_uv_catalog(build_project: Path, tmp_path: Path) -> None:
+    """Reject Python patch and standalone-build pins that uv cannot install."""
+
+    # Arrange
+    context = tmp_path / "context"
+    metadata = build.read_pyproject(build_project)
+    build.build_solution(build_project, context, pyproject_data=metadata)
+    instructions = context.joinpath("Dockerfile").read_text(encoding="utf-8").splitlines()
+    python_version = next(line.removeprefix("RUN uv python install ") for line in instructions if line.startswith("RUN uv python install "))
+    python_build = next(
+        line.removeprefix("ENV UV_PYTHON_CPYTHON_BUILD=") for line in instructions if line.startswith("ENV UV_PYTHON_CPYTHON_BUILD=")
+    )
+
+    # Act
+    result = subprocess.run(
+        ["uv", "python", "list", f"cpython-{python_version}-linux-x86_64-gnu", "--offline", "--only-downloads", "--output-format", "json"],
+        capture_output=True,
+        text=True,
+        check=True,
+        timeout=30,
+    )
+    downloads = json.loads(result.stdout)
+
+    # Assert
+    assert len(downloads) == 1
+    assert f"/download/{python_build}/" in downloads[0]["url"]
+
+
 def run_docker(docker: str, *arguments: str, check: bool = True, timeout: int = 60) -> subprocess.CompletedProcess[str]:
     """Run bounded Docker commands and report actionable failures when opted in."""
 

@@ -34,6 +34,8 @@ async def test_get_me_returns_authenticated_user_profile_and_separate_org_member
         "email": user.email,
         "avatar": user.avatar,
         "administrator": user.administrator,
+        "theme": "system",
+        "accent": "neutral",
     }
 
     assert organizations_response.status_code == 200
@@ -125,6 +127,8 @@ async def test_patch_me_persists_without_organization_database_access(
         "email": user.email,
         "avatar": user.avatar,
         "administrator": user.administrator,
+        "theme": "system",
+        "accent": "neutral",
     }
     async with session_scope() as session:
         persisted_user = await session.get(User, user.id)

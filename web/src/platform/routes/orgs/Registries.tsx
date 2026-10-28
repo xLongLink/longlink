@@ -1,8 +1,8 @@
 import type { z } from 'zod';
 import { api } from '@/lib/api';
 import { useState } from 'react';
-import { Form } from '@/components/Form';
 import { useApiError } from '@/lib/errors';
+import { Form } from '@/components/ui/Form';
 import { useApi } from '@/lib/hooks/use-api';
 import { Text } from '@astryxdesign/core/Text';
 import { Dialog } from '@/components/ui/Dialog';
@@ -11,6 +11,7 @@ import { Button } from '@astryxdesign/core/Button';
 import { Divider } from '@astryxdesign/core/Divider';
 import { Heading } from '@astryxdesign/core/Heading';
 import { DeletionDialog } from '@/components/Deletion';
+import { Illustration } from '@/components/Illustration';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { Table, proportional } from '@astryxdesign/core/Table';
 import { Layout, LayoutContent } from '@astryxdesign/core/Layout';
@@ -147,7 +148,7 @@ function RegistryForm({
                                 className="mx-auto"
                             >
                                 <Stack gap={3} align="center">
-                                    <img
+                                    <Illustration
                                         src="/images/lock.png"
                                         alt=""
                                         className="size-20 object-contain"

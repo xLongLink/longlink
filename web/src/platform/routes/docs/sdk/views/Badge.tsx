@@ -12,8 +12,7 @@ export default function BadgePage() {
                 {
                     name: 'label',
                     type: 'ReactNode',
-                    description:
-                        "Badge text content. A badge is one line, so a label wider than the space available is cut with an ellipsis rather than escaping its container; a string or number label is also set as the badge's title so the full text stays reachable on hover.",
+                    description: 'Badge content, truncated when space is limited.',
                 },
                 {
                     name: 'icon',
@@ -23,7 +22,7 @@ export default function BadgePage() {
                 {
                     name: 'variant',
                     type: '"success" | "error" | "warning" | "info" | "neutral"',
-                    description: 'Semantic variants (neutral, info, success, warning, error) use solid backgrounds.',
+                    description: 'Status or color variant.',
                 },
             ]}
             examples={[

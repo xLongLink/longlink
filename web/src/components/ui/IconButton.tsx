@@ -12,7 +12,6 @@ export function IconButton({
     icon: StoneIconName;
     variant?: 'primary' | 'secondary' | 'ghost' | 'destructive';
     size?: 'sm' | 'md' | 'lg';
-    tooltip?: string;
     isDisabled?: boolean;
     onClick?: (event: MouseEvent<HTMLButtonElement>) => void | Promise<void>;
 }) {
@@ -23,7 +22,7 @@ export function IconButton({
     return (
         <AstryxIconButton
             {...props}
-            tooltip={props.tooltip}
+            tooltip={undefined}
             icon={<Icon icon={props.icon} size={size} />}
             variant={props.variant ?? 'secondary'}
             size={size}

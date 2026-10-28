@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import ViewLayout from './ViewLayout';
 import { Stack } from '@/components/ui/Stack';
+import { Text } from '@astryxdesign/core/Text';
 import { Button } from '@/components/ui/Button';
 import { Step, Stepper } from '@/components/ui/Stepper';
 
@@ -10,8 +11,34 @@ export default function StepperPage() {
     return (
         <ViewLayout
             name="Stepper"
-            introduction={'Displays the current step using standard progress indicators.'}
+            isLongLinkSpecific
+            introduction="Displays progress by default. Set variant to wizard to show one persistent Step panel at a time with Next/Back navigation. Inside Form, Next validates the current panel and shared fields; only an explicit submit Button in the last Step submits all fields. Outside Form, wizard navigation works independently without submitting data. Set height to pin progress above centered, scrollable panels."
             properties={[
+                {
+                    name: 'variant',
+                    type: '"progress" | "wizard"',
+                    description: 'Defaults to progress. Wizard mode owns persistent panels and Next/Back navigation.',
+                },
+                {
+                    name: 'height',
+                    type: 'number | string',
+                    description: 'Bounds a wizard, pinning progress above its scrollable panels.',
+                },
+                {
+                    name: 'next',
+                    type: '(step: number) => { label: string; action: () => void | boolean | Promise<void | boolean> } | undefined',
+                    description: 'Runs intermediate work after validation. Returning false prevents advancement.',
+                },
+                {
+                    name: 'onCancel',
+                    type: '() => void',
+                    description: 'Adds a Cancel action to wizard navigation.',
+                },
+                {
+                    name: 'backVariant',
+                    type: '"secondary" | "ghost"',
+                    description: 'Wizard Back button appearance; defaults to secondary.',
+                },
                 {
                     name: 'children',
                     type: 'ReactNode',
@@ -20,8 +47,7 @@ export default function StepperPage() {
                 {
                     name: 'activeStep',
                     type: 'number',
-                    description:
-                        'Zero-based index of the currently active step. Steps before this index are marked as completed.',
+                    description: 'Zero-based active index. Wizard mode manages selection internally when omitted.',
                 },
                 {
                     name: 'orientation',
@@ -31,12 +57,12 @@ export default function StepperPage() {
                 {
                     name: 'onStepClick',
                     type: '(index: number) => void',
-                    description: "Enables step activation and receives the clicked step's zero-based index.",
+                    description: 'Enables progress step activation, or receives wizard selection changes.',
                 },
                 {
                     name: 'Step.step',
                     type: 'number',
-                    description: 'Zero-based index of this step in the process.',
+                    description: 'Optional progress index; defaults to child order. Wizards always use child order.',
                 },
                 {
                     name: 'Step.label',
@@ -51,20 +77,34 @@ export default function StepperPage() {
                 {
                     name: 'Step.children',
                     type: 'ReactNode',
-                    description:
-                        "Content below the label and description, outside the step's activation button. Compact horizontal steppers hide it without unmounting.",
+                    description: 'Persistent panel content in wizard mode; inline content in progress mode.',
                 },
             ]}
             examples={[
                 {
                     title: 'Stepper',
-                    preview: <StepperExample />,
+                    preview: (
+                        <Stack gap={8}>
+                            <StepperExample />
+                            <Stepper variant="wizard">
+                                <Step label="Details">
+                                    <Text>Enter your workflow details.</Text>
+                                </Step>
+                                <Step label="Review">
+                                    <Text>Review before continuing.</Text>
+                                </Step>
+                                <Step label="Complete">
+                                    <Text>Your workflow is complete.</Text>
+                                </Step>
+                            </Stepper>
+                        </Stack>
+                    ),
                     code: `function Example() {
   return (
-    <Stepper activeStep={1}>
-      <Step step={0} label="Details" />
-      <Step step={1} label="Review" />
-      <Step step={2} label="Complete" />
+    <Stepper variant="wizard">
+      <Step label="Details"><Text>Enter your workflow details.</Text></Step>
+      <Step label="Review"><Text>Review before continuing.</Text></Step>
+      <Step label="Complete"><Text>Your workflow is complete.</Text></Step>
     </Stepper>
   );
 }`,

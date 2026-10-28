@@ -11,6 +11,7 @@ dependencies = [
     "alembic>=1.19.1",
     "anyio>=4.14.2",
     "asyncpg>=0.31.0",
+    "certifi>=2026.10.19",
     "cyclopts>=5.0,<6",
     "email-validator>=2.3.0",
     "fastapi>=0.141.1",
@@ -84,7 +85,6 @@ longlink = [".static/**"]
 
 [tool.setuptools.exclude-package-data]
 longlink = [
-    ".static/jsx/discovery.yml",
     ".static/new/.venv",
     ".static/new/.venv/*",
     ".static/new/.venv/**",

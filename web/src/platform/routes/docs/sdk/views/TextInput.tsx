@@ -38,12 +38,6 @@ export default function TextInputPage() {
                     description: 'Prevents interaction and excludes the field from submission.',
                 },
                 {
-                    name: 'width',
-                    type: 'string | number',
-                    description:
-                        'Width of the field (number = pixels, string used as-is, e.g. "100%"). Sizes the whole field (label, control, and status) so they stay aligned. Without a width the field can shrink with its row, so a filter bar never overflows; use `<HStack wrap="wrap">` when the controls should move to a second line instead.',
-                },
-                {
                     name: 'value',
                     type: 'string',
                     description: 'Current value of the input.',
@@ -51,7 +45,7 @@ export default function TextInputPage() {
                 {
                     name: 'defaultValue',
                     type: 'string',
-                    description: 'The defaultValue prop.',
+                    description: 'Initial value.',
                 },
                 {
                     name: 'onChange',
@@ -75,43 +69,19 @@ export default function TextInputPage() {
                     description: 'The HTML input type.',
                 },
                 {
-                    name: 'size',
-                    type: '"sm" | "lg" | "md"',
-                    description: 'Size variant of the input.',
-                },
-                {
                     name: 'autoComplete',
                     type: 'string',
-                    description:
-                        'The native autocomplete attribute, forwarded to the input unchanged. Does not affect the controlled value.',
-                },
-                {
-                    name: 'hasClear',
-                    type: 'boolean',
-                    description:
-                        'Shows a clear (×) button when the input has a value. Clicking it clears the value and returns focus to the input.',
-                },
-                {
-                    name: 'hasAutoFocus',
-                    type: 'boolean',
-                    description: 'Automatically focuses the input on mount.',
-                },
-                {
-                    name: 'isLabelHidden',
-                    type: 'boolean',
-                    description: 'Visually hides the label while keeping it accessible to screen readers.',
+                    description: 'Native autocomplete hint.',
                 },
                 {
                     name: 'startIcon',
                     type: 'ReactNode',
-                    description:
-                        'SVG icon component displayed at the start of the input. See `astryx docs icons` for valid semantic names.',
+                    description: 'Icon displayed at the start of the input.',
                 },
                 {
                     name: 'onEnter',
                     type: '() => void',
-                    description:
-                        'Callback fired when the user presses the Enter key. IME-safe: Enter used to commit a Japanese/Chinese/Korean conversion does not fire it.',
+                    description: 'Runs on Enter, except when confirming an IME composition.',
                 },
             ]}
             examples={[

@@ -27,8 +27,7 @@ export default function MetadataListPage() {
                 {
                     name: 'label',
                     type: '{ position: "start" | "top"; width?: string | number; }',
-                    description:
-                        "Label display configuration. position controls label placement, width sets a custom label column width. Defaults to { position: 'top' } for multi-column layouts.",
+                    description: 'Label position and optional column width.',
                 },
                 {
                     name: 'maxNumOfItems',

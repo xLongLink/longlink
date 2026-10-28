@@ -39,7 +39,7 @@ export default function DialogPage() {
                     description: 'Spacing between the title and content; defaults to 3.',
                 },
             ]}
-            introduction="Dialog uses the Platform's 960px-wide, viewport-limited frame. A title adds a visible header; otherwise only the close control is shown. The gap between title and content defaults to spacing step 3, matching Stack and Grid. Escape and the close button dismiss it; clicking the backdrop does not. Content owns its padding, height, and scrolling. The modal stays within the isolated View viewport without blocking the surrounding Platform navigation."
+            introduction="Dialog uses the Platform's 960px-wide, 560px-high frame, reduced to fit shorter viewports. A title adds a visible header; otherwise only the close control is shown. The gap between title and content defaults to spacing step 3, matching Stack and Grid. Escape and the close button dismiss it; clicking the backdrop does not. Content owns its padding, and the body scrolls when needed while the header stays visible. The modal stays within the isolated View viewport without blocking the surrounding Platform navigation."
             examples={[
                 {
                     title: 'Dialog',
@@ -77,7 +77,7 @@ export function DialogExample() {
     return (
         <>
             <Button label="Open dialog" onClick={() => setIsOpen(true)} />
-            <Dialog title="Edit order" isOpen={isOpen} onOpenChange={setIsOpen}>
+            <Dialog title="Order details" isOpen={isOpen} onOpenChange={setIsOpen}>
                 <Stack gap={3} padding={4}>
                     <Text>Order details</Text>
                     <Button label="Close" onClick={() => setIsOpen(false)} />

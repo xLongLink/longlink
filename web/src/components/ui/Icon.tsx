@@ -35,7 +35,7 @@ export function Icon({
 }
 
 /** Caches on-demand glyphs without suspending the containing page or changing icon dimensions. */
-function DeferredIcon({ icon, size }: { icon: string; size: 'sm' | 'md' | 'lg' }) {
+export function DeferredIcon({ icon, size }: { icon: string; size: 'sm' | 'md' | 'lg' }) {
     const load = useContext(IconRequestContext);
 
     if (load === null) throw new Error('Icon requires IconRequestContext');
