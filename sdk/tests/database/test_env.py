@@ -21,6 +21,8 @@ def test_migration_environment_emits_offline_sql_without_creating_database(monke
 
     # Assert
     sql = output.getvalue()
+    assert "CREATE TABLE IF NOT EXISTS users (" in sql
+    assert sql.index("CREATE TABLE IF NOT EXISTS users (") < sql.index("CREATE TABLE project (")
     assert "CREATE TABLE project (" in sql
     assert "INSERT INTO alembic_version" in sql
     assert not (tmp_path / "dev.db").exists()

@@ -20,13 +20,6 @@ def migration_config(migrations_path: Path) -> Config:
     return config
 
 
-def include_object(_object: object, name: str | None, type_: str, _reflected: bool, _compare_to: object | None) -> bool:
-    """Return whether Alembic should manage one metadata object."""
-
-    # The SDK bootstraps users before Solution migrations create referencing tables.
-    return not (type_ == "table" and name == "users")
-
-
 def load_solution_models() -> None:
     """Load Solution model modules so metadata includes table definitions."""
 

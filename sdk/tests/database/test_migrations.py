@@ -9,24 +9,6 @@ from alembic.config import Config
 from longlink.database import migrations as database_migrations
 
 
-@pytest.mark.parametrize(
-    ("name", "type_", "expected"),
-    [
-        pytest.param("users", "table", False, id="sdk-users-table"),
-        pytest.param("inventory", "table", True, id="solution-table"),
-        pytest.param("audit", "index", True, id="audit-index"),
-    ],
-)
-def test_include_object_excludes_only_sdk_owned_users_table(name: str, type_: str, expected: bool) -> None:
-    """Keep SDK-owned users out of Solution Alembic revisions."""
-
-    # Act
-    included = database_migrations.include_object(object(), name, type_, False, None)
-
-    # Assert
-    assert included is expected
-
-
 def test_make_migrations_creates_revisions_only_for_schema_operations(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Discover nested models once and create revisions only for schema changes."""
 
@@ -38,10 +20,10 @@ def test_make_migrations_creates_revisions_only_for_schema_operations(tmp_path: 
     assert module_name not in sys.modules
     assert table_name not in SQLModel.metadata.tables
 
-    # Match existing metadata without replacing or removing other tests' tables.
+    # Match existing Solution metadata while leaving users for migration generation.
     engine = create_engine("sqlite:///dev.db")
     try:
-        SQLModel.metadata.create_all(engine)
+        SQLModel.metadata.create_all(engine, tables=[table for table in SQLModel.metadata.sorted_tables if table.name != "users"])
     finally:
         engine.dispose()
 
@@ -73,6 +55,7 @@ def test_make_migrations_creates_revisions_only_for_schema_operations(tmp_path: 
         database_migrations.apply_migrations()
         with closing(sqlite3.connect(tmp_path / "dev.db")) as connection:
             tables = connection.execute("SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?", (table_name,)).fetchall()
+            assert connection.execute("SELECT COUNT(*) FROM users").fetchone() == (0,)
         assert tables == [(table_name,)]
 
         # Suppress a second revision when the migrated schema already matches metadata.
