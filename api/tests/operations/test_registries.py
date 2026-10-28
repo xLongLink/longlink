@@ -24,6 +24,8 @@ async def test_registry_synchronization_updates_active_secret_and_removes_stale_
     cluster = kubernetes_client()
     api = await cluster.api()
     active_name = f"registry-{connection.id}"
+
+    # Record Secret reconciliation without connecting to a cluster.
     applied: list[dict] = []
     deleted: list[str] = []
 
@@ -62,6 +64,9 @@ async def test_registry_synchronization_updates_active_secret_and_removes_stale_
     }
     assert secret["type"] == "kubernetes.io/dockerconfigjson"
     assert json.loads(secret["stringData"][".dockerconfigjson"]) == {
+        # The applied Secret must contain the rotated pull credential.
         "auths": {"ghcr.io": {"auth": base64.b64encode(b"acme:rotated-token").decode()}}
     }
+
+    # Stale registry Secrets are removed after current credentials are applied.
     assert deleted == ["registry-removed"]

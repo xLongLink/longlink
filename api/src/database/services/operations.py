@@ -30,7 +30,9 @@ async def fetch(session: AsyncSession, pagination: Pagination, search: str = "")
             select(col(Solution.name)).where(col(Solution.id) == col(Operation.target_id)).correlate(Operation).scalar_subquery(),
         ),
         (
+            # Deployment targets identify revisions rather than Solutions.
             col(Operation.kind) == OperationKind.solution_deploy,
+            # Deployment operations reference a revision rather than its parent Solution.
             select(col(Solution.name))
             .join(Revision, col(Revision.solution_id) == col(Solution.id))
             .where(col(Revision.id) == col(Operation.target_id))
@@ -54,9 +56,11 @@ async def fetch(session: AsyncSession, pagination: Pagination, search: str = "")
                 attr(Operation.failed),
                 attr(Operation.lease_expires_at),
                 attr(Operation.created_at),
+                # Include completion state without loading unrelated resource credentials.
                 attr(Operation.finished_at),
             )
         )
+        # Stable ordering prevents equal timestamps from shifting page boundaries.
         .order_by(col(Operation.created_at).desc(), col(Operation.id).desc())
         .offset(pagination.offset)
         .limit(pagination.page_size)
@@ -74,6 +78,7 @@ async def fetch(session: AsyncSession, pagination: Pagination, search: str = "")
             "status": operation.status,
             "failed": operation.failed,
             "created_at": operation.created_at,
+            # Completion remains absent while work is pending or leased.
             "finished_at": operation.finished_at,
         }
         for operation, resource_name in operations
@@ -95,6 +100,8 @@ async def enqueue(session: AsyncSession, *, kind: OperationKind, target_id: UUID
             .order_by(col(Operation.created_at), col(Operation.id))
             .limit(1)
         )
+
+        # Reuse unfinished work instead of enqueuing a duplicate command.
         if operation is not None:
             return operation
 
@@ -121,6 +128,8 @@ async def claim(session: AsyncSession) -> Operation | None:
         )
         .limit(1)
     )
+
+    # An active lease belongs to another worker.
     if operation is None or operation.lease_expires_at is not None and operation.lease_expires_at > now:
         return None
 
@@ -134,6 +143,7 @@ async def claim(session: AsyncSession) -> Operation | None:
                 col(Operation.finished_at).is_(None),
                 or_(col(Operation.lease_expires_at).is_(None), col(Operation.lease_expires_at) <= now),
             )
+            # Claim only work whose lease is still available at update time.
             .values(lease_expires_at=now + timedelta(minutes=30))
         ),
     )
@@ -187,6 +197,8 @@ async def complete(session: AsyncSession, operation_id: UUID) -> bool:
         populate_existing=True,
         with_for_update=True,
     )
+
+    # Removed Solutions no longer need deployment bookkeeping.
     if solution is None or solution.deleted_at is not None:
         return True
 
@@ -221,6 +233,8 @@ async def fail(session: AsyncSession, operation_id: UUID, reason: str) -> bool:
             )
         ),
     )
+
+    # Publish failure only when this worker completed the pending operation.
     if result.rowcount != 1:
         return False
     operation = await session.get_one(Operation, operation_id, populate_existing=True)

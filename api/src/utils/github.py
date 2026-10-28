@@ -26,6 +26,8 @@ async def username(credential: SecretStr) -> str:
                 "https://api.github.com/user",
                 headers={"Accept": "application/vnd.github+json", "Authorization": f"Bearer {token}", "X-GitHub-Api-Version": "2022-11-28"},
             )
+
+    # Provider transport failures must not expose authentication details.
     except httpx2.HTTPError:
         raise HTTPException(status_code=503, detail="GitHub account lookup is unavailable. Try again later.")
 

@@ -14,6 +14,7 @@ pytestmark = pytest.mark.no_db
         pytest.param({"A": "x" * 32769}, "value is too long", id="value-too-long"),
         pytest.param({f"ENV_{index}": "value" for index in range(101)}, "too many variables", id="too-many"),
         pytest.param({"A" * 254: "value"}, "is too long", id="name-too-long"),
+        # Individually valid values can still exceed the complete Secret budget.
         pytest.param({f"ENV_{index}": "x" * 32768 for index in range(17)}, "too large", id="total-too-large"),
     ],
 )

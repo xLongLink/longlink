@@ -34,6 +34,8 @@ async def get_cards(ctx: Context, membership: auth.OrganizationOwner):
             return []
         default = customer.invoice_settings.default_payment_method if customer.invoice_settings is not None else None
         methods = await connection.v1.payment_methods.list_async({"customer": customer_id, "type": "card", "limit": 100})
+
+        # Return card display metadata, never reusable payment credentials.
         return [
             {
                 "id": method.id,
@@ -44,6 +46,7 @@ async def get_cards(ctx: Context, membership: auth.OrganizationOwner):
                 "is_default": method.id == default,
             }
             async for method in methods.auto_paging_iter()
+            # Ignore non-card payment methods returned by the provider.
             if method.card is not None
         ]
 
@@ -69,6 +72,7 @@ async def get_invoices(ctx: Context, membership: auth.OrganizationOwner):
                 "number": invoice.number,
                 "status": invoice.status,
                 "currency": invoice.currency,
+                # Normalize provider timestamps at the response boundary.
                 "created_at": datetime.fromtimestamp(invoice.created, UTC),
                 "invoice_pdf": invoice.invoice_pdf,
                 "hosted_invoice_url": invoice.hosted_invoice_url,
@@ -81,6 +85,7 @@ async def get_invoices(ctx: Context, membership: auth.OrganizationOwner):
 @router.get(
     "/organizations/{organization_id}/invoices/{invoice_id}/pdf",
     response_class=Response,
+    # The endpoint streams PDF bytes rather than a JSON response model.
     response_model=None,
     responses={200: {"content": {"application/pdf": {"schema": {"type": "string", "format": "binary"}}}}},
 )
@@ -95,6 +100,8 @@ async def get_invoice_pdf(invoice_id: str, ctx: Context, membership: auth.Organi
         raise HTTPException(status_code=404, detail="Invoice PDF unavailable")
     async with stripe.client() as connection:
         invoice = await connection.v1.invoices.retrieve_async(invoice_id)
+
+    # Only finalized invoices belonging to this customer may be downloaded.
     if invoice.customer != customer_id or invoice.status not in {"open", "paid", "void", "uncollectible"} or not invoice.invoice_pdf:
         raise HTTPException(status_code=404, detail="Invoice PDF unavailable")
 
@@ -104,13 +111,21 @@ async def get_invoice_pdf(invoice_id: str, ctx: Context, membership: auth.Organi
         raise HTTPException(status_code=502, detail="Invoice PDF unavailable")
     content = bytearray()
     try:
+
+        # Fetch the provider PDF within bounded network and response-size limits.
         async with asyncio.timeout(30), httpx2.AsyncClient(timeout=15, trust_env=False, follow_redirects=True) as client:
             async with client.stream("GET", url) as response:
                 response.raise_for_status()
+
+                # Enforce the PDF size ceiling while reading the provider response.
                 async for chunk in response.aiter_bytes():
+
+                    # Reject oversized PDFs before extending the response buffer.
                     if len(content) + len(chunk) > 10 * 1024**2:
                         raise HTTPException(status_code=502, detail="Invoice PDF is too large")
                     content.extend(chunk)
+
+    # Provider PDF outages remain distinct from missing customer-owned invoices.
     except (httpx2.HTTPError, TimeoutError):
         raise HTTPException(status_code=503, detail="Invoice PDF unavailable. Please try again.") from None
     if not content.startswith(b"%PDF-"):

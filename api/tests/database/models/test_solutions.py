@@ -19,6 +19,8 @@ async def test_revision_references_require_same_solution(users: tuple[User, User
         current = await session.get(Solution, first.id)
         assert current is not None
         setattr(current, reference, second.desired_revision_id)
+
+        # The database itself rejects a cross-Solution revision pointer.
         with pytest.raises(IntegrityError):
             await session.commit()
 
@@ -29,6 +31,7 @@ IMMUTABLE_REVISION_FIELDS = [
     ("image", "ghcr.io/longlink/dashboard@sha256:replacement"),
     ("envs", {"KEY": "replacement"}),
     ("created_at", datetime.now(UTC)),
+    # Immutable snapshots also protect actor attribution.
     ("created_id", uuid4()),
 ]
 

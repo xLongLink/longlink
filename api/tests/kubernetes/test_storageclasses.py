@@ -33,9 +33,12 @@ def storage_class_listing(monkeypatch: pytest.MonkeyPatch, classes: list[Storage
     ("classes", "expected"),
     [
         pytest.param([StorageClass("local-path")], "local-path", id="sole-class"),
+        # An explicit default wins when several storage classes exist.
         pytest.param([StorageClass("retain"), StorageClass("delete", default=True)], "delete", id="default-class"),
     ],
 )
+
+# Invalid listings must not silently select an arbitrary storage class.
 @pytest.mark.usefixtures("storage_class_listing")
 async def test_resolve_selects_unique_storage_class(expected: str) -> None:
     """Select the sole class or the default class from an unambiguous cluster."""
@@ -50,7 +53,10 @@ async def test_resolve_selects_unique_storage_class(expected: str) -> None:
         pytest.param([], "no storage classes", id="none"),
         pytest.param([StorageClass("retain"), StorageClass("delete")], "without a default", id="ambiguous"),
         pytest.param(
-            [StorageClass("retain", default=True), StorageClass("delete", default=True)], "multiple default", id="multiple-defaults"
+            # Multiple defaults are ambiguous even when every class is otherwise valid.
+            [StorageClass("retain", default=True), StorageClass("delete", default=True)],
+            "multiple default",
+            id="multiple-defaults",
         ),
     ],
 )

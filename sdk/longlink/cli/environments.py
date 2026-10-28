@@ -31,6 +31,8 @@ def read_model(root: Path, environment_import: str) -> list[dict[str, object]]:
             "name": field.validation_alias if isinstance(field.validation_alias, str) and field.validation_alias else field_name,
             "required": field.is_required(),
         }
+
+        # Descriptions are optional and never expose field defaults.
         if field.description is not None:
             env_entry["description"] = field.description
         environments.append(env_entry)
@@ -38,11 +40,14 @@ def read_model(root: Path, environment_import: str) -> list[dict[str, object]]:
 
 
 if __name__ == "__main__":
+
     # Return metadata or an expected validation error through a file, leaving output streams intact.
     root = Path(sys.argv[1])
     result_path = Path(sys.argv[3])
     try:
         result: list[dict[str, object]] | str = read_model(root, sys.argv[2])
     except ValueError as error:
+
+        # Expected model errors share the file transport with successful metadata.
         result = str(error)
     result_path.write_text(json.dumps(result), encoding="utf-8")

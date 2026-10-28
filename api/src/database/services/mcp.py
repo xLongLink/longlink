@@ -56,6 +56,8 @@ def resource_id(value: str) -> UUID:
         solution_id = UUID(value.split("/")[-3])
     except (ValueError, IndexError) as exc:
         raise OAuthError("invalid_target", "A Solution MCP resource is required") from exc
+
+    # Accept only the canonical resource URL, not alternate spellings.
     if value != resource(solution_id):
         raise OAuthError("invalid_target", "A Solution MCP resource is required")
     return solution_id
@@ -112,9 +114,11 @@ async def authenticate(session: AsyncSession, credential: str, solution_id: UUID
                 attr(MCPToken.resource),
                 attr(MCPToken.expires_at),
                 attr(MCPToken.fingerprint),
+                # Bind token admission to its retained Solution grant.
                 attr(MCPToken.solution_id),
             )
         )
+        # Compare stored digests without loading plaintext credentials.
         .where(col(MCPToken.hash) == digest(credential))
     )
     if (
@@ -124,6 +128,8 @@ async def authenticate(session: AsyncSession, credential: str, solution_id: UUID
         or grant.expires_at <= datetime.now(UTC)
     ):
         return None
+
+    # Password changes invalidate otherwise valid grants.
     return await token.credential_user(session, grant.user_id, grant.fingerprint)
 
 
@@ -164,6 +170,7 @@ async def approve(session: AsyncSession, user: User, payload: mcp.Approval) -> s
         solution_id=solution_id,
         resource=payload.resource,
         redirect_uri=payload.redirect_uri,
+        # Bind the short-lived proof to PKCE and the user's current password.
         challenge=payload.code_challenge,
         fingerprint=token.password_fingerprint(user.password),
         expires_at=datetime.now(UTC) + timedelta(seconds=300),
@@ -189,6 +196,7 @@ async def exchange(session: AsyncSession, payload: mcp.TokenExchange) -> dict[st
         or proof.solution_id != solution_id
         or proof.resource != payload.resource
         or proof.redirect_uri != payload.redirect_uri
+        # Compare PKCE proof without exposing timing differences.
         or not hmac.compare_digest(proof.challenge, challenge(payload.code_verifier))
     ):
         raise OAuthError("invalid_grant", "Invalid or expired authorization code")
@@ -197,9 +205,13 @@ async def exchange(session: AsyncSession, payload: mcp.TokenExchange) -> dict[st
     user = await token.credential_user(session, proof.user_id, proof.fingerprint)
     if user is None:
         raise OAuthError("invalid_grant", "Authorization is no longer valid")
+
+    # Recheck access because membership can change after browser approval.
     try:
         await _permitted_solution(session, user, solution_id)
     except HTTPException as exc:
+
+        # Only revoked access becomes an invalid grant; infrastructure errors propagate.
         if exc.status_code != 403:
             raise
         raise OAuthError("invalid_grant", "Authorization is no longer valid") from exc
@@ -211,6 +223,8 @@ async def exchange(session: AsyncSession, payload: mcp.TokenExchange) -> dict[st
     )
     if consumed.rowcount != 1:
         raise OAuthError("invalid_grant", "Authorization code already used")
+
+    # Return the opaque credential once and persist only its digest.
     credential = secrets.token_urlsafe(32)
     access = MCPToken(
         hash=digest(credential),
@@ -221,6 +235,8 @@ async def exchange(session: AsyncSession, payload: mcp.TokenExchange) -> dict[st
         fingerprint=proof.fingerprint,
         expires_at=datetime.now(UTC) + timedelta(seconds=ACCESS_LIFETIME_SECONDS),
     )
+
+    # Persist the grant before returning its one-time plaintext credential.
     session.add(access)
     return {"access_token": credential, "expires_in": ACCESS_LIFETIME_SECONDS}
 

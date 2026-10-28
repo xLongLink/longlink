@@ -94,8 +94,12 @@ async def ensure_administrator(session: AsyncSession) -> User:
             async with session.begin_nested():
                 session.add(user)
                 await session.flush()
+
+        # A concurrent registration can create the administrator first.
         except IntegrityError:
             user = await session.scalar(statement)
+
+            # Re-raise unexpected uniqueness failures instead of hiding a missing administrator.
             if user is None:
                 raise
         else:

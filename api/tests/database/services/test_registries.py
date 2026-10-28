@@ -42,6 +42,7 @@ async def test_private_image_fallback_never_uses_foreign_credentials(
         assert connection.id == accepted.id
         return metadata
 
+    # Replace only external registry inspection, leaving credential selection real.
     monkeypatch.setattr(images, "required_metadata", required_metadata)
 
     # Act

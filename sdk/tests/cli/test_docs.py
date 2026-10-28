@@ -19,6 +19,8 @@ def test_docs_command_lists_documented_component_categories(capsys: pytest.Captu
     assert "React state and controlled callbacks" in output
     assert "longlink docs search" in output
     assert "longlink docs build" in output
+
+    # CLI help exposes both workflow guidance and individual API lookup.
     assert "longlink docs component" in output
 
 

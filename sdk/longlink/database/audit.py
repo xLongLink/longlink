@@ -48,11 +48,14 @@ def install_listener(session_type: type[SyncSession], audit_type: type[object]) 
             if not isinstance(obj, audit_type):
                 continue
 
+            # Preserve explicitly supplied creation metadata while filling missing audit fields.
             record = cast(AuditRecord, obj)
             if record.created_at is None:
                 record.created_at = now
             if record.updated_at is None:
                 record.updated_at = now
+
+            # Fill actor defaults without replacing explicit creation attribution.
             if record.created_id is None:
                 record.created_id = user_id
             if record.updated_id is None:

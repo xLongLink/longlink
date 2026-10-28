@@ -19,6 +19,7 @@ async def server_metadata() -> dict[str, str | list[str]]:
         "revocation_endpoint": f"{env.PUBLIC_URL}/api/v1/mcp/revoke",
         "scopes_supported": ["mcp"],
         "grant_types_supported": ["authorization_code"],
+        # Public clients use authorization codes with PKCE, never client secrets.
         "response_types_supported": ["code"],
         "code_challenge_methods_supported": ["S256"],
         "token_endpoint_auth_methods_supported": ["none"],

@@ -20,6 +20,8 @@ def require_docker_daemon() -> None:
         with closing(client):
             client.ping()
     except (DockerException, OSError) as exc:
+
+        # Container-backed tests are optional when the daemon is unavailable.
         pytest.skip(f"Docker daemon is not available: {exc}")
 
 
@@ -60,7 +62,11 @@ def postgres_url(postgres_server: PostgresContainer) -> Iterator[URL]:
     try:
         with engine.connect() as connection:
             name = connection.dialect.identifier_preparer.quote(database)
+
+            # Allocate a fresh database for this test's persisted state.
             connection.exec_driver_sql(f"CREATE DATABASE {name}")
+
+            # Keep this database alive until its requesting test finishes.
             try:
                 yield server_url.set(database=database)
             finally:
@@ -81,15 +87,23 @@ def mysql_url(mysql_server: MySqlContainer) -> Iterator[URL]:
     try:
         with engine.connect() as connection:
             name = connection.dialect.identifier_preparer.quote(database)
+
+            # MySQL database identifiers are quoted by the connected dialect.
             connection.exec_driver_sql(f"CREATE DATABASE {name}")
+
+            # Database cleanup must also run when granting test access fails.
             try:
                 connection.execute(text(f"GRANT ALL PRIVILEGES ON {name}.* TO 'longlink'@'%'"))
                 try:
+
+                    # Keep granted access alive until the requesting test completes.
                     yield server_url.set(database=database)
                 finally:
+
                     # Revoke only after the grant succeeds, even when the test fails.
                     connection.execute(text(f"REVOKE ALL PRIVILEGES ON {name}.* FROM 'longlink'@'%'"))
             finally:
+
                 # Remove the database even if granting or revoking its access fails.
                 connection.exec_driver_sql(f"DROP DATABASE {name}")
     finally:

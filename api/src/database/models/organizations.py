@@ -41,6 +41,7 @@ class Organization(AuditTable, table=True):
             nullable=False,
         ),
     )
+
     # Storage
     storage_quota_bytes: int = Field(default=FREE_STORAGE_BYTES, ge=1073741824, sa_type=BigInteger)
 

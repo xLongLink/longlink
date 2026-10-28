@@ -33,11 +33,14 @@ async def test_operations_service_create_coalesces_and_reopens_completed_work() 
 
     assert duplicate.id == solution.id
     assert len(fetched) == 2
+
+    # Deduplication preserves distinct operation targets and kinds.
     assert {(item.kind, item.target_id) for item in fetched} == {
         (OperationKind.solution_deploy, first_solution_id),
         (OperationKind.organization_create, organization_id),
     }
 
+    # Claim through the real lease transition before checking worker-visible state.
     claimed = await claim_operation()
     assert claimed is not None
     assert claimed.id == solution.id
@@ -60,6 +63,7 @@ async def test_operations_service_claim_claims_oldest_available_operation() -> N
         older_row.created_at = datetime.now(UTC) - timedelta(days=1)
         await session.commit()
 
+    # Observe the claim only after its setup transaction is committed.
     claimed = await claim_operation()
 
     assert claimed is not None
@@ -80,6 +84,7 @@ async def test_operations_service_claim_serializes_active_work() -> None:
     waiting_claim = await claim_operation()
     assert waiting_claim is not None
 
+    # Completing the active claim releases its queued successor.
     await complete_operation(waiting_claim.id)
 
     assert waiting_claim.id == waiting.id
@@ -171,6 +176,8 @@ async def test_operations_service_failed_creation_updates_targets_and_resolves_r
         session.add(solution)
         await session.flush()
         revision = Revision(solution_id=solution.id, image="ghcr.io/longlink/dashboard@sha256:resolved", envs={})
+
+        # Persist the revision before constructing its deployment command.
         session.add(revision)
         await session.flush()
         solution.desired_revision_id = revision.id
@@ -183,6 +190,8 @@ async def test_operations_service_failed_creation_updates_targets_and_resolves_r
     assert await fail_operation(organization_operation.id, "organization creation failed") is True
 
     solution_operation = await queue(kind=OperationKind.solution_deploy, target_id=solution.desired_revision_id)
+
+    # Claim the queued deployment through the production worker transition.
     solution_claim = await claim_operation()
     assert solution_claim is not None
     assert solution_claim.id == solution_operation.id
@@ -206,6 +215,8 @@ async def test_operations_service_failed_creation_updates_targets_and_resolves_r
     solution_item = items_by_kind[OperationKind.solution_deploy]
     assert organization_item["resource_name"] == organization.name
     assert organization_item["status"] == OperationStatus.failed
+
+    # Solution operations retain their own display identity and failure state.
     assert solution_item["resource_name"] == solution.name
     assert solution_item["status"] == OperationStatus.failed
 
@@ -249,6 +260,8 @@ async def test_operations_service_complete_reenqueues_stale_effective_revision()
         solution = Solution(organization_id=organization.id, name="Dashboard", slug="dashboard", secrets={})
         session.add(solution)
         await session.flush()
+
+        # Preserve the observed release independently of the next desired snapshot.
         deployed_revision = Revision(
             solution_id=solution.id, image="ghcr.io/longlink/dashboard@sha256:one", envs={}, deployed_at=datetime.now(UTC)
         )
@@ -258,6 +271,8 @@ async def test_operations_service_complete_reenqueues_stale_effective_revision()
         session.add(desired_revision)
         await session.flush()
         solution.desired_revision_id = desired_revision.id
+
+        # Persist observed state independently of the desired release.
         solution.deployed_revision_id = deployed_revision.id
         await session.commit()
 
@@ -292,6 +307,7 @@ async def test_claim_globally_leases_one_operation_to_one_concurrent_worker(
         database_url = database_url.set(drivername="mysql+aiomysql")
     engine = create_async_engine(database_url, isolation_level="READ COMMITTED")
     try:
+
         # Create the queue and its audit-user dependency before binding the production session service.
         async with engine.begin() as connection:
             await connection.run_sync(User.__table__.create)
@@ -329,6 +345,8 @@ async def test_claim_globally_leases_one_operation_to_one_concurrent_worker(
                     read_ids.append(operation.id)
                     async with asyncio.timeout(5):
                         await barrier.wait()
+
+                    # Both workers must contend for the same queued identity.
                     assert operation.id == read_ids[0]
                     return operation
 
@@ -345,6 +363,8 @@ async def test_claim_globally_leases_one_operation_to_one_concurrent_worker(
                 first_worker = workers.create_task(claim_after_shared_read())
                 second_worker = workers.create_task(claim_after_shared_read())
         claims = [first_worker.result(), second_worker.result()]
+
+        # Exactly one competing worker may publish a lease.
         claimed = [claim for claim in claims if claim is not None]
 
         # Assert one winner both in the returned claims and in committed database state.
@@ -356,6 +376,8 @@ async def test_claim_globally_leases_one_operation_to_one_concurrent_worker(
             [active] = result.all()
             assert active.id == claimed[0].id
             assert active.status == OperationStatus.active
+
+        # A live claim must not be handed to another worker.
         assert await claim_operation() is None
 
         # Releasing work remains safe with multiple unfinished rows for the same target.
@@ -401,10 +423,14 @@ async def test_claim_globally_leases_one_operation_to_one_concurrent_worker(
             assert failed.finished_at is not None
             await session.commit()
 
+        # Completed recovery leaves no work available to a new worker.
         assert await claim_operation() is None
         async with session_factory() as session:
+
+            # Recovery must leave no unfinished queue entries.
             unfinished = await session.scalar(select(Operation).where(col(Operation.finished_at).is_(None)))
             assert unfinished is None
     finally:
+
         # Dispose database connections before the fixture removes the database.
         await engine.dispose()

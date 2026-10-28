@@ -62,6 +62,7 @@ def test_dev_command_warns_only_for_public_hosts(
                 "port": 1707,
                 "reload": True,
                 "reload_includes": ["*.jsx"],
+                # Resolve reloaded imports from the selected Solution directory.
                 "app_dir": str(tmp_path),
                 "log_config": dev.log_config,
             },

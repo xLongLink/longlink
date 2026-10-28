@@ -25,6 +25,7 @@ class ViewDefinition:
 class ViewTab:
     """Declare an explicitly included navigation tab."""
 
+    # Optional labels and icons override navigation inferred from the View.
     route: str
     label: str | None = None
     icon: str | None = None
@@ -50,6 +51,7 @@ def view_stem_route(view_stem: str) -> str:
 
     # Convert filesystem route conventions into React Router-style route patterns.
     for segment in view_stem.split("/"):
+
         # Index segments map to the current route level.
         if segment == "index":
             continue

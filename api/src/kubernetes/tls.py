@@ -18,6 +18,7 @@ async def certificate(client: "Kubernetes", namespace: str, name: str, *, entry:
     if not isinstance(encoded_certificate, str):
         raise ValueError(f"{namespace}/{name} must contain a TLS certificate")
 
+    # Validate both the Secret encoding and the PEM trust material.
     try:
         value = base64.b64decode(encoded_certificate, validate=True).decode("utf-8")
         ssl.create_default_context(cadata=value)

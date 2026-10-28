@@ -32,6 +32,7 @@ def stored_file(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[tup
     try:
         yield storage, str(path), content, handles
     finally:
+
         # Release leaked handles only after each test checks response cleanup.
         for handle in handles:
             handle.close()

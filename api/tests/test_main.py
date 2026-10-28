@@ -304,6 +304,8 @@ async def test_lifespan_starts_and_stops_background_jobs(monkeypatch: pytest.Mon
             try:
                 await main.asyncio.Event().wait()
             except main.asyncio.CancelledError:
+
+                # Record cancellation before propagating it to the lifespan owner.
                 events.append(f"{name} cancel")
                 raise
 

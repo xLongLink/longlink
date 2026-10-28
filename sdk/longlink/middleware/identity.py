@@ -39,6 +39,8 @@ class IdentityMiddleware:
             try:
                 user = identity.identity_token_user(request.headers.get("x-longlink-identity", ""), self.identity_secret)
                 user_id = user.id
+
+            # Invalid assertions remain anonymous until the route's identity policy is enforced.
             except jwt.PyJWTError:
                 pass
 

@@ -40,13 +40,15 @@ async def registry_json(
 ) -> tuple[object, httpx2.Headers] | None:
     """Fetch a successful, bounded JSON registry response with its headers."""
 
+    # GHCR blobs may redirect only to the fixed GitHub CDN, without the registry token.
     async with client.stream("GET", url, headers=headers, params=params, auth=auth, follow_redirects=False) as response:
-        # GHCR serves blobs through one fixed GitHub CDN; never forward the pull token.
         if ghcr_blob and response.status_code in (302, 307):
             destination = httpx2.URL(response.headers.get("Location", ""))
             if (
+                # Redirects must retain the fixed CDN's HTTPS authority.
                 destination.scheme == "https"
                 and destination.host == "pkg-containers.githubusercontent.com"
+                # Only the fixed HTTPS CDN origin may receive a redirected blob request.
                 and destination.port in (None, 443)
                 and not destination.userinfo
                 and not destination.fragment
@@ -55,6 +57,8 @@ async def registry_json(
             return None
         if response.status_code in (401, 403):
             raise HTTPException(status_code=403, detail="Registry denied image access. Check package permissions and registry credentials.")
+
+        # Non-success registry responses cannot supply image metadata.
         if not response.is_success:
             return None
 
@@ -90,10 +94,13 @@ async def required_metadata(image: Image, connection: RegistryConnection | None 
 
     # Keep registry inspection and transport cleanup within one client lifetime.
     async with httpx2.AsyncClient(follow_redirects=False, timeout=5.0, trust_env=False) as client:
+
+        # Bound the whole lookup as well as individual network reads.
         try:
-            # Bound the whole lookup as well as individual network reads.
             async with asyncio.timeout(20):
                 result = await inspect(client, image, base, connection)
+
+        # Unavailable or malformed registry metadata remains an unresolved image.
         except (httpx2.HTTPError, TimeoutError, TypeError, ValueError):
             result = None
 
@@ -119,12 +126,16 @@ async def inspect(
             params={"service": "ghcr.io", "scope": f"repository:{image.repository}:pull"},
             auth=httpx2.BasicAuth(connection.username, connection.credential) if connection is not None else None,
         )
+
+        # Validate the registry token response before constructing pull headers.
         if token_result is None:
             return None
         token_payload, _ = token_result
         if not isinstance(token_payload, dict):
             return None
         token = token_payload.get("token")
+
+        # Only non-empty bearer credentials may authenticate the registry pull.
         if not isinstance(token, str) or not token:
             return None
         headers["Authorization"] = f"Bearer {token}"
@@ -136,33 +147,46 @@ async def inspect(
         if manifest_result is None:
             return None
         manifest, manifest_headers = manifest_result
+
+        # Reject non-object manifests before interpreting their descriptors.
         if not isinstance(manifest, dict):
             return None
 
         digest = manifest_headers.get("Docker-Content-Digest")
         if digest is None:
             digest = reference
+
+        # Immutable metadata must identify a syntactically valid content digest.
         if not IMAGE_DIGEST_PATTERN.fullmatch(digest):
             return None
         if IMAGE_DIGEST_PATTERN.fullmatch(reference) and digest != reference:
             return None
 
         children = manifest.get("manifests")
+
+        # Resolve at most one manifest-index level for the selected platform.
         if children is not None:
             if depth != 0 or not isinstance(children, list):
                 return None
             reference = ""
+
+            # Select only a valid descriptor for the supported runtime platform.
             for child in children:
                 if not isinstance(child, dict):
                     continue
+
+                # Runtime images require the supported Linux AMD64 descriptor.
                 platform = child.get("platform")
                 if isinstance(platform, dict) and platform.get("os") == "linux" and platform.get("architecture") == "amd64":
                     reference = child.get("digest")
                     break
+
+            # An index without a valid supported-platform digest cannot be inspected.
             if not isinstance(reference, str) or not IMAGE_DIGEST_PATTERN.fullmatch(reference):
                 return None
             continue
 
+        # A concrete image manifest must identify its configuration blob.
         manifest_config = manifest.get("config")
         if not isinstance(manifest_config, dict):
             return None
@@ -171,17 +195,21 @@ async def inspect(
         if not isinstance(config_digest, str) or not IMAGE_DIGEST_PATTERN.fullmatch(config_digest):
             return None
 
+        # Fetch only the validated configuration digest from the selected manifest.
         config_result = await registry_json(
             client, f"{base}/v2/{image.repository}/blobs/{config_digest}", headers=headers, ghcr_blob=is_ghcr
         )
         if config_result is None:
             return None
         config_blob, _ = config_result
+
+        # Validate config shape and runtime platform before interpreting image labels.
         if not isinstance(config_blob, dict):
             return None
         if config_blob.get("os", "linux") != "linux" or config_blob.get("architecture", "amd64") != "amd64":
             return None
 
+        # LongLink metadata is carried in the image's config labels.
         image_config = config_blob.get("config")
         if not isinstance(image_config, dict):
             return None

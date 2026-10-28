@@ -27,12 +27,16 @@ async def deploy(revision_id: UUID) -> None:
         if revision is None:
             return
         solution_id = revision.solution_id
+
+        # Deleted or unavailable parents cannot accept a deployment.
         target = await organizations.solution_infrastructure(session, solution_id)
         if target is None:
             return
         solution, organization, compute = target
         if revision.id != solution.effective_revision_id:
             return
+
+        # Tombstoned Solutions cannot accept a captured deployment command.
         if solution.deleted_at is not None:
             return
         await session.execute(update(Solution).where(col(Solution.id) == solution_id).values(status=Status.creating))
@@ -62,9 +66,8 @@ async def deploy(revision_id: UUID) -> None:
         # Use one current CA snapshot for SQL provisioning and workload rendering in this attempt.
         database_certificate = await database_resources.certificate(cluster, organization.id)
 
-        # Reuse generated credentials after an interrupted creation attempt.
+        # Reuse generated credentials; new RustFS accounts remain scoped to this Solution.
         if "LONGLINK_ENV" not in runtime_secrets:
-            # RustFS service accounts are scoped to this Solution and owner keys never reach workloads.
             database_password = secrets.token_urlsafe(24)
             credentials = await storage.service_account(organization.id, solution.id)
             database = await database_resources.connection(organization, cluster, certificate=database_certificate)
@@ -104,16 +107,20 @@ async def deploy(revision_id: UUID) -> None:
 
         # Persist generated credentials when the runtime contract changed.
         if runtime_secrets != solution.secrets:
+
+            # Persist credentials only while the Solution remains active.
             async with session_scope() as session:
-                # Persist credentials only while the Solution remains active.
                 result = cast(
                     CursorResult[tuple[object, ...]],
                     await session.execute(
                         update(Solution)
                         .where(col(Solution.id) == solution.id, col(Solution.deleted_at).is_(None))
+                        # Store generated credentials only on a still-active Solution.
                         .values(secrets=runtime_secrets)
                     ),
                 )
+
+                # Stop if deletion won the race with credential persistence.
                 if result.rowcount != 1:
                     return
 
@@ -128,6 +135,7 @@ async def deploy(revision_id: UUID) -> None:
             solution.id,
             revision.image,
             runtime_environment,
+            # Replays reuse the captured release and skip already-completed migrations.
             revision_id=revision.id,
             migrate=revision.deployed_at is None,
             registry_connection_id=revision.registry_connection_id,
@@ -153,6 +161,8 @@ async def delete(solution_id: UUID) -> None:
         if target is None:
             return
         organization, compute = target
+
+        # Organization cleanup owns resources once its parent is tombstoned.
         if organization.deleted_at is not None:
             return
 
@@ -167,9 +177,8 @@ async def delete(solution_id: UUID) -> None:
         storage = Storage(compute, cluster)
         await storage.delete_solution(organization.id, solution_id)
 
-    # Purge the tombstone only after all external resources are absent.
+    # Purge the locked tombstone only after all external resources are absent.
     async with session_scope() as session:
-        # The delete statement locks the tombstone while making completed cleanup idempotent.
         await session.execute(
             update(Solution).where(col(Solution.id) == solution_id).values(desired_revision_id=None, deployed_revision_id=None)
         )

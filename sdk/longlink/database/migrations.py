@@ -45,6 +45,8 @@ def load_solution_models() -> None:
         try:
             spec.loader.exec_module(module)
         except BaseException:
+
+            # Failed imports must not leave a partially initialized model module cached.
             del sys.modules[module_name]
             raise
 
@@ -56,6 +58,7 @@ def make_migrations() -> bool:
         bool: True when a new migration file is created, otherwise False.
 
     """
+
     # Load Solution models before comparing their metadata with the database.
     load_solution_models()
 
@@ -94,5 +97,6 @@ def apply_migrations() -> None:
 
 
 if __name__ == "__main__":
+
     # Kubernetes runs this module directly before starting a Solution workload.
     apply_migrations()

@@ -57,8 +57,12 @@ def init_command(
         raise errors.Error(f"Target is not a directory: {target}")
     if target.exists():
         for scaffold in scaffolds:
+
+            # Reject every collision before copying any scaffold content.
             for source in scaffold.rglob("*"):
                 destination = target / source.relative_to(scaffold)
+
+                # Never overwrite existing project files or follow destination symlinks.
                 if destination.is_symlink() or (destination.exists() and (source.is_file() or not destination.is_dir())):
                     raise errors.Error(f"Target already exists: {destination}")
 

@@ -126,6 +126,7 @@ def rendered_chart() -> list[dict]:
             "--namespace",
             "longlink-system",
             "--set",
+            # Use documentation-only addresses in rendered integration manifests.
             "gateway.address=203.0.113.10",
             "--set",
             "storage.address=203.0.113.11",
@@ -136,6 +137,8 @@ def rendered_chart() -> list[dict]:
         capture_output=True,
         text=True,
     )
+
+    # Inspect the Helm-rendered resources, not a second copy of the chart logic.
     return list(yaml.safe_load_all(release.stdout))
 
 
@@ -305,6 +308,8 @@ async def reset_db(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, request: pyt
     monkeypatch.setattr(session, "Session", async_sessionmaker(engine, expire_on_commit=False))
 
     try:
+
+        # Keep shared test services bound for the complete test lifecycle.
         yield
     finally:
         await engine.dispose()

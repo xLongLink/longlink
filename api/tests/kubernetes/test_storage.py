@@ -100,6 +100,7 @@ async def test_storage_registration_checks_remote_tunnel(
             finally:
                 observations.append("closed")
 
+    # Replace the transport boundary while exercising real storage ownership.
     monkeypatch.setattr(storage.s3.aiobotocore.session, "get_session", Session)
 
     # kr8s opens its remote connection only after the first local HTTP request.
@@ -126,6 +127,7 @@ async def test_storage_registration_checks_remote_tunnel(
     monkeypatch.setattr(storage.httpx2, "AsyncClient", local_client)
     target = storage.Storage(storage_compute, storage_cluster)  # type: ignore[arg-type]
 
+    # Storage verification accepts only a successful readiness response.
     if status == 200:
         await target.verify()
     else:
@@ -159,6 +161,8 @@ def test_storage_proxy_denies_admin_routes_but_keeps_s3(rendered_chart: list[dic
     assert pod["securityContext"]["runAsNonRoot"] is True
     assert pod["securityContext"]["runAsUser"] == 101
     assert pod["securityContext"]["seccompProfile"]["type"] == "RuntimeDefault"
+
+    # Storage containers retain the hardened runtime security policy.
     assert container["securityContext"]["allowPrivilegeEscalation"] is False
     assert container["securityContext"]["readOnlyRootFilesystem"] is True
     assert container["securityContext"]["capabilities"]["drop"] == ["ALL"]

@@ -91,6 +91,7 @@ async def test_operations_endpoint_serializes_failed_organization_operation(
 @pytest.mark.parametrize(
     "query",
     [
+        # Reject invalid pagination before querying operation history.
         pytest.param("page=0", id="page-below-minimum"),
         pytest.param("page_size=0", id="page-size-below-minimum"),
         pytest.param("page_size=101", id="page-size-above-maximum"),

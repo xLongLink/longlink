@@ -27,8 +27,13 @@ class Solution(AuditTable, table=True):
         UniqueConstraint("organization_id", "slug"),
         UniqueConstraint("organization_id", "id", name="uq_solutions_organization_id"),
         ForeignKeyConstraint(
-            ["id", "desired_revision_id"], ["revisions.solution_id", "revisions.id"], name="solution_desired_revision", use_alter=True
+            # A desired revision must belong to this Solution.
+            ["id", "desired_revision_id"],
+            ["revisions.solution_id", "revisions.id"],
+            name="solution_desired_revision",
+            use_alter=True,
         ),
+        # Observed revisions must belong to the same Solution too.
         ForeignKeyConstraint(
             ["id", "deployed_revision_id"], ["revisions.solution_id", "revisions.id"], name="solution_deployed_revision", use_alter=True
         ),
@@ -126,6 +131,7 @@ class Revision(AuditTable, table=True):
     min_scale: int = Field(default=0, sa_column=Column(Integer, nullable=False, server_default="0"))
     idle_seconds: int = Field(default=60, ge=0, le=3600, sa_column=Column(Integer, nullable=False, server_default="60"))
     envs: dict[str, str] = Field(sa_column=Column(EncryptedType(env.ENCRYPTION_KEY), nullable=False))
+
     # Observed state does not modify the snapshot.
     failed: bool = Field(default=False)
     deployed_at: datetime | None = Field(default=None)

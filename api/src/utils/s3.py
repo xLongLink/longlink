@@ -49,6 +49,7 @@ class S3:
                 region_name="us-east-1",
                 verify=verify,
                 aws_access_key_id=self._credentials.access_key,
+                # Bind both credentials to this transport instead of process-global configuration.
                 aws_secret_access_key=self._credentials.secret_key,
                 config=config,
             ) as client:
@@ -71,6 +72,8 @@ class S3:
         async with self.client() as client:
             try:
                 await client.create_bucket(Bucket=bucket)
+
+            # Replayed provisioning accepts an already-existing bucket.
             except ClientError as exc:
                 if exc.response.get("Error", {}).get("Code") not in {"BucketAlreadyOwnedByYou", "BucketAlreadyExists"}:
                     raise
@@ -93,6 +96,8 @@ class S3:
         async with self.client() as client:
             try:
                 await self._delete_prefix(client, bucket, prefix)
+
+            # Prefix cleanup is complete when its bucket no longer exists.
             except ClientError as exc:
                 if exc.response.get("Error", {}).get("Code") != "NoSuchBucket":
                     raise
@@ -105,6 +110,8 @@ class S3:
             try:
                 await self._delete_prefix(client, bucket, "")
                 await client.delete_bucket(Bucket=bucket)
+
+            # Repeated tenant deletion tolerates an already-removed bucket.
             except ClientError as exc:
                 if exc.response.get("Error", {}).get("Code") != "NoSuchBucket":
                     raise
@@ -116,6 +123,8 @@ class S3:
         async for page in client.get_paginator("list_multipart_uploads").paginate(Bucket=bucket, Prefix=prefix):
             for upload in page.get("Uploads", []):
                 await client.abort_multipart_upload(Bucket=bucket, Key=upload["Key"], UploadId=upload["UploadId"])
+
+        # Remove every version and delete marker, not just visible objects.
         async for page in client.get_paginator("list_object_versions").paginate(Bucket=bucket, Prefix=prefix):
             versions: Iterable[ObjectIdentifierTypeDef] = (
                 {"Key": item["Key"], "VersionId": item["VersionId"]}

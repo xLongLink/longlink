@@ -46,6 +46,7 @@ def test_testing_storage_isolates_files_across_simultaneous_instances() -> None:
     second_storage = storage_base.create_fs(settings)
 
     try:
+
         # Act
         first_storage.pipe_file("report.txt", b"first report")
         second_storage.pipe_file("report.txt", b"second report")
@@ -59,6 +60,7 @@ def test_testing_storage_isolates_files_across_simultaneous_instances() -> None:
         assert not first_storage.exists("report.txt")
         assert second_storage.cat_file("report.txt") == b"second report"
     finally:
+
         # Remove only these files without clearing fsspec's process-global store.
         with suppress(FileNotFoundError):
             first_storage.rm("report.txt")

@@ -99,6 +99,8 @@ async def inspect(session: AsyncSession, organization_id: UUID | None, image: Im
     try:
         metadata = await images.required_metadata(image)
         return metadata, None
+
+    # Retry only GHCR authorization failures with tenant-owned credentials.
     except HTTPException as exc:
         if exc.status_code != 403 or organization_id is None or image.registry != RegistryConnection.host:
             raise
@@ -108,11 +110,14 @@ async def inspect(session: AsyncSession, organization_id: UUID | None, image: Im
         select(RegistryConnection).where(col(RegistryConnection.organization_id) == organization_id).order_by(col(RegistryConnection.id))
     )
     connections = result.all()
+
+    # Stop on a successful lookup or a non-authentication error, never masking invalid metadata.
     for connection in connections:
-        # Stop on a successful lookup or a non-authentication error, never masking invalid metadata.
         try:
             metadata = await images.required_metadata(image, connection)
             return metadata, connection.id
+
+        # Do not mask registry or metadata failures with another credential attempt.
         except HTTPException as exc:
             if exc.status_code != 403:
                 raise

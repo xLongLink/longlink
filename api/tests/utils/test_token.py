@@ -73,6 +73,7 @@ EXPIRED_TOKEN_CLAIMS = [
     pytest.param({"email": "member@example.com", "aud": token.REGISTRATION_TOKEN_AUDIENCE}, token.registration_claims, id="registration"),
     pytest.param(
         {"sub": "00000000-0000-0000-0000-000000000001", "password_fingerprint": "fingerprint", "aud": token.AUTH_TOKEN_AUDIENCE},
+        # Browser authentication requires its own audience and password-bound identity.
         token.auth_token_claims,
         id="authentication",
     ),
@@ -124,6 +125,7 @@ def test_oauth_state_claims_reject_expired_token() -> None:
     [
         pytest.param(
             {"aud": token.REGISTRATION_TOKEN_AUDIENCE},
+            # Registration proof requires its email even when the signature is valid.
             token.registration_claims,
             "Invalid registration token claims",
             id="missing-registration-email",
@@ -132,6 +134,7 @@ def test_oauth_state_claims_reject_expired_token() -> None:
             {"sub": "user", "aud": token.AUTH_TOKEN_AUDIENCE},
             token.auth_token_claims,
             "Invalid browser session claims",
+            # Browser proof is unusable without its password-bound fingerprint.
             id="missing-auth-fingerprint",
         ),
     ],
@@ -154,6 +157,7 @@ INVALID_PASSWORD_RESET_CLAIMS = [
         "Invalid password reset user",
         id="malformed-subject",
     ),
+    # Reset proof cannot omit its password-bound fingerprint.
     pytest.param(
         {"sub": "00000000-0000-0000-0000-000000000001", "aud": token.PASSWORD_RESET_TOKEN_AUDIENCE},
         signed_token,
@@ -162,6 +166,7 @@ INVALID_PASSWORD_RESET_CLAIMS = [
     ),
     pytest.param(
         {"sub": "00000000-0000-0000-0000-000000000001", "password_fingerprint": "fingerprint", "aud": token.PASSWORD_RESET_TOKEN_AUDIENCE},
+        # Expired proof is rejected even with a valid password fingerprint.
         expired_token,
         None,
         id="expired-token",

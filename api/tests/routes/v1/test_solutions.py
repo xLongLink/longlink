@@ -121,6 +121,8 @@ async def test_create_app_persists_desired_state_and_queues_reconciliation(
         assert persisted.status == Status.creating
         assert persisted.description == "Dashboard app"
         assert (persisted.created_id, persisted.updated_id) == (user.id, user.id)
+
+        # Creation persists the resolved image without preallocating runtime secrets.
         assert persisted.image_desired == "ghcr.io/longlink/dashboard@sha256:test"
         assert persisted.secrets == {}
         assert persisted.desired_revision.envs == {"API_KEY": "secret-value", "PORT": "8080"}
@@ -131,6 +133,8 @@ async def test_create_app_persists_desired_state_and_queues_reconciliation(
             )
         )
         assert operation is not None
+
+        # Lifecycle work retains the authenticated command author's audit identity.
         assert (operation.created_id, operation.updated_id) == (user.id, user.id)
 
 
@@ -164,12 +168,14 @@ async def test_create_app_enforces_the_per_organization_beta_limit(
 @pytest.mark.parametrize(
     ("metadata", "expected_status", "expected_detail"),
     [
+        # Image inspection failures remain client-visible without creating a Solution.
         pytest.param(None, 404, "Image metadata not found", id="missing-metadata"),
         pytest.param(
             LongLinkMetadata(
                 image=Image("ghcr.io/longlink/dashboard@sha256:test"), environments=[EnvironmentMetadata(name="API_KEY", required=True)]
             ),
             422,
+            # Valid image metadata can still require missing runtime configuration.
             "Solution environment does not satisfy required image variables: API_KEY",
             id="missing-required-environment",
         ),
@@ -401,6 +407,8 @@ async def test_create_app_allows_maintainer(
         assert persisted.desired_revision_id is not None
         assert persisted.desired_revision is not None
         assert persisted.desired_revision.solution_id == persisted.id
+
+        # Attribute the immutable release to the authenticated command author.
         assert (persisted.desired_revision.created_id, persisted.desired_revision.updated_id) == (maintainer.id, maintainer.id)
         operation = await session.scalar(
             select(Operation).where(
@@ -452,6 +460,7 @@ async def test_get_app_logs_returns_pod_logs(
     [
         pytest.param(None, "Access required", id="non-member"),
         pytest.param(OrganizationRoles.read, "Permission required", id="read-member"),
+        # Write access alone cannot perform lifecycle maintenance.
         pytest.param(OrganizationRoles.write, "Permission required", id="write-member"),
     ],
 )
@@ -574,6 +583,8 @@ async def test_delete_solution_soft_deletes_and_queues_reconciliation(
         assert deleted_solution is not None
         assert deleted_solution.deleted_at is not None
         assert deleted_solution.updated_at >= deleted_solution.deleted_at
+
+        # Tombstone audit metadata identifies the authenticated deleting user.
         assert (deleted_solution.deleted_id, deleted_solution.updated_id) == (user.id, user.id)
         assert operation is not None
         assert (operation.created_id, operation.updated_id) == (user.id, user.id)
@@ -603,6 +614,8 @@ async def test_delete_solution_rejects_write_member_without_mutating_solution(
         )
         assert solution is not None
         assert solution.deleted_at is None
+
+        # Rejected commands must not enqueue lifecycle work.
         assert operation is None
 
 
@@ -698,7 +711,11 @@ async def test_plugin_download_packages_only_the_selected_solution_without_crede
     with archive:
         assert set(archive.namelist()) == {"plugin.json", "mcp.json"}
         manifest = json.loads(archive.read("plugin.json"))
+
+        # Inspect the MCP connection metadata from the actual exported archive.
         mcp = json.loads(archive.read("mcp.json"))
+
+    # Verify the exported archive's public plugin contract.
     assert manifest["$schema"] == "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json"
     assert manifest["name"] == f"longlink-{solution.id}"
     assert manifest["version"] == "1.0.0"
@@ -709,6 +726,8 @@ async def test_plugin_download_packages_only_the_selected_solution_without_crede
             f"longlink-{solution.id}": {"type": "streamable-http", "url": f"{env.PUBLIC_URL}/api/v1/solutions/{solution.id}/proxy/mcp"}
         },
     }
+
+    # Exported plugin metadata must not include another tenant's identity.
     contents = json.dumps([manifest, mcp])
     assert str(other.id) not in contents
     assert "private-environment-value" not in contents
@@ -918,7 +937,11 @@ async def test_update_reresolves_moved_tag_and_enforces_required_envs(
     async with session_scope() as session:
         current = await session.get(Solution, solution.id, options=(selectinload(Solution.desired_revision),))
         assert current is not None
+
+        # Published releases use the inspected immutable image, not the mutable request tag.
         assert current.desired_revision.image == resolved.image
+
+        # Environment patches preserve retained values in the new immutable snapshot.
         assert current.desired_revision.envs == {"KEEP": "private-value", "NEW": "new-value"}
         assert current.deployment_pending
         prior = await session.get(Revision, solution.desired_revision_id)
@@ -927,6 +950,7 @@ async def test_update_reresolves_moved_tag_and_enforces_required_envs(
     assert inspected[-1] == source
 
 
+# Update inspection requires active maintenance access.
 UPDATE_CHECK_REJECTIONS = [
     pytest.param(None, 403, "Access required", id="non-member"),
     pytest.param(OrganizationRoles.read, 403, "Permission required", id="read-member"),
@@ -1024,6 +1048,7 @@ async def test_release_inspection_revalidates_concurrent_desired_changes(
             await session.commit()
         return metadata
 
+    # Suspend only registry inspection to exercise real optimistic revision checks.
     monkeypatch.setattr(images, "required_metadata", inspect)
     url = f"/api/v1/solutions/{solution.id}/update"
     response = await clients[0].request(method, url, json={})
@@ -1035,6 +1060,7 @@ async def test_release_inspection_revalidates_concurrent_desired_changes(
         assert current.desired_revision.envs == {"OTHER": "concurrent-secret"}
 
 
+# Recheck authorization after every unlocked metadata lookup.
 @pytest.mark.parametrize(("method", "demotion_wait"), [("GET", 1), ("POST", 1), ("GET", 2)])
 async def test_release_inspection_rejects_demotion_during_metadata_wait(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
@@ -1055,6 +1081,8 @@ async def test_release_inspection_rejects_demotion_during_metadata_wait(
         previous_revisions = set(result.all())
     previous_operations = await fetch_operations()
     inspected: list[Image] = []
+
+    # Keep the inspected candidate distinct from the concurrently desired image.
     candidate = LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:candidate"))
 
     async def metadata(image: Image, _connection: object | None = None) -> LongLinkMetadata:
@@ -1068,6 +1096,8 @@ async def test_release_inspection_rejects_demotion_during_metadata_wait(
                 assert membership is not None
                 membership.role = OrganizationRoles.read
                 await session.commit()
+
+        # Later inspection observes the release changed by the competing command.
         return candidate if len(inspected) == 1 else LongLinkMetadata(image=image)
 
     monkeypatch.setattr(images, "required_metadata", metadata)
@@ -1087,7 +1117,11 @@ async def test_release_inspection_rejects_demotion_during_metadata_wait(
         assert current.desired_revision_id == solution.desired_revision_id
         assert current.desired_revision.envs == {"KEEP": "private-value"}
         result = await session.scalars(select(col(Revision.id)).where(col(Revision.solution_id) == solution.id))
+
+        # Rejected updates must not leave an extra immutable revision behind.
         assert set(result.all()) == previous_revisions
+
+    # Revision conflicts cannot schedule deployment work.
     await assert_no_new_operations(previous_operations)
 
 
@@ -1124,6 +1158,7 @@ async def test_update_rolls_back_revision_and_pointer_after_queue_insert_failure
     monkeypatch.setattr(images, "required_metadata", metadata)
     event.listen(Operation, "after_insert", fail_insert)
     try:
+
         # Act
         async with AsyncClient(
             transport=ASGITransport(app=app, raise_app_exceptions=False),
@@ -1133,9 +1168,11 @@ async def test_update_rolls_back_revision_and_pointer_after_queue_insert_failure
         ) as client:
             response = await client.post(
                 f"/api/v1/solutions/{solution.id}/update",
+                # Bind the patch to the revision read before the concurrent write.
                 json={"expected_revision_id": str(solution.desired_revision_id), "envs": {"NEW": "new-value"}},
             )
     finally:
+
         # Restore the narrow late-write seam even if the request fails unexpectedly.
         event.remove(Operation, "after_insert", fail_insert)
 
@@ -1148,8 +1185,12 @@ async def test_update_rolls_back_revision_and_pointer_after_queue_insert_failure
         current = await session.get(Solution, solution.id, options=(selectinload(Solution.desired_revision),))
         assert current is not None
         assert current.desired_revision_id == solution.desired_revision_id
+
+        # A failed late write preserves the previously desired environment.
         assert current.desired_revision.envs == {"KEEP": "private-value"}
         result = await session.scalars(select(col(Revision.id)).where(col(Revision.solution_id) == solution.id))
+
+        # A rejected command leaves the set of immutable revisions unchanged.
         assert set(result.all()) == previous_revisions
     await assert_no_new_operations(previous_operations)
 
@@ -1267,22 +1308,30 @@ async def test_local_registry_release_roundtrip(
     try:
         metadata = await images.required_metadata(source)
     except HTTPException as exc:
+
+        # Only absence is expected when probing a deleted Solution.
         if exc.status_code != 404:
             raise
         pytest.skip("Local sample registry image is unavailable")
     organization = await create_organization(users[0])
     envs = {item.name: "integration-value" for item in metadata.environments}
     response = await clients[0].post(
-        f"/api/v1/organizations/{organization.id}/solutions", json={"name": "Local sample", "image": source, "envs": envs}
+        # Exercise creation with the metadata inspected from the local registry image.
+        f"/api/v1/organizations/{organization.id}/solutions",
+        json={"name": "Local sample", "image": source, "envs": envs},
     )
     assert response.status_code == 204
     listing = await clients[0].get(f"/api/v1/organizations/{organization.id}/solutions")
     assert listing.status_code == 200
     assert listing.json()[0]["deployment_pending"]
     solution_id = UUID(listing.json()[0]["id"])
+
+    # Inspect the created sample through its public update-check endpoint.
     url = f"/api/v1/solutions/{solution_id}/update"
     check = await clients[0].get(url)
     assert check.status_code == 200
+
+    # Update checks retain the resolved immutable image without legacy availability fields.
     assert check.json()["current_image"] == check.json()["metadata"]["image"] == metadata.image
     assert {"source", "image", "available"}.isdisjoint(check.json())
     assert "integration-value" not in check.text
@@ -1291,6 +1340,8 @@ async def test_local_registry_release_roundtrip(
     async with session_scope() as session:
         current = await session.get(Solution, solution_id)
         assert current is not None
+
+        # Verify the local registry's resolved digest reached the persisted release snapshot.
         revision = await session.get(Revision, current.desired_revision_id)
         assert revision is not None
         assert revision.image == metadata.image

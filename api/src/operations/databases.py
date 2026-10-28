@@ -68,36 +68,50 @@ class Lease:
             try:
                 while True:
                     await asyncio.sleep(30)
+
+                    # Bound renewal so a stalled database cannot hold the owner indefinitely.
                     async with asyncio.timeout(30), session_scope() as session:
                         await lock(session, self.organization_id)
+
+                        # Renewal must not extend a replacement owner's lease.
                         if not await self.owned(session):
                             raise RuntimeError("Organization activity lease was lost")
                         expires_at = datetime.now(UTC).replace(microsecond=0) + timedelta(seconds=180)
                         await session.execute(
                             update(OrganizationActivity)
                             .where(col(OrganizationActivity.organization_id) == self.organization_id)
+                            # Renew only the current Organization's activity row.
                             .values(expires_at=expires_at)
                         )
                         self.expires_at = expires_at
                         await session.commit()
             except Exception:
+
+                # Losing renewal cancels the operation still running under this lease.
                 self.lost = True
                 if not task.done():
                     task.cancel()
                 raise
 
         renewal = asyncio.create_task(renew())
+
+        # Keep renewal alive for the full operation scope, including cancellation cleanup.
         try:
             yield
         finally:
             try:
                 renewal.cancel()
+
+                # Reap the renewal task before releasing its activity lease.
                 with contextlib.suppress(asyncio.CancelledError):
                     await renewal
+
+            # Conditional release cannot delete a replacement lease after crash recovery.
             finally:
-                # Conditional release cannot delete a replacement lease after crash recovery.
                 async with session_scope() as session:
                     organization = await lock(session, self.organization_id)
+
+                    # Delete only the activity row protected by this lease.
                     if organization is not None and await self.owned(session):
                         await session.execute(
                             delete(OrganizationActivity).where(col(OrganizationActivity.organization_id) == self.organization_id)
@@ -117,6 +131,8 @@ async def _claim(session: AsyncSession, organization_id: UUID) -> Lease | None:
     )
     if await session.get(OrganizationActivity, organization_id) is not None:
         return None
+
+    # Reserve the transition after removing expired activity.
     row = OrganizationActivity(organization_id=organization_id, expires_at=now.replace(microsecond=0) + timedelta(seconds=180))
     session.add(row)
     await session.flush()
@@ -131,29 +147,41 @@ async def deleting(organization_id: UUID) -> AsyncGenerator[None]:
     while True:
         async with session_scope() as session:
             organization = await lock(session, organization_id)
+
+            # An absent Organization has already completed cleanup.
             if organization is None:
                 break
+
+            # Lifecycle cleanup must never remove an active tenant database.
             if organization.deleted_at is None:
                 raise HTTPException(status_code=403, detail="Active Organizations cannot be deleted by lifecycle cleanup")
             lease = await _claim(session, organization_id)
             await session.commit()
+
+        # Hold the admitted deletion lease throughout external cleanup.
         if lease is not None:
             async with lease.maintain():
                 yield
             return
         await asyncio.sleep(0.5)
+
+    # An already-removed Organization needs no external deletion lease.
     yield
 
 
 async def ready(organization_id: UUID) -> bool:
     """Provision the database behind one persisted transition lease."""
 
+    # Provisioning decisions share the same short write transaction.
     while True:
-        # Provisioning decisions share the same short write transaction.
         async with session_scope() as session:
             organization = await lock(session, organization_id)
+
+            # Provisioning cannot revive an absent or deleted Organization.
             if organization is None or organization.deleted_at is not None:
                 return False
+
+            # Available databases can be reused only outside an active transition.
             transition = await session.get(OrganizationActivity, organization_id)
             if organization.database_state == DatabaseState.available and (
                 transition is None or transition.expires_at <= datetime.now(UTC)
@@ -161,41 +189,55 @@ async def ready(organization_id: UUID) -> bool:
                 return True
             lease = await _claim(session, organization_id)
             await session.commit()
+
+        # Another transition may finish while this caller waits for admission.
         if lease is None:
             await asyncio.sleep(0.5)
             continue
 
         async with lease.maintain():
+
+            # Load only the database assignment without decrypting unrelated storage credentials.
             try:
-                # Load only the database assignment without decrypting unrelated storage credentials.
                 async with session_scope() as session:
                     result = await session.execute(
+                        # Fetch only the database provisioning assignment.
                         select(Organization, col(ComputeRegistry.kubeconfig), col(ComputeRegistry.database_storage_class))
                         .join(ComputeRegistry, col(ComputeRegistry.id) == col(Organization.compute_id))
                         .where(col(Organization.id) == organization_id)
                     )
+
+                    # Consume the query before releasing its session.
                     target = result.one_or_none()
                 if target is None:
                     raise RuntimeError("Organization is unavailable")
                 organization, kubeconfig, database_storage_class = target
                 cluster = Kubernetes(kubeconfig)
+
+                # Revalidate ownership before mutating cluster resources.
                 async with cluster:
                     await lease.check()
+
+                    # New infrastructure needs provisioning before PostgreSQL initialization.
                     if organization.status != Status.running:
                         await database_resources.apply(
                             cluster,
                             organization_id,
                             organization.database_password,
+                            # Preserve the Compute's selected persistent storage class.
                             database_storage_class,
                             size_mib=organization.database_size_mib,
                             instances=organization.database_instances,
                         )
+
+                    # Reassert the desired annotation even after an expired worker's interrupted sleep.
                     else:
-                        # Reassert the desired annotation even after an expired worker's interrupted sleep.
                         await database_resources.resume(cluster, organization_id)
                     database = await database_resources.connection(organization, cluster)
                     if organization.status != Status.running:
                         await lease.check()
+
+                        # Prepare PostgreSQL roles only while the transition is still owned.
                         await database.prepare_organization_database(organization_id)
 
                     # Verify ownership before checking the tenant connection and publishing readiness.
@@ -208,15 +250,24 @@ async def ready(organization_id: UUID) -> bool:
                     # Publish the provisioned database.
                     async with session_scope() as session:
                         organization = await lock(session, organization_id)
+
+                        # A lost lease cannot publish infrastructure as available.
                         if organization is None or organization.deleted_at is not None or not await lease.owned(session):
                             raise RuntimeError("Organization transition lease was lost")
                         organization.database_state = DatabaseState.available
                         await session.commit()
+
+                        # Availability is visible only after the transaction commits.
                         return True
+
+            # Interrupted provisioning is retried through the failed state.
             except BaseException:
-                # Interrupted provisioning is retried through the failed state.
+
+                # Persist failure without changing a replacement lease's state.
                 async with session_scope() as session:
                     organization = await lock(session, organization_id)
+
+                    # Do not overwrite a replacement worker's transition state.
                     if organization is not None and await lease.owned(session):
                         organization.database_state = DatabaseState.failed
                     await session.commit()

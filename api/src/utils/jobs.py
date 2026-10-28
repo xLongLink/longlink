@@ -27,9 +27,13 @@ async def _finish_transition(transition: Callable[[AsyncSession, UUID], Awaitabl
 
     task = asyncio.create_task(persist())
     cancelled = False
+
+    # Finish the persistence transition even when its caller is cancelled.
     while not task.done():
         try:
             await asyncio.wait({task})
+
+        # Remember cancellation while allowing the protected persistence task to finish.
         except asyncio.CancelledError:
             cancelled = True
 
@@ -52,18 +56,25 @@ async def execute(operation: Operation) -> None:
     try:
         async with asyncio.timeout(env.OPERATION_TIMEOUT_SECONDS):
             await handlers[operation.kind](operation.target_id)
+
+    # Graceful shutdown leaves interrupted work available for the next scheduler.
     except asyncio.CancelledError:
-        # Graceful shutdown leaves interrupted work available for the next scheduler.
         with contextlib.suppress(Exception):
             await _finish_transition(operations.release, operation.id)
         raise
+
+    # Timeouts are terminal handler failures with a bounded queue-visible reason.
     except TimeoutError:
         reason = f"Operation timed out after {env.OPERATION_TIMEOUT_SECONDS} seconds"
+
+    # Persist only the public error detail, not the exception representation.
     except HTTPException as exc:
         reason = str(exc.detail)
     except Exception as exc:
         message = str(exc)
         reason = f"{type(exc).__name__}: {message}" if message else type(exc).__name__
+
+    # Successful handlers clear any prior failure reason.
     else:
         reason = None
 
@@ -87,6 +98,8 @@ async def run_operation_scheduler() -> None:
     # Keep polling after transient failures so the worker remains available.
     while True:
         try:
+
+            # Publish the lease before dispatching work outside the transaction.
             async with session_scope() as session:
                 operation = await operations.claim(session)
                 await session.commit()
@@ -98,7 +111,11 @@ async def run_operation_scheduler() -> None:
 
             # Execute and release one claimed operation before locking more work.
             await execute(operation)
+
+        # Startup retries transient database failures without terminating the API.
         except Exception:
+
+            # Back off before retrying administrator initialization.
             await asyncio.sleep(1)
 
 
@@ -108,10 +125,14 @@ async def run_administrator_reconciler() -> None:
     # Retry database initialization without delaying process startup and static route serving.
     while True:
         try:
+
+            # Retry initialization until the configured administrator is persisted.
             async with session_scope() as session:
                 await users.ensure_administrator(session)
                 await session.commit()
 
             return
+
+        # Keep startup alive while administrator persistence is temporarily unavailable.
         except Exception:
             await asyncio.sleep(1)

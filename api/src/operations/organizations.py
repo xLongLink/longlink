@@ -33,14 +33,17 @@ async def reconcile(organization_id: UUID) -> None:
 
     # Converge the Organization bucket before Solutions receive scoped credentials.
     cluster = Kubernetes(compute.kubeconfig)
+
+    # Card registration can expand capacity independently of the free pricing allowance.
     async with cluster:
-        # Card registration can expand capacity independently of the free pricing allowance.
         if organization.stripe_payment_method_id is not None:
             await database_resources.resize(
                 cluster, organization.id, size_mib=organization.database_size_mib, instances=organization.database_instances
             )
         storage = Storage(compute, cluster)
         await storage.apply(organization.id, quota_bytes=organization.storage_quota_bytes)
+
+        # Apply shared tenant infrastructure after storage capacity is configured.
         await organizations.apply(cluster, organization.id)
         await registries.synchronize(cluster, organization.id)
 
@@ -53,6 +56,7 @@ async def reconcile(organization_id: UUID) -> None:
                 col(Organization.deleted_at).is_(None),
                 col(Organization.status).in_((Status.creating, Status.failed)),
             )
+            # Publish readiness only for a still-active provisioning target.
             .values(status=Status.running)
         )
 
@@ -62,11 +66,12 @@ async def reconcile(organization_id: UUID) -> None:
 async def delete(organization_id: UUID) -> None:
     """Drain runtime activity before destroying the Organization's boundaries."""
 
-    # Delegate deletion eligibility and lease admission to the locked database scope.
+    # Delegate deletion eligibility and lease admission; absent tombstones mean cleanup is complete.
     async with databases.deleting(organization_id):
-        # An absent tombstone means a previous execution completed cleanup.
         async with session_scope() as session:
             target = await src.database.services.organizations.infrastructure(session, organization_id)
+
+            # A completed deletion leaves no infrastructure target to revisit.
             if target is None:
                 return
             organization, compute = target
@@ -79,7 +84,11 @@ async def delete(organization_id: UUID) -> None:
         if organization.stripe_customer_id is not None:
             async with stripe.client() as connection:
                 checkouts = await connection.v1.checkout.sessions.list_async({"customer": organization.stripe_customer_id, "limit": 100})
+
+                # Expire all open sessions, including those from interrupted requests.
                 async for hosted in checkouts.auto_paging_iter():
+
+                    # Closed checkout sessions no longer accept card-registration attempts.
                     if hosted.status == "open":
                         await connection.v1.checkout.sessions.expire_async(hosted.id)
 

@@ -43,6 +43,7 @@ def test_make_migrations_creates_revisions_only_for_schema_operations(tmp_path: 
     )
 
     try:
+
         # Act
         migration_created = database_migrations.make_migrations()
 
@@ -62,6 +63,7 @@ def test_make_migrations_creates_revisions_only_for_schema_operations(tmp_path: 
         assert database_migrations.make_migrations() is False
         assert list((tmp_path / "migrations").glob("*.py")) == revisions
     finally:
+
         # Remove only this test's model metadata and module, including on migration failure.
         table = SQLModel.metadata.tables.get(table_name)
         if table is not None:

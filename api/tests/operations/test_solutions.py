@@ -211,6 +211,7 @@ async def test_solution_creation_applies_user_and_managed_environment_values(
         *,
         revision_id: object,
         migrate: bool,
+        # Match the deployment boundary's optional private-image credential.
         registry_connection_id: UUID | None = None,
     ) -> None:
         """Capture the generated runtime environment."""
@@ -238,6 +239,8 @@ async def test_solution_creation_applies_user_and_managed_environment_values(
     assert captured["secrets"]["LONGLINK_DATABASE_USERNAME"] == "solution"
     assert captured["secrets"]["LONGLINK_DATABASE_CERTIFICATE"] == "test-database-ca"
     assert captured["secrets"]["LONGLINK_STORAGE_BUCKET"] == f"longlink-{organization.id.hex}"
+
+    # Inspect persisted state after the runtime deployment completes.
     async with session_scope() as session:
         persisted = await session.get(Solution, solution.id)
     assert persisted is not None
@@ -264,6 +267,8 @@ async def test_solution_creation_applies_user_and_managed_environment_values(
         revision_id = current.desired_revision_id
     await solution_operations.deploy(revision_id)
     assert calls == ["open", "workload", "close"]
+
+    # Updated environment values override retained runtime credentials only where allowed.
     assert captured["secrets"] == {
         "API_KEY": "replacement",
         **persisted.secrets,
@@ -274,6 +279,7 @@ async def test_solution_creation_applies_user_and_managed_environment_values(
         "LONGLINK_STORAGE_BUCKET": f"longlink-{organization.id.hex}",
         "LONGLINK_STORAGE_PREFIX": f"solutions/{solution.id.hex}/",
         "LONGLINK_STORAGE_REGION": "us-east-1",
+        # Database trust configuration travels with the captured runtime environment.
         "LONGLINK_DATABASE_CERTIFICATE": "test-database-ca",
         "LONGLINK_STORAGE_ENDPOINT_URL": "https://longlink-storage.rustfs.svc:443",
     }
@@ -327,6 +333,8 @@ async def test_solution_creation_preserves_schema_failure_before_storage_authori
         assert persisted is not None
         assert persisted.secrets == initial_secrets
         assert persisted.deployed_revision_id == initial_deployed_revision_id
+
+        # Interrupted work cannot advance either revision pointer.
         assert persisted.desired_revision_id == initial_desired_revision_id
         assert persisted.status == Status.creating
         revision = await session.get(Revision, initial_desired_revision_id)
@@ -357,6 +365,7 @@ async def test_solution_creation_retry_reuses_persisted_runtime_secrets(
         **credentials,
         "LONGLINK_STORAGE_BUCKET": organization.id.hex,
         "LONGLINK_DATABASE_HOST": "old-database.example",
+        # Retained database credentials must survive a reconciliation replay.
         "LONGLINK_DATABASE_NAME": "old-database",
         "LONGLINK_DATABASE_PORT": "5433",
         "LONGLINK_DATABASE_SCHEMA": "old-schema",
@@ -364,6 +373,7 @@ async def test_solution_creation_retry_reuses_persisted_runtime_secrets(
         "LONGLINK_STORAGE_REGION": "old-region",
         "LONGLINK_DATABASE_CERTIFICATE": "old-database-ca",
         "LONGLINK_STORAGE_ENDPOINT_URL": "https://old-storage.example",
+        # Existing object-storage trust remains part of the retained runtime credentials.
         "LONGLINK_STORAGE_CERTIFICATE": "old-storage-ca",
     }
     async with session_scope() as session:
@@ -389,6 +399,7 @@ async def test_solution_creation_retry_reuses_persisted_runtime_secrets(
         *,
         revision_id: object,
         migrate: bool,
+        # Preserve the deployment boundary's registry option.
         registry_connection_id: UUID | None = None,
     ) -> None:
         """Capture the persisted runtime environment."""
@@ -397,6 +408,8 @@ async def test_solution_creation_retry_reuses_persisted_runtime_secrets(
 
     monkeypatch.setattr(solution_operations.database_resources.postgres, "Postgres", unexpected_provider)
     monkeypatch.setattr(StorageKubernetes, "service_account", unexpected_provider)
+
+    # Control only deployment boundaries while exercising real worker transitions.
     monkeypatch.setattr(solution_operations, "Kubernetes", DatabaseKubernetes)
     monkeypatch.setattr(solution_operations.solution_resources, "apply", apply)
     monkeypatch.setattr(solution_operations, "Storage", StorageKubernetes)
@@ -412,6 +425,8 @@ async def test_solution_creation_retry_reuses_persisted_runtime_secrets(
         assert identity_secret
         if identity is not None:
             assert identity_secret == identity
+
+        # Reconciliation preserves generated credentials and the existing identity secret.
         assert persisted.secrets == {**credentials, "LONGLINK_IDENTITY_SECRET": identity_secret}
         assert persisted.status == Status.running
         assert persisted.deployed_revision_id == solution.desired_revision_id
@@ -422,6 +437,7 @@ async def test_solution_creation_retry_reuses_persisted_runtime_secrets(
             "LONGLINK_DATABASE_HOST": f"database-rw.longlink-database-{organization.id.hex}.svc.cluster.local",
             "LONGLINK_DATABASE_NAME": organization.id.hex,
             "LONGLINK_DATABASE_PORT": "5432",
+            # Reconciliation uses the stable Solution-owned database schema.
             "LONGLINK_DATABASE_SCHEMA": solution.id.hex,
             "LONGLINK_STORAGE_BUCKET": f"longlink-{organization.id.hex}",
             "LONGLINK_STORAGE_PREFIX": f"solutions/{solution.id.hex}/",
@@ -471,12 +487,14 @@ async def test_initial_deployment_failure_does_not_schedule_recovery(
         *,
         revision_id: UUID,
         migrate: bool,
+        # Keep failure injection compatible with private-image deployments.
         registry_connection_id: UUID | None = None,
     ) -> None:
         """Fail the initial Kubernetes rollout."""
 
         raise RuntimeError("rollout failed")
 
+    # Run the real queue worker against the controlled rollout boundary.
     monkeypatch.setattr(solution_operations, "Kubernetes", DatabaseKubernetes)
     monkeypatch.setattr(solution_operations.solution_resources, "apply", apply)
     initial = await claim_operation()
@@ -495,6 +513,8 @@ async def test_initial_deployment_failure_does_not_schedule_recovery(
         assert current.status == Status.failed
         assert current.deployed_revision_id is None
         assert current.desired_revision.failed
+
+    # Terminal initial failures must not leave deployment commands pending.
     scheduled = await fetch_operations()
     assert all(operation.kind != OperationKind.solution_deploy or operation.finished_at is not None for operation in scheduled)
 
@@ -518,6 +538,7 @@ async def test_shutdown_keeps_deployment_resumable(users: tuple[User, User, User
         *,
         revision_id: UUID,
         migrate: bool,
+        # Keep cancellation injection compatible with the full deployment contract.
         registry_connection_id: UUID | None = None,
     ) -> None:
         """Complete the first rollout and cancel its replacement."""
@@ -527,6 +548,8 @@ async def test_shutdown_keeps_deployment_resumable(users: tuple[User, User, User
 
     monkeypatch.setattr(solution_operations, "Kubernetes", DatabaseKubernetes)
     monkeypatch.setattr(solution_operations.solution_resources, "apply", apply)
+
+    # Execute the initial immutable snapshot before scheduling its replacement.
     initial = await claim_operation()
     assert initial is not None
     await execute(initial)
@@ -535,6 +558,7 @@ async def test_shutdown_keeps_deployment_resumable(users: tuple[User, User, User
         assert result is not None
         assert result.failed is None
 
+    # The replacement image must remain distinct from the initial captured release.
     metadata = LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:new"))
     async with session_scope() as session:
         current = await solutions.access(session, solution.id, owner.id)
@@ -543,6 +567,8 @@ async def test_shutdown_keeps_deployment_resumable(users: tuple[User, User, User
         desired_id = current.desired_revision_id
     update = await claim_operation()
     assert update is not None
+
+    # The queued command targets the captured desired revision, not mutable Solution state.
     assert update.target_id == desired_id
 
     # Act
@@ -582,6 +608,7 @@ async def test_failed_update_recovery(users: tuple[User, User, User], monkeypatc
         *,
         revision_id: UUID,
         migrate: bool,
+        # Observe the registry option alongside the captured release.
         registry_connection_id: UUID | None = None,
     ) -> None:
         """Capture the exact snapshot and simulate rollout outcomes."""
@@ -589,22 +616,28 @@ async def test_failed_update_recovery(users: tuple[User, User, User], monkeypatc
         calls.append((image, secrets, migrate))
         if not failing:
             return
+
+        # Delete through the real lifecycle service while rollout is suspended.
         if failure == "deleted_during_rollout":
             async with session_scope() as session:
                 await solutions.delete(session, solution.id, owner.id)
                 await session.commit()
         if not migrate and failure != "restoration":
             return
+
+        # Suspend rollout until the real worker timeout cancels and finalizes it.
         if failure == "timeout":
-            # Suspend rollout until the real worker timeout cancels and finalizes it.
             try:
                 await asyncio.Event().wait()
             finally:
                 rollout_finalized.set()
         raise RuntimeError("rollout failed")
 
+    # Execute the real worker with deterministic rollout failure and recovery boundaries.
     monkeypatch.setattr(solution_operations, "Kubernetes", DatabaseKubernetes)
     monkeypatch.setattr(solution_operations.solution_resources, "apply", apply)
+
+    # Execute the initial claim before observing replacement recovery.
     initial = await claim_operation()
     assert initial is not None
     await execute(initial)
@@ -625,6 +658,8 @@ async def test_failed_update_recovery(users: tuple[User, User, User], monkeypatc
         desired_id = current.desired_revision_id
     failing = True
     update = await claim_operation()
+
+    # Replacement work targets the requested immutable revision.
     assert update is not None
     assert update.target_id == desired_id
 
@@ -647,8 +682,12 @@ async def test_failed_update_recovery(users: tuple[User, User, User], monkeypatc
     if failure in {"deleted_during_rollout", "deleted_before_recovery"}:
         if failure == "deleted_before_recovery":
             async with session_scope() as session:
+
+                # Queue deletion while failed rollout recovery is still pending.
                 await solutions.delete(session, solution.id, owner.id)
                 await session.commit()
+
+            # Deletion recovery must outrank obsolete deployment work.
             recovery = await claim_operation()
             assert recovery is not None
             assert recovery.kind == OperationKind.solution_deploy
@@ -662,6 +701,8 @@ async def test_failed_update_recovery(users: tuple[User, User, User], monkeypatc
         deletion = await claim_operation()
         assert deletion is not None
         assert deletion.kind == OperationKind.solution_delete
+
+        # Finishing deletion leaves no obsolete work claimable.
         await complete_operation(deletion.id)
         assert await claim_operation() is None
         assert len(calls) == 2
@@ -670,6 +711,8 @@ async def test_failed_update_recovery(users: tuple[User, User, User], monkeypatc
             assert current is not None
             assert current.deleted_at is not None
             assert current.deployed_revision_id == good_id
+
+            # Recovery retains the newest requested snapshot without publishing it as observed.
             assert current.desired_revision_id == desired_id
             assert current.desired_revision.failed
         return
@@ -705,7 +748,11 @@ async def test_failed_update_recovery(users: tuple[User, User, User], monkeypatc
         good = await session.get(Revision, good_id)
         assert good is not None
         assert not good.failed
+
+        # Only failed restoration leaves the Solution unavailable.
         assert current.status == (Status.failed if failure == "restoration" else Status.running)
+
+        # Failed replacement preserves the last working runtime credentials.
         assert current.secrets == solution.secrets
     assert calls[-1][1] == {
         "KEY": "old",
@@ -715,6 +762,7 @@ async def test_failed_update_recovery(users: tuple[User, User, User], monkeypatc
         "LONGLINK_DATABASE_PORT": "5432",
         "LONGLINK_DATABASE_SCHEMA": solution.id.hex,
         "LONGLINK_STORAGE_BUCKET": f"longlink-{organization.id.hex}",
+        # Generated storage credentials remain scoped to the Solution prefix.
         "LONGLINK_STORAGE_PREFIX": f"solutions/{solution.id.hex}/",
         "LONGLINK_STORAGE_REGION": "us-east-1",
         "LONGLINK_DATABASE_CERTIFICATE": "test-database-ca",
@@ -735,6 +783,8 @@ async def test_queued_deployments_keep_exact_targets(users: tuple[User, User, Us
     assert initial is not None
     second = LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:second"))
     third = LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:third"))
+
+    # Track revisions requested while earlier rollouts are still active.
     second_id: UUID | None = None
     third_id: UUID | None = None
     applied: list[str] = []
@@ -753,6 +803,7 @@ async def test_queued_deployments_keep_exact_targets(users: tuple[User, User, Us
         *,
         revision_id: UUID,
         migrate: bool,
+        # Retain the complete release boundary while recording image and environment pairs.
         registry_connection_id: UUID | None = None,
     ) -> None:
         """Capture immutable image and environment pairs."""
@@ -762,6 +813,7 @@ async def test_queued_deployments_keep_exact_targets(users: tuple[User, User, Us
         assert image == expected_images[secrets["KEY"]]
         assert revision_id == {"first": initial.target_id, "second": second_id, "third": third_id}[secrets["KEY"]]
         if second_id is None:
+
             # A newer request during an active rollout must not change its captured target.
             async with session_scope() as session:
                 current = await solutions.access(session, solution.id, users[0].id)
@@ -769,6 +821,7 @@ async def test_queued_deployments_keep_exact_targets(users: tuple[User, User, Us
                 await session.commit()
                 second_id = current.desired_revision_id
         elif third_id is None:
+
             # The second rollout still uses its snapshot while a third revision becomes desired.
             async with session_scope() as session:
                 current = await solutions.access(session, solution.id, users[0].id)
@@ -777,6 +830,8 @@ async def test_queued_deployments_keep_exact_targets(users: tuple[User, User, Us
                 third_id = current.desired_revision_id
 
     monkeypatch.setattr(solution_operations, "Kubernetes", DatabaseKubernetes)
+
+    # Exercise queue transitions with the controlled rollout boundary.
     monkeypatch.setattr(solution_operations.solution_resources, "apply", apply)
     await execute(initial)
     async with session_scope() as session:
@@ -786,6 +841,8 @@ async def test_queued_deployments_keep_exact_targets(users: tuple[User, User, Us
         assert current.desired_revision_id == second_id
     second_operation = await claim_operation()
     assert second_operation is not None
+
+    # A newer desired release cannot rewrite the queued second snapshot.
     assert second_operation.target_id == second_id
     await execute(second_operation)
 
@@ -807,8 +864,12 @@ async def test_queued_deployments_keep_exact_targets(users: tuple[User, User, Us
     assert applied == ["first", "second", "third"]
     assert await claim_operation() is None
     async with session_scope() as session:
+
+        # Reload the final Solution state after all captured rollouts complete.
         current = await session.get(Solution, solution.id)
         assert current is not None
+
+        # Final reconciliation publishes the latest requested revision.
         assert current.desired_revision_id == current.deployed_revision_id == third_id
 
 
@@ -852,6 +913,8 @@ async def test_solution_creation_skips_deployment_when_deleted_before_credential
             return "solution"
 
     monkeypatch.setattr(solution_operations.database_resources.postgres, "Postgres", Postgres)
+
+    # Replace only cluster and storage boundaries for deletion cleanup.
     monkeypatch.setattr(solution_operations, "Kubernetes", DatabaseKubernetes)
     monkeypatch.setattr(solution_operations, "Storage", StorageKubernetes)
 

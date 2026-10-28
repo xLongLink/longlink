@@ -39,6 +39,8 @@ class Image(str):
             raise ValueError("Image reference is too long")
         if value.startswith("//") or "://" in value:
             raise ValueError("Image reference must not be a URL")
+
+        # Reject invisible separators before parsing registry and repository boundaries.
         if any(character.isspace() or ord(character) < 32 or ord(character) == 127 for character in value):
             raise ValueError("Image reference contains invalid characters")
 
@@ -53,6 +55,8 @@ class Image(str):
             repository, _, tag_or_digest = remainder.partition("@")
             if not IMAGE_DIGEST_PATTERN.fullmatch(tag_or_digest):
                 raise ValueError("Image digest is invalid")
+
+        # Tagged references require an explicit, valid tag.
         else:
             repository, separator, tag_or_digest = remainder.rpartition(":")
             if not separator:
@@ -60,6 +64,7 @@ class Image(str):
             if not re.fullmatch(r"[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}", tag_or_digest):
                 raise ValueError("Image tag is invalid")
 
+        # Validate the registry authority separately from the image selector.
         parsed_registry = urllib.parse.urlsplit(f"//{registry}")
 
         # Reject malformed registry hosts, credentials, and ports.

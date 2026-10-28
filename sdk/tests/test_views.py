@@ -21,6 +21,7 @@ def test_view_stem_route_preserves_nested_index_parent() -> None:
         pytest.param(":settings", "cannot contain route parameters", id="static-parameter"),
         pytest.param("issues/{id}", "cannot contain route parameters", id="brace-parameter"),
         pytest.param("files/*", "cannot contain route parameters", id="wildcard"),
+        # File routes cannot hide separators through encoding or platform-specific syntax.
         pytest.param("encoded%2Fsegment", "URL-safe file names", id="percent-encoding"),
         pytest.param("admin\\settings", "URL-safe file names", id="backslash"),
         pytest.param("search?tab", "URL-safe file names", id="query"),

@@ -11,6 +11,7 @@ class OrganizationRoles(StrEnum):
     owner = "owner"
 
 
+# HTTP methods map to the minimum Organization role accepted by the runtime proxy.
 SOLUTION_PROXY_METHOD_ROLES = {
     "DELETE": OrganizationRoles.maintain,
     "GET": OrganizationRoles.read,

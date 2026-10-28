@@ -14,6 +14,7 @@ pytestmark = pytest.mark.no_db
         pytest.param(OrganizationRoles.admin, OrganizationRoles.maintain, True, id="admin-satisfies-maintain"),
         pytest.param(OrganizationRoles.owner, OrganizationRoles.admin, True, id="owner-satisfies-admin"),
         pytest.param(OrganizationRoles.read, OrganizationRoles.write, False, id="read-rejects-write"),
+        # Adjacent lower roles cannot satisfy stricter maintenance or administration checks.
         pytest.param(OrganizationRoles.write, OrganizationRoles.maintain, False, id="write-rejects-maintain"),
         pytest.param(OrganizationRoles.maintain, OrganizationRoles.admin, False, id="maintain-rejects-admin"),
         pytest.param(OrganizationRoles.admin, OrganizationRoles.owner, False, id="admin-rejects-owner"),

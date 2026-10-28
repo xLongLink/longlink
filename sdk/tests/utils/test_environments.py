@@ -15,9 +15,12 @@ class EnvironmentSettings(Environments):
     [
         pytest.param("file", "process", "process", id="process-over-dotenv"),
         pytest.param("file", None, "file", id="dotenv-over-sample"),
+        # Sample settings are the fallback when no configured source supplies a value.
         pytest.param(None, None, "sample", id="sample-only"),
     ],
 )
+
+# Explicit configuration wins over lower-priority environment sources.
 def test_environments_prioritizes_configured_sources(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path, dotenv_value: str | None, process_value: str | None, expected: str
 ) -> None:

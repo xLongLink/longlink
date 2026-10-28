@@ -28,6 +28,8 @@ def build_project(tmp_path: Path) -> Path:
     envs_path = root / "src" / "envs.py"
     envs_path.parent.mkdir()
     envs_path.write_text("from pydantic import BaseModel\n\nclass Env(BaseModel):\n    pass\n", encoding="utf-8")
+
+    # Build fixtures always carry the authoritative project lockfile.
     root.joinpath("uv.lock").write_text("project lock", encoding="utf-8")
     return root
 
@@ -85,6 +87,7 @@ def test_build_reports_missing_project_file_before_docker(tmp_path: Path, capsys
     """Report a missing project file instead of blaming the Docker CLI."""
 
     with chdir(tmp_path):
+
         # Act
         with pytest.raises(SystemExit) as failure:
             main(["build"])
@@ -164,6 +167,7 @@ def test_read_env_spec_emits_supported_environment_metadata(tmp_path: Path) -> N
         pytest.param(
             '[tool.longlink]\nenvironments = "src.envs:Settings"\n',
             "src/envs.py",
+            # Importing an unrelated class is not a valid environment declaration.
             "class Other:\n    pass\n",
             "Environment model must define Settings",
             id="missing-class",
@@ -173,11 +177,13 @@ def test_read_env_spec_emits_supported_environment_metadata(tmp_path: Path) -> N
             "src/envs.py",
             "raise RuntimeError('import failed')\n",
             "Unable to import environment model src.envs:Env: import failed",
+            # Import failures retain the inspector's actionable error.
             id="import-error",
         ),
         pytest.param(
             '[tool.longlink]\nenvironments = "src.envs:Env"\n',
             "src/envs.py",
+            # Importable plain classes do not satisfy the Pydantic environment contract.
             "class Env:\n    pass\n",
             "Environment model must be a Pydantic model",
             id="non-model",
@@ -187,6 +193,7 @@ def test_read_env_spec_emits_supported_environment_metadata(tmp_path: Path) -> N
             "src/envs.py",
             "import sys\nsys.exit(17)\n",
             "child process exited with code 17",
+            # Abnormal child termination must remain an actionable inspection error.
             id="abnormal-exit",
         ),
         pytest.param(
@@ -194,6 +201,7 @@ def test_read_env_spec_emits_supported_environment_metadata(tmp_path: Path) -> N
             "src/envs.py",
             "import sys\nsys.exit(0)\n",
             "invalid child response",
+            # Successful process exit alone does not prove metadata was produced.
             id="missing-response",
         ),
     ],
@@ -238,6 +246,8 @@ def test_read_env_spec_isolates_solution_state_and_preserves_output(
         "class Env(BaseModel):\n"
         "    TOKEN: str\n"
     )
+
+    # Simulate a failed import only after its observable import-time side effects.
     if fails:
         source += "raise RuntimeError('import failed')\n"
     model_path.write_text(source, encoding="utf-8")
@@ -314,6 +324,8 @@ def test_build_solution_generates_docker_artifacts_from_project_metadata(chdir_p
     chdir_project.joinpath(".cache").mkdir()
     chdir_project.joinpath(".cache", "artifact").write_text("cache", encoding="utf-8")
     chdir_project.joinpath("tests").mkdir()
+
+    # Test files remain ordinary selected source, unlike runtime caches and secrets.
     chdir_project.joinpath("tests", "test_app.py").write_text("def test_app():\n    pass\n", encoding="utf-8")
     build_context = chdir_project.parent / "context"
 
@@ -342,6 +354,8 @@ def test_build_solution_generates_docker_artifacts_from_project_metadata(chdir_p
     assert dockerignore.splitlines() == ["Dockerfile", ".dockerignore"]
     assert not build_context.joinpath(".env").exists()
     assert not build_context.joinpath("dev.db").exists()
+
+    # Exclude generated test and tool caches from container build context.
     assert not build_context.joinpath(".pytest_cache").exists()
     assert not build_context.joinpath(".cache").exists()
     assert build_context.joinpath("tests", "test_app.py").is_file()
@@ -354,6 +368,7 @@ def test_build_solution_generates_docker_artifacts_from_project_metadata(chdir_p
         pytest.param("[project]\nname = 'demo'\n", "[project].version is required", id="missing-version"),
         pytest.param("[project]\nname = '  '\nversion = '0.1.0'\n", "[project].name is required", id="blank-name"),
         pytest.param(
+            # Project descriptions must be strings before becoming image labels.
             "[project]\nname = 'demo'\nversion = '0.1.0'\ndescription = 1\n",
             "[project].description must be a string",
             id="invalid-description",
@@ -395,6 +410,8 @@ def test_build_solution_filters_symlinks_by_resolved_target(chdir_project: Path)
     chdir_project.joinpath("cycle-b").symlink_to("cycle-a")
     chdir_project.joinpath("broken-link").symlink_to("missing.py")
     chdir_project.joinpath("src", "parent-link").symlink_to("..")
+
+    # Links that escape after relocation must not enter the temporary context.
     chdir_project.joinpath("relocated-envs.py").symlink_to("../solution/src/envs.py")
     chdir_project.joinpath("dev.db").write_text("local database", encoding="utf-8")
     chdir_project.joinpath("linked-database").symlink_to("dev.db")
@@ -417,6 +434,8 @@ def test_build_solution_filters_symlinks_by_resolved_target(chdir_project: Path)
     assert not os.path.lexists(build_context / "broken-link")
     assert not os.path.lexists(build_context / "src" / "parent-link")
     assert not os.path.lexists(build_context / "relocated-envs.py")
+
+    # Ignored secrets cannot be reintroduced through a symbolic link.
     assert not os.path.lexists(build_context / "linked-secret.txt")
 
 
@@ -433,6 +452,8 @@ def test_resolve_docker_paths_includes_transitive_local_workspace_projects(build
         '[tool.uv.workspace]\nmembers = ["*"]\nexclude = ["unrelated"]\n', encoding="utf-8"
     )
     if source_kind == "workspace":
+
+        # Follow normalized workspace sources declared by transitive local dependencies.
         transitive_dependency.joinpath("pyproject.toml").write_text(
             '[project]\nname = "common"\nversion = "0.1.0"\ndependencies = ["shared-lib"]\n'
             '[tool.uv.sources]\n"Shared.Lib" = { workspace = true }\n',
@@ -443,6 +464,8 @@ def test_resolve_docker_paths_includes_transitive_local_workspace_projects(build
             "[tool.uv.sources]\ncommon = { workspace = true }\n",
             encoding="utf-8",
         )
+
+        # Both direct and transitive local dependencies enter the selected workspace.
         build_project.joinpath("pyproject.toml").write_text(
             '[project]\nname = "demo"\nversion = "0.1.0"\ndependencies = ["shared-lib", "common"]\n'
             "[tool.uv.sources]\nshared_lib = { workspace = true }\ncommon = { workspace = true }\n",
@@ -453,7 +476,9 @@ def test_resolve_docker_paths_includes_transitive_local_workspace_projects(build
             '[project]\nname = "common"\nversion = "0.1.0"\n[tool.uv.sources]\ndemo = { path = "../solution" }\n', encoding="utf-8"
         )
         dependency.joinpath("pyproject.toml").write_text(
-            '[project]\nname = "shared"\nversion = "0.1.0"\n[tool.uv.sources]\ncommon = { path = "../common" }\n', encoding="utf-8"
+            # A selected local dependency can introduce another relative project source.
+            '[project]\nname = "shared"\nversion = "0.1.0"\n[tool.uv.sources]\ncommon = { path = "../common" }\n',
+            encoding="utf-8",
         )
         build_project.joinpath("pyproject.toml").write_text(
             '[project]\nname = "demo"\nversion = "0.1.0"\n[tool.uv.sources]\nshared = { path = "../shared" }\n', encoding="utf-8"
@@ -475,6 +500,7 @@ def test_resolve_docker_paths_includes_transitive_local_workspace_projects(build
         pytest.param("../../outside", ["solution"], [], "inside the UV workspace", True, id="outside-list"),
         pytest.param("..", None, [], "inside the UV workspace", False, id="standalone-ancestor"),
         pytest.param("../..", ["solution"], [], "inside the UV workspace", False, id="ancestor-outside"),
+        # Workspace membership does not permit copying an ancestor of the Solution.
         pytest.param("..", ["solution"], [], "ancestor of the Solution", False, id="workspace-ancestor"),
         pytest.param("../shared", ["solution"], [], "member of the UV workspace", False, id="undeclared"),
         pytest.param("../shared", ["*"], ["shared", "linked-outside"], "member of the UV workspace", False, id="excluded"),
@@ -497,6 +523,8 @@ def test_resolve_docker_paths_rejects_local_dependencies_outside_workspace(
     if source_path == "../linked-outside" or "linked-outside" in exclude:
         workspace.joinpath("linked-outside").symlink_to(outside, target_is_directory=True)
     workspace.parent.joinpath("pyproject.toml").write_text('[project]\nname = "ancestor"\nversion = "0.1.0"\n', encoding="utf-8")
+
+    # Create a sibling dependency independently of the ancestor project manifest.
     shared = workspace / "shared"
     shared.mkdir()
     shared.joinpath("pyproject.toml").write_text('[project]\nname = "shared"\nversion = "0.1.0"\n', encoding="utf-8")
@@ -506,6 +534,7 @@ def test_resolve_docker_paths_rejects_local_dependencies_outside_workspace(
     workspace.joinpath("pyproject.toml").write_text(
         '[project]\nname = "ancestor"\nversion = "0.1.0"\n'
         if members is None
+        # Keep absent workspace declarations distinct from explicit member lists.
         else f"[tool.uv.workspace]\nmembers = {members!r}\nexclude = {exclude!r}\n",
         encoding="utf-8",
     )
@@ -532,6 +561,8 @@ def test_build_solution_filters_expanded_context(chdir_project: Path) -> None:
     unrelated.joinpath("private.txt").write_text("unrelated content", encoding="utf-8")
     unrelated.joinpath("pyproject.toml").write_text('[project]\nname = "unrelated"\nversion = "0.1.0"\n', encoding="utf-8")
     dependency.joinpath("nested").mkdir()
+
+    # Ignore secret files recursively inside selected local dependencies.
     dependency.joinpath("nested", ".env").write_text("dependency secret", encoding="utf-8")
     chdir_project.joinpath("pyproject.toml").write_text(
         '[project]\nname = "demo"\nversion = "0.1.0"\n\n[tool.longlink]\nenvironments = "src.envs:Env"\n\n'
@@ -542,6 +573,8 @@ def test_build_solution_filters_expanded_context(chdir_project: Path) -> None:
     chdir_project.joinpath(".env.production").write_text("SECRET=production-value\n", encoding="utf-8")
     chdir_project.joinpath("nested").mkdir()
     chdir_project.joinpath("nested", "drop.db").write_text("local database", encoding="utf-8")
+
+    # Ordinary nested source must survive alongside ignored database files.
     chdir_project.joinpath("nested", "source.py").write_text("VALUE = 1\n", encoding="utf-8")
     build_context = chdir_project.parent / "context"
 
@@ -564,6 +597,7 @@ def test_build_solution_filters_expanded_context(chdir_project: Path) -> None:
     assert "WORKDIR /workspace/solution\n" in dockerfile
 
 
+# Workspace source declarations can be inherited or selected explicitly.
 WORKSPACE_SOURCE_CASES = [
     pytest.param("{ workspace = true }", "", "", False, id="none"),
     pytest.param(
@@ -573,6 +607,7 @@ WORKSPACE_SOURCE_CASES = [
     pytest.param("{ workspace = true }", '[build-system]\nrequires = ["shared"]\nbuild-backend = "shared"\n', "", True, id="build"),
     pytest.param(
         "[{ workspace = true }]",
+        # UV source alternatives use the same local-path resolution rules.
         'dependencies = ["shared"]\n[tool.uv.sources]\nshared = [{{ path = {shared_path} }}]\n',
         "",
         True,
@@ -583,6 +618,7 @@ WORKSPACE_SOURCE_CASES = [
     pytest.param(
         "[{ workspace = true }]",
         'dependencies = ["shared"]\n[tool.uv.sources]\nshared = [{{ path = {shared_path} }}]\n',
+        # Path quoting must survive whitespace and shell-significant characters.
         " with spaces 'single' \"double\" $HOME \\backslash",
         True,
         id="literal-path",
@@ -606,6 +642,8 @@ def test_build_solution_preserves_workspace_manifests_without_unrelated_sources(
         encoding="utf-8",
     )
     workspace.joinpath("uv.lock").write_text("workspace lock", encoding="utf-8")
+
+    # Only referenced workspace members should join the Solution build context.
     for name in ("shared", "unrelated"):
         project = workspace / member_directories[name]
         project.mkdir()
@@ -614,6 +652,7 @@ def test_build_solution_preserves_workspace_manifests_without_unrelated_sources(
     shared_path = "../" + member_directories["shared"]
     build_project.joinpath("pyproject.toml").write_text(
         '[project]\nname = "demo"\nversion = "0.1.0"\n'
+        # Exercise the configured source declaration in the actual member manifest.
         f"{project_configuration.format(shared_path=json.dumps(shared_path))}"
         '[tool.longlink]\nenvironments = "src.envs:Env"\n',
         encoding="utf-8",
@@ -635,6 +674,8 @@ def test_build_solution_preserves_workspace_manifests_without_unrelated_sources(
     assert ["pyproject.toml", "uv.lock", "/workspace/"] in copies
     assert f"{member_directories['solution']}/uv.lock" not in dockerfile
     assert 'ENV PATH="/workspace/.venv/bin:$PATH"' in dockerfile
+
+    # Both image stages use the selected workspace member as their working directory.
     workdirs = [shlex.split(line.removeprefix("WORKDIR ")) for line in dockerfile.splitlines() if line.startswith("WORKDIR ")]
     assert workdirs == [[f"/workspace/{member_directories['solution']}"]] * 2
     for name in member_directories.values():
@@ -643,6 +684,7 @@ def test_build_solution_preserves_workspace_manifests_without_unrelated_sources(
         assert source.replace(r"[\\]", "\\") == f"{name}/pyproject.toml"
         assert (
             context.joinpath(destination.removeprefix("/workspace/")).read_bytes()
+            # Docker's manifest layer must contain the exact selected dependency metadata.
             == workspace.joinpath(name, "pyproject.toml").read_bytes()
         )
     assert context.joinpath("uv.lock").read_text(encoding="utf-8") == "workspace lock"
@@ -680,7 +722,11 @@ def test_build_solution_rechecks_lockfile_after_model_import(build_project: Path
         encoding="utf-8",
     )
     metadata = build.read_pyproject(build_project)
+
+    # Keep generated build context separate from the source project.
     context = build_project.parent / "context"
+
+    # Manifest links cannot escape the workspace or target ignored source.
     message = "inside the UV workspace" if target_kind == "outside" else "must not reference an ignored path"
 
     # Reject the changed lockfile after inspection and before the explicit metadata copy.
@@ -695,6 +741,7 @@ def test_build_solution_rechecks_lockfile_after_model_import(build_project: Path
         pytest.param("\nunsafe", "line breaks", id="newline"),
         pytest.param("\runsafe", "line breaks", id="carriage-return"),
         pytest.param("*unsafe", "glob characters", id="asterisk"),
+        # Docker COPY metacharacters must not be interpreted as source patterns.
         pytest.param("?unsafe", "glob characters", id="question-mark"),
         pytest.param("[unsafe", "glob characters", id="bracket"),
     ],
@@ -746,6 +793,7 @@ def test_build_solution_rejects_unsafe_metadata_symlinks(build_project: Path, fi
         pytest.param('[tool.uv.sources]\nmissing = { path = "/" }\n', id="nonproject-path"),
         pytest.param('[tool.uv.sources]\nincomplete = { path = "../incomplete-dependency" }\n', id="missing-project-metadata"),
         pytest.param("[tool.uv]\nsources = []\n", id="malformed-table"),
+        # Unused or malformed source entries do not become local build dependencies.
         pytest.param('[tool.uv.sources]\nunsupported = "workspace"\n', id="unsupported-source"),
         pytest.param("[tool.uv.sources]\nworkspace = { workspace = true }\n", id="source-without-path"),
         pytest.param('[tool.uv.sources]\nunsupported = ["invalid", 1, true]\n', id="invalid-source-entries"),
@@ -787,6 +835,7 @@ def test_resolve_image_tag_returns_valid_image_references(solution_name: str, ve
         pytest.param("demo", "-dev", None, "Invalid Docker image tag", id="invalid-tag"),
         pytest.param("demo", "dev", "localhost:0", "Docker registry port is invalid", id="port-below-range"),
         pytest.param("demo", "dev", "localhost:65536", "Docker registry port is invalid", id="port-above-range"),
+        # Production registry tags require the supported owner-qualified GHCR form.
         pytest.param("demo", "dev", "ghcr.io", "Docker registry must be ghcr.io/<owner> or localhost", id="missing-ghcr-owner"),
         pytest.param("demo", "dev", "localhost:15000/team/invalid?", "Invalid Docker image path", id="invalid-namespace"),
     ],
@@ -828,6 +877,7 @@ def test_build_command_reports_built_image(
             "-f",
             str(temporary_context / "Dockerfile"),
             "-t",
+            # Compare the actual image tag and temporary context passed to Docker.
             "localhost:15000/demo:dev",
             str(temporary_context),
         ],
@@ -840,6 +890,7 @@ def test_build_command_reports_built_image(
 
 
 @pytest.mark.parametrize(
+    # Docker build and push failures preserve their command-specific exit status.
     ("failed_command", "exit_code", "expected_commands"),
     [pytest.param("build", 23, ["build"], id="build"), pytest.param("push", 24, ["build", "push"], id="push")],
 )
@@ -904,6 +955,8 @@ def run_docker(docker: str, *arguments: str, check: bool = True, timeout: int = 
     except (OSError, subprocess.TimeoutExpired) as error:
         pytest.fail(f"Docker command {arguments!r} could not complete: {error}")
     if check and result.returncode:
+
+        # Include daemon output when an integration command fails.
         pytest.fail(f"Docker command {arguments!r} failed ({result.returncode}):\n{result.stdout}\n{result.stderr}")
     return result
 
@@ -928,8 +981,12 @@ def test_generated_manifest_layer_preserves_literal_workspace_paths(tmp_path: Pa
     for project in (solution, shared, unrelated):
         project.mkdir(parents=True)
     workspace.joinpath("pyproject.toml").write_text(
-        f"[tool.uv.workspace]\nmembers = {json.dumps([solution_name, 'shared', 'unrelated'])}\n", encoding="utf-8"
+        # Include an unrelated member to verify dependency selection in the built image.
+        f"[tool.uv.workspace]\nmembers = {json.dumps([solution_name, 'shared', 'unrelated'])}\n",
+        encoding="utf-8",
     )
+
+    # Workspace builds must use the root lockfile rather than a member-local copy.
     workspace.joinpath("uv.lock").write_text("authoritative workspace lock\n", encoding="utf-8")
     solution.joinpath("uv.lock").write_text("non-authoritative Solution lock\n", encoding="utf-8")
     solution.joinpath("pyproject.toml").write_text(
@@ -940,6 +997,8 @@ def test_generated_manifest_layer_preserves_literal_workspace_paths(tmp_path: Pa
     )
     solution.joinpath("envs.py").write_text("from pydantic import BaseModel\n\nclass Env(BaseModel):\n    pass\n", encoding="utf-8")
     for project in (shared, unrelated):
+
+        # Give sibling workspace members independent package identities.
         project.joinpath("pyproject.toml").write_text(f'[project]\nname = "{project.name}"\nversion = "0.1.0"\n', encoding="utf-8")
     shared.joinpath("source.py").write_text("VALUE = 1\n", encoding="utf-8")
     unrelated.joinpath("private.txt").write_text("private unrelated source\n", encoding="utf-8")
@@ -953,12 +1012,16 @@ def test_generated_manifest_layer_preserves_literal_workspace_paths(tmp_path: Pa
     generated_lines = context.joinpath("Dockerfile").read_text(encoding="utf-8").splitlines()
     manifest_instructions: list[str] = []
     for line in generated_lines:
+
+        # Preserve only manifest-layer instructions for the dependency-cache probe.
         if line.startswith(("COPY [", "WORKDIR ")):
             manifest_instructions.append(line)
         if line.startswith("WORKDIR "):
             break
     assert sum(line.startswith("COPY [") for line in manifest_instructions) == 4
     assert manifest_instructions[-1].startswith("WORKDIR ")
+
+    # Build only the generated manifest layer to inspect its actual exported files.
     context.joinpath("Dockerfile").write_text("FROM scratch\n" + "\n".join(manifest_instructions) + "\n", encoding="utf-8")
 
     # Give every resource a unique known name so even failed build/create attempts can be cleaned up.
@@ -977,10 +1040,14 @@ def test_generated_manifest_layer_preserves_literal_workspace_paths(tmp_path: Pa
         with tarfile.open(archive_path) as archive:
             exported_files: dict[str, bytes] = {}
             for member in archive.getmembers():
+
+                # Inspect only regular workspace files exported from the built image.
                 if not member.isfile() or not member.name.startswith("workspace/"):
                     continue
                 contents = archive.extractfile(member)
                 assert contents is not None
+
+                # Close every extracted file handle after recording its bytes.
                 with contents:
                     exported_files[member.name] = contents.read()
 
@@ -993,6 +1060,7 @@ def test_generated_manifest_layer_preserves_literal_workspace_paths(tmp_path: Pa
             "workspace/unrelated/pyproject.toml": unrelated.joinpath("pyproject.toml").read_bytes(),
         }
     finally:
+
         # Remove only this test's resources, including names allocated by unsuccessful Docker commands.
         try:
             run_docker(docker, "container", "rm", "--force", container_name, check=False)

@@ -27,6 +27,8 @@ async def save_card(
         or organization.stripe_customer_id is None
     ):
         return
+
+    # Verify the completed setup intent before retaining its payment method.
     intent = await connection.v1.setup_intents.retrieve_async(hosted.setup_intent)
     await save_setup_intent(session, organization, intent, connection)
 
@@ -82,6 +84,8 @@ async def checkout(session: AsyncSession, organization_id: UUID, user_id: UUID, 
             {"name": organization.name, "metadata": {"organization_id": str(organization.id)}},
             options={"idempotency_key": f"customer:{organization.id}"},
         )
+
+        # Persist the idempotent customer before reacquiring local ownership locks.
         organization.stripe_customer_id = customer.id
         await session.commit()
         organization = await organizations.lock(session, organization.id)
@@ -92,11 +96,15 @@ async def checkout(session: AsyncSession, organization_id: UUID, user_id: UUID, 
     # Reuse open attempts and recover completed setup when a webhook was delayed.
     if organization.stripe_checkout_id is not None:
         existing = await connection.v1.checkout.sessions.retrieve_async(organization.stripe_checkout_id)
+
+        # Reuse a live checkout instead of creating competing card-registration sessions.
         if existing.status == "open":
             if existing.url is None:
                 raise HTTPException(status_code=503, detail="Checkout URL unavailable")
             return existing.url
         await save_card(session, organization, existing, connection)
+
+        # Closed checkout attempts no longer own the next registration request.
         organization.stripe_checkout_id = None
         organization.stripe_checkout_key = uuid4()
 
@@ -108,11 +116,15 @@ async def checkout(session: AsyncSession, organization_id: UUID, user_id: UUID, 
     await organizations.locked_membership(session, user_id, organization.id, OrganizationRoles.owner)
     if organization.deleted_at is not None:
         raise HTTPException(status_code=403, detail="Organization unavailable")
+
+    # Another request may have published a checkout while the lock was released.
     if organization.stripe_checkout_id is not None:
         existing = await connection.v1.checkout.sessions.retrieve_async(organization.stripe_checkout_id)
         if existing.status == "open" and existing.url is not None:
             return existing.url
         raise HTTPException(status_code=409, detail="Card registration already started. Refresh usage.")
+
+    # Customer creation can race with Organization removal while remote I/O runs.
     if organization.stripe_customer_id is None:
         raise HTTPException(status_code=409, detail="Stripe customer unavailable. Refresh usage.")
 
@@ -128,11 +140,13 @@ async def checkout(session: AsyncSession, organization_id: UUID, user_id: UUID, 
             "setup_intent_data": {"metadata": {"organization_id": str(organization.id)}},
             "custom_text": {
                 "submit": {
+                    # Hosted checkout records consent to usage-based monthly charges.
                     "message": "By saving your card, you authorize LongLink to charge it monthly for your organization's "
                     "month-end users, database, and file storage above the free allowances at the published prices. "
                     "No payment is taken now."
                 }
             },
+            # Both outcomes return to the same Organization billing page.
             "success_url": return_url,
             "cancel_url": return_url,
         },

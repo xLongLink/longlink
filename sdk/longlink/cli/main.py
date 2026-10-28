@@ -30,6 +30,8 @@ def main(tokens: Sequence[str] | None = None) -> None:
     except errors.Error as error:
         print(f"Error: {error}", file=sys.stderr)
         raise SystemExit(1) from error
+
+    # User cancellation is a concise CLI error, not a traceback.
     except (EOFError, KeyboardInterrupt) as error:
         print("Aborted!", file=sys.stderr)
         raise SystemExit(1) from error

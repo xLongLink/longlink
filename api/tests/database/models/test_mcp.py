@@ -22,6 +22,7 @@ async def test_mcp_token_hash_cannot_identify_two_grants(users: tuple[User, User
         "client_id": client.id,
         "solution_id": solution.id,
         "resource": f"https://platform.example/{solution.id}/mcp",
+        # Authorization proofs remain bound to a password and an expiry.
         "fingerprint": "b" * 64,
         "expires_at": datetime.now(UTC) + timedelta(minutes=5),
     }

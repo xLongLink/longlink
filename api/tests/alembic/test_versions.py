@@ -36,6 +36,8 @@ def migration_urls(request: pytest.FixtureRequest, tmp_path: Path) -> Iterator[s
         url = request.getfixturevalue("mysql_url")
         yield url.set(drivername="mysql+aiomysql", query={"ssl-mode": "DISABLED"}).render_as_string(hide_password=False)
     else:
+
+        # SQLite migration tests own a separate temporary database file.
         path = tmp_path / "migration.db"
         yield f"sqlite+aiosqlite:///{path}"
 

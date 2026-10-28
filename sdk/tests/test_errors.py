@@ -11,7 +11,7 @@ def test_installed_http_handler_preserves_bodyless_status_and_headers() -> None:
     # Arrange
     app = FastAPI()
 
-    @app.delete("/resource")
+    @app.delete("/resource", response_model=None)
     async def delete_resource() -> None:
         """Return a response with a body-prohibited status."""
 
@@ -36,7 +36,7 @@ def test_installed_http_handler_falls_back_for_blank_detail_and_preserves_header
     # Arrange
     app = FastAPI()
 
-    @app.get("/resource")
+    @app.get("/resource", response_model=None)
     async def get_resource() -> None:
         """Return an HTTP error without a useful detail."""
 
@@ -66,7 +66,7 @@ def test_installed_validation_handler_hides_submitted_values() -> None:
 
         quantity: int
 
-    @app.post("/orders")
+    @app.post("/orders", response_model=Payload)
     async def create_order(payload: Payload) -> Payload:
         """Return validated request data."""
 
@@ -96,7 +96,7 @@ def test_installed_handlers_preserve_a_solution_owned_http_handler() -> None:
 
         return JSONResponse(status_code=error.status_code, content={"solution": error.detail})
 
-    @app.get("/orders")
+    @app.get("/orders", response_model=None)
     async def get_orders() -> None:
         """Return a Solution-owned HTTP error."""
 

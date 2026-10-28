@@ -57,8 +57,9 @@ async def check_update(ctx: Context, user: auth.CurrentUser, solution: auth.Solu
 
     # Reuse the inspected version when the candidate is the current immutable image.
     current_version = metadata.version if metadata.image == revision.image else None
+
+    # Release command locks before inspecting the current digest with its retained credentials.
     if metadata.image != revision.image:
-        # Release command locks before inspecting the current digest with its retained credentials.
         current_image = Image(revision.image)
         connection = await registries.resolve(ctx.database, solution.organization_id, revision.registry_connection_id, current_image)
         await ctx.database.commit()
@@ -66,8 +67,12 @@ async def check_update(ctx: Context, user: auth.CurrentUser, solution: auth.Solu
         # An unavailable old image must not block review of an otherwise valid update.
         try:
             current_metadata = await images.required_metadata(current_image, connection)
+
+            # Missing registry access leaves the current version unknown, not the update unavailable.
             current_version = current_metadata.version
         except HTTPException as exc:
+
+            # Only missing or inaccessible current images have an unknown version.
             if exc.status_code not in (403, 404):
                 raise
             current_version = None
@@ -82,6 +87,7 @@ async def check_update(ctx: Context, user: auth.CurrentUser, solution: auth.Solu
         "current_version": current_version,
         "metadata": metadata,
         "revision_id": revision.id,
+        # Expose names only; environment values remain server-side.
         "configured_envs": sorted(revision.envs),
     }
 
@@ -120,6 +126,7 @@ async def download_plugin(solution: auth.SolutionMaintainer) -> Response:
                 "interface": {
                     "displayName": solution.name,
                     "shortDescription": "LongLink solution tools",
+                    # Fall back to Solution metadata when no custom description exists.
                     "longDescription": solution.description or f"Tools for {solution.name}.",
                     "developerName": "LongLink",
                     "category": "Productivity",
@@ -129,6 +136,7 @@ async def download_plugin(solution: auth.SolutionMaintainer) -> Response:
     }
     mcp = {
         "$schema": "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json",
+        # Clients connect through the authenticated Platform proxy.
         "mcpServers": {name: {"type": "streamable-http", "url": f"{env.PUBLIC_URL}/api/v1/solutions/{solution.id}/proxy/mcp"}},
     }
 
@@ -162,6 +170,8 @@ async def get_solution_logs(solution_id: UUID, access: auth.SolutionLogAccess):
         cluster = Kubernetes(kubeconfig)
         async with cluster:
             return await solution_resources.logs(cluster, organization_id, solution_id)
+
+    # Do not expose cluster diagnostics through the public log endpoint.
     except RuntimeError:
         raise HTTPException(status_code=503, detail="Solution logs unavailable")
 

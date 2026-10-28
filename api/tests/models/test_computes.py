@@ -42,9 +42,11 @@ def test_compute_registry_create_parses_yaml_kubeconfig() -> None:
                 "contexts": [{"name": "context", "context": {"cluster": "cluster", "user": "worker"}}],
                 "current-context": "context",
                 "users": [
+                    # Authentication data must never cause subprocess execution.
                     {"name": "worker", "user": {"exec": {"apiVersion": "client.authentication.k8s.io/v1", "command": "untrusted-command"}}}
                 ],
             },
+            # Executable authentication is rejected even in otherwise valid kubeconfig.
             "exec authentication is not allowed",
             id="exec-authentication",
         ),
@@ -55,6 +57,7 @@ def test_compute_registry_create_parses_yaml_kubeconfig() -> None:
                 "current-context": "context",
                 "users": [{"name": "user", "user": {}}],
             },
+            # Contexts must resolve both their cluster and authentication identity.
             "current-context must reference a configured cluster and user",
             id="dangling-context-user",
         ),
@@ -75,6 +78,7 @@ def test_compute_registry_create_rejects_invalid_kubeconfigs(kubeconfig: object,
         )
 
 
+# Context references must use scalar names, not structured values.
 @pytest.mark.parametrize("field", ["cluster", "user"])
 @pytest.mark.parametrize("reference", [pytest.param([], id="list"), pytest.param({}, id="mapping")])
 def test_compute_registry_create_rejects_non_string_context_references(field: str, reference: object) -> None:

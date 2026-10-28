@@ -108,6 +108,8 @@ async def create_running_solution(user: User) -> tuple[Solution, ComputeRegistry
         secrets={"LONGLINK_IDENTITY_SECRET": "test-identity-secret-01234567890"},
     )
     async with session_scope() as session:
+
+        # Persist the runtime target before sending requests through the proxy.
         session.add(solution)
         await session.commit()
 
@@ -139,6 +141,7 @@ async def test_solution_proxy_forwards_safe_content(
         captured["content_type"] = request.headers.get("content-type")
         captured["has_content_type"] = "content-type" in request.headers
         captured["user_id"] = str(
+            # Inspect the signed identity actually delivered to the gateway.
             identity.identity_token_user(request.headers["x-longlink-identity"], "test-identity-secret-01234567890").id
         )
 
@@ -170,6 +173,8 @@ async def test_solution_proxy_forwards_safe_content(
     )
     assert "set-cookie" not in response.headers
     assert captured.get("close_count") == 1
+
+    # Proxying preserves method and URL while owning upstream cleanup.
     assert captured.get("method") == "POST"
     assert captured.get("url") == "https://gateway.example/anything?answer=42"
     assert captured.get("content") == b"payload"
@@ -194,6 +199,8 @@ async def test_solution_proxy_strips_credential_headers_and_pins_gateway_tls(
         await session.commit()
 
     captured: dict[str, object] = {}
+
+    # Observe real TLS construction while replacing only external network I/O.
     real_create_context = ssl.create_default_context
     real_client = httpx2.AsyncClient
 
@@ -211,6 +218,8 @@ async def test_solution_proxy_strips_credential_headers_and_pins_gateway_tls(
 
         follow_redirects: bool
         trust_env: bool
+
+        # Capture the security-relevant client configuration.
         timeout: float
         verify: ssl.SSLContext
 
@@ -226,7 +235,11 @@ async def test_solution_proxy_strips_credential_headers_and_pins_gateway_tls(
         assert isinstance(follow_redirects, bool)
         assert isinstance(trust_env, bool)
         assert isinstance(timeout, float)
+
+        # Upstream HTTPS must receive an actual configured trust context.
         assert isinstance(verify, ssl.SSLContext)
+
+        # Record validated transport options for the assertions below.
         captured["follow_redirects"] = follow_redirects
         captured["trust_env"] = trust_env
         captured["timeout"] = timeout
@@ -274,6 +287,8 @@ async def test_solution_proxy_strips_credential_headers_and_pins_gateway_tls(
     assert "x-forwarded-for" not in upstream_headers
     assert "x-forwarded-host" not in upstream_headers
     assert "mcp-session-id" not in upstream_headers
+
+    # Ordinary runtime requests must not forward MCP session state.
     assert "mcp-protocol-version" not in upstream_headers
     assert "mcp-method" not in upstream_headers
     assert "mcp-name" not in upstream_headers
@@ -286,6 +301,7 @@ async def test_solution_proxy_strips_credential_headers_and_pins_gateway_tls(
     assert captured.get("timeout") == 300.0
 
 
+# Both MCP endpoint spellings preserve the protocol's session metadata.
 @pytest.mark.parametrize("path", ["mcp", "mcp/"])
 async def test_solution_proxy_preserves_mcp_transport_metadata(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient], users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch, path: str
@@ -339,6 +355,8 @@ async def test_solution_proxy_preserves_mcp_transport_metadata(
     assert captured["last-event-id"] == "caller-event"
     profile = identity.identity_token_user(captured["x-longlink-identity"], "test-identity-secret-01234567890")
     assert profile.id == users[0].id
+
+    # The runtime receives the authenticated Platform profile, not browser-supplied identity.
     assert profile.name == users[0].name
     assert profile.email == users[0].email
     assert profile.avatar == users[0].avatar
@@ -372,9 +390,12 @@ async def test_solution_proxy_sanitizes_json_upstream_error(
             "set-cookie": "upstream_session=private-json-cookie",
             "x-debug": "private-json-diagnostics",
         },
+        # Only the explicit public detail may cross the proxy error boundary.
         b'{"detail":"Please retry shortly.","diagnostics":"private-json-diagnostics"}',
         on_close=close,
     )
+
+    # Keep request construction real while controlling the gateway response.
     monkeypatch.setattr(httpx2.AsyncHTTPTransport, "handle_async_request", fake_gateway_request(gateway_response))
 
     # Act
@@ -444,6 +465,7 @@ async def test_solution_proxy_rejects_anonymous_without_gateway_access(client: A
         pytest.param(b'{"detail":123}', None, id="non-string-detail"),
         pytest.param(b"[1,2]", None, id="non-object-payload"),
         pytest.param(b'{"detail":"' + b"x" * (64 * 1024) + b'"}', None, id="oversized"),
+        # Incomplete upstream diagnostics must never become a public error detail.
         pytest.param([b'{"detail":"partial'], RecursionError("stream aborted"), id="aborted"),
     ],
 )
@@ -569,6 +591,8 @@ async def test_solution_proxy_propagates_timed_out_response_stream(
             except asyncio.CancelledError as exc:
                 cancellation = exc
                 raise
+
+            # This chunk must not be delivered after streaming cancellation.
             yield b"late"
 
         async def aclose(self) -> None:
@@ -706,6 +730,8 @@ async def test_solution_proxy_allows_organization_read_members(
     async with session_scope() as session:
         session.add(UserOrganization(user_id=user.id, organization_id=solution.organization_id, role=OrganizationRoles.read))
         await session.commit()
+
+    # Send the request as the non-owner identity under test.
     client = clients[1]
 
     # Request the Solution through the member's Organization access.
@@ -726,6 +752,8 @@ async def test_solution_proxy_rejects_cross_organization_access(
     owner = users[0]
     organization = await create_organization(owner)
     solution = await create_solution(organization, image="ghcr.io/xlonglink/sample:latest")
+
+    # Authorization rejection must happen before any gateway connection.
     reject_gateway_access(monkeypatch)
 
     # Request the other Organization's runtime through an authenticated session.
@@ -761,6 +789,7 @@ async def test_solution_proxy_rejects_membership_revoked_before_access_lookup(
             await revocation_session.commit()
         return await real_access(session, user_id, solution_id)
 
+    # Reject admission before the proxy attempts any gateway I/O.
     monkeypatch.setattr(proxy_routes.organizations, "solution_runtime_access", access)
     reject_gateway_access(monkeypatch)
 
@@ -887,6 +916,7 @@ async def test_solution_proxy_delete_allows_maintain_member(
         organization_membership.role = OrganizationRoles.maintain
         await session.commit()
     monkeypatch.setattr(
+        # Use a harmless upstream response while observing request admission.
         httpx2.AsyncHTTPTransport,
         "handle_async_request",
         fake_gateway_request(make_upstream(200, {"content-type": "application/json"}, b"{}")),
@@ -1016,6 +1046,7 @@ def request_scope(monkeypatch: pytest.MonkeyPatch) -> SimpleNamespace:
         solution=solution,
         user=user,
         closed=closed,
+        # Keep the request-scope inputs explicit for cleanup tests.
         kwargs={
             "request": request,
             "solution_id": solution.id,
@@ -1029,6 +1060,7 @@ def request_scope(monkeypatch: pytest.MonkeyPatch) -> SimpleNamespace:
 class GatewayClient(httpx2.AsyncClient):
     """Keep real HTTP request construction while recording client cleanup."""
 
+    # Observe independently acquired response and client cleanup.
     closed: list[str]
 
     async def aclose(self) -> None:
@@ -1071,11 +1103,17 @@ async def test_gateway_response_closes_client_when_response_close_fails(
 
     monkeypatch.setattr(proxy_routes.httpx2, "AsyncClient", Client)
 
-    # The response raises on scope exit, after the assertion that cleanup has not started.
-    with pytest.raises(RuntimeError, match="response close failed"):  # noqa: PT012
-        async with asynccontextmanager(proxy_routes.runtime_scope)() as runtime:
-            await proxy_routes.proxy_solution_request(**request_scope.kwargs, runtime=runtime)
-            assert request_scope.closed == []
+    # Verify the response stays open until the request scope exits.
+    scope = asynccontextmanager(proxy_routes.runtime_scope)()
+    runtime = await scope.__aenter__()
+    try:
+        await proxy_routes.proxy_solution_request(**request_scope.kwargs, runtime=runtime)
+        assert request_scope.closed == []
+    finally:
+
+        # Response cleanup must still release the client when it fails.
+        with pytest.raises(RuntimeError, match="response close failed"):
+            await scope.__aexit__(None, None, None)
     assert request_scope.closed == ["response", "client"]
 
 
@@ -1107,11 +1145,16 @@ async def test_gateway_request_closes_client_when_send_is_cancelled(
         try:
             await asyncio.wait_for(entered.wait(), timeout=1)
             task.cancel()
+
+            # Cancellation must promptly unwind the partially acquired runtime scope.
             async with asyncio.timeout(1):
                 with pytest.raises(asyncio.CancelledError):
                     await task
+
+            # Interrupted submission releases its acquired client immediately.
             assert request_scope.closed == ["client"]
         finally:
+
             # Always reap the request task, including failures before send is entered.
             task.cancel()
             async with asyncio.timeout(1):
@@ -1167,6 +1210,8 @@ async def test_gateway_request_forwards_identity_and_defers_cleanup(
         assert request.method == "POST"
         assert request.url == "https://gateway.example/health%2Fstatus?verbose=true&raw=%2F+%25"
         assert request.url.raw_path == b"/health%2Fstatus?verbose=true&raw=%2F+%25"
+
+        # Preserve the encoded path while routing with the internal Solution hostname.
         assert request.headers["host"] == (
             f"solution-{request_scope.solution.id}.longlink-compute-{request_scope.solution.organization_id.hex}.svc.cluster.local"
         )

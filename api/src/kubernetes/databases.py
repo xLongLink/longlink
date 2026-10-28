@@ -31,6 +31,7 @@ async def apply(
         instances=instances,
         quota_pods=2 * instances + 1,
         quota_instances=instances + 1,
+        # Reserve storage for an additional instance during replacement.
         quota_storage_mib=size_mib * (instances + 1),
     )
     api = await client.api()
@@ -42,6 +43,8 @@ async def apply(
             continue
         resource = object_from_spec(document, api=api)
         await utils.apply(resource)
+
+    # Keep the database superuser credential in its dedicated namespace.
     secret = Secret(
         {
             "metadata": {"name": "database-superuser", "namespace": database_namespace},
@@ -52,6 +55,8 @@ async def apply(
     )
     await utils.apply(secret)
     cluster = ClusterResource(cluster_document, api=api)
+
+    # Publish the cluster before waiting for database readiness.
     await utils.apply(cluster)
     await resume(client, organization_id)
 
@@ -77,10 +82,14 @@ async def resume(client: "Kubernetes", organization_id: UUID) -> None:
     cluster = ClusterResource("database", namespace=database_namespace, api=api)
     await cluster.patch({"metadata": {"annotations": {"cnpg.io/hibernation": "off"}}})
     async with asyncio.timeout(2 * 60):
+
+        # Hibernation annotations alone do not prove that PostgreSQL is accepting traffic.
         while True:
             await cluster.refresh()
             status = cluster.raw.get("status", {})
             conditions = status.get("conditions", [])
+
+            # False hibernation conditions still mean shutdown; after removal, verify live Pod state too.
             if (
                 cluster.metadata.get("annotations", {}).get("cnpg.io/hibernation") == "off"
                 and cluster.metadata.get("deletionTimestamp") is None
@@ -88,16 +97,20 @@ async def resume(client: "Kubernetes", organization_id: UUID) -> None:
                 and any(condition.get("type") == "Ready" and condition.get("status") == "True" for condition in conditions)
                 and not any(condition.get("type") == "cnpg.io/hibernation" for condition in conditions)
             ):
-                # False hibernation conditions still mean shutdown; after removal, verify live Pod state too.
+
+                # Controller conditions must be confirmed by ready instance Pods.
                 ready_pods = 0
                 async for candidate in Pod.list(
                     api=api, namespace=database_namespace, label_selector={"cnpg.io/cluster": "database", "cnpg.io/podRole": "instance"}
                 ):
                     pod = cast(Pod, candidate)
+
+                    # Require a live, non-terminating instance Pod.
                     pod_status = pod.raw.get("status", {})
                     if (
                         pod.metadata.get("deletionTimestamp") is not None
                         or pod_status.get("phase") != "Running"
+                        # Pod readiness must be explicitly acknowledged.
                         or not any(
                             condition.get("type") == "Ready" and condition.get("status") == "True"
                             for condition in pod_status.get("conditions", [])
@@ -106,6 +119,8 @@ async def resume(client: "Kubernetes", organization_id: UUID) -> None:
                         break
                     ready_pods += 1
                 else:
+
+                    # Every configured PostgreSQL instance must be ready.
                     if ready_pods == cluster.spec["instances"]:
                         return
             await asyncio.sleep(1)
@@ -127,6 +142,7 @@ async def connection(organization: Organization, cluster: "Kubernetes", *, certi
         password=organization.database_password,
         sslmode=DatabaseSSLMode.require,
         certificate=certificate,
+        # Connect through the tunnel while validating the cluster hostname.
         hostaddr="127.0.0.1",
     )
 

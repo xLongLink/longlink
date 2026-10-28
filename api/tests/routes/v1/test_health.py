@@ -52,6 +52,7 @@ async def test_readyz_returns_internal_error_when_database_query_fails(monkeypat
     client = AsyncClient(transport=ASGITransport(app=app, raise_app_exceptions=False), base_url="http://testserver")
 
     try:
+
         # Act
         async with client:
             response = await client.get("/api/v1/readyz")
@@ -61,5 +62,6 @@ async def test_readyz_returns_internal_error_when_database_query_fails(monkeypat
         assert response.json() == {"detail": "An unexpected error occurred. Please try again later."}
         assert response.headers["cache-control"] == "no-store"
     finally:
+
         # Release the test-owned engine even if the readiness assertions fail.
         await engine.dispose()

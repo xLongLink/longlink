@@ -3,8 +3,8 @@ from datetime import UTC, datetime, timedelta
 from pydantic import ValidationError
 from longlink.database.users import User
 
-IDENTITY_TOKEN_ALGORITHM = "HS256"  # noqa: S105
-IDENTITY_TOKEN_AUDIENCE = "longlink:identity"  # noqa: S105
+IDENTITY_TOKEN_ALGORITHM = "HS256"
+IDENTITY_TOKEN_AUDIENCE = "longlink:identity"
 IDENTITY_TOKEN_LIFETIME_SECONDS = 300
 
 
@@ -22,6 +22,7 @@ def create_identity_token(user: User, secret: str) -> str:
             "exp": issued_at + timedelta(seconds=IDENTITY_TOKEN_LIFETIME_SECONDS),
         },
         secret,
+        # Fix the signing algorithm independently of caller-controlled identity data.
         algorithm=IDENTITY_TOKEN_ALGORITHM,
     )
 
@@ -47,10 +48,14 @@ def identity_token_user(token: str, secret: str) -> User:
         profile = data["profile"]
         if not isinstance(profile, dict) or "updated_at" not in profile:
             raise jwt.InvalidTokenError("Invalid identity token profile")
+
+        # The JWT subject is authoritative even if a profile contains an identifier.
         user = User.model_validate({**profile, "id": data["sub"]})
         if user.updated_at.tzinfo is None:
             raise jwt.InvalidTokenError("Profile timestamp must include a timezone")
         user.updated_at = user.updated_at.astimezone(UTC)
         return user
+
+    # Invalid signed profiles share the JWT authentication error boundary.
     except ValidationError as exc:
         raise jwt.InvalidTokenError("Invalid identity token user") from exc

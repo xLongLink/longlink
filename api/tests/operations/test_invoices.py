@@ -35,6 +35,8 @@ async def test_snapshot_measurement_failure_preserves_deadline_until_complete_re
         persisted.database_state = DatabaseState.available
         persisted.stripe_customer_id = "cus_usage"
         persisted.stripe_payment_method_id = "pm_usage"
+
+        # Make the captured Organization eligible for the closed billing period.
         persisted.invoice_due_at = period_end
         await session.commit()
 
@@ -88,6 +90,8 @@ async def test_snapshot_measurement_failure_preserves_deadline_until_complete_re
         assert (invoice.users, invoice.database_bytes, invoice.storage_bytes) == (1, 100 * 1024**2 + 1024**3, 2 * 1024**3)
         persisted = await session.get(Organization, organization.id)
         assert persisted is not None
+
+        # Capturing usage advances the next billing boundary once.
         assert persisted.invoice_due_at == invoices.dates.next_month(period_end)
 
 
@@ -106,6 +110,8 @@ async def test_issue_recovers_remote_success_after_crash_without_duplicate_charg
         storage_bytes=2 * 1024**3 + 1,
     )
     async with session_scope() as session:
+
+        # Persist pending usage before exercising remote issuance retries.
         session.add(invoice)
         await session.commit()
 
@@ -129,6 +135,8 @@ async def test_issue_recovers_remote_success_after_crash_without_duplicate_charg
             assert parse_qs(urlsplit(url).query)["customer"] == ["cus_retry"]
             payload = {"object": "list", "data": remote_invoices, "has_more": False, "url": path}
         elif method == "post" and path == "/v1/invoices":
+
+            # New invoices must not absorb unrelated pending customer items.
             assert params["customer"] == ["cus_retry"]
             assert params["pending_invoice_items_behavior"] == ["exclude"]
             remote = {
@@ -138,6 +146,7 @@ async def test_issue_recovers_remote_success_after_crash_without_duplicate_charg
                 "currency": params["currency"][0],
                 "status": "draft",
                 "metadata": {"longlink_invoice_id": params["metadata[longlink_invoice_id]"][0]},
+                # Draft invoices have no finalized charge total yet.
                 "total": 0,
             }
             remote_invoices.append(remote)
@@ -145,12 +154,15 @@ async def test_issue_recovers_remote_success_after_crash_without_duplicate_charg
             event = "invoice"
         elif method == "get" and path == "/v1/invoiceitems":
             assert parse_qs(urlsplit(url).query)["invoice"] == ["in_1"]
+
+            # Return the provider's already-created invoice lines for retry recovery.
             payload = {"object": "list", "data": remote_items, "has_more": False, "url": path}
         elif method == "post" and path == "/v1/invoiceitems":
             assert params["invoice"] == ["in_1"]
             item = {
                 "id": f"ii_{len(remote_items) + 1}",
                 "object": "invoiceitem",
+                # Simulate the amount Stripe computes from its submitted price and quantity.
                 "amount": int(
                     (Decimal(params["unit_amount_decimal"][0]) * int(params["quantity"][0])).quantize(Decimal("1"), rounding=ROUND_HALF_UP)
                 ),
@@ -161,36 +173,57 @@ async def test_issue_recovers_remote_success_after_crash_without_duplicate_charg
                     "resource": params["metadata[resource]"][0],
                 },
             }
+
+            # Retain provider state so replayed requests observe their prior side effects.
             remote_items.append(item)
             remote_invoices[0]["total"] += item["amount"]
             payload = item
             event = "item"
+
+        # Coupon lookups observe state retained by earlier issuance attempts.
         elif method == "get" and path.startswith("/v1/coupons/"):
             coupon_id = path.rsplit("/", 1)[1]
+
+            # Stripe distinguishes a missing coupon from an empty successful response.
             if coupon_id not in remote_coupons:
                 error = {"error": {"type": "invalid_request_error", "code": "resource_missing", "message": "No such coupon", "param": "id"}}
                 return json.dumps(error).encode(), 404, {}
             payload = remote_coupons[coupon_id]
+
+        # Retain created coupons for subsequent retry recovery.
         elif method == "post" and path == "/v1/coupons":
             coupon_id = params["id"][0]
             assert coupon_id not in remote_coupons
+
+            # Return a provider-shaped coupon for the submitted invoice allowance.
             payload = {
                 "id": coupon_id,
                 "object": "coupon",
                 "name": params["name"][0],
+                # Preserve the actual submitted free-tier credit and invoice binding.
                 "amount_off": int(params["amount_off"][0]),
                 "currency": params["currency"][0],
                 "duration": params["duration"][0],
                 "metadata": {"longlink_invoice_id": params["metadata[longlink_invoice_id]"][0]},
             }
             remote_coupons[coupon_id] = payload
+
+        # Applying the allowance updates the remote invoice's actual charge total.
         elif method == "post" and path == "/v1/invoices/in_1":
             coupon = remote_coupons[params["discounts[0][coupon]"][0]]
             remote_invoices[0]["total"] = sum(item["amount"] for item in remote_items) - coupon["amount_off"]
+
+            # Subsequent retrieval observes the updated provider-side invoice.
             payload = remote_invoices[0]
+
+        # Invoice reads return the accumulated remote state.
         elif method == "get" and path == "/v1/invoices/in_1":
             payload = remote_invoices[0]
+
+        # Finalization records the total that would become chargeable.
         elif method == "post" and path == "/v1/invoices/in_1/finalize":
+
+            # Finalization opts into Stripe's normal automatic collection lifecycle.
             assert params["auto_advance"] == ["true"]
             remote_invoices[0]["status"] = "open"
             finalized_totals.append(remote_invoices[0]["total"])
@@ -240,6 +273,8 @@ async def test_issue_recovers_remote_success_after_crash_without_duplicate_charg
         ("storage", 41),
     ]
     assert [item["quantity"] for item in remote_items] == [7, 1124, 2049]
+
+    # Verify actual Stripe prices and the recovered free-allowance discount.
     assert [item["unit_amount_decimal"] for item in remote_items] == ["1000", "0.1", "0.02"]
     assert list(remote_coupons.values()) == [
         {
@@ -249,6 +284,7 @@ async def test_issue_recovers_remote_success_after_crash_without_duplicate_charg
             "amount_off": 5030,
             "currency": "chf",
             "duration": "once",
+            # The free-allowance coupon remains bound to this invoice.
             "metadata": {"longlink_invoice_id": str(invoice.id)},
         }
     ]

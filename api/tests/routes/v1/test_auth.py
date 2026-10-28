@@ -31,6 +31,7 @@ UNVERIFIED_OAUTH_RESPONSES = (
     pytest.param(
         "github",
         [{"primary": True, "verified": False}, {"primary": False, "verified": True}],
+        # Primary and verified flags must belong to the same address.
         id="github-primary-and-verified-on-different-emails",
     ),
 )
@@ -152,6 +153,8 @@ async def test_oauth_login_redirects_with_browser_bound_state_and_pkce(
     assert credential is not None
     state, verifier, _ = token.oauth_state_claims(credential, provider)
     redirect = urlparse(response.headers["location"])
+
+    # Inspect the provider redirect rather than recreating authorization URL logic.
     parameters = parse_qs(redirect.query)
     assert redirect.geturl().startswith(oauth.GOOGLE_AUTHORIZATION_URL if provider == "google" else oauth.GITHUB_AUTHORIZATION_URL)
     assert parameters["client_id"] == [f"{provider}-client"]
@@ -164,6 +167,7 @@ async def test_oauth_login_redirects_with_browser_bound_state_and_pkce(
     assert verifier not in response.headers["location"]
 
 
+# Availability depends on complete provider configuration, not account state.
 @pytest.mark.no_db
 async def test_oauth_availability_reports_configured_providers(client: AsyncClient, monkeypatch: pytest.MonkeyPatch) -> None:
     """Report OAuth availability without disclosing confidential client credentials."""
@@ -200,9 +204,12 @@ async def test_oauth_login_rejects_unconfigured_provider_without_state_cookie(cl
     ("callback_provider", "state"),
     [
         pytest.param("google", "mismatched-state", id="mismatched-state"),
+        # A valid state token cannot be replayed against another provider.
         pytest.param("github", "expected-state", id="cross-provider-state"),
     ],
 )
+
+# Invalid browser state must fail before any provider code exchange.
 async def test_oauth_callback_rejects_invalid_state_without_provider_exchange(
     client: AsyncClient, monkeypatch: pytest.MonkeyPatch, callback_provider: str, state: str
 ) -> None:
@@ -236,8 +243,10 @@ async def test_oauth_callback_rejects_invalid_state_without_provider_exchange(
 @pytest.mark.no_db
 @pytest.mark.parametrize("provider", OAUTH_PROVIDERS)
 @pytest.mark.parametrize(
+    # Malformed callback parameters must not reach the provider exchange.
     "parameters",
     [
+        # Provider cancellation and malformed callbacks never publish a browser session.
         pytest.param({"code": "provider-code", "state": "expected-state", "error": "access_denied"}, id="cancelled"),
         pytest.param({"state": "expected-state"}, id="missing-code"),
     ],
@@ -301,6 +310,7 @@ async def test_oauth_callback_rejects_unresolved_identity_without_account_change
     assert {(user.id, user.google_id, user.github_id) for user in persisted_users} == {(user.id, None, None) for user in users}
 
 
+# Redirect destinations remain local even when supplied through OAuth state.
 @pytest.mark.parametrize("provider", OAUTH_PROVIDERS)
 @pytest.mark.parametrize(
     ("return_to", "destination"),
@@ -342,7 +352,11 @@ async def test_oauth_callback_links_existing_email_and_authenticates_browser(
     assert profile_response.status_code == 200
     assert profile_response.json()["id"] == str(user.id)
     async with session_scope() as session:
+
+        # Inspect the persisted identity link in a fresh session.
         linked_user = await session.get(User, user.id)
+
+    # Verify the provider subject was persisted on the existing local account.
     assert linked_user is not None
     assert getattr(linked_user, f"{provider}_id") == "12345"
 
@@ -377,7 +391,11 @@ async def test_oauth_callback_rejects_unverified_email_without_account_changes(
     assert client.cookies.get("longlink_oauth") is None
     assert client.cookies.get("longlink_auth") is None
     async with session_scope() as session:
+
+        # Query persisted accounts rather than relying on the callback's in-memory user.
         result = await session.execute(select(User))
+
+        # Inspect actual account rows after the OAuth callback.
         persisted_users = result.scalars().all()
     assert {(user.id, user.email, user.google_id, user.github_id) for user in persisted_users} == {
         (user.id, user.email, None, None) for user in users
@@ -422,8 +440,12 @@ async def test_oauth_callback_prefers_linked_subject_over_another_accounts_email
     assert profile_response.json()["id"] == str(account_a.id)
     assert profile_response.json()["email"] == account_a.email
     async with session_scope() as session:
+
+        # Inspect all persisted accounts after the attempted provider link.
         result = await session.execute(select(User))
         persisted_users = result.scalars().all()
+
+    # Provider identity must not be attached to a different local account.
     assert {(user.id, user.email, getattr(user, f"{provider}_id")) for user in persisted_users} == {
         (users[0].id, users[0].email, None),
         (account_a.id, account_a.email, "12345"),
@@ -462,6 +484,8 @@ async def test_oauth_callback_rejects_deleted_account_without_browser_session(
     async with session_scope() as session:
         persisted = await session.get(User, user.id)
     assert persisted is not None
+
+    # Rejected linking leaves both external identity slots untouched.
     assert persisted.google_id is None
     assert persisted.github_id is None
 
@@ -579,6 +603,8 @@ async def test_registration_verification_is_stateless(
     assert client.cookies.get("longlink_auth") is None
     assert verify_response.headers["cache-control"] == "no-store"
     cookie = verify_response.headers["set-cookie"]
+
+    # Email proof moves into a restricted browser-only registration cookie.
     assert "longlink_registration=" in cookie
     assert "HttpOnly" in cookie
     assert f"Max-Age={token.EMAIL_TOKEN_LIFETIME_SECONDS}" in cookie
@@ -616,6 +642,8 @@ async def test_registration_completion_creates_authenticated_account(
     assert registered_user["name"] == "Registered User"
     assert registered_user["email"] == email
     assert client.cookies.get("longlink_auth")
+
+    # Successful registration replaces email proof with an authenticated session.
     assert client.cookies.get("longlink_registration") is None
     assert profile_response.status_code == 200
     assert profile_response.json()["id"] == registered_user["id"]
@@ -752,6 +780,7 @@ async def test_registration_completion_rejects_duplicate_account(
     assert repeat_client.cookies.get("longlink_auth") is None
 
 
+# Reset setup must never infer proof from an ordinary browser session.
 @pytest.mark.no_db
 async def test_password_reset_setup_rejects_missing_reset_cookie(client: AsyncClient) -> None:
     """Reject reset setup without browser-only reset proof."""
@@ -879,7 +908,11 @@ async def test_forgot_and_reset_password(
     assert "Max-Age=0" in reset_cookie
     assert "Path=/api/v1/auth/reset-password" in reset_cookie
     assert reused_token_response.status_code == 400
+
+    # Password replacement consumes the old password-bound reset proof.
     assert reused_token_response.json() == {"detail": "This password reset link is invalid or has expired. Please request a new one."}
+
+    # Replacing the password invalidates previously issued browser credentials.
     assert revoked_session.status_code == 401
     assert revoked_session.json() == {"detail": "Not authenticated"}
 
@@ -932,9 +965,12 @@ async def test_logout_rejects_untrusted_origin_without_browser_session(client: A
     [
         pytest.param(None, "https://attacker.example", id="cross-origin"),
         pytest.param("http://localhost:5173", "http://127.0.0.1:5173", id="localhost-public"),
+        # Loopback host spellings remain distinct browser origins.
         pytest.param("http://127.0.0.1:5173", "http://localhost:5173", id="loopback-public"),
     ],
 )
+
+# Authenticated cross-origin requests must not clear the browser session.
 async def test_authenticated_logout_rejects_untrusted_origin(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient], monkeypatch: pytest.MonkeyPatch, public_origin: str | None, origin: str
 ) -> None:
@@ -961,6 +997,7 @@ async def test_authenticated_logout_rejects_untrusted_origin(
     [
         pytest.param({"origin": "http://localhost:5173"}, False, id="localhost"),
         pytest.param({"origin": "http://127.0.0.1:5173"}, False, id="loopback"),
+        # Production cookie scope still applies when the caller supplies an Origin.
         pytest.param({"origin": "https://platform.example"}, True, id="production"),
     ],
 )
@@ -1047,6 +1084,7 @@ async def test_expired_browser_session_is_rejected_at_http(client: AsyncClient, 
             "exp": datetime.now(UTC) - timedelta(seconds=60),
         },
         env.SESSION_KEY,
+        # Sign malformed claims with the real algorithm so validation reaches the claim boundary.
         algorithm=token.JWT_ALGORITHM,
     )
     client.cookies.set("longlink_auth", expired, domain="testserver.local", path="/")

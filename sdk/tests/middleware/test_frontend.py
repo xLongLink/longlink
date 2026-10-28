@@ -28,6 +28,7 @@ def create_text_app(headers: dict[str, str], path: str = "/text", media_type: st
     [
         ("gzip;q=0, *;q=1", False),
         ("br;q=1, *;q=1", True),
+        # Encoding names are case-insensitive, but quality values must parse correctly.
         pytest.param("GZip", True, id="case-insensitive"),
         pytest.param("gzip;q=invalid", False, id="invalid-quality"),
         pytest.param("gzip;q=1.1", False, id="out-of-range-quality"),
@@ -165,6 +166,7 @@ async def test_frontend_middleware_passes_websocket_scopes_through_unchanged() -
         pytest.param("/assets/app-abcdef12.js", "text/javascript", 200, "public, max-age=31536000, immutable", id="hashed-asset"),
         pytest.param("/assets/app-abcdef12.js", "text/javascript", 304, "public, max-age=31536000, immutable", id="not-modified-asset"),
         pytest.param("/assets/app.js", "text/javascript", 200, "no-cache", id="unhashed-asset"),
+        # Failed asset requests must not inherit immutable caching.
         pytest.param("/assets/app-abcdef12.js", "text/javascript", 404, "no-store", id="missing-hashed-asset"),
         pytest.param("/favicon.ico", "image/x-icon", 200, "public, max-age=86400", id="favicon"),
     ],

@@ -40,6 +40,7 @@ def _membership_query(user_id: UUID) -> Select[UserOrganization]:
                 attr(Organization.id),
                 attr(Organization.name),
                 attr(Organization.slug),
+                # Include lifecycle and quota data without decrypting infrastructure credentials.
                 attr(Organization.status),
                 attr(Organization.storage_quota_bytes),
             )
@@ -98,10 +99,12 @@ async def solution_runtime_access(
         .join(Organization, col(Organization.id) == col(Solution.organization_id))
         .join(UserOrganization, col(UserOrganization.organization_id) == col(Organization.id))
         .join(ComputeRegistry, col(ComputeRegistry.id) == col(Organization.compute_id))
+        # Require active tenant resources and the caller's membership.
         .where(
             col(Solution.id) == solution_id,
             col(Solution.deleted_at).is_(None),
             col(Organization.deleted_at).is_(None),
+            # Scope the access query to the authenticated user.
             col(UserOrganization.user_id) == user_id,
         )
     )
@@ -126,6 +129,7 @@ async def solution_logs_access(
         .where(
             col(Solution.id) == solution_id,
             col(Solution.deleted_at).is_(None),
+            # Access requires an active parent and the caller's membership.
             col(Organization.deleted_at).is_(None),
             col(UserOrganization.user_id) == user_id,
         )
@@ -148,10 +152,12 @@ async def storage_infrastructure(session: AsyncSession, organization_id: UUID) -
                 attr(ComputeRegistry.storage_endpoint),
                 attr(ComputeRegistry.storage_access_key),
                 attr(ComputeRegistry.storage_secret_key),
+                # Retain the storage endpoint's trust material with its credentials.
                 attr(ComputeRegistry.storage_certificate),
             )
         )
         .join(Organization, col(Organization.compute_id) == col(ComputeRegistry.id))
+        # Resolve infrastructure only through the owning Organization.
         .where(col(Organization.id) == organization_id)
     )
     if compute is None:
@@ -172,6 +178,7 @@ async def database_infrastructure(session: AsyncSession, organization_id: UUID) 
                 attr(Organization.database_password),
                 attr(Organization.database_size_mib),
             ),
+            # Database provisioning needs cluster access, not storage credentials.
             load_only(attr(ComputeRegistry.kubeconfig)),
         )
         .join(ComputeRegistry, col(ComputeRegistry.id) == col(Organization.compute_id))
@@ -193,6 +200,7 @@ def _infrastructure_query() -> Select[Organization, ComputeRegistry]:
             load_only(
                 attr(ComputeRegistry.id),
                 attr(ComputeRegistry.kubeconfig),
+                # Provisioning owns both database placement and object storage setup.
                 attr(ComputeRegistry.database_storage_class),
                 attr(ComputeRegistry.storage_endpoint),
                 attr(ComputeRegistry.storage_access_key),
@@ -240,6 +248,7 @@ async def solution_infrastructure(session: AsyncSession, solution_id: UUID) -> t
                 attr(Solution.desired_revision_id),
                 attr(Solution.deployed_revision_id),
                 attr(Solution.secrets),
+                # Deployment needs lifecycle state alongside the captured revision pointers.
                 attr(Solution.status),
                 attr(Solution.deleted_at),
             ),
@@ -289,6 +298,7 @@ async def solutions(session: AsyncSession, organization_id: UUID) -> Sequence[So
                 attr(Solution.description),
                 attr(Solution.status),
                 attr(Solution.desired_revision_id),
+                # Preserve both desired and observed release identities.
                 attr(Solution.deployed_revision_id),
             ),
             selectinload(attr(Solution.desired_revision)).load_only(attr(Revision.failed), raiseload=True),
@@ -298,6 +308,8 @@ async def solutions(session: AsyncSession, organization_id: UUID) -> Sequence[So
         .where(col(Solution.organization_id) == organization_id, col(Solution.deleted_at).is_(None))
         .order_by(col(Solution.created_at))
     )
+
+    # Consume the read-only query within its owning session.
     result = await session.scalars(statement)
     return result.all()
 
@@ -314,6 +326,7 @@ async def invitations(session: AsyncSession, organization_id: UUID) -> Sequence[
             col(OrganizationInvitation.created_at) > datetime.now(UTC) - timedelta(days=7),
             col(Organization.deleted_at).is_(None),
         )
+        # Show the newest invitations first.
         .order_by(col(OrganizationInvitation.created_at).desc())
     )
     result = await session.scalars(statement)
@@ -419,9 +432,8 @@ async def update_member_role(session: AsyncSession, organization_id: UUID, membe
     if membership.role == role:
         return
 
-    # Protect organizations from losing their last owner.
+    # Reject demotion when no other active owner remains.
     if membership.role == OrganizationRoles.owner:
-        # Reject demotion when no other active owner remains.
         other_owner_id = await session.scalar(
             select(col(UserOrganization.user_id))
             .where(
@@ -429,9 +441,12 @@ async def update_member_role(session: AsyncSession, organization_id: UUID, membe
                 col(UserOrganization.role) == OrganizationRoles.owner,
                 col(UserOrganization.user_id) != member_id,
             )
+            # Lock the surviving owner before permitting demotion.
             .limit(1)
             .with_for_update()
         )
+
+        # Demoting the final active owner would make the Organization unmanageable.
         if other_owner_id is None:
             raise HTTPException(status_code=409, detail="Organization must have at least one owner")
 
@@ -459,8 +474,10 @@ async def remove_member(session: AsyncSession, organization_id: UUID, member_id:
             select(col(UserOrganization.user_id))
             .join(User, col(User.id) == col(UserOrganization.user_id))
             .where(
+                # Other tenants cannot satisfy the remaining-owner requirement.
                 col(UserOrganization.organization_id) == organization_id,
                 col(UserOrganization.role) == OrganizationRoles.owner,
+                # Only another active owner can make this removal safe.
                 col(UserOrganization.user_id) != member_id,
                 col(User.deleted_at).is_(None),
             )
@@ -486,6 +503,7 @@ async def create(session: AsyncSession, name: str, user: User) -> Organization:
     organization_limit_result = await session.execute(
         select(1)
         .where(col(Organization.created_id) == user.id, col(Organization.deleted_at).is_(None))
+        # A third active Organization exceeds the beta allowance.
         .offset(2)
         .limit(1)
         .with_for_update()
@@ -531,6 +549,7 @@ async def create(session: AsyncSession, name: str, user: User) -> Organization:
             # Store the All filter once so later renames and deletions remain permanent.
             session.add(OrganizationTag(organization_id=organization.id, name="All", kind=TagKind.all, icon=TagIcon.app_window))
             await session.flush()
+
     # Keep Organization uniqueness collisions at the service boundary as an API conflict.
     except IntegrityError:
         raise HTTPException(status_code=409, detail="Organization already exists")
@@ -577,13 +596,19 @@ async def create_invitation(session: AsyncSession, organization_id: UUID, payloa
     # Resolve concurrent re-invites to the one database-enforced active grant.
     if invitation is None:
         try:
+
+            # Isolate invitation creation so uniqueness races can be recovered.
             async with session.begin_nested():
                 invitation = OrganizationInvitation(organization_id=organization_id, email=payload.email, role=payload.role)
                 session.add(invitation)
                 await session.flush()
             return
+
+        # Recover a competing invitation insert from the nested transaction.
         except IntegrityError:
             invitation = await session.scalar(invitation_statement)
+
+            # A uniqueness collision must resolve to the competing invitation.
             if invitation is None:
                 raise HTTPException(status_code=409, detail="Invitation could not be created")
 
@@ -622,6 +647,8 @@ async def soft_delete(session: AsyncSession, organization_id: UUID, user: User) 
         membership = await session.get(UserOrganization, (user.id, organization_id), with_for_update=True)
         if membership is None:
             raise HTTPException(status_code=403, detail="Access required")
+
+        # Lifecycle deletion is reserved for Organization owners.
         if not roles.atleast(membership.role, OrganizationRoles.owner):
             raise HTTPException(status_code=403, detail="Permission required")
 

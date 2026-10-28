@@ -62,6 +62,7 @@ async def test_execute_finishes_terminal_transition_when_cancelled(monkeypatch: 
         with pytest.raises(asyncio.CancelledError):
             await asyncio.wait_for(asyncio.shield(execution), timeout=3)
     finally:
+
         # Unblock persistence and reap the worker even if an assertion or wait fails.
         release.set()
         execution.cancel()
@@ -104,6 +105,7 @@ async def test_finish_transition_preserves_cancellation_when_terminal_persistenc
         with pytest.raises(asyncio.CancelledError):
             await asyncio.wait_for(asyncio.shield(transition), timeout=3)
     finally:
+
         # Unblock and reap the protected transition on failures as well as normal cancellation.
         release.set()
         transition.cancel()
@@ -130,6 +132,7 @@ HANDLER_FAILURES = [
 ]
 
 
+# Handler failures persist a stable queue-visible reason.
 @pytest.mark.parametrize(("failure", "expected_reason"), HANDLER_FAILURES)
 async def test_execute_persists_handler_failure(
     monkeypatch: pytest.MonkeyPatch, operation: Operation, failure: HTTPException | RuntimeError, expected_reason: str
@@ -268,6 +271,7 @@ SCHEDULER_FAILURES = [
 ]
 
 
+# Polling and execution failures must not stop the scheduler permanently.
 @pytest.mark.no_db
 @pytest.mark.parametrize(("polling_failure", "execution_failure"), SCHEDULER_FAILURES)
 async def test_scheduler_recovers_from_worker_failures(
@@ -315,6 +319,7 @@ async def test_scheduler_recovers_from_worker_failures(
         async with asyncio.timeout(3):
             await idle.wait()
     finally:
+
         # Always stop and await the worker, even when recovery never reaches idle.
         scheduler.cancel()
         async with asyncio.timeout(1):

@@ -5,7 +5,7 @@ import shlex
 import shutil
 import tomllib
 import tempfile
-import subprocess  # noqa: S404
+import subprocess
 from typing import TypedDict, NotRequired
 from pathlib import Path
 from pydantic import TypeAdapter, ValidationError
@@ -151,13 +151,14 @@ def read_env_spec(root: Path, pyproject_data: Mapping[str, object]) -> list[Envi
     # Let a child process own Solution imports and their global state until it exits.
     with tempfile.TemporaryDirectory(prefix="longlink-env-") as directory:
         result_path = Path(directory) / "environments.json"
-        result = subprocess.run(  # noqa: S603
+        result = subprocess.run(
             [
                 sys.executable,
                 "-P",
                 str(Path(__file__).with_name("environments.py")),
                 str(root.resolve()),
                 environment_import,
+                # Transport metadata through a file, independently of child stdout.
                 str(result_path),
             ],
             capture_output=True,
@@ -170,6 +171,8 @@ def read_env_spec(root: Path, pyproject_data: Mapping[str, object]) -> list[Envi
             print(result.stdout, end="")
         if result.stderr:
             print(result.stderr, end="", file=sys.stderr)
+
+        # Failed imports must not be interpreted as valid environment metadata.
         if result.returncode:
             raise errors.Error(
                 f"Unable to inspect environment model {environment_import}: child process exited with code {result.returncode}"
@@ -181,6 +184,8 @@ def read_env_spec(root: Path, pyproject_data: Mapping[str, object]) -> list[Envi
             environments = adapter.validate_json(result_path.read_bytes(), strict=True)
         except (OSError, ValidationError) as error:
             raise errors.Error(f"Unable to inspect environment model {environment_import}: invalid child response") from error
+
+        # The inspector reports expected validation errors as strings.
         if isinstance(environments, str):
             raise errors.Error(environments)
         return environments
@@ -213,6 +218,8 @@ def read_project_metadata(pyproject_data: Mapping[str, object]) -> tuple[str, st
     project_description = project_data.get("description")
     if not isinstance(project_name, str) or not project_name.strip():
         raise errors.Error("[project].name is required")
+
+    # Versions and descriptions become image metadata and must have explicit types.
     if not isinstance(project_version, str) or not project_version.strip():
         raise errors.Error("[project].version is required")
     if project_description is not None and not isinstance(project_description, str):
@@ -238,6 +245,8 @@ def resolve_docker_paths(root: Path, pyproject_data: Mapping[str, object]) -> tu
     workspace_pyproject_data = pyproject_data
     ignore_patterns = shutil.ignore_patterns(*CONTEXT_IGNORE_PATTERNS)
     for candidate in (root, *root.parents):
+
+        # Walk outward until a manifest declares this project's workspace.
         candidate_pyproject = candidate / "pyproject.toml"
         if not candidate_pyproject.is_file():
             continue
@@ -245,6 +254,8 @@ def resolve_docker_paths(root: Path, pyproject_data: Mapping[str, object]) -> tu
         tool_data = candidate_data.get("tool")
         uv_data = tool_data.get("uv") if isinstance(tool_data, dict) else None
         workspace_data = uv_data.get("workspace") if isinstance(uv_data, dict) else None
+
+        # Ordinary ancestor projects do not define a UV workspace.
         if not isinstance(workspace_data, dict):
             continue
         workspace_root = candidate
@@ -256,12 +267,20 @@ def resolve_docker_paths(root: Path, pyproject_data: Mapping[str, object]) -> tu
             patterns = workspace_data.get(field, [])
             if not isinstance(patterns, list) or not all(isinstance(pattern, str) for pattern in patterns):
                 raise errors.Error(f"[tool.uv.workspace].{field} must be a list of path patterns")
+
+            # Expand member and exclusion patterns only inside the workspace.
             declared_paths[field] = set()
             for pattern in patterns:
+
+                # Workspace membership patterns cannot escape their root.
                 if not pattern or Path(pattern).is_absolute() or ".." in Path(pattern).parts:
                     raise errors.Error(f"UV workspace path pattern must stay inside the workspace: {pattern}")
+
+                # Resolve member paths before applying workspace containment checks.
                 for member in candidate.glob(pattern):
                     resolved_member = member.resolve()
+
+                    # Only directories can be workspace project members.
                     if resolved_member.is_dir():
                         declared_paths[field].add(resolved_member)
 
@@ -314,6 +333,8 @@ def resolve_docker_paths(root: Path, pyproject_data: Mapping[str, object]) -> tu
         if pyproject_path.is_symlink() and ignore_patterns(str(workspace_root), list(manifest_target.relative_to(workspace_root).parts)):
             raise errors.Error(f"Project manifest must not reference an ignored path: {pyproject_path}")
         manifest_paths.add(pyproject_path)
+
+        # Read each dependency manifest once while traversing local sources.
         source_pyproject_data = project_data_by_path.get(source_root)
         if source_pyproject_data is None:
             source_pyproject_data = read_pyproject(source_root)
@@ -332,14 +353,22 @@ def resolve_docker_paths(root: Path, pyproject_data: Mapping[str, object]) -> tu
         requirements = list(dependencies) if isinstance(dependencies, list) else []
         optional_dependencies = project_data.get("optional-dependencies") if isinstance(project_data, dict) else None
         if isinstance(optional_dependencies, dict):
+
+            # Optional dependencies can introduce local sources into the build context too.
             for dependencies in optional_dependencies.values():
                 if isinstance(dependencies, list):
                     requirements.extend(dependencies)
+
+        # Local source discovery also considers declared dependency groups.
         dependency_groups = source_pyproject_data.get("dependency-groups")
         if isinstance(dependency_groups, dict):
+
+            # Ignore non-list group declarations while collecting concrete requirements.
             for dependencies in dependency_groups.values():
                 if isinstance(dependencies, list):
                     requirements.extend(dependencies)
+
+        # Retain compatibility with UV's legacy development dependency declaration.
         dev_dependencies = uv_data.get("dev-dependencies") if isinstance(uv_data, dict) else None
         if isinstance(dev_dependencies, list):
             requirements.extend(dev_dependencies)
@@ -372,43 +401,65 @@ def resolve_docker_paths(root: Path, pyproject_data: Mapping[str, object]) -> tu
                 (name, config, workspace_root)
                 for name, configs in workspace_sources.items()
                 if normalize_package_name(name) in inherited_source_names
+                # UV accepts either one source mapping or a list of alternatives.
                 for config in (configs if isinstance(configs, list) else [configs])
             )
 
         # Add local path dependencies to the context.
         for source_name, source_config, config_root in source_configs:
+
             # Follow only mapping entries with local project sources.
             if not isinstance(source_config, dict):
                 continue
             source_path = source_config.get("path")
             if isinstance(source_path, str):
+
+                # Relative path sources are rooted at their declaring manifest.
                 resolved_source_path = (config_root / source_path).resolve()
             elif source_config.get("workspace") is True:
+
                 # Resolve workspace sources by normalized project name, not directory name.
                 dependency_name = normalize_package_name(source_name)
                 if dependency_name not in dependency_names:
                     continue
+
+                # Discard stale cached members before searching current manifests.
                 resolved_source_path = workspace_paths_by_name.get(dependency_name)
                 if resolved_source_path is None or not (resolved_source_path / "pyproject.toml").is_file():
+
                     # Populate matches lazily so unrelated invalid metadata does not change error precedence.
                     workspace_paths_by_name.pop(dependency_name, None)
                     resolved_source_path = None
                     for member in ordered_workspace_paths:
+
+                        # Workspace directory matches are not necessarily Python projects.
                         if not (member / "pyproject.toml").is_file():
                             continue
                         member_data = project_data_by_path.get(member)
+
+                        # Reuse already-read metadata while resolving normalized package names.
                         if member_data is None:
                             member_data = read_pyproject(member)
                             project_data_by_path[member] = member_data
+
+                        # Package names, not directory names, select workspace dependencies.
                         member_project = member_data.get("project")
                         member_name = member_project.get("name") if isinstance(member_project, dict) else None
+
+                        # Directories without named Python projects cannot satisfy workspace sources.
                         if not isinstance(member_name, str):
                             continue
+
+                        # Compare normalized package identities, preserving their original directory paths.
                         normalized_name = normalize_package_name(member_name)
                         workspace_paths_by_name.setdefault(normalized_name, member)
+
+                        # Select the actual member directory matching the requested package.
                         if normalized_name == dependency_name:
                             resolved_source_path = member
                             break
+
+                # Unresolved package names cannot silently select a non-member dependency.
                 if resolved_source_path is None:
                     raise errors.Error(f"Local dependency must be a member of the UV workspace: {source_name}")
             else:
@@ -467,6 +518,8 @@ def build_solution(root: Path, build_context: Path, *, pyproject_data: Mapping[s
         relative_path = path.relative_to(source_root).as_posix()
         if "\r" in relative_path or "\n" in relative_path:
             raise errors.Error(f"Docker build paths must not contain line breaks: {relative_path!r}")
+
+        # Docker COPY interprets glob characters instead of treating them literally.
         if any(character in relative_path for character in "*?["):
             raise errors.Error(f"Docker build paths must not contain glob characters: {relative_path!r}")
 
@@ -521,6 +574,7 @@ def build_solution(root: Path, build_context: Path, *, pyproject_data: Mapping[s
                 ignored.add(name)
                 continue
 
+            # Resolve links again after relocation into the temporary build context.
             relative_path = path.relative_to(source_root)
             relocated_target = (context_root / relative_path.parent / link_target).resolve()
             if not relocated_target.is_relative_to(context_root):
@@ -533,6 +587,8 @@ def build_solution(root: Path, build_context: Path, *, pyproject_data: Mapping[s
             except (OSError, RuntimeError):
                 ignored.add(name)
                 continue
+
+            # Exclude links into ignored or unselected source trees.
             if (
                 not target.is_relative_to(source_root)
                 or not any(target.is_relative_to(selected) for selected in selected_paths)
@@ -580,6 +636,7 @@ def build_solution(root: Path, build_context: Path, *, pyproject_data: Mapping[s
             local_dependency_manifests="\n".join(manifest_lines),
             workdir=shlex.quote(workdir),
             labels="\n".join(labels),
+            # Quote the installed SDK version as Dockerfile data.
             sdk_version=json.dumps(sdk_version),
         ),
         encoding="utf-8",
@@ -602,12 +659,15 @@ def resolve_image_tag(solution_name: str, version: str, registry: str | None = N
 
     # Add a registry prefix when requested.
     if registry_prefix:
+
         # Restrict production registries to GHCR while allowing localhost development registries.
         registry_parts = registry_prefix.split("/")
         registry_host = registry_parts[0]
         host, separator, port = registry_host.partition(":")
         if separator and (not port.isdecimal() or not 1 <= int(port) <= 65535):
             raise errors.Error("Docker registry port is invalid")
+
+        # GHCR requires one owner namespace; localhost remains available for development.
         if host != "localhost" and (host != "ghcr.io" or separator or len(registry_parts) != 2):
             raise errors.Error("Docker registry must be ghcr.io/<owner> or localhost")
 
@@ -670,12 +730,16 @@ def build_command(
             for image_tag in image_tags:
                 docker_build_command.extend(["-t", image_tag])
             docker_build_command.append(str(build_context))
-            subprocess.run(docker_build_command, check=True)  # noqa: S603
+
+            # Execute the validated argument list without shell interpretation.
+            subprocess.run(docker_build_command, check=True)
 
             # Push each built tag only when requested.
             if push:
                 for image_tag in image_tags:
-                    subprocess.run([docker_command, "push", image_tag], check=True)  # noqa: S603
+                    subprocess.run([docker_command, "push", image_tag], check=True)
+
+        # Preserve Docker's exit status in the CLI's stable error boundary.
         except subprocess.CalledProcessError as error:
             raise errors.Error(f"Docker command failed with exit code {error.returncode}") from error
 

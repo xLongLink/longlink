@@ -28,9 +28,8 @@ class Storage:
     async def _admin(self) -> AsyncGenerator[rustfs.RustFS, None]:
         """Own one administrative HTTP client inside the authenticated cluster tunnel's lifetime."""
 
-        # Route administrator requests through the bound Kubernetes connection.
+        # Close the workflow's HTTP transport before the Kubernetes tunnel is released.
         async with self._cluster.forward_storage() as port:
-            # Close the workflow's HTTP transport before the Kubernetes tunnel is released.
             client = httpx2.AsyncClient(trust_env=False, timeout=30, follow_redirects=False)
             async with client:
                 admin = rustfs.RustFS(f"http://127.0.0.1:{port}", self._credentials, client)
@@ -53,6 +52,8 @@ class Storage:
             secret_key = base64.b64decode(data["RUSTFS_SECRET_KEY"], validate=True).decode("utf-8")
         except (KeyError, ValueError, UnicodeDecodeError) as exc:
             raise ValueError("rustfs/longlink-rustfs must contain RUSTFS credentials") from exc
+
+        # Empty decoded credentials are invalid even when the Secret keys exist.
         if not access_key or not secret_key:
             raise ValueError("rustfs/longlink-rustfs must contain RUSTFS credentials")
         return s3.Credentials(access_key, secret_key)
@@ -64,9 +65,8 @@ class Storage:
         async with self._storage.client() as client:
             await client.list_buckets()
 
-        # kr8s starts the remote port-forward only when a request enters its local listener.
+        # Release the readiness HTTP client before closing its tunnel.
         async with self._cluster.forward_storage() as port:
-            # Release the readiness HTTP client before closing its tunnel.
             client = httpx2.AsyncClient(trust_env=False, timeout=5.0, follow_redirects=False)
             async with client:
                 response = await client.get(f"http://127.0.0.1:{port}/health/ready")
@@ -113,6 +113,8 @@ class Storage:
         name = self.bucket_name(organization)
         if solutions:
             async with self._admin() as admin:
+
+                # Revoke every workload credential before deleting tenant data.
                 for solution in solutions:
                     await admin.revoke(solution)
 

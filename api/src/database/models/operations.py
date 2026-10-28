@@ -25,9 +25,12 @@ class Operation(AuditTable, table=True):
                 native_enum=False,
                 values_callable=lambda members: [member.value for member in members],
             ),
+            # Every queued command has a registered operation kind.
             nullable=False,
         )
     )
+
+    # The target type is determined by the operation kind.
     target_id: UUID
 
     # State
