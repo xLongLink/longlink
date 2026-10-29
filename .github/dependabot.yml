@@ -38,6 +38,28 @@ updates:
               patterns:
                   - '@types/react'
                   - '@types/react-dom'
+          react-security:
+              applies-to: security-updates
+              patterns:
+                  - 'react'
+                  - 'react-dom'
+          react-router:
+              patterns:
+                  - 'react-router'
+                  - '@react-router/dev'
+          astryx:
+              patterns:
+                  - '@astryxdesign/core'
+                  - '@astryxdesign/cli'
+          tailwind:
+              patterns:
+                  - 'tailwindcss'
+                  - '@tailwindcss/vite'
+          vite-plus:
+              patterns:
+                  - 'vite'
+                  - 'vite-plus'
+                  - '@voidzero-dev/vite-plus-core'
 
     - package-ecosystem: 'docker'
       directories:
