@@ -7,9 +7,6 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Env(BaseSettings):
     """Define startup-validated settings for one LongLink Platform API replica."""
 
-    # Runtime scheduling
-    OPERATION_TIMEOUT_SECONDS: int = Field(default=180, ge=60, le=1740)
-
     # Optional Organization payments
     STRIPE_SECRET_KEY: str | None = Field(default=None, min_length=1)
     STRIPE_WEBHOOK_SECRET: str | None = Field(default=None, min_length=1)

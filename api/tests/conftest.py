@@ -27,7 +27,6 @@ os.environ["DATABASE_URL"] = "sqlite+aiosqlite:///./dev.db"
 os.environ["ADMIN_EMAIL"] = "test-administrator@example.com"
 os.environ["ADMIN_PASSWORD"] = TEST_PASSWORD
 os.environ["ENCRYPTION_KEY"] = "longlink-test-encryption-key-that-is-long-enough"
-os.environ["OPERATION_TIMEOUT_SECONDS"] = "60"
 os.environ["SMTP_PORT"] = "587"
 os.environ["SMTP_TRANSPORT"] = "starttls"
 

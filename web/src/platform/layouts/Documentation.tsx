@@ -23,6 +23,7 @@ export default function Documentation() {
         (section) =>
             section.title === 'Introduction' ||
             section.title === activeSection ||
+            (activeSection === 'Platform' && section.title === 'Self hosted') ||
             (activeSection === 'Solutions' && section.title === 'Views')
     );
 

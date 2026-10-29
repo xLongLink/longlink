@@ -165,7 +165,7 @@ async def test_execute_fails_operation_when_handler_times_out(monkeypatch: pytes
 
     # Arrange
     cancelled = asyncio.Event()
-    monkeypatch.setattr(operation_worker.env, "OPERATION_TIMEOUT_SECONDS", 0.01)
+    monkeypatch.setattr(operation_worker, "OPERATION_TIMEOUT_SECONDS", 0.01)
 
     async def stalled_handler(target_id: UUID) -> None:
         """Wait for the worker deadline to interrupt a real pending handler."""

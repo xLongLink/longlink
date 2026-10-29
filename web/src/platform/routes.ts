@@ -166,6 +166,13 @@ export const documentationSections: Array<{ title: string; pages: Array<Document
         ],
     },
     {
+        title: 'Self hosted',
+        pages: [
+            { path: '/docs/api/self-hosted/platform', label: 'Platform', icon: ShieldCheck },
+            { path: '/docs/api/self-hosted/compute', label: 'Compute', icon: Layers },
+        ],
+    },
+    {
         title: 'Alternatives',
         pages: [],
     },
@@ -232,6 +239,8 @@ export default [
             { path: 'docs/api/solutions', file: './routes/docs/api/Solutions.tsx' },
             { path: 'docs/api/mcp', file: './routes/docs/api/Mcp.tsx' },
             { path: 'docs/api/billing', file: './routes/docs/api/Billing.tsx' },
+            { path: 'docs/api/self-hosted/platform', file: './routes/docs/api/self-hosted/Platform.tsx' },
+            { path: 'docs/api/self-hosted/compute', file: './routes/docs/api/self-hosted/Compute.tsx' },
             { path: 'docs/alternatives', file: './routes/docs/alternatives/Index.tsx' },
             { path: 'docs/*', file: '../components/layouts/NotFound.tsx', id: 'docs-not-found' },
         ],

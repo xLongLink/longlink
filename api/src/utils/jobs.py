@@ -6,11 +6,12 @@ from datetime import UTC, datetime
 from functools import partial
 from src.operations import handlers
 from collections.abc import Callable, Awaitable
-from src.environments import env
 from src.database.session import session_scope
 from src.database.services import users, operations
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.operations import Operation
+
+OPERATION_TIMEOUT_SECONDS = 180
 
 
 async def _finish_transition(transition: Callable[[AsyncSession, UUID], Awaitable[bool]], operation_id: UUID) -> bool:
@@ -54,7 +55,7 @@ async def execute(operation: Operation) -> None:
 
     # Bound one complete handler execution under its worker lease.
     try:
-        async with asyncio.timeout(env.OPERATION_TIMEOUT_SECONDS):
+        async with asyncio.timeout(OPERATION_TIMEOUT_SECONDS):
             await handlers[operation.kind](operation.target_id)
 
     # Graceful shutdown leaves interrupted work available for the next scheduler.
@@ -65,7 +66,7 @@ async def execute(operation: Operation) -> None:
 
     # Timeouts are terminal handler failures with a bounded queue-visible reason.
     except TimeoutError:
-        reason = f"Operation timed out after {env.OPERATION_TIMEOUT_SECONDS} seconds"
+        reason = f"Operation timed out after {OPERATION_TIMEOUT_SECONDS} seconds"
 
     # Persist only the public error detail, not the exception representation.
     except HTTPException as exc:
