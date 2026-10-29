@@ -14,7 +14,7 @@ it('selects Platform navigation for API documentation', () => {
     expect(output.querySelector('[aria-label="Documentation navigation"] a[href="/docs/sdk/storage/"]')).toBeNull();
 });
 
-it('selects Alternatives without listing alternatives or other sections’ pages', () => {
+it('selects Alternatives and lists its comparison pages without other sections', () => {
     // Act
     const output = renderStatic(<Layout />, '/docs/alternatives/');
 
@@ -26,5 +26,5 @@ it('selects Alternatives without listing alternatives or other sections’ pages
         Array.from(output.querySelectorAll('[aria-label="Documentation navigation"] a'), (link) =>
             link.getAttribute('href')
         )
-    ).toEqual(['/docs/']);
+    ).toEqual(['/docs/', '/docs/alternatives/windmill/']);
 });
