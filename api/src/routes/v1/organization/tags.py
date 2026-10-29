@@ -19,7 +19,7 @@ async def get_tags(ctx: Context, membership: auth.OrganizationMember):
 async def create_tag(ctx: Context, payload: OrganizationTagWrite, membership: auth.OrganizationMaintainer):
     """Create a shared category without deploying any Solutions."""
 
-    tag = await tags.save(ctx.database, membership.organization_id, membership.user_id, payload.name, payload.icon)
+    tag = await tags.save(ctx.database, membership.organization_id, membership.user_id, payload)
     await ctx.database.commit()
     return tag
 
@@ -28,7 +28,7 @@ async def create_tag(ctx: Context, payload: OrganizationTagWrite, membership: au
 async def update_tag(ctx: Context, tag_id: UUID, payload: OrganizationTagWrite, membership: auth.OrganizationMaintainer):
     """Update a category's name and icon while preserving its assignments."""
 
-    tag = await tags.save(ctx.database, membership.organization_id, membership.user_id, payload.name, payload.icon, tag_id)
+    tag = await tags.save(ctx.database, membership.organization_id, membership.user_id, payload, tag_id)
     await ctx.database.commit()
     return tag
 

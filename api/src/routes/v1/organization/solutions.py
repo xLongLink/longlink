@@ -18,10 +18,8 @@ async def create_solution(ctx: Context, payload: SolutionCreate, membership: aut
         ctx.database,
         membership.organization_id,
         metadata=metadata,
-        name=payload.name,
-        envs=payload.envs,
+        payload=payload,
         user_id=membership.user_id,
-        description=payload.description,
         # Retain the credential that successfully resolved this image.
         registry_connection_id=connection_id,
     )
