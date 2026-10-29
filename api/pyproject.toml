@@ -51,7 +51,7 @@ dev = [
     'pytest-cov>=7.0.0',
     'docker>=7.2.0',
     'testcontainers>=4.15.0',
-    'types-aiobotocore-s3==3.9.2',
+    'types-aiobotocore-s3==3.10.0',
 ]
 
 [tool.setuptools_scm]
