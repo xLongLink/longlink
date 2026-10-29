@@ -60,13 +60,13 @@
         "happy-dom": "^21.0.4",
         "tailwindcss": "^4.3.3",
         "typescript": "5.9.3",
-        "vite": "npm:@voidzero-dev/vite-plus-core@1.3.0",
-        "vite-plus": "1.3.0",
+        "vite": "npm:@voidzero-dev/vite-plus-core@1.4.0",
+        "vite-plus": "1.4.0",
         "vitest": "5.0.5",
         "yaml": "^2.9.1"
     },
     "overrides": {
-        "vite": "npm:@voidzero-dev/vite-plus-core@1.3.0"
+        "vite": "npm:@voidzero-dev/vite-plus-core@1.4.0"
     },
     "devEngines": {
         "packageManager": {
