@@ -68,6 +68,12 @@ def _view_handler(content: bytes) -> Callable[[], Awaitable[Response]]:
     return view
 
 
+def _is_automatic_tab(view: views.ViewDefinition) -> bool:
+    """Identify non-root, top-level static Views for automatic navigation."""
+
+    return view.route != "/" and "/" not in view.route[1:] and ":" not in view.route
+
+
 class LongLink(FastAPI):
     """LongLink runtime application with Platform services installed."""
 
@@ -143,9 +149,7 @@ class LongLink(FastAPI):
             self.add_api_route(f"/{definition.path}", _view_handler(content), methods=["GET"], include_in_schema=False)
 
         # Reserve the root redirect only when automatic navigation has a target.
-        if any(
-            definition.route != "/" and "/" not in definition.route[1:] and ":" not in definition.route for definition in view_definitions
-        ):
+        if any(_is_automatic_tab(definition) for definition in view_definitions):
             self.add_api_route("/", self._redirect_root, methods=["GET"], include_in_schema=False)
 
         # Share the manifest catalog after registering Views so they cannot collide with themselves.
@@ -251,7 +255,7 @@ class LongLink(FastAPI):
         tabs.append(tab)
 
         # Explicit nested tabs need a redirect even when there were no automatic root tabs.
-        if len(tabs) == 1 and not any(view.route != "/" and "/" not in view.route[1:] and ":" not in view.route for view in self._views):
+        if len(tabs) == 1 and not any(_is_automatic_tab(view) for view in self._views):
             self.add_api_route("/", self._redirect_root, methods=["GET"], include_in_schema=False)
 
     async def _redirect_root(self) -> RedirectResponse:
@@ -262,7 +266,7 @@ class LongLink(FastAPI):
         if tabs is not None:
             return RedirectResponse(tabs[0].route)
 
-        first_route = next(view.route for view in self._views if view.route != "/" and "/" not in view.route[1:] and ":" not in view.route)
+        first_route = next(view.route for view in self._views if _is_automatic_tab(view))
         return RedirectResponse(first_route)
 
     # FastAPI accepts framework-defined router options with heterogeneous values.

@@ -93,20 +93,6 @@ async def _stop_migrations(api: Api, namespace: str, solution_id: UUID, resume_j
             await asyncio.sleep(5)
 
 
-async def _run_migration(migration_job: Job) -> None:
-    """Apply a migration once and reject terminal failure."""
-
-    # Keep the rendered identity available even before Kubernetes accepts the Job.
-    migration_id = migration_job.raw["metadata"]["name"]
-    await utils.apply(migration_job)
-    await _wait_for_job_condition(migration_job, {"Complete", "Failed"})
-
-    # Treat the Kubernetes terminal condition as the authoritative Job outcome.
-    conditions = migration_job.raw.get("status", {}).get("conditions", [])
-    if any(condition.get("type") == "Failed" and condition.get("status") == "True" for condition in conditions):
-        raise RuntimeError(f"Solution migration Job '{migration_id}' failed")
-
-
 async def _wait_for_rollout(deployed: APIObject) -> None:
     """Wait for the current Knative revision, surfacing explicit rollout failures."""
 
@@ -209,7 +195,13 @@ async def apply(
     # Apply migrations once without restarting a failed migration container.
     if migrate:
         migration_job = Job(migration, api=api)
-        await _run_migration(migration_job)
+        await utils.apply(migration_job)
+        await _wait_for_job_condition(migration_job, {"Complete", "Failed"})
+
+        # Treat the Kubernetes terminal condition as the authoritative Job outcome.
+        conditions = migration_job.raw.get("status", {}).get("conditions", [])
+        if any(condition.get("type") == "Failed" and condition.get("status") == "True" for condition in conditions):
+            raise RuntimeError(f"Solution migration Job '{migration_id}' failed")
 
     # Knative owns revision Deployments, Services, routing, and scale-to-zero activation.
     deployed = KnativeServiceResource(service, api=api)

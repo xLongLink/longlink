@@ -438,8 +438,7 @@ export default function SolutionManagement({
                               onDelete: async () => {
                                   // Refresh Solutions only after the delete request succeeds.
                                   await api.delete(`/api/v1/solutions/${selected.item.id}`);
-                                  await invalidateSolutions();
-                                  closeSelected();
+                                  await onSuccess();
                               },
                           }
                         : null

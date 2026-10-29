@@ -22,42 +22,35 @@ export default function Impressum() {
     // Keep the legal notice within the shared public shell and legal reading order.
     return (
         <PublicArticle article={article} paths={legalPaths}>
-            <ImpressumContent />
+            <Stack
+                className="[--font-family-heading:var(--font-family-handwritten)] [&_.astryx-heading]:tracking-wide [&_.astryx-heading]:uppercase"
+                gap={5}
+            >
+                <Heading id="impressum" level={1}>
+                    Impressum
+                </Heading>
+
+                <Stack as="section" gap={3}>
+                    <Heading id="company" level={2}>
+                        Company
+                    </Heading>
+                    <Text as="p">LongLink SAGL</Text>
+                    <Text as="p">Company registration number (UID): CHE-150.642.313</Text>
+                    <Text as="p">Legal form: Limited liability company (Sagl)</Text>
+                </Stack>
+
+                <Stack as="section" gap={3}>
+                    <Heading id="contact" level={2}>
+                        Contact
+                    </Heading>
+                    <Text as="p">
+                        Email:{' '}
+                        <Link href="mailto:info@longlink.dev" hasUnderline type="inherit">
+                            info@longlink.dev
+                        </Link>
+                    </Text>
+                </Stack>
+            </Stack>
         </PublicArticle>
-    );
-}
-
-/** Renders the legal notice and company information. */
-function ImpressumContent() {
-    return (
-        <Stack
-            className="[--font-family-heading:var(--font-family-handwritten)] [&_.astryx-heading]:tracking-wide [&_.astryx-heading]:uppercase"
-            gap={5}
-        >
-            <Heading id="impressum" level={1}>
-                Impressum
-            </Heading>
-
-            <Stack as="section" gap={3}>
-                <Heading id="company" level={2}>
-                    Company
-                </Heading>
-                <Text as="p">LongLink SAGL</Text>
-                <Text as="p">Company registration number (UID): CHE-150.642.313</Text>
-                <Text as="p">Legal form: Limited liability company (Sagl)</Text>
-            </Stack>
-
-            <Stack as="section" gap={3}>
-                <Heading id="contact" level={2}>
-                    Contact
-                </Heading>
-                <Text as="p">
-                    Email:{' '}
-                    <Link href="mailto:info@longlink.dev" hasUnderline type="inherit">
-                        info@longlink.dev
-                    </Link>
-                </Text>
-            </Stack>
-        </Stack>
     );
 }
