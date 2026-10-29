@@ -5,7 +5,7 @@ from sqlmodel import col
 from sqlalchemy import delete, select
 from sqlalchemy.exc import IntegrityError
 from collections.abc import Sequence
-from src.models.tags import TagIcon, TagKind
+from src.models.tags import TagKind, OrganizationTagWrite
 from src.models.roles import OrganizationRoles
 from src.database.services import organizations
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -36,7 +36,7 @@ async def lock(session: AsyncSession, organization_id: UUID, user_id: UUID) -> N
 
 
 async def save(
-    session: AsyncSession, organization_id: UUID, user_id: UUID, name: str, icon: TagIcon, tag_id: UUID | None = None
+    session: AsyncSession, organization_id: UUID, user_id: UUID, payload: OrganizationTagWrite, tag_id: UUID | None = None
 ) -> OrganizationTag:
     """Create or edit a category under its Organization lock."""
 
@@ -48,27 +48,26 @@ async def save(
 
     # Reject case-insensitive duplicates, including Unicode names.
     existing = await fetch(session, organization_id)
-    if any(item.id != tag_id and item.name.casefold() == name.casefold() for item in existing):
+    if any(item.id != tag_id and item.name.casefold() == payload.name.casefold() for item in existing):
         raise HTTPException(status_code=409, detail="Tag already exists")
 
     # Preserve assignments and translate backend-specific collation conflicts.
     try:
         async with session.begin_nested():
-
             # New tags belong to the locked Organization.
             if tag is None:
                 tag = OrganizationTag(
                     organization_id=organization_id,
-                    name=name,
-                    icon=icon,
+                    name=payload.name,
+                    icon=payload.icon,
                     position=max((item.position for item in existing), default=-1) + 1,
                 )
 
                 # Publish new tag metadata within the savepoint.
                 session.add(tag)
             else:
-                tag.name = name
-                tag.icon = icon
+                tag.name = payload.name
+                tag.icon = payload.icon
             await session.flush()
     except IntegrityError:
         raise HTTPException(status_code=409, detail="Tag already exists")

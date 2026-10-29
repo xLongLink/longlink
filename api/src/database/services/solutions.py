@@ -10,7 +10,7 @@ from collections.abc import Mapping, Sequence
 from src.models.roles import OrganizationRoles
 from src.database.types import attr
 from src.models.metadata import LongLinkMetadata
-from src.models.solutions import validate_environment_variables
+from src.models.solutions import SolutionCreate, validate_environment_variables
 from src.database.services import operations, registries, organizations
 from src.models.operations import OperationKind
 from src.models.pagination import Pagination
@@ -67,10 +67,8 @@ async def create(
     organization_id: UUID,
     metadata: LongLinkMetadata,
     *,
-    name: str,
-    envs: Mapping[str, str],
+    payload: SolutionCreate,
     user_id: UUID,
-    description: str | None = None,
     # Private images retain their Organization-owned registry connection.
     registry_connection_id: UUID | None = None,
 ) -> Solution:
@@ -108,7 +106,9 @@ async def create(
         )
 
     # Build the Solution row before checking its Organization-scoped uniqueness.
-    solution = Solution(organization_id=organization_id, name=name, slug=names.slugify(name), description=description, secrets={})
+    solution = Solution(
+        organization_id=organization_id, name=payload.name, slug=names.slugify(payload.name), description=payload.description, secrets={}
+    )
 
     # Let the Organization-scoped database constraint arbitrate slug uniqueness.
     try:
@@ -121,7 +121,7 @@ async def create(
         raise HTTPException(status_code=409, detail="Solution slug already exists")
 
     # Creation uses the same immutable release boundary as subsequent updates.
-    await deploy(session, solution, user_id, metadata, envs, registry_connection_id=registry_connection_id)
+    await deploy(session, solution, user_id, metadata, payload.envs, registry_connection_id=registry_connection_id)
 
     return solution
 

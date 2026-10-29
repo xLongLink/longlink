@@ -81,7 +81,6 @@ class LongLink(FastAPI):
         """Install runtime services, routes, and the frontend fallback."""
 
         super().__init__()
-        self._views: list[views.ViewDefinition] = []
 
         # Validate the Platform-provided runtime environment before loading Solution files.
         settings = Envs()
@@ -108,7 +107,7 @@ class LongLink(FastAPI):
         view_definitions = [definition for definition, _ in discovered_views]
 
         # Declare the pinned runtime once for the complete Solution catalog.
-        self._view_manifest = views.ViewManifest(views=view_definitions, runtime=view_runtime)
+        view_manifest = views.ViewManifest(views=view_definitions, runtime=view_runtime)
 
         # Initialize Solution storage and database connections.
         runtime = RuntimeState.from_settings(settings)
@@ -130,7 +129,7 @@ class LongLink(FastAPI):
                 access_logger.addFilter(ApiAccessFilter())
 
         # Mount SDK-managed routes before user-facing assets.
-        runtime_router = router(self._view_manifest)
+        runtime_router = router(view_manifest)
         self.include_router(runtime_router)
         runtime_operation_ids = {route.unique_id for route in runtime_router.routes if isinstance(route, APIRoute)}
 
@@ -153,7 +152,7 @@ class LongLink(FastAPI):
             self.add_api_route("/", self._redirect_root, methods=["GET"], include_in_schema=False)
 
         # Share the manifest catalog after registering Views so they cannot collide with themselves.
-        self._views = view_definitions
+        self._view_manifest = view_manifest
 
         # Credentials come from the current MCP request, never tool arguments or a previous caller.
         async def forward_credentials(request: httpx2.Request) -> None:
@@ -228,7 +227,7 @@ class LongLink(FastAPI):
         if not isinstance(path, str) or not path.endswith(".jsx"):
             raise ValueError("View path must be a relative .jsx file name")
 
-        definition = next((view for view in self._views if f"{view.path.removeprefix('views/')}.jsx" == path), None)
+        definition = next((view for view in self._view_manifest.views if f"{view.path.removeprefix('views/')}.jsx" == path), None)
         if definition is None:
             raise ValueError(f"Unknown View: {path}")
 
@@ -255,7 +254,7 @@ class LongLink(FastAPI):
         tabs.append(tab)
 
         # Explicit nested tabs need a redirect even when there were no automatic root tabs.
-        if len(tabs) == 1 and not any(_is_automatic_tab(view) for view in self._views):
+        if len(tabs) == 1 and not any(_is_automatic_tab(view) for view in self._view_manifest.views):
             self.add_api_route("/", self._redirect_root, methods=["GET"], include_in_schema=False)
 
     async def _redirect_root(self) -> RedirectResponse:
@@ -266,7 +265,7 @@ class LongLink(FastAPI):
         if tabs is not None:
             return RedirectResponse(tabs[0].route)
 
-        first_route = next(view.route for view in self._views if _is_automatic_tab(view))
+        first_route = next(view.route for view in self._view_manifest.views if _is_automatic_tab(view))
         return RedirectResponse(first_route)
 
     # FastAPI accepts framework-defined router options with heterogeneous values.
@@ -294,12 +293,17 @@ class LongLink(FastAPI):
     def _validate_added_routes(self, added: int) -> None:
         """Roll back appended routes when View overlap validation fails."""
 
+        # Internal routes are installed before publishing the manifest for collision checks.
+        manifest = getattr(self, "_view_manifest", None)
+        if manifest is None:
+            return
+
         # Remove the complete registration without handling framework errors.
         try:
 
             # Solution routes added after startup respect the same View endpoint contract.
             routes = self.router.routes[added:]
-            for definition in self._views:
+            for definition in manifest.views:
                 view_path = f"/{definition.path}"
                 scope = {"type": "http", "method": "GET", "path": view_path}
 

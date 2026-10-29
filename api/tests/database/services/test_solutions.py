@@ -17,6 +17,7 @@ from src.models.types import Image
 from sqlalchemy.engine import URL
 from src.models.metadata import LongLinkMetadata
 from src.database.session import session_scope
+from src.models.solutions import SolutionCreate
 from src.database.services import solutions, organizations
 from src.models.pagination import Pagination
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
@@ -36,15 +37,15 @@ async def test_create_rejects_tombstoned_organization(users: tuple[User, User, U
         await session.commit()
 
     # Act and assert
+    payload = SolutionCreate(name="Dashboard", image=Image("ghcr.io/longlink/dashboard:latest"))
+    metadata = LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:test"))
     async with session_scope() as session:
         with pytest.raises(HTTPException, match="409: Organization is not available"):
             await solutions.create(
                 session,
                 organization.id,
-                metadata=LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:test")),
-                name="Dashboard",
-                # No environment values are needed to exercise creation authorization.
-                envs={},
+                metadata=metadata,
+                payload=payload,
                 # The authenticated owner supplies audit attribution.
                 user_id=owner.id,
             )
@@ -60,15 +61,15 @@ async def test_create_rejects_missing_organization() -> None:
     """Reject solution creation when the Organization does not exist."""
 
     # Act and assert
+    payload = SolutionCreate(name="Dashboard", image=Image("ghcr.io/longlink/dashboard:latest"))
+    metadata = LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:test"))
     async with session_scope() as session:
         with pytest.raises(HTTPException, match="404: Organization not found"):
             await solutions.create(
                 session,
                 uuid4(),
-                metadata=LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:test")),
-                name="Dashboard",
-                # The rejected command must not allocate a release snapshot.
-                envs={},
+                metadata=metadata,
+                payload=payload,
                 # An unrelated identity must not gain creation access.
                 user_id=uuid4(),
             )
@@ -96,26 +97,21 @@ async def test_create_refreshes_cached_maintainer_access_before_authorizing(user
             await concurrent_session.commit()
 
         # Act and assert the demoted maintainer cannot create a Solution, while the owner still can.
+        payload = SolutionCreate(name="Blocked dashboard", image=Image("ghcr.io/longlink/dashboard:latest"))
+        metadata = LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:test"))
         with pytest.raises(HTTPException, match="403: Permission required"):
             await solutions.create(
                 session,
                 organization.id,
-                metadata=LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:test")),
-                name="Blocked dashboard",
-                envs={},
+                metadata=metadata,
+                payload=payload,
                 # Maintenance access cannot bypass Organization creation policy.
                 user_id=maintainer.id,
             )
 
         # An authorized creator can proceed after the rejected command.
-        solution = await solutions.create(
-            session,
-            organization.id,
-            metadata=LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:test")),
-            name="Owner dashboard",
-            envs={},
-            user_id=owner.id,
-        )
+        payload = SolutionCreate(name="Owner dashboard", image=Image("ghcr.io/longlink/dashboard:latest"))
+        solution = await solutions.create(session, organization.id, metadata=metadata, payload=payload, user_id=owner.id)
         await session.commit()
 
     assert solution.organization_id == organization.id
@@ -192,10 +188,8 @@ async def test_revision_ownership_constraints_and_cleanup(monkeypatch: pytest.Mo
         # The actual migrated schema independently enforces same-Solution pointers.
         for reference in ("desired_revision_id", "deployed_revision_id"):
             async with session_factory() as session:
-
                 # Accept constraint violations raised by either the UPDATE or its commit.
                 with pytest.raises(IntegrityError):
-
                     # Commit-time and statement-time constraint failures share this transaction boundary.
                     async with session.begin():
                         await session.execute(
@@ -209,6 +203,5 @@ async def test_revision_ownership_constraints_and_cleanup(monkeypatch: pytest.Mo
             assert await session.get(Revision, first.desired_revision_id) is None
             assert await session.get(Revision, second.desired_revision_id) is not None
     finally:
-
         # Dispose database connections before the fixture removes the database.
         await engine.dispose()

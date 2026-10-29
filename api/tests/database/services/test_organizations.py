@@ -6,6 +6,7 @@ from src.models.roles import OrganizationRoles
 from src.models.types import Image
 from src.models.metadata import LongLinkMetadata
 from src.database.session import session_scope
+from src.models.solutions import SolutionCreate
 from src.database.services import solutions, organizations
 from src.models.pagination import Pagination
 from src.models.organizations import OrganizationInvitationCreate
@@ -74,7 +75,6 @@ async def test_membership_mutation_services_revalidate_demoted_administrator_acc
             assert cached_membership is not None
 
         async with session_scope() as concurrent_session:
-
             # Revoke privileges through another transaction before the command resumes.
             membership = await concurrent_session.get(UserOrganization, (administrator.id, organization.id))
             assert membership is not None
@@ -180,13 +180,14 @@ async def test_soft_delete_tombstones_solutions_and_retains_memberships(users: t
     # Arrange
     owner, member = users[0], users[1]
     organization = await create_organization(owner)
+    payload = SolutionCreate(name="Dashboard", image=Image("ghcr.io/longlink/dashboard:latest"))
+    metadata = LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:test"))
     async with session_scope() as session:
         solution = await solutions.create(
             session,
             organization.id,
-            LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:test")),
-            name="Dashboard",
-            envs={},
+            metadata,
+            payload=payload,
             # Attribute the child Solution to the Organization owner.
             user_id=owner.id,
         )

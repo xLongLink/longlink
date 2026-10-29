@@ -7,6 +7,7 @@ from src.models.roles import OrganizationRoles
 from src.models.types import Image
 from src.models.metadata import LongLinkMetadata
 from src.database.session import session_scope
+from src.models.solutions import SolutionCreate
 from src.database.services import solutions, operations
 from src.models.operations import OperationKind
 from src.database.models.users import User
@@ -139,15 +140,17 @@ async def create_solution(
     if organization.created_id is None:
         raise ValueError("Test organization must have a creator")
 
+    payload = SolutionCreate(name=name, image=parsed_image, envs=envs or {})
+    metadata = LongLinkMetadata(image=resolved_image)
+
     async with session_scope() as session:
         solution = await solutions.create(
             session,
             organization.id,
-            name=name,
-            envs=envs or {},
+            payload=payload,
             # Attribute release creation to the fixture Organization's actual creator.
             user_id=organization.created_id,
-            metadata=LongLinkMetadata(image=resolved_image),
+            metadata=metadata,
         )
         solution.secrets = runtime_secrets or {}
         await session.commit()
