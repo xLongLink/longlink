@@ -16,6 +16,11 @@ updates:
       directory: '/web'
       schedule:
           interval: 'weekly'
+      groups:
+          react:
+              patterns:
+                  - 'react'
+                  - 'react-dom'
 
     - package-ecosystem: 'docker'
       directory: '/api'
