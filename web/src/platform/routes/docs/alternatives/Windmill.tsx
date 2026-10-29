@@ -180,7 +180,7 @@ export default function Windmill() {
                         full-code apps guide
                     </Link>
                     , and{' '}
-                    <Link href="https://www.windmill.dev/docs/getting_started/triggers/" hasUnderline isExternalLink type="inherit">
+                    <Link href="https://www.windmill.dev/docs/intro" hasUnderline isExternalLink type="inherit">
                         triggers guide
                     </Link>
                     .
