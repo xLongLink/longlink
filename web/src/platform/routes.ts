@@ -174,7 +174,7 @@ export const documentationSections: Array<{ title: string; pages: Array<Document
     },
     {
         title: 'Alternatives',
-        pages: [],
+        pages: [{ path: '/docs/alternatives/windmill', label: 'Windmill', icon: ArrowUpDown }],
     },
 ];
 
@@ -242,6 +242,7 @@ export default [
             { path: 'docs/api/self-hosted/platform', file: './routes/docs/api/self-hosted/Platform.tsx' },
             { path: 'docs/api/self-hosted/compute', file: './routes/docs/api/self-hosted/Compute.tsx' },
             { path: 'docs/alternatives', file: './routes/docs/alternatives/Index.tsx' },
+            { path: 'docs/alternatives/windmill', file: './routes/docs/alternatives/Windmill.tsx' },
             { path: 'docs/*', file: '../components/layouts/NotFound.tsx', id: 'docs-not-found' },
         ],
     },
