@@ -4,6 +4,8 @@ updates:
       directory: '/'
       schedule:
           interval: 'weekly'
+      cooldown:
+          default-days: 3
 
     - package-ecosystem: 'uv'
       directories:
@@ -11,16 +13,31 @@ updates:
           - '/sdk'
       schedule:
           interval: 'weekly'
+      cooldown:
+          default-days: 3
+      groups:
+          aws-storage:
+              patterns:
+                  - 'aiobotocore'
+                  - 'botocore'
+                  - 's3fs'
+                  - 'fsspec'
 
     - package-ecosystem: 'bun'
       directory: '/web'
       schedule:
           interval: 'weekly'
+      cooldown:
+          default-days: 3
       groups:
           react:
               patterns:
                   - 'react'
                   - 'react-dom'
+          react-types:
+              patterns:
+                  - '@types/react'
+                  - '@types/react-dom'
           react-security:
               applies-to: security-updates
               patterns:
@@ -45,16 +62,24 @@ updates:
                   - '@voidzero-dev/vite-plus-core'
 
     - package-ecosystem: 'docker'
-      directory: '/api'
+      directories:
+          - '/api'
+          - '/sdk/longlink/.static/docker'
       schedule:
           interval: 'weekly'
+      cooldown:
+          default-days: 3
 
     - package-ecosystem: 'docker-compose'
       directory: '/dev'
       schedule:
           interval: 'weekly'
+      cooldown:
+          default-days: 3
 
     - package-ecosystem: 'helm'
       directory: '/k8s/chart'
       schedule:
           interval: 'weekly'
+      cooldown:
+          default-days: 3
