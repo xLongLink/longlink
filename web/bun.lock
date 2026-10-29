@@ -22,7 +22,7 @@
         "react-dom": "^19.3.1",
         "react-error-boundary": "^6.1.6",
         "react-hook-form": "^7.91.0",
-        "react-router": "8.4.0",
+        "react-router": "8.5.0",
         "sucrase": "^3.35.1",
         "zod": "^4.6.7",
       },
@@ -30,7 +30,7 @@
         "@astryxdesign/cli": "0.7.1",
         "@hey-api/openapi-ts": "0.99.0",
         "@oxlint/plugins": "1.81.0",
-        "@react-router/dev": "8.4.0",
+        "@react-router/dev": "8.5.0",
         "@tailwindcss/vite": "^4.3.3",
         "@testing-library/user-event": "14.6.8",
         "@types/node": "^26.6.5",
@@ -297,9 +297,9 @@
 
     "@polka/url": ["@polka/url@1.0.0-next.29", "", {}, "sha512-wwQAWhWSuHaag8c4q/KN/vCoeOJYshAIvMQwD4GpSb3OiZklFfvAgmj0VCBBImRpuF/aFgIRzllXlVX93Jevww=="],
 
-    "@react-router/dev": ["@react-router/dev@8.4.0", "", { "dependencies": { "@babel/core": "^7.29.7", "@babel/generator": "^7.29.7", "@babel/parser": "^7.29.7", "@babel/traverse": "^7.29.7", "@babel/types": "^7.29.7", "@react-router/node": "8.4.0", "@remix-run/node-fetch-server": "^0.14.1", "babel-dead-code-elimination": "^1.0.12", "chokidar": "^5.0.0", "dedent": "^1.7.2", "es-module-lexer": "^2.1.0", "exit-hook": "5.1.0", "isbot": "^5.1.40", "jsesc": "3.1.0", "lodash": "^4.18.1", "p-map": "^7.0.4", "pathe": "^2.0.3", "picocolors": "^1.1.1", "pkg-types": "^2.3.1", "react-refresh": "^0.18.0", "semver": "^7.8.1", "tinyglobby": "^0.2.16", "valibot": "^1.4.1" }, "peerDependencies": { "@react-router/serve": "^8.4.0", "@vitejs/plugin-rsc": "~0.5.26", "react-router": "^8.4.0", "react-server-dom-webpack": "^19.2.7", "typescript": "^5.1.0 || ^6.0.0 || ^7.0.0", "vite": "^7.0.0 || ^8.0.0", "wrangler": "^4.0.0" }, "optionalPeers": ["@react-router/serve", "@vitejs/plugin-rsc", "react-server-dom-webpack", "typescript", "wrangler"], "bin": { "react-router": "bin.cjs" } }, "sha512-GKznpn6h8c52xGXwtsypD5ZwNiWFSeqoKPdyGq7SfG+T9rFjGO8F0i/R/yECfZqHXaNz1NVmpODuBamBy9FfMg=="],
+    "@react-router/dev": ["@react-router/dev@8.5.0", "", { "dependencies": { "@babel/core": "^7.29.7", "@babel/generator": "^7.29.7", "@babel/parser": "^7.29.7", "@babel/traverse": "^7.29.7", "@babel/types": "^7.29.7", "@react-router/node": "8.5.0", "@remix-run/node-fetch-server": "^0.14.1", "babel-dead-code-elimination": "^1.0.12", "chokidar": "^5.0.0", "dedent": "^1.7.2", "es-module-lexer": "^2.1.0", "exit-hook": "5.1.0", "isbot": "^5.1.40", "jsesc": "3.1.0", "lodash": "^4.18.1", "p-map": "^7.0.4", "pathe": "^2.0.3", "picocolors": "^1.1.1", "pkg-types": "^2.3.1", "react-refresh": "^0.18.0", "semver": "^7.8.1", "tinyglobby": "^0.2.16", "valibot": "^1.4.1" }, "peerDependencies": { "@react-router/serve": "^8.5.0", "@vitejs/plugin-rsc": "~0.5.26", "react-router": "^8.5.0", "react-server-dom-webpack": "^19.2.7", "typescript": "^5.1.0 || ^6.0.0 || ^7.0.0", "vite": "^7.0.0 || ^8.0.0", "wrangler": "^4.0.0" }, "optionalPeers": ["@react-router/serve", "@vitejs/plugin-rsc", "react-server-dom-webpack", "typescript", "wrangler"], "bin": { "react-router": "bin.cjs" } }, "sha512-SXmL0ym9Wp8Hi0LdXLG6yPaN8V1rUW4PuavvBS9eqpr0hM3PFjiCUT44pRzCj4G9lKEQBeNcj4beOtpN7IxuCg=="],
 
-    "@react-router/node": ["@react-router/node@8.4.0", "", { "dependencies": { "@remix-run/node-fetch-server": "^0.14.1" }, "peerDependencies": { "react-router": "8.4.0", "typescript": "^5.1.0 || ^6.0.0 || ^7.0.0" }, "optionalPeers": ["typescript"] }, "sha512-1teZHtk7XDm1pteQ2Plgtvtjjup5C5sIwFlOMYVIyoOH7X3bId3Qb//kUdbydX6NRIxcGK28UnfZlz4SrD/mkg=="],
+    "@react-router/node": ["@react-router/node@8.5.0", "", { "dependencies": { "@remix-run/node-fetch-server": "^0.14.1" }, "peerDependencies": { "react-router": "8.5.0", "typescript": "^5.1.0 || ^6.0.0 || ^7.0.0" }, "optionalPeers": ["typescript"] }, "sha512-9a3a37TW5GAo/J336Uk1tca/X1OxjpseETz/zCHcojtL7oRlFrlFoDt6wSdCtFRCiwlLyHcWY+qwZ+xnb05kSg=="],
 
     "@remix-run/node-fetch-server": ["@remix-run/node-fetch-server@0.14.1", "", {}, "sha512-pKenF5ysIN5lDCnCyvoUxDhKP0tfnGagvGbZh01xxHG6DJXSIXWVC9NpLSDGjxcxd1CKdCOKuZFleXBF3pChIg=="],
 
@@ -801,7 +801,7 @@
 
     "react-refresh": ["react-refresh@0.18.0", "", {}, "sha512-QgT5//D3jfjJb6Gsjxv0Slpj23ip+HtOpnNgnb2S5zU3CB26G/IDPGoy4RJB42wzFE46DRsstbW6tKHoKbhAxw=="],
 
-    "react-router": ["react-router@8.4.0", "", { "dependencies": { "@remix-run/route-pattern": "^0.22.1", "cookie-es": "^3.1.1" }, "peerDependencies": { "react": ">=19.2.7", "react-dom": ">=19.2.7" }, "optionalPeers": ["react-dom"] }, "sha512-JtydAkBvU9UTEe5qNC+POhu+ZBNM7rlKY2IegwXc7Idj7xfRG16x5RZrw3mju+XlqBxfvb2ky9P3jUp9WyWC1g=="],
+    "react-router": ["react-router@8.5.0", "", { "dependencies": { "@remix-run/route-pattern": "^0.22.1", "cookie-es": "^3.1.1" }, "peerDependencies": { "@types/react": ">=19.2.0", "@types/react-dom": ">=19.2.0", "react": ">=19.2.7", "react-dom": ">=19.2.7" }, "optionalPeers": ["@types/react", "@types/react-dom", "react-dom"] }, "sha512-9nEd/deifcTJIIcUaNIyQGkyXD0D6QVB9XD2O5GgHpP3xu3U5RXm87YQ8++Wn8JQWgMBM/5+PjWPM/7n7O7WHA=="],
 
     "readdirp": ["readdirp@5.0.0", "", {}, "sha512-9u/XQ1pvrQtYyMpZe7DXKv2p5CNvyVwzUB6uhLAnQwHMSgKMBR62lc7AHljaeteeHXn11XTAaLLUVZYVZyuRBQ=="],
 

@@ -42,7 +42,7 @@
         "react-dom": "^19.3.1",
         "react-error-boundary": "^6.1.6",
         "react-hook-form": "^7.91.0",
-        "react-router": "8.4.0",
+        "react-router": "8.5.0",
         "sucrase": "^3.35.1",
         "zod": "^4.6.7"
     },
@@ -50,7 +50,7 @@
         "@astryxdesign/cli": "0.7.1",
         "@hey-api/openapi-ts": "0.99.0",
         "@oxlint/plugins": "1.81.0",
-        "@react-router/dev": "8.4.0",
+        "@react-router/dev": "8.5.0",
         "@tailwindcss/vite": "^4.3.3",
         "@testing-library/user-event": "14.6.8",
         "@types/node": "^26.6.5",
