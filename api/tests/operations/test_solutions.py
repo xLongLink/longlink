@@ -3,6 +3,7 @@ import asyncio
 from uuid import UUID, uuid4
 from conftest import DatabasePostgres, StorageKubernetes, DatabaseKubernetes, reject_provider_construction
 from factories import claim_operation, create_solution, fetch_operations, complete_operation, create_organization
+from src.utils import jobs
 from contextlib import asynccontextmanager
 from src.utils.s3 import Credentials
 from sqlalchemy.orm import selectinload
@@ -10,7 +11,6 @@ from src.kubernetes import storage
 from src.operations import solutions as solution_operations
 from src.utils.jobs import execute
 from collections.abc import Callable, Awaitable, AsyncGenerator
-from src.environments import env
 from src.models.types import Image
 from src.models.metadata import LongLinkMetadata
 from src.models.statuses import Status
@@ -666,7 +666,7 @@ async def test_failed_update_recovery(users: tuple[User, User, User], monkeypatc
     # Act: limit the timeout override to the failing attempt, not recovery work.
     with monkeypatch.context() as timeout:
         if failure == "timeout":
-            timeout.setattr(env, "OPERATION_TIMEOUT_SECONDS", 0.5)
+            timeout.setattr(jobs, "OPERATION_TIMEOUT_SECONDS", 0.5)
         await execute(update)
 
     # Assert: rollout finalization and the exact persisted timeout precede worker return.
