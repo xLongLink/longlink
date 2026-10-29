@@ -5063,13 +5063,11 @@
           },
           "storage_mib_monthly_price": {
             "type": "string",
-            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Storage Mib Monthly Price",
             "default": "0.02"
           },
           "database_mib_monthly_price": {
             "type": "string",
-            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Database Mib Monthly Price",
             "default": "0.1"
           },
