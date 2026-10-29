@@ -103,46 +103,49 @@ class Database:
         """Initialize and return the Solution database engine."""
 
         # Initialize the engine once when concurrent requests arrive before startup completes.
-        if self._engine is None:
-            async with self._initialization_lock:
-                if self._engine is None:
-                    engine = create_engine(self._env)
+        if self._engine is not None:
+            return self._engine
 
-                    # Initialize the database without publishing partially initialized resources.
-                    try:
+        async with self._initialization_lock:
+            if self._engine is not None:
+                return self._engine
 
-                        # Schema setup and local-user seeding commit together.
-                        async with engine.begin() as conn:
+            engine = create_engine(self._env)
 
-                            # Testing creates all tables; other environments use committed migrations.
-                            if self._env.ENV == "testing":
-                                await conn.run_sync(SQLModel.metadata.create_all)
+            # Initialize the database without publishing partially initialized resources.
+            try:
 
-                            # Production identities arrive through signed Platform requests.
-                            if self._env.ENV != "production":
+                # Schema setup and local-user seeding commit together.
+                async with engine.begin() as conn:
 
-                                # Seed the local user within the initialization transaction.
-                                users = SQLModel.metadata.tables["users"]
-                                user_id = await conn.scalar(sqlalchemy.select(users.c.id).where(users.c.id == LOCAL_USER_ID))
-                                if user_id is None:
+                    # Testing creates all tables; other environments use committed migrations.
+                    if self._env.ENV == "testing":
+                        await conn.run_sync(SQLModel.metadata.create_all)
 
-                                    # Seed only the fixed local identity, preserving existing profile changes.
-                                    name = "Development user" if self._env.ENV == "development" else "Testing user"
-                                    await conn.execute(
-                                        sqlalchemy.insert(users).values(
-                                            id=LOCAL_USER_ID, name=name, email="local@example.com", avatar="", updated_at=datetime.now(UTC)
-                                        )
-                                    )
+                    # Production identities arrive through signed Platform requests.
+                    if self._env.ENV != "production":
 
-                    # Failed or cancelled initialization must dispose the unpublished engine.
-                    except BaseException:
-                        await engine.dispose()
-                        raise
+                        # Seed the local user within the initialization transaction.
+                        users = SQLModel.metadata.tables["users"]
+                        user_id = await conn.scalar(sqlalchemy.select(users.c.id).where(users.c.id == LOCAL_USER_ID))
+                        if user_id is None:
 
-                    # Publish the engine only after initialization succeeds.
-                    self._engine = engine
+                            # Seed only the fixed local identity, preserving existing profile changes.
+                            name = "Development user" if self._env.ENV == "development" else "Testing user"
+                            await conn.execute(
+                                sqlalchemy.insert(users).values(
+                                    id=LOCAL_USER_ID, name=name, email="local@example.com", avatar="", updated_at=datetime.now(UTC)
+                                )
+                            )
 
-        return self._engine
+            # Failed or cancelled initialization must dispose the unpublished engine.
+            except BaseException:
+                await engine.dispose()
+                raise
+
+            # Publish the engine only after initialization succeeds.
+            self._engine = engine
+            return engine
 
     @asynccontextmanager
     async def session(self) -> AsyncGenerator[AsyncSession, None]:
