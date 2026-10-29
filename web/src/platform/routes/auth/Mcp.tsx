@@ -28,7 +28,12 @@ export default function McpAuthorization() {
     /** Posts an explicit decision; the server validates permissions and the callback again. */
     async function decide(approve: boolean) {
         const result = await api
-            .post('/api/v1/mcp/consent', { json: { ...Object.fromEntries(params), approve } })
+            .post('/api/v1/mcp/consent', {
+                json: {
+                    ...Object.fromEntries(params),
+                    approve,
+                },
+            })
             .json(zAuthorizationRedirect);
 
         window.location.assign(result.url);
@@ -54,8 +59,8 @@ export default function McpAuthorization() {
                             {consent.client_name} requests access to {consent.solution_name}.
                         </Text>
                         <Text as="p" type="supporting">
-                            It may read and modify Solution data within your current Organization permissions. Access
-                            expires after one hour.
+                            This client uses your current Solution permissions. Permission changes apply automatically.{' '}
+                            Access expires after {Math.round(consent.expires_in / 86400)} days.
                         </Text>
                         <Text as="p" type="label">
                             Client callback

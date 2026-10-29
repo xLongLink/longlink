@@ -28,6 +28,8 @@ def build_project(tmp_path: Path) -> Path:
     envs_path = root / "src" / "envs.py"
     envs_path.parent.mkdir()
     envs_path.write_text("from pydantic import BaseModel\n\nclass Env(BaseModel):\n    pass\n", encoding="utf-8")
+    root.joinpath("main.py").write_text("from longlink import LongLink\n\napp = LongLink()\n", encoding="utf-8")
+    root.joinpath("src", "views").mkdir()
 
     # Build fixtures always carry the authoritative project lockfile.
     root.joinpath("uv.lock").write_text("project lock", encoding="utf-8")
@@ -996,6 +998,8 @@ def test_generated_manifest_layer_preserves_literal_workspace_paths(tmp_path: Pa
         encoding="utf-8",
     )
     solution.joinpath("envs.py").write_text("from pydantic import BaseModel\n\nclass Env(BaseModel):\n    pass\n", encoding="utf-8")
+    solution.joinpath("main.py").write_text("from longlink import LongLink\n\napp = LongLink()\n", encoding="utf-8")
+    solution.joinpath("src", "views").mkdir(parents=True)
     for project in (shared, unrelated):
 
         # Give sibling workspace members independent package identities.

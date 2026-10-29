@@ -29,7 +29,7 @@ def mint_identity_token(
     return jwt.encode(payload, secret, algorithm=algorithm)
 
 
-def test_identity_token_user_returns_identity_from_created_token() -> None:
+def test_identity_token_data_returns_identity_from_created_token() -> None:
     """Resolve the user bound to a current Platform identity assertion."""
 
     # Arrange
@@ -38,7 +38,7 @@ def test_identity_token_user_returns_identity_from_created_token() -> None:
     token = identity.create_identity_token(user, IDENTITY_SECRET)
 
     # Act
-    result = identity.identity_token_user(token, IDENTITY_SECRET)
+    result, _access = identity.identity_token_data(token, IDENTITY_SECRET)
 
     # Assert
     assert result.model_dump() == user.model_dump()
@@ -48,12 +48,12 @@ def test_identity_token_user_returns_identity_from_created_token() -> None:
     assert claims["exp"] - claims["iat"] == 300
 
 
-def test_identity_token_user_rejects_empty_identity_secret() -> None:
+def test_identity_token_data_rejects_empty_identity_secret() -> None:
     """Reject identity verification when the Solution secret is absent."""
 
     # Act and assert
     with pytest.raises(jwt.InvalidTokenError, match="Identity secret is required"):
-        identity.identity_token_user("token", "")
+        identity.identity_token_data("token", "")
 
 
 INVALID_SIGNED_TOKENS = [
@@ -80,7 +80,7 @@ INVALID_SIGNED_TOKENS = [
 
 
 @pytest.mark.parametrize(("secret", "claims", "expected_error"), INVALID_SIGNED_TOKENS)
-def test_identity_token_user_rejects_invalid_signed_token(
+def test_identity_token_data_rejects_invalid_signed_token(
     secret: str, claims: dict[str, object], expected_error: type[jwt.InvalidTokenError]
 ) -> None:
     """Reject expired, wrongly scoped, and incorrectly signed identity assertions."""
@@ -90,10 +90,10 @@ def test_identity_token_user_rejects_invalid_signed_token(
 
     # Act and assert
     with pytest.raises(expected_error):
-        identity.identity_token_user(encoded, IDENTITY_SECRET)
+        identity.identity_token_data(encoded, IDENTITY_SECRET)
 
 
-def test_identity_token_user_rejects_unapproved_algorithm() -> None:
+def test_identity_token_data_rejects_unapproved_algorithm() -> None:
     """Reject an otherwise valid identity assertion signed with another algorithm."""
 
     # Arrange
@@ -102,10 +102,10 @@ def test_identity_token_user_rejects_unapproved_algorithm() -> None:
 
     # Act and assert
     with pytest.raises(jwt.InvalidTokenError):
-        identity.identity_token_user(encoded, identity_secret)
+        identity.identity_token_data(encoded, identity_secret)
 
 
-def test_identity_token_user_rejects_malformed_subject() -> None:
+def test_identity_token_data_rejects_malformed_subject() -> None:
     """Reject an otherwise valid identity token with a malformed UUID subject."""
 
     # Arrange
@@ -113,11 +113,11 @@ def test_identity_token_user_rejects_malformed_subject() -> None:
 
     # Act and assert
     with pytest.raises(jwt.InvalidTokenError):
-        identity.identity_token_user(token, IDENTITY_SECRET)
+        identity.identity_token_data(token, IDENTITY_SECRET)
 
 
 @pytest.mark.parametrize("missing_claim", ["sub", "aud", "iat", "exp", "profile"])
-def test_identity_token_user_rejects_missing_required_claim(missing_claim: str) -> None:
+def test_identity_token_data_rejects_missing_required_claim(missing_claim: str) -> None:
     """Reject an otherwise valid identity token missing any required claim."""
 
     # Arrange
@@ -125,4 +125,4 @@ def test_identity_token_user_rejects_missing_required_claim(missing_claim: str) 
 
     # Act and assert
     with pytest.raises(jwt.InvalidTokenError):
-        identity.identity_token_user(token, IDENTITY_SECRET)
+        identity.identity_token_data(token, IDENTITY_SECRET)

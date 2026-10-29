@@ -1324,6 +1324,255 @@
         }
       }
     },
+    "/api/v1/solutions/{solution_id}/permissions": {
+      "get": {
+        "summary": "Settings",
+        "description": "Inspect repository-defined defaults before configuring Solution access.",
+        "operationId": "settings_api_v1_solutions__solution_id__permissions_get",
+        "parameters": [
+          {
+            "name": "solution_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Solution Id"
+            }
+          },
+          {
+            "name": "longlink_auth",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Longlink Auth"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PermissionSettings"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/solutions/{solution_id}/members/{member_id}/access": {
+      "get": {
+        "summary": "Member Access",
+        "description": "Explain one active member's saved and effective endpoint permissions.",
+        "operationId": "member_access_api_v1_solutions__solution_id__members__member_id__access_get",
+        "parameters": [
+          {
+            "name": "solution_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Solution Id"
+            }
+          },
+          {
+            "name": "member_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Member Id"
+            }
+          },
+          {
+            "name": "longlink_auth",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Longlink Auth"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MemberAccess"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Update Access",
+        "description": "Assign an SDK-defined role or remove one member's Solution access with null.",
+        "operationId": "update_access_api_v1_solutions__solution_id__members__member_id__access_put",
+        "parameters": [
+          {
+            "name": "solution_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Solution Id"
+            }
+          },
+          {
+            "name": "member_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Member Id"
+            }
+          },
+          {
+            "name": "longlink_auth",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Longlink Auth"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AccessUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/solutions/{solution_id}/access": {
+      "get": {
+        "summary": "Current Access",
+        "description": "Expose caller-effective permissions without allowing assignment changes.",
+        "operationId": "current_access_api_v1_solutions__solution_id__access_get",
+        "parameters": [
+          {
+            "name": "solution_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Solution Id"
+            }
+          },
+          {
+            "name": "longlink_auth",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Longlink Auth"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MemberAccess"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/users": {
       "get": {
         "summary": "List Users",
@@ -4033,6 +4282,36 @@
         "title": "AccessToken",
         "description": "Return a short-lived opaque MCP access credential."
       },
+      "AccessUpdate": {
+        "properties": {
+          "role": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 64,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Role"
+          },
+          "revision_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Revision Id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "role",
+          "revision_id"
+        ],
+        "title": "AccessUpdate",
+        "description": "Assign an SDK-defined role or disable Solution access with null."
+      },
       "AdminUserSummary": {
         "properties": {
           "id": {
@@ -4200,6 +4479,25 @@
         ],
         "title": "Body_revoke_api_v1_mcp_revoke_post"
       },
+      "Catalog": {
+        "properties": {
+          "endpoints": {
+            "items": {
+              "$ref": "#/components/schemas/Endpoint"
+            },
+            "type": "array",
+            "maxItems": 512,
+            "title": "Endpoints"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "endpoints"
+        ],
+        "title": "Catalog",
+        "description": "Describe the complete, deterministic Solution permission definition."
+      },
       "ClientRegistration": {
         "properties": {
           "client_name": {
@@ -4343,6 +4641,11 @@
           "solution_name": {
             "type": "string",
             "title": "Solution Name"
+          },
+          "expires_in": {
+            "type": "integer",
+            "title": "Expires In",
+            "default": 2592000
           }
         },
         "type": "object",
@@ -4440,6 +4743,82 @@
         "title": "EmailPayload",
         "description": "Return one verified email address."
       },
+      "Endpoint": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "maxLength": 520,
+            "title": "Key"
+          },
+          "path": {
+            "type": "string",
+            "maxLength": 512,
+            "pattern": "^/",
+            "title": "Path"
+          },
+          "roles": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 64,
+            "title": "Roles"
+          },
+          "method": {
+            "type": "string",
+            "enum": [
+              "GET",
+              "POST",
+              "PUT",
+              "PATCH",
+              "DELETE",
+              "HEAD",
+              "OPTIONS"
+            ],
+            "title": "Method"
+          },
+          "summary": {
+            "type": "string",
+            "maxLength": 256,
+            "title": "Summary",
+            "default": ""
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "key",
+          "path",
+          "roles",
+          "method"
+        ],
+        "title": "Endpoint",
+        "description": "Describe one registered business operation."
+      },
+      "EndpointDecision": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source"
+          },
+          "allowed": {
+            "type": "boolean",
+            "title": "Allowed"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "source",
+          "allowed"
+        ],
+        "title": "EndpointDecision",
+        "description": "Explain effective endpoint access in the management interface."
+      },
       "EnvironmentMetadata": {
         "properties": {
           "name": {
@@ -4511,6 +4890,16 @@
             ],
             "title": "Description"
           },
+          "permissions": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Catalog"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "environments": {
             "items": {
               "$ref": "#/components/schemas/EnvironmentMetadata"
@@ -4525,6 +4914,41 @@
         ],
         "title": "LongLinkMetadata",
         "description": "Structured metadata extracted from OCI and LongLink image labels."
+      },
+      "MemberAccess": {
+        "properties": {
+          "role": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Role"
+          },
+          "revision_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Revision Id"
+          },
+          "endpoints": {
+            "items": {
+              "$ref": "#/components/schemas/EndpointDecision"
+            },
+            "type": "array",
+            "title": "Endpoints"
+          }
+        },
+        "type": "object",
+        "required": [
+          "role",
+          "revision_id",
+          "endpoints"
+        ],
+        "title": "MemberAccess",
+        "description": "Return saved assignments and derived effective access."
       },
       "OAuthAvailability": {
         "properties": {
@@ -5397,6 +5821,47 @@
         ],
         "title": "PaymentRedirect",
         "description": "Return a hosted Stripe card-registration URL."
+      },
+      "PermissionSettings": {
+        "properties": {
+          "roles": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Roles"
+          },
+          "catalog": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Catalog"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "revision_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revision Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "roles",
+          "catalog",
+          "revision_id"
+        ],
+        "title": "PermissionSettings",
+        "description": "Expose discovered defaults without Solution secrets."
       },
       "RegisteredClient": {
         "properties": {

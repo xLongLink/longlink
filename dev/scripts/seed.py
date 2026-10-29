@@ -300,11 +300,11 @@ async def register_card(organization_id: UUID) -> None:
                 "confirm": True,
                 "usage": "off_session",
                 "payment_method": "pm_card_visa",
-                "payment_method_types": ["card"],
+                "allowed_payment_method_types": ["card"],
                 "metadata": {"organization_id": str(organization.id)},
             },
             # Repeated seeds reuse the same provider setup attempt.
-            options={"idempotency_key": f"seed-card:{organization.id}"},
+            options={"idempotency_key": f"seed-card:{organization.id}:allowed-methods"},
         )
         await payments.save_setup_intent(database, organization, intent, connection)
         await database.commit()

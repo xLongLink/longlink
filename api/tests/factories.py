@@ -6,6 +6,7 @@ from collections.abc import Sequence
 from src.models.roles import OrganizationRoles
 from src.models.types import Image
 from src.models.metadata import LongLinkMetadata
+from longlink.permissions import Catalog
 from src.database.session import session_scope
 from src.models.solutions import SolutionCreate
 from src.database.services import solutions, operations
@@ -15,6 +16,7 @@ from src.database.models.computes import ComputeRegistry
 from src.database.models.solutions import Solution
 from src.database.models.operations import Operation
 from src.database.models.association import UserOrganization
+from src.database.models.permissions import SolutionMemberAccess
 from src.database.models.organizations import Organization
 
 
@@ -130,6 +132,7 @@ async def create_solution(
     image: str = "ghcr.io/longlink/dashboard:latest",
     envs: dict[str, str] | None = None,
     runtime_secrets: dict[str, str] | None = None,
+    catalog: Catalog | None = None,
 ) -> Solution:
     """Create one Solution with explicit release envs and runtime credentials."""
 
@@ -141,7 +144,7 @@ async def create_solution(
         raise ValueError("Test organization must have a creator")
 
     payload = SolutionCreate(name=name, image=parsed_image, envs=envs or {})
-    metadata = LongLinkMetadata(image=resolved_image)
+    metadata = LongLinkMetadata(image=resolved_image, permissions=catalog if catalog is not None else Catalog(endpoints=[]))
 
     async with session_scope() as session:
         solution = await solutions.create(
@@ -153,5 +156,13 @@ async def create_solution(
             metadata=metadata,
         )
         solution.secrets = runtime_secrets or {}
+        if catalog is not None:
+            assert solution.desired_revision_id is not None
+            solution.deployed_revision_id = solution.desired_revision_id
+            session.add(
+                SolutionMemberAccess(
+                    user_id=organization.created_id, solution_id=solution.id, organization_id=organization.id, role="write"
+                )
+            )
         await session.commit()
         return solution

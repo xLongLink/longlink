@@ -5,6 +5,7 @@ from factories import create_organization
 from src.utils import images
 from src.models.types import Image
 from src.models.metadata import LongLinkMetadata
+from longlink.permissions import Catalog
 from src.database.session import session_scope
 from src.database.services import registries
 from src.database.models.users import User
@@ -28,7 +29,7 @@ async def test_private_image_fallback_never_uses_foreign_credentials(
         session.add_all([foreign, denied, accepted])
         await session.commit()
     image = Image("ghcr.io/acme/private:latest")
-    metadata = LongLinkMetadata(image=Image("ghcr.io/acme/private@sha256:resolved"))
+    metadata = LongLinkMetadata(image=Image("ghcr.io/acme/private@sha256:resolved"), permissions=Catalog(endpoints=[]))
     attempts: list[str | None] = []
 
     async def required_metadata(requested: Image, connection: RegistryConnection | None = None) -> LongLinkMetadata:

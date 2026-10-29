@@ -15,12 +15,14 @@ from src.routes.v1 import proxy as proxy_routes
 from collections.abc import Callable, Sequence, Awaitable, AsyncIterator, AsyncGenerator
 from src.models.roles import OrganizationRoles
 from src.models.statuses import Status
+from longlink.permissions import Catalog
 from src.database.session import session_scope
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
 from src.database.models.solutions import Solution
 from src.database.models.association import UserOrganization
+from src.database.models.permissions import PermissionCatalog, SolutionMemberAccess
 
 
 class GatewayStream(httpx2.AsyncByteStream):
@@ -99,16 +101,12 @@ async def create_running_solution(user: User) -> tuple[Solution, ComputeRegistry
     compute = await create_compute()
     organization = await create_organization(user, compute=compute)
 
-    # Persist runtime state directly because proxy admission does not consume release history.
-    solution = Solution(
-        organization_id=organization.id,
-        name="dashboard",
-        slug="dashboard",
-        status=Status.running,
-        secrets={"LONGLINK_IDENTITY_SECRET": "test-identity-secret-01234567890"},
+    # Persist a deployed catalog and explicit creator access before proxy admission.
+    solution = await create_solution(
+        organization, catalog=Catalog(endpoints=[]), runtime_secrets={"LONGLINK_IDENTITY_SECRET": "test-identity-secret-01234567890"}
     )
+    solution.status = Status.running
     async with session_scope() as session:
-
         # Persist the runtime target before sending requests through the proxy.
         session.add(solution)
         await session.commit()
@@ -142,7 +140,7 @@ async def test_solution_proxy_forwards_safe_content(
         captured["has_content_type"] = "content-type" in request.headers
         captured["user_id"] = str(
             # Inspect the signed identity actually delivered to the gateway.
-            identity.identity_token_user(request.headers["x-longlink-identity"], "test-identity-secret-01234567890").id
+            identity.identity_token_data(request.headers["x-longlink-identity"], "test-identity-secret-01234567890")[0].id
         )
 
         def close() -> None:
@@ -353,7 +351,7 @@ async def test_solution_proxy_preserves_mcp_transport_metadata(
     assert captured["mcp-method"] == "tools/list"
     assert captured["mcp-name"] == "list_tools"
     assert captured["last-event-id"] == "caller-event"
-    profile = identity.identity_token_user(captured["x-longlink-identity"], "test-identity-secret-01234567890")
+    profile, _access = identity.identity_token_data(captured["x-longlink-identity"], "test-identity-secret-01234567890")
     assert profile.id == users[0].id
 
     # The runtime receives the authenticated Platform profile, not browser-supplied identity.
@@ -711,7 +709,7 @@ async def test_solution_proxy_forwards_streamed_request_body(
 async def test_solution_proxy_allows_organization_read_members(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient], users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Allow solution proxy access inherited from Organization read membership."""
+    """Allow explicitly assigned Solution access for an Organization read member."""
 
     # Give a regular Organization member read access.
     owner = users[0]
@@ -729,6 +727,7 @@ async def test_solution_proxy_allows_organization_read_members(
     monkeypatch.setattr(httpx2.AsyncHTTPTransport, "handle_async_request", request)
     async with session_scope() as session:
         session.add(UserOrganization(user_id=user.id, organization_id=solution.organization_id, role=OrganizationRoles.read))
+        session.add(SolutionMemberAccess(user_id=user.id, solution_id=solution.id, organization_id=solution.organization_id, role="read"))
         await session.commit()
 
     # Send the request as the non-owner identity under test.
@@ -779,7 +778,7 @@ async def test_solution_proxy_rejects_membership_revoked_before_access_lookup(
     # Revoke the grant immediately before the real access lookup reads it.
     real_access = proxy_routes.organizations.solution_runtime_access
 
-    async def access(session: AsyncSession, user_id: UUID, solution_id: UUID) -> tuple[Solution, OrganizationRoles, ComputeRegistry]:
+    async def access(session: AsyncSession, user_id: UUID, solution_id: UUID) -> tuple[Solution, ComputeRegistry]:
         """Delete the member grant before resolving current access."""
 
         async with session_scope() as revocation_session:
@@ -827,10 +826,10 @@ async def test_solution_proxy_returns_unavailable_when_gateway_request_fails(
 
 
 @pytest.mark.parametrize("method", ["PATCH", "POST", "PUT"])
-async def test_solution_proxy_enforces_method_role(
+async def test_solution_proxy_rejects_disabled_access(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient], users: tuple[User, User, User], method: str, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Reject mutating proxy requests when the runtime role is read-only."""
+    """Reject mutating proxy requests when Solution access is disabled."""
 
     # Restrict the caller to Organization read access.
     user = users[0]
@@ -840,6 +839,9 @@ async def test_solution_proxy_enforces_method_role(
         organization_membership = await session.get(UserOrganization, (user.id, solution.organization_id))
         assert organization_membership is not None
         organization_membership.role = OrganizationRoles.read
+        assignment = await session.get(SolutionMemberAccess, (user.id, solution.id))
+        assert assignment is not None
+        assignment.role = None
         await session.commit()
 
     client = clients[0]
@@ -848,9 +850,9 @@ async def test_solution_proxy_enforces_method_role(
     # Attempt a mutating Solution proxy request.
     response = await client.request(method, f"/api/v1/solutions/{solution.id}/proxy/api/tasks")
 
-    # Verify the HTTP method requires its Organization role before reaching the gateway.
+    # Disabled Solution access is rejected before any gateway request.
     assert response.status_code == 403
-    assert response.json() == {"detail": "Organization write access required"}
+    assert response.json() == {"detail": "Solution access required"}
 
 
 async def test_solution_proxy_allows_write_member_to_post(
@@ -878,10 +880,10 @@ async def test_solution_proxy_allows_write_member_to_post(
     assert response.json() == {}
 
 
-async def test_solution_proxy_delete_rejects_write_member(
+async def test_solution_proxy_delete_rejects_disabled_solution_member(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient], users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Reject proxy DELETE from an Organization write member before the gateway."""
+    """Organization write access cannot bypass disabled Solution access."""
 
     # Arrange
     user = users[0]
@@ -890,6 +892,9 @@ async def test_solution_proxy_delete_rejects_write_member(
         organization_membership = await session.get(UserOrganization, (user.id, solution.organization_id))
         assert organization_membership is not None
         organization_membership.role = OrganizationRoles.write
+        assignment = await session.get(SolutionMemberAccess, (user.id, solution.id))
+        assert assignment is not None
+        assignment.role = None
         await session.commit()
 
     reject_gateway_access(monkeypatch)
@@ -899,7 +904,7 @@ async def test_solution_proxy_delete_rejects_write_member(
 
     # Assert
     assert response.status_code == 403
-    assert response.json() == {"detail": "Organization maintain access required"}
+    assert response.json() == {"detail": "Solution access required"}
 
 
 async def test_solution_proxy_delete_allows_maintain_member(
@@ -1018,14 +1023,23 @@ def request_scope(monkeypatch: pytest.MonkeyPatch) -> SimpleNamespace:
         organization_id=uuid4(),
         status=Status.running,
         secrets={"LONGLINK_IDENTITY_SECRET": "identity-secret-012345678901234567"},
+        deployed_revision_id=uuid4(),
     )
     registry = SimpleNamespace(gateway_url="https://gateway.example/", gateway_certificate=None)
     user = User(id=uuid4(), name="Gateway User", email="gateway@example.com", password="unused-test-password")
 
-    async def access(*args: object) -> tuple[SimpleNamespace, OrganizationRoles, SimpleNamespace]:
+    async def access(*args: object) -> tuple[SimpleNamespace, SimpleNamespace]:
         """Return the authorized running Solution before and after admission."""
 
-        return solution, OrganizationRoles.maintain, registry
+        return solution, registry
+
+    async def get(model: object, key: object, **kwargs: object) -> object:
+        """Supply persisted permission records at the database boundary."""
+
+        if model is PermissionCatalog:
+            return PermissionCatalog(revision_id=solution.deployed_revision_id, catalog=Catalog(endpoints=[]).model_dump(mode="json"))
+        assert model is SolutionMemberAccess
+        return SolutionMemberAccess(user_id=user.id, solution_id=solution.id, organization_id=solution.organization_id, role="write")
 
     async def commit() -> None:
         """Release the authorization snapshot."""
@@ -1052,7 +1066,7 @@ def request_scope(monkeypatch: pytest.MonkeyPatch) -> SimpleNamespace:
             "solution_id": solution.id,
             "path": "health%2Fstatus",
             "user": user,
-            "ctx": SimpleNamespace(request=request, database=SimpleNamespace(commit=commit)),
+            "ctx": SimpleNamespace(request=request, database=SimpleNamespace(commit=commit, get=get)),
         },
     )
 
@@ -1206,7 +1220,8 @@ async def test_gateway_request_forwards_identity_and_defers_cleanup(
         assert captured_request is not None
         request = captured_request
         identity_token = request.headers["x-longlink-identity"]
-        assert proxy_routes.identity.identity_token_user(identity_token, "identity-secret-012345678901234567").id == request_scope.user.id
+        profile, _access = proxy_routes.identity.identity_token_data(identity_token, "identity-secret-012345678901234567")
+        assert profile.id == request_scope.user.id
         assert request.method == "POST"
         assert request.url == "https://gateway.example/health%2Fstatus?verbose=true&raw=%2F+%25"
         assert request.url.raw_path == b"/health%2Fstatus?verbose=true&raw=%2F+%25"

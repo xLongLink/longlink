@@ -13,6 +13,7 @@ export default function Organization() {
             <SolutionManagement
                 organization={membership.organization}
                 canMaintain={['maintain', 'admin', 'owner'].includes(membership.role)}
+                canAdminister={['admin', 'owner'].includes(membership.role)}
                 presentation="overview"
             />
         </>

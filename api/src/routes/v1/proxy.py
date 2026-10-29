@@ -7,16 +7,15 @@ from uuid import UUID
 from fastapi import Depends, Request, Response, APIRouter, HTTPException
 from datetime import UTC
 from longlink import identity
-from src.utils import roles
 from contextlib import AsyncExitStack
 from src.context import Context
 from src.kubernetes import namespace
 from collections.abc import AsyncIterator, AsyncGenerator
-from src.models.roles import SOLUTION_PROXY_METHOD_ROLES
 from fastapi.responses import JSONResponse, StreamingResponse
 from longlink.database import users
 from src.models.statuses import Status
-from src.database.services import organizations
+from longlink.permissions import METHODS
+from src.database.services import permissions, organizations
 
 router = APIRouter()
 BLOCKED_PROXY_CONTENT_TYPES = {"application/xhtml+xml", "image/svg+xml", "text/html"}
@@ -31,8 +30,8 @@ async def runtime_scope() -> AsyncGenerator[AsyncExitStack]:
         yield stack
 
 
-@router.api_route("/solutions/{solution_id}/proxy", methods=list(SOLUTION_PROXY_METHOD_ROLES), include_in_schema=False)
-@router.api_route("/solutions/{solution_id}/proxy/{path:path}", methods=list(SOLUTION_PROXY_METHOD_ROLES), include_in_schema=False)
+@router.api_route("/solutions/{solution_id}/proxy", methods=sorted(METHODS), include_in_schema=False)
+@router.api_route("/solutions/{solution_id}/proxy/{path:path}", methods=sorted(METHODS), include_in_schema=False)
 async def proxy_solution_request(
     ctx: Context,
     request: Request,
@@ -41,12 +40,10 @@ async def proxy_solution_request(
     path: str = "",
     runtime: AsyncExitStack = Depends(runtime_scope, scope="request"),
 ) -> Response:
-    """Enforce HTTP-method-specific Organization roles before traffic enters its compute gateway.
+    """Enforce Solution admission and sign scoped permissions before traffic enters its compute gateway.
 
     The API is the trust boundary: it injects authenticated identity and trusts only the persisted compute CA.
     """
-
-    required_role = SOLUTION_PROXY_METHOD_ROLES[request.method]
 
     # Preserve protocol metadata only on the scoped MCP transport, never ordinary Solution routes.
     is_mcp = path.rstrip("/") == "mcp"
@@ -55,17 +52,14 @@ async def proxy_solution_request(
     await ctx.database.commit()
 
     # Resolve fresh Solution access immediately before runtime admission; never reuse a stale snapshot.
-    solution, role, registry = await organizations.solution_runtime_access(ctx.database, user.id, solution_id)
-
-    # Enforce method-level runtime access in the API before any request can reach Kubernetes.
-    if not roles.atleast(role, required_role):
-        raise HTTPException(status_code=403, detail=f"Organization {required_role.value} access required")
+    solution, registry = await organizations.solution_runtime_access(ctx.database, user.id, solution_id)
 
     # Report readiness explicitly; the frontend owns its loading presentation.
     if solution.status != Status.running:
         raise HTTPException(
             status_code=503, detail="Solution is not ready yet. Please try again shortly.", headers={"cache-control": "no-store"}
         )
+    access = await permissions.runtime_access(ctx.database, solution, user.id)
     await ctx.database.commit()
 
     identity_secret = solution.secrets.get("LONGLINK_IDENTITY_SECRET")
@@ -86,7 +80,7 @@ async def proxy_solution_request(
                 headers = {
                     "host": namespace.solution_hostname(solution.organization_id, solution.id),
                     "x-longlink-identity": identity.create_identity_token(
-                        users.User.model_validate(user, update={"updated_at": user.updated_at.replace(tzinfo=UTC)}), identity_secret
+                        users.User.model_validate(user, update={"updated_at": user.updated_at.replace(tzinfo=UTC)}), identity_secret, access
                     ),
                 }
 

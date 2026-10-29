@@ -90,6 +90,7 @@ class Consent(BaseModel):
     client_name: str
     redirect_uri: str
     solution_name: str
+    expires_in: int = 30 * 24 * 60 * 60
 
 
 class AuthorizationRedirect(BaseModel):

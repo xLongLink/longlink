@@ -18,6 +18,7 @@ from src.models.types import Image
 from sqlalchemy.engine import Connection
 from src.models.metadata import LongLinkMetadata, EnvironmentMetadata
 from src.models.statuses import Status
+from longlink.permissions import Catalog
 from src.database.session import session_scope
 from src.models.operations import OperationKind
 from src.database.models.users import User
@@ -30,7 +31,11 @@ def mock_image_metadata(monkeypatch: pytest.MonkeyPatch, metadata: LongLinkMetad
     """Patch image inspection with deterministic test metadata."""
 
     # Share one fake for the registry boundary; callers pass only meaningful variants.
-    resolved = metadata if metadata is not None else LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:test"))
+    resolved = (
+        metadata
+        if metadata is not None
+        else LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:test"), permissions=Catalog(endpoints=[]))
+    )
 
     async def inspect_image(_image: object, _connection: object | None = None) -> LongLinkMetadata:
         """Return the configured metadata response."""
@@ -95,7 +100,9 @@ async def test_create_app_persists_desired_state_and_queues_reconciliation(
     mock_image_metadata(
         monkeypatch,
         LongLinkMetadata(
-            image=Image("ghcr.io/longlink/dashboard@sha256:test"), environments=[EnvironmentMetadata(name="API_KEY", required=True)]
+            permissions=Catalog(endpoints=[]),
+            image=Image("ghcr.io/longlink/dashboard@sha256:test"),
+            environments=[EnvironmentMetadata(name="API_KEY", required=True)],
         ),
     )
 
@@ -172,7 +179,9 @@ async def test_create_app_enforces_the_per_organization_beta_limit(
         pytest.param(None, 404, "Image metadata not found", id="missing-metadata"),
         pytest.param(
             LongLinkMetadata(
-                image=Image("ghcr.io/longlink/dashboard@sha256:test"), environments=[EnvironmentMetadata(name="API_KEY", required=True)]
+                permissions=Catalog(endpoints=[]),
+                image=Image("ghcr.io/longlink/dashboard@sha256:test"),
+                environments=[EnvironmentMetadata(name="API_KEY", required=True)],
             ),
             422,
             # Valid image metadata can still require missing runtime configuration.
@@ -310,7 +319,7 @@ async def test_solution_responses_do_not_expose_environment_secrets(
         """Resolve latest and the current digest to the same immutable test image."""
 
         assert image in ("ghcr.io/longlink/dashboard:latest", "ghcr.io/longlink/dashboard@sha256:first")
-        return LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:first"))
+        return LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:first"), permissions=Catalog(endpoints=[]))
 
     monkeypatch.setattr(images, "required_metadata", metadata)
 
@@ -665,7 +674,7 @@ async def test_create_solution_rejects_too_long_slug_without_queuing_work(
     async def inspect_image(_image: Image, _connection: object | None = None) -> LongLinkMetadata:
         """Return valid immutable image metadata."""
 
-        return LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:test"))
+        return LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:test"), permissions=Catalog(endpoints=[]))
 
     monkeypatch.setattr(images, "required_metadata", inspect_image)
 
@@ -853,7 +862,7 @@ async def test_update_allows_unchanged_deployments(
     solution = await create_solution(organization, envs={"KEEP": "private-value", "DROP": "old-value"})
     url = f"/api/v1/solutions/{solution.id}/update"
     source = "ghcr.io/longlink/dashboard:latest"
-    resolved = LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:first"))
+    resolved = LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:first"), permissions=Catalog(endpoints=[]))
 
     async def metadata(image: Image, _connection: object | None = None) -> LongLinkMetadata:
         """Require latest at the external registry boundary."""
@@ -895,7 +904,7 @@ async def test_update_reresolves_moved_tag_and_enforces_required_envs(
     solution = await create_solution(organization, envs={"KEEP": "private-value", "DROP": "old-value"})
     url = f"/api/v1/solutions/{solution.id}/update"
     source = "ghcr.io/longlink/dashboard:latest"
-    resolved = LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:first"))
+    resolved = LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:first"), permissions=Catalog(endpoints=[]))
     inspected: list[str] = []
 
     async def metadata(image: Image, _connection: object | None = None) -> LongLinkMetadata:
@@ -908,7 +917,7 @@ async def test_update_reresolves_moved_tag_and_enforces_required_envs(
     assert (await clients[0].post(url, json={})).status_code == 204
 
     # Act: the advisory check observes the moved tag without persisting it.
-    resolved = LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:candidate"))
+    resolved = LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:candidate"), permissions=Catalog(endpoints=[]))
     check = await clients[0].get(url)
 
     # Assert the check is advisory before enforcing the new requirements.
@@ -917,6 +926,7 @@ async def test_update_reresolves_moved_tag_and_enforces_required_envs(
 
     # Arrange the final requirements.
     resolved = LongLinkMetadata(
+        permissions=Catalog(endpoints=[]),
         image=Image("ghcr.io/longlink/dashboard@sha256:final"),
         environments=[EnvironmentMetadata(name="NEW", required=True), EnvironmentMetadata(name="KEEP", required=True)],
     )
@@ -1012,7 +1022,7 @@ async def test_update_check_allows_maintainer_without_registry_oracle(
     async def metadata(image: Image, _connection: object | None = None) -> LongLinkMetadata:
         """Resolve metadata for the persisted source at the external boundary."""
 
-        return LongLinkMetadata(image=image)
+        return LongLinkMetadata(image=image, permissions=Catalog(endpoints=[]))
 
     monkeypatch.setattr(images, "required_metadata", metadata)
 
@@ -1034,7 +1044,7 @@ async def test_release_inspection_revalidates_concurrent_desired_changes(
 
     organization = await create_organization(users[0])
     solution = await create_solution(organization)
-    metadata = LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:new"))
+    metadata = LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:new"), permissions=Catalog(endpoints=[]))
     replacement_id = None
 
     async def inspect(_image: Image, _connection: object | None = None) -> LongLinkMetadata:
@@ -1083,7 +1093,7 @@ async def test_release_inspection_rejects_demotion_during_metadata_wait(
     inspected: list[Image] = []
 
     # Keep the inspected candidate distinct from the concurrently desired image.
-    candidate = LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:candidate"))
+    candidate = LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:candidate"), permissions=Catalog(endpoints=[]))
 
     async def metadata(image: Image, _connection: object | None = None) -> LongLinkMetadata:
         """Commit demotion while the request has released its registry-wait transaction."""
@@ -1098,7 +1108,7 @@ async def test_release_inspection_rejects_demotion_during_metadata_wait(
                 await session.commit()
 
         # Later inspection observes the release changed by the competing command.
-        return candidate if len(inspected) == 1 else LongLinkMetadata(image=image)
+        return candidate if len(inspected) == 1 else LongLinkMetadata(image=image, permissions=Catalog(endpoints=[]))
 
     monkeypatch.setattr(images, "required_metadata", metadata)
 
@@ -1144,7 +1154,7 @@ async def test_update_rolls_back_revision_and_pointer_after_queue_insert_failure
     async def metadata(_image: Image, _connection: object | None = None) -> LongLinkMetadata:
         """Provide a changed valid release at the metadata transport boundary."""
 
-        return LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:candidate"))
+        return LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:candidate"), permissions=Catalog(endpoints=[]))
 
     def fail_insert(_mapper: Mapper[Operation], connection: Connection, operation: Operation) -> None:
         """Fail only after the real queue INSERT and release snapshot flush."""
@@ -1209,7 +1219,7 @@ async def test_environment_patch_validates_merged_limits(
     async def metadata(_image: Image, _connection: object | None = None) -> LongLinkMetadata:
         """Provide a valid release without additional required variables."""
 
-        return LongLinkMetadata(image=image)
+        return LongLinkMetadata(image=image, permissions=Catalog(endpoints=[]))
 
     monkeypatch.setattr(images, "required_metadata", metadata)
     url = f"/api/v1/solutions/{solution.id}/update"
@@ -1272,7 +1282,7 @@ async def test_simultaneous_source_updates_create_only_one_revision(
         """Let both commands inspect before either reacquires a command lock."""
 
         await asyncio.wait_for(barrier.wait(), timeout=5)
-        return LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:new"))
+        return LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:new"), permissions=Catalog(endpoints=[]))
 
     monkeypatch.setattr(images, "required_metadata", metadata)
     url = f"/api/v1/solutions/{solution.id}/update"
@@ -1313,6 +1323,8 @@ async def test_local_registry_release_roundtrip(
         if exc.status_code != 404:
             raise
         pytest.skip("Local sample registry image is unavailable")
+    if metadata.permissions is None:
+        pytest.skip("Rebuild the local sample image with build-time permission metadata")
     organization = await create_organization(users[0])
     envs = {item.name: "integration-value" for item in metadata.environments}
     response = await clients[0].post(

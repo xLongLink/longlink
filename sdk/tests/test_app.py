@@ -5,11 +5,12 @@ from uuid import UUID
 from typing import Annotated
 from fastapi import Header, Depends, Response, APIRouter, HTTPException
 from pathlib import Path
-from longlink import User, Context, identity
+from longlink import User, Context, identity, permissions
 from longlink import app as longlink_app
 from pydantic import ValidationError
 from sqlalchemy import event
 from longlink.app import LongLink
+from fastapi.routing import iter_route_contexts
 from longlink.logger import ApiAccessFilter
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from longlink.database import audit, migrations
@@ -438,8 +439,10 @@ def test_mcp_preserves_identity_and_endpoint_authorization(monkeypatch: pytest.M
     with client:
         anonymous = client.post("/mcp", json={"jsonrpc": "2.0", "id": 1, "method": "tools/list"})
         forged = client.post("/mcp", json=request, headers={"x-longlink-identity": "forged"})
+        catalog = app.state.permission_catalog
+        access = permissions.Access(catalog=catalog.digest, endpoints=list(range(len(catalog.endpoints))))
         client.headers["x-longlink-identity"] = identity.create_identity_token(
-            User(id=allowed_user, name="Allowed", email="allowed@example.com"), secret
+            User(id=allowed_user, name="Allowed", email="allowed@example.com"), secret, access
         )
         client.headers["authorization"] = "Bearer allowed-bearer"
 
@@ -464,7 +467,7 @@ def test_mcp_preserves_identity_and_endpoint_authorization(monkeypatch: pytest.M
 
         # A valid session must still enforce the next tool call's signed user identity.
         client.headers["x-longlink-identity"] = identity.create_identity_token(
-            User(id=denied_user, name="Denied", email="denied@example.com"), secret
+            User(id=denied_user, name="Denied", email="denied@example.com"), secret, access
         )
         denied = client.post("/mcp", json=request)
         direct_denied = client.get("/api/private")
@@ -628,8 +631,12 @@ def test_tool_arguments_cannot_override_request_credentials(monkeypatch: pytest.
     app.state.longlink.database = Database(Envs(ENV="testing"))
 
     # The signed HTTP identity must override any credentials embedded in tool metadata.
-    actual_identity = identity.create_identity_token(User(id=actual_user, name="Actual", email="actual@example.com"), secret)
-    other_identity = identity.create_identity_token(User(id=UUID(int=1), name="Other", email="other@example.com"), secret)
+    catalog = permissions.discover(
+        [route for route in iter_route_contexts(app.routes) if id(route.original_route) not in app._runtime_routes]
+    )
+    access = permissions.Access(catalog=catalog.digest, endpoints=list(range(len(catalog.endpoints))))
+    actual_identity = identity.create_identity_token(User(id=actual_user, name="Actual", email="actual@example.com"), secret, access)
+    other_identity = identity.create_identity_token(User(id=UUID(int=1), name="Other", email="other@example.com"), secret, access)
     client = TestClient(app, headers={"x-longlink-identity": actual_identity, "authorization": "Bearer actual", "cookie": "user=actual"})
 
     # Try to supply another user's valid signed token and bearer through declared tool parameters.

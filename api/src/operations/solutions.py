@@ -143,6 +143,9 @@ async def deploy(revision_id: UUID) -> None:
 
     # Publish the applied release only after workload readiness.
     async with session_scope() as session:
+        current = await session.get(Solution, solution.id, with_for_update=True)
+        if current is None or current.deleted_at is not None:
+            return
         await session.execute(
             update(Solution)
             .where(col(Solution.id) == solution.id, col(Solution.deleted_at).is_(None))

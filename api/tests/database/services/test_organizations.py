@@ -5,6 +5,7 @@ from factories import add_member, create_compute, fetch_operations, create_organ
 from src.models.roles import OrganizationRoles
 from src.models.types import Image
 from src.models.metadata import LongLinkMetadata
+from longlink.permissions import Catalog
 from src.database.session import session_scope
 from src.models.solutions import SolutionCreate
 from src.database.services import solutions, organizations
@@ -181,7 +182,7 @@ async def test_soft_delete_tombstones_solutions_and_retains_memberships(users: t
     owner, member = users[0], users[1]
     organization = await create_organization(owner)
     payload = SolutionCreate(name="Dashboard", image=Image("ghcr.io/longlink/dashboard:latest"))
-    metadata = LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:test"))
+    metadata = LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:test"), permissions=Catalog(endpoints=[]))
     async with session_scope() as session:
         solution = await solutions.create(
             session,

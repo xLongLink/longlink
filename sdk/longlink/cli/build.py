@@ -8,6 +8,7 @@ import tempfile
 import subprocess
 from typing import TypedDict, NotRequired
 from pathlib import Path
+from longlink import permissions
 from pydantic import TypeAdapter, ValidationError
 from longlink.cli import errors
 from collections.abc import Mapping
@@ -130,6 +131,38 @@ def read_env_spec(root: Path, pyproject_data: Mapping[str, object]) -> list[Envi
         if isinstance(environments, str):
             raise errors.Error(environments)
         return environments
+
+
+def read_permission_spec(root: Path) -> permissions.Catalog:
+    """Require reproducible permission metadata from isolated Solution imports."""
+
+    # Inspect twice in fresh processes so import state cannot hide nondeterministic declarations.
+    catalogs: list[permissions.Catalog] = []
+    with tempfile.TemporaryDirectory(prefix="longlink-permissions-") as directory:
+        for attempt in range(2):
+            result_path = Path(directory) / f"permissions-{attempt}.json"
+            result = subprocess.run(
+                [sys.executable, "-P", str(Path(__file__).with_name("permissions.py")), str(root.resolve()), str(result_path)],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            if result.stdout:
+                print(result.stdout, end="")
+            if result.stderr:
+                print(result.stderr, end="", file=sys.stderr)
+            if result.returncode:
+                raise errors.Error("Unable to inspect main:app permissions; routes must be registered without runtime configuration")
+
+            # Validate child metadata before embedding it in the image configuration.
+            try:
+                catalog = permissions.Catalog.model_validate_json(result_path.read_bytes())
+            except (OSError, ValidationError) as error:
+                raise errors.Error("Unable to inspect main:app permissions: invalid child response") from error
+            catalogs.append(catalog)
+    if catalogs[0] != catalogs[1]:
+        raise errors.Error("Solution permissions must be deterministic at build time")
+    return catalogs[0]
 
 
 def read_pyproject(root: Path) -> dict[str, object]:
@@ -478,6 +511,8 @@ def build_solution(root: Path, build_context: Path, *, pyproject_data: Mapping[s
     environments = read_env_spec(root, pyproject_data)
     if environments:
         labels.append(f"LABEL dev.longlink.environments={json.dumps(json.dumps(environments, separators=(',', ':')))}")
+    catalog = read_permission_spec(root)
+    labels.append(f"LABEL dev.longlink.permissions={json.dumps(catalog.model_dump_json())}")
 
     # Apply a fixed context policy without interpreting project-specific ignore syntax.
     context_root = build_context.resolve()

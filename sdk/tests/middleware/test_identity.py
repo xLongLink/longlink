@@ -4,7 +4,7 @@ import asyncio
 from uuid import UUID
 from types import SimpleNamespace
 from fastapi import FastAPI, WebSocket
-from longlink import User, identity
+from longlink import User, identity, permissions
 from collections.abc import Iterator
 from longlink.database import audit
 from fastapi.testclient import TestClient
@@ -108,7 +108,8 @@ def test_production_context_requires_signed_http_identity(
 
     # Arrange
     if signing_secret is not None:
-        token = identity.create_identity_token(User(id=UUID(int=1), name="Test User", email="test@example.com"), signing_secret)
+        access = permissions.Access(catalog="a" * 64, endpoints=[])
+        token = identity.create_identity_token(User(id=UUID(int=1), name="Test User", email="test@example.com"), signing_secret, access)
         headers = {"x-longlink-identity": token}
 
     # Act
