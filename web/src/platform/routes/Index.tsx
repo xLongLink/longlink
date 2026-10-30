@@ -43,11 +43,11 @@ export default function Home() {
                 >
                     <img
                         alt=""
-                        className="absolute inset-0 size-full object-cover"
+                        className="absolute inset-0 size-full -scale-x-100 bg-black object-contain"
                         fetchPriority="high"
-                        height={1086}
-                        src="/images/landing-skyline.webp"
-                        width={1448}
+                        height={941}
+                        src="/images/landing-earth.png"
+                        width={1672}
                     />
                     <Stack
                         className="relative flex-1 bg-linear-to-t from-black via-black/50 to-transparent p-6 sm:p-10"
