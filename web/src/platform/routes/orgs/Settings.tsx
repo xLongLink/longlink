@@ -168,6 +168,7 @@ export default function OrganizationSettings() {
                         ) : (
                             <GeneralSection
                                 base={base}
+                                tags={membership.tags}
                                 name={membership.organization.name}
                                 canMaintain={canMaintain}
                                 canDelete={membership.role === 'owner'}
@@ -183,11 +184,13 @@ export default function OrganizationSettings() {
 /** Shows shared navigation categories and owner-only organization deletion. */
 function GeneralSection({
     base,
+    tags,
     name,
     canMaintain,
     canDelete,
 }: {
     base: string;
+    tags: OrganizationContext['tags'];
     name: string;
     canMaintain: boolean;
     canDelete: boolean;
@@ -202,7 +205,7 @@ function GeneralSection({
                 </Heading>
             </Stack>
             <Divider />
-            <TabsSection base={base} canMaintain={canMaintain} />
+            <TabsSection base={base} tags={tags} canMaintain={canMaintain} />
             {canDelete && (
                 <Stack gap={3}>
                     <Stack className="text-red-600 dark:text-red-400">

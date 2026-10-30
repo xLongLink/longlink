@@ -20,15 +20,13 @@ export default function TimestampPage() {
                     description: 'Date, time, relative, or Unix-seconds display format.',
                 },
             ]}
-            examples={[
-                {
-                    title: 'Timestamp',
-                    preview: <TimestampExample />,
-                    code: `function Example() {
+            example={{
+                title: 'Timestamp',
+                preview: <TimestampExample />,
+                code: `function Example() {
   return <Timestamp value="2026-10-02T12:00:00Z" format="date_time" />;
 }`,
-                },
-            ]}
+            }}
         />
     );
 }

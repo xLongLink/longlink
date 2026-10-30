@@ -61,15 +61,13 @@ export default function ProgressBarPage() {
                     description: 'Animated loading indicator for unknown progress.',
                 },
             ]}
-            examples={[
-                {
-                    title: 'ProgressBar',
-                    preview: <ProgressBarExample />,
-                    code: `function Example() {
+            example={{
+                title: 'ProgressBar',
+                preview: <ProgressBarExample />,
+                code: `function Example() {
   return <ProgressBar label="Progress" value={60} max={100} hasValueLabel />;
 }`,
-                },
-            ]}
+            }}
         />
     );
 }

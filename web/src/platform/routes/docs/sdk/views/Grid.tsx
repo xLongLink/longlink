@@ -82,11 +82,10 @@ export default function GridPage() {
                 },
             ]}
             introduction="Grid supports fixed columns or responsive tracks with columns={{ minWidth: 240, max: 3 }}. Responsive tracks reflow with the container width; use one-column or full GridSpan items with them. For unequal fixed-column layouts, collapseBelow={768} switches to a single column at narrow View viewport widths and makes spanning children full-width."
-            examples={[
-                {
-                    title: 'Grid',
-                    preview: <GridExample />,
-                    code: `function Example() {
+            example={{
+                title: 'Grid',
+                preview: <GridExample />,
+                code: `function Example() {
   return (
     <Grid columns={2} gap={3}>
       <Text>First column</Text>
@@ -96,8 +95,7 @@ export default function GridPage() {
     </Grid>
   );
 }`,
-                },
-            ]}
+            }}
         />
     );
 }

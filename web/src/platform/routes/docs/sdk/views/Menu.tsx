@@ -68,11 +68,10 @@ export default function MenuPage() {
                 },
             ]}
             introduction="Menu combines section navigation with the selected section’s content using Astryx SideNav. At View viewport widths of 768px and below, navigation moves above content rather than competing for its width. Resizing keeps the active content mounted; changing sections mounts only the selected section."
-            examples={[
-                {
-                    title: 'Menu',
-                    preview: <MenuExample />,
-                    code: `function Example() {
+            example={{
+                title: 'Menu',
+                preview: <MenuExample />,
+                code: `function Example() {
   return (
     <Stack padding={4}>
       <Menu>
@@ -101,8 +100,7 @@ export default function MenuPage() {
     </Stack>
   );
 }`,
-                },
-            ]}
+            }}
         />
     );
 }

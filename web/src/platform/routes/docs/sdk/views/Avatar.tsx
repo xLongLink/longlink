@@ -45,15 +45,13 @@ export default function AvatarPage() {
                     description: 'Avatar size.',
                 },
             ]}
-            examples={[
-                {
-                    title: 'Avatar',
-                    preview: <AvatarExample />,
-                    code: `function Example() {
+            example={{
+                title: 'Avatar',
+                preview: <AvatarExample />,
+                code: `function Example() {
   return <Avatar name="Ada Lovelace" />;
 }`,
-                },
-            ]}
+            }}
         />
     );
 }

@@ -47,11 +47,10 @@ export default function TokenPage() {
                     description: 'Shows a remove button and runs when it is clicked.',
                 },
             ]}
-            examples={[
-                {
-                    title: 'Interests',
-                    preview: <TokenExample />,
-                    code: `function Example() {
+            example={{
+                title: 'Interests',
+                preview: <TokenExample />,
+                code: `function Example() {
   return (
     <Stack direction="horizontal" wrap="wrap" gap={2}>
       <Token label="Research" />
@@ -59,8 +58,7 @@ export default function TokenPage() {
     </Stack>
   );
 }`,
-                },
-            ]}
+            }}
         />
     );
 }

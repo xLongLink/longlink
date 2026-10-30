@@ -71,15 +71,14 @@ export default function MultiSelectorPage() {
                     description: 'Shows a search field for filtering options.',
                 },
             ]}
-            examples={[
-                {
-                    title: 'Teams form',
-                    preview: (
-                        <FormPreview>
-                            <MultiSelectorExample />
-                        </FormPreview>
-                    ),
-                    code: `/** Submits selected teams as repeated form entries. */
+            example={{
+                title: 'Teams form',
+                preview: (
+                    <FormPreview>
+                        <MultiSelectorExample />
+                    </FormPreview>
+                ),
+                code: `/** Submits selected teams as repeated form entries. */
 export default function TeamsForm() {
   return (
     <Form action="/api/example" method="post">
@@ -97,8 +96,7 @@ export default function TeamsForm() {
     </Form>
   );
 }`,
-                },
-            ]}
+            }}
         />
     );
 }

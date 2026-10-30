@@ -80,15 +80,14 @@ export default function RadioListPage() {
                     type: 'boolean',
                 },
             ]}
-            examples={[
-                {
-                    title: 'Plan form',
-                    preview: (
-                        <FormPreview>
-                            <RadioListExample />
-                        </FormPreview>
-                    ),
-                    code: `/** Submits one plan from a native radio group. */
+            example={{
+                title: 'Plan form',
+                preview: (
+                    <FormPreview>
+                        <RadioListExample />
+                    </FormPreview>
+                ),
+                code: `/** Submits one plan from a native radio group. */
 export default function PlanForm() {
   return (
     <Form action="/api/example" method="post">
@@ -103,8 +102,7 @@ export default function PlanForm() {
     </Form>
   );
 }`,
-                },
-            ]}
+            }}
         />
     );
 }

@@ -20,7 +20,6 @@ from src.kubernetes.storage import Storage
 from src.models.organizations import (
     DatabaseState,
     OrganizationUsage,
-    OrganizationDetails,
     OrganizationByteUsage,
     OrganizationMemberUpdate,
     OrganizationInvitationCreate,
@@ -31,23 +30,6 @@ from src.database.models.solutions import Solution
 from src.database.models.organizations import Organization
 
 router = APIRouter()
-
-
-@router.get("/organizations/{organization_id}", response_model=OrganizationDetails)
-async def get_organization(session: auth.Session, membership: auth.OrganizationMember):
-    """Return one organization and its metadata."""
-
-    # Reuse the active Organization loaded with the authorized membership.
-    organization = membership.organization
-
-    # Show invitations only to organization managers.
-    return {
-        "organization": organization,
-        "members": await organizations.members(session, organization.id),
-        "invitations": await organizations.invitations(session, organization.id)
-        if roles.atleast(membership.role, OrganizationRoles.maintain)
-        else [],
-    }
 
 
 @router.get("/organizations/{organization_id}/members", response_model=list[OrganizationMemberAccessResponse])
@@ -61,7 +43,7 @@ async def get_organization_members(session: auth.Session, membership: auth.Organ
 async def get_organization_invitations(session: auth.Session, membership: auth.OrganizationMember):
     """Return pending invitations only to Organization managers."""
 
-    # Preserve the details endpoint's restricted invitation visibility for ordinary members.
+    # Restrict invitation visibility to Organization managers.
     if not roles.atleast(membership.role, OrganizationRoles.maintain):
         return []
     return await organizations.invitations(session, membership.organization_id)

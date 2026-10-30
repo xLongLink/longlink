@@ -743,17 +743,6 @@ export const zOrganizationMemberAccessResponse = z.object({
 });
 
 /**
- * OrganizationDetails
- *
- * Represent an Organization with its member access.
- */
-export const zOrganizationDetails = z.object({
-    organization: zOrganizationIdentity,
-    members: z.array(zOrganizationMemberAccessResponse),
-    invitations: z.array(zOrganizationInvitationResponse)
-});
-
-/**
  * UserOrganizationInvitation
  *
  * Represent one pending Organization invitation for the current user.

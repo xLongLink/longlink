@@ -5,12 +5,11 @@ import { renderPlatform, membership } from '../../render';
 
 it('renders General without loading inactive billing or registry resources', () => {
     // Act
-    const output = renderPlatform(
-        <Settings />,
-        '/orgs/acme/settings',
-        [[`/api/v1/organizations/${membership.organization.id}/tags`, []]],
-        '/orgs/:organization/settings'
-    );
+    const output = renderPlatform(<Settings />, '/orgs/acme/settings', [], '/orgs/:organization/settings', {
+        ...membership,
+        tags: [],
+        activeTag: undefined,
+    });
 
     // Assert
     expect(output.textContent).toContain('Acme');

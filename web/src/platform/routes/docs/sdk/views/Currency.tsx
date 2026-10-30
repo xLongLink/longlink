@@ -27,15 +27,13 @@ export default function CurrencyPage() {
                 },
             ]}
             introduction="Currency formats a numeric value with the browser’s locale-aware currency formatter."
-            examples={[
-                {
-                    title: 'Currency',
-                    preview: <CurrencyExample />,
-                    code: `function Example() {
+            example={{
+                title: 'Currency',
+                preview: <CurrencyExample />,
+                code: `function Example() {
   return <Currency value={1234.5} currency="USD" />;
 }`,
-                },
-            ]}
+            }}
         />
     );
 }

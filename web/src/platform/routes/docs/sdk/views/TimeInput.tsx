@@ -81,15 +81,14 @@ export default function TimeInputPage() {
                     description: 'Empty-field text, replaced by a format hint on focus.',
                 },
             ]}
-            examples={[
-                {
-                    title: 'Start time form',
-                    preview: (
-                        <FormPreview>
-                            <TimeInputExample />
-                        </FormPreview>
-                    ),
-                    code: `/** Submits a local time using the themed time picker. */
+            example={{
+                title: 'Start time form',
+                preview: (
+                    <FormPreview>
+                        <TimeInputExample />
+                    </FormPreview>
+                ),
+                code: `/** Submits a local time using the themed time picker. */
 export default function StartTimeForm() {
   return (
     <Form action="/api/example" method="post">
@@ -101,8 +100,7 @@ export default function StartTimeForm() {
     </Form>
   );
 }`,
-                },
-            ]}
+            }}
         />
     );
 }

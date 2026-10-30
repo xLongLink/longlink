@@ -39,19 +39,17 @@ export default function MoreMenuPage() {
                     description: 'Callback fired when the menu opens or closes.',
                 },
             ]}
-            examples={[
-                {
-                    title: 'MoreMenu',
-                    preview: <MoreMenuExample />,
-                    code: `function Example() {
+            example={{
+                title: 'MoreMenu',
+                preview: <MoreMenuExample />,
+                code: `function Example() {
   return (
     <MoreMenu
       items={[{ id: 'edit', label: 'Edit', onClick: () => navigate('/edit') }]}
     />
   );
 }`,
-                },
-            ]}
+            }}
         />
     );
 }

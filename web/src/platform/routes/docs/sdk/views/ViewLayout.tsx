@@ -67,7 +67,7 @@ export default function ViewLayout({
     introduction,
     properties = [],
     isLongLinkSpecific = false,
-    examples = [],
+    example,
     children,
     toc,
 }: {
@@ -75,7 +75,7 @@ export default function ViewLayout({
     introduction: string;
     properties?: ViewProperty[];
     isLongLinkSpecific?: boolean;
-    examples?: ViewExample[];
+    example?: ViewExample;
     children?: ReactNode;
     toc?: { id: string; label: string; level: number }[];
 }) {
@@ -84,7 +84,6 @@ export default function ViewLayout({
 
     if (!component) throw new Error(`Missing View documentation: ${name}`);
     const runtime = component.category === 'Runtime';
-    const [example] = examples;
 
     // Prepare property tables below the example.
     const groups = new Map<string, ViewProperty[]>();

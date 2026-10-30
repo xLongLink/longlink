@@ -78,26 +78,25 @@ export default function StepperPage() {
                     description: 'Persistent panel content in wizard mode; inline content in progress mode.',
                 },
             ]}
-            examples={[
-                {
-                    title: 'Stepper',
-                    preview: (
-                        <Stack gap={8}>
-                            <StepperExample />
-                            <Stepper variant="wizard">
-                                <Step label="Details">
-                                    <Text>Enter your workflow details.</Text>
-                                </Step>
-                                <Step label="Review">
-                                    <Text>Review before continuing.</Text>
-                                </Step>
-                                <Step label="Complete">
-                                    <Text>Your workflow is complete.</Text>
-                                </Step>
-                            </Stepper>
-                        </Stack>
-                    ),
-                    code: `function Example() {
+            example={{
+                title: 'Stepper',
+                preview: (
+                    <Stack gap={8}>
+                        <StepperExample />
+                        <Stepper variant="wizard">
+                            <Step label="Details">
+                                <Text>Enter your workflow details.</Text>
+                            </Step>
+                            <Step label="Review">
+                                <Text>Review before continuing.</Text>
+                            </Step>
+                            <Step label="Complete">
+                                <Text>Your workflow is complete.</Text>
+                            </Step>
+                        </Stepper>
+                    </Stack>
+                ),
+                code: `function Example() {
   return (
     <Stepper variant="wizard">
       <Step label="Details"><Text>Enter your workflow details.</Text></Step>
@@ -106,8 +105,7 @@ export default function StepperPage() {
     </Stepper>
   );
 }`,
-                },
-            ]}
+            }}
         />
     );
 }

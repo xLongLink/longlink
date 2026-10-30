@@ -84,15 +84,14 @@ export default function TextInputPage() {
                     description: 'Runs on Enter, except when confirming an IME composition.',
                 },
             ]}
-            examples={[
-                {
-                    title: 'Name form',
-                    preview: (
-                        <FormPreview>
-                            <TextInputExample />
-                        </FormPreview>
-                    ),
-                    code: `/** Submits a name without draft state. */
+            example={{
+                title: 'Name form',
+                preview: (
+                    <FormPreview>
+                        <TextInputExample />
+                    </FormPreview>
+                ),
+                code: `/** Submits a name without draft state. */
 export default function NameForm() {
   return (
     <Form action="/api/example" method="post">
@@ -104,8 +103,7 @@ export default function NameForm() {
     </Form>
   );
 }`,
-                },
-            ]}
+            }}
         />
     );
 }
