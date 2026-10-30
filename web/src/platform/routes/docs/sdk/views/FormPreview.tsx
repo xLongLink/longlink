@@ -6,22 +6,14 @@ import { useState, type ReactNode } from 'react';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 
 /** Exercises the real Form locally and displays submitted fields without sending API requests. */
-export default function FormPreview({
-    children,
-    stepped = false,
-    height,
-}: {
-    children: ReactNode;
-    stepped?: boolean;
-    height?: number | string;
-}) {
+export default function FormPreview({ children, stepped = false }: { children: ReactNode; stepped?: boolean }) {
     // Retain the latest submission as entries so repeated names and file objects remain intact.
     const [submission, setSubmission] = useState<[string, string | Blob][] | null>(null);
 
     // Capture documentation submissions locally without Platform credentials or networking.
     return (
         <Stack gap={3} onResetCapture={() => setSubmission(null)}>
-            <Form action={(data) => setSubmission([...data.entries()])} height={height}>
+            <Form action={(data) => setSubmission([...data.entries()])}>
                 {stepped ? (
                     children
                 ) : (
