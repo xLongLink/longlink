@@ -1,6 +1,6 @@
+import { useEffect, useRef } from 'react';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
-import { useEffect, useRef, useState } from 'react';
 import { Heading } from '@astryxdesign/core/Heading';
 import { Section } from '@astryxdesign/core/Section';
 import { industryGroups, sharedUseCaseGroups } from '@/lib/industries';
@@ -74,7 +74,6 @@ function MovingRow({ items, label, reverse = false }: { items: readonly string[]
 /** Connects industries and use cases around one extensible Platform foundation. */
 export function Foundation() {
     const sectionRef = useRef<HTMLDivElement>(null);
-    const [inView, setInView] = useState(false);
 
     // Add scroll movement only while the section is visible and motion is enabled.
     useEffect(() => {
@@ -108,7 +107,7 @@ export function Foundation() {
 
         const observer = new IntersectionObserver(([entry]) => {
             visible = entry.isIntersecting;
-            setInView(visible);
+            section.dataset.paused = String(!visible);
             schedule();
         });
 
@@ -132,7 +131,7 @@ export function Foundation() {
             aria-labelledby="foundation-heading"
             aria-describedby="foundation-motion-description"
             className="overflow-hidden py-20 sm:py-32"
-            data-paused={!inView}
+            data-paused="true"
             tabIndex={0}
             padding={0}
             variant="transparent"

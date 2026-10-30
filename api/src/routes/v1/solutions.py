@@ -53,38 +53,11 @@ async def update_candidate(
 async def check_update(ctx: Context, user: auth.CurrentUser, solution: auth.SolutionMaintainer):
     """Inspect the repository's latest image without changing deployment state."""
 
-    solution, revision, metadata = await update_candidate(ctx.database, solution, user.id)
-
-    # Reuse the inspected version when the candidate is the current immutable image.
-    current_version = metadata.version if metadata.image == revision.image else None
-
-    # Release command locks before inspecting the current digest with its retained credentials.
-    if metadata.image != revision.image:
-        current_image = Image(revision.image)
-        connection = await registries.resolve(ctx.database, solution.organization_id, revision.registry_connection_id, current_image)
-        await ctx.database.commit()
-
-        # An unavailable old image must not block review of an otherwise valid update.
-        try:
-            current_metadata = await images.required_metadata(current_image, connection)
-
-            # Missing registry access leaves the current version unknown, not the update unavailable.
-            current_version = current_metadata.version
-        except HTTPException as exc:
-
-            # Only missing or inaccessible current images have an unknown version.
-            if exc.status_code not in (403, 404):
-                raise
-            current_version = None
-
-        # Reject stale reviews or revoked access after the additional registry lookup.
-        solution = await solutions.access(ctx.database, solution.id, user.id, lock=False)
-        if solution.desired_revision_id != revision.id:
-            raise HTTPException(status_code=409, detail="Desired revision changed during inspection. Check again.")
+    _solution, revision, metadata = await update_candidate(ctx.database, solution, user.id)
 
     return {
         "current_image": revision.image,
-        "current_version": current_version,
+        "current_version": revision.version,
         "metadata": metadata,
         "revision_id": revision.id,
         # Expose names only; environment values remain server-side.

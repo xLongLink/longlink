@@ -1,9 +1,9 @@
 import { Search } from 'lucide-react';
+import { useAdminList } from './use-list';
 import { useApi } from '@/lib/hooks/use-api';
 import { Text } from '@astryxdesign/core/Text';
 import { Avatar } from '@/components/ui/Avatar';
 import { Stack } from '@astryxdesign/core/Stack';
-import { useDeferredValue, useState } from 'react';
 import { Heading } from '@astryxdesign/core/Heading';
 import { TextInput } from '@/components/ui/TextInput';
 import { Timestamp } from '@astryxdesign/core/Timestamp';
@@ -13,26 +13,15 @@ import { zPageAdminUserSummary } from '@/lib/generated/platform-api-v1/zod.gen';
 
 /** Lists Platform users with server-side pagination. */
 export default function Users() {
-    // Defer list requests so typing remains responsive while a new page loads.
-    const [filters, setFilters] = useState({ search: '', page: 1 });
-    const { search, page } = useDeferredValue(filters);
+    const { search, pagination, suffix } = useAdminList();
 
-    const [users] = useApi(
-        `/api/v1/users?page=${page}&page_size=25&search=${encodeURIComponent(search.trim())}`,
-        zPageAdminUserSummary
-    );
+    const [users] = useApi(`/api/v1/users${suffix}`, zPageAdminUserSummary);
 
     return (
         <Stack gap={2}>
             <title>Users | LongLink</title>
             <Heading level={1}>Users</Heading>
-            <TextInput
-                label="Search users"
-                placeholder="Search by name or email"
-                value={filters.search}
-                startIcon={<Search />}
-                onChange={(search) => setFilters({ search, page: 1 })}
-            />
+            <TextInput label="Search users" placeholder="Search by name or email" {...search} startIcon={<Search />} />
             <Stack gap={1}>
                 <Table
                     data={users.items}
@@ -75,13 +64,7 @@ export default function Users() {
                     ]}
                 />
                 <Stack as="footer" align="center" paddingBlock={2}>
-                    <Pagination
-                        page={page}
-                        onChange={(page) => setFilters({ ...filters, page })}
-                        totalItems={users.total}
-                        pageSize={25}
-                        variant="pages"
-                    />
+                    <Pagination {...pagination} totalItems={users.total} variant="pages" />
                 </Stack>
             </Stack>
         </Stack>

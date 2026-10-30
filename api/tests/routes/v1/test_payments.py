@@ -60,7 +60,7 @@ PAYMENT_ENDPOINTS = [
                 "status": "paid",
                 "currency": "usd",
                 "created_at": "2026-01-01T00:00:00Z",
-                "invoice_pdf": "https://stripe.example/invoice.pdf",
+                "has_pdf": True,
                 "hosted_invoice_url": "https://stripe.example/invoice",
             }
         ],

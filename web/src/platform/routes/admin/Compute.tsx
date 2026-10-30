@@ -1,8 +1,10 @@
 import { z } from 'zod';
+import { useAdminList } from './use-list';
 import { api, ApiError } from '@/lib/api';
 import { useApiError } from '@/lib/errors';
 import { Form } from '@/components/ui/Form';
 import { Info, Search } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { useApi } from '@/lib/hooks/use-api';
 import { Text } from '@astryxdesign/core/Text';
 import { Dialog } from '@/components/ui/Dialog';
@@ -15,7 +17,6 @@ import { TextArea } from '@astryxdesign/core/TextArea';
 import { Step, Stepper } from '@/components/ui/Stepper';
 import { FileInput } from '@astryxdesign/core/FileInput';
 import { Pagination } from '@astryxdesign/core/Pagination';
-import { useDeferredValue, useEffect, useState } from 'react';
 import { Table, proportional } from '@astryxdesign/core/Table';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 
@@ -26,9 +27,7 @@ const registrationSchema = schemas.zComputeRegistryCreate.extend({
 
 /** Lists registered Compute infrastructure and manages registration and removal. */
 export default function Compute() {
-    // Defer list requests so typing remains responsive while a new page loads.
-    const [filters, setFilters] = useState({ search: '', page: 1 });
-    const { search, page } = useDeferredValue(filters);
+    const { search, pagination, suffix } = useAdminList();
 
     const [dialog, setDialog] = useState<
         | { kind: 'registration' }
@@ -37,7 +36,7 @@ export default function Compute() {
         | null
     >(null);
 
-    const path = `/api/v1/computes?page=${page}&page_size=25&search=${encodeURIComponent(search.trim())}`;
+    const path = `/api/v1/computes${suffix}`;
     const [computes, invalidate] = useApi(path, schemas.zPageComputeRegistryResponse);
 
     // Use current metadata and clear missing selections so returning to a page cannot reopen the dialog.
@@ -55,9 +54,8 @@ export default function Compute() {
             <TextInput
                 label="Search compute"
                 placeholder="Search by name or endpoint"
-                value={filters.search}
+                {...search}
                 startIcon={<Search />}
-                onChange={(search) => setFilters({ search, page: 1 })}
             />
             <Stack gap={1}>
                 <Table
@@ -95,13 +93,7 @@ export default function Compute() {
                     ]}
                 />
                 <Stack as="footer" align="center" paddingBlock={2}>
-                    <Pagination
-                        page={page}
-                        onChange={(page) => setFilters({ ...filters, page })}
-                        totalItems={computes.total}
-                        pageSize={25}
-                        variant="pages"
-                    />
+                    <Pagination {...pagination} totalItems={computes.total} variant="pages" />
                 </Stack>
             </Stack>
             {dialog?.kind === 'registration' && (

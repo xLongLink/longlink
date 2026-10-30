@@ -230,9 +230,9 @@ async def ready(organization_id: UUID) -> bool:
                             instances=organization.database_instances,
                         )
 
-                    # Reassert the desired annotation even after an expired worker's interrupted sleep.
+                    # Existing infrastructure must be ready before using PostgreSQL.
                     else:
-                        await database_resources.resume(cluster, organization_id)
+                        await database_resources.wait_ready(cluster, organization_id)
                     database = await database_resources.connection(organization, cluster)
                     if organization.status != Status.running:
                         await lease.check()

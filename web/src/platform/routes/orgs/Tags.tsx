@@ -186,24 +186,18 @@ function TagForm({
 }) {
     const [name, setName] = useState(tag?.name ?? '');
     const [icon, setIcon] = useState(tag?.icon ?? 'tag');
-    const reportError = useApiError();
 
     /** Saves presentation without changing the tab's filtering or assignments. */
     async function save() {
-        try {
-            const json = schemas.zOrganizationTagWrite.parse({ name: name.trim(), icon });
+        const json = schemas.zOrganizationTagWrite.parse({ name: name.trim(), icon });
 
-            if (tag) {
-                await api.patch(`${base}/tags/${tag.id}`, { json });
-            } else {
-                await api.post(`${base}/tags`, { json });
-            }
-
-            await onSuccess();
-        } catch (failure) {
-            reportError(failure);
-            throw failure;
+        if (tag) {
+            await api.patch(`${base}/tags/${tag.id}`, { json });
+        } else {
+            await api.post(`${base}/tags`, { json });
         }
+
+        await onSuccess();
     }
 
     return (
@@ -278,18 +272,12 @@ export function SolutionTags({
     onClose: () => void;
 }) {
     const [tagIds, setTagIds] = useState(solution.tag_ids ?? []);
-    const reportError = useApiError();
 
     /** Submits the complete selection so clearing all tags is supported. */
     async function save() {
-        try {
-            const json = schemas.zSolutionTagsWrite.parse({ tag_ids: tagIds });
-            await api.patch(`${base}/solutions/${solution.id}/tags`, { json });
-            await onSuccess();
-        } catch (failure) {
-            reportError(failure);
-            throw failure;
-        }
+        const json = schemas.zSolutionTagsWrite.parse({ tag_ids: tagIds });
+        await api.patch(`${base}/solutions/${solution.id}/tags`, { json });
+        await onSuccess();
     }
 
     return (

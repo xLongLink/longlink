@@ -1,4 +1,6 @@
 import { api } from '@/lib/api';
+import { useState } from 'react';
+import { useAdminList } from './use-list';
 import { Info, Search } from 'lucide-react';
 import { useApi } from '@/lib/hooks/use-api';
 import { Link } from '@astryxdesign/core/Link';
@@ -7,7 +9,6 @@ import { Avatar } from '@/components/ui/Avatar';
 import { Dialog } from '@/components/ui/Dialog';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
-import { useDeferredValue, useState } from 'react';
 import { Heading } from '@astryxdesign/core/Heading';
 import { TextInput } from '@/components/ui/TextInput';
 import { DeletionDialog } from '@/components/Deletion';
@@ -17,18 +18,13 @@ import { zPageSolutionResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 
 /** Lists Solutions and manages administrator metadata and deletion dialogs. */
 export default function Solutions() {
-    // Defer list requests so typing remains responsive while a new page loads.
-    const [filters, setFilters] = useState({ search: '', page: 1 });
-    const { search, page } = useDeferredValue(filters);
+    const { search, pagination, suffix } = useAdminList();
 
     const [dialog, setDialog] = useState<
         { kind: 'metadata'; id: string } | { kind: 'deletion'; item: { id: string; name: string } } | null
     >(null);
 
-    const [solutions, invalidate] = useApi(
-        `/api/v1/solutions?page=${page}&page_size=25&search=${encodeURIComponent(search.trim())}`,
-        zPageSolutionResponse
-    );
+    const [solutions, invalidate] = useApi(`/api/v1/solutions${suffix}`, zPageSolutionResponse);
 
     // Use current metadata and clear missing selections so returning to a page cannot reopen the dialog.
     const metadata = dialog?.kind === 'metadata' ? solutions.items.find((item) => item.id === dialog.id) : undefined;
@@ -42,9 +38,8 @@ export default function Solutions() {
             <TextInput
                 label="Search solutions"
                 placeholder="Search by name, slug, description, or organization"
-                value={filters.search}
+                {...search}
                 startIcon={<Search />}
-                onChange={(search) => setFilters({ search, page: 1 })}
             />
             <Stack gap={1}>
                 <Table
@@ -125,13 +120,7 @@ export default function Solutions() {
                     ]}
                 />
                 <Stack as="footer" align="center" paddingBlock={2}>
-                    <Pagination
-                        page={page}
-                        onChange={(page) => setFilters({ ...filters, page })}
-                        totalItems={solutions.total}
-                        pageSize={25}
-                        variant="pages"
-                    />
+                    <Pagination {...pagination} totalItems={solutions.total} variant="pages" />
                 </Stack>
             </Stack>
             {metadata && (

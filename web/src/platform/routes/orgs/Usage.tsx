@@ -112,10 +112,7 @@ function UsageMeter({
     included: number;
     hasPaymentMethod: boolean;
 }) {
-    const [usage] = useApi(
-        `${base}/${resource}`,
-        resource === 'storage' ? schemas.zOrganizationStorageUsageResponse : schemas.zOrganizationDatabaseUsageResponse
-    );
+    const [usage] = useApi(`${base}/${resource}`, schemas.zOrganizationByteUsage);
 
     // Registered Organizations use their actual provisioned capacity.
     const capacity = hasPaymentMethod ? usage.quota_bytes : included;

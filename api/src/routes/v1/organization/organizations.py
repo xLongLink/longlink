@@ -14,8 +14,6 @@ from src.kubernetes import databases
 from src.environments import env
 from src.models.roles import OrganizationRoles
 from botocore.exceptions import ClientError, BotoCoreError
-from src.models.storages import OrganizationStorageUsageResponse
-from src.models.databases import OrganizationDatabaseUsageResponse
 from src.models.resources import OrganizationSolutionSummary
 from src.database.services import organizations
 from src.kubernetes.client import Kubernetes
@@ -24,6 +22,7 @@ from src.models.organizations import (
     DatabaseState,
     OrganizationUsage,
     OrganizationDetails,
+    OrganizationByteUsage,
     OrganizationMemberUpdate,
     OrganizationInvitationCreate,
 )
@@ -81,9 +80,9 @@ async def get_organization_usage(ctx: Context, membership: auth.OrganizationMemb
     }
 
 
-@router.get("/organizations/{organization_id}/storage", response_model=OrganizationStorageUsageResponse)
+@router.get("/organizations/{organization_id}/storage", response_model=OrganizationByteUsage)
 async def get_organization_storage_usage(ctx: Context, membership: auth.OrganizationMember):
-    """Return live usage for the Organization bucket."""
+    """Return live logical object bytes against the Organization bucket's quota."""
 
     # Load the Organization's immutable storage assignment.
     compute = await organizations.storage_infrastructure(ctx.database, membership.organization_id)
@@ -104,9 +103,9 @@ async def get_organization_storage_usage(ctx: Context, membership: auth.Organiza
     return {"space_used": usage, "quota_bytes": membership.organization.storage_quota_bytes}
 
 
-@router.get("/organizations/{organization_id}/database", response_model=OrganizationDatabaseUsageResponse)
+@router.get("/organizations/{organization_id}/database", response_model=OrganizationByteUsage)
 async def get_organization_database_usage(ctx: Context, membership: auth.OrganizationMember):
-    """Return live PostgreSQL usage against provisioned capacity for an authorized Organization."""
+    """Return PostgreSQL schema and index bytes, excluding WAL, backups, and replicas, against provisioned capacity."""
 
     # Read only the authorized Organization's database assignment before external I/O.
     organization, compute = await organizations.database_infrastructure(ctx.database, membership.organization_id)

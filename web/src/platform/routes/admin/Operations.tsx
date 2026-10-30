@@ -1,10 +1,11 @@
+import { useState } from 'react';
+import { useAdminList } from './use-list';
 import { Info, Search } from 'lucide-react';
 import { useApi } from '@/lib/hooks/use-api';
 import { Text } from '@astryxdesign/core/Text';
 import { Dialog } from '@/components/ui/Dialog';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
-import { useDeferredValue, useState } from 'react';
 import { Heading } from '@astryxdesign/core/Heading';
 import { TextInput } from '@/components/ui/TextInput';
 import { Pagination } from '@astryxdesign/core/Pagination';
@@ -22,15 +23,10 @@ const statuses = { scheduled: 'Planned', active: 'Active', completed: 'Completed
 
 /** Lists operation history and exposes its metadata. */
 export default function Operations() {
-    // Defer list requests so typing remains responsive while a new page loads.
-    const [filters, setFilters] = useState({ search: '', page: 1 });
-    const { search, page } = useDeferredValue(filters);
+    const { search, pagination, suffix } = useAdminList();
     const [metadataId, setMetadataId] = useState<string | null>(null);
 
-    const [operations] = useApi(
-        `/api/v1/operations?page=${page}&page_size=25&search=${encodeURIComponent(search.trim())}`,
-        zPageOperationResponse
-    );
+    const [operations] = useApi(`/api/v1/operations${suffix}`, zPageOperationResponse);
 
     // Use current metadata and clear missing selections so returning to a page cannot reopen the dialog.
     const metadata = operations.items.find((item) => item.id === metadataId);
@@ -44,9 +40,8 @@ export default function Operations() {
             <TextInput
                 label="Search operations"
                 placeholder="Search by operation kind or resource name"
-                value={filters.search}
+                {...search}
                 startIcon={<Search />}
-                onChange={(search) => setFilters({ search, page: 1 })}
             />
             <Stack gap={1}>
                 <Table
@@ -100,13 +95,7 @@ export default function Operations() {
                     ]}
                 />
                 <Stack as="footer" align="center" paddingBlock={2}>
-                    <Pagination
-                        page={page}
-                        onChange={(page) => setFilters({ ...filters, page })}
-                        totalItems={operations.total}
-                        pageSize={25}
-                        variant="pages"
-                    />
+                    <Pagination {...pagination} totalItems={operations.total} variant="pages" />
                 </Stack>
             </Stack>
             {metadata && (
