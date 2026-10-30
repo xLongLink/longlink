@@ -6,7 +6,6 @@ from datetime import UTC, datetime
 from sqlmodel import col
 from src.utils import stripe
 from sqlalchemy import select
-from src.context import Context
 from src.environments import env
 from fastapi.responses import Response
 from src.models.payments import PaymentCard, PaymentInvoice, PaymentRedirect
@@ -17,11 +16,11 @@ router = APIRouter()
 
 
 @router.get("/organizations/{organization_id}/cards", response_model=list[PaymentCard])
-async def get_cards(ctx: Context, membership: auth.OrganizationOwner):
+async def get_cards(session: auth.Session, membership: auth.OrganizationOwner):
     """List masked saved cards for the current Organization owner."""
 
     # Resolve ownership before accessing the Organization's Stripe customer.
-    customer_id = await ctx.database.scalar(
+    customer_id = await session.scalar(
         select(col(Organization.stripe_customer_id)).where(col(Organization.id) == membership.organization_id)
     )
     if not env.stripe_enabled or customer_id is None:
@@ -52,11 +51,11 @@ async def get_cards(ctx: Context, membership: auth.OrganizationOwner):
 
 
 @router.get("/organizations/{organization_id}/invoices", response_model=list[PaymentInvoice])
-async def get_invoices(ctx: Context, membership: auth.OrganizationOwner):
+async def get_invoices(session: auth.Session, membership: auth.OrganizationOwner):
     """List issued invoices and hosted documents for the current Organization owner."""
 
     # Keep accounting documents private to owners of the mapped Organization.
-    customer_id = await ctx.database.scalar(
+    customer_id = await session.scalar(
         select(col(Organization.stripe_customer_id)).where(col(Organization.id) == membership.organization_id)
     )
     if not env.stripe_enabled or customer_id is None:
@@ -89,11 +88,11 @@ async def get_invoices(ctx: Context, membership: auth.OrganizationOwner):
     response_model=None,
     responses={200: {"content": {"application/pdf": {"schema": {"type": "string", "format": "binary"}}}}},
 )
-async def get_invoice_pdf(invoice_id: str, ctx: Context, membership: auth.OrganizationOwner):
+async def get_invoice_pdf(invoice_id: str, session: auth.Session, membership: auth.OrganizationOwner):
     """Display an owner's invoice PDF inline without forwarding Stripe's download headers."""
 
     # Authorize the invoice against this Organization's Stripe customer.
-    customer_id = await ctx.database.scalar(
+    customer_id = await session.scalar(
         select(col(Organization.stripe_customer_id)).where(col(Organization.id) == membership.organization_id)
     )
     if not env.stripe_enabled or customer_id is None:
@@ -111,7 +110,6 @@ async def get_invoice_pdf(invoice_id: str, ctx: Context, membership: auth.Organi
         raise HTTPException(status_code=502, detail="Invoice PDF unavailable")
     content = bytearray()
     try:
-
         # Fetch the provider PDF within bounded network and response-size limits.
         async with asyncio.timeout(30), httpx2.AsyncClient(timeout=15, trust_env=False, follow_redirects=True) as client:
             async with client.stream("GET", url) as response:
@@ -119,7 +117,6 @@ async def get_invoice_pdf(invoice_id: str, ctx: Context, membership: auth.Organi
 
                 # Enforce the PDF size ceiling while reading the provider response.
                 async for chunk in response.aiter_bytes():
-
                     # Reject oversized PDFs before extending the response buffer.
                     if len(content) + len(chunk) > 10 * 1024**2:
                         raise HTTPException(status_code=502, detail="Invoice PDF is too large")
@@ -144,11 +141,11 @@ async def get_invoice_pdf(invoice_id: str, ctx: Context, membership: auth.Organi
 
 
 @router.post("/organizations/{organization_id}/cards/checkout", response_model=PaymentRedirect)
-async def create_checkout(ctx: Context, membership: auth.OrganizationOwner):
+async def create_checkout(session: auth.Session, membership: auth.OrganizationOwner):
     """Save an invoice payment method without taking an immediate payment."""
 
     # The service serializes card registration and revalidates ownership across its commits.
     async with stripe.client() as connection:
-        url = await payments.checkout(ctx.database, membership.organization_id, membership.user_id, connection)
-    await ctx.database.commit()
+        url = await payments.checkout(session, membership.organization_id, membership.user_id, connection)
+    await session.commit()
     return {"url": url}

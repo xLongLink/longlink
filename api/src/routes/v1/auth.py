@@ -2,10 +2,10 @@ import jwt
 import hmac
 import asyncio
 import secrets
+from src import auth
 from typing import Annotated
 from fastapi import Body, Query, Cookie, Header, Response, APIRouter, HTTPException, BackgroundTasks
 from src.utils import mail, oauth, token, cookies
-from src.context import Context
 from longlink.types import Email
 from sqlalchemy.exc import IntegrityError
 from src.models.auth import EmailPayload, TokenPayload, PasswordLogin, OAuthAvailability, RegistrationComplete, PasswordResetComplete
@@ -91,7 +91,7 @@ async def start_oauth_login(provider: oauth.OAuthProvider, return_to: Annotated[
 
 @router.get("/auth/oauth/{provider}/callback", response_class=RedirectResponse, response_model=None, include_in_schema=False)
 async def complete_oauth_login(
-    ctx: Context,
+    session: auth.Session,
     provider: oauth.OAuthProvider,
     code: Annotated[str | None, Query(max_length=4096)] = None,
     state: Annotated[str | None, Query(max_length=512)] = None,
@@ -114,11 +114,11 @@ async def complete_oauth_login(
         return oauth_failure_response()
 
     # Resolve a stable provider identity before safely linking verified email ownership.
-    user = await users.by_oauth_identity(ctx.database, provider, identity.subject)
+    user = await users.by_oauth_identity(session, provider, identity.subject)
     if user is None:
-        user = await users.by_email(ctx.database, identity.email)
+        user = await users.by_email(session, identity.email)
         if user is None:
-            user = await users.register(ctx.database, identity.name, identity.email, secrets.token_urlsafe(48), identity.avatar)
+            user = await users.register(session, identity.name, identity.email, secrets.token_urlsafe(48), identity.avatar)
 
         # Persist the provider subject only after resolving the local account.
         if provider == "google":
@@ -135,7 +135,7 @@ async def complete_oauth_login(
     destination = oauth.login_destination(return_to)
     response = RedirectResponse(f"{env.PUBLIC_URL}{destination}", status_code=302)
     try:
-        await set_auth_session(ctx.database, response, user)
+        await set_auth_session(session, response, user)
     except IntegrityError:
         return oauth_failure_response()
 
@@ -146,11 +146,11 @@ async def complete_oauth_login(
 
 # Deployment rate limiting bounds unauthenticated credential work before it reaches the API.
 @router.post("/auth/password/login", status_code=204)
-async def password_login(ctx: Context, payload: PasswordLogin):
+async def password_login(session: auth.Session, response: Response, payload: PasswordLogin):
     """Authenticate a local account and create one signed browser session."""
 
     # Load the canonical account identity before verifying its credential.
-    user = await users.by_email(ctx.database, payload.email)
+    user = await users.by_email(session, payload.email)
     if user is None:
         await asyncio.to_thread(users.PASSWORD_HASH.hash, payload.password)
         raise HTTPException(status_code=400, detail="Invalid email or password.")
@@ -161,7 +161,7 @@ async def password_login(ctx: Context, payload: PasswordLogin):
         raise HTTPException(status_code=400, detail="Invalid email or password.")
 
     # Issue the signed browser session for the verified account.
-    await set_auth_session(ctx.database, ctx.response, user)
+    await set_auth_session(session, response, user)
 
 
 @router.post("/auth/logout", status_code=204, include_in_schema=False)
@@ -178,11 +178,11 @@ async def logout(response: Response, origin: str | None = Header(default=None)):
 
 # Deployment rate limiting bounds unauthenticated email delivery requests before they reach the API.
 @router.post("/auth/forgot-password", response_model=None, status_code=202)
-async def request_password_reset(ctx: Context, email: Annotated[Email, Body(embed=True)], background_tasks: BackgroundTasks):
+async def request_password_reset(session: auth.Session, email: Annotated[Email, Body(embed=True)], background_tasks: BackgroundTasks):
     """Queue password reset delivery without disclosing account existence."""
 
     # Missing and inactive accounts receive the same response as eligible accounts.
-    user = await users.by_email(ctx.database, email)
+    user = await users.by_email(session, email)
     if user is None or user.deleted_at is not None:
         return
 
@@ -192,53 +192,54 @@ async def request_password_reset(ctx: Context, email: Annotated[Email, Body(embe
 
 
 @router.post("/auth/reset-password/verify", status_code=204)
-async def verify_password_reset_token(ctx: Context, payload: TokenPayload):
+async def verify_password_reset_token(session: auth.Session, response: Response, payload: TokenPayload):
     """Exchange an emailed reset bearer token for browser-only proof."""
 
     # Validate the bearer credential before moving it into a restricted cookie.
-    await password_reset_user(ctx.database, payload.token)
-    cookies.set_browser_cookie(ctx.response, cookies.PASSWORD_RESET_COOKIE, payload.token, 900)
+    await password_reset_user(session, payload.token)
+    cookies.set_browser_cookie(response, cookies.PASSWORD_RESET_COOKIE, payload.token, 900)
 
 
 @router.get("/auth/reset-password/setup", status_code=204)
 async def get_password_reset_setup(
-    ctx: Context, password_reset_token: str | None = Cookie(default=None, alias=cookies.PASSWORD_RESET_COOKIE)
+    session: auth.Session, response: Response, password_reset_token: str | None = Cookie(default=None, alias=cookies.PASSWORD_RESET_COOKIE)
 ):
     """Restore password reset state from browser-only proof."""
 
     # Refreshes validate only the restricted cookie, never an exposed URL credential.
-    await password_reset_user(ctx.database, password_reset_token or "")
-    ctx.response.headers["Cache-Control"] = "no-store"
+    await password_reset_user(session, password_reset_token or "")
+    response.headers["Cache-Control"] = "no-store"
 
 
 @router.post("/auth/reset-password", status_code=204)
 async def reset_password(
-    ctx: Context,
+    session: auth.Session,
+    response: Response,
     payload: PasswordResetComplete,
     password_reset_token: str | None = Cookie(default=None, alias=cookies.PASSWORD_RESET_COOKIE),
 ):
     """Replace a password using browser-only reset proof."""
 
     # Resolve the active account from one valid, current password-reset credential.
-    user = await password_reset_user(ctx.database, password_reset_token or "")
+    user = await password_reset_user(session, password_reset_token or "")
 
     # Replace the credential so password-bound browser sessions become invalid.
     with audit.actor(user.id):
         user.password = await asyncio.to_thread(users.PASSWORD_HASH.hash, payload.password)
-        await ctx.database.commit()
+        await session.commit()
 
     # Remove reset proof only after the replacement password commits.
-    ctx.response.headers["Cache-Control"] = "no-store"
-    cookies.delete_browser_cookie(ctx.response, cookies.PASSWORD_RESET_COOKIE)
+    response.headers["Cache-Control"] = "no-store"
+    cookies.delete_browser_cookie(response, cookies.PASSWORD_RESET_COOKIE)
 
 
 # Deployment rate limiting bounds unauthenticated email delivery requests before they reach the API.
 @router.post("/auth/register", response_model=None, status_code=202)
-async def request_registration(ctx: Context, email: Annotated[Email, Body(embed=True)], background_tasks: BackgroundTasks):
+async def request_registration(session: auth.Session, email: Annotated[Email, Body(embed=True)], background_tasks: BackgroundTasks):
     """Send a stateless registration link when the email has no account."""
 
     # Keep the response non-enumerating while avoiding registration mail for existing accounts.
-    if await users.by_email(ctx.database, email) is not None:
+    if await users.by_email(session, email) is not None:
         return
 
     # Email proof contains no password or pending user identifier.
@@ -270,7 +271,10 @@ async def get_registration_setup(
 
 @router.post("/auth/register/complete", response_model=UserSummary, status_code=201)
 async def complete_registration(
-    ctx: Context, payload: RegistrationComplete, registration_token: str | None = Cookie(default=None, alias=cookies.REGISTRATION_COOKIE)
+    session: auth.Session,
+    response: Response,
+    payload: RegistrationComplete,
+    registration_token: str | None = Cookie(default=None, alias=cookies.REGISTRATION_COOKIE),
 ):
     """Create and authenticate an account after stateless email verification."""
 
@@ -279,13 +283,13 @@ async def complete_registration(
 
     # Commit account creation before publishing browser authentication.
     try:
-        user = await users.register(ctx.database, payload.name, email, payload.password)
-        await set_auth_session(ctx.database, ctx.response, user)
+        user = await users.register(session, payload.name, email, payload.password)
+        await set_auth_session(session, response, user)
     except IntegrityError:
         raise HTTPException(
             status_code=409, detail="An account with this email already exists. Sign in or reset your password to continue."
         )
 
     # Remove email verification proof only after account creation commits.
-    cookies.delete_browser_cookie(ctx.response, cookies.REGISTRATION_COOKIE)
+    cookies.delete_browser_cookie(response, cookies.REGISTRATION_COOKIE)
     return user

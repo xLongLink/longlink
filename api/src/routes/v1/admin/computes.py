@@ -1,8 +1,8 @@
 import asyncio
+from src import auth
 from kr8s import ServerError, NotFoundError
 from uuid import UUID
 from fastapi import Query, Depends, APIRouter, HTTPException
-from src.context import Context
 from sqlalchemy.exc import IntegrityError
 from src.kubernetes import tls, gateway, storageclasses
 from collections.abc import Sequence
@@ -17,19 +17,17 @@ router = APIRouter()
 
 
 @router.post("/computes", response_model=ComputeRegistryResponse, status_code=201)
-async def create_compute_registry(ctx: Context, payload: ComputeRegistryCreate) -> ComputeRegistry:
+async def create_compute_registry(session: auth.Session, payload: ComputeRegistryCreate) -> ComputeRegistry:
     """Register a compute target after verifying its infrastructure inline."""
 
     # Bound cluster discovery, verification, and connection cleanup so failures return before the browser times out.
     cluster = Kubernetes(payload.kubeconfig)
     try:
         async with asyncio.timeout(7):
-
             # Verify the cluster identity before accepting its service endpoints.
             async with cluster:
                 cluster_uid = await cluster.cluster_uid()
                 try:
-
                     # Reject unusable storage and trust configuration before persisting a Compute.
                     database_storage_class = await storageclasses.resolve(cluster)
                     credentials = await Storage.controller_credentials(cluster)
@@ -78,11 +76,11 @@ async def create_compute_registry(ctx: Context, payload: ComputeRegistryCreate) 
         )
 
     # Persist the verified connection as immediately assignable.
-    ctx.database.add(candidate)
+    session.add(candidate)
 
     # Translate duplicate names or physical clusters to one stable API conflict.
     try:
-        await ctx.database.commit()
+        await session.commit()
     except IntegrityError:
         raise HTTPException(status_code=409, detail="Compute registry already exists")
     return candidate
@@ -90,19 +88,19 @@ async def create_compute_registry(ctx: Context, payload: ComputeRegistryCreate) 
 
 @router.get("/computes", response_model=Page[ComputeRegistryResponse])
 async def list_compute_registries(
-    ctx: Context, pagination: Pagination = Depends(), search: str = Query(default="", max_length=200)
+    session: auth.Session, pagination: Pagination = Depends(), search: str = Query(default="", max_length=200)
 ) -> dict[str, Sequence[ComputeRegistry] | int]:
     """Return all registered compute backends."""
 
     # Search the full administrator listing before pagination.
-    items, total = await compute.fetch(ctx.database, pagination, search.strip())
+    items, total = await compute.fetch(session, pagination, search.strip())
     return {"items": items, "total": total}
 
 
 @router.delete("/computes/{registry_id}", status_code=204)
-async def delete_compute_registry(ctx: Context, registry_id: UUID) -> None:
+async def delete_compute_registry(session: auth.Session, registry_id: UUID) -> None:
     """Remove one unused compute registration without changing its cluster."""
 
     # Remove only a registered Compute with no Organization dependency.
-    await compute.delete(ctx.database, registry_id)
-    await ctx.database.commit()
+    await compute.delete(session, registry_id)
+    await session.commit()

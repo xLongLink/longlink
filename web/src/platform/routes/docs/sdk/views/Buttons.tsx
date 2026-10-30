@@ -3,7 +3,6 @@ import ViewLayout from './ViewLayout';
 import { Text } from '@astryxdesign/core/Text';
 import { Button } from '@/components/ui/Button';
 import { Stack } from '@astryxdesign/core/Stack';
-import { ButtonGroup } from '@/components/ui/ButtonGroup';
 
 /** Documents buttons and grouped button actions in LongLink Views. */
 export default function ButtonsPage() {
@@ -123,18 +122,6 @@ export default function ButtonsPage() {
   );
 }`,
                 },
-                {
-                    title: 'ButtonGroup',
-                    preview: <ButtonGroupExample />,
-                    code: `function Example() {
-  return (
-    <ButtonGroup label="Actions">
-      <Button label="Save" />
-      <Button label="Cancel" variant="ghost" />
-    </ButtonGroup>
-  );
-}`,
-                },
             ]}
         />
     );
@@ -152,23 +139,6 @@ export function ButtonExample() {
                 <Button label="Edit" size="sm" onClick={() => setAction('Editing order')} />
                 <Button label="View" size="sm" variant="ghost" onClick={() => setAction('Viewing order')} />
             </Stack>
-            {action && <Text role="status">{action}</Text>}
-        </Stack>
-    );
-}
-
-/** Demonstrates grouped actions with local feedback. */
-function ButtonGroupExample() {
-    const [action, setAction] = useState('');
-
-    // Simulate editing actions without changing the clipboard.
-    return (
-        <Stack gap={2}>
-            <ButtonGroup label="Text editing" size="sm">
-                <Button label="Copy" onClick={() => setAction('Copied')} />
-                <Button label="Cut" onClick={() => setAction('Cut')} />
-                <Button label="Paste" onClick={() => setAction('Pasted')} />
-            </ButtonGroup>
             {action && <Text role="status">{action}</Text>}
         </Stack>
     );

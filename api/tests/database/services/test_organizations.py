@@ -90,9 +90,13 @@ async def test_membership_mutation_services_revalidate_demoted_administrator_acc
                 administrator.id,
             )
 
+        # Release the rejected command's write reservation before the next request.
+        await create_invitation_session.rollback()
+
         # Cached membership must not authorize a command after demotion.
         with pytest.raises(HTTPException, match="403: Permission required"):
             await organizations.revoke_invitation(revoke_invitation_session, organization.id, invitation_id, administrator.id)
+        await revoke_invitation_session.rollback()
         with pytest.raises(HTTPException, match="403: Permission required"):
             await organizations.update_member_role(role_session, organization.id, owner.id, OrganizationRoles.admin, administrator.id)
 

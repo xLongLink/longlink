@@ -399,25 +399,11 @@ async def lock_active_access(
     return organization, membership
 
 
-async def _lock_active_membership(
-    session: AsyncSession, user_id: UUID, organization_id: UUID, minimum_role: OrganizationRoles
-) -> UserOrganization:
-    """Lock an active Organization before refreshing and authorizing its caller membership."""
-
-    # Lock and refresh the Organization before checking active access.
-    organization = await session.get(Organization, organization_id, populate_existing=True, with_for_update=True)
-    if organization is None or organization.deleted_at is not None:
-        raise HTTPException(status_code=403, detail="Access required")
-
-    # Refresh and authorize caller access only after locking the active Organization.
-    return await locked_membership(session, user_id, organization_id, minimum_role)
-
-
 async def update_member_role(session: AsyncSession, organization_id: UUID, member_id: UUID, role: OrganizationRoles, user_id: UUID) -> None:
     """Change one active Organization membership role."""
 
     # Lock the Organization before revalidating the caller's active access.
-    caller_membership = await _lock_active_membership(session, user_id, organization_id, OrganizationRoles.admin)
+    _, caller_membership = await lock_active_access(session, user_id, organization_id, OrganizationRoles.admin)
 
     # Lock the member role after locking the Organization and caller access.
     statement = (
@@ -605,7 +591,6 @@ async def create_invitation(session: AsyncSession, organization_id: UUID, payloa
     # Resolve concurrent re-invites to the one database-enforced active grant.
     if invitation is None:
         try:
-
             # Isolate invitation creation so uniqueness races can be recovered.
             async with session.begin_nested():
                 invitation = OrganizationInvitation(organization_id=organization_id, email=payload.email, role=payload.role)
@@ -629,7 +614,7 @@ async def revoke_invitation(session: AsyncSession, organization_id: UUID, invita
     """Authorize and revoke one active Organization invitation."""
 
     # Lock the Organization before revalidating the caller's active invitation permission.
-    membership = await _lock_active_membership(session, user_id, organization_id, OrganizationRoles.maintain)
+    _, membership = await lock_active_access(session, user_id, organization_id, OrganizationRoles.maintain)
 
     # Resolve only an invitation belonging to the locked Organization.
     invitation = await session.get(OrganizationInvitation, invitation_id, with_for_update=True)
