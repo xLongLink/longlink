@@ -4,7 +4,6 @@ from uuid import UUID
 from typing import TYPE_CHECKING, cast
 from src.utils import postgres, templates
 from src.kubernetes import tls, utils, databases, namespace
-from src.models.types import DatabaseSSLMode
 from importlib.resources import files
 from kr8s.asyncio.objects import Pod, Secret, ResourceQuota, new_class, object_from_spec
 from src.database.models.organizations import Organization
@@ -138,7 +137,6 @@ async def connection(organization: Organization, cluster: "Kubernetes", *, certi
         port=port,
         username="postgres",
         password=organization.database_password,
-        sslmode=DatabaseSSLMode.require,
         certificate=certificate,
         # Connect through the tunnel while validating the cluster hostname.
         hostaddr="127.0.0.1",

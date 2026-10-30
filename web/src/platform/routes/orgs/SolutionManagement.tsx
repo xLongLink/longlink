@@ -6,7 +6,6 @@ import { useApi } from '@/lib/hooks/use-api';
 import CreateSolution from './CreateSolution';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
-import { useSearchParams } from 'react-router';
 import { Dialog } from '@/components/ui/Dialog';
 import { OpenAI } from '@/components/svg/OpenAI';
 import { Button } from '@astryxdesign/core/Button';
@@ -22,6 +21,7 @@ import { Stack, StackItem } from '@astryxdesign/core/Stack';
 import { Table, proportional } from '@astryxdesign/core/Table';
 import DeploymentReview, { type Update } from './DeploymentReview';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
+import type { OrganizationContext } from '@/platform/layouts/Organization';
 import { Layout, LayoutPanel, LayoutContent } from '@astryxdesign/core/Layout';
 import { ExternalLink, Logs, Plug, Plus, RefreshCw, Tags, Trash } from 'lucide-react';
 
@@ -37,10 +37,11 @@ type SolutionAction =
 /** Owns Solution loading and dialogs for the overview and active settings section. */
 export default function SolutionManagement({
     organization,
+    tags,
+    activeTag,
     canMaintain,
     presentation,
-}: {
-    organization: z.output<typeof schemas.zUserOrganizationMembership>['organization'];
+}: Pick<OrganizationContext, 'organization' | 'tags' | 'activeTag'> & {
     canMaintain: boolean;
     presentation: 'overview' | 'settings';
 }) {
@@ -50,14 +51,7 @@ export default function SolutionManagement({
 
     // Keep solution refreshes scoped to the section's resource.
     const [solutions, invalidateSolutions] = useApi(`${base}/solutions`, schemas.zOrganizationSolutionSummary.array());
-    const [tags] = useApi(`${base}/tags`, schemas.zOrganizationTagResponse.array());
-    const [searchParams] = useSearchParams();
     const onboarding = presentation === 'overview' && solutions.length === 0;
-
-    // Deleted or unknown tab links select the first remaining saved filter.
-    const requestedTag = searchParams.get('tag');
-
-    const activeTag = tags.find((tag) => tag.id === requestedTag) ?? tags[0];
 
     const categoryName = activeTag?.name ?? 'Solutions';
 

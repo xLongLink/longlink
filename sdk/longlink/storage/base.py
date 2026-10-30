@@ -2,7 +2,7 @@ import fsspec
 import weakref
 from uuid import uuid4
 from pathlib import Path, PurePosixPath
-from contextlib import ExitStack
+from contextlib import ExitStack, nullcontext
 from fsspec.spec import AbstractFileSystem
 from longlink.storage import tls
 from longlink.utils.settings import Envs
@@ -43,7 +43,9 @@ def create_fs(settings: Envs) -> AbstractFileSystem:
 
         # s3fs connects lazily, so transfer CA cleanup only after constructing its owning filesystem.
         with ExitStack() as files:
-            certificate = files.enter_context(tls.verified_location(settings.STORAGE_CERTIFICATE))
+            certificate = files.enter_context(
+                tls.certificate_file(settings.STORAGE_CERTIFICATE) if settings.STORAGE_CERTIFICATE is not None else nullcontext(None)
+            )
             filesystem = fsspec.filesystem(
                 "s3",
                 endpoint_url=settings.STORAGE_ENDPOINT_URL,

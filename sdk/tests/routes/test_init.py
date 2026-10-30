@@ -21,4 +21,8 @@ def test_managed_routes_return_liveness_and_the_registered_view_catalog() -> Non
     assert health.status_code == 200
     assert health.json() == {"ok": True}
     assert views.status_code == 200
-    assert views.json() == {"views": [{"path": "views/home", "route": "/home"}], "runtime": {"version": "a" * 64}}
+    assert views.json() == {
+        "views": [{"path": "views/home", "route": "/home"}],
+        "runtime": {"version": "a" * 64},
+        "tabs": [{"route": "/home"}],
+    }

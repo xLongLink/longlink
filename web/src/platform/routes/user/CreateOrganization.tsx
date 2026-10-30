@@ -1,16 +1,17 @@
+import { z } from 'zod';
 import { api } from '@/lib/api';
-import { useState } from 'react';
+import { Form } from '@/components/ui/Form';
 import { Text } from '@astryxdesign/core/Text';
 import { Dialog } from '@/components/ui/Dialog';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
 import { Heading } from '@astryxdesign/core/Heading';
+import { TextInput } from '@/components/ui/TextInput';
 import { Illustration } from '@/components/Illustration';
-import { TextInput } from '@astryxdesign/core/TextInput';
 import { zOrganizationCreate } from '@/lib/generated/platform-api-v1/zod.gen';
 import { Layout, LayoutPanel, LayoutContent } from '@astryxdesign/core/Layout';
 
-/** Owns the creation draft and refreshes memberships after a successful request. */
+/** Refreshes memberships after a successful organization creation request. */
 export default function CreateOrganization({
     onClose,
     invalidate,
@@ -18,14 +19,13 @@ export default function CreateOrganization({
     onClose: () => void;
     invalidate: () => Promise<void>;
 }) {
-    const [name, setName] = useState('');
-
     /** Creates the organization and refreshes its memberships. */
-    async function createOrganization() {
-        if (!name.trim()) return;
+    async function createOrganization(data: FormData) {
+        // Parse the form-owned name before applying organization request constraints.
+        const name = z.string().trim().parse(data.get('name'));
 
         // Close only after creation and the membership refresh succeed.
-        await api.post('/api/v1/organizations', { json: zOrganizationCreate.parse({ name: name.trim() }) });
+        await api.post('/api/v1/organizations', { json: zOrganizationCreate.parse({ name }) });
         await invalidate();
         onClose();
     }
@@ -64,7 +64,7 @@ export default function CreateOrganization({
                                 maxWidth="100%"
                                 className="mx-auto"
                             >
-                                <form action={createOrganization}>
+                                <Form action={createOrganization}>
                                     <Stack gap={10}>
                                         <Stack gap={2} align="center">
                                             <Illustration
@@ -88,22 +88,19 @@ export default function CreateOrganization({
                                         <Stack gap={4} width={0} className="min-w-full">
                                             <TextInput
                                                 label="Name"
-                                                value={name}
+                                                name="name"
                                                 placeholder="Example LongLink"
-                                                isRequired
-                                                onChange={setName}
-                                                width="100%"
+                                                required
                                             />
                                             <Button
                                                 label="Create organization"
                                                 variant="primary"
                                                 type="submit"
                                                 width="100%"
-                                                isDisabled={!name.trim()}
                                             />
                                         </Stack>
                                     </Stack>
-                                </form>
+                                </Form>
                             </Stack>
                         </LayoutContent>
                     }

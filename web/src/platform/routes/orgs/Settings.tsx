@@ -27,6 +27,7 @@ import { useLocation, useOutletContext } from 'react-router';
 import { Table, proportional } from '@astryxdesign/core/Table';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { SideNav, SideNavSection } from '@astryxdesign/core/SideNav';
+import type { OrganizationContext } from '@/platform/layouts/Organization';
 import { Layout, LayoutPanel, LayoutContent } from '@astryxdesign/core/Layout';
 import { Dialog as AstryxDialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import { ArrowUp, Boxes, Building2, CheckCheck, CreditCard, EyeOff, Users, Wrench } from 'lucide-react';
@@ -49,7 +50,7 @@ const peopleSections = [
 
 /** Shares organization identity and permissions while sections own resource lifetimes. */
 export default function OrganizationSettings() {
-    const membership = useOutletContext<z.output<typeof schemas.zUserOrganizationMembership>>();
+    const membership = useOutletContext<OrganizationContext>();
 
     const base = `/api/v1/organizations/${membership.organization.id}`;
     const location = useLocation();
@@ -158,6 +159,8 @@ export default function OrganizationSettings() {
                         ) : section === 'solutions' ? (
                             <SolutionManagement
                                 organization={membership.organization}
+                                tags={membership.tags}
+                                activeTag={membership.activeTag}
                                 canMaintain={canMaintain}
                                 presentation="settings"
                             />

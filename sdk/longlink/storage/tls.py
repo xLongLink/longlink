@@ -18,19 +18,6 @@ def certificate_file(pem: str) -> Generator[str]:
         yield certificate.name
 
 
-@contextmanager
-def verified_location(pem: str | None) -> Generator[str | None]:
-    """Yield a CA filename for private endpoints while keeping public trust as None."""
-
-    # Keep the no-certificate path explicit so callers can distinguish default trust.
-    if pem is None:
-        yield None
-        return
-
-    with certificate_file(pem) as filename:
-        yield filename
-
-
 class Session(AIOHTTPSession):
     """Require hostname checks as well as CA checks on asynchronous S3 connections."""
 

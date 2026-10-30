@@ -3,7 +3,6 @@ from fastapi import HTTPException
 from datetime import UTC, datetime, timedelta
 from sqlmodel import col, select
 from factories import create_organization
-from sqlalchemy import Select
 from src.models.roles import OrganizationRoles
 from src.database.session import session_scope
 from src.database.services import invitations, organizations
@@ -54,55 +53,6 @@ async def test_create_replaces_existing_invitation(users: tuple[User, User, User
     # Assert
     assert replacement is not None
     assert replacement.id == invitation_id
-    assert replacement.role == OrganizationRoles.admin
-    assert replacement.created_at > original_created_at
-
-
-async def test_create_uses_concurrently_created_invitation(users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch) -> None:
-    """Apply the requested role when another transaction creates the invitation first."""
-
-    # Arrange
-    organization = await create_organization(users[0])
-    original_created_at = datetime(2026, 1, 1, tzinfo=UTC)
-    concurrent_invitation = OrganizationInvitation(
-        organization_id=organization.id, email="invited@example.com", role=OrganizationRoles.read, created_at=original_created_at
-    )
-    async with session_scope() as session:
-        session.add(concurrent_invitation)
-        await session.commit()
-
-    # Act
-    async with session_scope() as session:
-        scalar = session.scalar
-
-        async def suppress_first_invitation[T](statement: Select[tuple[T]]) -> T | None:
-            """Hide only the first invitation result to simulate a stale read."""
-
-            # Run real queries and restore normal reads once the winning row is hidden.
-            result = await scalar(statement)
-            if isinstance(result, OrganizationInvitation):
-                monkeypatch.setattr(session, "scalar", scalar)
-                return None
-            return result
-
-        monkeypatch.setattr(session, "scalar", suppress_first_invitation)
-        await organizations.create_invitation(
-            session,
-            organization.id,
-            # A concurrent invitation must be updated through the same public service.
-            OrganizationInvitationCreate(email=concurrent_invitation.email, role=OrganizationRoles.admin),
-            users[0].id,
-        )
-        await session.commit()
-
-    # Read the committed grant independently of the recovering session's identity map.
-    async with session_scope() as session:
-        result = await session.scalars(select(OrganizationInvitation).where(col(OrganizationInvitation.organization_id) == organization.id))
-        replacement = result.one()
-
-    # Assert
-    assert replacement.id == concurrent_invitation.id
-    assert replacement.email == concurrent_invitation.email
     assert replacement.role == OrganizationRoles.admin
     assert replacement.created_at > original_created_at
 

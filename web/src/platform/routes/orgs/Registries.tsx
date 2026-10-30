@@ -10,9 +10,9 @@ import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
 import { Divider } from '@astryxdesign/core/Divider';
 import { Heading } from '@astryxdesign/core/Heading';
+import { TextInput } from '@/components/ui/TextInput';
 import { DeletionDialog } from '@/components/Deletion';
 import { Illustration } from '@/components/Illustration';
-import { TextInput } from '@astryxdesign/core/TextInput';
 import { Table, proportional } from '@astryxdesign/core/Table';
 import { Layout, LayoutContent } from '@astryxdesign/core/Layout';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
@@ -108,14 +108,13 @@ function RegistryForm({
     invalidate: () => Promise<void>;
     onClose: () => void;
 }) {
-    const [credential, setCredential] = useState('');
     const reportError = useApiError();
 
     /** Saves credentials and queues synchronization of Kubernetes pull secrets. */
-    async function save() {
+    async function save(data: FormData) {
         // Submit new credentials without loading saved tokens.
         try {
-            const json = schemas.zRegistryCreateWritable.parse({ credential });
+            const json = schemas.zRegistryCreateWritable.parse({ credential: data.get('credential') });
             await api.post(`${base}/registries`, { json });
             await invalidate();
             onClose();
@@ -163,29 +162,23 @@ function RegistryForm({
                                         </Text>
                                     </Stack>
                                 </Stack>
-                                <Form action={save} submitDisabled={!credential.trim()}>
+                                <Form action={save}>
                                     <Stack gap={3}>
                                         <Text as="p">GitHub Container Registry (ghcr.io)</Text>
                                         <Stack className="[&_.astryx-field-label_.astryx-icon]:ml-auto">
                                             <TextInput
                                                 label="Personal access token (classic)"
-                                                labelTooltip="Requires the read:packages scope."
+                                                description="Requires the read:packages scope."
                                                 type="password"
                                                 placeholder="ghp_..."
                                                 autoComplete="new-password"
-                                                value={credential}
-                                                isRequired
-                                                onChange={setCredential}
+                                                name="credential"
+                                                required
                                             />
                                         </Stack>
                                         <Stack direction="horizontal" gap={2} justify="between" wrap="wrap">
                                             <Button label="Cancel" variant="ghost" type="button" onClick={onClose} />
-                                            <Button
-                                                label="Save"
-                                                variant="primary"
-                                                type="submit"
-                                                isDisabled={!credential.trim()}
-                                            />
+                                            <Button label="Save" variant="primary" type="submit" />
                                         </Stack>
                                     </Stack>
                                 </Form>

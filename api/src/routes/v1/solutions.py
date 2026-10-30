@@ -149,9 +149,9 @@ async def get_solution_logs(solution_id: UUID, access: auth.SolutionLogAccess):
 
 
 @router.delete("/solutions/{solution_id}", status_code=204)
-async def delete_solution(session: auth.Session, user: auth.CurrentUser, solution: auth.SolutionMaintainer):
+async def delete_solution(solution_id: UUID, session: auth.Session, user: auth.CurrentUser):
     """Mark one Solution absent and queue explicit lifecycle cleanup."""
 
-    await solutions.delete(session, solution.id, user.id)
+    await solutions.delete(session, solution_id, user.id)
 
     await session.commit()

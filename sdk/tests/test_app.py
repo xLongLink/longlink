@@ -199,7 +199,7 @@ def test_dynamic_view_is_registered_from_jsx_without_sidecar_metadata(solution_s
     assert "text/plain" in response.headers["content-type"]
     assert response.text == content
     assert views_response.status_code == 200
-    assert views_response.json() == {"views": [{"path": "views/issues/[issue]", "route": "/issues/:issue"}], "runtime": runtime}
+    assert views_response.json() == {"views": [{"path": "views/issues/[issue]", "route": "/issues/:issue"}], "runtime": runtime, "tabs": []}
 
 
 def test_view_catalog_orders_paths_and_redirects_to_first_static_view(solution_source: Path) -> None:
@@ -228,6 +228,7 @@ def test_view_catalog_orders_paths_and_redirects_to_first_static_view(solution_s
             {"path": "views/zebra", "route": "/zebra"},
         ],
         "runtime": runtime,
+        "tabs": [{"route": "/zebra"}],
     }
     assert root_response.status_code == 307
     assert root_response.headers["location"] == "/zebra"

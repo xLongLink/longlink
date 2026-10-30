@@ -39,6 +39,17 @@ class ViewManifest:
     runtime: ViewRuntime
     tabs: list[ViewTab] | None = None
 
+    def resolved_tabs(self) -> list[ViewTab]:
+        """Resolve explicit navigation or derive top-level static tabs in catalog order."""
+
+        # Explicit selection replaces automatic navigation, including an empty selection.
+        if self.tabs is not None:
+            return self.tabs
+
+        return [
+            ViewTab(route=view.route) for view in self.views if view.route != "/" and "/" not in view.route[1:] and ":" not in view.route
+        ]
+
 
 def view_stem_route(view_stem: str) -> str:
     """Return the browser route pattern for one suffix-free view path."""

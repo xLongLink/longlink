@@ -80,15 +80,13 @@ export default function VerifyEmail() {
     const { verification, startVerification } = useVerification(token, verify);
     const verifiedEmail = verification?.status === 'verified' ? verification.data.email : null;
 
-    /** Creates the account and publishes only the new authenticated query state. */
+    /** Creates the account and clears the previous session's cached data. */
     async function handleComplete(payload: RegistrationCompleteValues) {
         setAccountConflict(false);
 
         // Recover only expected account-creation transport failures.
-        let value: unknown;
-
         try {
-            value = await api('/api/v1/auth/register/complete', { json: payload, method: 'POST' }).json();
+            await api('/api/v1/auth/register/complete', { json: payload, method: 'POST' }).json(zUserSummary);
         } catch (cause: unknown) {
             if (!(cause instanceof ApiError) || ![400, 409].includes(cause.status)) throw cause;
 
@@ -100,10 +98,8 @@ export default function VerifyEmail() {
             return;
         }
 
-        // Publish the new authenticated identity only after account creation succeeds.
-        const user = zUserSummary.parse(value);
+        // Clear cached data after account creation; the identity query loads the complete profile.
         await clearSessionQueries(queryClient);
-        queryClient.setQueryData(['api', '/api/v1/me'], user);
         sessionStorage.removeItem(REGISTRATION_TOKEN_KEY);
         void navigate('/user/organizations', { replace: true });
     }
