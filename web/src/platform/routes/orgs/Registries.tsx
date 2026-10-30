@@ -1,7 +1,6 @@
 import type { z } from 'zod';
 import { api } from '@/lib/api';
 import { useState } from 'react';
-import { useApiError } from '@/lib/errors';
 import { Form } from '@/components/ui/Form';
 import { useApi } from '@/lib/hooks/use-api';
 import { Text } from '@astryxdesign/core/Text';
@@ -108,21 +107,13 @@ function RegistryForm({
     invalidate: () => Promise<void>;
     onClose: () => void;
 }) {
-    const reportError = useApiError();
-
     /** Saves credentials and queues synchronization of Kubernetes pull secrets. */
     async function save(data: FormData) {
         // Submit new credentials without loading saved tokens.
-        try {
-            const json = schemas.zRegistryCreateWritable.parse({ credential: data.get('credential') });
-            await api.post(`${base}/registries`, { json });
-            await invalidate();
-            onClose();
-        } catch (failure) {
-            // Apply root session policy while Form retains the draft and displays the failure.
-            reportError(failure);
-            throw failure;
-        }
+        const json = schemas.zRegistryCreateWritable.parse({ credential: data.get('credential') });
+        await api.post(`${base}/registries`, { json });
+        await invalidate();
+        onClose();
     }
 
     // Match Solution creation's 960px shell, 560px height, and 640px scrolling content column.

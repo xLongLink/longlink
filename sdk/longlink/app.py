@@ -1,7 +1,7 @@
 import re
 import httpx2
 import logging
-from typing import Any, Self
+from typing import Any
 from fastapi import FastAPI, APIRouter
 from fastmcp import FastMCP
 from pathlib import Path
@@ -45,15 +45,6 @@ class RuntimeState:
 
     storage: AbstractFileSystem
     database: Database
-
-    @classmethod
-    def from_settings(cls, settings: Envs) -> Self:
-        """Construct the services owned by one application runtime."""
-
-        # Preserve eager storage creation and lazy database initialization.
-        storage = create_fs(settings)
-        database = Database(settings)
-        return cls(storage=storage, database=database)
 
 
 def _view_handler(content: bytes) -> Callable[[], Awaitable[Response]]:
@@ -104,7 +95,9 @@ class LongLink(FastAPI):
         view_manifest = views.ViewManifest(views=view_definitions, runtime=view_runtime)
 
         # Initialize Solution storage and database connections.
-        runtime = RuntimeState.from_settings(settings)
+        storage = create_fs(settings)
+        database = Database(settings)
+        runtime = RuntimeState(storage=storage, database=database)
 
         # Supply safe defaults while preserving Solution-owned exception handlers.
         install_error_handlers(self)

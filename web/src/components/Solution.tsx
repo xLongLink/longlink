@@ -43,7 +43,25 @@ export function SolutionRuntime({ children, navigationBaseUrl = '/', viewsUrl = 
             const body = await host.load(viewsUrl, { signal });
             const data: unknown = JSON.parse(await body.text());
 
-            return manifestSchema.parse(data);
+            // Normalize legacy catalogs and explicit tabs before rendering navigation.
+            const manifest = manifestSchema.parse(data);
+
+            const tabs =
+                manifest.tabs ??
+                manifest.views
+                    .filter((view) => view.route !== '/' && !view.route.includes('/', 1) && !view.route.includes('/:'))
+                    .map((view) => ({ route: view.route, label: viewLabel(view.path), icon: undefined }));
+
+            return {
+                ...manifest,
+                tabs: tabs.map((tab) => ({
+                    route: tab.route,
+                    label:
+                        tab.label ??
+                        viewLabel(manifest.views.find((view) => view.route === tab.route)?.path ?? tab.route),
+                    icon: tab.icon,
+                })),
+            };
         },
     });
 
@@ -57,17 +75,12 @@ export function SolutionRuntime({ children, navigationBaseUrl = '/', viewsUrl = 
         `/${routePath}`
     )?.[0];
 
-    // Only top-level static Views appear in root navigation.
-    const tabViews = views.filter(
-        (view) => view.route !== '/' && !view.route.includes('/', 1) && !view.route.includes('/:')
-    );
-
     // Let nested and dynamic detail Views share their parent tab.
-    const navigationTabs = manifest?.tabs ?? tabViews;
+    const navigationTabs = manifest?.tabs ?? EMPTY_VIEWS;
     const activeView = routePath || navigationTabs.length === 0 ? match?.route.view : undefined;
 
     const activeViewTitle = activeView
-        ? (manifest?.tabs?.find((tab) => tab.route === activeView.route)?.label ?? viewLabel(activeView.path))
+        ? (navigationTabs.find((tab) => tab.route === activeView.route)?.label ?? viewLabel(activeView.path))
         : undefined;
 
     const isNotFound = manifest !== undefined && routePath.length > 0 && match == null;
@@ -88,11 +101,8 @@ export function SolutionRuntime({ children, navigationBaseUrl = '/', viewsUrl = 
     // Build one static navigation target per solution tab.
     const tabs = navigationTabs.map((view) => ({
         href: resolveNavigationUrl(navigationBaseUrl, view.route),
-        label:
-            'label' in view && view.label
-                ? view.label
-                : viewLabel(views.find((entry) => entry.route === view.route)?.path ?? view.route),
-        icon: 'icon' in view && view.icon ? <DeferredIcon icon={view.icon} size="sm" /> : undefined,
+        label: view.label,
+        icon: view.icon ? <DeferredIcon icon={view.icon} size="sm" /> : undefined,
     }));
 
     let content: ReactNode;

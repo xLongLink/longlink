@@ -1,6 +1,8 @@
 from typing import Any
 from longlink.app import LongLink, RuntimeState
 from fastapi.testclient import TestClient as FastAPITestClient
+from longlink.storage.base import create_fs
+from longlink.database.base import Database
 from longlink.utils.settings import Envs
 
 
@@ -12,7 +14,9 @@ class TestClient(FastAPITestClient):
 
         # Configure only this app; importing the client must not change process state.
         settings = Envs(ENV="testing", STORAGE_BUCKET=None, STORAGE_PREFIX=None)
-        app.state.longlink = RuntimeState.from_settings(settings)
+        storage = create_fs(settings)
+        database = Database(settings)
+        app.state.longlink = RuntimeState(storage=storage, database=database)
 
         # Initialize the client after the application owns its isolated services.
         super().__init__(app, **kwargs)

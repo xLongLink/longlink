@@ -24,6 +24,8 @@ from src.models.organizations import (
     OrganizationByteUsage,
     OrganizationMemberUpdate,
     OrganizationInvitationCreate,
+    OrganizationInvitationResponse,
+    OrganizationMemberAccessResponse,
 )
 from src.database.models.solutions import Solution
 from src.database.models.organizations import Organization
@@ -46,6 +48,23 @@ async def get_organization(session: auth.Session, membership: auth.OrganizationM
         if roles.atleast(membership.role, OrganizationRoles.maintain)
         else [],
     }
+
+
+@router.get("/organizations/{organization_id}/members", response_model=list[OrganizationMemberAccessResponse])
+async def get_organization_members(session: auth.Session, membership: auth.OrganizationMember):
+    """Return the active Organization members without unrelated invitation data."""
+
+    return await organizations.members(session, membership.organization_id)
+
+
+@router.get("/organizations/{organization_id}/invitations", response_model=list[OrganizationInvitationResponse])
+async def get_organization_invitations(session: auth.Session, membership: auth.OrganizationMember):
+    """Return pending invitations only to Organization managers."""
+
+    # Preserve the details endpoint's restricted invitation visibility for ordinary members.
+    if not roles.atleast(membership.role, OrganizationRoles.maintain):
+        return []
+    return await organizations.invitations(session, membership.organization_id)
 
 
 @router.get("/organizations/{organization_id}/solutions", response_model=list[OrganizationSolutionSummary])
