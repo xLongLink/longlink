@@ -22,6 +22,7 @@
 
 ## Python Guidelines
 
+- DO run `uv run --locked --project api --extra dev pyunslop` from the repository root and address its warnings.
 - AVOID renaming imports.
 - PREFER the simplest correct implementation. AVOID features needed only for hypothetical future use.
 - DO construct class instances in separate, multi-line assignments before invoking their methods.
@@ -33,11 +34,7 @@
 - PREFER namespaced module APIs to importing many related functions directly.
 - DO use exceptions for genuine errors.
 - AVOID unnecessary `try`/`except` blocks.
-- DO store asynchronous query results in a named variable before calling `.all()`, `.one_or_none()`, or similar result methods.
-- DO use `collections.abc.Sequence` instead of `list` for read-only query result return types.
-- DO declare `response_model` on FastAPI routes and let FastAPI validate responses.
 - DO group Pydantic fields into commented sections.
-- Within each section, DO order fields from the shortest name to the longest name.
 - DO add a descriptive `# ...` comment before each logic block, with one blank line before the comment.
 
 ## JavaScript / TypeScript Guidelines

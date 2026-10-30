@@ -1402,6 +1402,7 @@ dev = [
     { name = "pytest" },
     { name = "pytest-asyncio" },
     { name = "pytest-cov" },
+    { name = "pyunslop" },
     { name = "ruff" },
     { name = "testcontainers" },
     { name = "ty" },
@@ -1439,6 +1440,7 @@ dev = [
     { name = "pytest", specifier = ">=9.1.1" },
     { name = "pytest-asyncio", specifier = ">=1.4.0" },
     { name = "pytest-cov", specifier = ">=7.0.0" },
+    { name = "pyunslop", specifier = "==0.0.4" },
     { name = "ruff", specifier = ">=0.16.2" },
     { name = "testcontainers", specifier = ">=4.15.0" },
     { name = "ty", specifier = ">=0.0.69" },
@@ -2158,6 +2160,15 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/5b/42/55c32bb9b12693c092ad250a0e82edb5b31ddeda6eb772de5f308b3804ad/python_multipart-0.0.32.tar.gz", hash = "sha256:be54b7f3fa167bb83e4fcd936b887b708f4e57fe75911c02aebf53efaf8d938e", size = 46881, upload-time = "2026-06-04T16:18:58.647Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/e1/04/e8135ebd1ad02c56ec633277529b2602ff99ff634be76cdba5744cf554fd/python_multipart-0.0.32-py3-none-any.whl", hash = "sha256:ff6d3f776f16878c894e52e107296ffc890e913c611b1a4ec6c44e2821fe2e23", size = 30042, upload-time = "2026-06-04T16:18:57.319Z" },
+]
+
+[[package]]
+name = "pyunslop"
+version = "0.0.4"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/69/1b/0249886c646f5fc689c213975d7e4bdce795645abfc986fd7f117caa531a/pyunslop-0.0.4.tar.gz", hash = "sha256:a96578997875c35e64b4e47942bfdf0c1f4846d6a5ac78ff62a667ae1eb9caa4", size = 35515, upload-time = "2026-10-28T22:28:43.288Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/70/b0/2248df35ada5b928abceb5d9bed21188bf1e29a2948b002c18056bd860db/pyunslop-0.0.4-py3-none-any.whl", hash = "sha256:292921a2f4cd4dde3f29d9772fce6ca41acc00e538760c438fd7e2550dcf25fe", size = 37873, upload-time = "2026-10-28T22:28:41.753Z" },
 ]
 
 [[package]]
