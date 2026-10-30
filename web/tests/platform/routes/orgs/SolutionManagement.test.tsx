@@ -6,12 +6,15 @@ import Management from '@/platform/routes/orgs/SolutionManagement';
 it('does not offer creation to readers of Organization settings', () => {
     // Act
     const output = renderPlatform(
-        <Management organization={membership.organization} canMaintain={false} presentation="settings" />,
+        <Management
+            organization={membership.organization}
+            tags={[]}
+            activeTag={undefined}
+            canMaintain={false}
+            presentation="settings"
+        />,
         '/',
-        [
-            [`/api/v1/organizations/${membership.organization.id}/solutions`, []],
-            [`/api/v1/organizations/${membership.organization.id}/tags`, []],
-        ]
+        [[`/api/v1/organizations/${membership.organization.id}/solutions`, []]]
     );
 
     // Assert

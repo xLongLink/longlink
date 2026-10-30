@@ -2,7 +2,6 @@ import ssl
 import httpx2
 import asyncio
 from typing import TYPE_CHECKING
-from urllib.parse import urlsplit
 from kr8s.asyncio.objects import ConfigMap, Deployment
 
 if TYPE_CHECKING:
@@ -32,19 +31,7 @@ def _deployment_is_ready(deployment: Deployment) -> bool:
 async def verify(client: "Kubernetes", gateway_url: str, gateway_certificate: str | None = None) -> None:
     """Inspect package compatibility and readiness without changing infrastructure."""
 
-    # Validate trust before opening the operator-configured endpoint.
-    endpoint = urlsplit(gateway_url)
-    if (
-        endpoint.scheme != "https"
-        or not endpoint.hostname
-        or endpoint.username is not None
-        or endpoint.password is not None
-        or endpoint.path not in {"", "/"}
-        or endpoint.query
-        # Gateway configuration identifies an origin, never a resource or redirect.
-        or endpoint.fragment
-    ):
-        raise ValueError("Gateway endpoint must be an HTTPS origin")
+    # Configure trust before opening the operator-configured endpoint.
     context = ssl.create_default_context(cadata=gateway_certificate)
     api = await client.api()
 

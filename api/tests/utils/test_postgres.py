@@ -5,7 +5,6 @@ from longlink import User
 from src.utils import postgres
 from sqlalchemy import text
 from sqlalchemy.exc import DBAPIError
-from src.models.types import DatabaseSSLMode
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.dialects.postgresql import insert
 from testcontainers.community.postgres import PostgresContainer
@@ -25,7 +24,6 @@ def postgres_database(postgres_server: PostgresContainer) -> tuple[postgres.Post
         port=postgres_server.get_exposed_port(5432),
         username="longlink",
         password=postgres_server.password,
-        sslmode=DatabaseSSLMode.disable,
     )
     return adapter, organization_id, solution_id
 

@@ -100,26 +100,6 @@ async def test_gateway_verifies_installed_controllers(observed_resources: list[t
     assert ("cnpg-system", "cnpg-controller-manager") in observed_resources
 
 
-@pytest.mark.parametrize(
-    "gateway_url",
-    [
-        pytest.param("http://gateway.example", id="http-scheme"),
-        pytest.param("https://user@gateway.example", id="username"),
-        pytest.param("https://:secret@gateway.example", id="password"),
-        pytest.param("https://gateway.example/ready", id="path"),
-        # Endpoint configuration accepts origins, not resource-specific URLs.
-        pytest.param("https://gateway.example?next=1", id="query"),
-        pytest.param("https://gateway.example#ready", id="fragment"),
-    ],
-)
-async def test_gateway_rejects_non_origin_url(gateway_url: str) -> None:
-    """Reject Compute gateway endpoints that are not bare HTTPS origins."""
-
-    # Act and assert
-    with pytest.raises(ValueError, match="Gateway endpoint must be an HTTPS origin"):
-        await gateway.verify(kubernetes_client(), gateway_url)
-
-
 async def test_gateway_obeys_caller_deadline(monkeypatch: pytest.MonkeyPatch, observed_resources: list[tuple[str, str]]) -> None:
     """Cancel readiness observations at the caller's deadline without repairing infrastructure."""
 

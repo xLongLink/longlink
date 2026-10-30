@@ -11,6 +11,11 @@ import { PageBreadcrumb } from '@/components/PageBreadcrumb';
 import { Outlet, useParams, useLocation, useOutletContext } from 'react-router';
 import { zOrganizationTagResponse, zUserOrganizationMembership } from '@/lib/generated/platform-api-v1/zod.gen';
 
+export type OrganizationContext = z.output<typeof zUserOrganizationMembership> & {
+    tags: z.output<typeof zOrganizationTagResponse>[];
+    activeTag: z.output<typeof zOrganizationTagResponse> | undefined;
+};
+
 /** Renders shared category navigation around organization pages. */
 export default function OrganizationLayout() {
     const { organization = '' } = useParams();
@@ -48,7 +53,7 @@ export default function OrganizationLayout() {
         >
             <PageContainer gap={8} padding={2}>
                 <ApiBoundary>
-                    <Outlet context={membership} />
+                    <Outlet context={{ ...membership, tags, activeTag } satisfies OrganizationContext} />
                 </ApiBoundary>
             </PageContainer>
         </Platform>

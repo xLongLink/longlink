@@ -1,17 +1,18 @@
-import type { z } from 'zod';
 import { useOutletContext } from 'react-router';
 import SolutionManagement from './SolutionManagement';
-import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
+import type { OrganizationContext } from '@/platform/layouts/Organization';
 
 /** Lists an organization's Solutions; the layout owns organization-scoped state resets. */
 export default function Organization() {
-    const membership = useOutletContext<z.output<typeof schemas.zUserOrganizationMembership>>();
+    const membership = useOutletContext<OrganizationContext>();
 
     return (
         <>
             <title>Organization Solutions | LongLink</title>
             <SolutionManagement
                 organization={membership.organization}
+                tags={membership.tags}
+                activeTag={membership.activeTag}
                 canMaintain={['maintain', 'admin', 'owner'].includes(membership.role)}
                 presentation="overview"
             />

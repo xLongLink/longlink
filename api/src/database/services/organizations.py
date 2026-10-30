@@ -588,23 +588,12 @@ async def create_invitation(session: AsyncSession, organization_id: UUID, payloa
     )
     invitation = await session.scalar(invitation_statement)
 
-    # Resolve concurrent re-invites to the one database-enforced active grant.
+    # Create the grant while the Organization lock serializes invitation commands.
     if invitation is None:
-        try:
-            # Isolate invitation creation so uniqueness races can be recovered.
-            async with session.begin_nested():
-                invitation = OrganizationInvitation(organization_id=organization_id, email=payload.email, role=payload.role)
-                session.add(invitation)
-                await session.flush()
-            return
-
-        # Recover a competing invitation insert from the nested transaction.
-        except IntegrityError:
-            invitation = await session.scalar(invitation_statement)
-
-            # A uniqueness collision must resolve to the competing invitation.
-            if invitation is None:
-                raise HTTPException(status_code=409, detail="Invitation could not be created")
+        invitation = OrganizationInvitation(organization_id=organization_id, email=payload.email, role=payload.role)
+        session.add(invitation)
+        await session.flush()
+        return
 
     invitation.role = payload.role
     invitation.created_at = datetime.now(UTC)
