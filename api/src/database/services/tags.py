@@ -25,23 +25,13 @@ async def fetch(session: AsyncSession, organization_id: UUID) -> Sequence[Organi
     return result.all()
 
 
-async def lock(session: AsyncSession, organization_id: UUID, user_id: UUID) -> None:
-    """Serialize category commands with Organization deletion and access changes."""
-
-    # Recheck current membership only after taking the Organization lock.
-    organization = await organizations.lock(session, organization_id)
-    if organization.deleted_at is not None:
-        raise HTTPException(status_code=403, detail="Access required")
-    await organizations.locked_membership(session, user_id, organization_id, OrganizationRoles.maintain)
-
-
 async def save(
     session: AsyncSession, organization_id: UUID, user_id: UUID, payload: OrganizationTagWrite, tag_id: UUID | None = None
 ) -> OrganizationTag:
     """Create or edit a category under its Organization lock."""
 
     # Scope both name uniqueness and identity to the authorized Organization.
-    await lock(session, organization_id, user_id)
+    await organizations.lock_active_access(session, user_id, organization_id, OrganizationRoles.maintain)
     tag = await session.get(OrganizationTag, tag_id) if tag_id is not None else None
     if tag_id is not None and (tag is None or tag.organization_id != organization_id):
         raise HTTPException(status_code=404, detail="Tag not found")
@@ -51,24 +41,22 @@ async def save(
     if any(item.id != tag_id and item.name.casefold() == payload.name.casefold() for item in existing):
         raise HTTPException(status_code=409, detail="Tag already exists")
 
-    # Preserve assignments and translate backend-specific collation conflicts.
-    try:
-        async with session.begin_nested():
-            # New tags belong to the locked Organization.
-            if tag is None:
-                tag = OrganizationTag(
-                    organization_id=organization_id,
-                    name=payload.name,
-                    icon=payload.icon,
-                    position=max((item.position for item in existing), default=-1) + 1,
-                )
+    # Preserve assignments while creating or updating the locked Organization's tag.
+    if tag is None:
+        tag = OrganizationTag(
+            organization_id=organization_id,
+            name=payload.name,
+            icon=payload.icon,
+            position=max((item.position for item in existing), default=-1) + 1,
+        )
+        session.add(tag)
+    else:
+        tag.name = payload.name
+        tag.icon = payload.icon
 
-                # Publish new tag metadata within the savepoint.
-                session.add(tag)
-            else:
-                tag.name = payload.name
-                tag.icon = payload.icon
-            await session.flush()
+    # Translate backend-specific collation conflicts at the database boundary.
+    try:
+        await session.flush()
     except IntegrityError:
         raise HTTPException(status_code=409, detail="Tag already exists")
     return tag
@@ -78,7 +66,7 @@ async def move(session: AsyncSession, organization_id: UUID, user_id: UUID, tag_
     """Move one tab relative to the current order under the Organization lock."""
 
     # Resolve the target only within the caller's serialized Organization state.
-    await lock(session, organization_id, user_id)
+    await organizations.lock_active_access(session, user_id, organization_id, OrganizationRoles.maintain)
     ordered = list(await fetch(session, organization_id))
     index = next((index for index, tag in enumerate(ordered) if tag.id == tag_id), None)
     if index is None:
@@ -99,7 +87,7 @@ async def remove(session: AsyncSession, organization_id: UUID, user_id: UUID, ta
     """Delete a category and its assignments, never its Solutions."""
 
     # Serialize with assignment replacement so deleted tags cannot be reassigned.
-    await lock(session, organization_id, user_id)
+    await organizations.lock_active_access(session, user_id, organization_id, OrganizationRoles.maintain)
     tag = await session.get(OrganizationTag, tag_id)
     if tag is None or tag.organization_id != organization_id:
         raise HTTPException(status_code=404, detail="Tag not found")
@@ -110,7 +98,7 @@ async def assign(session: AsyncSession, organization_id: UUID, user_id: UUID, so
     """Replace all tags without changing a Solution's deployment state."""
 
     # Lock the Organization before resolving the active Solution and its categories.
-    await lock(session, organization_id, user_id)
+    await organizations.lock_active_access(session, user_id, organization_id, OrganizationRoles.maintain)
     active_solution_id = await session.scalar(
         select(col(Solution.id)).where(
             col(Solution.id) == solution_id, col(Solution.organization_id) == organization_id, col(Solution.deleted_at).is_(None)

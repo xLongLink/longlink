@@ -386,6 +386,19 @@ async def locked_membership(
     return membership
 
 
+async def lock_active_access(
+    session: AsyncSession, user_id: UUID, organization_id: UUID, minimum_role: OrganizationRoles
+) -> tuple[Organization, UserOrganization]:
+    """Reserve an Organization command write before authorizing active caller access."""
+
+    # Refresh active Organization state under the write lock before checking membership.
+    organization = await lock(session, organization_id)
+    if organization.deleted_at is not None:
+        raise HTTPException(status_code=403, detail="Access required")
+    membership = await locked_membership(session, user_id, organization_id, minimum_role)
+    return organization, membership
+
+
 async def _lock_active_membership(
     session: AsyncSession, user_id: UUID, organization_id: UUID, minimum_role: OrganizationRoles
 ) -> UserOrganization:
@@ -458,10 +471,9 @@ async def remove_member(session: AsyncSession, organization_id: UUID, member_id:
     """Remove access without removing historical user records or charging the organization."""
 
     # Serialize member changes and revalidate the caller after taking the organization lock.
-    organization = await lock(session, organization_id)
-    if organization.deleted_at is not None:
-        raise HTTPException(status_code=403, detail="Access required")
-    caller = await locked_membership(session, user_id, organization_id, OrganizationRoles.admin)
+    _, caller = await lock_active_access(session, user_id, organization_id, OrganizationRoles.admin)
+
+    # Lock the target membership after authorizing the caller.
     membership = await session.get(UserOrganization, (member_id, organization_id), populate_existing=True, with_for_update=True)
     if membership is None:
         raise HTTPException(status_code=404, detail="Organization member not found")
@@ -563,10 +575,7 @@ async def create_invitation(session: AsyncSession, organization_id: UUID, payloa
     """Authorize and create one Organization invitation."""
 
     # Lock the Organization before revalidating the caller's active invitation permission.
-    organization = await lock(session, organization_id)
-    if organization.deleted_at is not None:
-        raise HTTPException(status_code=403, detail="Access required")
-    membership = await locked_membership(session, user_id, organization_id, OrganizationRoles.maintain)
+    organization, membership = await lock_active_access(session, user_id, organization_id, OrganizationRoles.maintain)
     if not roles.atleast(membership.role, payload.role):
         raise HTTPException(status_code=403, detail="Invitation role permissions required")
 

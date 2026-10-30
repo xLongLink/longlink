@@ -3542,7 +3542,7 @@
     "/api/v1/organizations/{organization_id}/storage": {
       "get": {
         "summary": "Get Organization Storage Usage",
-        "description": "Return live usage for the Organization bucket.",
+        "description": "Return live logical object bytes against the Organization bucket's quota.",
         "operationId": "get_organization_storage_usage_api_v1_organizations__organization_id__storage_get",
         "parameters": [
           {
@@ -3578,7 +3578,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/OrganizationStorageUsageResponse"
+                  "$ref": "#/components/schemas/OrganizationByteUsage"
                 }
               }
             }
@@ -3599,7 +3599,7 @@
     "/api/v1/organizations/{organization_id}/database": {
       "get": {
         "summary": "Get Organization Database Usage",
-        "description": "Return live PostgreSQL usage against provisioned capacity for an authorized Organization.",
+        "description": "Return PostgreSQL schema and index bytes, excluding WAL, backups, and replicas, against provisioned capacity.",
         "operationId": "get_organization_database_usage_api_v1_organizations__organization_id__database_get",
         "parameters": [
           {
@@ -3635,7 +3635,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/OrganizationDatabaseUsageResponse"
+                  "$ref": "#/components/schemas/OrganizationByteUsage"
                 }
               }
             }
@@ -4658,23 +4658,7 @@
         "title": "OperationStatus",
         "description": "Supported long-running operation lifecycle states."
       },
-      "OrganizationCreate": {
-        "properties": {
-          "name": {
-            "type": "string",
-            "maxLength": 128,
-            "minLength": 1,
-            "title": "Name"
-          }
-        },
-        "type": "object",
-        "required": [
-          "name"
-        ],
-        "title": "OrganizationCreate",
-        "description": "Validate organization creation payloads."
-      },
-      "OrganizationDatabaseUsageResponse": {
+      "OrganizationByteUsage": {
         "properties": {
           "space_used": {
             "type": "integer",
@@ -4692,8 +4676,24 @@
           "space_used",
           "quota_bytes"
         ],
-        "title": "OrganizationDatabaseUsageResponse",
-        "description": "Report PostgreSQL database bytes against the Organization's provisioned capacity.\n\nDatabase bytes include every schema and index, but not WAL, backups, or replicas."
+        "title": "OrganizationByteUsage",
+        "description": "Report measured resource bytes against an Organization's configured capacity."
+      },
+      "OrganizationCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "OrganizationCreate",
+        "description": "Validate organization creation payloads."
       },
       "OrganizationDetails": {
         "properties": {
@@ -4951,27 +4951,6 @@
         ],
         "title": "OrganizationSolutionSummary",
         "description": "Represent a compact LongLink Solution in nested Organization responses."
-      },
-      "OrganizationStorageUsageResponse": {
-        "properties": {
-          "space_used": {
-            "type": "integer",
-            "minimum": 0.0,
-            "title": "Space Used"
-          },
-          "quota_bytes": {
-            "type": "integer",
-            "minimum": 0.0,
-            "title": "Quota Bytes"
-          }
-        },
-        "type": "object",
-        "required": [
-          "space_used",
-          "quota_bytes"
-        ],
-        "title": "OrganizationStorageUsageResponse",
-        "description": "Report current logical object usage and quota for one Organization bucket."
       },
       "OrganizationTagMove": {
         "properties": {
@@ -5338,19 +5317,9 @@
             "format": "date-time",
             "title": "Created At"
           },
-          "invoice_pdf": {
-            "anyOf": [
-              {
-                "type": "string",
-                "maxLength": 2083,
-                "minLength": 1,
-                "format": "uri"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Invoice Pdf"
+          "has_pdf": {
+            "type": "boolean",
+            "title": "Has Pdf"
           },
           "hosted_invoice_url": {
             "anyOf": [
@@ -5375,7 +5344,7 @@
           "status",
           "currency",
           "created_at",
-          "invoice_pdf",
+          "has_pdf",
           "hosted_invoice_url"
         ],
         "title": "PaymentInvoice",

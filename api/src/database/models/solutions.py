@@ -2,7 +2,7 @@ from uuid import UUID, uuid4
 from typing import TYPE_CHECKING, ClassVar, Optional
 from datetime import datetime
 from sqlmodel import Field, Relationship
-from sqlalchemy import Enum, Text, Column, Integer, CheckConstraint, UniqueConstraint, ForeignKeyConstraint, event, inspect
+from sqlalchemy import Enum, Text, Column, UniqueConstraint, ForeignKeyConstraint, event, inspect
 from sqlalchemy.orm import Mapper
 from src.environments import env
 from sqlalchemy.engine import Connection
@@ -120,7 +120,7 @@ class Revision(AuditTable, table=True):
     """Retain an immutable release snapshot and its observed deployment outcome."""
 
     __tablename__: ClassVar[str] = "revisions"
-    __table_args__ = (UniqueConstraint("solution_id", "id"), CheckConstraint("min_scale IN (0, 1)", name="revision_min_scale"))
+    __table_args__ = (UniqueConstraint("solution_id", "id"),)
 
     # Snapshot
     id: UUID = Field(default_factory=uuid4, primary_key=True)
@@ -128,8 +128,6 @@ class Revision(AuditTable, table=True):
     image: str = Field(max_length=512)
     version: str | None = Field(default=None, sa_column=Column(Text, nullable=True))
     registry_connection_id: UUID | None = Field(default=None, foreign_key="registry_connections.id")
-    min_scale: int = Field(default=0, sa_column=Column(Integer, nullable=False, server_default="0"))
-    idle_seconds: int = Field(default=60, ge=0, le=3600, sa_column=Column(Integer, nullable=False, server_default="60"))
     envs: dict[str, str] = Field(sa_column=Column(EncryptedType(env.ENCRYPTION_KEY), nullable=False))
 
     # Observed state does not modify the snapshot.
@@ -145,17 +143,6 @@ def protect_snapshot(_mapper: Mapper[Revision], _connection: Connection, revisio
     state = inspect(revision)
     if any(
         state.attrs[name].history.has_changes()
-        for name in (
-            "id",
-            "solution_id",
-            "image",
-            "version",
-            "envs",
-            "min_scale",
-            "idle_seconds",
-            "registry_connection_id",
-            "created_at",
-            "created_id",
-        )
+        for name in ("id", "solution_id", "image", "version", "envs", "registry_connection_id", "created_at", "created_id")
     ):
         raise ValueError("Revision snapshots are immutable")

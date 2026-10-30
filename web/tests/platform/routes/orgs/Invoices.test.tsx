@@ -20,7 +20,7 @@ const invoice = {
     status: 'paid',
     currency: 'usd',
     created_at: '2026-10-01T00:00:00Z',
-    invoice_pdf: 'https://example.com/invoices/acme.pdf',
+    has_pdf: true,
     hosted_invoice_url: 'https://example.com/invoices/acme',
 };
 

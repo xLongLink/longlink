@@ -250,7 +250,6 @@ def resolve_docker_paths(root: Path, pyproject_data: Mapping[str, object]) -> tu
     seen_paths: set[Path] = set()
     manifest_paths: set[Path] = set()
     project_data_by_path = {root: pyproject_data, workspace_root: workspace_pyproject_data}
-    workspace_paths_by_name: dict[str, Path] = {}
 
     # Read transitive local uv source paths so editable dependencies keep their relative paths in Docker.
     while pending_paths:
@@ -364,41 +363,32 @@ def resolve_docker_paths(root: Path, pyproject_data: Mapping[str, object]) -> tu
                 if dependency_name not in dependency_names:
                     continue
 
-                # Discard stale cached members before searching current manifests.
-                resolved_source_path = workspace_paths_by_name.get(dependency_name)
-                if resolved_source_path is None or not (resolved_source_path / "pyproject.toml").is_file():
+                # Search lazily so unrelated invalid metadata does not change error precedence.
+                resolved_source_path = None
+                for member in ordered_workspace_paths:
 
-                    # Populate matches lazily so unrelated invalid metadata does not change error precedence.
-                    workspace_paths_by_name.pop(dependency_name, None)
-                    resolved_source_path = None
-                    for member in ordered_workspace_paths:
+                    # Workspace directory matches are not necessarily Python projects.
+                    if not (member / "pyproject.toml").is_file():
+                        continue
 
-                        # Workspace directory matches are not necessarily Python projects.
-                        if not (member / "pyproject.toml").is_file():
-                            continue
-                        member_data = project_data_by_path.get(member)
+                    # Reuse already-read metadata while resolving normalized package names.
+                    member_data = project_data_by_path.get(member)
+                    if member_data is None:
+                        member_data = read_pyproject(member)
+                        project_data_by_path[member] = member_data
 
-                        # Reuse already-read metadata while resolving normalized package names.
-                        if member_data is None:
-                            member_data = read_pyproject(member)
-                            project_data_by_path[member] = member_data
+                    # Package names, not directory names, select workspace dependencies.
+                    member_project = member_data.get("project")
+                    member_name = member_project.get("name") if isinstance(member_project, dict) else None
 
-                        # Package names, not directory names, select workspace dependencies.
-                        member_project = member_data.get("project")
-                        member_name = member_project.get("name") if isinstance(member_project, dict) else None
+                    # Directories without named Python projects cannot satisfy workspace sources.
+                    if not isinstance(member_name, str):
+                        continue
 
-                        # Directories without named Python projects cannot satisfy workspace sources.
-                        if not isinstance(member_name, str):
-                            continue
-
-                        # Compare normalized package identities, preserving their original directory paths.
-                        normalized_name = normalize_package_name(member_name)
-                        workspace_paths_by_name.setdefault(normalized_name, member)
-
-                        # Select the actual member directory matching the requested package.
-                        if normalized_name == dependency_name:
-                            resolved_source_path = member
-                            break
+                    # Select the first member matching the normalized package name.
+                    if normalize_package_name(member_name) == dependency_name:
+                        resolved_source_path = member
+                        break
 
                 # Unresolved package names cannot silently select a non-member dependency.
                 if resolved_source_path is None:
@@ -444,7 +434,14 @@ def validate_lockfile(lockfile: Path, workspace_root: Path) -> None:
         raise errors.Error(f"Lockfile must not reference an ignored path: {lockfile}")
 
 
-def build_solution(root: Path, build_context: Path, *, pyproject_data: Mapping[str, object], version: str | None = None) -> None:
+def build_solution(
+    root: Path,
+    build_context: Path,
+    *,
+    pyproject_data: Mapping[str, object],
+    project_metadata: tuple[str, str, str | None],
+    version: str | None = None,
+) -> None:
     """Create Docker build artifacts from validated Solution metadata."""
 
     # Resolve build paths using the project metadata prepared by the command.
@@ -471,7 +468,7 @@ def build_solution(root: Path, build_context: Path, *, pyproject_data: Mapping[s
         sdk_version = "0.0.0"
 
     # Render standard OCI metadata and LongLink-specific runtime metadata.
-    _, project_version, project_description = read_project_metadata(pyproject_data)
+    _, project_version, project_description = project_metadata
     labels = [f"LABEL org.opencontainers.image.version={json.dumps(version if version is not None else project_version)}"]
     if project_description is not None:
         labels.append(f"LABEL org.opencontainers.image.description={json.dumps(project_description)}")
@@ -644,7 +641,8 @@ def build_command(
     # Validate the project and Docker prerequisites before copying source files.
     root = Path.cwd().resolve()
     pyproject_data = read_pyproject(root)
-    solution_name, project_version, _ = read_project_metadata(pyproject_data)
+    project_metadata = read_project_metadata(pyproject_data)
+    solution_name, project_version, _ = project_metadata
     if version is not None and (not version or any(character.isspace() or not character.isprintable() for character in version)):
         raise errors.Error("Image version must be nonempty and contain no whitespace or control characters")
     image_tag = resolve_image_tag(solution_name, tag or project_version, registry)
@@ -664,7 +662,7 @@ def build_command(
     # Build inside a temporary context.
     with tempfile.TemporaryDirectory(prefix="longlink-build-") as temp_dir:
         build_context = Path(temp_dir)
-        build_solution(root, build_context, pyproject_data=pyproject_data, version=version)
+        build_solution(root, build_context, pyproject_data=pyproject_data, project_metadata=project_metadata, version=version)
 
         # Run the Docker build and optional push.
         try:

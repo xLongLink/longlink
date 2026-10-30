@@ -74,7 +74,7 @@ async def get_invoices(ctx: Context, membership: auth.OrganizationOwner):
                 "currency": invoice.currency,
                 # Normalize provider timestamps at the response boundary.
                 "created_at": datetime.fromtimestamp(invoice.created, UTC),
-                "invoice_pdf": invoice.invoice_pdf,
+                "has_pdf": bool(invoice.invoice_pdf),
                 "hosted_invoice_url": invoice.hosted_invoice_url,
             }
             async for invoice in invoices.auto_paging_iter()

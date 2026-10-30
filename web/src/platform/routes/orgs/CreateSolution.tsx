@@ -23,11 +23,13 @@ export default function CreateSolution({
     onSuccess: () => void | Promise<void>;
     onClose: () => void;
 }) {
-    // Retain domain drafts while Stepper owns navigation and Form owns submission.
-    const [environments, setEnvironments] = useState<z.output<typeof schemas.zEnvironmentMetadata>[]>([]);
+    // Retain image metadata while named controls own drafts and Stepper owns navigation.
     const [image, setImage] = useState('');
-    const [description, setDescription] = useState('');
-    const [envs, setEnvs] = useState<Record<string, string>>({});
+
+    const [inspection, setInspection] = useState<{
+        metadata: z.output<typeof schemas.zLongLinkMetadata>;
+        generation: number;
+    }>();
 
     /** Inspects the chosen image before opening its configuration. */
     async function inspectImage() {
@@ -41,9 +43,7 @@ export default function CreateSolution({
         );
 
         setImage(image.trim());
-        setDescription(inspected.description || '');
-        setEnvs({});
-        setEnvironments(inspected.environments ?? []);
+        setInspection((previous) => ({ metadata: inspected, generation: (previous?.generation ?? 0) + 1 }));
     }
 
     /** Creates the configured Solution before completing the parent-owned success workflow. */
@@ -53,8 +53,12 @@ export default function CreateSolution({
 
         // Omit blank optional environments and notify the parent only after creation succeeds.
         const json = schemas.zSolutionCreate.parse({
-            description: description || null,
-            envs: Object.fromEntries(Object.entries(envs).filter(([, value]) => value.length > 0)),
+            description: z.string().parse(data.get('description')) || null,
+            envs: Object.fromEntries(
+                (inspection?.metadata.environments ?? [])
+                    .map(({ name }) => [name, z.string().parse(data.get(`envs.${name}`))] as const)
+                    .filter(([, value]) => value !== '')
+            ),
             image,
             name,
         });
@@ -141,10 +145,11 @@ export default function CreateSolution({
                             <Stack gap={3}>
                                 <TextInput label="Name" name="name" required />
                                 <TextInput
+                                    key={inspection?.generation}
                                     label="Description"
-                                    value={description}
+                                    name="description"
+                                    defaultValue={inspection?.metadata.description ?? ''}
                                     placeholder="Dashboard solution"
-                                    onChange={setDescription}
                                 />
                             </Stack>
                         </Stack>
@@ -169,15 +174,14 @@ export default function CreateSolution({
                                     </Text>
                                 </Stack>
                             </Stack>
-                            <Stack gap={3}>
-                                {environments.map((environment) => (
+                            <Stack key={inspection?.generation} gap={3}>
+                                {(inspection?.metadata.environments ?? []).map((environment) => (
                                     <TextInput
                                         key={environment.name}
                                         label={environment.name}
-                                        value={envs[environment.name] ?? ''}
+                                        name={`envs.${environment.name}`}
                                         placeholder={environment.description ?? undefined}
                                         required={environment.required}
-                                        onChange={(value) => setEnvs({ ...envs, [environment.name]: value })}
                                     />
                                 ))}
                             </Stack>

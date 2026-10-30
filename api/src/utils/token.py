@@ -117,21 +117,33 @@ def oauth_state_claims(token: str, provider: OAuthProvider) -> tuple[str, str, s
     return state, verifier, return_to if isinstance(return_to, str) else "/user/organizations"
 
 
+def _password_bound_claims(token: str, *, audience: str, claims_error: str, user_error: str) -> tuple[UUID, str]:
+    """Validate purpose-specific proof and parse its password-bound identity."""
+
+    # Validate the signature, lifetime, and purpose before accepting identity claims.
+    data = jwt.decode(token, env.SESSION_KEY, audience=audience, algorithms=[JWT_ALGORITHM])
+    raw_user_id = data.get("sub")
+    fingerprint = data.get("password_fingerprint")
+    if not isinstance(raw_user_id, str) or not isinstance(fingerprint, str):
+        raise jwt.InvalidTokenError(claims_error)
+
+    # Reject malformed subjects before either credential can resolve an account.
+    try:
+        return UUID(raw_user_id), fingerprint
+    except ValueError as exc:
+        raise jwt.InvalidTokenError(user_error) from exc
+
+
 async def password_reset_user(session: AsyncSession, token: str) -> User:
     """Return the active user authenticated by one password-reset token."""
 
     # Decode and validate the reset credential before loading its account.
-    data = jwt.decode(token, env.SESSION_KEY, audience=PASSWORD_RESET_TOKEN_AUDIENCE, algorithms=[JWT_ALGORITHM])
-    raw_user_id = data.get("sub")
-    fingerprint = data.get("password_fingerprint")
-    if not isinstance(raw_user_id, str) or not isinstance(fingerprint, str):
-        raise jwt.InvalidTokenError("Invalid password reset token claims")
-
-    # Reject malformed subject identifiers before querying a reset account.
-    try:
-        user_id = UUID(raw_user_id)
-    except ValueError as exc:
-        raise jwt.InvalidTokenError("Invalid password reset user") from exc
+    user_id, fingerprint = _password_bound_claims(
+        token,
+        audience=PASSWORD_RESET_TOKEN_AUDIENCE,
+        claims_error="Invalid password reset token claims",
+        user_error="Invalid password reset user",
+    )
 
     # Require an active account and the exact credential version that received the link.
     user = await credential_user(session, user_id, fingerprint)
@@ -163,14 +175,6 @@ def auth_token_claims(token: str) -> tuple[UUID, str]:
     """Return the user and password fingerprint carried by one valid browser session."""
 
     # Validate the signature, lifetime, and token purpose before accepting its identity claims.
-    data = jwt.decode(token, env.SESSION_KEY, audience=AUTH_TOKEN_AUDIENCE, algorithms=[JWT_ALGORITHM])
-    raw_user_id = data.get("sub")
-    fingerprint = data.get("password_fingerprint")
-    if not isinstance(raw_user_id, str) or not isinstance(fingerprint, str):
-        raise jwt.InvalidTokenError("Invalid browser session claims")
-
-    # Parse the verified subject before resolving the local browser identity.
-    try:
-        return UUID(raw_user_id), fingerprint
-    except ValueError as exc:
-        raise jwt.InvalidTokenError("Invalid browser session user") from exc
+    return _password_bound_claims(
+        token, audience=AUTH_TOKEN_AUDIENCE, claims_error="Invalid browser session claims", user_error="Invalid browser session user"
+    )

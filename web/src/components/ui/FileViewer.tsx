@@ -1,6 +1,7 @@
 import { Stack } from './Stack';
 import { Button } from './Button';
 import { useContext, useState } from 'react';
+import { ReportedError } from '@/lib/reported';
 import { Text } from '@astryxdesign/core/Text';
 import { Spinner } from '@astryxdesign/core/Spinner';
 import { FileRequestContext, usePreview } from './preview';
@@ -40,7 +41,9 @@ export function FileViewer({
                             const filename = title.replace(/[/\\\p{Cc}]/gu, '_').slice(0, 256) || 'attachment';
                             await files.download(src, filename);
                         } catch (failure) {
-                            setError(failure instanceof Error ? failure.message : 'Download failed');
+                            if (!(failure instanceof ReportedError)) {
+                                setError(failure instanceof Error ? failure.message : 'Download failed');
+                            }
                         }
                     }}
                 />

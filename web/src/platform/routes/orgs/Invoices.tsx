@@ -85,11 +85,11 @@ function InvoiceTable({ base }: { base: string }) {
                     renderCell: (invoice) => <Token label={invoice.status?.replaceAll('_', ' ') ?? 'Unknown'} />,
                 },
                 {
-                    key: 'invoice_pdf',
+                    key: 'has_pdf',
                     header: 'Document',
                     width: proportional(1),
                     renderCell: (invoice) =>
-                        invoice.invoice_pdf ? (
+                        invoice.has_pdf ? (
                             <Link href={`${base}/invoices/${invoice.id}/pdf`} hasUnderline isExternalLink>
                                 PDF
                             </Link>

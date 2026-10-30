@@ -36,6 +36,16 @@ class OrganizationUsage(UsageRates):
     has_payment_method: bool
 
 
+class OrganizationByteUsage(BaseModel):
+    """Report measured resource bytes against an Organization's configured capacity."""
+
+    # Measurement
+    space_used: int = Field(ge=0)
+
+    # Capacity
+    quota_bytes: int = Field(ge=0)
+
+
 class OrganizationQuotasResponse(BaseModel):
     """Represent stored per-Organization quotas in administrator responses."""
 

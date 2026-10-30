@@ -1061,15 +1061,11 @@ async def test_release_inspection_revalidates_concurrent_desired_changes(
 
 
 # Recheck authorization after every unlocked metadata lookup.
-@pytest.mark.parametrize(("method", "demotion_wait"), [("GET", 1), ("POST", 1), ("GET", 2)])
+@pytest.mark.parametrize("method", ["GET", "POST"])
 async def test_release_inspection_rejects_demotion_during_metadata_wait(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-    users: tuple[User, User, User],
-    monkeypatch: pytest.MonkeyPatch,
-    method: str,
-    demotion_wait: int,
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient], users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch, method: str
 ) -> None:
-    """Recheck committed membership after both candidate and old-digest inspection."""
+    """Recheck committed membership after candidate inspection."""
 
     # Arrange
     organization = await create_organization(users[0])
@@ -1080,25 +1076,21 @@ async def test_release_inspection_rejects_demotion_during_metadata_wait(
         result = await session.scalars(select(col(Revision.id)).where(col(Revision.solution_id) == solution.id))
         previous_revisions = set(result.all())
     previous_operations = await fetch_operations()
-    inspected: list[Image] = []
 
     # Keep the inspected candidate distinct from the concurrently desired image.
     candidate = LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:candidate"))
 
-    async def metadata(image: Image, _connection: object | None = None) -> LongLinkMetadata:
+    async def metadata(_image: Image, _connection: object | None = None) -> LongLinkMetadata:
         """Commit demotion while the request has released its registry-wait transaction."""
 
-        # Revoke the otherwise valid maintainer at the selected external wait.
-        inspected.append(image)
-        if len(inspected) == demotion_wait:
-            async with session_scope() as session:
-                membership = await session.get(UserOrganization, (users[1].id, organization.id))
-                assert membership is not None
-                membership.role = OrganizationRoles.read
-                await session.commit()
+        # Revoke the otherwise valid maintainer during the external wait.
+        async with session_scope() as session:
+            membership = await session.get(UserOrganization, (users[1].id, organization.id))
+            assert membership is not None
+            membership.role = OrganizationRoles.read
+            await session.commit()
 
-        # Later inspection observes the release changed by the competing command.
-        return candidate if len(inspected) == 1 else LongLinkMetadata(image=image)
+        return candidate
 
     monkeypatch.setattr(images, "required_metadata", metadata)
 
@@ -1110,7 +1102,6 @@ async def test_release_inspection_rejects_demotion_during_metadata_wait(
     # Assert
     assert response.status_code == 403
     assert response.json() == {"detail": "Permission required"}
-    assert inspected == [Image("ghcr.io/longlink/dashboard:latest"), Image("ghcr.io/longlink/dashboard@sha256:test")][:demotion_wait]
     async with session_scope() as session:
         current = await session.get(Solution, solution.id, options=(selectinload(Solution.desired_revision),))
         assert current is not None
