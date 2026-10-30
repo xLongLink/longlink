@@ -43,11 +43,10 @@ export default function IconButtonPage() {
                     description: 'Standard click handler.',
                 },
             ]}
-            examples={[
-                {
-                    title: 'IconButton',
-                    preview: <IconButtonExample />,
-                    code: `function Example() {
+            example={{
+                title: 'IconButton',
+                preview: <IconButtonExample />,
+                code: `function Example() {
   return (
     <IconButton
       label="Refresh"
@@ -58,8 +57,7 @@ export default function IconButtonPage() {
     />
   );
 }`,
-                },
-            ]}
+            }}
         />
     );
 }

@@ -71,15 +71,14 @@ export default function DateInputPage() {
                     description: 'Placeholder text shown in the text input.',
                 },
             ]}
-            examples={[
-                {
-                    title: 'Due date form',
-                    preview: (
-                        <FormPreview>
-                            <DateInputExample />
-                        </FormPreview>
-                    ),
-                    code: `/** Submits an ISO date using the themed calendar picker. */
+            example={{
+                title: 'Due date form',
+                preview: (
+                    <FormPreview>
+                        <DateInputExample />
+                    </FormPreview>
+                ),
+                code: `/** Submits an ISO date using the themed calendar picker. */
 export default function DueDateForm() {
   return (
     <Form action="/api/example" method="post">
@@ -91,8 +90,7 @@ export default function DueDateForm() {
     </Form>
   );
 }`,
-                },
-            ]}
+            }}
         />
     );
 }

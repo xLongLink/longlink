@@ -8,9 +8,10 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import defer, selectinload, contains_eager
 from collections.abc import Mapping, Sequence
 from src.models.roles import OrganizationRoles
+from src.models.types import Image
 from src.database.types import attr
 from src.models.metadata import LongLinkMetadata
-from src.models.solutions import SolutionCreate, validate_environment_variables
+from src.models.solutions import SolutionPatch, SolutionCreate, SolutionUpdateCheck, validate_environment_variables
 from src.database.services import operations, registries, organizations
 from src.models.operations import OperationKind
 from src.models.pagination import Pagination
@@ -115,7 +116,7 @@ async def create(
         raise HTTPException(status_code=409, detail="Solution slug already exists")
 
     # Creation uses the same immutable release boundary as subsequent updates.
-    await deploy(session, solution, user_id, metadata, payload.envs, registry_connection_id=registry_connection_id)
+    await _deploy(session, solution, user_id, metadata, payload.envs, registry_connection_id=registry_connection_id)
 
     return solution
 
@@ -157,7 +158,61 @@ async def access(session: AsyncSession, solution_id: UUID, user_id: UUID, *, loc
     return solution
 
 
-async def deploy(
+async def _update_candidate(
+    session: AsyncSession, solution: Solution, user_id: UUID, expected_revision_id: UUID | None = None
+) -> tuple[Solution, Revision, LongLinkMetadata]:
+    """Inspect the repository's latest image and revalidate the desired revision."""
+
+    # Reuse authorized Solution access without holding command locks across registry calls.
+    solution_id = solution.id
+    if expected_revision_id is not None and expected_revision_id != solution.desired_revision_id:
+        raise HTTPException(status_code=409, detail="Desired revision changed since review. Check again.")
+    revision = await session.get(Revision, solution.desired_revision_id) if solution.desired_revision_id is not None else None
+    if revision is None:
+        raise HTTPException(status_code=409, detail="Solution has no desired revision")
+
+    # Follow latest for updates, including Solutions created with a version tag or digest.
+    source = Image(revision.image)
+    source = Image(f"{source.registry}/{source.repository}:latest")
+    revision_id = revision.id
+    connection = await registries.resolve(session, solution.organization_id, revision.registry_connection_id, source)
+    await session.commit()
+    metadata = await images.required_metadata(source, connection)
+
+    # Revalidate permissions and the source after inspection before returning a candidate.
+    if revision.registry_connection_id is not None:
+        await registries.lock(session, solution.organization_id)
+    solution = await access(session, solution_id, user_id)
+    if solution.desired_revision_id != revision_id:
+        raise HTTPException(status_code=409, detail="Desired revision changed during inspection. Check again.")
+    return solution, revision, metadata
+
+
+async def check_update(session: AsyncSession, solution: Solution, user_id: UUID) -> SolutionUpdateCheck:
+    """Describe the inspected candidate without exposing release admission state."""
+
+    # Expose the reviewed revision and configured names, never environment values.
+    _solution, revision, metadata = await _update_candidate(session, solution, user_id)
+    return SolutionUpdateCheck(
+        current_image=revision.image,
+        current_version=revision.version,
+        metadata=metadata,
+        revision_id=revision.id,
+        configured_envs=sorted(revision.envs),
+    )
+
+
+async def apply_update(session: AsyncSession, solution: Solution, user_id: UUID, payload: SolutionPatch) -> None:
+    """Inspect and admit an update in the caller's final transaction."""
+
+    # Inspect without command locks, then revalidate the desired state and maintenance access.
+    solution, _revision, metadata = await _update_candidate(session, solution, user_id, payload.expected_revision_id)
+
+    # Compare and merge only against the current serialized desired state.
+    await _deploy(session, solution, user_id, metadata, payload.envs)
+
+
+async def _deploy(
     session: AsyncSession,
     solution: Solution,
     user_id: UUID,

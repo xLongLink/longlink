@@ -41,19 +41,17 @@ export default function CollapsiblePage() {
                     description: 'Runs when the open state changes.',
                 },
             ]}
-            examples={[
-                {
-                    title: 'Collapsible',
-                    preview: <CollapsibleExample />,
-                    code: `function Example() {
+            example={{
+                title: 'Collapsible',
+                preview: <CollapsibleExample />,
+                code: `function Example() {
   return (
     <Collapsible trigger="Details">
       <Text>Additional information</Text>
     </Collapsible>
   );
 }`,
-                },
-            ]}
+            }}
         />
     );
 }

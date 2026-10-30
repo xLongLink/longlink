@@ -3,7 +3,6 @@ import { api } from '@/lib/api';
 import * as tabs from '@/platform/tabs';
 import { useApiError } from '@/lib/errors';
 import { Form } from '@/components/ui/Form';
-import { useApi } from '@/lib/hooks/use-api';
 import { Text } from '@astryxdesign/core/Text';
 import { Dialog } from '@/components/ui/Dialog';
 import { Stack } from '@astryxdesign/core/Stack';
@@ -26,8 +25,7 @@ type Tag = z.output<typeof schemas.zOrganizationTagResponse>;
 type TagAction = { kind: 'create' } | { kind: 'edit' | 'delete'; tag: Tag };
 
 /** Lists and manages the shared tags used as top-level Organization tabs. */
-export default function TabsSection({ base, canMaintain }: { base: string; canMaintain: boolean }) {
-    const [tags, invalidateTags] = useApi(`${base}/tags`, schemas.zOrganizationTagResponse.array());
+export default function TabsSection({ base, tags, canMaintain }: { base: string; tags: Tag[]; canMaintain: boolean }) {
     const queryClient = useQueryClient();
     const [action, setAction] = useState<TagAction | null>(null);
     const [isMoving, setIsMoving] = useState(false);
@@ -40,7 +38,7 @@ export default function TabsSection({ base, canMaintain }: { base: string; canMa
         try {
             const json = schemas.zOrganizationTagMove.parse({ direction });
             await api.post(`${base}/tags/${tag.id}/move`, { json });
-            await invalidateTags();
+            await queryClient.invalidateQueries({ queryKey: ['api', `${base}/tags`], exact: true });
         } catch (failure) {
             reportError(failure);
         } finally {
@@ -139,7 +137,7 @@ export default function TabsSection({ base, canMaintain }: { base: string; canMa
                     onCancel={() => setAction(null)}
                     onSuccess={async () => {
                         // Refresh shared data before dismissing only the completed edit.
-                        await invalidateTags();
+                        await queryClient.invalidateQueries({ queryKey: ['api', `${base}/tags`], exact: true });
                         setAction((current) => (current === action ? null : current));
                     }}
                 />
@@ -154,7 +152,7 @@ export default function TabsSection({ base, canMaintain }: { base: string; canMa
                                   // Cascading assignments disappear with the tag, never the Solutions.
                                   await api.delete(`${base}/tags/${action.tag.id}`);
                                   await Promise.all([
-                                      invalidateTags(),
+                                      queryClient.invalidateQueries({ queryKey: ['api', `${base}/tags`], exact: true }),
                                       queryClient.invalidateQueries({
                                           queryKey: ['api', `${base}/solutions`],
                                           exact: true,

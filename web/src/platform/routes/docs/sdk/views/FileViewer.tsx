@@ -30,15 +30,13 @@ export default function FileViewerPage() {
             introduction={
                 'FileViewer previews images and downloads attachments through the scoped Solution API. Other documents, including PDFs, are downloaded rather than executed inside the View. Set size="sm" for compact table actions; omit size to retain inherited sizing.'
             }
-            examples={[
-                {
-                    title: 'FileViewer',
-                    preview: <FileViewerExample />,
-                    code: `function Example() {
+            example={{
+                title: 'FileViewer',
+                preview: <FileViewerExample />,
+                code: `function Example() {
   return <FileViewer src="/api/items/123/image" title="invoice.png" />;
 }`,
-                },
-            ]}
+            }}
         />
     );
 }

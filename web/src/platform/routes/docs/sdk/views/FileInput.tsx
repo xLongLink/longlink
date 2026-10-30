@@ -77,15 +77,14 @@ export default function FileInputPage() {
                     description: 'Compact input or drag-and-drop area.',
                 },
             ]}
-            examples={[
-                {
-                    title: 'Attachments form',
-                    preview: (
-                        <FormPreview>
-                            <FileInputExample />
-                        </FormPreview>
-                    ),
-                    code: `/** Submits multiple attachments with their original filenames. */
+            example={{
+                title: 'Attachments form',
+                preview: (
+                    <FormPreview>
+                        <FileInputExample />
+                    </FormPreview>
+                ),
+                code: `/** Submits multiple attachments with their original filenames. */
 export default function AttachmentsForm() {
   return (
     <Form action="/api/example" method="post">
@@ -105,8 +104,7 @@ export default function AttachmentsForm() {
     </Form>
   );
 }`,
-                },
-            ]}
+            }}
         />
     );
 }

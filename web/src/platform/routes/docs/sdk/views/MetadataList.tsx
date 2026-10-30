@@ -55,11 +55,10 @@ export default function MetadataListPage() {
                     description: 'Optional icon displayed beside the metadata label.',
                 },
             ]}
-            examples={[
-                {
-                    title: 'MetadataList',
-                    preview: <MetadataListExample />,
-                    code: `function Example() {
+            example={{
+                title: 'MetadataList',
+                preview: <MetadataListExample />,
+                code: `function Example() {
   return (
     <MetadataList title="Order details">
       <MetadataListItem label="Owner">Ada Lovelace</MetadataListItem>
@@ -67,8 +66,7 @@ export default function MetadataListPage() {
     </MetadataList>
   );
 }`,
-                },
-            ]}
+            }}
         />
     );
 }

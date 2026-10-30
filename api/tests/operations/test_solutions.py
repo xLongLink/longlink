@@ -263,7 +263,7 @@ async def test_solution_creation_applies_user_and_managed_environment_values(
     async with session_scope() as session:
         current = await solutions.access(session, solution.id, owner.id)
         metadata = LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:updated"))
-        await solutions.deploy(session, current, owner.id, metadata, {"API_KEY": "replacement"})
+        await solutions._deploy(session, current, owner.id, metadata, {"API_KEY": "replacement"})
         await session.commit()
         revision_id = current.desired_revision_id
     await solution_operations.deploy(revision_id)
@@ -590,7 +590,7 @@ async def test_shutdown_keeps_deployment_resumable(users: tuple[User, User, User
     metadata = LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:new"))
     async with session_scope() as session:
         current = await solutions.access(session, solution.id, owner.id)
-        await solutions.deploy(session, current, owner.id, metadata, {"KEY": "new"})
+        await solutions._deploy(session, current, owner.id, metadata, {"KEY": "new"})
         await session.commit()
         desired_id = current.desired_revision_id
     update = await claim_operation()
@@ -689,7 +689,7 @@ async def test_failed_update_recovery(users: tuple[User, User, User], monkeypatc
     metadata = LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:new"))
     async with session_scope() as session:
         current = await solutions.access(session, solution.id, owner.id)
-        await solutions.deploy(session, current, owner.id, metadata, {"KEY": "new"})
+        await solutions._deploy(session, current, owner.id, metadata, {"KEY": "new"})
         await session.commit()
         desired_id = current.desired_revision_id
     failing = True
@@ -860,14 +860,14 @@ async def test_queued_deployments_keep_exact_targets(users: tuple[User, User, Us
             # A newer request during an active rollout must not change its captured target.
             async with session_scope() as session:
                 current = await solutions.access(session, solution.id, users[0].id)
-                await solutions.deploy(session, current, users[0].id, second, {"KEY": "second"})
+                await solutions._deploy(session, current, users[0].id, second, {"KEY": "second"})
                 await session.commit()
                 second_id = current.desired_revision_id
         elif third_id is None:
             # The second rollout still uses its snapshot while a third revision becomes desired.
             async with session_scope() as session:
                 current = await solutions.access(session, solution.id, users[0].id)
-                await solutions.deploy(session, current, users[0].id, third, {"KEY": "third"})
+                await solutions._deploy(session, current, users[0].id, third, {"KEY": "third"})
                 await session.commit()
                 third_id = current.desired_revision_id
 

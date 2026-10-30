@@ -104,11 +104,10 @@ export default function ButtonsPage() {
                 },
             ]}
             introduction="Button triggers an action, submits a form, or opens a link. Buttons are flat. Use onClick for actions: loading feedback and duplicate-click prevention are automatic while an asynchronous handler is pending."
-            examples={[
-                {
-                    title: 'Button',
-                    preview: <ButtonExample />,
-                    code: `function Example() {
+            example={{
+                title: 'Button',
+                preview: <ButtonExample />,
+                code: `function Example() {
   return (
     <Button
       label="Save"
@@ -121,8 +120,7 @@ export default function ButtonsPage() {
     />
   );
 }`,
-                },
-            ]}
+            }}
         />
     );
 }

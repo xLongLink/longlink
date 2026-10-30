@@ -55,11 +55,10 @@ export default function TabsPage() {
                 },
             ]}
             introduction="Tabs is a LongLink component that displays a tab strip and the selected Tab’s content."
-            examples={[
-                {
-                    title: 'Tabs',
-                    preview: <TabsExample />,
-                    code: `function Example() {
+            example={{
+                title: 'Tabs',
+                preview: <TabsExample />,
+                code: `function Example() {
   return (
     <Tabs hasDivider>
       <Tab value="overview" label="Overview">
@@ -71,8 +70,7 @@ export default function TabsPage() {
     </Tabs>
   );
 }`,
-                },
-            ]}
+            }}
         />
     );
 }

@@ -38,11 +38,10 @@ export default function PaginationPage() {
                 },
             ]}
             introduction="Pagination supplies page controls, bounds, and accessible navigation for tables or galleries. Pages start at 1. The Solution owns page state and data fetching; pass the total item count and page size returned or used by your API."
-            examples={[
-                {
-                    title: 'Server pagination',
-                    preview: <PaginationExample />,
-                    code: `export default function Items() {
+            example={{
+                title: 'Server pagination',
+                preview: <PaginationExample />,
+                code: `export default function Items() {
   const [page, setPage] = useState(1);
   const [items] = useApi(\`/api/items?page=\${page}&page_size=8\`);
 
@@ -53,8 +52,7 @@ export default function PaginationPage() {
     </Stack>
   );
 }`,
-                },
-            ]}
+            }}
         />
     );
 }

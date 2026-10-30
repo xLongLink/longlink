@@ -6,7 +6,6 @@ from longlink.types import Email
 from src.models.roles import OrganizationRoles
 from src.models.users import UserIdentity
 from src.models.pricing import UsageRates
-from src.models.resources import OrganizationIdentity
 
 MAX_SOLUTIONS = 9
 
@@ -107,14 +106,3 @@ class OrganizationMemberAccessResponse(BaseModel):
 
     # Access
     role: OrganizationRoles
-
-
-class OrganizationDetails(BaseModel):
-    """Represent an Organization with its member access."""
-
-    # Organization
-    organization: OrganizationIdentity
-
-    # Relationships
-    members: list[OrganizationMemberAccessResponse]
-    invitations: list[OrganizationInvitationResponse]

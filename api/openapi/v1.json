@@ -2103,61 +2103,6 @@
             }
           }
         }
-      },
-      "get": {
-        "summary": "Get Organization",
-        "description": "Return one organization and its metadata.",
-        "operationId": "get_organization_api_v1_organizations__organization_id__get",
-        "parameters": [
-          {
-            "name": "organization_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Organization Id"
-            }
-          },
-          {
-            "name": "longlink_auth",
-            "in": "cookie",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Longlink Auth"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/OrganizationDetails"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
       }
     },
     "/api/v1/me": {
@@ -4814,35 +4759,6 @@
         ],
         "title": "OrganizationCreate",
         "description": "Validate organization creation payloads."
-      },
-      "OrganizationDetails": {
-        "properties": {
-          "organization": {
-            "$ref": "#/components/schemas/OrganizationIdentity"
-          },
-          "members": {
-            "items": {
-              "$ref": "#/components/schemas/OrganizationMemberAccessResponse"
-            },
-            "type": "array",
-            "title": "Members"
-          },
-          "invitations": {
-            "items": {
-              "$ref": "#/components/schemas/OrganizationInvitationResponse"
-            },
-            "type": "array",
-            "title": "Invitations"
-          }
-        },
-        "type": "object",
-        "required": [
-          "organization",
-          "members",
-          "invitations"
-        ],
-        "title": "OrganizationDetails",
-        "description": "Represent an Organization with its member access."
       },
       "OrganizationIdentity": {
         "properties": {

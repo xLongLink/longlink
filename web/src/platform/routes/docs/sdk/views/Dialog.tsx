@@ -40,11 +40,10 @@ export default function DialogPage() {
                 },
             ]}
             introduction="Dialog uses the Platform's 960px-wide, 560px-high frame, reduced to fit shorter viewports. A title adds a visible header; otherwise only the close control is shown. The gap between title and content defaults to spacing step 3, matching Stack and Grid. Escape and the close button dismiss it; clicking the backdrop does not. Content owns its padding, and the body scrolls when needed while the header stays visible. The modal stays within the isolated View viewport without blocking the surrounding Platform navigation."
-            examples={[
-                {
-                    title: 'Dialog',
-                    preview: <DialogExample />,
-                    code: `function Example() {
+            example={{
+                title: 'Dialog',
+                preview: <DialogExample />,
+                code: `function Example() {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -63,8 +62,7 @@ export default function DialogPage() {
     </Stack>
   );
 }`,
-                },
-            ]}
+            }}
         />
     );
 }

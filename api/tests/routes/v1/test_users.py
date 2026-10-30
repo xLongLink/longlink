@@ -196,12 +196,13 @@ async def test_decline_my_invitation_removes_it_from_the_organization(
 
     # Act
     decline_response = await clients[1].delete(f"/api/v1/me/invitations/{invitation_id}")
-    details_response = await clients[0].get(f"/api/v1/organizations/{organization.id}")
+    invitations_response = await clients[0].get(f"/api/v1/organizations/{organization.id}/invitations")
     organizations_response = await clients[1].get("/api/v1/me/organizations")
 
     # Assert
     assert decline_response.status_code == 204
-    assert details_response.json()["invitations"] == []
+    assert invitations_response.status_code == 200
+    assert invitations_response.json() == []
     assert organizations_response.json() == []
 
 

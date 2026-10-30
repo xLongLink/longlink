@@ -62,8 +62,7 @@ async def test_snapshot_measurement_failure_preserves_deadline_until_complete_re
 
     # Act
     with pytest.raises(OSError, match=f"{failed_measurement} measurement unavailable"):
-        async with session_scope() as session:
-            await invoices.snapshot(session, organization.id, period_end)
+        await invoices.snapshot(organization.id, period_end)
 
     # Assert
     async with session_scope() as session:
@@ -75,10 +74,8 @@ async def test_snapshot_measurement_failure_preserves_deadline_until_complete_re
 
     # Act
     failed_measurement = ""
-    async with session_scope() as session:
-        await invoices.snapshot(session, organization.id, period_end)
-    async with session_scope() as session:
-        await invoices.snapshot(session, organization.id, period_end)
+    await invoices.snapshot(organization.id, period_end)
+    await invoices.snapshot(organization.id, period_end)
 
     # Assert
     async with session_scope() as session:

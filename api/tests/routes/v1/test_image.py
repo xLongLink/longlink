@@ -112,9 +112,9 @@ async def test_inspect_image_rejects_non_members_before_metadata_inspection(
 
     # Arrange
     organization = await create_organization(users[1])
-    owner_response = await clients[1].get(f"/api/v1/organizations/{organization.id}")
+    owner_response = await clients[1].get(f"/api/v1/organizations/{organization.id}/members")
     assert owner_response.status_code == 200
-    assert owner_response.json()["organization"]["id"] == str(organization.id)
+    assert owner_response.json()[0]["user"]["id"] == str(users[1].id)
 
     async def unexpected_metadata(_image: Image, _connection: object | None = None) -> None:
         """Fail if a non-member reaches the metadata adapter."""

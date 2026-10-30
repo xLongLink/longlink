@@ -22,15 +22,13 @@ export default function IconPage() {
                     description: 'Icon size; inherits the parent default or falls back to md.',
                 },
             ]}
-            examples={[
-                {
-                    title: 'Icon',
-                    preview: <IconExample />,
-                    code: `function Example() {
+            example={{
+                title: 'Icon',
+                preview: <IconExample />,
+                code: `function Example() {
   return <Icon icon="search" size="md" />;
 }`,
-                },
-            ]}
+            }}
         />
     );
 }
