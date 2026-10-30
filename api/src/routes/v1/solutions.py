@@ -5,7 +5,6 @@ from src import auth
 from uuid import UUID
 from fastapi import Depends, Response, APIRouter, HTTPException
 from src.utils import images
-from src.context import Context
 from src.kubernetes import solutions as solution_resources
 from src.environments import env
 from src.models.types import Image
@@ -50,10 +49,10 @@ async def update_candidate(
 
 
 @router.get("/solutions/{solution_id}/update", response_model=SolutionUpdateCheck)
-async def check_update(ctx: Context, user: auth.CurrentUser, solution: auth.SolutionMaintainer):
+async def check_update(session: auth.Session, user: auth.CurrentUser, solution: auth.SolutionMaintainer):
     """Inspect the repository's latest image without changing deployment state."""
 
-    _solution, revision, metadata = await update_candidate(ctx.database, solution, user.id)
+    _solution, revision, metadata = await update_candidate(session, solution, user.id)
 
     return {
         "current_image": revision.image,
@@ -66,14 +65,14 @@ async def check_update(ctx: Context, user: auth.CurrentUser, solution: auth.Solu
 
 
 @router.post("/solutions/{solution_id}/update", status_code=204)
-async def apply_update(ctx: Context, user: auth.CurrentUser, solution: auth.SolutionMaintainer, payload: SolutionPatch):
+async def apply_update(session: auth.Session, user: auth.CurrentUser, solution: auth.SolutionMaintainer, payload: SolutionPatch):
     """Re-resolve latest and deploy a changed immutable image or configuration."""
 
-    solution, _revision, metadata = await update_candidate(ctx.database, solution, user.id, payload.expected_revision_id)
+    solution, _revision, metadata = await update_candidate(session, solution, user.id, payload.expected_revision_id)
 
     # Compare and merge only against the current serialized desired state.
-    await solutions.deploy(ctx.database, solution, user.id, metadata, payload.envs)
-    await ctx.database.commit()
+    await solutions.deploy(session, solution, user.id, metadata, payload.envs)
+    await session.commit()
 
 
 @router.get(
@@ -150,9 +149,9 @@ async def get_solution_logs(solution_id: UUID, access: auth.SolutionLogAccess):
 
 
 @router.delete("/solutions/{solution_id}", status_code=204)
-async def delete_solution(ctx: Context, user: auth.CurrentUser, solution: auth.SolutionMaintainer):
+async def delete_solution(session: auth.Session, user: auth.CurrentUser, solution: auth.SolutionMaintainer):
     """Mark one Solution absent and queue explicit lifecycle cleanup."""
 
-    await solutions.delete(ctx.database, solution.id, user.id)
+    await solutions.delete(session, solution.id, user.id)
 
-    await ctx.database.commit()
+    await session.commit()

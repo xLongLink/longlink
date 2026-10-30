@@ -45,6 +45,7 @@ async def deploy(revision_id: UUID) -> None:
 
     # Infrastructure owns these settings; discard copies retained by earlier deployments.
     for name in (
+        "LONGLINK_ENV",
         "LONGLINK_DATABASE_HOST",
         "LONGLINK_DATABASE_NAME",
         "LONGLINK_DATABASE_PORT",
@@ -67,7 +68,7 @@ async def deploy(revision_id: UUID) -> None:
         database_certificate = await database_resources.certificate(cluster, organization.id)
 
         # Reuse generated credentials; new RustFS accounts remain scoped to this Solution.
-        if "LONGLINK_ENV" not in runtime_secrets:
+        if "LONGLINK_DATABASE_PASSWORD" not in runtime_secrets:
             database_password = secrets.token_urlsafe(24)
             credentials = await storage.service_account(organization.id, solution.id)
             database = await database_resources.connection(organization, cluster, certificate=database_certificate)
@@ -76,7 +77,6 @@ async def deploy(revision_id: UUID) -> None:
             # Build the durable runtime credentials before creating the workload.
             runtime_secrets.update(
                 {
-                    "LONGLINK_ENV": "production",
                     "LONGLINK_DATABASE_PASSWORD": database_password,
                     "LONGLINK_DATABASE_USERNAME": database_username,
                     "LONGLINK_STORAGE_PASSWORD": credentials.secret_key,
@@ -92,6 +92,7 @@ async def deploy(revision_id: UUID) -> None:
         runtime_environment = {
             **revision.envs,
             **runtime_secrets,
+            "LONGLINK_ENV": "production",
             "LONGLINK_DATABASE_HOST": namespace.database_hostname(organization.id),
             "LONGLINK_DATABASE_NAME": organization.id.hex,
             "LONGLINK_DATABASE_PORT": "5432",
@@ -107,7 +108,6 @@ async def deploy(revision_id: UUID) -> None:
 
         # Persist generated credentials when the runtime contract changed.
         if runtime_secrets != solution.secrets:
-
             # Persist credentials only while the Solution remains active.
             async with session_scope() as session:
                 result = cast(

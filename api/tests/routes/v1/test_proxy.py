@@ -108,7 +108,6 @@ async def create_running_solution(user: User) -> tuple[Solution, ComputeRegistry
         secrets={"LONGLINK_IDENTITY_SECRET": "test-identity-secret-01234567890"},
     )
     async with session_scope() as session:
-
         # Persist the runtime target before sending requests through the proxy.
         session.add(solution)
         await session.commit()
@@ -1052,7 +1051,7 @@ def request_scope(monkeypatch: pytest.MonkeyPatch) -> SimpleNamespace:
             "solution_id": solution.id,
             "path": "health%2Fstatus",
             "user": user,
-            "ctx": SimpleNamespace(request=request, database=SimpleNamespace(commit=commit)),
+            "session": SimpleNamespace(commit=commit),
         },
     )
 
@@ -1110,7 +1109,6 @@ async def test_gateway_response_closes_client_when_response_close_fails(
         await proxy_routes.proxy_solution_request(**request_scope.kwargs, runtime=runtime)
         assert request_scope.closed == []
     finally:
-
         # Response cleanup must still release the client when it fails.
         with pytest.raises(RuntimeError, match="response close failed"):
             await scope.__aexit__(None, None, None)
@@ -1154,7 +1152,6 @@ async def test_gateway_request_closes_client_when_send_is_cancelled(
             # Interrupted submission releases its acquired client immediately.
             assert request_scope.closed == ["client"]
         finally:
-
             # Always reap the request task, including failures before send is entered.
             task.cancel()
             async with asyncio.timeout(1):
