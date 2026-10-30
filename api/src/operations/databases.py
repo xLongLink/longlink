@@ -10,21 +10,12 @@ from src.kubernetes import databases as database_resources
 from collections.abc import AsyncGenerator
 from src.models.statuses import Status
 from src.database.session import session_scope
+from src.database.services import organizations
 from src.kubernetes.client import Kubernetes
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.models.organizations import DatabaseState
 from src.database.models.computes import ComputeRegistry
 from src.database.models.organizations import Organization, OrganizationActivity
-
-
-async def lock(session: AsyncSession, organization_id: UUID) -> Organization | None:
-    """Serialize admission and transitions on SQLite, PostgreSQL, and MySQL."""
-
-    # An UPDATE takes a write lock even where SELECT FOR UPDATE is unsupported.
-    await session.execute(
-        update(Organization).where(col(Organization.id) == organization_id).values(updated_at=col(Organization.updated_at))
-    )
-    return await session.get(Organization, organization_id, populate_existing=True)
 
 
 @dataclass
@@ -47,7 +38,7 @@ class Lease:
 
         # Release the admission lock before external I/O; Kubernetes still needs its own strict fencing.
         async with session_scope() as session:
-            organization = await lock(session, self.organization_id)
+            organization = await organizations.lock_row(session, self.organization_id)
             if organization is None or organization.deleted_at is not None or self.lost or not await self.owned(session):
                 raise RuntimeError("Organization transition lease was lost")
 
@@ -71,7 +62,7 @@ class Lease:
 
                     # Bound renewal so a stalled database cannot hold the owner indefinitely.
                     async with asyncio.timeout(30), session_scope() as session:
-                        await lock(session, self.organization_id)
+                        await organizations.lock_row(session, self.organization_id)
 
                         # Renewal must not extend a replacement owner's lease.
                         if not await self.owned(session):
@@ -109,7 +100,7 @@ class Lease:
             # Conditional release cannot delete a replacement lease after crash recovery.
             finally:
                 async with session_scope() as session:
-                    organization = await lock(session, self.organization_id)
+                    organization = await organizations.lock_row(session, self.organization_id)
 
                     # Delete only the activity row protected by this lease.
                     if organization is not None and await self.owned(session):
@@ -146,7 +137,7 @@ async def deleting(organization_id: UUID) -> AsyncGenerator[None]:
     # Serialize deletion eligibility and lease admission under the same Organization lock.
     while True:
         async with session_scope() as session:
-            organization = await lock(session, organization_id)
+            organization = await organizations.lock_row(session, organization_id)
 
             # An absent Organization has already completed cleanup.
             if organization is None:
@@ -175,7 +166,7 @@ async def ready(organization_id: UUID) -> bool:
     # Provisioning decisions share the same short write transaction.
     while True:
         async with session_scope() as session:
-            organization = await lock(session, organization_id)
+            organization = await organizations.lock_row(session, organization_id)
 
             # Provisioning cannot revive an absent or deleted Organization.
             if organization is None or organization.deleted_at is not None:
@@ -215,25 +206,24 @@ async def ready(organization_id: UUID) -> bool:
                 cluster = Kubernetes(kubeconfig)
 
                 # Revalidate ownership before mutating cluster resources.
-                async with cluster:
-                    await lease.check()
+                await lease.check()
 
-                    # New infrastructure needs provisioning before PostgreSQL initialization.
-                    if organization.status != Status.running:
-                        await database_resources.apply(
-                            cluster,
-                            organization_id,
-                            organization.database_password,
-                            # Preserve the Compute's selected persistent storage class.
-                            database_storage_class,
-                            size_mib=organization.database_size_mib,
-                            instances=organization.database_instances,
-                        )
+                # New infrastructure needs provisioning before PostgreSQL initialization.
+                if organization.status != Status.running:
+                    await database_resources.apply(
+                        cluster,
+                        organization_id,
+                        organization.database_password,
+                        # Preserve the Compute's selected persistent storage class.
+                        database_storage_class,
+                        size_mib=organization.database_size_mib,
+                        instances=organization.database_instances,
+                    )
 
-                    # Existing infrastructure must be ready before using PostgreSQL.
-                    else:
-                        await database_resources.wait_ready(cluster, organization_id)
-                    database = await database_resources.connection(organization, cluster)
+                # Existing infrastructure must be ready before using PostgreSQL.
+                else:
+                    await database_resources.wait_ready(cluster, organization_id)
+                async with database_resources.connection(organization, cluster) as database:
                     if organization.status != Status.running:
                         await lease.check()
 
@@ -249,7 +239,7 @@ async def ready(organization_id: UUID) -> bool:
 
                     # Publish the provisioned database.
                     async with session_scope() as session:
-                        organization = await lock(session, organization_id)
+                        organization = await organizations.lock_row(session, organization_id)
 
                         # A lost lease cannot publish infrastructure as available.
                         if organization is None or organization.deleted_at is not None or not await lease.owned(session):
@@ -265,7 +255,7 @@ async def ready(organization_id: UUID) -> bool:
 
                 # Persist failure without changing a replacement lease's state.
                 async with session_scope() as session:
-                    organization = await lock(session, organization_id)
+                    organization = await organizations.lock_row(session, organization_id)
 
                     # Do not overwrite a replacement worker's transition state.
                     if organization is not None and await lease.owned(session):

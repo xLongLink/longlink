@@ -23,12 +23,13 @@ import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 
 type Tag = z.output<typeof schemas.zOrganizationTagResponse>;
 
+type TagAction = { kind: 'create' } | { kind: 'edit' | 'delete'; tag: Tag };
+
 /** Lists and manages the shared tags used as top-level Organization tabs. */
 export default function TabsSection({ base, canMaintain }: { base: string; canMaintain: boolean }) {
     const [tags, invalidateTags] = useApi(`${base}/tags`, schemas.zOrganizationTagResponse.array());
     const queryClient = useQueryClient();
-    const [editing, setEditing] = useState<Tag | 'create' | null>(null);
-    const [deleting, setDeleting] = useState<Tag | null>(null);
+    const [action, setAction] = useState<TagAction | null>(null);
     const [isMoving, setIsMoving] = useState(false);
     const reportError = useApiError();
 
@@ -47,14 +48,6 @@ export default function TabsSection({ base, canMaintain }: { base: string; canMa
         }
     }
 
-    /** Refreshes navigation and removes stale assignments from cached Solution lists. */
-    async function invalidate() {
-        await Promise.all([
-            invalidateTags(),
-            queryClient.invalidateQueries({ queryKey: ['api', `${base}/solutions`], exact: true }),
-        ]);
-    }
-
     // Keep category editing separate from Solution deployments and assignments.
     return (
         <>
@@ -63,7 +56,7 @@ export default function TabsSection({ base, canMaintain }: { base: string; canMa
                     <Heading level={4} accessibilityLevel={3}>
                         Tabs
                     </Heading>
-                    {canMaintain && <Button label="New tab" size="sm" onClick={() => setEditing('create')} />}
+                    {canMaintain && <Button label="New tab" size="sm" onClick={() => setAction({ kind: 'create' })} />}
                 </Stack>
                 <Table
                     data={tags}
@@ -102,7 +95,7 @@ export default function TabsSection({ base, canMaintain }: { base: string; canMa
                                                       id: 'edit',
                                                       label: 'Edit',
                                                       icon: <Pencil className="size-4" aria-hidden="true" />,
-                                                      onClick: () => setEditing(tag),
+                                                      onClick: () => setAction({ kind: 'edit', tag }),
                                                   },
                                                   {
                                                       id: 'up',
@@ -127,7 +120,7 @@ export default function TabsSection({ base, canMaintain }: { base: string; canMa
                                                       label: 'Delete',
                                                       variant: 'destructive',
                                                       icon: <Trash className="size-4" aria-hidden="true" />,
-                                                      onClick: () => setDeleting(tag),
+                                                      onClick: () => setAction({ kind: 'delete', tag }),
                                                   },
                                               ]}
                                           />
@@ -138,35 +131,41 @@ export default function TabsSection({ base, canMaintain }: { base: string; canMa
                     ]}
                 />
             </Stack>
-            {editing && (
+            {action && action.kind !== 'delete' && (
                 <TagForm
-                    key={editing === 'create' ? 'create' : editing.id}
+                    key={action.kind === 'create' ? 'create' : action.tag.id}
                     base={base}
-                    tag={editing === 'create' ? null : editing}
-                    onCancel={() => setEditing(null)}
+                    tag={action.kind === 'create' ? null : action.tag}
+                    onCancel={() => setAction(null)}
                     onSuccess={async () => {
                         // Refresh shared data before dismissing only the completed edit.
-                        await invalidate();
-                        setEditing((current) => (current === editing ? null : current));
+                        await invalidateTags();
+                        setAction((current) => (current === action ? null : current));
                     }}
                 />
             )}
             <DeletionDialog
                 confirmation={
-                    deleting
+                    action?.kind === 'delete'
                         ? {
                               title: 'Delete tab',
-                              description: `Delete tab ${deleting.name}? Solutions will not be deleted and will keep their other tags.`,
+                              description: `Delete tab ${action.tag.name}? Solutions will not be deleted and will keep their other tags.`,
                               onDelete: async () => {
                                   // Cascading assignments disappear with the tag, never the Solutions.
-                                  await api.delete(`${base}/tags/${deleting.id}`);
-                                  await invalidate();
-                                  setDeleting(null);
+                                  await api.delete(`${base}/tags/${action.tag.id}`);
+                                  await Promise.all([
+                                      invalidateTags(),
+                                      queryClient.invalidateQueries({
+                                          queryKey: ['api', `${base}/solutions`],
+                                          exact: true,
+                                      }),
+                                  ]);
+                                  setAction((current) => (current === action ? null : current));
                               },
                           }
                         : null
                 }
-                onClose={() => setDeleting(null)}
+                onClose={() => setAction(null)}
             />
         </>
     );

@@ -74,14 +74,8 @@ async def create(
 ) -> Solution:
     """Create an Organization-owned LongLink Solution."""
 
-    # Lock the Organization before creating a Solution against its assignment.
-    if session.get_bind().dialect.name == "sqlite":
-        await session.execute(
-            update(Organization).where(col(Organization.id) == organization_id).values(updated_at=col(Organization.updated_at))
-        )
-
     # Serialize creation against Organization deletion and capacity checks.
-    organization = await session.scalar(select(Organization).where(col(Organization.id) == organization_id).with_for_update())
+    organization = await organizations.lock_row(session, organization_id)
     if organization is None:
         raise HTTPException(status_code=404, detail="Organization not found")
     if organization.deleted_at is not None:

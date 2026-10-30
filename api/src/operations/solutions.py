@@ -61,85 +61,84 @@ async def deploy(revision_id: UUID) -> None:
 
     # Organization reconciliation owns bucket provisioning and quota admission.
     cluster = Kubernetes(compute.kubeconfig)
-    async with cluster:
-        storage = Storage(compute, cluster)
+    storage = Storage(compute, cluster)
 
-        # Use one current CA snapshot for SQL provisioning and workload rendering in this attempt.
-        database_certificate = await database_resources.certificate(cluster, organization.id)
+    # Use one current CA snapshot for SQL provisioning and workload rendering in this attempt.
+    database_certificate = await database_resources.certificate(cluster, organization.id)
 
-        # Reuse generated credentials; new RustFS accounts remain scoped to this Solution.
-        if "LONGLINK_DATABASE_PASSWORD" not in runtime_secrets:
-            database_password = secrets.token_urlsafe(24)
-            credentials = await storage.service_account(organization.id, solution.id)
-            database = await database_resources.connection(organization, cluster, certificate=database_certificate)
+    # Reuse generated credentials; new RustFS accounts remain scoped to this Solution.
+    if "LONGLINK_DATABASE_PASSWORD" not in runtime_secrets:
+        database_password = secrets.token_urlsafe(24)
+        credentials = await storage.service_account(organization.id, solution.id)
+        async with database_resources.connection(organization, cluster, certificate=database_certificate) as database:
             database_username = await database.solution_schema(organization.id, solution.id, database_password)
 
-            # Build the durable runtime credentials before creating the workload.
-            runtime_secrets.update(
-                {
-                    "LONGLINK_DATABASE_PASSWORD": database_password,
-                    "LONGLINK_DATABASE_USERNAME": database_username,
-                    "LONGLINK_STORAGE_PASSWORD": credentials.secret_key,
-                    "LONGLINK_STORAGE_USERNAME": credentials.access_key,
-                }
+        # Build the durable runtime credentials before creating the workload.
+        runtime_secrets.update(
+            {
+                "LONGLINK_DATABASE_PASSWORD": database_password,
+                "LONGLINK_DATABASE_USERNAME": database_username,
+                "LONGLINK_STORAGE_PASSWORD": credentials.secret_key,
+                "LONGLINK_STORAGE_USERNAME": credentials.access_key,
+            }
+        )
+
+    # Issue a solution-specific key so only Platform-originated requests can assert an audit identity.
+    if "LONGLINK_IDENTITY_SECRET" not in runtime_secrets:
+        runtime_secrets["LONGLINK_IDENTITY_SECRET"] = secrets.token_urlsafe(32)
+
+    # Resolve current infrastructure settings without persisting a second configuration owner.
+    runtime_environment = {
+        **revision.envs,
+        **runtime_secrets,
+        "LONGLINK_ENV": "production",
+        "LONGLINK_DATABASE_HOST": namespace.database_hostname(organization.id),
+        "LONGLINK_DATABASE_NAME": organization.id.hex,
+        "LONGLINK_DATABASE_PORT": "5432",
+        "LONGLINK_DATABASE_SCHEMA": solution.id.hex,
+        "LONGLINK_STORAGE_BUCKET": storage.bucket_name(organization.id),
+        "LONGLINK_STORAGE_PREFIX": f"solutions/{solution.id.hex}/",
+        "LONGLINK_STORAGE_REGION": "us-east-1",
+        # Workloads always reach object storage through the cluster-local TLS proxy.
+        "LONGLINK_STORAGE_ENDPOINT_URL": "https://longlink-storage.rustfs.svc:443",
+        "LONGLINK_DATABASE_CERTIFICATE": database_certificate,
+        **({"LONGLINK_STORAGE_CERTIFICATE": compute.storage_certificate} if compute.storage_certificate else {}),
+    }
+
+    # Persist generated credentials when the runtime contract changed.
+    if runtime_secrets != solution.secrets:
+        # Persist credentials only while the Solution remains active.
+        async with session_scope() as session:
+            result = cast(
+                CursorResult[tuple[object, ...]],
+                await session.execute(
+                    update(Solution)
+                    .where(col(Solution.id) == solution.id, col(Solution.deleted_at).is_(None))
+                    # Store generated credentials only on a still-active Solution.
+                    .values(secrets=runtime_secrets)
+                ),
             )
 
-        # Issue a solution-specific key so only Platform-originated requests can assert an audit identity.
-        if "LONGLINK_IDENTITY_SECRET" not in runtime_secrets:
-            runtime_secrets["LONGLINK_IDENTITY_SECRET"] = secrets.token_urlsafe(32)
+            # Stop if deletion won the race with credential persistence.
+            if result.rowcount != 1:
+                return
 
-        # Resolve current infrastructure settings without persisting a second configuration owner.
-        runtime_environment = {
-            **revision.envs,
-            **runtime_secrets,
-            "LONGLINK_ENV": "production",
-            "LONGLINK_DATABASE_HOST": namespace.database_hostname(organization.id),
-            "LONGLINK_DATABASE_NAME": organization.id.hex,
-            "LONGLINK_DATABASE_PORT": "5432",
-            "LONGLINK_DATABASE_SCHEMA": solution.id.hex,
-            "LONGLINK_STORAGE_BUCKET": storage.bucket_name(organization.id),
-            "LONGLINK_STORAGE_PREFIX": f"solutions/{solution.id.hex}/",
-            "LONGLINK_STORAGE_REGION": "us-east-1",
-            # Workloads always reach object storage through the cluster-local TLS proxy.
-            "LONGLINK_STORAGE_ENDPOINT_URL": "https://longlink-storage.rustfs.svc:443",
-            "LONGLINK_DATABASE_CERTIFICATE": database_certificate,
-            **({"LONGLINK_STORAGE_CERTIFICATE": compute.storage_certificate} if compute.storage_certificate else {}),
-        }
+            await session.commit()
 
-        # Persist generated credentials when the runtime contract changed.
-        if runtime_secrets != solution.secrets:
-            # Persist credentials only while the Solution remains active.
-            async with session_scope() as session:
-                result = cast(
-                    CursorResult[tuple[object, ...]],
-                    await session.execute(
-                        update(Solution)
-                        .where(col(Solution.id) == solution.id, col(Solution.deleted_at).is_(None))
-                        # Store generated credentials only on a still-active Solution.
-                        .values(secrets=runtime_secrets)
-                    ),
-                )
-
-                # Stop if deletion won the race with credential persistence.
-                if result.rowcount != 1:
-                    return
-
-                await session.commit()
-
-        # Apply the captured desired release so reconciliation repairs workload drift.
-        if revision.registry_connection_id is not None:
-            await registries.synchronize(cluster, organization.id)
-        await solution_resources.apply(
-            cluster,
-            organization.id,
-            solution.id,
-            revision.image,
-            runtime_environment,
-            # Replays reuse the captured release and skip already-completed migrations.
-            revision_id=revision.id,
-            migrate=revision.deployed_at is None,
-            registry_connection_id=revision.registry_connection_id,
-        )
+    # Apply the captured desired release so reconciliation repairs workload drift.
+    if revision.registry_connection_id is not None:
+        await registries.synchronize(cluster, organization.id)
+    await solution_resources.apply(
+        cluster,
+        organization.id,
+        solution.id,
+        revision.image,
+        runtime_environment,
+        # Replays reuse the captured release and skip already-completed migrations.
+        revision_id=revision.id,
+        migrate=revision.deployed_at is None,
+        registry_connection_id=revision.registry_connection_id,
+    )
 
     # Publish the applied release only after workload readiness.
     async with session_scope() as session:
@@ -168,14 +167,13 @@ async def delete(solution_id: UUID) -> None:
 
     # Remove Solution Kubernetes resources before revoking provider credentials.
     cluster = Kubernetes(compute.kubeconfig)
-    async with cluster:
-        await solution_resources.delete(cluster, organization.id, solution_id)
-        db = await database_resources.connection(organization, cluster)
-        await db.delete_solution_schema(organization.id, solution_id)
+    await solution_resources.delete(cluster, organization.id, solution_id)
+    async with database_resources.connection(organization, cluster) as database:
+        await database.delete_solution_schema(organization.id, solution_id)
 
-        # Revoke the service account before owner credentials remove its private objects.
-        storage = Storage(compute, cluster)
-        await storage.delete_solution(organization.id, solution_id)
+    # Revoke the service account before owner credentials remove its private objects.
+    storage = Storage(compute, cluster)
+    await storage.delete_solution(organization.id, solution_id)
 
     # Purge the locked tombstone only after all external resources are absent.
     async with session_scope() as session:

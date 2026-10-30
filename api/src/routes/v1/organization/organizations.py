@@ -119,9 +119,8 @@ async def get_organization_database_usage(session: auth.Session, membership: aut
         async with asyncio.timeout(15):
             cluster = Kubernetes(compute.kubeconfig)
 
-            # Measure PostgreSQL through its cluster-owned connection.
-            async with cluster:
-                database = await databases.connection(organization, cluster)
+            # Measure PostgreSQL through a workflow-owned tunnel.
+            async with databases.connection(organization, cluster) as database:
                 usage = await database.usage(organization.id)
     except (
         TimeoutError,

@@ -1,5 +1,8 @@
 import pytest
+from uuid import uuid4
+from contextlib import asynccontextmanager
 from src.kubernetes import client as kubernetes_client
+from collections.abc import AsyncGenerator
 
 pytestmark = pytest.mark.no_db
 
@@ -80,12 +83,6 @@ async def test_kubernetes_clients_leave_shared_http_session_to_lifespan(monkeypa
     # Arrange
     closed: list[str] = []
 
-    async def close_tunnel() -> None:
-        """Record tunnel cleanup on the real connection exit stack."""
-
-        # Record completion before the dependent HTTP session closes.
-        closed.append("tunnel")
-
     class Session:
         """Record asynchronous HTTP session closure."""
 
@@ -102,32 +99,44 @@ async def test_kubernetes_clients_leave_shared_http_session_to_lifespan(monkeypa
 
     api = Api()
 
+    class Service:
+        """Provide a tunnel while borrowing the shared Kubernetes API."""
+
+        def __init__(self, name: str, *, namespace: str, api: Api) -> None:
+            """Accept the database Service lookup."""
+
+        async def refresh(self) -> None:
+            """Accept the database Service refresh."""
+
+        @asynccontextmanager
+        async def portforward(self, port: int, *, local_port: str) -> AsyncGenerator[int]:
+            """Record tunnel cleanup before lifespan transport disposal."""
+
+            try:
+                yield 15432
+            finally:
+                closed.append("tunnel")
+
     async def create_api(**_kwargs: object) -> Api:
         """Share the same API between wrappers, matching the kr8s factory."""
 
         return api
 
     monkeypatch.setattr(kubernetes_client.kr8s.asyncio, "api", create_api)
+    monkeypatch.setattr(kubernetes_client, "Service", Service)
     kubernetes = kubernetes_client.Kubernetes({"apiVersion": "v1"})
     other = kubernetes_client.Kubernetes({"apiVersion": "v1"})
     await kubernetes.api()
     assert await other.api() is api
-    kubernetes._connections.push_async_callback(close_tunnel)
 
     # Act
-    async with kubernetes:
-        pass
+    async with kubernetes.forward_database(uuid4()) as port:
+        assert port == 15432
+        assert closed == []
 
     # Assert
     assert closed == ["tunnel"]
     assert await other.api() is api
-
-    # Act
-    await kubernetes.aclose()
-    await other.aclose()
-
-    # Assert
-    assert closed == ["tunnel"]
 
     # Shut down only after both borrowers have finished, then repeat disposal to check idempotency.
     await kubernetes_client.dispose_clients()

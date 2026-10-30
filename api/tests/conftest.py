@@ -81,10 +81,11 @@ class StorageKubernetes:
 class DatabaseKubernetes(Kubernetes):
     """Provide the CNPG provider boundary without opening Kubernetes connections."""
 
-    async def forward_database(self, organization_id: UUID) -> int:
+    @asynccontextmanager
+    async def forward_database(self, organization_id: UUID) -> AsyncGenerator[int]:
         """Supply a local transport port consumed only by the SQL fake."""
 
-        return 15432
+        yield 15432
 
 
 class DatabasePostgres:

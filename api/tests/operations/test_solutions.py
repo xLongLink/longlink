@@ -188,19 +188,18 @@ async def test_solution_creation_applies_user_and_managed_environment_values(
             return "solution"
 
     class FakeKubernetes(DatabaseKubernetes):
-        """Record the Kubernetes connection scope during deployment."""
+        """Record the database tunnel scope during deployment."""
 
-        def __init__(self, kubeconfig: dict[str, object]) -> None:
-            """Record client construction alongside shared fake ownership."""
+        @asynccontextmanager
+        async def forward_database(self, organization_id: UUID) -> AsyncGenerator[int]:
+            """Release the database tunnel after schema provisioning."""
 
-            super().__init__(kubeconfig)
             calls.append("open")
-
-        async def aclose(self) -> None:
-            """Provide the Kubernetes client cleanup contract."""
-
-            await super().aclose()
-            calls.append("close")
+            try:
+                async with super().forward_database(organization_id) as port:
+                    yield port
+            finally:
+                calls.append("close")
 
     async def apply(
         client: object,
@@ -229,7 +228,7 @@ async def test_solution_creation_applies_user_and_managed_environment_values(
     await solution_operations.deploy(solution.desired_revision_id)
 
     # User values and generated Platform values share the runtime Secret.
-    assert calls == ["open", "credentials", "schema", "workload", "close"]
+    assert calls == ["credentials", "open", "schema", "close", "workload"]
     calls.clear()
     assert captured["secrets"]["API_KEY"] == "runtime-secret"
     assert captured["secrets"]["LONGLINK_ENV"] == "production"
@@ -268,7 +267,7 @@ async def test_solution_creation_applies_user_and_managed_environment_values(
         await session.commit()
         revision_id = current.desired_revision_id
     await solution_operations.deploy(revision_id)
-    assert calls == ["open", "workload", "close"]
+    assert calls == ["workload"]
 
     # Updated environment values override retained runtime credentials only where allowed.
     assert captured["secrets"] == {

@@ -140,8 +140,7 @@ async def get_solution_logs(solution_id: UUID, access: auth.SolutionLogAccess):
     # Map expected cluster log failures to a service-unavailable response.
     try:
         cluster = Kubernetes(kubeconfig)
-        async with cluster:
-            return await solution_resources.logs(cluster, organization_id, solution_id)
+        return await solution_resources.logs(cluster, organization_id, solution_id)
 
     # Do not expose cluster diagnostics through the public log endpoint.
     except RuntimeError:
