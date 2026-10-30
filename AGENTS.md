@@ -104,25 +104,33 @@ RULES:
 
 ## Commit Message Structure
 
-DO use this structure for commit messages:
+DO use Conventional Commits for commit messages: type, optional scope in parentheses, a colon, a space, and a short imperative description.
 
-```
-<commit-message>
-	<type>feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert</type>
-	<scope>api|sdk|web (optional)</scope>
-	<description>A short, imperative summary of the change</description>
-</commit-message>
+DO choose a type from `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, or `revert`. Optional scopes are `api`, `sdk`, and `web`; omit the scope for cross-area changes.
+
+DO write plain text only. NEVER include XML/HTML tags, Markdown wrappers, or literal template placeholders in commit messages or pull request titles.
+
+Valid examples:
+
+```text
+refactor: Make resource and workflow ownership explicit
+fix(api): Preserve invitation permissions
 ```
 
 ## Merge Request Structure
 
-DO use this structure for merge requests:
+DO format the pull request title exactly like a commit message, following the rules and examples above.
 
+DO use these Markdown headings in the pull request body, replacing the example bullets with the actual changes and results:
+
+```markdown
+## Summary
+
+- What changed and why.
+
+## Validation
+
+- Checks run and results, or why not run.
 ```
-<merge-request>
-	<title>Use the commit message structure</title>
-	<summary>What changed and why</summary>
-	<validation>Checks run and results, or why not run</validation>
-	<labels>Change-type labels from .github/release.yml and applicable area labels: api|sdk|web</labels>
-</merge-request>
-```
+
+DO apply change-type labels from `.github/release.yml` and applicable area labels (`api`, `sdk`, `web`) through GitHub labels, not as tags in the title or body.
