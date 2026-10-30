@@ -359,14 +359,21 @@ async def member_count(session: AsyncSession, organization_id: UUID) -> int:
     return result.scalar_one()
 
 
-async def lock(session: AsyncSession, organization_id: UUID) -> Organization:
-    """Serialize organization commands and membership admission on every supported database."""
+async def lock_row(session: AsyncSession, organization_id: UUID) -> Organization | None:
+    """Lock and refresh an Organization, including tombstones, in the caller's transaction."""
 
     # A no-op write also takes a lock on SQLite, where FOR UPDATE is ignored.
     await session.execute(
         sql_update(Organization).where(col(Organization.id) == organization_id).values(updated_at=col(Organization.updated_at))
     )
-    organization = await session.get(Organization, organization_id, populate_existing=True)
+    return await session.get(Organization, organization_id, populate_existing=True)
+
+
+async def lock(session: AsyncSession, organization_id: UUID) -> Organization:
+    """Serialize organization commands and membership admission on every supported database."""
+
+    # Keep command availability policy separate from row acquisition.
+    organization = await lock_row(session, organization_id)
     if organization is None:
         raise HTTPException(status_code=403, detail="Organization unavailable")
     return organization

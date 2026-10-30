@@ -61,8 +61,7 @@ async def snapshot(session: AsyncSession, organization_id: UUID, period_end: dat
     cluster = Kubernetes(compute.kubeconfig)
     credentials = s3.Credentials(compute.storage_access_key, compute.storage_secret_key)
     storage = s3.S3(compute.storage_endpoint, credentials, compute.storage_certificate)
-    async with asyncio.timeout(60), cluster:
-        database = await databases.connection(organization, cluster)
+    async with asyncio.timeout(60), databases.connection(organization, cluster) as database:
         database_bytes = await database.usage(organization_id)
         storage_bytes = await storage.usage(Storage.bucket_name(organization_id))
 

@@ -26,6 +26,7 @@ type SelectorProps = FieldProps & {
     defaultValue?: string;
     onChange?: (value: string | null) => void;
     hasSearch?: boolean;
+    hasClear?: boolean;
     placeholder?: string;
 };
 
@@ -59,9 +60,10 @@ export function Selector(props: SelectorProps) {
                     // Keep the selected value and its menu row on the same icon-loading path.
                     return { ...option, icon: option.icon ? <Icon icon={option.icon} size="sm" /> : undefined };
                 })}
-                hasClear
                 size="md"
-                value={field.value}
+                {...(props.hasClear === false
+                    ? { hasClear: false as const, value: field.value ?? undefined }
+                    : { hasClear: true as const, value: field.value })}
                 onChange={field.onChange}
                 htmlName={props.name}
                 placeholder={props.placeholder ?? 'Select...'}

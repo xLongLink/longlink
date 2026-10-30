@@ -6,6 +6,7 @@ import { useState } from 'react';
 import Invoices from './Invoices';
 import Registries from './Registries';
 import { useApiError } from '@/lib/errors';
+import { Form } from '@/components/ui/Form';
 import { useApi } from '@/lib/hooks/use-api';
 import PaymentMethods from './PaymentMethods';
 import { Text } from '@astryxdesign/core/Text';
@@ -13,24 +14,24 @@ import { Avatar } from '@/components/ui/Avatar';
 import { Dialog } from '@/components/ui/Dialog';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
+import { Selector } from '@/components/ui/Selector';
 import { Divider } from '@astryxdesign/core/Divider';
 import { Heading } from '@astryxdesign/core/Heading';
 import SolutionManagement from './SolutionManagement';
+import { TextInput } from '@/components/ui/TextInput';
 import { ApiBoundary } from '@/components/ApiBoundary';
 import { DeletionDialog } from '@/components/Deletion';
 import { MoreMenu } from '@astryxdesign/core/MoreMenu';
-import { Selector } from '@astryxdesign/core/Selector';
 import { Illustration } from '@/components/Illustration';
-import { TextInput } from '@astryxdesign/core/TextInput';
 import { SideNavItem } from '@/components/ui/SideNavItem';
 import { useLocation, useOutletContext } from 'react-router';
 import { Table, proportional } from '@astryxdesign/core/Table';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
+import { Boxes, Building2, CreditCard, Users } from 'lucide-react';
 import { SideNav, SideNavSection } from '@astryxdesign/core/SideNav';
 import type { OrganizationContext } from '@/platform/layouts/Organization';
 import { Layout, LayoutPanel, LayoutContent } from '@astryxdesign/core/Layout';
 import { Dialog as AstryxDialog, DialogHeader } from '@astryxdesign/core/Dialog';
-import { ArrowUp, Boxes, Building2, CheckCheck, CreditCard, EyeOff, Users, Wrench } from 'lucide-react';
 
 const organizationSections = [
     { id: 'general', label: 'General' },
@@ -254,8 +255,8 @@ function MembersSection({ base, canAdminister }: { base: string; canAdminister: 
         action: { kind: 'role'; role: string } | { kind: 'remove' };
     } | null>(null);
 
-    // Load and invalidate People data only while the members section is active.
-    const [{ members }, invalidateDetails] = useApi(base, schemas.zOrganizationDetails);
+    // Load and invalidate members independently of pending invitations.
+    const [members, invalidateMembers] = useApi(`${base}/members`, schemas.zOrganizationMemberAccessResponse.array());
 
     return (
         <>
@@ -369,7 +370,7 @@ function MembersSection({ base, canAdminister }: { base: string; canAdminister: 
                                     }
 
                                     // Refresh members only after the confirmed access change succeeds.
-                                    await invalidateDetails();
+                                    await invalidateMembers();
                                     setMember(null);
                                 }}
                             />
@@ -383,30 +384,31 @@ function MembersSection({ base, canAdminister }: { base: string; canAdminister: 
 
 /** Owns invitation drafts and actions only while their section is active. */
 function InvitationsSection({ base, canMaintain }: { base: string; canMaintain: boolean }) {
-    const [invitation, setInvitation] = useState({ email: '', role: 'write' });
+    const [hasEmail, setHasEmail] = useState(false);
     const [inviting, setInviting] = useState(false);
     const reportError = useApiError();
 
-    // Load and invalidate People data only while the invitations section is active.
-    const [{ invitations }, invalidateDetails] = useApi(base, schemas.zOrganizationDetails);
+    // Load and invalidate invitations independently of member access.
+    const [invitations, invalidateInvitations] = useApi(
+        `${base}/invitations`,
+        schemas.zOrganizationInvitationResponse.array()
+    );
 
     /** Sends the validated invitation and refreshes organization access. */
-    async function inviteMember() {
-        if (!invitation.email.trim()) return;
-
+    async function inviteMember(data: FormData) {
         // Keep the dialog open on failure, but refresh either way because a failed email still saves the invitation.
         try {
             await api.post(`${base}/invitations`, {
                 json: schemas.zOrganizationInvitationCreate.parse({
-                    ...invitation,
-                    email: invitation.email.trim(),
+                    role: data.get('role'),
+                    email: z.string().trim().parse(data.get('email')),
                 }),
             });
             setInviting(false);
         } catch (failure) {
             reportError(failure);
         } finally {
-            await invalidateDetails();
+            await invalidateInvitations();
         }
     }
 
@@ -453,7 +455,7 @@ function InvitationsSection({ base, canMaintain }: { base: string; canMaintain: 
                                               clickAction={async () => {
                                                   // Refresh organization access only after revocation succeeds.
                                                   await api.delete(`${base}/invitations/${row.id}`);
-                                                  await invalidateDetails();
+                                                  await invalidateInvitations();
                                               }}
                                           />
                                       ),
@@ -491,7 +493,7 @@ function InvitationsSection({ base, canMaintain }: { base: string; canMaintain: 
                                     maxWidth="100%"
                                     className="mx-auto"
                                 >
-                                    <form action={inviteMember}>
+                                    <Form action={inviteMember}>
                                         <Stack gap={10}>
                                             <Stack gap={2} align="center">
                                                 <Illustration
@@ -516,42 +518,41 @@ function InvitationsSection({ base, canMaintain }: { base: string; canMaintain: 
                                                 <TextInput
                                                     label="Email"
                                                     type="email"
-                                                    value={invitation.email}
+                                                    name="email"
                                                     placeholder="user@example.com"
-                                                    isRequired
-                                                    onChange={(email) => setInvitation({ ...invitation, email })}
-                                                    width="100%"
+                                                    required
+                                                    onChange={(email) => setHasEmail(Boolean(email.trim()))}
                                                 />
                                                 <Selector
                                                     label="Role"
-                                                    value={invitation.role}
+                                                    name="role"
+                                                    defaultValue="write"
+                                                    hasClear={false}
                                                     options={[
-                                                        { value: 'read', label: 'read', icon: EyeOff },
-                                                        { value: 'write', label: 'write', icon: ArrowUp },
+                                                        { value: 'read', label: 'read', icon: 'lucide:eye-off' },
+                                                        { value: 'write', label: 'write', icon: 'lucide:arrow-up' },
                                                         {
                                                             value: 'maintain',
                                                             label: 'maintain',
-                                                            icon: Wrench,
+                                                            icon: 'lucide:wrench',
                                                         },
                                                         {
                                                             value: 'admin',
                                                             label: 'admin',
-                                                            icon: CheckCheck,
+                                                            icon: 'lucide:check-check',
                                                         },
                                                     ]}
-                                                    onChange={(role) => setInvitation({ ...invitation, role })}
-                                                    width="100%"
                                                 />
                                                 <Button
                                                     label="Invite"
                                                     variant="primary"
                                                     type="submit"
                                                     width="100%"
-                                                    isDisabled={!invitation.email.trim()}
+                                                    isDisabled={!hasEmail}
                                                 />
                                             </Stack>
                                         </Stack>
-                                    </form>
+                                    </Form>
                                 </Stack>
                             </LayoutContent>
                         }

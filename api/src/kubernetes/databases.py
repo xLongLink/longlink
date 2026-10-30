@@ -3,7 +3,9 @@ import asyncio
 from uuid import UUID
 from typing import TYPE_CHECKING, cast
 from src.utils import postgres, templates
+from contextlib import asynccontextmanager
 from src.kubernetes import tls, utils, databases, namespace
+from collections.abc import AsyncGenerator
 from importlib.resources import files
 from kr8s.asyncio.objects import Pod, Secret, ResourceQuota, new_class, object_from_spec
 from src.database.models.organizations import Organization
@@ -123,24 +125,27 @@ async def wait_ready(client: "Kubernetes", organization_id: UUID) -> None:
             await asyncio.sleep(1)
 
 
-async def connection(organization: Organization, cluster: "Kubernetes", *, certificate: str | None = None) -> postgres.Postgres:
-    """Build a private PostgreSQL connection using the caller's CA snapshot or a fresh cluster lookup."""
+@asynccontextmanager
+async def connection(
+    organization: Organization, cluster: "Kubernetes", *, certificate: str | None = None
+) -> AsyncGenerator[postgres.Postgres]:
+    """Own a private PostgreSQL tunnel using the caller's CA snapshot or a fresh cluster lookup."""
 
     # Platform workers can run outside the compute cluster and its private DNS/network.
-    port = await cluster.forward_database(organization.id)
-
-    # Preserve the cluster DNS hostname for certificate verification even through a local tunnel.
-    if certificate is None:
-        certificate = await databases.certificate(cluster, organization.id)
-    return postgres.Postgres(
-        host=namespace.database_hostname(organization.id),
-        port=port,
-        username="postgres",
-        password=organization.database_password,
-        certificate=certificate,
-        # Connect through the tunnel while validating the cluster hostname.
-        hostaddr="127.0.0.1",
-    )
+    async with cluster.forward_database(organization.id) as port:
+        # Preserve the cluster DNS hostname for certificate verification even through a local tunnel.
+        if certificate is None:
+            certificate = await databases.certificate(cluster, organization.id)
+        database = postgres.Postgres(
+            host=namespace.database_hostname(organization.id),
+            port=port,
+            username="postgres",
+            password=organization.database_password,
+            certificate=certificate,
+            # Connect through the tunnel while validating the cluster hostname.
+            hostaddr="127.0.0.1",
+        )
+        yield database
 
 
 async def certificate(client: "Kubernetes", organization_id: UUID) -> str:

@@ -2,7 +2,7 @@ from uuid import UUID
 from fastapi import HTTPException
 from sqlmodel import col
 from src.utils import github, images
-from sqlalchemy import select, update
+from sqlalchemy import select
 from src.models.roles import OrganizationRoles
 from src.models.types import Image
 from src.models.metadata import LongLinkMetadata
@@ -12,20 +12,13 @@ from src.models.registries import RegistryCreate
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.solutions import Revision
 from src.database.models.registries import RegistryConnection
-from src.database.models.organizations import Organization
 
 
 async def lock(session: AsyncSession, organization_id: UUID) -> None:
     """Serialize registry mutations, secret synchronization, and revision admission."""
 
-    # SQLite requires a write reservation rather than SELECT FOR UPDATE.
-    if session.get_bind().dialect.name == "sqlite":
-        await session.execute(
-            update(Organization).where(col(Organization.id) == organization_id).values(updated_at=col(Organization.updated_at))
-        )
-
     # Lock and refresh Organization state before checking availability.
-    organization = await session.get(Organization, organization_id, populate_existing=True, with_for_update=True)
+    organization = await organizations.lock_row(session, organization_id)
     if organization is None or organization.deleted_at is not None:
         raise HTTPException(status_code=409, detail="Organization is not available")
 
