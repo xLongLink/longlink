@@ -14,10 +14,9 @@ from urllib.parse import urlsplit, parse_qsl, urlencode, urlunsplit
 from sqlalchemy.orm import load_only
 from collections.abc import Sequence
 from src.environments import env
-from src.models.roles import OrganizationRoles
 from sqlalchemy.engine import CursorResult
 from src.database.types import attr
-from src.database.services import organizations
+from src.database.services import permissions, organizations
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.mcp import MCPCode, MCPToken, MCPClient
 from src.database.models.users import User
@@ -93,12 +92,21 @@ async def _permitted_solution(session: AsyncSession, user: User, solution_id: UU
     # Load only permission and consent metadata, without decrypting runtime secrets.
     solution = await session.scalar(
         select(Solution)
-        .options(load_only(attr(Solution.id), attr(Solution.name), attr(Solution.deleted_at), attr(Solution.organization_id)))
+        .options(
+            load_only(
+                attr(Solution.id),
+                attr(Solution.name),
+                attr(Solution.deleted_at),
+                attr(Solution.organization_id),
+                attr(Solution.deployed_revision_id),
+            )
+        )
         .where(col(Solution.id) == solution_id)
     )
     if solution is None or solution.deleted_at is not None:
         raise HTTPException(status_code=403, detail="Access required")
-    await organizations.require_membership(session, user.id, solution.organization_id, OrganizationRoles.write)
+    await organizations.require_membership(session, user.id, solution.organization_id)
+    await permissions.runtime_access(session, solution, user.id)
     return solution
 
 
@@ -142,12 +150,17 @@ async def register(session: AsyncSession, payload: mcp.ClientRegistration) -> UU
     return client.id
 
 
-async def consent(session: AsyncSession, user: User, request: mcp.AuthorizationRequest) -> dict[str, str]:
+async def consent(session: AsyncSession, user: User, request: mcp.AuthorizationRequest) -> dict[str, object]:
     """Describe the actual client and Solution only after current permission checks."""
 
     client, solution_id = await validate_request(session, request)
     solution = await _permitted_solution(session, user, solution_id)
-    return {"client_name": client.name, "redirect_uri": request.redirect_uri, "solution_name": solution.name}
+    return {
+        "client_name": client.name,
+        "redirect_uri": request.redirect_uri,
+        "solution_name": solution.name,
+        "expires_in": ACCESS_LIFETIME_SECONDS,
+    }
 
 
 async def approve(session: AsyncSession, user: User, payload: mcp.Approval) -> str:

@@ -16,6 +16,7 @@ import { Heading } from '@astryxdesign/core/Heading';
 import { ApiBoundary } from '@/components/ApiBoundary';
 import { DeletionDialog } from '@/components/Deletion';
 import { MoreMenu } from '@astryxdesign/core/MoreMenu';
+import SolutionPermissions from './SolutionPermissions';
 import { Illustration } from '@/components/Illustration';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { Stack, StackItem } from '@astryxdesign/core/Stack';
@@ -23,7 +24,7 @@ import { Table, proportional } from '@astryxdesign/core/Table';
 import DeploymentReview, { type Update } from './DeploymentReview';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { Layout, LayoutPanel, LayoutContent } from '@astryxdesign/core/Layout';
-import { ExternalLink, Logs, Plug, Plus, RefreshCw, Tags, Trash } from 'lucide-react';
+import { ExternalLink, Logs, Plug, Plus, RefreshCw, Shield, Tags, Trash } from 'lucide-react';
 
 type Solution = z.output<typeof schemas.zOrganizationSolutionSummary>;
 
@@ -32,16 +33,20 @@ type SolutionAction =
     | { kind: 'tags'; solution: Solution }
     | ({ kind: 'update' } & Update)
     | { kind: 'logs'; id: string }
-    | { kind: 'mcp' | 'delete'; item: { id: string; name: string } };
+    | { kind: 'permissions'; id: string }
+    | { kind: 'mcp'; id: string }
+    | { kind: 'delete'; item: { id: string; name: string } };
 
 /** Owns Solution loading and dialogs for the overview and active settings section. */
 export default function SolutionManagement({
     organization,
     canMaintain,
+    canAdminister = false,
     presentation,
 }: {
     organization: z.output<typeof schemas.zUserOrganizationMembership>['organization'];
     canMaintain: boolean;
+    canAdminister?: boolean;
     presentation: 'overview' | 'settings';
 }) {
     // Own one dialog action; captured identity prevents old completions from closing its replacement.
@@ -253,6 +258,22 @@ export default function SolutionManagement({
                                                   alignment="end"
                                                   size="sm"
                                                   items={[
+                                                      ...(canAdminister
+                                                          ? [
+                                                                {
+                                                                    id: 'permissions',
+                                                                    label: 'Permissions',
+                                                                    icon: (
+                                                                        <Shield className="size-4" aria-hidden="true" />
+                                                                    ),
+                                                                    onClick: () =>
+                                                                        setSelected({
+                                                                            kind: 'permissions',
+                                                                            id: row.id,
+                                                                        }),
+                                                                },
+                                                            ]
+                                                          : []),
                                                       {
                                                           id: 'tags',
                                                           label: 'Tags',
@@ -303,7 +324,7 @@ export default function SolutionManagement({
                                                           onClick: () =>
                                                               setSelected({
                                                                   kind: 'mcp',
-                                                                  item: { id: row.id, name: row.name },
+                                                                  id: row.id,
                                                               }),
                                                       },
                                                       {
@@ -328,6 +349,22 @@ export default function SolutionManagement({
             </Stack>
             {selected?.kind === 'create' && (
                 <CreateSolution organizationId={organization.id} onSuccess={onSuccess} onClose={closeSelected} />
+            )}
+            {selected?.kind === 'permissions' && (
+                <Dialog
+                    isOpen
+                    onOpenChange={(open) => {
+                        if (!open) closeSelected();
+                    }}
+                >
+                    <ApiBoundary key={selected.id}>
+                        <SolutionPermissions
+                            solutionId={selected.id}
+                            organizationId={organization.id}
+                            onClose={closeSelected}
+                        />
+                    </ApiBoundary>
+                </Dialog>
             )}
             {selected?.kind === 'tags' && (
                 <SolutionTags
@@ -404,12 +441,12 @@ export default function SolutionManagement({
                                         </Stack>
                                         {/* Match the creation dialog's content-sized column and control width. */}
                                         <Stack gap={4} width={0} className="min-w-full">
-                                            <ApiBoundary key={selected.item.id}>
-                                                <SolutionMcpUrl solutionId={selected.item.id} onClose={closeSelected} />
+                                            <ApiBoundary key={selected.id}>
+                                                <SolutionMcpUrl solutionId={selected.id} onClose={closeSelected} />
                                             </ApiBoundary>
                                             <Button
                                                 as="a"
-                                                href={`/api/v1/solutions/${selected.item.id}/plugin`}
+                                                href={`/api/v1/solutions/${selected.id}/plugin`}
                                                 label="Download plugin ZIP"
                                                 variant="primary"
                                                 width="100%"

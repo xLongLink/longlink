@@ -13,12 +13,17 @@ from longlink.app import LongLink
 from urllib.parse import parse_qs, urlsplit
 from src.environments import env
 from src.models.statuses import Status
+from longlink.permissions import Catalog, Endpoint
 from src.database.session import session_scope
 from src.database.services import mcp
 from src.database.models.mcp import MCPCode, MCPToken
 from src.database.models.users import User
 from src.database.models.solutions import Solution
 from src.database.models.association import UserOrganization
+
+IDENTITY_CATALOG = Catalog(
+    endpoints=[Endpoint(key="GET /api/identity", path="/api/identity", method="GET", roles=["read", "write"], summary="current_identity")]
+)
 
 
 @pytest_asyncio.fixture
@@ -30,7 +35,7 @@ async def authorization_request(
     # Create current Organization access and a public client without granting anything at registration.
     compute = await create_compute()
     organization = await create_organization(users[0], compute=compute)
-    solution = await create_solution(organization)
+    solution = await create_solution(organization, catalog=IDENTITY_CATALOG)
     registration = await clients[0].post(
         "/api/v1/mcp/register", json={"client_name": "Test client", "redirect_uris": ["https://client.example/callback?keep=1"]}
     )
@@ -136,7 +141,12 @@ async def test_mcp_authorization_navigates_to_first_party_approval_and_loads_con
     assert parse_qs(location.query)["resource"] == [request["resource"]]
     assert navigation.headers["x-frame-options"] == "DENY"
     assert consent.status_code == 200
-    assert consent.json() == {"client_name": "Test client", "redirect_uri": request["redirect_uri"], "solution_name": solution.name}
+    assert consent.json() == {
+        "client_name": "Test client",
+        "redirect_uri": request["redirect_uri"],
+        "solution_name": solution.name,
+        "expires_in": 30 * 24 * 60 * 60,
+    }
     assert anonymous.status_code == 401
     assert invalid.status_code == 400
     assert "location" not in invalid.headers
@@ -542,7 +552,7 @@ async def mcp_gateway(users: tuple[User, User, User], tmp_path: Path, monkeypatc
     # Create valid persisted runtime state without contacting Kubernetes.
     secret = "test-mcp-gateway-secret-01234567890"
     organization = await create_organization(users[0])
-    solution = await create_solution(organization, runtime_secrets={"LONGLINK_IDENTITY_SECRET": secret})
+    solution = await create_solution(organization, runtime_secrets={"LONGLINK_IDENTITY_SECRET": secret}, catalog=IDENTITY_CATALOG)
     async with session_scope() as session:
         persisted = await session.get(Solution, solution.id)
         assert persisted is not None

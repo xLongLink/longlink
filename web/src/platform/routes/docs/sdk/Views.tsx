@@ -49,9 +49,9 @@ import { Blockquote } from '@astryxdesign/core/Blockquote';
 import { CheckboxInputExample } from './views/CheckboxInput';
 import { MultiSelectorExample } from './views/MultiSelector';
 import { Collapsible } from '@astryxdesign/core/Collapsible';
-import { documentationCategories } from '@/lib/documentation';
 import { Table, proportional } from '@astryxdesign/core/Table';
 import { DocumentationArticle } from '@/components/layouts/Article';
+import { viewHooks, documentationCategories } from '@/lib/documentation';
 import { SideNav, SideNavItem, SideNavSection } from '@astryxdesign/core/SideNav';
 
 const article = {
@@ -188,31 +188,7 @@ export default function Item({ params }) {
                                 description:
                                     'Requests a Solution operation and returns its data. Options support the HTTP method, JSON, form data, and binary responses. Requests and responses are limited to 2,000,000 bytes, with at most 32 form entries and 8 pending operations. Successful writes refresh cached View data. Failed HTTP requests reject with an Error containing an optional numeric status and a bounded client-facing message.',
                             },
-                            {
-                                name: 'useState(initial)',
-                                description:
-                                    'Returns the current state and a setter. Pass a value or an initializer function; updates can use the previous state.',
-                            },
-                            {
-                                name: 'useEffect(effect, dependencies)',
-                                description:
-                                    'Synchronizes with external systems after rendering. Return a cleanup function to release timers or subscriptions. Include every reactive value used by the effect in its dependencies.',
-                            },
-                            {
-                                name: 'useMemo(factory, dependencies)',
-                                description:
-                                    'Caches a calculated value until its dependencies change. Use it for expensive calculations, not required application state.',
-                            },
-                            {
-                                name: 'useRef(initial)',
-                                description:
-                                    'Returns a stable object with a mutable current property. Changing current does not trigger a render.',
-                            },
-                            {
-                                name: 'useApi(path)',
-                                description:
-                                    'Returns Solution data and an awaitable invalidator scoped to the full request path. The renderer handles initial loading, errors, and retry.',
-                            },
+                            ...viewHooks,
                         ]}
                         columns={[
                             {

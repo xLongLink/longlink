@@ -8,6 +8,7 @@ from src.database.models import operations as operations
 from src.database.models import registries as registries
 from src.database.models import association as association
 from src.database.models import invitations as invitations
+from src.database.models import permissions as permissions
 from src.database.models import organizations as organizations
 from src.database.models.base import PlatformModel
 

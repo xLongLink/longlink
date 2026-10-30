@@ -83,17 +83,21 @@ async def memberships(session: AsyncSession, user_id: UUID) -> Sequence[UserOrga
     return result.all()
 
 
-async def solution_runtime_access(
-    session: AsyncSession, user_id: UUID, solution_id: UUID
-) -> tuple[Solution, OrganizationRoles, ComputeRegistry]:
+async def solution_runtime_access(session: AsyncSession, user_id: UUID, solution_id: UUID) -> tuple[Solution, ComputeRegistry]:
     """Return one user's active Solution access with its gateway connection."""
 
     # Load Solution access and its gateway secret in one query.
     result = await session.execute(
-        select(Solution, col(UserOrganization.role), ComputeRegistry)
+        select(Solution, ComputeRegistry)
         .execution_options(populate_existing=True)
         .options(
-            load_only(attr(Solution.id), attr(Solution.organization_id), attr(Solution.secrets), attr(Solution.status)),
+            load_only(
+                attr(Solution.id),
+                attr(Solution.organization_id),
+                attr(Solution.secrets),
+                attr(Solution.status),
+                attr(Solution.deployed_revision_id),
+            ),
             load_only(attr(ComputeRegistry.id), attr(ComputeRegistry.gateway_url), attr(ComputeRegistry.gateway_certificate)),
         )
         .join(Organization, col(Organization.id) == col(Solution.organization_id))

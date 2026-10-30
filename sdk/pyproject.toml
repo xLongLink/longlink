@@ -115,6 +115,7 @@ ignore = ["D100", "D104", "D202"]
 "tests/**" = ["ARG", "N803", "S"]
 # Framework forwarding preserves FastAPI's heterogeneous argument contracts.
 "longlink/app.py" = ["ANN401"]
+"longlink/routing.py" = ["ANN401"]
 "longlink/testclient.py" = ["ANN401"]
 # The CLI intentionally executes argument lists without a shell.
 "longlink/cli/build.py" = ["S404", "S603"]

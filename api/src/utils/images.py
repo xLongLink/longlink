@@ -219,6 +219,7 @@ async def inspect(
 
         # Prefer the domain-namespaced label while supporting previously built images.
         environments = labels.get("dev.longlink.environments", labels.get("longlink.environments"))
+        permissions = labels.get("dev.longlink.permissions")
 
         # Validate the complete image metadata before returning it to release workflows.
         return LongLinkMetadata(
@@ -226,6 +227,7 @@ async def inspect(
             version=labels.get("org.opencontainers.image.version", "").strip() or None,
             description=labels.get("org.opencontainers.image.description"),
             environments=pydantic_core.from_json(environments) if environments is not None else [],
+            permissions=pydantic_core.from_json(permissions) if permissions is not None else None,
         )
 
     # Keep an explicit fallback for the bounded traversal's return contract.

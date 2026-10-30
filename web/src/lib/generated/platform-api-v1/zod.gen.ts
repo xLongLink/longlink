@@ -15,6 +15,16 @@ export const zAccessToken = z.object({
 });
 
 /**
+ * AccessUpdate
+ *
+ * Assign an SDK-defined role or disable Solution access with null.
+ */
+export const zAccessUpdate = z.object({
+    role: z.string().min(1).max(64).nullable(),
+    revision_id: z.uuid()
+});
+
+/**
  * AdminUserSummary
  *
  * Represent a user with its creation time for platform administrators.
@@ -122,7 +132,8 @@ export const zComputeRegistryResponse = z.object({
 export const zConsent = z.object({
     client_name: z.string(),
     redirect_uri: z.string(),
-    solution_name: z.string()
+    solution_name: z.string(),
+    expires_in: z.int().optional().default(2592000)
 });
 
 /**
@@ -173,6 +184,47 @@ export const zEmailPayload = z.object({
 });
 
 /**
+ * Endpoint
+ *
+ * Describe one registered business operation.
+ */
+export const zEndpoint = z.object({
+    key: z.string().max(520),
+    path: z.string().max(512).regex(/^\//),
+    roles: z.array(z.string()).max(64),
+    method: z.enum([
+        'GET',
+        'POST',
+        'PUT',
+        'PATCH',
+        'DELETE',
+        'HEAD',
+        'OPTIONS'
+    ]),
+    summary: z.string().max(256).optional().default('')
+});
+
+/**
+ * Catalog
+ *
+ * Describe the complete, deterministic Solution permission definition.
+ */
+export const zCatalog = z.object({
+    endpoints: z.array(zEndpoint).max(512)
+});
+
+/**
+ * EndpointDecision
+ *
+ * Explain effective endpoint access in the management interface.
+ */
+export const zEndpointDecision = z.object({
+    key: z.string(),
+    source: z.string(),
+    allowed: z.boolean()
+});
+
+/**
  * EnvironmentMetadata
  *
  * Typed metadata for a single environment variable.
@@ -192,7 +244,19 @@ export const zLongLinkMetadata = z.object({
     image: z.string(),
     version: z.string().nullish(),
     description: z.string().nullish(),
+    permissions: zCatalog.nullish(),
     environments: z.array(zEnvironmentMetadata).optional()
+});
+
+/**
+ * MemberAccess
+ *
+ * Return saved assignments and derived effective access.
+ */
+export const zMemberAccess = z.object({
+    role: z.string().nullable(),
+    revision_id: z.uuid(),
+    endpoints: z.array(zEndpointDecision)
 });
 
 /**
@@ -450,6 +514,17 @@ export const zPaymentInvoice = z.object({
  */
 export const zPaymentRedirect = z.object({
     url: z.url().min(1).max(2083)
+});
+
+/**
+ * PermissionSettings
+ *
+ * Expose discovered defaults without Solution secrets.
+ */
+export const zPermissionSettings = z.object({
+    roles: z.array(z.string()),
+    catalog: zCatalog.nullable(),
+    revision_id: z.uuid().nullable()
 });
 
 /**

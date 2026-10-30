@@ -160,6 +160,7 @@ export default function OrganizationSettings() {
                                 organization={membership.organization}
                                 canMaintain={canMaintain}
                                 presentation="settings"
+                                canAdminister={canAdminister}
                             />
                         ) : (
                             <GeneralSection
