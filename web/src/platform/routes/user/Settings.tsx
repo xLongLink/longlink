@@ -1,5 +1,4 @@
 import type { z } from 'zod';
-import { api } from '@/lib/api';
 import { useState } from 'react';
 import { useApiError } from '@/lib/errors';
 import { useLocation } from 'react-router';
@@ -11,15 +10,14 @@ import { UserRound, Building2 } from 'lucide-react';
 import { Divider } from '@astryxdesign/core/Divider';
 import { Heading } from '@astryxdesign/core/Heading';
 import { ApiBoundary } from '@/components/ApiBoundary';
-import { useQueryClient } from '@tanstack/react-query';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { SideNavItem } from '@/components/ui/SideNavItem';
 import { PageContainer } from '@/components/PageContainer';
-import { useAuthenticatedUser } from '@/lib/hooks/use-user';
 import OrganizationManagement from './OrganizationManagement';
 import { Layout, LayoutPanel } from '@astryxdesign/core/Layout';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { SideNav, SideNavSection } from '@astryxdesign/core/SideNav';
+import { useUpdateUser, useAuthenticatedUser } from '@/lib/hooks/use-user';
 
 /** Renders account metadata and resets drafts when the authenticated identity changes. */
 export default function Settings() {
@@ -36,8 +34,7 @@ export default function Settings() {
 /** Edits the authenticated profile and manages owned organizations. */
 function SettingsPage({ user }: { user: z.output<typeof schemas.zCurrentUser> }) {
     const [name, setName] = useState(user.name);
-    const [saving, setSaving] = useState(false);
-    const queryClient = useQueryClient();
+    const userUpdate = useUpdateUser();
     const location = useLocation();
     const reportError = useApiError();
 
@@ -46,24 +43,15 @@ function SettingsPage({ user }: { user: z.output<typeof schemas.zCurrentUser> })
 
     /** Saves the validated account name and refreshes the profile. */
     async function saveAccount() {
-        if (saving || !name.trim() || name.trim() === user.name) return;
-        setSaving(true);
+        if (userUpdate.isPending || !name.trim() || name.trim() === user.name) return;
 
-        // Refresh the authoritative profile only after saving succeeds.
+        // Cache the authoritative profile returned by a successful save.
         try {
-            await api.patch('/api/v1/me', {
-                json: schemas.zUserUpdate.parse({ name: name.trim() }),
-            });
-            setName(name.trim());
-            await queryClient.invalidateQueries({
-                queryKey: ['api', '/api/v1/me'],
-                exact: true,
-            });
+            const updatedUser = await userUpdate.mutateAsync({ name: name.trim() });
+            setName(updatedUser.name);
         } catch (error) {
             setName(user.name);
             reportError(error);
-        } finally {
-            setSaving(false);
         }
     }
 
@@ -126,7 +114,7 @@ function SettingsPage({ user }: { user: z.output<typeof schemas.zCurrentUser> })
                                     label="Username"
                                     value={name}
                                     isRequired
-                                    isReadOnly={saving}
+                                    isReadOnly={userUpdate.isPending}
                                     onChange={setName}
                                     onBlur={() => void saveAccount()}
                                 />

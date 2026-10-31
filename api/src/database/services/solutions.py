@@ -11,7 +11,7 @@ from src.models.roles import OrganizationRoles
 from src.models.types import Image
 from src.database.types import attr
 from src.models.metadata import LongLinkMetadata
-from src.models.solutions import SolutionPatch, SolutionCreate, SolutionUpdateCheck, validate_environment_variables
+from src.models.solutions import SolutionPatch, SolutionCreate, validate_environment_variables
 from src.database.services import operations, registries, organizations
 from src.models.operations import OperationKind
 from src.models.pagination import Pagination
@@ -188,18 +188,18 @@ async def _update_candidate(
     return solution, revision, metadata
 
 
-async def check_update(session: AsyncSession, solution: Solution, user_id: UUID) -> SolutionUpdateCheck:
+async def check_update(session: AsyncSession, solution: Solution, user_id: UUID) -> dict[str, object]:
     """Describe the inspected candidate without exposing release admission state."""
 
     # Expose the reviewed revision and configured names, never environment values.
     _solution, revision, metadata = await _update_candidate(session, solution, user_id)
-    return SolutionUpdateCheck(
-        current_image=revision.image,
-        current_version=revision.version,
-        metadata=metadata,
-        revision_id=revision.id,
-        configured_envs=sorted(revision.envs),
-    )
+    return {
+        "current_image": revision.image,
+        "current_version": revision.version,
+        "metadata": metadata,
+        "revision_id": revision.id,
+        "configured_envs": sorted(revision.envs),
+    }
 
 
 async def apply_update(session: AsyncSession, solution: Solution, user_id: UUID, payload: SolutionPatch) -> None:

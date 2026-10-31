@@ -1,29 +1,25 @@
-import { api } from '@/lib/api';
-import { useState } from 'react';
 import { useApiError } from '@/lib/errors';
 import { Circle, Check } from 'lucide-react';
 import { Card } from '@astryxdesign/core/Card';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
+import { useUpdateUser } from '@/lib/hooks/use-user';
 import { Heading } from '@astryxdesign/core/Heading';
-import { useQueryClient } from '@tanstack/react-query';
 import { useAppearance } from '@/components/Appearance';
 import { SelectableCard } from '@astryxdesign/core/SelectableCard';
-import { zCurrentUser } from '@/lib/generated/platform-api-v1/zod.gen';
 import { accentColors, appearanceSchema, type Appearance } from '@/lib/appearance';
 
 /** Previews and saves personal appearance without changing any Solution configuration. */
 export default function AppearanceSettings() {
     const { appearance, setAppearance } = useAppearance();
-    const [saving, setSaving] = useState(false);
-    const queryClient = useQueryClient();
+    const userUpdate = useUpdateUser();
     const reportError = useApiError();
 
     /** Serializes changes and restores the previous preference when saving fails. */
     async function saveAppearance(next: Appearance) {
         if (
-            saving ||
+            userUpdate.isPending ||
             (next.theme === appearance.theme &&
                 next.accent === appearance.accent &&
                 next.navigation === appearance.navigation)
@@ -31,18 +27,12 @@ export default function AppearanceSettings() {
             return;
         const previous = appearance;
         setAppearance(next);
-        setSaving(true);
 
         try {
-            await queryClient.cancelQueries({ queryKey: ['api', '/api/v1/me'], exact: true });
-            const user = await api.patch('/api/v1/me', { json: next }).json(zCurrentUser);
-            await queryClient.cancelQueries({ queryKey: ['api', '/api/v1/me'], exact: true });
-            queryClient.setQueryData(['api', '/api/v1/me'], user);
+            await userUpdate.mutateAsync(next);
         } catch (error) {
             setAppearance(previous);
             reportError(error);
-        } finally {
-            setSaving(false);
         }
     }
 
@@ -63,7 +53,7 @@ export default function AppearanceSettings() {
                             label={label}
                             padding={2}
                             isSelected={appearance.theme === value}
-                            isDisabled={saving}
+                            isDisabled={userUpdate.isPending}
                             onChange={() =>
                                 void saveAppearance(appearanceSchema.parse({ ...appearance, theme: value }))
                             }
@@ -96,7 +86,7 @@ export default function AppearanceSettings() {
                             label={label}
                             padding={2}
                             isSelected={appearance.navigation === value}
-                            isDisabled={saving}
+                            isDisabled={userUpdate.isPending}
                             onChange={() =>
                                 void saveAppearance(appearanceSchema.parse({ ...appearance, navigation: value }))
                             }
@@ -129,7 +119,7 @@ export default function AppearanceSettings() {
                                         key={accent}
                                         label={accent.charAt(0).toUpperCase() + accent.slice(1)}
                                         aria-pressed={appearance.accent === accent}
-                                        isDisabled={saving}
+                                        isDisabled={userUpdate.isPending}
                                         icon={
                                             appearance.accent === accent ? (
                                                 <Check size={16} data-accent-swatch={accent} aria-hidden="true" />
@@ -150,7 +140,7 @@ export default function AppearanceSettings() {
                     </Stack>
                 </Card>
             </Stack>
-            {saving && (
+            {userUpdate.isPending && (
                 <Text type="supporting" color="secondary" role="status">
                     Saving appearance…
                 </Text>

@@ -4,6 +4,7 @@ import { Item } from '@astryxdesign/core/Item';
 import { Text } from '@astryxdesign/core/Text';
 import { Avatar } from '@/components/ui/Avatar';
 import { Stack } from '@astryxdesign/core/Stack';
+import { adminNavigation } from '@/platform/admin';
 import { Button } from '@astryxdesign/core/Button';
 import { Divider } from '@astryxdesign/core/Divider';
 import { Popover } from '@astryxdesign/core/Popover';
@@ -12,17 +13,7 @@ import { List, ListItem } from '@astryxdesign/core/List';
 import { IconButton } from '@astryxdesign/core/IconButton';
 import { useAuthenticatedUser } from '@/lib/hooks/use-user';
 import { SidebarContext, SidebarCollapsedContext } from '@/components/layouts/Platform';
-import {
-    AppWindow,
-    ArrowUpDown,
-    BookOpen,
-    Building2,
-    ChevronsUpDown,
-    ExternalLink,
-    Settings2,
-    Users,
-    Wrench,
-} from 'lucide-react';
+import { BookOpen, Building2, ChevronsUpDown, ExternalLink, Settings2 } from 'lucide-react';
 
 /** Renders a user profile popover with authentication and navigation actions. */
 export function ProfileMenu() {
@@ -89,38 +80,15 @@ export function ProfileMenu() {
                                     </Text>
                                 }
                             >
-                                <ListItem
-                                    href="/admin/users"
-                                    label="Users"
-                                    onClickCapture={closeMenu}
-                                    startContent={<Users aria-hidden="true" className="text-secondary" size={16} />}
-                                />
-                                <ListItem
-                                    href="/admin/solutions"
-                                    label="Solutions"
-                                    onClickCapture={closeMenu}
-                                    startContent={<AppWindow aria-hidden="true" className="text-secondary" size={16} />}
-                                />
-                                <ListItem
-                                    href="/admin/organizations"
-                                    label="Organizations"
-                                    onClickCapture={closeMenu}
-                                    startContent={<Building2 aria-hidden="true" className="text-secondary" size={16} />}
-                                />
-                                <ListItem
-                                    href="/admin/compute"
-                                    label="Compute"
-                                    onClickCapture={closeMenu}
-                                    startContent={<Wrench aria-hidden="true" className="text-secondary" size={16} />}
-                                />
-                                <ListItem
-                                    href="/admin/operations"
-                                    label="Operations"
-                                    onClickCapture={closeMenu}
-                                    startContent={
-                                        <ArrowUpDown aria-hidden="true" className="text-secondary" size={16} />
-                                    }
-                                />
+                                {adminNavigation.map(({ href, icon: Icon, label }) => (
+                                    <ListItem
+                                        key={href}
+                                        href={href}
+                                        label={label}
+                                        onClickCapture={closeMenu}
+                                        startContent={<Icon aria-hidden="true" className="text-secondary" size={16} />}
+                                    />
+                                ))}
                             </List>
                             <Divider />
                         </>
