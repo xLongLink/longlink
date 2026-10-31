@@ -7,14 +7,12 @@ import NotFoundLayout from '@/components/layouts/NotFound';
 import { PageContainer } from '@/components/PageContainer';
 import { Outlet, useMatch, useParams } from 'react-router';
 import { PageError, PageLoading } from '@/components/Utils';
-import { useAuthenticatedUser } from '@/lib/hooks/use-user';
 import { PageBreadcrumb } from '@/components/PageBreadcrumb';
 import { zUserOrganizationMembership } from '@/lib/generated/platform-api-v1/zod.gen';
 
 /** Resolves organization access before either organization or Solution pages mount. */
 export default function OrganizationAccess() {
     const { organization = '' } = useParams();
-    const user = useAuthenticatedUser();
     const solutionRoute = useMatch('/orgs/:organization/solutions/:solution/*');
 
     return (
@@ -27,7 +25,7 @@ export default function OrganizationAccess() {
                         <PageLoading label="Loading solution" />
                     </>
                 ) : (
-                    <Platform action={<ProfileMenu user={user} />} breadcrumb={<PageBreadcrumb />} tabs={[]}>
+                    <Platform action={<ProfileMenu />} breadcrumb={<PageBreadcrumb />} tabs={[]}>
                         <PageContainer gap={8} padding={2}>
                             <PageLoading label="Loading organization" />
                         </PageContainer>
@@ -45,7 +43,7 @@ export default function OrganizationAccess() {
                         </>
                     )
                 ) : (
-                    <Platform action={<ProfileMenu user={user} />} breadcrumb={<PageBreadcrumb />} tabs={[]}>
+                    <Platform action={<ProfileMenu />} breadcrumb={<PageBreadcrumb />} tabs={[]}>
                         <PageContainer gap={8} padding={2}>
                             {error instanceof ApiError && error.status === 404 ? (
                                 <NotFoundLayout />

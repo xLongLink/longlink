@@ -6,7 +6,6 @@ import { ProfileMenu } from '@/components/Profile';
 import Platform from '@/components/layouts/Platform';
 import { ApiBoundary } from '@/components/ApiBoundary';
 import { PageContainer } from '@/components/PageContainer';
-import { useAuthenticatedUser } from '@/lib/hooks/use-user';
 import { PageBreadcrumb } from '@/components/PageBreadcrumb';
 import { Outlet, useParams, useLocation, useOutletContext } from 'react-router';
 import { zOrganizationTagResponse, zUserOrganizationMembership } from '@/lib/generated/platform-api-v1/zod.gen';
@@ -19,7 +18,6 @@ export type OrganizationContext = z.output<typeof zUserOrganizationMembership> &
 /** Renders shared category navigation around organization pages. */
 export default function OrganizationLayout() {
     const { organization = '' } = useParams();
-    const user = useAuthenticatedUser();
     const membership = useOutletContext<z.output<typeof zUserOrganizationMembership>>();
     const [tags] = useApi(`/api/v1/organizations/${membership.organization.id}/tags`, zOrganizationTagResponse.array());
     const location = useLocation();
@@ -39,7 +37,7 @@ export default function OrganizationLayout() {
 
     return (
         <Platform
-            action={<ProfileMenu user={user} />}
+            action={<ProfileMenu />}
             breadcrumb={<PageBreadcrumb />}
             activeTab={activeTab}
             tabs={[

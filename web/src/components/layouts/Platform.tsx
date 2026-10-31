@@ -20,8 +20,6 @@ type PlatformProps = {
     activeTab?: string;
     breadcrumb?: ReactNode;
     children: ReactNode;
-    /** Lets compact application views use AppShell's header-aware scroll region. */
-    height?: 'auto' | 'fill';
     tabs: readonly NavigationTab[];
 };
 
@@ -41,64 +39,12 @@ function findActiveTab(tabs: readonly NavigationTab[], pathname: string): string
 }
 
 /** Renders the shared Platform frame with contextual navigation and actions. */
-export default function Platform({ action, activeTab, breadcrumb, children, height = 'auto', tabs }: PlatformProps) {
+export default function Platform({ action, activeTab, breadcrumb, children, tabs }: PlatformProps) {
     const { pathname } = useLocation();
 
-    // Keep route selection outside the presentation frame so previews need no account or router state.
-    return (
-        <PlatformFrame
-            action={action}
-            breadcrumb={breadcrumb}
-            height={height}
-            navigation={
-                tabs.length > 0 ? (
-                    <TabList
-                        aria-label="Section navigation"
-                        onChange={() => undefined}
-                        size="sm"
-                        value={activeTab ?? findActiveTab(tabs, pathname) ?? ''}
-                    >
-                        {tabs.map((tab) => {
-                            const Icon = tab.icon;
-
-                            return (
-                                <Tab
-                                    href={tab.href}
-                                    icon={
-                                        isValidElement(Icon) ? (
-                                            Icon
-                                        ) : Icon ? (
-                                            <Icon aria-hidden="true" size={16} />
-                                        ) : undefined
-                                    }
-                                    key={tab.href}
-                                    label={tab.label}
-                                    value={tab.href}
-                                />
-                            );
-                        })}
-                    </TabList>
-                ) : undefined
-            }
-        >
-            {children}
-        </PlatformFrame>
-    );
-}
-
-/** Shares the actual Platform chrome and content frame without authentication or route-dependent navigation. */
-export function PlatformFrame({
-    action,
-    breadcrumb,
-    children,
-    className,
-    height = 'auto',
-    navigation,
-}: Omit<PlatformProps, 'tabs' | 'activeTab'> & { className?: string; navigation?: ReactNode }) {
     return (
         <AppShell
-            className={className}
-            height={height}
+            height="auto"
             mobileNav={false}
             topNav={
                 <Stack>
@@ -114,9 +60,34 @@ export function PlatformFrame({
                         }
                         label="Platform navigation"
                     />
-                    {navigation && (
+                    {tabs.length > 0 && (
                         <Stack direction="horizontal" paddingInline={4} width="100%">
-                            {navigation}
+                            <TabList
+                                aria-label="Section navigation"
+                                onChange={() => undefined}
+                                size="sm"
+                                value={activeTab ?? findActiveTab(tabs, pathname) ?? ''}
+                            >
+                                {tabs.map((tab) => {
+                                    const Icon = tab.icon;
+
+                                    return (
+                                        <Tab
+                                            href={tab.href}
+                                            icon={
+                                                isValidElement(Icon) ? (
+                                                    Icon
+                                                ) : Icon ? (
+                                                    <Icon aria-hidden="true" size={16} />
+                                                ) : undefined
+                                            }
+                                            key={tab.href}
+                                            label={tab.label}
+                                            value={tab.href}
+                                        />
+                                    );
+                                })}
+                            </TabList>
                         </Stack>
                     )}
                 </Stack>
@@ -124,10 +95,7 @@ export function PlatformFrame({
             variant="wash"
         >
             {/* Cover at least the main region and grow the background with overflowing View content. */}
-            <Stack
-                className="relative"
-                minHeight={height === 'fill' ? '100%' : 'calc(100dvh - var(--_app-shell-header-height, 0px))'}
-            >
+            <Stack className="relative" minHeight="calc(100dvh - var(--_app-shell-header-height, 0px))">
                 <Card
                     aria-hidden="true"
                     className="pointer-events-none absolute z-0 inset-0 overflow-clip bg-body px-2 pb-2 pt-0"
@@ -136,7 +104,7 @@ export function PlatformFrame({
                 >
                     <Card className="border-0" height="100%" width="100%" />
                 </Card>
-                <Stack className="relative z-10" minHeight={height === 'fill' ? 0 : undefined} padding={2}>
+                <Stack className="relative z-10" padding={2}>
                     {children}
                 </Stack>
             </Stack>

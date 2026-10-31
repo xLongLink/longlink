@@ -1,7 +1,5 @@
 import path from 'node:path';
 import { siteUrl } from './src/site';
-// Use cases are a work in progress; exclude them from prerendering and the sitemap.
-// import { useCasePaths } from './src/platform/routes';
 import type { Config } from '@react-router/dev/config';
 import { cp, mkdir, rename, rm, writeFile } from 'node:fs/promises';
 
@@ -25,7 +23,6 @@ const publicPagePaths = [
     '/pricing',
     '/blog',
     '/blog/why-longlink',
-    // ...useCasePaths,
     ...legalPaths,
     ...brandingPaths,
     ...documentationPaths,

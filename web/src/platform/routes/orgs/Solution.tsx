@@ -13,14 +13,12 @@ import NotFoundLayout from '@/components/layouts/NotFound';
 import { PageContainer } from '@/components/PageContainer';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { useParams, useOutletContext } from 'react-router';
-import { useAuthenticatedUser } from '@/lib/hooks/use-user';
 import { PageBreadcrumb } from '@/components/PageBreadcrumb';
 import { zUserOrganizationMembership, zOrganizationSolutionSummary } from '@/lib/generated/platform-api-v1/zod.gen';
 
 /** Renders one proxy-backed organization solution after membership resolves. */
 export default function OrganizationSolution() {
     const { organization = '', solution = '' } = useParams();
-    const user = useAuthenticatedUser();
     const membership = useOutletContext<z.output<typeof zUserOrganizationMembership>>();
 
     // Fetch accessible solutions after membership resolves and poll pending deployments.
@@ -42,7 +40,7 @@ export default function OrganizationSolution() {
         return <NotFoundLayout />;
     }
 
-    const action = <ProfileMenu user={user} />;
+    const action = <ProfileMenu />;
     const breadcrumb = <PageBreadcrumb solutionName={solutionAccess.name} />;
     const canMaintain = ['maintain', 'admin', 'owner'].includes(membership.role);
 
