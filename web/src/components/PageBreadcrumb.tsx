@@ -8,28 +8,48 @@ import { Stack } from '@astryxdesign/core/Stack';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@astryxdesign/core/Button';
 import { Popover } from '@astryxdesign/core/Popover';
+import { Check, ChevronsUpDown } from 'lucide-react';
+import { useAppearance } from '@/components/Appearance';
 import { List, ListItem } from '@astryxdesign/core/List';
+import { IconButton } from '@astryxdesign/core/IconButton';
 import { useLocation, useOutletContext } from 'react-router';
 import { formatPathSegment } from '@/components/breadcrumb/text';
-import { Check, ChevronDown, ChevronsUpDown } from 'lucide-react';
 import { BreadcrumbItem, Breadcrumbs } from '@astryxdesign/core/Breadcrumbs';
 import { zUserOrganizationMembership } from '@/lib/generated/platform-api-v1/zod.gen';
 
 /** Renders the top navigation breadcrumb for organization and admin routes. */
 export function PageBreadcrumb({ solutionName }: { solutionName?: string }) {
     const { pathname } = useLocation();
+    const { appearance } = useAppearance();
     const organization = pathname.split('/')[2] ?? '';
     const isOrganization = pathname.startsWith('/orgs/');
     const label = pathname.startsWith('/admin/') ? 'Admin' : formatPathSegment(organization);
     const isSolutionBreadcrumb = solutionName !== undefined;
+    const isOrganizationSidebar = isOrganization && appearance.navigation === 'sidebar';
+    const membership = useOutletContext<{ organization: { name: string; slug: string } } | undefined>();
+
+    const organizationName =
+        (membership?.organization.slug === organization ? membership.organization.name : undefined) ??
+        formatPathSegment(organization);
 
     return (
         <Breadcrumbs separator=">" variant="supporting">
-            <BreadcrumbItem href="/user/organizations">
-                <Wordmark />
-            </BreadcrumbItem>
-            <BreadcrumbItem isCurrent={!isSolutionBreadcrumb}>
-                {isOrganization ? <OrganizationSwitcher organization={organization} /> : label}
+            {!isOrganization && (
+                <BreadcrumbItem href="/user/organizations">
+                    <Wordmark />
+                </BreadcrumbItem>
+            )}
+            <BreadcrumbItem
+                href={isOrganizationSidebar ? `/orgs/${organization}` : undefined}
+                isCurrent={!isSolutionBreadcrumb}
+            >
+                {isOrganizationSidebar ? (
+                    organizationName
+                ) : isOrganization ? (
+                    <OrganizationSwitcher organization={organization} />
+                ) : (
+                    label
+                )}
             </BreadcrumbItem>
             {isSolutionBreadcrumb && <BreadcrumbItem isCurrent>{solutionName}</BreadcrumbItem>}
         </Breadcrumbs>
@@ -40,9 +60,11 @@ export function PageBreadcrumb({ solutionName }: { solutionName?: string }) {
 export function OrganizationSwitcher({
     organization,
     isSidebar = false,
+    isCollapsed = false,
 }: {
     organization: string;
     isSidebar?: boolean;
+    isCollapsed?: boolean;
 }) {
     const [isOpen, setIsOpen] = useState(false);
     const membership = useOutletContext<{ organization: { name: string; slug: string } } | undefined>();
@@ -106,7 +128,9 @@ export function OrganizationSwitcher({
                 </Stack>
             }
         >
-            {isSidebar ? (
+            {isSidebar && isCollapsed ? (
+                <IconButton icon={<Avatar kind="organization" name={name} />} label={name} variant="ghost" />
+            ) : isSidebar ? (
                 (trigger) => (
                     <Item
                         {...trigger}
@@ -123,7 +147,8 @@ export function OrganizationSwitcher({
                 )
             ) : (
                 <Button
-                    endContent={<ChevronDown aria-hidden="true" size={14} />}
+                    icon={<Avatar kind="organization" name={name} size="sm" />}
+                    endContent={<ChevronsUpDown aria-hidden="true" className="text-secondary" size={16} />}
                     label={name}
                     size="sm"
                     variant="ghost"

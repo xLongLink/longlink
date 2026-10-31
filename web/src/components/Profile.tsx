@@ -11,14 +11,13 @@ import { clearAppearanceCache } from '@/lib/appearance';
 import { List, ListItem } from '@astryxdesign/core/List';
 import { IconButton } from '@astryxdesign/core/IconButton';
 import { useAuthenticatedUser } from '@/lib/hooks/use-user';
-import { SidebarContext } from '@/components/layouts/Platform';
+import { SidebarContext, SidebarCollapsedContext } from '@/components/layouts/Platform';
 import {
     AppWindow,
     ArrowUpDown,
     BookOpen,
     Building2,
     ChevronsUpDown,
-    ChevronRight,
     ExternalLink,
     Settings2,
     Users,
@@ -29,6 +28,7 @@ import {
 export function ProfileMenu() {
     const user = useAuthenticatedUser();
     const isSidebar = useContext(SidebarContext);
+    const isCollapsed = useContext(SidebarCollapsedContext);
     const [isOpen, setIsOpen] = useState(false);
     const closeMenu = () => setIsOpen(false);
 
@@ -58,14 +58,12 @@ export function ProfileMenu() {
                         }
                     >
                         <ListItem
-                            endContent={<ChevronRight aria-hidden="true" className="text-secondary" size={12} />}
                             href="/user/organizations"
                             label="Organizations"
                             onClickCapture={closeMenu}
                             startContent={<Building2 aria-hidden="true" className="text-secondary" size={16} />}
                         />
                         <ListItem
-                            endContent={<ChevronRight aria-hidden="true" className="text-secondary" size={12} />}
                             href="/user/settings"
                             label="Settings"
                             onClickCapture={closeMenu}
@@ -142,7 +140,7 @@ export function ProfileMenu() {
                 </Stack>
             }
         >
-            {isSidebar ? (
+            {isSidebar && !isCollapsed ? (
                 (trigger) => (
                     <Item
                         {...trigger}

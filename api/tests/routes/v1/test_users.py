@@ -37,7 +37,7 @@ async def test_get_me_returns_authenticated_user_profile_and_separate_org_member
         # Profile responses include the default personal appearance settings.
         "theme": "system",
         "accent": "neutral",
-        "navigation": "topbar",
+        "navigation": "sidebar",
     }
 
     assert organizations_response.status_code == 200
