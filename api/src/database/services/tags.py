@@ -32,12 +32,12 @@ async def save(
 
     # Scope both name uniqueness and identity to the authorized Organization.
     await organizations.lock_active_access(session, user_id, organization_id, OrganizationRoles.maintain)
-    tag = await session.get(OrganizationTag, tag_id) if tag_id is not None else None
-    if tag_id is not None and (tag is None or tag.organization_id != organization_id):
+    existing = await fetch(session, organization_id)
+    tag = next((item for item in existing if item.id == tag_id), None)
+    if tag_id is not None and tag is None:
         raise HTTPException(status_code=404, detail="Tag not found")
 
     # Reject case-insensitive duplicates, including Unicode names.
-    existing = await fetch(session, organization_id)
     if any(item.id != tag_id and item.name.casefold() == payload.name.casefold() for item in existing):
         raise HTTPException(status_code=409, detail="Tag already exists")
 

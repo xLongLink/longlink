@@ -22,12 +22,10 @@ const articleRouteLabels = {
     docs: 'Documentation',
     'why-longlink': 'Why LongLink',
     sdk: 'Solutions',
-    'use-cases': 'Use cases',
     views: 'Views',
     assets: 'Brand assets',
     values: 'Values',
     comunication: 'Communication',
-    'property-acquisition-screening': 'Property Acquisition Screening',
 } satisfies Record<string, string>;
 
 const dateFormatter = new Intl.DateTimeFormat('en-GB', {

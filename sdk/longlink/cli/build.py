@@ -186,7 +186,6 @@ def resolve_docker_paths(root: Path, pyproject_data: Mapping[str, object]) -> tu
     workspace_pyproject_data = pyproject_data
     ignore_patterns = shutil.ignore_patterns(*CONTEXT_IGNORE_PATTERNS)
     for candidate in (root, *root.parents):
-
         # Walk outward until a manifest declares this project's workspace.
         candidate_pyproject = candidate / "pyproject.toml"
         if not candidate_pyproject.is_file():
@@ -212,7 +211,6 @@ def resolve_docker_paths(root: Path, pyproject_data: Mapping[str, object]) -> tu
             # Expand member and exclusion patterns only inside the workspace.
             declared_paths[field] = set()
             for pattern in patterns:
-
                 # Workspace membership patterns cannot escape their root.
                 if not pattern or Path(pattern).is_absolute() or ".." in Path(pattern).parts:
                     raise errors.Error(f"UV workspace path pattern must stay inside the workspace: {pattern}")
@@ -293,7 +291,6 @@ def resolve_docker_paths(root: Path, pyproject_data: Mapping[str, object]) -> tu
         requirements = list(dependencies) if isinstance(dependencies, list) else []
         optional_dependencies = project_data.get("optional-dependencies") if isinstance(project_data, dict) else None
         if isinstance(optional_dependencies, dict):
-
             # Optional dependencies can introduce local sources into the build context too.
             for dependencies in optional_dependencies.values():
                 if isinstance(dependencies, list):
@@ -302,7 +299,6 @@ def resolve_docker_paths(root: Path, pyproject_data: Mapping[str, object]) -> tu
         # Local source discovery also considers declared dependency groups.
         dependency_groups = source_pyproject_data.get("dependency-groups")
         if isinstance(dependency_groups, dict):
-
             # Ignore non-list group declarations while collecting concrete requirements.
             for dependencies in dependency_groups.values():
                 if isinstance(dependencies, list):
@@ -347,17 +343,14 @@ def resolve_docker_paths(root: Path, pyproject_data: Mapping[str, object]) -> tu
 
         # Add local path dependencies to the context.
         for source_name, source_config, config_root in source_configs:
-
             # Follow only mapping entries with local project sources.
             if not isinstance(source_config, dict):
                 continue
             source_path = source_config.get("path")
             if isinstance(source_path, str):
-
                 # Relative path sources are rooted at their declaring manifest.
                 resolved_source_path = (config_root / source_path).resolve()
             elif source_config.get("workspace") is True:
-
                 # Resolve workspace sources by normalized project name, not directory name.
                 dependency_name = normalize_package_name(source_name)
                 if dependency_name not in dependency_names:
@@ -366,7 +359,6 @@ def resolve_docker_paths(root: Path, pyproject_data: Mapping[str, object]) -> tu
                 # Search lazily so unrelated invalid metadata does not change error precedence.
                 resolved_source_path = None
                 for member in ordered_workspace_paths:
-
                     # Workspace directory matches are not necessarily Python projects.
                     if not (member / "pyproject.toml").is_file():
                         continue
@@ -593,7 +585,6 @@ def resolve_image_tag(solution_name: str, version: str, registry: str | None = N
 
     # Add a registry prefix when requested.
     if registry_prefix:
-
         # Restrict production registries to GHCR while allowing localhost development registries.
         registry_parts = registry_prefix.split("/")
         registry_host = registry_parts[0]
@@ -653,13 +644,13 @@ def build_command(
     if docker_command is None:
         raise errors.Error("Docker is required to build images")
 
-    # Build inside a temporary context.
-    with tempfile.TemporaryDirectory(prefix="longlink-build-") as temp_dir:
-        build_context = Path(temp_dir)
-        build_solution(root, build_context, pyproject_data=pyproject_data, version=version)
+    # Run the Docker build and optional push with a shared CLI error boundary.
+    try:
+        # Release copied sources as soon as the Docker build finishes.
+        with tempfile.TemporaryDirectory(prefix="longlink-build-") as temp_dir:
+            build_context = Path(temp_dir)
+            build_solution(root, build_context, pyproject_data=pyproject_data, version=version)
 
-        # Run the Docker build and optional push.
-        try:
             docker_build_command = [docker_command, "build", "--platform", "linux/amd64", "-f", str(build_context / "Dockerfile")]
             for image_tag in image_tags:
                 docker_build_command.extend(["-t", image_tag])
@@ -668,14 +659,14 @@ def build_command(
             # Execute the validated argument list without shell interpretation.
             subprocess.run(docker_build_command, check=True)
 
-            # Push each built tag only when requested.
-            if push:
-                for image_tag in image_tags:
-                    subprocess.run([docker_command, "push", image_tag], check=True)
+        # Push each built tag only when requested.
+        if push:
+            for image_tag in image_tags:
+                subprocess.run([docker_command, "push", image_tag], check=True)
 
-        # Preserve Docker's exit status in the CLI's stable error boundary.
-        except subprocess.CalledProcessError as error:
-            raise errors.Error(f"Docker command failed with exit code {error.returncode}") from error
+    # Preserve Docker's exit status in the CLI's stable error boundary.
+    except subprocess.CalledProcessError as error:
+        raise errors.Error(f"Docker command failed with exit code {error.returncode}") from error
 
     # Report every tag attached to the built image.
     for image_tag in image_tags:

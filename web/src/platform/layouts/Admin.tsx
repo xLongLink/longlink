@@ -18,7 +18,7 @@ export default function Admin() {
 
     return (
         <Platform
-            action={<ProfileMenu user={user} />}
+            action={<ProfileMenu />}
             breadcrumb={<PageBreadcrumb />}
             tabs={[
                 { href: '/admin/users', icon: Users, label: 'Users' },

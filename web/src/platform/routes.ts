@@ -49,9 +49,6 @@ export const brandingPaths: string[] = ['/branding/assets', '/branding/values', 
 // Keep legal publication paths in their established reading order.
 export const legalPaths: string[] = ['/terms', '/impressum', '/privacy'];
 
-// Keep the use-case collection's reading order explicit.
-export const useCasePaths: string[] = ['/use-cases', '/use-cases/real-estate/property-acquisition-screening'];
-
 // Derive route identity from the website's published component pages.
 export const componentDocumentation = [
     { name: 'Avatar', category: 'Display', icon: Users },
@@ -200,21 +197,8 @@ export default [
             { path: 'pricing', file: './routes/Pricing.tsx' },
             { path: 'blog', file: './routes/blog/Index.tsx' },
             { path: 'blog/why-longlink', file: './routes/blog/WhyLongLink.tsx' },
-            // { path: 'use-cases', file: './routes/usecases/Index.tsx' },
         ],
     },
-    /* Use cases are a work in progress; retain the route definitions for later.
-    {
-        file: './layouts/UseCases.tsx',
-        children: [
-            {
-                path: 'use-cases/real-estate/property-acquisition-screening',
-                file: './routes/usecases/Screening.tsx',
-            },
-            { path: 'use-cases/*', file: '../components/layouts/NotFound.tsx', id: 'use-cases-not-found' },
-        ],
-    },
-    */
     { path: 'docs/introduction', file: './routes/docs/Introduction.tsx' },
     {
         file: './layouts/Documentation.tsx',
