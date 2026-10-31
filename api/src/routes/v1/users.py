@@ -63,6 +63,8 @@ async def patch_me(session: auth.Session, payload: UserUpdate, user: auth.Curren
         user.theme = payload.theme
     if payload.accent is not None:
         user.accent = payload.accent
+    if payload.navigation is not None:
+        user.navigation = payload.navigation
 
     await session.commit()
 

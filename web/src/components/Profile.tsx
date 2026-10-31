@@ -1,5 +1,5 @@
 import { api } from '@/lib/api';
-import { useState } from 'react';
+import { useContext, useState } from 'react';
 import { Item } from '@astryxdesign/core/Item';
 import { Text } from '@astryxdesign/core/Text';
 import { Avatar } from '@/components/ui/Avatar';
@@ -11,11 +11,13 @@ import { clearAppearanceCache } from '@/lib/appearance';
 import { List, ListItem } from '@astryxdesign/core/List';
 import { IconButton } from '@astryxdesign/core/IconButton';
 import { useAuthenticatedUser } from '@/lib/hooks/use-user';
+import { SidebarContext } from '@/components/layouts/Platform';
 import {
     AppWindow,
     ArrowUpDown,
     BookOpen,
     Building2,
+    ChevronsUpDown,
     ChevronRight,
     ExternalLink,
     Settings2,
@@ -26,15 +28,18 @@ import {
 /** Renders a user profile popover with authentication and navigation actions. */
 export function ProfileMenu() {
     const user = useAuthenticatedUser();
+    const isSidebar = useContext(SidebarContext);
     const [isOpen, setIsOpen] = useState(false);
     const closeMenu = () => setIsOpen(false);
 
     return (
         <Popover
-            alignment="end"
+            alignment={isSidebar ? 'start' : 'end'}
+            className={isSidebar ? 'w-full' : undefined}
             isOpen={isOpen}
             label={user.name}
             onOpenChange={setIsOpen}
+            placement={isSidebar ? 'above' : 'below'}
             width={280}
             content={
                 <Stack gap={2} width="100%">
@@ -137,11 +142,28 @@ export function ProfileMenu() {
                 </Stack>
             }
         >
-            <IconButton
-                icon={<Avatar src={user.avatar} name={user.name} seed={user.id} />}
-                label={user.name}
-                variant="ghost"
-            />
+            {isSidebar ? (
+                (trigger) => (
+                    <Item
+                        {...trigger}
+                        as="button"
+                        role="button"
+                        className="w-full rounded-lg px-2 py-1.5 text-left"
+                        description={user.email}
+                        descriptionLines={1}
+                        endContent={<ChevronsUpDown aria-hidden="true" className="text-secondary" size={16} />}
+                        label={user.name}
+                        labelLines={1}
+                        startContent={<Avatar src={user.avatar} name={user.name} seed={user.id} />}
+                    />
+                )
+            ) : (
+                <IconButton
+                    icon={<Avatar src={user.avatar} name={user.name} seed={user.id} />}
+                    label={user.name}
+                    variant="ghost"
+                />
+            )}
         </Popover>
     );
 }

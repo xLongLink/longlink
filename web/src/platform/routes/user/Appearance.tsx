@@ -11,6 +11,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useAppearance } from '@/components/Appearance';
 import { SelectableCard } from '@astryxdesign/core/SelectableCard';
 import { zCurrentUser } from '@/lib/generated/platform-api-v1/zod.gen';
+import { RadioList, RadioListItem } from '@astryxdesign/core/RadioList';
 import { accentColors, appearanceSchema, type Appearance } from '@/lib/appearance';
 
 /** Previews and saves personal appearance without changing any Solution configuration. */
@@ -22,7 +23,13 @@ export default function AppearanceSettings() {
 
     /** Serializes changes and restores the previous preference when saving fails. */
     async function saveAppearance(next: Appearance) {
-        if (saving || (next.theme === appearance.theme && next.accent === appearance.accent)) return;
+        if (
+            saving ||
+            (next.theme === appearance.theme &&
+                next.accent === appearance.accent &&
+                next.navigation === appearance.navigation)
+        )
+            return;
         const previous = appearance;
         setAppearance(next);
         setSaving(true);
@@ -81,30 +88,45 @@ export default function AppearanceSettings() {
                     Appearance
                 </Heading>
                 <Card>
-                    <Stack gap={2} role="group" aria-label="Accent color">
-                        <Text>Accent color</Text>
-                        <Stack direction="horizontal" wrap="wrap" gap={2}>
-                            {accentColors.map((accent) => (
-                                <Button
-                                    key={accent}
-                                    label={accent.charAt(0).toUpperCase() + accent.slice(1)}
-                                    aria-pressed={appearance.accent === accent}
-                                    isDisabled={saving}
-                                    icon={
-                                        appearance.accent === accent ? (
-                                            <Check size={16} data-accent-swatch={accent} aria-hidden="true" />
-                                        ) : (
-                                            <Circle
-                                                size={16}
-                                                data-accent-swatch={accent}
-                                                fill="currentColor"
-                                                aria-hidden="true"
-                                            />
-                                        )
-                                    }
-                                    onClick={() => void saveAppearance({ ...appearance, accent })}
-                                />
-                            ))}
+                    <Stack gap={4}>
+                        <RadioList
+                            label="Navigation layout"
+                            size="sm"
+                            value={appearance.navigation}
+                            orientation="horizontal"
+                            isDisabled={saving}
+                            onChange={(navigation) =>
+                                void saveAppearance(appearanceSchema.parse({ ...appearance, navigation }))
+                            }
+                        >
+                            <RadioListItem value="topbar" label="Topbar" />
+                            <RadioListItem value="sidebar" label="Sidebar" />
+                        </RadioList>
+                        <Stack gap={2} role="group" aria-label="Accent color">
+                            <Text>Accent color</Text>
+                            <Stack direction="horizontal" wrap="wrap" gap={2}>
+                                {accentColors.map((accent) => (
+                                    <Button
+                                        key={accent}
+                                        label={accent.charAt(0).toUpperCase() + accent.slice(1)}
+                                        aria-pressed={appearance.accent === accent}
+                                        isDisabled={saving}
+                                        icon={
+                                            appearance.accent === accent ? (
+                                                <Check size={16} data-accent-swatch={accent} aria-hidden="true" />
+                                            ) : (
+                                                <Circle
+                                                    size={16}
+                                                    data-accent-swatch={accent}
+                                                    fill="currentColor"
+                                                    aria-hidden="true"
+                                                />
+                                            )
+                                        }
+                                        onClick={() => void saveAppearance({ ...appearance, accent })}
+                                    />
+                                ))}
+                            </Stack>
                         </Stack>
                     </Stack>
                 </Card>

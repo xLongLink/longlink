@@ -174,7 +174,7 @@ describe('SolutionRuntime', () => {
             source,
             params: {},
             navigationBaseUrl: 'http://localhost:3000/',
-            appearance: { theme: 'system', accent: 'neutral' },
+            appearance: { theme: 'system', accent: 'neutral', navigation: 'topbar' },
         });
         await act(async () => vi.advanceTimersByTimeAsync(10_000));
         expect(output.querySelector('iframe')).toBe(frame);

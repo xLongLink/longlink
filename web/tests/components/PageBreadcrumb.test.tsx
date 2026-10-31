@@ -9,5 +9,5 @@ it('uses the resolved Solution name rather than its slug for the current breadcr
 
     // Assert
     expect(output.querySelector('[aria-current="page"]')?.textContent).toContain('Order dashboard');
-    expect(output.querySelector('a[href="/orgs/acme"]')).not.toBeNull();
+    expect(output.querySelector('button')?.textContent).toContain('Acme');
 });

@@ -5,9 +5,15 @@ import type { LucideIcon } from 'lucide-react';
 import { Wordmark } from '@/components/Wordmark';
 import { Stack } from '@astryxdesign/core/Stack';
 import { TopNav } from '@astryxdesign/core/TopNav';
+import { Divider } from '@astryxdesign/core/Divider';
 import { AppShell } from '@astryxdesign/core/AppShell';
+import { useAppearance } from '@/components/Appearance';
 import { Tab, TabList } from '@astryxdesign/core/TabList';
-import { isValidElement, type ReactElement, type ReactNode } from 'react';
+import { SideNav, SideNavItem } from '@astryxdesign/core/SideNav';
+import { OrganizationSwitcher } from '@/components/PageBreadcrumb';
+import { createContext, isValidElement, type ReactElement, type ReactNode } from 'react';
+
+export const SidebarContext = createContext(false);
 
 export type NavigationTab = {
     href: string;
@@ -41,32 +47,87 @@ function findActiveTab(tabs: readonly NavigationTab[], pathname: string): string
 /** Renders the shared Platform frame with contextual navigation and actions. */
 export default function Platform({ action, activeTab, breadcrumb, children, tabs }: PlatformProps) {
     const { pathname } = useLocation();
+    const { appearance } = useAppearance();
+
+    // Both layouts share the same links and route selection, including query-based categories.
+    const selectedTab = activeTab ?? findActiveTab(tabs, pathname) ?? '';
+    const hasSidebar = appearance.navigation === 'sidebar' && tabs.length > 0;
+    const hasOrganizationSidebar = hasSidebar && pathname.startsWith('/orgs/');
+    const organization = pathname.split('/')[2] ?? '';
 
     return (
         <AppShell
             height="auto"
-            mobileNav={false}
+            mobileNav={hasSidebar ? { breakpoint: 'lg' } : false}
+            sideNav={
+                hasSidebar ? (
+                    <SideNav
+                        aria-label="Section navigation"
+                        header={
+                            hasOrganizationSidebar ? (
+                                <Stack padding={1}>
+                                    <OrganizationSwitcher organization={organization} isSidebar />
+                                </Stack>
+                            ) : undefined
+                        }
+                        footer={
+                            <SidebarContext value={true}>
+                                <Stack gap={3} padding={1}>
+                                    <Divider />
+                                    {action}
+                                </Stack>
+                            </SidebarContext>
+                        }
+                    >
+                        <Stack padding={2}>
+                            {tabs.map((tab) => {
+                                const Icon = tab.icon;
+
+                                return (
+                                    <SideNavItem
+                                        href={tab.href}
+                                        icon={
+                                            isValidElement(Icon) ? (
+                                                Icon
+                                            ) : Icon ? (
+                                                <Icon aria-hidden="true" size={16} />
+                                            ) : undefined
+                                        }
+                                        isSelected={selectedTab === tab.href}
+                                        key={tab.href}
+                                        label={tab.label}
+                                    />
+                                );
+                            })}
+                        </Stack>
+                    </SideNav>
+                ) : undefined
+            }
             topNav={
-                <Stack>
+                <Stack className={hasOrganizationSidebar ? 'lg:hidden' : undefined}>
                     <TopNav
                         className="min-h-11 px-7"
-                        endContent={action}
+                        endContent={hasSidebar ? undefined : action}
                         heading={
-                            breadcrumb ?? (
-                                <Link href="/" label="LongLink home" color="inherit">
-                                    <Wordmark />
-                                </Link>
+                            hasOrganizationSidebar ? (
+                                <OrganizationSwitcher organization={organization} isSidebar />
+                            ) : (
+                                (breadcrumb ?? (
+                                    <Link href="/" label="LongLink home" color="inherit">
+                                        <Wordmark />
+                                    </Link>
+                                ))
                             )
                         }
                         label="Platform navigation"
                     />
-                    {tabs.length > 0 && (
+                    {!hasSidebar && tabs.length > 0 && (
                         <Stack direction="horizontal" paddingInline={4} width="100%">
                             <TabList
                                 aria-label="Section navigation"
                                 onChange={() => undefined}
                                 size="sm"
-                                value={activeTab ?? findActiveTab(tabs, pathname) ?? ''}
+                                value={selectedTab}
                             >
                                 {tabs.map((tab) => {
                                     const Icon = tab.icon;
@@ -98,7 +159,7 @@ export default function Platform({ action, activeTab, breadcrumb, children, tabs
             <Stack className="relative" minHeight="calc(100dvh - var(--_app-shell-header-height, 0px))">
                 <Card
                     aria-hidden="true"
-                    className="pointer-events-none absolute z-0 inset-0 overflow-clip bg-body px-2 pb-2 pt-0"
+                    className={`pointer-events-none absolute z-0 inset-0 overflow-clip bg-body px-2 pb-2 ${hasOrganizationSidebar ? 'pt-2' : 'pt-0'}`}
                     padding={0}
                     variant="transparent"
                 >

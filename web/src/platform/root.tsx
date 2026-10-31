@@ -67,7 +67,7 @@ export function Layout({ children }: { children: ReactNode }) {
             <head>
                 <meta charSet="utf-8" />
                 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-                {!isHome && <script dangerouslySetInnerHTML={{ __html: appearanceBootstrap }} />}
+                <script data-platform>{appearanceBootstrap}</script>
                 <Meta />
                 <Links />
                 <link rel="icon" href="/favicon.ico" />
