@@ -62,7 +62,9 @@ jobs:
 
             - name: Lint API
               working-directory: api
-              run: uv run --locked ruff check .
+              run: |
+                  uv run --locked ruff check .
+                  uv run --locked pyunslop
 
             - name: Set up Helm
               uses: azure/setup-helm@9bc31f4ebc9c6b171d7bfbaa5d006ae7abdb4310 # v5
@@ -130,6 +132,7 @@ jobs:
               run: |
                   uv run --locked ruff check .
                   uv run --locked ruff check --config longlink/.static/new/pyproject.toml longlink/.static/new
+                  uv run --locked pyunslop
 
             - name: Verify Docker daemon
               run: docker info
