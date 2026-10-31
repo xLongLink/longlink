@@ -85,7 +85,7 @@ async def resolve(session: AsyncSession, organization_id: UUID, connection_id: U
     return connection
 
 
-async def inspect(session: AsyncSession, organization_id: UUID | None, image: Image) -> tuple[LongLinkMetadata, UUID | None]:
+async def inspect(session: AsyncSession, organization_id: UUID, image: Image) -> tuple[LongLinkMetadata, UUID | None]:
     """Inspect anonymously first, then find an authorized organization-scoped pull credential."""
 
     # Public images must not depend on saved credentials; retry only registry access denials.
@@ -95,7 +95,7 @@ async def inspect(session: AsyncSession, organization_id: UUID | None, image: Im
 
     # Retry only GHCR authorization failures with tenant-owned credentials.
     except HTTPException as exc:
-        if exc.status_code != 403 or organization_id is None or image.registry != RegistryConnection.host:
+        if exc.status_code != 403 or image.registry != RegistryConnection.host:
             raise
 
     # Only matching credentials in the caller-authorized organization may reach this registry.

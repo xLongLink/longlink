@@ -1,12 +1,12 @@
 from src import auth
 from uuid import UUID
-from fastapi import Depends, APIRouter
+from fastapi import APIRouter
 from src.models.users import UserOrganizationMembership
 from src.models.resources import OrganizationIdentity
 from src.database.services import organizations
 from src.models.organizations import OrganizationCreate
 
-router = APIRouter(dependencies=[Depends(auth.authuser)])
+router = APIRouter()
 
 
 @router.get("/organizations/slug/{organization_slug}", response_model=UserOrganizationMembership)

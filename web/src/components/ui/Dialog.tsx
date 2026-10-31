@@ -1,9 +1,10 @@
+import { X } from 'lucide-react';
 import type { Spacing } from './types';
 import type { ReactNode } from 'react';
-import { DialogClose } from './DialogClose';
 import { Stack } from '@astryxdesign/core/Stack';
 import { createContext, use, useEffect } from 'react';
 import { DialogHeader } from '@astryxdesign/core/Dialog';
+import { IconButton } from '@astryxdesign/core/IconButton';
 import { Dialog as AstryxDialog } from '@astryxdesign/core/Dialog';
 
 export const DialogActivityContext = createContext<((open: boolean) => void) | null>(null);
@@ -38,7 +39,14 @@ export function Dialog(props: {
             maxHeight="calc(100dvh - var(--spacing-10) * 4)"
             padding={0}
         >
-            <DialogClose onClose={() => props.onOpenChange(false)} />
+            <IconButton
+                label="Close dialog"
+                tooltip="Close"
+                icon={<X className="size-5" aria-hidden="true" />}
+                variant="ghost"
+                className="absolute top-3 end-3 z-10"
+                onClick={() => props.onOpenChange(false)}
+            />
             <Stack
                 gap={0}
                 height="min(560px, calc(100dvh - var(--spacing-10) * 4))"
