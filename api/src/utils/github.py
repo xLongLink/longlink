@@ -10,7 +10,7 @@ class Profile(BaseModel):
     login: str = Field(min_length=1, max_length=100, pattern=r"^[A-Za-z0-9-]+$")
 
 
-async def username(credential: SecretStr) -> str:
+async def username(credential: SecretStr, *, transport: httpx2.AsyncBaseTransport | None = None) -> str:
     """Resolve the owner of a GitHub token without exposing the credential."""
 
     # Reject characters that cannot safely form a bearer authorization header.
@@ -19,7 +19,7 @@ async def username(credential: SecretStr) -> str:
         raise HTTPException(status_code=422, detail="GitHub token has an invalid format")
 
     # Send the credential only to GitHub's fixed HTTPS endpoint, never through redirects or environment proxies.
-    client = httpx2.AsyncClient(timeout=5.0, trust_env=False, follow_redirects=False)
+    client = httpx2.AsyncClient(timeout=5.0, trust_env=False, follow_redirects=False, transport=transport)
     try:
         async with client:
             response = await client.get(
