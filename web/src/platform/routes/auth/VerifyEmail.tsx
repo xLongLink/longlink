@@ -16,7 +16,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useQueryClient } from '@tanstack/react-query';
 import { clearSessionQueries } from '@/lib/react-query';
 import { useFragmentToken } from '@/lib/hooks/use-fragment-token';
-import { zEmailPayload, zUserSummary } from '@/lib/generated/platform-api-v1/zod.gen';
+import { zEmailPayload } from '@/lib/generated/platform-api-v1/zod.gen';
 import { useVerification, type VerificationRequest } from '@/lib/hooks/use-verification';
 
 const REGISTRATION_TOKEN_KEY = 'longlink.registration.token';
@@ -82,11 +82,9 @@ export default function VerifyEmail() {
 
     /** Creates the account and clears the previous session's cached data. */
     async function handleComplete(payload: RegistrationCompleteValues) {
-        setAccountConflict(false);
-
         // Recover only expected account-creation transport failures.
         try {
-            await api('/api/v1/auth/register/complete', { json: payload, method: 'POST' }).json(zUserSummary);
+            await api('/api/v1/auth/register/complete', { json: payload, method: 'POST' });
         } catch (cause: unknown) {
             if (!(cause instanceof ApiError) || ![400, 409].includes(cause.status)) throw cause;
 

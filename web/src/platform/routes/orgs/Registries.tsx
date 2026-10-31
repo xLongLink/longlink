@@ -25,6 +25,17 @@ export default function Registries({ base, canMaintain }: { base: string; canMai
     const [connections, invalidate] = useApi(`${base}/registries`, schemas.zRegistryResponse.array());
     const [action, setAction] = useState<RegistryAction | null>(null);
 
+    function closeAction() {
+        // Leave replacement dialogs open when an older operation finishes.
+        setAction((current) => (current === action ? null : current));
+    }
+
+    async function onSuccess() {
+        // Keep the active dialog and its draft when refreshing fails.
+        await invalidate();
+        closeAction();
+    }
+
     // Retain the settings shell's 260px navigation and show dense, edge-to-edge rows.
     return (
         <>
@@ -40,7 +51,13 @@ export default function Registries({ base, canMaintain }: { base: string; canMai
                         Private registries
                     </Heading>
                     {canMaintain && (
-                        <Button label="Add registry" size="sm" onClick={() => setAction({ kind: 'create' })} />
+                        <Button
+                            label="Add registry"
+                            size="sm"
+                            onClick={() =>
+                                setAction((current) => (current?.kind === 'create' ? current : { kind: 'create' }))
+                            }
+                        />
                     )}
                 </Stack>
                 <Divider />
@@ -73,9 +90,7 @@ export default function Registries({ base, canMaintain }: { base: string; canMai
                     ]}
                 />
             </Stack>
-            {action?.kind === 'create' && (
-                <RegistryForm base={base} invalidate={invalidate} onClose={() => setAction(null)} />
-            )}
+            {action?.kind === 'create' && <RegistryForm base={base} onSuccess={onSuccess} onClose={closeAction} />}
             <DeletionDialog
                 confirmation={
                     action?.kind === 'delete'
@@ -85,13 +100,12 @@ export default function Registries({ base, canMaintain }: { base: string; canMai
                               onDelete: async () => {
                                   // Remove the connection only after server dependency checks succeed.
                                   await api.delete(`${base}/registries/${action.connection.id}`);
-                                  await invalidate();
-                                  setAction(null);
+                                  await onSuccess();
                               },
                           }
                         : null
                 }
-                onClose={() => setAction(null)}
+                onClose={closeAction}
             />
         </>
     );
@@ -100,11 +114,11 @@ export default function Registries({ base, canMaintain }: { base: string; canMai
 /** Collects a token and lets the server resolve its registry account. */
 function RegistryForm({
     base,
-    invalidate,
+    onSuccess,
     onClose,
 }: {
     base: string;
-    invalidate: () => Promise<void>;
+    onSuccess: () => Promise<void>;
     onClose: () => void;
 }) {
     /** Saves credentials and queues synchronization of Kubernetes pull secrets. */
@@ -112,8 +126,7 @@ function RegistryForm({
         // Submit new credentials without loading saved tokens.
         const json = schemas.zRegistryCreateWritable.parse({ credential: data.get('credential') });
         await api.post(`${base}/registries`, { json });
-        await invalidate();
-        onClose();
+        await onSuccess();
     }
 
     // Match Solution creation's 960px shell, 560px height, and 640px scrolling content column.

@@ -1,4 +1,4 @@
-import type { z } from 'zod';
+import { z } from 'zod';
 import { api } from '@/lib/api';
 import * as tabs from '@/platform/tabs';
 import { useApiError } from '@/lib/errors';
@@ -9,11 +9,11 @@ import { Stack } from '@astryxdesign/core/Stack';
 import { useState, isValidElement } from 'react';
 import { Button } from '@astryxdesign/core/Button';
 import { Heading } from '@astryxdesign/core/Heading';
+import { TextInput } from '@/components/ui/TextInput';
 import { DeletionDialog } from '@/components/Deletion';
 import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { Selector } from '@astryxdesign/core/Selector';
 import { useQueryClient } from '@tanstack/react-query';
-import { TextInput } from '@astryxdesign/core/TextInput';
 import { Table, proportional } from '@astryxdesign/core/Table';
 import { MultiSelector } from '@astryxdesign/core/MultiSelector';
 import { ArrowDown, ArrowUp, Pencil, Trash } from 'lucide-react';
@@ -181,12 +181,11 @@ function TagForm({
     onSuccess: () => Promise<void>;
     onCancel: () => void;
 }) {
-    const [name, setName] = useState(tag?.name ?? '');
     const [icon, setIcon] = useState(tag?.icon ?? 'tag');
 
     /** Saves presentation without changing the tab's filtering or assignments. */
-    async function save() {
-        const json = schemas.zOrganizationTagWrite.parse({ name: name.trim(), icon });
+    async function save(data: FormData) {
+        const json = schemas.zOrganizationTagWrite.parse({ name: z.string().trim().parse(data.get('name')), icon });
 
         if (tag) {
             await api.patch(`${base}/tags/${tag.id}`, { json });
@@ -220,9 +219,9 @@ function TagForm({
                                 <Heading level={2} justify="center">
                                     {tag ? 'Edit tab' : 'New tab'}
                                 </Heading>
-                                <Form action={save} submitDisabled={!name.trim()}>
+                                <Form action={save}>
                                     <Stack gap={3}>
-                                        <TextInput label="Name" value={name} onChange={setName} isRequired />
+                                        <TextInput label="Name" name="name" defaultValue={tag?.name ?? ''} required />
                                         <Selector
                                             label="Icon"
                                             value={icon}
@@ -239,7 +238,6 @@ function TagForm({
                                                 label={tag ? 'Save' : 'Create tab'}
                                                 type="submit"
                                                 variant="primary"
-                                                isDisabled={!name.trim()}
                                             />
                                             <Button label="Cancel" type="button" variant="ghost" onClick={onCancel} />
                                         </Stack>
@@ -264,7 +262,7 @@ export function SolutionTags({
 }: {
     base: string;
     tags: Tag[];
-    solution: z.output<typeof schemas.zOrganizationSolutionSummary>;
+    solution: Pick<z.output<typeof schemas.zOrganizationSolutionSummary>, 'id' | 'name' | 'tag_ids'>;
     onSuccess: () => Promise<void>;
     onClose: () => void;
 }) {

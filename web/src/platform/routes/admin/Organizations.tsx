@@ -101,12 +101,7 @@ export default function Organizations() {
                         if (!open) setDialog(null);
                     }}
                 >
-                    <Stack
-                        gap={2}
-                        height="min(560px, calc(100dvh - var(--spacing-10) * 4))"
-                        padding={8}
-                        className="overflow-auto"
-                    >
+                    <Stack gap={2} padding={8}>
                         <Text>
                             <b>Status</b> {metadata.status}
                         </Text>

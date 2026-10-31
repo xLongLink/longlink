@@ -387,7 +387,6 @@ function MembersSection({ base, canAdminister }: { base: string; canAdminister: 
 
 /** Owns invitation drafts and actions only while their section is active. */
 function InvitationsSection({ base, canMaintain }: { base: string; canMaintain: boolean }) {
-    const [hasEmail, setHasEmail] = useState(false);
     const [inviting, setInviting] = useState(false);
     const reportError = useApiError();
 
@@ -524,7 +523,6 @@ function InvitationsSection({ base, canMaintain }: { base: string; canMaintain: 
                                                     name="email"
                                                     placeholder="user@example.com"
                                                     required
-                                                    onChange={(email) => setHasEmail(Boolean(email.trim()))}
                                                 />
                                                 <Selector
                                                     label="Role"
@@ -546,13 +544,7 @@ function InvitationsSection({ base, canMaintain }: { base: string; canMaintain: 
                                                         },
                                                     ]}
                                                 />
-                                                <Button
-                                                    label="Invite"
-                                                    variant="primary"
-                                                    type="submit"
-                                                    width="100%"
-                                                    isDisabled={!hasEmail}
-                                                />
+                                                <Button label="Invite" variant="primary" type="submit" width="100%" />
                                             </Stack>
                                         </Stack>
                                     </Form>

@@ -176,6 +176,62 @@ def normalize_package_name(name: str) -> str:
     return re.sub(r"[-_.]+", "-", name).lower()
 
 
+def _discover_dependency_names(pyproject_data: Mapping[str, object]) -> set[str]:
+    """Collect normalized dependency names from all supported requirement sections."""
+
+    # Collect declared dependencies conservatively across optional extras and dependency groups.
+    project_data = pyproject_data.get("project")
+    dependencies = project_data.get("dependencies", []) if isinstance(project_data, dict) else []
+    requirements = list(dependencies) if isinstance(dependencies, list) else []
+    optional_dependencies = project_data.get("optional-dependencies") if isinstance(project_data, dict) else None
+    if isinstance(optional_dependencies, dict):
+        for dependencies in optional_dependencies.values():
+            if isinstance(dependencies, list):
+                requirements.extend(dependencies)
+
+    # Local source discovery also considers declared dependency groups.
+    dependency_groups = pyproject_data.get("dependency-groups")
+    if isinstance(dependency_groups, dict):
+        for dependencies in dependency_groups.values():
+            if isinstance(dependencies, list):
+                requirements.extend(dependencies)
+
+    # Retain compatibility with UV's legacy development dependency declaration.
+    tool_data = pyproject_data.get("tool")
+    uv_data = tool_data.get("uv") if isinstance(tool_data, dict) else None
+    dev_dependencies = uv_data.get("dev-dependencies") if isinstance(uv_data, dict) else None
+    if isinstance(dev_dependencies, list):
+        requirements.extend(dev_dependencies)
+
+    # Retain inherited local build dependencies needed to package the selected projects.
+    build_system = pyproject_data.get("build-system")
+    build_dependencies = build_system.get("requires") if isinstance(build_system, dict) else None
+    if isinstance(build_dependencies, list):
+        requirements.extend(build_dependencies)
+
+    # Match requirement names without evaluating extras or platform markers during context preparation.
+    dependency_names = set()
+    for requirement in requirements:
+        match = re.match(r"\s*([A-Za-z0-9][A-Za-z0-9._-]*)", requirement) if isinstance(requirement, str) else None
+        if match:
+            dependency_names.add(normalize_package_name(match[1]))
+    return dependency_names
+
+
+def _validate_metadata_target(path: Path, workspace_root: Path, label: str) -> None:
+    """Keep metadata targets inside the workspace and outside ignored paths."""
+
+    # Prevent metadata copying from following links outside the approved workspace.
+    target = path.resolve()
+    if not target.is_relative_to(workspace_root):
+        raise errors.Error(f"{label} must be inside the UV workspace: {path}")
+
+    # Keep symbolic metadata files from bypassing the sensitive-path exclusion policy.
+    ignore_patterns = shutil.ignore_patterns(*CONTEXT_IGNORE_PATTERNS)
+    if path.is_symlink() and ignore_patterns(str(workspace_root), list(target.relative_to(workspace_root).parts)):
+        raise errors.Error(f"{label} must not reference an ignored path: {path}")
+
+
 def resolve_docker_paths(root: Path, pyproject_data: Mapping[str, object]) -> tuple[Path, list[Path], list[Path]]:
     """Resolve the workspace root, local source directories, and required project manifests."""
 
@@ -184,7 +240,6 @@ def resolve_docker_paths(root: Path, pyproject_data: Mapping[str, object]) -> tu
     workspace_root = root
     workspace_paths = {root}
     workspace_pyproject_data = pyproject_data
-    ignore_patterns = shutil.ignore_patterns(*CONTEXT_IGNORE_PATTERNS)
     for candidate in (root, *root.parents):
         # Walk outward until a manifest declares this project's workspace.
         candidate_pyproject = candidate / "pyproject.toml"
@@ -265,11 +320,7 @@ def resolve_docker_paths(root: Path, pyproject_data: Mapping[str, object]) -> tu
             continue
 
         # Prevent manifest-only copying from following links outside the approved workspace.
-        manifest_target = pyproject_path.resolve()
-        if not manifest_target.is_relative_to(workspace_root):
-            raise errors.Error(f"Project manifest must be inside the UV workspace: {pyproject_path}")
-        if pyproject_path.is_symlink() and ignore_patterns(str(workspace_root), list(manifest_target.relative_to(workspace_root).parts)):
-            raise errors.Error(f"Project manifest must not reference an ignored path: {pyproject_path}")
+        _validate_metadata_target(pyproject_path, workspace_root, "Project manifest")
         manifest_paths.add(pyproject_path)
 
         # Read each dependency manifest once while traversing local sources.
@@ -286,41 +337,7 @@ def resolve_docker_paths(root: Path, pyproject_data: Mapping[str, object]) -> tu
             uv_sources = {}
 
         # Collect declared dependencies conservatively across optional extras and dependency groups.
-        project_data = source_pyproject_data.get("project")
-        dependencies = project_data.get("dependencies", []) if isinstance(project_data, dict) else []
-        requirements = list(dependencies) if isinstance(dependencies, list) else []
-        optional_dependencies = project_data.get("optional-dependencies") if isinstance(project_data, dict) else None
-        if isinstance(optional_dependencies, dict):
-            # Optional dependencies can introduce local sources into the build context too.
-            for dependencies in optional_dependencies.values():
-                if isinstance(dependencies, list):
-                    requirements.extend(dependencies)
-
-        # Local source discovery also considers declared dependency groups.
-        dependency_groups = source_pyproject_data.get("dependency-groups")
-        if isinstance(dependency_groups, dict):
-            # Ignore non-list group declarations while collecting concrete requirements.
-            for dependencies in dependency_groups.values():
-                if isinstance(dependencies, list):
-                    requirements.extend(dependencies)
-
-        # Retain compatibility with UV's legacy development dependency declaration.
-        dev_dependencies = uv_data.get("dev-dependencies") if isinstance(uv_data, dict) else None
-        if isinstance(dev_dependencies, list):
-            requirements.extend(dev_dependencies)
-
-        # Retain inherited local build dependencies needed to package the selected projects.
-        build_system = source_pyproject_data.get("build-system")
-        build_dependencies = build_system.get("requires") if isinstance(build_system, dict) else None
-        if isinstance(build_dependencies, list):
-            requirements.extend(build_dependencies)
-
-        # Match requirement names without evaluating extras or platform markers during context preparation.
-        dependency_names = set()
-        for requirement in requirements:
-            match = re.match(r"\s*([A-Za-z0-9][A-Za-z0-9._-]*)", requirement) if isinstance(requirement, str) else None
-            if match:
-                dependency_names.add(normalize_package_name(match[1]))
+        dependency_names = _discover_dependency_names(source_pyproject_data)
 
         # Normalize single and multiple UV source entries while preserving their authored order.
         source_configs = [
@@ -416,14 +433,7 @@ def validate_lockfile(lockfile: Path, workspace_root: Path) -> None:
     # Require the actual file before following its resolved target.
     if not lockfile.is_file():
         raise errors.Error(f"Lockfile not found: {lockfile}")
-    lockfile_target = lockfile.resolve()
-    if not lockfile_target.is_relative_to(workspace_root):
-        raise errors.Error(f"Lockfile must be inside the UV workspace: {lockfile}")
-
-    # Keep symbolic lockfiles from bypassing the sensitive-path exclusion policy.
-    ignore_patterns = shutil.ignore_patterns(*CONTEXT_IGNORE_PATTERNS)
-    if lockfile.is_symlink() and ignore_patterns(str(workspace_root), list(lockfile_target.relative_to(workspace_root).parts)):
-        raise errors.Error(f"Lockfile must not reference an ignored path: {lockfile}")
+    _validate_metadata_target(lockfile, workspace_root, "Lockfile")
 
 
 def build_solution(root: Path, build_context: Path, *, pyproject_data: Mapping[str, object], version: str | None = None) -> None:
