@@ -86,7 +86,13 @@ async def resolve(session: AsyncSession, organization_id: UUID, connection_id: U
 
 
 async def inspect(session: AsyncSession, organization_id: UUID, image: Image) -> tuple[LongLinkMetadata, UUID | None]:
-    """Inspect anonymously first, then find an authorized organization-scoped pull credential."""
+    """Inspect anonymously first, then try tenant-owned credentials.
+
+    The caller must have no pending writes; read transactions are committed before registry I/O.
+    """
+
+    # Release the caller's read-only authorization transaction before registry I/O.
+    await session.commit()
 
     # Public images must not depend on saved credentials; retry only registry access denials.
     try:
@@ -103,6 +109,9 @@ async def inspect(session: AsyncSession, organization_id: UUID, image: Image) ->
         select(RegistryConnection).where(col(RegistryConnection.organization_id) == organization_id).order_by(col(RegistryConnection.id))
     )
     connections = result.all()
+
+    # Loaded credentials remain available after commit without reopening a transaction.
+    await session.commit()
 
     # Stop on a successful lookup or a non-authentication error, never masking invalid metadata.
     for connection in connections:

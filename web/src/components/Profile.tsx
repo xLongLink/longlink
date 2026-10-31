@@ -12,14 +12,14 @@ import { clearAppearanceCache } from '@/lib/appearance';
 import { List, ListItem } from '@astryxdesign/core/List';
 import { IconButton } from '@astryxdesign/core/IconButton';
 import { useAuthenticatedUser } from '@/lib/hooks/use-user';
-import { SidebarContext, SidebarCollapsedContext } from '@/components/layouts/Platform';
+import { SidebarContext } from '@/components/layouts/Platform';
 import { BookOpen, Building2, ChevronsUpDown, ExternalLink, Settings2 } from 'lucide-react';
 
 /** Renders a user profile popover with authentication and navigation actions. */
 export function ProfileMenu() {
     const user = useAuthenticatedUser();
-    const isSidebar = useContext(SidebarContext);
-    const isCollapsed = useContext(SidebarCollapsedContext);
+    const sidebar = useContext(SidebarContext);
+    const isSidebar = sidebar !== null;
     const [isOpen, setIsOpen] = useState(false);
     const closeMenu = () => setIsOpen(false);
 
@@ -108,7 +108,7 @@ export function ProfileMenu() {
                 </Stack>
             }
         >
-            {isSidebar && !isCollapsed ? (
+            {sidebar === 'expanded' ? (
                 (trigger) => (
                     <Item
                         {...trigger}

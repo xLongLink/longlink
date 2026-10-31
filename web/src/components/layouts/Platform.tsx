@@ -16,9 +16,7 @@ import { BreadcrumbItem, Breadcrumbs } from '@astryxdesign/core/Breadcrumbs';
 import { SideNav, SideNavItem, SideNavCollapseButton } from '@astryxdesign/core/SideNav';
 import { createContext, isValidElement, useState, type ReactElement, type ReactNode } from 'react';
 
-export const SidebarContext = createContext(false);
-
-export const SidebarCollapsedContext = createContext(false);
+export const SidebarContext = createContext<'expanded' | 'collapsed' | null>(null);
 
 export type NavigationTab = {
     href: string;
@@ -107,13 +105,11 @@ export default function Platform({ action, activeTab, breadcrumb, children, tabs
                             ) : undefined
                         }
                         footer={
-                            <SidebarContext value={true}>
-                                <SidebarCollapsedContext value={isCollapsed}>
-                                    <Stack gap={3} padding={1}>
-                                        <Divider />
-                                        {action}
-                                    </Stack>
-                                </SidebarCollapsedContext>
+                            <SidebarContext value={isCollapsed ? 'collapsed' : 'expanded'}>
+                                <Stack gap={3} padding={1}>
+                                    <Divider />
+                                    {action}
+                                </Stack>
                             </SidebarContext>
                         }
                     >

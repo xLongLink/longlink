@@ -68,10 +68,9 @@ def catalog() -> Catalog:
 
 
 def score(query: str, name: str, keywords: list[str], description: str) -> float:
-    """Rank explicit intent ahead of prose, with typo tolerance only for short lookups."""
+    """Rank a normalized query by explicit intent, with typo tolerance only for short lookups."""
 
     # Normalize CamelCase names and punctuation into searchable words.
-    query = " ".join(re.findall(r"\w+", query.casefold()))
     name = re.sub(r"(?<=[a-z])(?=[A-Z])", " ", name).casefold()
     names = [name, name.replace(" ", "")]
     phrases = [keyword.casefold() for keyword in keywords]
@@ -130,6 +129,7 @@ def search(query: str, components: Sequence[Component]) -> list[Component]:
     """Return the best documented API matches for a validated query."""
 
     # Include callable names as explicit search signals for runtime collections.
+    query = " ".join(re.findall(r"\w+", query.casefold()))
     ranked = []
     for component in components:
         keywords = [*component.keywords, *(member.name.split("(")[0] for member in component.members)]
@@ -263,8 +263,9 @@ def build_command(query: str, /) -> None:
     # Reuse API search and rank authored patterns by explicit intent only.
     query = validate_query(query)
     documentation = catalog()
+    normalized_query = " ".join(re.findall(r"\w+", query.casefold()))
     best = max(
-        ((score(query, pattern.name, pattern.keywords, ""), pattern) for pattern in documentation.patterns),
+        ((score(normalized_query, pattern.name, pattern.keywords, ""), pattern) for pattern in documentation.patterns),
         key=lambda match: match[0],
         default=None,
     )
@@ -278,7 +279,6 @@ def build_command(query: str, /) -> None:
             print(f"{index}. {step}")
         matches = [next(component for component in documentation.components if component.name == name) for name in pattern.components]
     else:
-
         # Search results are useful even when no curated workflow matches.
         print("\nNo specific workflow guidance matches this idea. These are documentation matches, not a complete implementation plan.")
         matches = search(query, documentation.components)

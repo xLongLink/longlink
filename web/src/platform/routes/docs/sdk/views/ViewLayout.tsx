@@ -166,27 +166,26 @@ export default function ViewLayout({
                                 Properties
                             </Heading>
                             {[...groups].map(([name, properties]) => (
-                                <Stack key={name} gap={0}>
-                                    <Table
-                                        data={properties}
-                                        columns={[
-                                            {
-                                                key: 'name',
-                                                header: `${name} - Properties`,
-                                                width: proportional(1),
-                                                renderCell: (property) => (
-                                                    <Stack gap={0}>
-                                                        <Stack direction="horizontal" align="center" gap={2}>
-                                                            <Text>{property.name}</Text>
-                                                            <Code className="text-sm">{property.type}</Code>
-                                                        </Stack>
-                                                        <Text type="supporting">{property.description}</Text>
+                                <Table
+                                    key={name}
+                                    data={properties}
+                                    columns={[
+                                        {
+                                            key: 'name',
+                                            header: `${name} - Properties`,
+                                            width: proportional(1),
+                                            renderCell: (property) => (
+                                                <Stack gap={0}>
+                                                    <Stack direction="horizontal" align="center" gap={2}>
+                                                        <Text>{property.name}</Text>
+                                                        <Code className="text-sm">{property.type}</Code>
                                                     </Stack>
-                                                ),
-                                            },
-                                        ]}
-                                    />
-                                </Stack>
+                                                    <Text type="supporting">{property.description}</Text>
+                                                </Stack>
+                                            ),
+                                        },
+                                    ]}
+                                />
                             ))}
                         </Stack>
                     </Stack>

@@ -60,6 +60,11 @@ export default function SolutionManagement({
             ? solutions
             : solutions.filter((solution) => activeTag && solution.tag_ids?.includes(activeTag.id));
 
+    /** Opens creation without replacing an already active creation attempt. */
+    function openCreate() {
+        setSelected((current) => (current?.kind === 'create' ? current : { kind: 'create' }));
+    }
+
     /** Closes only this selection, leaving a replacement dialog open after an older operation finishes. */
     function closeSelected() {
         // Each render captures the selection that owns its callbacks.
@@ -96,33 +101,14 @@ export default function SolutionManagement({
                             <Heading level={2} hasCapsize>
                                 Solutions
                             </Heading>
-                            {canMaintain && (
-                                <Button
-                                    label="New Solution"
-                                    size="sm"
-                                    onClick={() =>
-                                        setSelected((current) =>
-                                            current?.kind === 'create' ? current : { kind: 'create' }
-                                        )
-                                    }
-                                />
-                            )}
+                            {canMaintain && <Button label="New Solution" size="sm" onClick={openCreate} />}
                         </Stack>
                         <Divider />
                     </>
                 ) : solutions.length > 0 ? (
                     <Stack direction="horizontal" justify="between" align="center" wrap="wrap" className="min-h-12">
                         <Heading level={1}>{categoryName}</Heading>
-                        {canMaintain && (
-                            <Button
-                                label="New Solution"
-                                onClick={() =>
-                                    setSelected((current) =>
-                                        current?.kind === 'create' ? current : { kind: 'create' }
-                                    )
-                                }
-                            />
-                        )}
+                        {canMaintain && <Button label="New Solution" onClick={openCreate} />}
                     </Stack>
                 ) : null}
                 {presentation === 'overview' && tags.length === 0 ? (
@@ -161,11 +147,7 @@ export default function SolutionManagement({
                                     label="Create solution"
                                     variant="primary"
                                     icon={<Plus className="size-4" aria-hidden="true" />}
-                                    onClick={() =>
-                                        setSelected((current) =>
-                                            current?.kind === 'create' ? current : { kind: 'create' }
-                                        )
-                                    }
+                                    onClick={openCreate}
                                 />
                             )}
                         </Stack>

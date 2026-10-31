@@ -436,11 +436,16 @@ def validate_lockfile(lockfile: Path, workspace_root: Path) -> None:
     _validate_metadata_target(lockfile, workspace_root, "Lockfile")
 
 
-def build_solution(root: Path, build_context: Path, *, pyproject_data: Mapping[str, object], version: str | None = None) -> None:
+def build_solution(
+    root: Path,
+    build_context: Path,
+    *,
+    pyproject_data: Mapping[str, object],
+    project_version: str,
+    project_description: str | None,
+    version: str | None = None,
+) -> None:
     """Create Docker build artifacts from validated Solution metadata."""
-
-    # Validate image metadata before resolving paths or creating build artifacts.
-    _, project_version, project_description = read_project_metadata(pyproject_data)
 
     # Resolve build paths using the project metadata prepared by the command.
     source_root, local_source_paths, project_manifests = resolve_docker_paths(root, pyproject_data)
@@ -637,7 +642,7 @@ def build_command(
     # Validate the project and Docker prerequisites before copying source files.
     root = Path.cwd().resolve()
     pyproject_data = read_pyproject(root)
-    solution_name, project_version, _ = read_project_metadata(pyproject_data)
+    solution_name, project_version, project_description = read_project_metadata(pyproject_data)
     if version is not None and (not version or any(character.isspace() or not character.isprintable() for character in version)):
         raise errors.Error("Image version must be nonempty and contain no whitespace or control characters")
     image_tag = resolve_image_tag(solution_name, tag or project_version, registry)
@@ -659,7 +664,14 @@ def build_command(
         # Release copied sources as soon as the Docker build finishes.
         with tempfile.TemporaryDirectory(prefix="longlink-build-") as temp_dir:
             build_context = Path(temp_dir)
-            build_solution(root, build_context, pyproject_data=pyproject_data, version=version)
+            build_solution(
+                root,
+                build_context,
+                pyproject_data=pyproject_data,
+                project_version=project_version,
+                project_description=project_description,
+                version=version,
+            )
 
             docker_build_command = [docker_command, "build", "--platform", "linux/amd64", "-f", str(build_context / "Dockerfile")]
             for image_tag in image_tags:
