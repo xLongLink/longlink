@@ -160,7 +160,8 @@ export const zCurrentUser = z.object({
         'fuchsia',
         'pink',
         'rose'
-    ])
+    ]),
+    navigation: z.enum(['topbar', 'sidebar'])
 });
 
 /**
@@ -808,7 +809,8 @@ export const zUserUpdate = z.object({
         'fuchsia',
         'pink',
         'rose'
-    ]).nullish()
+    ]).nullish(),
+    navigation: z.enum(['topbar', 'sidebar']).nullish()
 });
 
 /**
