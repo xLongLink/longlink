@@ -1,10 +1,10 @@
 from src import auth
 from uuid import UUID
-from fastapi import Depends, APIRouter
+from fastapi import APIRouter
 from src.models.users import UserUpdate, CurrentUser, UserOrganizationInvitation, UserOrganizationMembership
 from src.database.services import invitations, organizations
 
-router = APIRouter(dependencies=[Depends(auth.authuser)])
+router = APIRouter()
 
 
 @router.get("/me", response_model=CurrentUser)

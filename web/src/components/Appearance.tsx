@@ -101,13 +101,9 @@ export function AppearanceSync() {
 
     // Revalidate the account rather than trusting another tab's cached identity.
     useEffect(() => {
-        const refresh = (event: StorageEvent) => {
-            if (event.key === 'longlink:appearance') void refetch();
-        };
-
-        window.addEventListener('storage', refresh);
-
-        return () => window.removeEventListener('storage', refresh);
+        return subscribeToCache(() => {
+            void refetch();
+        });
     }, [refetch]);
 
     return null;

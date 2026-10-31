@@ -3,14 +3,14 @@ import json
 import zipfile
 from src import auth
 from uuid import UUID
-from fastapi import Depends, Response, APIRouter, HTTPException
+from fastapi import Response, APIRouter, HTTPException
 from src.kubernetes import solutions as solution_resources
 from src.environments import env
 from src.models.solutions import SolutionPatch, SolutionUpdateCheck
 from src.database.services import solutions
 from src.kubernetes.client import Kubernetes
 
-router = APIRouter(dependencies=[Depends(auth.authuser)])
+router = APIRouter()
 
 
 @router.get("/solutions/{solution_id}/update", response_model=SolutionUpdateCheck)

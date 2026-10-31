@@ -26,6 +26,9 @@ async def get_cards(session: auth.Session, membership: auth.OrganizationOwner):
     if not env.stripe_enabled or customer_id is None:
         return []
 
+    # Release the read-only transaction before contacting Stripe.
+    await session.commit()
+
     # Read current Stripe details rather than persisting duplicate card metadata.
     async with stripe.client() as connection:
         customer = await connection.v1.customers.retrieve_async(customer_id)
@@ -60,6 +63,9 @@ async def get_invoices(session: auth.Session, membership: auth.OrganizationOwner
     )
     if not env.stripe_enabled or customer_id is None:
         return []
+
+    # Release the read-only transaction before contacting Stripe.
+    await session.commit()
 
     # Stripe remains authoritative for invoice status, payment outcomes, and document URLs.
     async with stripe.client() as connection:
@@ -97,6 +103,9 @@ async def get_invoice_pdf(invoice_id: str, session: auth.Session, membership: au
     )
     if not env.stripe_enabled or customer_id is None:
         raise HTTPException(status_code=404, detail="Invoice PDF unavailable")
+
+    # Release the read-only transaction before retrieving the invoice and its PDF.
+    await session.commit()
     async with stripe.client() as connection:
         invoice = await connection.v1.invoices.retrieve_async(invoice_id)
 
