@@ -2,14 +2,14 @@ import type { z } from 'zod';
 import { zCurrentUser } from '@/lib/generated/platform-api-v1/zod.gen';
 
 export const appearanceSchema = zCurrentUser.pick({ theme: true, accent: true, navigation: true }).extend({
-    navigation: zCurrentUser.shape.navigation.default('topbar'),
+    navigation: zCurrentUser.shape.navigation.default('sidebar'),
 });
 
 export const accentColors = zCurrentUser.shape.accent.options;
 
 export type Appearance = z.output<typeof appearanceSchema>;
 
-export const defaultAppearance: Appearance = { theme: 'system', accent: 'neutral', navigation: 'topbar' };
+export const defaultAppearance: Appearance = { theme: 'system', accent: 'neutral', navigation: 'sidebar' };
 
 // Restore the saved appearance before the shared stylesheet renders the document.
 export const appearanceBootstrap = `(() => {

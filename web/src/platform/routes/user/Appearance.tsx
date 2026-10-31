@@ -11,7 +11,6 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useAppearance } from '@/components/Appearance';
 import { SelectableCard } from '@astryxdesign/core/SelectableCard';
 import { zCurrentUser } from '@/lib/generated/platform-api-v1/zod.gen';
-import { RadioList, RadioListItem } from '@astryxdesign/core/RadioList';
 import { accentColors, appearanceSchema, type Appearance } from '@/lib/appearance';
 
 /** Previews and saves personal appearance without changing any Solution configuration. */
@@ -83,25 +82,45 @@ export default function AppearanceSettings() {
                     ))}
                 </Stack>
             </Stack>
+            <Stack gap={3} role="group" aria-label="Navigation layout">
+                <Heading level={4} accessibilityLevel={3}>
+                    Layout
+                </Heading>
+                <Stack direction="horizontal" wrap="wrap" gap={3}>
+                    {[
+                        { value: 'sidebar', label: 'Sidebar', image: 'layout_sidebar.png' },
+                        { value: 'topbar', label: 'Topbar', image: 'layout_topbar.png' },
+                    ].map(({ value, label, image }) => (
+                        <SelectableCard
+                            key={value}
+                            label={label}
+                            padding={2}
+                            isSelected={appearance.navigation === value}
+                            isDisabled={saving}
+                            onChange={() =>
+                                void saveAppearance(appearanceSchema.parse({ ...appearance, navigation: value }))
+                            }
+                        >
+                            <Stack gap={2}>
+                                <Text>{label}</Text>
+                                <img
+                                    src={`/images/${image}`}
+                                    alt=""
+                                    width={1448}
+                                    height={1086}
+                                    className="aspect-3/2 w-40 max-w-full rounded-md object-contain p-2"
+                                />
+                            </Stack>
+                        </SelectableCard>
+                    ))}
+                </Stack>
+            </Stack>
             <Stack gap={3}>
                 <Heading level={4} accessibilityLevel={3}>
                     Appearance
                 </Heading>
                 <Card>
                     <Stack gap={4}>
-                        <RadioList
-                            label="Navigation layout"
-                            size="sm"
-                            value={appearance.navigation}
-                            orientation="horizontal"
-                            isDisabled={saving}
-                            onChange={(navigation) =>
-                                void saveAppearance(appearanceSchema.parse({ ...appearance, navigation }))
-                            }
-                        >
-                            <RadioListItem value="topbar" label="Topbar" />
-                            <RadioListItem value="sidebar" label="Sidebar" />
-                        </RadioList>
                         <Stack gap={2} role="group" aria-label="Accent color">
                             <Text>Accent color</Text>
                             <Stack direction="horizontal" wrap="wrap" gap={2}>

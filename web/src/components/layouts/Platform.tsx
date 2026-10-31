@@ -1,3 +1,4 @@
+import { PanelLeft } from 'lucide-react';
 import { useLocation } from 'react-router';
 import { Card } from '@astryxdesign/core/Card';
 import { Link } from '@astryxdesign/core/Link';
@@ -5,15 +6,19 @@ import type { LucideIcon } from 'lucide-react';
 import { Wordmark } from '@/components/Wordmark';
 import { Stack } from '@astryxdesign/core/Stack';
 import { TopNav } from '@astryxdesign/core/TopNav';
+import { useTheme } from '@astryxdesign/core/theme';
 import { Divider } from '@astryxdesign/core/Divider';
 import { AppShell } from '@astryxdesign/core/AppShell';
 import { useAppearance } from '@/components/Appearance';
 import { Tab, TabList } from '@astryxdesign/core/TabList';
-import { SideNav, SideNavItem } from '@astryxdesign/core/SideNav';
 import { OrganizationSwitcher } from '@/components/PageBreadcrumb';
-import { createContext, isValidElement, type ReactElement, type ReactNode } from 'react';
+import { BreadcrumbItem, Breadcrumbs } from '@astryxdesign/core/Breadcrumbs';
+import { SideNav, SideNavItem, SideNavCollapseButton } from '@astryxdesign/core/SideNav';
+import { createContext, isValidElement, useState, type ReactElement, type ReactNode } from 'react';
 
 export const SidebarContext = createContext(false);
+
+export const SidebarCollapsedContext = createContext(false);
 
 export type NavigationTab = {
     href: string;
@@ -48,12 +53,16 @@ function findActiveTab(tabs: readonly NavigationTab[], pathname: string): string
 export default function Platform({ action, activeTab, breadcrumb, children, tabs }: PlatformProps) {
     const { pathname } = useLocation();
     const { appearance } = useAppearance();
+    const { mode } = useTheme();
+    const [isCollapsed, setIsCollapsed] = useState(false);
 
     // Both layouts share the same links and route selection, including query-based categories.
     const selectedTab = activeTab ?? findActiveTab(tabs, pathname) ?? '';
     const hasSidebar = appearance.navigation === 'sidebar' && tabs.length > 0;
     const hasOrganizationSidebar = hasSidebar && pathname.startsWith('/orgs/');
+    const hasDashboardSidebar = hasOrganizationSidebar || (hasSidebar && pathname.startsWith('/user/'));
     const organization = pathname.split('/')[2] ?? '';
+    const collapsible = { isCollapsed, onCollapsedChange: setIsCollapsed, hasButton: false };
 
     return (
         <AppShell
@@ -63,19 +72,48 @@ export default function Platform({ action, activeTab, breadcrumb, children, tabs
                 hasSidebar ? (
                     <SideNav
                         aria-label="Section navigation"
+                        collapsible={collapsible}
                         header={
-                            hasOrganizationSidebar ? (
-                                <Stack padding={1}>
-                                    <OrganizationSwitcher organization={organization} isSidebar />
+                            hasDashboardSidebar ? (
+                                <Stack gap={3} padding={1}>
+                                    {hasOrganizationSidebar ? (
+                                        <OrganizationSwitcher
+                                            organization={organization}
+                                            isSidebar
+                                            isCollapsed={isCollapsed}
+                                        />
+                                    ) : (
+                                        <Link
+                                            className={
+                                                isCollapsed ? 'flex justify-center py-1.5' : 'w-full px-6 py-1.5'
+                                            }
+                                            href="/user/organizations"
+                                            label="LongLink home"
+                                            color="inherit"
+                                        >
+                                            {isCollapsed ? (
+                                                <img
+                                                    alt="LongLink"
+                                                    className="size-8 object-contain"
+                                                    src={`/longlink-logo-${mode}.png`}
+                                                />
+                                            ) : (
+                                                <Wordmark size="full" />
+                                            )}
+                                        </Link>
+                                    )}
+                                    <Divider />
                                 </Stack>
                             ) : undefined
                         }
                         footer={
                             <SidebarContext value={true}>
-                                <Stack gap={3} padding={1}>
-                                    <Divider />
-                                    {action}
-                                </Stack>
+                                <SidebarCollapsedContext value={isCollapsed}>
+                                    <Stack gap={3} padding={1}>
+                                        <Divider />
+                                        {action}
+                                    </Stack>
+                                </SidebarCollapsedContext>
                             </SidebarContext>
                         }
                     >
@@ -104,7 +142,7 @@ export default function Platform({ action, activeTab, breadcrumb, children, tabs
                 ) : undefined
             }
             topNav={
-                <Stack className={hasOrganizationSidebar ? 'lg:hidden' : undefined}>
+                <Stack className={hasSidebar ? 'lg:hidden' : undefined}>
                     <TopNav
                         className="min-h-11 px-7"
                         endContent={hasSidebar ? undefined : action}
@@ -159,13 +197,28 @@ export default function Platform({ action, activeTab, breadcrumb, children, tabs
             <Stack className="relative" minHeight="calc(100dvh - var(--_app-shell-header-height, 0px))">
                 <Card
                     aria-hidden="true"
-                    className={`pointer-events-none absolute z-0 inset-0 overflow-clip bg-body px-2 pb-2 ${hasOrganizationSidebar ? 'pt-2' : 'pt-0'}`}
+                    className={`pointer-events-none absolute z-0 inset-0 overflow-clip bg-body px-2 pb-2 ${hasSidebar ? 'pt-2' : 'pt-0'}`}
                     padding={0}
                     variant="transparent"
                 >
                     <Card className="border-0" height="100%" width="100%" />
                 </Card>
                 <Stack className="relative z-10" padding={2}>
+                    {hasSidebar && (
+                        <Stack className="hidden lg:flex" direction="horizontal" align="center" gap={3} padding={3}>
+                            <SideNavCollapseButton collapsible={collapsible}>
+                                <PanelLeft aria-hidden="true" size={16} />
+                            </SideNavCollapseButton>
+                            <Divider className="h-5" orientation="vertical" />
+                            {breadcrumb ?? (
+                                <Breadcrumbs>
+                                    <BreadcrumbItem isCurrent>
+                                        {tabs.find((tab) => tab.href === selectedTab)?.label}
+                                    </BreadcrumbItem>
+                                </Breadcrumbs>
+                            )}
+                        </Stack>
+                    )}
                     {children}
                 </Stack>
             </Stack>

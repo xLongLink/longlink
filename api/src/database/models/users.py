@@ -20,7 +20,7 @@ class User(AuditTable, table=True):
     # Appearance
     theme: str = Field(default="system", max_length=6)
     accent: str = Field(default="neutral", max_length=7)
-    navigation: str = Field(default="topbar", max_length=7)
+    navigation: str = Field(default="sidebar", max_length=7)
 
     # Authentication
     password: str = Field(max_length=128)

@@ -19,5 +19,5 @@ it('selects the longest matching navigation path', () => {
     );
 
     // Assert
-    expect(output.querySelector('[aria-current="true"]')?.textContent).toContain('Users');
+    expect(output.querySelector('[aria-current="page"]')?.textContent).toContain('Users');
 });
