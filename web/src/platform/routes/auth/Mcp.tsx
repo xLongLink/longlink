@@ -55,7 +55,7 @@ export default function McpAuthorization() {
                         </Text>
                         <Text as="p" type="supporting">
                             It may read and modify Solution data within your current Organization permissions. Access
-                            expires after one hour.
+                            expires after 30 days.
                         </Text>
                         <Text as="p" type="label">
                             Client callback
