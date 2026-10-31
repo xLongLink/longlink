@@ -37,6 +37,7 @@ async def test_get_me_returns_authenticated_user_profile_and_separate_org_member
         # Profile responses include the default personal appearance settings.
         "theme": "system",
         "accent": "neutral",
+        "navigation": "topbar",
     }
 
     assert organizations_response.status_code == 200
@@ -116,7 +117,7 @@ async def test_patch_me_persists_without_organization_database_access(
     monkeypatch.setattr("src.operations.databases.ready", unavailable)
 
     # Act
-    response = await clients[1].patch("/api/v1/me", json={"name": expected_name})
+    response = await clients[1].patch("/api/v1/me", json={"name": expected_name, "navigation": "sidebar"})
     retried = await clients[1].patch("/api/v1/me", json={"name": expected_name})
 
     # Assert
@@ -131,11 +132,13 @@ async def test_patch_me_persists_without_organization_database_access(
         # Name changes leave personal appearance settings intact.
         "theme": "system",
         "accent": "neutral",
+        "navigation": "sidebar",
     }
     async with session_scope() as session:
         persisted_user = await session.get(User, user.id)
         assert persisted_user is not None
         assert persisted_user.name == expected_name
+        assert persisted_user.navigation == "sidebar"
 
 
 async def test_accept_my_invitation_adds_membership(

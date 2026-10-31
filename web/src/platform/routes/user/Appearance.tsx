@@ -22,7 +22,13 @@ export default function AppearanceSettings() {
 
     /** Serializes changes and restores the previous preference when saving fails. */
     async function saveAppearance(next: Appearance) {
-        if (saving || (next.theme === appearance.theme && next.accent === appearance.accent)) return;
+        if (
+            saving ||
+            (next.theme === appearance.theme &&
+                next.accent === appearance.accent &&
+                next.navigation === appearance.navigation)
+        )
+            return;
         const previous = appearance;
         setAppearance(next);
         setSaving(true);
@@ -58,6 +64,19 @@ export default function AppearanceSettings() {
                         <RadioListItem value="system" label="System" />
                         <RadioListItem value="light" label="Light" />
                         <RadioListItem value="dark" label="Dark" />
+                    </RadioList>
+                    <RadioList
+                        label="Navigation layout"
+                        size="sm"
+                        value={appearance.navigation}
+                        orientation="horizontal"
+                        isDisabled={saving}
+                        onChange={(navigation) =>
+                            void saveAppearance(appearanceSchema.parse({ ...appearance, navigation }))
+                        }
+                    >
+                        <RadioListItem value="topbar" label="Topbar" />
+                        <RadioListItem value="sidebar" label="Sidebar" />
                     </RadioList>
                     <Stack gap={2} role="group" aria-label="Accent color">
                         <Text>Accent color</Text>

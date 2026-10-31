@@ -14,6 +14,7 @@ export const user = zCurrentUser.parse({
     administrator: false,
     theme: 'system',
     accent: 'neutral',
+    navigation: 'topbar',
 });
 
 export const membership = zUserOrganizationMembership.parse({

@@ -82,7 +82,7 @@ export function AppearanceSync() {
     // Never carry one account's cached colors into an anonymous or different account session.
     useEffect(() => {
         if (user) {
-            const appearance = { theme: user.theme, accent: user.accent };
+            const appearance = { theme: user.theme, accent: user.accent, navigation: user.navigation };
             setAppearance(appearance);
 
             try {
