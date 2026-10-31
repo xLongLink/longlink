@@ -14,6 +14,7 @@ export const defaultAppearance: Appearance = { theme: 'system', accent: 'neutral
 // Restore the saved appearance before the shared stylesheet renders the document.
 export const appearanceBootstrap = `(() => {
     try {
+        if (location.pathname === '/' && document.currentScript?.hasAttribute('data-platform')) return;
         if (/^\\/(login|register|auth)(\\/|$)/.test(location.pathname)) return;
         const preference = JSON.parse(localStorage.getItem('longlink:appearance') || 'null');
         const accents = ${JSON.stringify(accentColors)};
