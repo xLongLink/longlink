@@ -190,7 +190,14 @@ export default function Platform({ action, activeTab, breadcrumb, children, tabs
             variant="wash"
         >
             {/* Cover at least the main region and grow the background with overflowing View content. */}
-            <Stack className="relative" minHeight="calc(100dvh - var(--_app-shell-header-height, 0px))">
+            <Stack
+                className={
+                    hasSidebar
+                        ? 'relative lg:[--platform-toolbar-height:calc(var(--size-element-md)+var(--spacing-3)*2)]'
+                        : 'relative'
+                }
+                minHeight="calc(100dvh - var(--_app-shell-header-height, 0px))"
+            >
                 <Card
                     aria-hidden="true"
                     className={`pointer-events-none absolute z-0 inset-0 overflow-clip bg-body px-2 pb-2 ${hasSidebar ? 'pt-2' : 'pt-0'}`}
@@ -201,7 +208,14 @@ export default function Platform({ action, activeTab, breadcrumb, children, tabs
                 </Card>
                 <Stack className="relative z-10" padding={2}>
                     {hasSidebar && (
-                        <Stack className="hidden lg:flex" direction="horizontal" align="center" gap={3} padding={3}>
+                        <Stack
+                            className="hidden lg:flex"
+                            direction="horizontal"
+                            align="center"
+                            gap={3}
+                            height="var(--platform-toolbar-height)"
+                            padding={3}
+                        >
                             <SideNavCollapseButton collapsible={collapsible}>
                                 <PanelLeft aria-hidden="true" size={16} />
                             </SideNavCollapseButton>
