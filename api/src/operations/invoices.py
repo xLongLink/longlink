@@ -134,7 +134,6 @@ async def issue(session: AsyncSession, invoice_id: UUID) -> None:
         if remote.status == "draft":
             items = await connection.v1.invoice_items.list_async({"invoice": remote.id, "limit": 100})
             existing_items = [item async for item in items.auto_paging_iter()]
-            lines = []
             discount = 0
             total = 0
 
@@ -153,12 +152,10 @@ async def issue(session: AsyncSession, invoice_id: UUID) -> None:
                 gross = (quantity * unit_price).quantize(Decimal("1"), rounding=ROUND_HALF_UP)
                 net = (billable * unit_price).quantize(Decimal("1"), rounding=ROUND_HALF_UP)
                 description = label if resource == "users" else f"{label} ({unit})"
-                lines.append((resource, description, quantity, unit_price, int(gross)))
                 discount += int(gross - net)
                 total += int(net)
 
-            # Recover each resource line independently to avoid duplicate charges.
-            for resource, label, quantity, rate, amount in lines:
+                # Recover each resource line independently to avoid duplicate charges.
                 matched = [item for item in existing_items if (item.to_dict().get("metadata") or {}).get("resource") == resource]
 
                 # Recovered items must match the expected price and quantity exactly.
@@ -166,7 +163,7 @@ async def issue(session: AsyncSession, invoice_id: UUID) -> None:
                     # Refuse ambiguous or modified invoice items instead of charging again.
                     if (
                         len(matched) != 1
-                        or matched[0].amount != amount
+                        or matched[0].amount != int(gross)
                         or matched[0].quantity != quantity
                         # Resource matches must still belong to this exact measured invoice.
                         or (matched[0].to_dict().get("metadata") or {}).get("longlink_invoice_id") != str(invoice.id)
@@ -181,8 +178,8 @@ async def issue(session: AsyncSession, invoice_id: UUID) -> None:
                         "invoice": remote.id,
                         "currency": "chf",
                         "quantity": quantity,
-                        "unit_amount_decimal": str(rate),
-                        "description": label,
+                        "unit_amount_decimal": str(unit_price),
+                        "description": description,
                         "metadata": {"longlink_invoice_id": str(invoice.id), "resource": resource},
                     },
                     # Retried issuance must not duplicate a resource's line item.

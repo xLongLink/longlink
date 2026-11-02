@@ -195,8 +195,7 @@ def _infrastructure_query() -> Select[Organization, ComputeRegistry]:
             load_only(
                 attr(ComputeRegistry.id),
                 attr(ComputeRegistry.kubeconfig),
-                # Provisioning owns both database placement and object storage setup.
-                attr(ComputeRegistry.database_storage_class),
+                # Database provisioning selects placement separately from lifecycle storage access.
                 attr(ComputeRegistry.storage_endpoint),
                 attr(ComputeRegistry.storage_access_key),
                 attr(ComputeRegistry.storage_secret_key),

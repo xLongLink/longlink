@@ -11,23 +11,22 @@ import { Illustration } from '@/components/Illustration';
 import { zOrganizationCreate } from '@/lib/generated/platform-api-v1/zod.gen';
 import { Layout, LayoutPanel, LayoutContent } from '@astryxdesign/core/Layout';
 
-/** Refreshes memberships after a successful organization creation request. */
+/** Notifies the parent after a successful organization creation request. */
 export default function CreateOrganization({
     onClose,
-    invalidate,
+    onSuccess,
 }: {
     onClose: () => void;
-    invalidate: () => Promise<void>;
+    onSuccess: () => Promise<void>;
 }) {
-    /** Creates the organization and refreshes its memberships. */
+    /** Creates the organization before awaiting the parent's success workflow. */
     async function createOrganization(data: FormData) {
         // Parse the form-owned name before applying organization request constraints.
         const name = z.string().trim().parse(data.get('name'));
 
-        // Close only after creation and the membership refresh succeed.
+        // Let the parent handle the successful creation.
         await api.post('/api/v1/organizations', { json: zOrganizationCreate.parse({ name }) });
-        await invalidate();
-        onClose();
+        await onSuccess();
     }
 
     // Keep the split dialog compact and within the dynamic viewport.

@@ -32,7 +32,8 @@ type SolutionAction =
     | { kind: 'tags'; solution: Solution }
     | ({ kind: 'update' } & Update)
     | { kind: 'logs'; id: string }
-    | { kind: 'mcp' | 'delete'; item: { id: string; name: string } };
+    | { kind: 'mcp'; id: string }
+    | { kind: 'delete'; item: { id: string; name: string } };
 
 /** Owns Solution loading and dialogs for the overview and active settings section. */
 export default function SolutionManagement({
@@ -276,11 +277,7 @@ export default function SolutionManagement({
                                                           id: 'mcp',
                                                           label: 'MCP',
                                                           icon: <Plug className="size-4" aria-hidden="true" />,
-                                                          onClick: () =>
-                                                              setSelected({
-                                                                  kind: 'mcp',
-                                                                  item: { id: row.id, name: row.name },
-                                                              }),
+                                                          onClick: () => setSelected({ kind: 'mcp', id: row.id }),
                                                       },
                                                       {
                                                           id: 'delete',
@@ -380,12 +377,12 @@ export default function SolutionManagement({
                                         </Stack>
                                         {/* Match the creation dialog's content-sized column and control width. */}
                                         <Stack gap={4} width={0} className="min-w-full">
-                                            <ApiBoundary key={selected.item.id}>
-                                                <SolutionMcpUrl solutionId={selected.item.id} onClose={closeSelected} />
+                                            <ApiBoundary key={selected.id}>
+                                                <SolutionMcpUrl solutionId={selected.id} onClose={closeSelected} />
                                             </ApiBoundary>
                                             <Button
                                                 as="a"
-                                                href={`/api/v1/solutions/${selected.item.id}/plugin`}
+                                                href={`/api/v1/solutions/${selected.id}/plugin`}
                                                 label="Download plugin ZIP"
                                                 variant="primary"
                                                 width="100%"
