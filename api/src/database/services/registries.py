@@ -28,16 +28,15 @@ async def create(session: AsyncSession, organization_id: UUID, payload: Registry
     """Authorize a registry connection and queue secret synchronization in the caller's final transaction."""
 
     # Authorize before using the submitted token to resolve its GitHub account.
-    membership = await organizations.require_membership(session, user_id, organization_id, OrganizationRoles.maintain)
+    await organizations.require_membership(session, user_id, organization_id, OrganizationRoles.maintain)
 
-    # Release the transaction and discard its permission snapshot before waiting for GitHub.
+    # Release the transaction before waiting for GitHub.
     await session.commit()
-    session.expire(membership)
     username = await github.username(payload.credential)
 
     # Revalidate access after the external lookup and serialize creation with secret synchronization.
     await lock(session, organization_id)
-    await organizations.require_membership(session, user_id, organization_id, OrganizationRoles.maintain)
+    await organizations.locked_membership(session, user_id, organization_id, OrganizationRoles.maintain)
 
     # Store new credentials within the authorized Organization.
     connection = RegistryConnection(organization_id=organization_id, username=username, credential=payload.credential.get_secret_value())

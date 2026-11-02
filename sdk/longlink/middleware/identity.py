@@ -34,33 +34,27 @@ class IdentityMiddleware:
         # Verify the Platform-signed user assertion before exposing it to Solution code.
         request = Request(scope)
         user = None
-        user_id = None
         if self.identity_secret:
             try:
                 user, access = identity.identity_token_data(request.headers.get("x-longlink-identity", ""), self.identity_secret)
                 if self.require_identity and access is None:
                     raise jwt.InvalidTokenError("Endpoint permissions are required")
                 scope["longlink.access"] = access
-                user_id = user.id
 
             # Invalid assertions remain anonymous until the route's identity policy is enforced.
             except jwt.PyJWTError:
                 user = None
 
         # Only Kubernetes liveness and readiness probes are anonymous in production.
-        if self.require_identity and user_id is None and not (request.method == "GET" and request.url.path in {"/health", "/ready"}):
+        if self.require_identity and user is None and not (request.method == "GET" and request.url.path in {"/health", "/ready"}):
             response = JSONResponse({"detail": "Authentication required"}, status_code=401)
             await response(scope, receive, send)
             return
-
-        # Use the seeded local user when no signed Platform identity was supplied.
-        if user_id is None:
-            user_id = self.local_user_id
 
         # Persist verified profiles before any route can create user-referencing records.
         if user is not None:
             await request.app.state.longlink.database.sync_user(user)
 
         # Reset audit identity after response streaming, background work, or failure.
-        with audit.actor(user_id):
+        with audit.actor(user.id if user is not None else self.local_user_id):
             await self.app(scope, receive, send)
