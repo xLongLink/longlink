@@ -41,12 +41,16 @@ export default function OrganizationLayout() {
             breadcrumb={<PageBreadcrumb />}
             activeTab={activeTab}
             tabs={[
-                ...tags.map((tag, index) => ({
-                    href: index === 0 ? base : `${base}?tag=${tag.id}`,
-                    icon: tabs.icons[tag.icon].component,
-                    label: tag.name,
-                })),
-                { href: `${base}/settings`, icon: Settings2, label: 'Settings' },
+                ...tags.map((tag, index) => {
+                    const Icon = tabs.icons[tag.icon].component;
+
+                    return {
+                        href: index === 0 ? base : `${base}?tag=${tag.id}`,
+                        icon: <Icon aria-hidden="true" size={16} />,
+                        label: tag.name,
+                    };
+                }),
+                { href: `${base}/settings`, icon: <Settings2 aria-hidden="true" size={16} />, label: 'Settings' },
             ]}
         >
             <PageContainer gap={8} padding={2}>

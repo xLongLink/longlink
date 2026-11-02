@@ -17,7 +17,14 @@ export default function Admin() {
     }
 
     return (
-        <Platform action={<ProfileMenu />} breadcrumb={<PageBreadcrumb />} tabs={adminNavigation}>
+        <Platform
+            action={<ProfileMenu />}
+            breadcrumb={<PageBreadcrumb />}
+            tabs={adminNavigation.map(({ icon: Icon, ...tab }) => ({
+                ...tab,
+                icon: <Icon aria-hidden="true" size={16} />,
+            }))}
+        >
             <PageContainer gap={8} padding={2}>
                 <Outlet />
             </PageContainer>

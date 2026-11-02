@@ -10,6 +10,7 @@ from src.environments import env
 from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.exceptions import RequestValidationError
 from src.database.services import mcp
+from src.database.models.mcp import MCPClient
 
 
 class OAuthRoute(APIRoute):
@@ -61,9 +62,10 @@ async def register(session: auth.Session, payload: models.ClientRegistration) ->
     """Register immutable callbacks for a public client; registration grants no access."""
 
     # Persist registration before returning its identifier and validated public metadata.
-    client_id = await mcp.register(session, payload)
+    client = MCPClient(name=payload.client_name, redirects=payload.redirect_uris)
+    session.add(client)
     await session.commit()
-    return {**payload.model_dump(), "client_id": client_id}
+    return {**payload.model_dump(), "client_id": client.id}
 
 
 @router.get("/authorize", response_model=None)

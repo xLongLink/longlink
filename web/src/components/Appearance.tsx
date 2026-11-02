@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { Theme } from '@astryxdesign/core/theme';
 import { stoneTheme } from '@/lib/generated/stone.js';
 import { useCurrentUser } from '@/lib/hooks/use-user';
+import { useIsMutating } from '@tanstack/react-query';
 import { appearanceSchema, clearAppearanceCache, defaultAppearance, type Appearance } from '@/lib/appearance';
 import { createContext, useContext, useEffect, useLayoutEffect, useMemo, useState, useSyncExternalStore } from 'react';
 
@@ -78,6 +79,7 @@ export function useAppearance() {
 export function AppearanceSync() {
     const { data: user, error, refetch } = useCurrentUser();
     const { setAppearance } = useAppearance();
+    const isSaving = useIsMutating({ mutationKey: ['current-user'] }) > 0;
 
     // Never carry one account's cached colors into an anonymous or different account session.
     useEffect(() => {
@@ -85,19 +87,22 @@ export function AppearanceSync() {
             const appearance = { theme: user.theme, accent: user.accent, navigation: user.navigation };
             setAppearance(appearance);
 
-            try {
-                const cached = JSON.stringify(appearance);
+            // Keep previews local until the profile write settles.
+            if (!isSaving) {
+                try {
+                    const cached = JSON.stringify(appearance);
 
-                if (localStorage.getItem('longlink:appearance') !== cached)
-                    localStorage.setItem('longlink:appearance', cached);
-            } catch {
-                // Saving to the account does not depend on browser storage.
+                    if (localStorage.getItem('longlink:appearance') !== cached)
+                        localStorage.setItem('longlink:appearance', cached);
+                } catch {
+                    // Saving to the account does not depend on browser storage.
+                }
             }
         } else if (error instanceof ApiError && error.status === 401) {
             setAppearance(defaultAppearance);
             clearAppearanceCache();
         }
-    }, [user, error, setAppearance]);
+    }, [user, error, setAppearance, isSaving]);
 
     // Revalidate the account rather than trusting another tab's cached identity.
     useEffect(() => {
