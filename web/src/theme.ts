@@ -381,28 +381,20 @@ export const stoneTheme = defineTheme({
 
         banner: {
             'status:info': {
-                '--color-accent-muted': 'var(--color-background-blue)',
-                '--color-text-primary': 'var(--color-text-blue)',
-                '--color-text-secondary': 'var(--color-text-blue)',
-                '--color-accent': 'var(--color-text-blue)',
+                '--color-info-muted': 'var(--color-background-blue)',
+                '--color-on-info-muted': 'var(--color-text-blue)',
             },
             'status:success': {
                 '--color-success-muted': 'var(--color-background-green)',
-                '--color-text-primary': 'var(--color-text-green)',
-                '--color-text-secondary': 'var(--color-text-green)',
-                '--color-success': 'var(--color-text-green)',
+                '--color-on-success-muted': 'var(--color-text-green)',
             },
             'status:warning': {
                 '--color-warning-muted': 'var(--color-background-yellow)',
-                '--color-text-primary': 'var(--color-text-yellow)',
-                '--color-text-secondary': 'var(--color-text-yellow)',
-                '--color-warning': 'var(--color-text-yellow)',
+                '--color-on-warning-muted': 'var(--color-text-yellow)',
             },
             'status:error': {
                 '--color-error-muted': 'var(--color-background-red)',
-                '--color-text-primary': 'var(--color-text-red)',
-                '--color-text-secondary': 'var(--color-text-red)',
-                '--color-error': 'var(--color-text-red)',
+                '--color-on-error-muted': 'var(--color-text-red)',
             },
         },
 
