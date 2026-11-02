@@ -341,6 +341,7 @@ async def create_invoice(organization_id: UUID) -> None:
 
         # Use the published rates, free-tier discount, and Stripe-hosted documents.
         await invoices.issue(database, invoice.id)
+        await database.commit()
 
     print("Example Stripe test invoice ready for ACME Ink.")
 

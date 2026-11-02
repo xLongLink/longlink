@@ -11,6 +11,9 @@ router = APIRouter()
 async def inspect_image(session: auth.Session, image: Image, membership: auth.OrganizationMember):
     """Inspect a container image and return its LongLink metadata."""
 
+    # Release the authorization transaction before registry I/O.
+    await session.commit()
+
     # Select matching credentials automatically while keeping this response metadata-only.
-    metadata, _ = await registries.inspect(session, membership.organization_id, image)
+    metadata, _ = await registries.inspect(membership.organization_id, image)
     return metadata

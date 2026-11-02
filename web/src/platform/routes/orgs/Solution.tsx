@@ -7,10 +7,9 @@ import { Center } from '@astryxdesign/core/Center';
 import Platform from '@/components/layouts/Platform';
 import { Heading } from '@astryxdesign/core/Heading';
 import { ApiBoundary } from '@/components/ApiBoundary';
-import { SolutionRuntime } from '@/components/Solution';
+import { SolutionPage } from '@/components/SolutionPage';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import NotFoundLayout from '@/components/layouts/NotFound';
-import { PageContainer } from '@/components/PageContainer';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { useParams, useOutletContext } from 'react-router';
 import { PageBreadcrumb } from '@/components/PageBreadcrumb';
@@ -95,19 +94,13 @@ export default function OrganizationSolution() {
     }
 
     return (
-        <SolutionRuntime
+        <SolutionPage
+            action={action}
+            breadcrumb={breadcrumb}
+            formatTitle={(title) => `${title ?? solutionAccess.name} | LongLink`}
             navigationBaseUrl={`/orgs/${organization}/solutions/${solution}`}
             viewsUrl={`/api/v1/solutions/${solutionAccess.id}/proxy/views.json`}
-        >
-            {({ content, isNavigationLoading, tabs, title }) => (
-                <Platform action={action} breadcrumb={breadcrumb} isNavigationLoading={isNavigationLoading} tabs={tabs}>
-                    <title>{`${title ?? solutionAccess.name} | LongLink`}</title>
-                    <PageContainer height="100%" minHeight={0} padding={2}>
-                        {content}
-                    </PageContainer>
-                </Platform>
-            )}
-        </SolutionRuntime>
+        />
     );
 }
 
