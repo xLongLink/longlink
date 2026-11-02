@@ -1,227 +1,41 @@
-import { PanelLeft } from 'lucide-react';
 import { useLocation } from 'react-router';
-import { SidebarContext } from '@/lib/sidebar';
-import { Card } from '@astryxdesign/core/Card';
-import { Link } from '@astryxdesign/core/Link';
-import { Wordmark } from '@/components/Wordmark';
-import { Stack } from '@astryxdesign/core/Stack';
-import { TopNav } from '@astryxdesign/core/TopNav';
-import { useTheme } from '@astryxdesign/core/theme';
-import { Divider } from '@astryxdesign/core/Divider';
-import { AppShell } from '@astryxdesign/core/AppShell';
-import { useMediaQuery } from '@astryxdesign/core/hooks';
-import { Tab, TabList } from '@astryxdesign/core/TabList';
+import Topbar from '@/components/layouts/Topbar';
+import Sidebar from '@/components/layouts/Sidebar';
 import { useAppearance } from '@/lib/hooks/use-appearance';
-import { OrganizationSwitcher } from '@/components/PageBreadcrumb';
-import { useState, type ReactElement, type ReactNode } from 'react';
-import { BreadcrumbItem, Breadcrumbs } from '@astryxdesign/core/Breadcrumbs';
-import { SideNav, SideNavItem, SideNavCollapseButton } from '@astryxdesign/core/SideNav';
-
-export type NavigationTab = {
-    href: string;
-    icon?: ReactElement;
-    label: string;
-};
-
-type PlatformProps = {
-    action: ReactNode;
-    activeTab?: string;
-    breadcrumb?: ReactNode;
-    children: ReactNode;
-    isNavigationLoading?: boolean;
-    tabs: readonly NavigationTab[];
-};
+import type { NavigationTab, PlatformProps } from '@/components/layouts/types';
 
 /** Finds the longest platform tab path that matches a pathname. */
 function findActiveTab(tabs: readonly NavigationTab[], pathname: string): string | undefined {
     const normalizedPathname = pathname.replace(/\/+$/, '') || '/';
+    let bestTab: NavigationTab | undefined;
+    let bestMatchLength = 0;
 
-    return tabs.reduce<string | undefined>((best, tab) => {
+    // Rank normalized paths while retaining the original tab identity.
+    for (const tab of tabs) {
         const tabPathname = tab.href.replace(/\/+$/, '') || '/';
 
         if (tabPathname !== normalizedPathname && !normalizedPathname.startsWith(`${tabPathname}/`)) {
-            return best;
+            continue;
         }
 
-        return best === undefined || tabPathname.length > best.length ? tabPathname : best;
-    }, undefined);
+        if (tabPathname.length > bestMatchLength) {
+            bestTab = tab;
+            bestMatchLength = tabPathname.length;
+        }
+    }
+
+    return bestTab?.href;
 }
 
-/** Renders the shared Platform frame with contextual navigation and actions. */
-export default function Platform({
-    action,
-    activeTab,
-    breadcrumb,
-    children,
-    isNavigationLoading = false,
-    tabs,
-}: PlatformProps) {
+/** Selects application navigation without knowing the route's domain or identity. */
+export default function Platform({ activeTab, isNavigationLoading = false, ...props }: PlatformProps) {
     const { pathname } = useLocation();
     const { appearance } = useAppearance();
-    const { mode } = useTheme();
-    const isSmallScreen = useMediaQuery('(width < 1024px)');
-    const [isDesktopCollapsed, setIsDesktopCollapsed] = useState(false);
-    const [isMobileCollapsed, setIsMobileCollapsed] = useState(true);
-    const isCollapsed = isSmallScreen ? isMobileCollapsed : isDesktopCollapsed;
-    const setIsCollapsed = isSmallScreen ? setIsMobileCollapsed : setIsDesktopCollapsed;
+    const selectedTab = activeTab ?? findActiveTab(props.tabs, pathname) ?? '';
 
-    // Both layouts share the same links and route selection, including query-based categories.
-    const selectedTab = activeTab ?? findActiveTab(tabs, pathname) ?? '';
-    const hasSidebar = appearance.navigation === 'sidebar' && (isNavigationLoading || tabs.length > 0);
-    const isSdk = import.meta.env.MODE === 'sdk';
-    const hasOrganizationSidebar = hasSidebar && pathname.startsWith('/orgs/');
-    const hasBrandedSidebar = hasOrganizationSidebar || (hasSidebar && (isSdk || pathname.startsWith('/user/')));
-    const organization = pathname.split('/')[2] ?? '';
-    const collapsible = { isCollapsed, onCollapsedChange: setIsCollapsed, hasButton: false };
+    // Keep pages without navigation in the topbar frame, including failed manifest loads.
+    const Layout =
+        appearance.navigation === 'sidebar' && (isNavigationLoading || props.tabs.length > 0) ? Sidebar : Topbar;
 
-    return (
-        <AppShell
-            height="auto"
-            mobileNav={hasSidebar ? { breakpoint: 'none', hasToggle: false } : false}
-            sideNav={
-                hasSidebar ? (
-                    <SideNav
-                        aria-label="Section navigation"
-                        collapsible={collapsible}
-                        header={
-                            hasBrandedSidebar ? (
-                                <Stack gap={3} padding={1}>
-                                    {hasOrganizationSidebar ? (
-                                        <OrganizationSwitcher
-                                            organization={organization}
-                                            isSidebar
-                                            isCollapsed={isCollapsed}
-                                        />
-                                    ) : (
-                                        <Link
-                                            className={
-                                                isCollapsed ? 'flex justify-center py-1.5' : 'w-full px-6 py-1.5'
-                                            }
-                                            href={isSdk ? '/' : '/user/organizations'}
-                                            label="LongLink home"
-                                            color="inherit"
-                                        >
-                                            {isCollapsed ? (
-                                                <img
-                                                    alt="LongLink"
-                                                    className="size-8 object-contain"
-                                                    src={`/longlink-logo-${mode}.png`}
-                                                />
-                                            ) : (
-                                                <Wordmark size="full" />
-                                            )}
-                                        </Link>
-                                    )}
-                                    <Divider />
-                                </Stack>
-                            ) : undefined
-                        }
-                        footer={
-                            <SidebarContext value={isCollapsed ? 'collapsed' : 'expanded'}>
-                                <Stack gap={3} padding={1}>
-                                    <Divider />
-                                    {action}
-                                </Stack>
-                            </SidebarContext>
-                        }
-                    >
-                        <Stack padding={2}>
-                            {tabs.map((tab) => (
-                                <SideNavItem
-                                    href={tab.href}
-                                    icon={tab.icon}
-                                    isSelected={selectedTab === tab.href}
-                                    key={tab.href}
-                                    label={tab.label}
-                                    onClick={() => setIsMobileCollapsed(true)}
-                                />
-                            ))}
-                        </Stack>
-                    </SideNav>
-                ) : undefined
-            }
-            topNav={
-                !hasSidebar ? (
-                    <Stack>
-                        <TopNav
-                            className="min-h-11 px-7"
-                            endContent={action}
-                            heading={
-                                breadcrumb ?? (
-                                    <Link href="/" label="LongLink home" color="inherit">
-                                        <Wordmark />
-                                    </Link>
-                                )
-                            }
-                            label="Platform navigation"
-                        />
-                        {tabs.length > 0 && (
-                            <Stack direction="horizontal" paddingInline={4} width="100%">
-                                <TabList
-                                    aria-label="Section navigation"
-                                    onChange={() => undefined}
-                                    size="sm"
-                                    value={selectedTab}
-                                >
-                                    {tabs.map((tab) => (
-                                        <Tab
-                                            href={tab.href}
-                                            icon={tab.icon}
-                                            key={tab.href}
-                                            label={tab.label}
-                                            value={tab.href}
-                                        />
-                                    ))}
-                                </TabList>
-                            </Stack>
-                        )}
-                    </Stack>
-                ) : undefined
-            }
-            variant="wash"
-        >
-            {/* Cover at least the main region and grow the background with overflowing View content. */}
-            <Stack
-                className={
-                    hasSidebar
-                        ? 'relative [--platform-toolbar-height:calc(var(--size-element-md)+var(--spacing-3)*2)]'
-                        : 'relative'
-                }
-                minHeight="calc(100dvh - var(--_app-shell-header-height, 0px))"
-            >
-                <Card
-                    aria-hidden="true"
-                    className={`pointer-events-none absolute z-0 inset-0 overflow-clip bg-body px-2 pb-2 ${hasSidebar ? 'pt-2' : 'pt-0'}`}
-                    padding={0}
-                    variant="transparent"
-                >
-                    <Card className="border-0" height="100%" width="100%" />
-                </Card>
-                <Stack className="relative z-10" padding={2}>
-                    {hasSidebar && (
-                        <Stack
-                            direction="horizontal"
-                            align="center"
-                            gap={3}
-                            height="var(--platform-toolbar-height)"
-                            padding={3}
-                        >
-                            <SideNavCollapseButton collapsible={collapsible}>
-                                <PanelLeft aria-hidden="true" size={16} />
-                            </SideNavCollapseButton>
-                            <Divider className="h-5" orientation="vertical" />
-                            {breadcrumb ?? (
-                                <Breadcrumbs>
-                                    <BreadcrumbItem isCurrent>
-                                        {tabs.find((tab) => tab.href === selectedTab)?.label}
-                                    </BreadcrumbItem>
-                                </Breadcrumbs>
-                            )}
-                        </Stack>
-                    )}
-                    {children}
-                </Stack>
-            </Stack>
-        </AppShell>
-    );
+    return <Layout {...props} activeTab={selectedTab} />;
 }

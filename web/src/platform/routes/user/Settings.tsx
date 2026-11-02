@@ -11,13 +11,12 @@ import { Divider } from '@astryxdesign/core/Divider';
 import { Heading } from '@astryxdesign/core/Heading';
 import { ApiBoundary } from '@/components/ApiBoundary';
 import { TextInput } from '@astryxdesign/core/TextInput';
-import { SideNavItem } from '@/components/ui/SideNavItem';
 import { PageContainer } from '@/components/PageContainer';
 import OrganizationManagement from './OrganizationManagement';
 import { Layout, LayoutPanel } from '@astryxdesign/core/Layout';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
-import { SideNav, SideNavSection } from '@astryxdesign/core/SideNav';
 import { useUpdateUser, useAuthenticatedUser } from '@/lib/hooks/use-user';
+import { SideNav, SideNavItem, SideNavSection } from '@astryxdesign/core/SideNav';
 
 /** Renders account metadata and resets drafts when the authenticated identity changes. */
 export default function Settings() {

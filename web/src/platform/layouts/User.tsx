@@ -8,6 +8,7 @@ export default function UserLayout() {
     return (
         <Platform
             action={<ProfileMenu />}
+            homeHref="/user/organizations"
             tabs={[
                 {
                     href: '/user/organizations',

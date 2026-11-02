@@ -1,73 +1,29 @@
 import { api } from '@/lib/api';
-import { useState } from 'react';
+import { useContext, useState } from 'react';
+import { SidebarContext } from '@/lib/sidebar';
 import { Item } from '@astryxdesign/core/Item';
 import { Text } from '@astryxdesign/core/Text';
 import { Avatar } from '@/components/ui/Avatar';
-import { Wordmark } from '@/components/Wordmark';
 import { Stack } from '@astryxdesign/core/Stack';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@astryxdesign/core/Button';
 import { Popover } from '@astryxdesign/core/Popover';
 import { Check, ChevronsUpDown } from 'lucide-react';
 import { List, ListItem } from '@astryxdesign/core/List';
-import { useAppearance } from '@/lib/hooks/use-appearance';
 import { IconButton } from '@astryxdesign/core/IconButton';
-import { useLocation, useOutletContext } from 'react-router';
 import { formatPathSegment } from '@/components/breadcrumb/text';
-import { BreadcrumbItem, Breadcrumbs } from '@astryxdesign/core/Breadcrumbs';
 import { zUserOrganizationMembership } from '@/lib/generated/platform-api-v1/zod.gen';
 
-/** Renders the top navigation breadcrumb for organization and admin routes. */
-export function PageBreadcrumb({ solutionName }: { solutionName?: string }) {
-    const { pathname } = useLocation();
-    const { appearance } = useAppearance();
-    const organization = pathname.split('/')[2] ?? '';
-    const isOrganization = pathname.startsWith('/orgs/');
-    const label = pathname.startsWith('/admin/') ? 'Admin' : formatPathSegment(organization);
-    const isSolutionBreadcrumb = solutionName !== undefined;
-    const isOrganizationSidebar = isOrganization && appearance.navigation === 'sidebar';
-    const membership = useOutletContext<{ organization: { id: string; name: string } } | undefined>();
-
-    const organizationName =
-        (membership?.organization.id === organization ? membership.organization.name : undefined) ??
-        formatPathSegment(organization);
-
-    return (
-        <Breadcrumbs separator=">" variant="supporting">
-            {!isOrganization && (
-                <BreadcrumbItem href="/user/organizations">
-                    <Wordmark />
-                </BreadcrumbItem>
-            )}
-            <BreadcrumbItem
-                href={isOrganizationSidebar ? `/orgs/${organization}` : undefined}
-                isCurrent={!isSolutionBreadcrumb}
-            >
-                {isOrganizationSidebar ? (
-                    organizationName
-                ) : isOrganization ? (
-                    <OrganizationSwitcher organization={organization} />
-                ) : (
-                    label
-                )}
-            </BreadcrumbItem>
-            {isSolutionBreadcrumb && <BreadcrumbItem isCurrent>{solutionName}</BreadcrumbItem>}
-        </Breadcrumbs>
-    );
-}
+export type OrganizationIdentity = {
+    id: string;
+    name?: string;
+};
 
 /** Switches Organizations from a compact breadcrumb or a full-width sidebar account row. */
-export function OrganizationSwitcher({
-    organization,
-    isSidebar = false,
-    isCollapsed = false,
-}: {
-    organization: string;
-    isSidebar?: boolean;
-    isCollapsed?: boolean;
-}) {
+export function OrganizationSwitcher({ organization }: { organization: OrganizationIdentity }) {
+    const sidebar = useContext(SidebarContext);
+    const isSidebar = sidebar !== null;
     const [isOpen, setIsOpen] = useState(false);
-    const membership = useOutletContext<{ organization: { id: string; name: string } } | undefined>();
 
     // Fetch memberships only when the switcher opens, without suspending the page header.
     const {
@@ -83,9 +39,9 @@ export function OrganizationSwitcher({
     });
 
     const name =
-        (membership?.organization.id === organization ? membership.organization.name : undefined) ??
-        memberships?.find((item) => item.organization.id === organization)?.organization.name ??
-        formatPathSegment(organization);
+        organization.name ??
+        memberships?.find((item) => item.organization.id === organization.id)?.organization.name ??
+        formatPathSegment(organization.id);
 
     return (
         <Popover
@@ -113,10 +69,10 @@ export function OrganizationSwitcher({
                                 <ListItem
                                     description="Organization"
                                     endContent={
-                                        item.id === organization ? <Check aria-hidden="true" size={16} /> : undefined
+                                        item.id === organization.id ? <Check aria-hidden="true" size={16} /> : undefined
                                     }
                                     href={`/orgs/${item.id}`}
-                                    isSelected={item.id === organization}
+                                    isSelected={item.id === organization.id}
                                     key={item.id}
                                     label={item.name}
                                     onClickCapture={() => setIsOpen(false)}
@@ -128,7 +84,7 @@ export function OrganizationSwitcher({
                 </Stack>
             }
         >
-            {isSidebar && isCollapsed ? (
+            {sidebar === 'collapsed' ? (
                 <IconButton icon={<Avatar kind="organization" name={name} />} label={name} variant="ghost" />
             ) : isSidebar ? (
                 (trigger) => (

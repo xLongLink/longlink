@@ -1,6 +1,6 @@
 import { it, expect } from 'vitest';
-import { componentDocumentation } from '@/platform/routes';
 import { documentationCategories } from '@/lib/documentation';
+import { componentDocumentation } from '@/platform/publications';
 
 it('places every published component in a documented reading category', () => {
     // Assert

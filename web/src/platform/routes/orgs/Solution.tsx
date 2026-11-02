@@ -12,7 +12,8 @@ import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import NotFoundLayout from '@/components/layouts/NotFound';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { useParams, useOutletContext } from 'react-router';
-import { PageBreadcrumb } from '@/components/PageBreadcrumb';
+import { OrganizationSwitcher } from '@/platform/components/OrganizationSwitcher';
+import { OrganizationBreadcrumb } from '@/platform/components/OrganizationBreadcrumb';
 import { zUserOrganizationMembership, zOrganizationSolutionSummary } from '@/lib/generated/platform-api-v1/zod.gen';
 
 /** Renders one proxy-backed organization solution after membership resolves. */
@@ -40,7 +41,11 @@ export default function OrganizationSolution() {
     }
 
     const action = <ProfileMenu />;
-    const breadcrumb = <PageBreadcrumb solutionName={solutionAccess.name} />;
+
+    const breadcrumb = (
+        <OrganizationBreadcrumb organization={membership.organization} solutionName={solutionAccess.name} />
+    );
+
     const canMaintain = ['maintain', 'admin', 'owner'].includes(membership.role);
 
     const deploymentNotice =
@@ -97,6 +102,7 @@ export default function OrganizationSolution() {
         <SolutionPage
             action={action}
             breadcrumb={breadcrumb}
+            sidebarHeader={<OrganizationSwitcher organization={membership.organization} />}
             formatTitle={(title) => `${title ?? solutionAccess.name} | LongLink`}
             navigationBaseUrl={`/orgs/${organization}/solutions/${solution}`}
             viewsUrl={`/api/v1/solutions/${solutionAccess.id}/proxy/views.json`}

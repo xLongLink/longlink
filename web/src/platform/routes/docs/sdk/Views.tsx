@@ -44,13 +44,13 @@ import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { Tab, TabList } from '@astryxdesign/core/TabList';
 import { DropdownMenuExample } from './views/DropdownMenu';
 import { MetadataListExample } from './views/MetadataList';
-import { componentDocumentation } from '@/platform/routes';
 import { Blockquote } from '@astryxdesign/core/Blockquote';
 import { CheckboxInputExample } from './views/CheckboxInput';
 import { MultiSelectorExample } from './views/MultiSelector';
 import { Collapsible } from '@astryxdesign/core/Collapsible';
 import { documentationCategories } from '@/lib/documentation';
 import { Table, proportional } from '@astryxdesign/core/Table';
+import { componentDocumentation } from '@/platform/publications';
 import { DocumentationArticle } from '@/components/layouts/Article';
 import { SideNav, SideNavItem, SideNavSection } from '@astryxdesign/core/SideNav';
 

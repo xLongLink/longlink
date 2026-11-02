@@ -8,10 +8,10 @@ import { useState, type ReactNode } from 'react';
 import { Switch } from '@astryxdesign/core/Switch';
 import { Heading } from '@astryxdesign/core/Heading';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
-import { componentDocumentation } from '@/platform/routes';
 import { Blockquote } from '@astryxdesign/core/Blockquote';
 import { Table, proportional } from '@/components/ui/Table';
 import { documentationLastUpdated } from '@/lib/documentation';
+import { componentDocumentation } from '@/platform/publications';
 import { DocumentationArticle } from '@/components/layouts/Article';
 import { Layout, LayoutContent, LayoutHeader } from '@astryxdesign/core/Layout';
 
