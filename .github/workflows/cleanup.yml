@@ -1,6 +1,9 @@
 name: cleanup
 
 on:
+    pull_request_target:
+        types: [closed]
+        branches: [main]
     workflow_dispatch:
     workflow_call:
         secrets:
@@ -18,6 +21,7 @@ concurrency:
 
 jobs:
     cleanup:
+        if: github.event_name != 'pull_request_target' || github.event.pull_request.merged == true
         runs-on: ubuntu-latest
         timeout-minutes: 60
         defaults:
@@ -97,7 +101,7 @@ jobs:
                   path: repository
                   base: ${{ github.event.repository.default_branch }}
                   branch: automation/opencode-cleanup
-                  commit-message: 'refactor: scoped OpenCode cleanup'
-                  title: 'refactor: scoped OpenCode cleanup'
+                  commit-message: 'refactor: cleanup'
+                  title: 'refactor: cleanup'
                   labels: refactor
                   body-path: ${{ env.CLEANUP_REPORT }}
