@@ -1517,6 +1517,7 @@ dev = [
     { name = "pytest", specifier = ">=9.1.1" },
     { name = "pytest-asyncio", specifier = ">=1.4.0" },
     { name = "pytest-cov", specifier = ">=7.0.0" },
+    { name = "pyunslop", specifier = "==0.0.4" },
     { name = "ruff", specifier = ">=0.16.2" },
     { name = "testcontainers", specifier = ">=4.15.0" },
     { name = "ty", specifier = ">=0.0.69" },
@@ -1560,6 +1561,7 @@ dev = [
     { name = "pytest" },
     { name = "pytest-asyncio" },
     { name = "pytest-cov" },
+    { name = "pyunslop" },
     { name = "ruff" },
     { name = "testcontainers" },
     { name = "ty" },
@@ -1592,6 +1594,7 @@ requires-dist = [
     { name = "pytest-asyncio", marker = "extra == 'dev'", specifier = ">=1.4.0" },
     { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=7.0.0" },
     { name = "python-slugify", specifier = ">=8.0.4" },
+    { name = "pyunslop", marker = "extra == 'dev'", specifier = "==0.0.4" },
     { name = "pyyaml", specifier = ">=6.0.3" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.16.2" },
     { name = "sqlalchemy", specifier = ">=2.0.51" },
@@ -2454,6 +2457,15 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/bd/e8/26b1af09d728d604dc16427a39f53985b22a170dbd61addac3f48db73f03/python_slugify-9.1.3.tar.gz", hash = "sha256:90e997f2e0987239ce95e12f700086eb18e1d1d3ee22624fbbdbd095afca42b6", size = 66093, upload-time = "2026-10-07T01:06:20.101Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/47/67/5598c98725332a6a4084c7b622d5a1ebe7d6745c1d2f434c9e4e89e04cba/python_slugify-9.1.3-py3-none-any.whl", hash = "sha256:9aced0670e54c5603e2335c0fa9a4011ad4bc41ecb3c46e8097294c46fd60ed4", size = 16032, upload-time = "2026-10-07T01:06:18.891Z" },
+]
+
+[[package]]
+name = "pyunslop"
+version = "0.0.4"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/69/1b/0249886c646f5fc689c213975d7e4bdce795645abfc986fd7f117caa531a/pyunslop-0.0.4.tar.gz", hash = "sha256:a96578997875c35e64b4e47942bfdf0c1f4846d6a5ac78ff62a667ae1eb9caa4", size = 35515, upload-time = "2026-10-28T22:28:43.288Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/70/b0/2248df35ada5b928abceb5d9bed21188bf1e29a2948b002c18056bd860db/pyunslop-0.0.4-py3-none-any.whl", hash = "sha256:292921a2f4cd4dde3f29d9772fce6ca41acc00e538760c438fd7e2550dcf25fe", size = 37873, upload-time = "2026-10-28T22:28:41.753Z" },
 ]
 
 [[package]]

@@ -49,6 +49,7 @@ dev = [
     'pytest>=9.0.3',
     'pytest-asyncio>=1.4.0',
     'pytest-cov>=7.0.0',
+    'pyunslop==0.0.4',
     'docker>=7.2.0',
     'testcontainers>=4.15.0',
     'types-aiobotocore-s3==3.10.0',
