@@ -7,8 +7,9 @@ import NotFoundLayout from '@/components/layouts/NotFound';
 import { PageContainer } from '@/components/PageContainer';
 import { Outlet, useMatch, useParams } from 'react-router';
 import { PageError, PageLoading } from '@/components/Utils';
-import { PageBreadcrumb } from '@/components/PageBreadcrumb';
+import { OrganizationSwitcher } from '@/platform/components/OrganizationSwitcher';
 import { zUserOrganizationMembership } from '@/lib/generated/platform-api-v1/zod.gen';
+import { OrganizationBreadcrumb } from '@/platform/components/OrganizationBreadcrumb';
 
 /** Resolves organization access before either organization or Solution pages mount. */
 export default function OrganizationAccess() {
@@ -25,7 +26,13 @@ export default function OrganizationAccess() {
                         <PageLoading label="Loading solution" />
                     </>
                 ) : (
-                    <Platform action={<ProfileMenu />} breadcrumb={<PageBreadcrumb />} isNavigationLoading tabs={[]}>
+                    <Platform
+                        action={<ProfileMenu />}
+                        breadcrumb={<OrganizationBreadcrumb organization={{ id: organization }} />}
+                        sidebarHeader={<OrganizationSwitcher organization={{ id: organization }} />}
+                        isNavigationLoading
+                        tabs={[]}
+                    >
                         <PageContainer gap={8} padding={2}>
                             <PageLoading label="Loading organization" />
                         </PageContainer>
@@ -43,7 +50,11 @@ export default function OrganizationAccess() {
                         </>
                     )
                 ) : (
-                    <Platform action={<ProfileMenu />} breadcrumb={<PageBreadcrumb />} tabs={[]}>
+                    <Platform
+                        action={<ProfileMenu />}
+                        breadcrumb={<OrganizationBreadcrumb organization={{ id: organization }} />}
+                        tabs={[]}
+                    >
                         <PageContainer gap={8} padding={2}>
                             {error instanceof ApiError && error.status === 404 ? (
                                 <NotFoundLayout />

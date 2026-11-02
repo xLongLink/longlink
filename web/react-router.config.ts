@@ -15,7 +15,7 @@ const isSolution = process.env.LONGLINK_WEB_TARGET === 'sdk';
 // Only Platform builds need the documentation catalog for publication paths.
 const { legalPaths, brandingPaths, documentationPaths } = isSolution
     ? { legalPaths: [], brandingPaths: [], documentationPaths: [] }
-    : await import('./src/platform/routes');
+    : await import('./src/platform/publications');
 
 const publicPagePaths = [
     '/',

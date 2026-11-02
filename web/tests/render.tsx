@@ -60,7 +60,7 @@ export function documentationPage(Page: ComponentType, heading: string, path: st
 }
 
 /** Runs DOM-level interaction checks with deterministic mounting and cleanup. */
-export async function withMounted(children: ReactNode, check: (output: HTMLElement) => Promise<void>) {
+export async function withMounted(children: ReactNode, check: (output: HTMLElement) => Promise<void>, path = '/') {
     const output = document.createElement('section');
     document.body.append(output);
     const root = createRoot(output);
@@ -71,7 +71,7 @@ export async function withMounted(children: ReactNode, check: (output: HTMLEleme
     try {
         await act(async () =>
             root.render(
-                <MemoryRouter>
+                <MemoryRouter initialEntries={[path]}>
                     <Theme theme={stoneTheme} mode="dark">
                         <LayerProvider>
                             <QueryClientProvider client={client}>{children}</QueryClientProvider>

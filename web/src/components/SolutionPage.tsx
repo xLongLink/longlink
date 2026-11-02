@@ -29,12 +29,16 @@ export function SolutionPage({
     breadcrumb,
     formatTitle,
     navigationBaseUrl = '/',
+    sidebarHeader,
+    topbarHeading,
     viewsUrl = '/views.json',
 }: {
     action: ReactNode;
     breadcrumb: ReactNode;
     formatTitle: (title: string | undefined) => string;
     navigationBaseUrl?: string;
+    sidebarHeader?: ReactNode;
+    topbarHeading?: ReactNode;
     viewsUrl?: string;
 }) {
     const { '*': routePath = '' } = useParams();
@@ -172,6 +176,8 @@ export function SolutionPage({
         <Platform
             action={action}
             breadcrumb={breadcrumb}
+            sidebarHeader={sidebarHeader}
+            topbarHeading={topbarHeading}
             isNavigationLoading={manifest === undefined && !viewsError}
             tabs={tabs}
         >

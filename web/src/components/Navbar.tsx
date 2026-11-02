@@ -8,6 +8,16 @@ import { Button } from '@astryxdesign/core/Button';
 import { TopNav } from '@astryxdesign/core/TopNav';
 import { MobileNav } from '@astryxdesign/core/MobileNav';
 
+const publicNavigation = {
+    links: [
+        { href: '/blog/', label: 'Blog', isExternalLink: false },
+        { href: '/docs/', label: 'Documentation', isExternalLink: false },
+        { href: '/pricing/', label: 'Pricing', isExternalLink: false },
+        { href: 'https://github.com/xLongLink/longlink', label: 'GitHub', isExternalLink: true },
+    ],
+    signIn: { href: '/login/', label: 'Sign In' },
+};
+
 /** Renders public navigation at the page's content width. */
 export function Navbar({
     maxWidth = 1000,
@@ -71,26 +81,20 @@ export function Navbar({
                     endContent={
                         <>
                             <Stack className="hidden sm:flex" direction="horizontal" gap={6} vAlign="center">
-                                <Link href="/blog/" color="secondary" isStandalone weight="medium">
-                                    Blog
-                                </Link>
-                                <Link href="/docs/" color="secondary" isStandalone weight="medium">
-                                    Documentation
-                                </Link>
-                                <Link href="/pricing/" color="secondary" isStandalone weight="medium">
-                                    Pricing
-                                </Link>
-                                <Link
-                                    as="a"
-                                    color="secondary"
-                                    href="https://github.com/xLongLink/longlink"
-                                    isExternalLink
-                                    isStandalone
-                                    weight="medium"
-                                >
-                                    GitHub
-                                </Link>
-                                <Button href="/login/" label="Sign In" size="sm" variant="primary" />
+                                {publicNavigation.links.map((link) => (
+                                    <Link
+                                        key={link.href}
+                                        as={link.isExternalLink ? 'a' : undefined}
+                                        color="secondary"
+                                        href={link.href}
+                                        isExternalLink={link.isExternalLink}
+                                        isStandalone
+                                        weight="medium"
+                                    >
+                                        {link.label}
+                                    </Link>
+                                ))}
+                                <Button {...publicNavigation.signIn} size="sm" variant="primary" />
                             </Stack>
                             <Button
                                 className="sm:hidden"
@@ -109,26 +113,20 @@ export function Navbar({
             </Stack>
             <MobileNav isOpen={menuOpen} onOpenChange={setMenuOpen} header="Navigation" label="Main navigation">
                 <Stack as="nav" aria-label="Public pages" gap={4} padding={4}>
-                    <Link href="/blog/" color="inherit" isStandalone onClick={() => setMenuOpen(false)}>
-                        Blog
-                    </Link>
-                    <Link href="/docs/" color="inherit" isStandalone onClick={() => setMenuOpen(false)}>
-                        Documentation
-                    </Link>
-                    <Link href="/pricing/" color="inherit" isStandalone onClick={() => setMenuOpen(false)}>
-                        Pricing
-                    </Link>
-                    <Link
-                        as="a"
-                        href="https://github.com/xLongLink/longlink"
-                        color="inherit"
-                        isExternalLink
-                        isStandalone
-                        onClick={() => setMenuOpen(false)}
-                    >
-                        GitHub
-                    </Link>
-                    <Button href="/login/" label="Sign In" variant="primary" onClick={() => setMenuOpen(false)} />
+                    {publicNavigation.links.map((link) => (
+                        <Link
+                            key={link.href}
+                            as={link.isExternalLink ? 'a' : undefined}
+                            href={link.href}
+                            color="inherit"
+                            isExternalLink={link.isExternalLink}
+                            isStandalone
+                            onClick={() => setMenuOpen(false)}
+                        >
+                            {link.label}
+                        </Link>
+                    ))}
+                    <Button {...publicNavigation.signIn} variant="primary" onClick={() => setMenuOpen(false)} />
                 </Stack>
             </MobileNav>
         </Stack>

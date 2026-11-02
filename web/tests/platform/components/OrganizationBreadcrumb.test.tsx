@@ -1,12 +1,15 @@
 // @vitest-environment happy-dom
 import { it, expect } from 'vitest';
-import { PageBreadcrumb } from '@/components/PageBreadcrumb';
-import { renderPlatform, membership } from '../platform/render';
+import { SidebarContext } from '@/lib/sidebar';
+import { renderPlatform, membership } from '../render';
+import { OrganizationBreadcrumb } from '@/platform/components/OrganizationBreadcrumb';
 
 it('uses the resolved Solution name rather than its slug for the current breadcrumb', () => {
     // Act
     const output = renderPlatform(
-        <PageBreadcrumb solutionName="Order dashboard" />,
+        <SidebarContext value="expanded">
+            <OrganizationBreadcrumb organization={membership.organization} solutionName="Order dashboard" />
+        </SidebarContext>,
         `/orgs/${membership.organization.id}/solutions/00000000-0000-4000-8000-000000000003`
     );
 

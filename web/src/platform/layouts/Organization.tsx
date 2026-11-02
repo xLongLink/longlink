@@ -6,8 +6,9 @@ import { ProfileMenu } from '@/components/Profile';
 import Platform from '@/components/layouts/Platform';
 import { ApiBoundary } from '@/components/ApiBoundary';
 import { PageContainer } from '@/components/PageContainer';
-import { PageBreadcrumb } from '@/components/PageBreadcrumb';
 import { Outlet, useParams, useLocation, useOutletContext } from 'react-router';
+import { OrganizationSwitcher } from '@/platform/components/OrganizationSwitcher';
+import { OrganizationBreadcrumb } from '@/platform/components/OrganizationBreadcrumb';
 import { zOrganizationTagResponse, zUserOrganizationMembership } from '@/lib/generated/platform-api-v1/zod.gen';
 
 export type OrganizationContext = z.output<typeof zUserOrganizationMembership> & {
@@ -38,7 +39,8 @@ export default function OrganizationLayout() {
     return (
         <Platform
             action={<ProfileMenu />}
-            breadcrumb={<PageBreadcrumb />}
+            breadcrumb={<OrganizationBreadcrumb organization={membership.organization} />}
+            sidebarHeader={<OrganizationSwitcher organization={membership.organization} />}
             activeTab={activeTab}
             tabs={[
                 ...tags.map((tag, index) => {

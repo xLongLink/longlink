@@ -89,7 +89,9 @@ describe('SolutionPage', () => {
         // Assert
         // Router navigation does not settle inside act, so observe it directly.
         await vi.waitFor(() => expect(output.querySelector('[data-path]')?.getAttribute('data-path')).toBe('/home'));
-        expect(output.querySelector('[aria-label="Section navigation"] a')?.getAttribute('href')).toBe('/home');
+        expect(
+            output.querySelector('[aria-label="Section navigation"] a[aria-current="page"]')?.getAttribute('href')
+        ).toBe('/home');
         await vi.waitFor(() => expect(output.querySelector('iframe')?.srcdoc).toContain('Content-Security-Policy'));
     });
 
