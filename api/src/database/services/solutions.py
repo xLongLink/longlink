@@ -148,7 +148,7 @@ async def access(session: AsyncSession, solution_id: UUID, user_id: UUID, *, loc
 
 async def inspect_update(
     session: AsyncSession, solution: Solution, user_id: UUID, expected_revision_id: UUID | None = None
-) -> tuple[Solution, Revision, LongLinkMetadata]:
+) -> tuple[Revision, LongLinkMetadata]:
     """Inspect the repository's latest image and revalidate the desired revision."""
 
     # Reuse authorized Solution access without holding command locks across registry calls.
@@ -177,14 +177,14 @@ async def inspect_update(
     solution = await access(session, solution_id, user_id)
     if solution.desired_revision_id != revision_id:
         raise HTTPException(status_code=409, detail="Desired revision changed during inspection. Check again.")
-    return solution, revision, metadata
+    return revision, metadata
 
 
 async def apply_update(session: AsyncSession, solution: Solution, user_id: UUID, payload: SolutionPatch) -> None:
     """Inspect and admit an update in the caller's final transaction."""
 
     # Inspect without command locks, then revalidate the desired state and maintenance access.
-    solution, revision, metadata = await inspect_update(session, solution, user_id, payload.expected_revision_id)
+    revision, metadata = await inspect_update(session, solution, user_id, payload.expected_revision_id)
 
     # Compare and merge only against the current serialized desired state.
     await _deploy(session, solution, user_id, metadata, payload.envs, current=revision)

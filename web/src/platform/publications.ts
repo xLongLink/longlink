@@ -23,6 +23,7 @@ import {
     Layers,
     List,
     Menu,
+    MessageSquare,
     Package,
     PanelTop,
     Plug,
@@ -48,11 +49,23 @@ type DocumentationSection = {
     paths?: readonly string[];
 };
 
-// Keep branding publication paths in their established reading order.
-export const brandingPaths: string[] = ['/branding/assets', '/branding/values', '/branding/comunication'];
+// Keep branding navigation and publication paths in their established reading order.
+export const brandingPages = [
+    { path: '/branding/assets', label: 'Brand assets', icon: Image },
+    { path: '/branding/values', label: 'Values', icon: Gem },
+    { path: '/branding/comunication', label: 'Communication', icon: MessageSquare },
+];
 
-// Keep legal publication paths in their established reading order.
-export const legalPaths: string[] = ['/terms', '/impressum', '/privacy'];
+export const brandingPaths = brandingPages.map((page) => page.path);
+
+// Keep legal navigation and publication paths in their established reading order.
+export const legalPages = [
+    { path: '/terms', label: 'Terms', icon: FileText },
+    { path: '/impressum', label: 'Impressum', icon: Building2 },
+    { path: '/privacy', label: 'Privacy', icon: ShieldCheck },
+];
+
+export const legalPaths = legalPages.map((page) => page.path);
 
 // Derive route identity from the website's published component pages.
 export const componentDocumentation = [
