@@ -68,8 +68,9 @@ export default function Platform({
     // Both layouts share the same links and route selection, including query-based categories.
     const selectedTab = activeTab ?? findActiveTab(tabs, pathname) ?? '';
     const hasSidebar = appearance.navigation === 'sidebar' && (isNavigationLoading || tabs.length > 0);
+    const isSdk = import.meta.env.MODE === 'sdk';
     const hasOrganizationSidebar = hasSidebar && pathname.startsWith('/orgs/');
-    const hasDashboardSidebar = hasOrganizationSidebar || (hasSidebar && pathname.startsWith('/user/'));
+    const hasBrandedSidebar = hasOrganizationSidebar || (hasSidebar && (isSdk || pathname.startsWith('/user/')));
     const organization = pathname.split('/')[2] ?? '';
     const collapsible = { isCollapsed, onCollapsedChange: setIsCollapsed, hasButton: false };
 
@@ -83,7 +84,7 @@ export default function Platform({
                         aria-label="Section navigation"
                         collapsible={collapsible}
                         header={
-                            hasDashboardSidebar ? (
+                            hasBrandedSidebar ? (
                                 <Stack gap={3} padding={1}>
                                     {hasOrganizationSidebar ? (
                                         <OrganizationSwitcher
@@ -96,7 +97,7 @@ export default function Platform({
                                             className={
                                                 isCollapsed ? 'flex justify-center py-1.5' : 'w-full px-6 py-1.5'
                                             }
-                                            href="/user/organizations"
+                                            href={isSdk ? '/' : '/user/organizations'}
                                             label="LongLink home"
                                             color="inherit"
                                         >

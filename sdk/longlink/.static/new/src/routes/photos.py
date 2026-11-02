@@ -18,4 +18,6 @@ def photo_get_endpoint(
 
     # Restrict file access to the named demo assets validated by FastAPI.
     photo = Path(__file__).resolve().parents[1] / "assets" / f"{photo_id}.jpg"
-    return responses.FileResponse(photo, media_type="image/jpeg")
+    return responses.FileResponse(
+        photo, media_type="image/jpeg", headers={"Cache-Control": "no-cache"}
+    )

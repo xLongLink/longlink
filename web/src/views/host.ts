@@ -16,7 +16,7 @@ export function requestUrl(base: string, path: string): string {
 /** Loads a response without redirects within the request lifetime. */
 export async function load(
     url: string,
-    options: Pick<Options, 'headers' | 'method' | 'json' | 'body'> & { signal: AbortSignal }
+    options: Pick<Options, 'headers' | 'method' | 'json' | 'body' | 'cache'> & { signal: AbortSignal }
 ): Promise<Blob> {
     // Bound the complete response lifetime, including a server that stalls after sending headers.
     const response = await api(url, {
@@ -51,11 +51,12 @@ export async function request(base: string, command: RequestCommand, signal: Abo
         for (const [name, value] of command.form) form.append(name, value);
     }
 
-    // Apply the same response policy used to load the manifest and JSX source.
+    // Revalidate binary previews when files change without changing their URLs.
     const body = await load(url, {
         method: command.method,
         json: command.json,
         body: form,
+        cache: command.binary ? 'no-cache' : undefined,
         signal,
     });
 
