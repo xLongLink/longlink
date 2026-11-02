@@ -10,6 +10,7 @@ import { useTheme } from '@astryxdesign/core/theme';
 import { Divider } from '@astryxdesign/core/Divider';
 import { AppShell } from '@astryxdesign/core/AppShell';
 import { useAppearance } from '@/components/Appearance';
+import { useMediaQuery } from '@astryxdesign/core/hooks';
 import { Tab, TabList } from '@astryxdesign/core/TabList';
 import { OrganizationSwitcher } from '@/components/PageBreadcrumb';
 import { BreadcrumbItem, Breadcrumbs } from '@astryxdesign/core/Breadcrumbs';
@@ -60,7 +61,11 @@ export default function Platform({
     const { pathname } = useLocation();
     const { appearance } = useAppearance();
     const { mode } = useTheme();
-    const [isCollapsed, setIsCollapsed] = useState(false);
+    const isSmallScreen = useMediaQuery('(width < 1024px)');
+    const [isDesktopCollapsed, setIsDesktopCollapsed] = useState(false);
+    const [isMobileCollapsed, setIsMobileCollapsed] = useState(true);
+    const isCollapsed = isSmallScreen ? isMobileCollapsed : isDesktopCollapsed;
+    const setIsCollapsed = isSmallScreen ? setIsMobileCollapsed : setIsDesktopCollapsed;
 
     // Both layouts share the same links and route selection, including query-based categories.
     const selectedTab = activeTab ?? findActiveTab(tabs, pathname) ?? '';
@@ -73,7 +78,7 @@ export default function Platform({
     return (
         <AppShell
             height="auto"
-            mobileNav={hasSidebar ? { breakpoint: 'lg' } : false}
+            mobileNav={hasSidebar ? { breakpoint: 'none', hasToggle: false } : false}
             sideNav={
                 hasSidebar ? (
                     <SideNav
@@ -138,6 +143,7 @@ export default function Platform({
                                         isSelected={selectedTab === tab.href}
                                         key={tab.href}
                                         label={tab.label}
+                                        onClick={() => setIsMobileCollapsed(true)}
                                     />
                                 );
                             })}
@@ -146,54 +152,52 @@ export default function Platform({
                 ) : undefined
             }
             topNav={
-                <Stack className={hasSidebar ? 'lg:hidden' : undefined}>
-                    <TopNav
-                        className="min-h-11 px-7"
-                        endContent={hasSidebar ? undefined : action}
-                        heading={
-                            hasOrganizationSidebar ? (
-                                <OrganizationSwitcher organization={organization} isSidebar />
-                            ) : (
-                                (breadcrumb ?? (
+                !hasSidebar ? (
+                    <Stack>
+                        <TopNav
+                            className="min-h-11 px-7"
+                            endContent={action}
+                            heading={
+                                breadcrumb ?? (
                                     <Link href="/" label="LongLink home" color="inherit">
                                         <Wordmark />
                                     </Link>
-                                ))
-                            )
-                        }
-                        label="Platform navigation"
-                    />
-                    {!hasSidebar && tabs.length > 0 && (
-                        <Stack direction="horizontal" paddingInline={4} width="100%">
-                            <TabList
-                                aria-label="Section navigation"
-                                onChange={() => undefined}
-                                size="sm"
-                                value={selectedTab}
-                            >
-                                {tabs.map((tab) => {
-                                    const Icon = tab.icon;
+                                )
+                            }
+                            label="Platform navigation"
+                        />
+                        {tabs.length > 0 && (
+                            <Stack direction="horizontal" paddingInline={4} width="100%">
+                                <TabList
+                                    aria-label="Section navigation"
+                                    onChange={() => undefined}
+                                    size="sm"
+                                    value={selectedTab}
+                                >
+                                    {tabs.map((tab) => {
+                                        const Icon = tab.icon;
 
-                                    return (
-                                        <Tab
-                                            href={tab.href}
-                                            icon={
-                                                isValidElement(Icon) ? (
-                                                    Icon
-                                                ) : Icon ? (
-                                                    <Icon aria-hidden="true" size={16} />
-                                                ) : undefined
-                                            }
-                                            key={tab.href}
-                                            label={tab.label}
-                                            value={tab.href}
-                                        />
-                                    );
-                                })}
-                            </TabList>
-                        </Stack>
-                    )}
-                </Stack>
+                                        return (
+                                            <Tab
+                                                href={tab.href}
+                                                icon={
+                                                    isValidElement(Icon) ? (
+                                                        Icon
+                                                    ) : Icon ? (
+                                                        <Icon aria-hidden="true" size={16} />
+                                                    ) : undefined
+                                                }
+                                                key={tab.href}
+                                                label={tab.label}
+                                                value={tab.href}
+                                            />
+                                        );
+                                    })}
+                                </TabList>
+                            </Stack>
+                        )}
+                    </Stack>
+                ) : undefined
             }
             variant="wash"
         >
@@ -201,7 +205,7 @@ export default function Platform({
             <Stack
                 className={
                     hasSidebar
-                        ? 'relative lg:[--platform-toolbar-height:calc(var(--size-element-md)+var(--spacing-3)*2)]'
+                        ? 'relative [--platform-toolbar-height:calc(var(--size-element-md)+var(--spacing-3)*2)]'
                         : 'relative'
                 }
                 minHeight="calc(100dvh - var(--_app-shell-header-height, 0px))"
@@ -217,7 +221,6 @@ export default function Platform({
                 <Stack className="relative z-10" padding={2}>
                     {hasSidebar && (
                         <Stack
-                            className="hidden lg:flex"
                             direction="horizontal"
                             align="center"
                             gap={3}
