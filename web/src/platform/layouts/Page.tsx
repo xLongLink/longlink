@@ -12,6 +12,8 @@ export default function Page() {
 
     // Keep the opening section within the viewport as navigation dimensions change.
     useEffect(() => {
+        if (!isHome) return;
+
         const page = pageRef.current;
         const navigation = page?.querySelector('header');
 
@@ -26,7 +28,7 @@ export default function Page() {
         observer.observe(navigation);
 
         return () => observer.disconnect();
-    }, []);
+    }, [isHome]);
 
     return (
         <Stack ref={pageRef} className={isHome ? 'bg-black text-white' : undefined} minHeight="100vh">

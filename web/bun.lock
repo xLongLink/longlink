@@ -43,7 +43,6 @@
         "vite": "npm:@voidzero-dev/vite-plus-core@1.4.0",
         "vite-plus": "1.4.0",
         "vitest": "5.0.5",
-        "yaml": "^2.9.1",
       },
     },
   },
