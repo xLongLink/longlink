@@ -6,6 +6,7 @@ import { createRoot } from 'react-dom/client';
 import { ReportedError } from '@/lib/reported';
 import { Theme } from '@astryxdesign/core/theme';
 import { Banner } from '@astryxdesign/core/Banner';
+import { Center } from '@astryxdesign/core/Center';
 import { Spinner } from '@astryxdesign/core/Spinner';
 import { ErrorBoundary } from 'react-error-boundary';
 import { stoneTheme } from '@/lib/generated/stone.js';
@@ -361,7 +362,13 @@ function initialize(event: MessageEvent<unknown>): void {
                                         />
                                     )}
                                 >
-                                    <React.Suspense fallback={<Spinner label="Loading View" />}>
+                                    <React.Suspense
+                                        fallback={
+                                            <Center minHeight="100dvh" width="100%">
+                                                <Spinner label="Loading View" />
+                                            </Center>
+                                        }
+                                    >
                                         <IconRequestContext value={loadIcon}>
                                             <LinkNavigationContext
                                                 value={{ baseUrl: parsed.data.navigationBaseUrl, navigate }}

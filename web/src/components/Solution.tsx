@@ -13,7 +13,12 @@ import type { NavigationTab } from '@/components/layouts/Platform';
 import { RELATIVE_URL_ORIGIN, resolveNavigationUrl, resolveRequestUrl } from '@/lib/url';
 
 type SolutionRuntimeProps = {
-    children: (solution: { content: ReactNode; tabs: readonly NavigationTab[]; title?: string }) => ReactNode;
+    children: (solution: {
+        content: ReactNode;
+        isNavigationLoading: boolean;
+        tabs: readonly NavigationTab[];
+        title?: string;
+    }) => ReactNode;
     navigationBaseUrl?: string;
     viewsUrl?: string;
 };
@@ -163,6 +168,7 @@ export function SolutionRuntime({ children, navigationBaseUrl = '/', viewsUrl = 
 
     return children({
         content,
+        isNavigationLoading: manifest === undefined && !viewsError,
         tabs,
         title: isNotFound ? 'Page Not Found' : activeViewTitle,
     });

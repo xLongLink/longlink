@@ -29,6 +29,7 @@ type PlatformProps = {
     activeTab?: string;
     breadcrumb?: ReactNode;
     children: ReactNode;
+    isNavigationLoading?: boolean;
     tabs: readonly NavigationTab[];
 };
 
@@ -48,7 +49,14 @@ function findActiveTab(tabs: readonly NavigationTab[], pathname: string): string
 }
 
 /** Renders the shared Platform frame with contextual navigation and actions. */
-export default function Platform({ action, activeTab, breadcrumb, children, tabs }: PlatformProps) {
+export default function Platform({
+    action,
+    activeTab,
+    breadcrumb,
+    children,
+    isNavigationLoading = false,
+    tabs,
+}: PlatformProps) {
     const { pathname } = useLocation();
     const { appearance } = useAppearance();
     const { mode } = useTheme();
@@ -56,7 +64,7 @@ export default function Platform({ action, activeTab, breadcrumb, children, tabs
 
     // Both layouts share the same links and route selection, including query-based categories.
     const selectedTab = activeTab ?? findActiveTab(tabs, pathname) ?? '';
-    const hasSidebar = appearance.navigation === 'sidebar' && tabs.length > 0;
+    const hasSidebar = appearance.navigation === 'sidebar' && (isNavigationLoading || tabs.length > 0);
     const hasOrganizationSidebar = hasSidebar && pathname.startsWith('/orgs/');
     const hasDashboardSidebar = hasOrganizationSidebar || (hasSidebar && pathname.startsWith('/user/'));
     const organization = pathname.split('/')[2] ?? '';

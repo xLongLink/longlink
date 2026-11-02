@@ -25,7 +25,7 @@ export default function OrganizationAccess() {
                         <PageLoading label="Loading solution" />
                     </>
                 ) : (
-                    <Platform action={<ProfileMenu />} breadcrumb={<PageBreadcrumb />} tabs={[]}>
+                    <Platform action={<ProfileMenu />} breadcrumb={<PageBreadcrumb />} isNavigationLoading tabs={[]}>
                         <PageContainer gap={8} padding={2}>
                             <PageLoading label="Loading organization" />
                         </PageContainer>

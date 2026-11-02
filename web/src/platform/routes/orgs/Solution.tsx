@@ -99,8 +99,8 @@ export default function OrganizationSolution() {
             navigationBaseUrl={`/orgs/${organization}/solutions/${solution}`}
             viewsUrl={`/api/v1/solutions/${solutionAccess.id}/proxy/views.json`}
         >
-            {({ content, tabs, title }) => (
-                <Platform action={action} breadcrumb={breadcrumb} tabs={tabs}>
+            {({ content, isNavigationLoading, tabs, title }) => (
+                <Platform action={action} breadcrumb={breadcrumb} isNavigationLoading={isNavigationLoading} tabs={tabs}>
                     <title>{`${title ?? solutionAccess.name} | LongLink`}</title>
                     <PageContainer height="100%" minHeight={0} padding={2}>
                         {content}
