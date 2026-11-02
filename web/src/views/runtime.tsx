@@ -11,15 +11,17 @@ import { Spinner } from '@astryxdesign/core/Spinner';
 import { ErrorBoundary } from 'react-error-boundary';
 import { stoneTheme } from '@/lib/generated/stone.js';
 import { LayerProvider } from '@astryxdesign/core/Layer';
-import { FormRequestContext } from '@/components/ui/Form';
-import { IconRequestContext } from '@/components/ui/Icon';
-import { LinkNavigationContext } from '@/components/ui/Link';
-import { MenuNavigationContext } from '@/components/ui/Menu';
 import { FileRequestContext } from '@/components/ui/preview';
-import { DialogActivityContext } from '@/components/ui/Dialog';
 import { Layout, LayoutContent } from '@astryxdesign/core/Layout';
 import { appearanceSchema, type Appearance } from '@/lib/appearance';
 import { QueryClient, QueryClientProvider, QueryErrorResetBoundary, useSuspenseQuery } from '@tanstack/react-query';
+import {
+    FormRequestContext,
+    IconRequestContext,
+    LinkNavigationContext,
+    MenuNavigationContext,
+    DialogActivityContext,
+} from '@/components/ui/contexts';
 import {
     requestSchema,
     parametersSchema,

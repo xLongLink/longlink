@@ -1,13 +1,10 @@
 import type { FieldProps } from './types';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
-import { createContext, useEffect, useEffectEvent, useState, type ReactNode, type RefObject } from 'react';
+import { useEffect, useEffectEvent, useState, type ReactNode, type RefObject } from 'react';
 
 /** Shares a scoped validation pass between Form and its non-native controls. */
 export type FormValidation = { scope: HTMLElement; panel?: HTMLElement; invalid: HTMLElement[] };
-
-// Form exposes validation without owning the navigation of its descendants.
-export const FormValidationContext = createContext<((panel?: HTMLElement) => boolean) | null>(null);
 
 /** Connects themed controls to native submission and reports missing or invalid named values. */
 export function FormField({

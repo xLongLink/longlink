@@ -1,12 +1,7 @@
 import { resolveNavigationUrl } from '@/lib/url';
+import { LinkNavigationContext } from './contexts';
 import { Link as AstryxLink } from '@astryxdesign/core/Link';
-import { createContext, useContext, type ComponentPropsWithRef, type ReactNode } from 'react';
-
-// The sandbox supplies a host navigation capability; native previews use ordinary links.
-export const LinkNavigationContext = createContext<{
-    baseUrl: string;
-    navigate: (path: string, newTab?: boolean) => void;
-} | null>(null);
+import { useContext, type ComponentPropsWithRef, type ReactNode } from 'react';
 
 /** Preserves native link gestures while routing ordinary internal clicks through the host. */
 export function NavigationLink({ href, target, onClick, ...props }: ComponentPropsWithRef<'a'>) {

@@ -2,7 +2,8 @@ import ViewLayout from './ViewLayout';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { useLocation, useNavigate } from 'react-router';
-import { Menu, MenuSection, MenuSubSection, MenuItem, MenuNavigationContext } from '@/components/ui/Menu';
+import { MenuNavigationContext } from '@/components/ui/contexts';
+import { Menu, MenuSection, MenuSubSection, MenuItem } from '@/components/ui/Menu';
 
 /** Documents section navigation and selected content. */
 export default function MenuPage() {

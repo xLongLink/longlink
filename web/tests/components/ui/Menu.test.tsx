@@ -1,7 +1,8 @@
 // @vitest-environment happy-dom
 import { it, expect } from 'vitest';
 import { renderStatic } from '../../render';
-import { Menu, MenuSection, MenuItem, MenuNavigationContext } from '@/components/ui/Menu';
+import { MenuNavigationContext } from '@/components/ui/contexts';
+import { Menu, MenuSection, MenuItem } from '@/components/ui/Menu';
 
 it('selects the first authored item before fragment navigation', () => {
     // Act

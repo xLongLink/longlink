@@ -8,7 +8,7 @@ import { stoneTheme } from '@/lib/generated/stone.js';
 import type { ComponentType, ReactNode } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { LayerProvider } from '@astryxdesign/core/Layer';
-import { IconRequestContext } from '@/components/ui/Icon';
+import { IconRequestContext } from '@/components/ui/contexts';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 /** Renders a component through real theme, routing, and query providers without browser automation. */

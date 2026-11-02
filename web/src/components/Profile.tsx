@@ -1,5 +1,6 @@
 import { api } from '@/lib/api';
 import { useContext, useState } from 'react';
+import { SidebarContext } from '@/lib/sidebar';
 import { Item } from '@astryxdesign/core/Item';
 import { Text } from '@astryxdesign/core/Text';
 import { Avatar } from '@/components/ui/Avatar';
@@ -12,7 +13,6 @@ import { clearAppearanceCache } from '@/lib/appearance';
 import { List, ListItem } from '@astryxdesign/core/List';
 import { IconButton } from '@astryxdesign/core/IconButton';
 import { useAuthenticatedUser } from '@/lib/hooks/use-user';
-import { SidebarContext } from '@/components/layouts/Platform';
 import { BookOpen, Building2, ChevronsUpDown, ExternalLink, Settings2 } from 'lucide-react';
 
 /** Renders a user profile popover with authentication and navigation actions. */

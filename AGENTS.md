@@ -57,6 +57,7 @@
 - DO inline simple, single-use prop types and `className` expressions.
 - When prop types are shared or complex, DO keep named prop types.
 - DO extract components only for meaningful UI boundaries.
+- DO keep React component modules limited to component and type exports; place shared contexts, hooks, and utilities in separate non-component modules, except framework-supported route exports.
 - AVOID unnecessary cards, duplicated derived state, and effects that do not synchronize with external systems.
 - PREFER explicit async/await.
 - DO use concurrency only for independent operations.

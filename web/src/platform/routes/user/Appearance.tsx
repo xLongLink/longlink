@@ -6,7 +6,7 @@ import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
 import { useUpdateUser } from '@/lib/hooks/use-user';
 import { Heading } from '@astryxdesign/core/Heading';
-import { useAppearance } from '@/components/Appearance';
+import { useAppearance } from '@/lib/hooks/use-appearance';
 import { SelectableCard } from '@astryxdesign/core/SelectableCard';
 import { accentColors, appearanceSchema, type Appearance } from '@/lib/appearance';
 

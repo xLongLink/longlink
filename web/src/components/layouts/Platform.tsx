@@ -1,5 +1,6 @@
 import { PanelLeft } from 'lucide-react';
 import { useLocation } from 'react-router';
+import { SidebarContext } from '@/lib/sidebar';
 import { Card } from '@astryxdesign/core/Card';
 import { Link } from '@astryxdesign/core/Link';
 import { Wordmark } from '@/components/Wordmark';
@@ -8,15 +9,13 @@ import { TopNav } from '@astryxdesign/core/TopNav';
 import { useTheme } from '@astryxdesign/core/theme';
 import { Divider } from '@astryxdesign/core/Divider';
 import { AppShell } from '@astryxdesign/core/AppShell';
-import { useAppearance } from '@/components/Appearance';
 import { useMediaQuery } from '@astryxdesign/core/hooks';
 import { Tab, TabList } from '@astryxdesign/core/TabList';
+import { useAppearance } from '@/lib/hooks/use-appearance';
 import { OrganizationSwitcher } from '@/components/PageBreadcrumb';
+import { useState, type ReactElement, type ReactNode } from 'react';
 import { BreadcrumbItem, Breadcrumbs } from '@astryxdesign/core/Breadcrumbs';
-import { createContext, useState, type ReactElement, type ReactNode } from 'react';
 import { SideNav, SideNavItem, SideNavCollapseButton } from '@astryxdesign/core/SideNav';
-
-export const SidebarContext = createContext<'expanded' | 'collapsed' | null>(null);
 
 export type NavigationTab = {
     href: string;
