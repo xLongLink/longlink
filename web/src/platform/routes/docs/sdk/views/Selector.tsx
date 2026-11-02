@@ -66,15 +66,14 @@ export default function SelectorPage() {
                     description: 'Callback fired when the selection changes.',
                 },
             ]}
-            examples={[
-                {
-                    title: 'Status form',
-                    preview: (
-                        <FormPreview>
-                            <SelectorExample />
-                        </FormPreview>
-                    ),
-                    code: `/** Submits one selected status using a themed selector. */
+            example={{
+                title: 'Status form',
+                preview: (
+                    <FormPreview>
+                        <SelectorExample />
+                    </FormPreview>
+                ),
+                code: `/** Submits one selected status using a themed selector. */
 export default function StatusForm() {
   return (
     <Form action="/api/example" method="post">
@@ -86,8 +85,7 @@ export default function StatusForm() {
     </Form>
   );
 }`,
-                },
-            ]}
+            }}
         />
     );
 }

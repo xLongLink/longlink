@@ -1,5 +1,5 @@
 import { it, expect } from 'vitest';
-import { legalPaths } from '@/platform/routes';
+import { legalPaths } from '@/platform/publications';
 
 it('preserves the published legal document reading order', () => {
     // Assert

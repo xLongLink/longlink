@@ -25,15 +25,13 @@ export default function BadgePage() {
                     description: 'Status or color variant.',
                 },
             ]}
-            examples={[
-                {
-                    title: 'Badge',
-                    preview: <BadgeExample />,
-                    code: `function Example() {
+            example={{
+                title: 'Badge',
+                preview: <BadgeExample />,
+                code: `function Example() {
   return <Badge label="Open" variant="info" />;
 }`,
-                },
-            ]}
+            }}
         />
     );
 }

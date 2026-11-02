@@ -3,8 +3,9 @@ import asyncio
 from uuid import UUID
 from typing import TYPE_CHECKING, cast
 from src.utils import postgres, templates
+from contextlib import asynccontextmanager
 from src.kubernetes import tls, utils, databases, namespace
-from src.models.types import DatabaseSSLMode
+from collections.abc import AsyncGenerator
 from importlib.resources import files
 from kr8s.asyncio.objects import Pod, Secret, ResourceQuota, new_class, object_from_spec
 from src.database.models.organizations import Organization
@@ -58,7 +59,7 @@ async def apply(
 
     # Publish the cluster before waiting for database readiness.
     await utils.apply(cluster)
-    await resume(client, organization_id)
+    await wait_ready(client, organization_id)
 
 
 async def resize(client: "Kubernetes", organization_id: UUID, *, size_mib: int, instances: int) -> None:
@@ -73,14 +74,13 @@ async def resize(client: "Kubernetes", organization_id: UUID, *, size_mib: int, 
     await cluster.patch({"spec": {"storage": {"size": f"{size_mib}Mi"}}})
 
 
-async def resume(client: "Kubernetes", organization_id: UUID) -> None:
-    """Wait for acknowledged wake and the expected ready, nonterminating database Pods."""
+async def wait_ready(client: "Kubernetes", organization_id: UUID) -> None:
+    """Wait for cluster readiness and the expected ready, nonterminating database Pods."""
 
-    # Clearing hibernation is idempotent; confirmed readiness is required before using SQL.
+    # Observe readiness without changing externally managed hibernation.
     api = await client.api()
     database_namespace = namespace.database(organization_id)
     cluster = ClusterResource("database", namespace=database_namespace, api=api)
-    await cluster.patch({"metadata": {"annotations": {"cnpg.io/hibernation": "off"}}})
     async with asyncio.timeout(2 * 60):
 
         # Hibernation annotations alone do not prove that PostgreSQL is accepting traffic.
@@ -91,8 +91,7 @@ async def resume(client: "Kubernetes", organization_id: UUID) -> None:
 
             # False hibernation conditions still mean shutdown; after removal, verify live Pod state too.
             if (
-                cluster.metadata.get("annotations", {}).get("cnpg.io/hibernation") == "off"
-                and cluster.metadata.get("deletionTimestamp") is None
+                cluster.metadata.get("deletionTimestamp") is None
                 and status.get("readyInstances") == cluster.spec["instances"]
                 and any(condition.get("type") == "Ready" and condition.get("status") == "True" for condition in conditions)
                 and not any(condition.get("type") == "cnpg.io/hibernation" for condition in conditions)
@@ -126,25 +125,27 @@ async def resume(client: "Kubernetes", organization_id: UUID) -> None:
             await asyncio.sleep(1)
 
 
-async def connection(organization: Organization, cluster: "Kubernetes", *, certificate: str | None = None) -> postgres.Postgres:
-    """Build a private PostgreSQL connection using the caller's CA snapshot or a fresh cluster lookup."""
+@asynccontextmanager
+async def connection(
+    organization: Organization, cluster: "Kubernetes", *, certificate: str | None = None
+) -> AsyncGenerator[postgres.Postgres]:
+    """Own a private PostgreSQL tunnel using the caller's CA snapshot or a fresh cluster lookup."""
 
     # Platform workers can run outside the compute cluster and its private DNS/network.
-    port = await cluster.forward_database(organization.id)
-
-    # Preserve the cluster DNS hostname for certificate verification even through a local tunnel.
-    if certificate is None:
-        certificate = await databases.certificate(cluster, organization.id)
-    return postgres.Postgres(
-        host=namespace.database_hostname(organization.id),
-        port=port,
-        username="postgres",
-        password=organization.database_password,
-        sslmode=DatabaseSSLMode.require,
-        certificate=certificate,
-        # Connect through the tunnel while validating the cluster hostname.
-        hostaddr="127.0.0.1",
-    )
+    async with cluster.forward_database(organization.id) as port:
+        # Preserve the cluster DNS hostname for certificate verification even through a local tunnel.
+        if certificate is None:
+            certificate = await databases.certificate(cluster, organization.id)
+        database = postgres.Postgres(
+            host=namespace.database_hostname(organization.id),
+            port=port,
+            username="postgres",
+            password=organization.database_password,
+            certificate=certificate,
+            # Connect through the tunnel while validating the cluster hostname.
+            hostaddr="127.0.0.1",
+        )
+        yield database
 
 
 async def certificate(client: "Kubernetes", organization_id: UUID) -> str:

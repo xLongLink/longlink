@@ -34,11 +34,10 @@ export default function DropdownMenuPage() {
                     description: 'Callback fired when the open state changes.',
                 },
             ]}
-            examples={[
-                {
-                    title: 'DropdownMenu',
-                    preview: <DropdownMenuExample />,
-                    code: `function Example() {
+            example={{
+                title: 'DropdownMenu',
+                preview: <DropdownMenuExample />,
+                code: `function Example() {
   return (
     <DropdownMenu
       button={{ label: 'Actions' }}
@@ -46,8 +45,7 @@ export default function DropdownMenuPage() {
     />
   );
 }`,
-                },
-            ]}
+            }}
         />
     );
 }

@@ -1,20 +1,18 @@
 import type { z } from 'zod';
 import { api } from '@/lib/api';
 import { useState } from 'react';
-import { useApiError } from '@/lib/errors';
+import { FormDialog } from './FormDialog';
 import { Form } from '@/components/ui/Form';
 import { useApi } from '@/lib/hooks/use-api';
 import { Text } from '@astryxdesign/core/Text';
-import { Dialog } from '@/components/ui/Dialog';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
 import { Divider } from '@astryxdesign/core/Divider';
 import { Heading } from '@astryxdesign/core/Heading';
+import { TextInput } from '@/components/ui/TextInput';
 import { DeletionDialog } from '@/components/Deletion';
 import { Illustration } from '@/components/Illustration';
-import { TextInput } from '@astryxdesign/core/TextInput';
 import { Table, proportional } from '@astryxdesign/core/Table';
-import { Layout, LayoutContent } from '@astryxdesign/core/Layout';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 
 type Registry = z.output<typeof schemas.zRegistryResponse>;
@@ -25,6 +23,17 @@ type RegistryAction = { kind: 'create' } | { kind: 'delete'; connection: Registr
 export default function Registries({ base, canMaintain }: { base: string; canMaintain: boolean }) {
     const [connections, invalidate] = useApi(`${base}/registries`, schemas.zRegistryResponse.array());
     const [action, setAction] = useState<RegistryAction | null>(null);
+
+    function closeAction() {
+        // Leave replacement dialogs open when an older operation finishes.
+        setAction((current) => (current === action ? null : current));
+    }
+
+    async function onSuccess() {
+        // Keep the active dialog and its draft when refreshing fails.
+        await invalidate();
+        closeAction();
+    }
 
     // Retain the settings shell's 260px navigation and show dense, edge-to-edge rows.
     return (
@@ -41,7 +50,13 @@ export default function Registries({ base, canMaintain }: { base: string; canMai
                         Private registries
                     </Heading>
                     {canMaintain && (
-                        <Button label="Add registry" size="sm" onClick={() => setAction({ kind: 'create' })} />
+                        <Button
+                            label="Add registry"
+                            size="sm"
+                            onClick={() =>
+                                setAction((current) => (current?.kind === 'create' ? current : { kind: 'create' }))
+                            }
+                        />
                     )}
                 </Stack>
                 <Divider />
@@ -74,9 +89,7 @@ export default function Registries({ base, canMaintain }: { base: string; canMai
                     ]}
                 />
             </Stack>
-            {action?.kind === 'create' && (
-                <RegistryForm base={base} invalidate={invalidate} onClose={() => setAction(null)} />
-            )}
+            {action?.kind === 'create' && <RegistryForm base={base} onSuccess={onSuccess} onClose={closeAction} />}
             <DeletionDialog
                 confirmation={
                     action?.kind === 'delete'
@@ -86,13 +99,12 @@ export default function Registries({ base, canMaintain }: { base: string; canMai
                               onDelete: async () => {
                                   // Remove the connection only after server dependency checks succeed.
                                   await api.delete(`${base}/registries/${action.connection.id}`);
-                                  await invalidate();
-                                  setAction(null);
+                                  await onSuccess();
                               },
                           }
                         : null
                 }
-                onClose={() => setAction(null)}
+                onClose={closeAction}
             />
         </>
     );
@@ -101,99 +113,54 @@ export default function Registries({ base, canMaintain }: { base: string; canMai
 /** Collects a token and lets the server resolve its registry account. */
 function RegistryForm({
     base,
-    invalidate,
+    onSuccess,
     onClose,
 }: {
     base: string;
-    invalidate: () => Promise<void>;
+    onSuccess: () => Promise<void>;
     onClose: () => void;
 }) {
-    const [credential, setCredential] = useState('');
-    const reportError = useApiError();
-
     /** Saves credentials and queues synchronization of Kubernetes pull secrets. */
-    async function save() {
+    async function save(data: FormData) {
         // Submit new credentials without loading saved tokens.
-        try {
-            const json = schemas.zRegistryCreateWritable.parse({ credential });
-            await api.post(`${base}/registries`, { json });
-            await invalidate();
-            onClose();
-        } catch (failure) {
-            // Apply root session policy while Form retains the draft and displays the failure.
-            reportError(failure);
-            throw failure;
-        }
+        const json = schemas.zRegistryCreateWritable.parse({ credential: data.get('credential') });
+        await api.post(`${base}/registries`, { json });
+        await onSuccess();
     }
 
-    // Match Solution creation's 960px shell, 560px height, and 640px scrolling content column.
     return (
-        <Dialog
-            isOpen
-            onOpenChange={(open) => {
-                if (!open) onClose();
-            }}
-        >
-            <Stack height="min(560px, calc(100dvh - var(--spacing-10) * 4))">
-                <Layout
-                    padding={0}
-                    content={
-                        <LayoutContent padding={8}>
-                            <Stack
-                                gap={8}
-                                minHeight="100%"
-                                justify="center"
-                                width="100%"
-                                maxWidth={640}
-                                className="mx-auto"
-                            >
-                                <Stack gap={3} align="center">
-                                    <Illustration
-                                        src="/images/lock.png"
-                                        alt=""
-                                        className="size-20 object-contain"
-                                        decoding="async"
-                                    />
-                                    <Stack gap={0}>
-                                        <Heading level={2} justify="center">
-                                            Connect a registry
-                                        </Heading>
-                                        <Text as="p" color="secondary" justify="center">
-                                            Allow LongLink to pull your private container images
-                                        </Text>
-                                    </Stack>
-                                </Stack>
-                                <Form action={save} submitDisabled={!credential.trim()}>
-                                    <Stack gap={3}>
-                                        <Text as="p">GitHub Container Registry (ghcr.io)</Text>
-                                        <Stack className="[&_.astryx-field-label_.astryx-icon]:ml-auto">
-                                            <TextInput
-                                                label="Personal access token (classic)"
-                                                labelTooltip="Requires the read:packages scope."
-                                                type="password"
-                                                placeholder="ghp_..."
-                                                autoComplete="new-password"
-                                                value={credential}
-                                                isRequired
-                                                onChange={setCredential}
-                                            />
-                                        </Stack>
-                                        <Stack direction="horizontal" gap={2} justify="between" wrap="wrap">
-                                            <Button label="Cancel" variant="ghost" type="button" onClick={onClose} />
-                                            <Button
-                                                label="Save"
-                                                variant="primary"
-                                                type="submit"
-                                                isDisabled={!credential.trim()}
-                                            />
-                                        </Stack>
-                                    </Stack>
-                                </Form>
-                            </Stack>
-                        </LayoutContent>
-                    }
-                />
+        <FormDialog gap={8} onClose={onClose}>
+            <Stack gap={3} align="center">
+                <Illustration src="/images/lock.png" alt="" className="size-20 object-contain" decoding="async" />
+                <Stack gap={0}>
+                    <Heading level={2} justify="center">
+                        Connect a registry
+                    </Heading>
+                    <Text as="p" color="secondary" justify="center">
+                        Allow LongLink to pull your private container images
+                    </Text>
+                </Stack>
             </Stack>
-        </Dialog>
+            <Form action={save}>
+                <Stack gap={3}>
+                    <Text as="p">GitHub Container Registry (ghcr.io)</Text>
+                    <Stack className="[&_.astryx-field-label_.astryx-icon]:ml-auto">
+                        <TextInput
+                            label="Personal access token (classic)"
+                            description="Requires the read:packages scope."
+                            type="password"
+                            placeholder="ghp_..."
+                            autoComplete="new-password"
+                            name="credential"
+                            required
+                        />
+                    </Stack>
+                    <Stack direction="horizontal" gap={2} justify="between" wrap="wrap">
+                        <Button label="Cancel" variant="ghost" type="button" onClick={onClose} />
+                        <Button label="Save" variant="primary" type="submit" />
+                    </Stack>
+                </Stack>
+            </Form>
+        </FormDialog>
     );
 }

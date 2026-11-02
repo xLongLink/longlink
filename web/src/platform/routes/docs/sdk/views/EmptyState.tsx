@@ -20,15 +20,13 @@ export default function EmptyStatePage() {
                     description: 'Enables the compact variant with reduced spacing for constrained content areas.',
                 },
             ]}
-            examples={[
-                {
-                    title: 'EmptyState',
-                    preview: <EmptyStateExample />,
-                    code: `function Example() {
+            example={{
+                title: 'EmptyState',
+                preview: <EmptyStateExample />,
+                code: `function Example() {
   return <EmptyState title="No results found" />;
 }`,
-                },
-            ]}
+            }}
         />
     );
 }

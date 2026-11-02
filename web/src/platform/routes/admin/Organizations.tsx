@@ -1,4 +1,6 @@
 import { api } from '@/lib/api';
+import { useState } from 'react';
+import { useAdminList } from './use-list';
 import { Info, Search } from 'lucide-react';
 import { useApi } from '@/lib/hooks/use-api';
 import { Link } from '@astryxdesign/core/Link';
@@ -8,7 +10,6 @@ import { Dialog } from '@/components/ui/Dialog';
 import { Badge } from '@astryxdesign/core/Badge';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
-import { useDeferredValue, useState } from 'react';
 import { Heading } from '@astryxdesign/core/Heading';
 import { TextInput } from '@/components/ui/TextInput';
 import { DeletionDialog } from '@/components/Deletion';
@@ -18,18 +19,13 @@ import { zPageOrganizationIdentity } from '@/lib/generated/platform-api-v1/zod.g
 
 /** Lists organizations and confirms administrator deletion. */
 export default function Organizations() {
-    // Defer list requests so typing remains responsive while a new page loads.
-    const [filters, setFilters] = useState({ search: '', page: 1 });
-    const { search, page } = useDeferredValue(filters);
+    const { search, pagination, suffix } = useAdminList();
 
     const [dialog, setDialog] = useState<
         { kind: 'metadata'; id: string } | { kind: 'deletion'; item: { id: string; name: string } } | null
     >(null);
 
-    const [organizations, invalidate] = useApi(
-        `/api/v1/organizations?page=${page}&page_size=25&search=${encodeURIComponent(search.trim())}`,
-        zPageOrganizationIdentity
-    );
+    const [organizations, invalidate] = useApi(`/api/v1/organizations${suffix}`, zPageOrganizationIdentity);
 
     // Use current metadata and clear missing selections so returning to a page cannot reopen the dialog.
     const metadata =
@@ -41,13 +37,7 @@ export default function Organizations() {
         <Stack gap={2}>
             <title>Organizations | LongLink</title>
             <Heading level={1}>Organizations</Heading>
-            <TextInput
-                label="Search organizations"
-                placeholder="Search by name or slug"
-                value={filters.search}
-                startIcon={<Search />}
-                onChange={(search) => setFilters({ search, page: 1 })}
-            />
+            <TextInput label="Search organizations" placeholder="Search by name" {...search} startIcon={<Search />} />
             <Stack gap={1}>
                 <Table
                     data={organizations.items}
@@ -64,7 +54,7 @@ export default function Organizations() {
                                     <Avatar kind="organization" name={row.name} />
                                     <Stack align="start">
                                         <Stack direction="horizontal" gap={1} align="center">
-                                            <Link href={`/orgs/${row.slug}`}>{row.name}</Link>
+                                            <Link href={`/orgs/${row.id}`}>{row.name}</Link>
                                             {row.status !== 'running' && (
                                                 <Badge
                                                     label={row.status === 'creating' ? 'Creating' : 'Failed'}
@@ -95,13 +85,7 @@ export default function Organizations() {
                     ]}
                 />
                 <Stack as="footer" align="center" paddingBlock={2}>
-                    <Pagination
-                        page={page}
-                        onChange={(page) => setFilters({ ...filters, page })}
-                        totalItems={organizations.total}
-                        pageSize={25}
-                        variant="pages"
-                    />
+                    <Pagination {...pagination} totalItems={organizations.total} variant="pages" />
                 </Stack>
             </Stack>
             {metadata && (
@@ -112,17 +96,9 @@ export default function Organizations() {
                         if (!open) setDialog(null);
                     }}
                 >
-                    <Stack
-                        gap={2}
-                        height="min(560px, calc(100dvh - var(--spacing-10) * 4))"
-                        padding={8}
-                        className="overflow-auto"
-                    >
+                    <Stack gap={2} padding={8}>
                         <Text>
                             <b>Status</b> {metadata.status}
-                        </Text>
-                        <Text>
-                            <b>Slug</b> {metadata.slug}
                         </Text>
                         <Text>
                             <b>ID</b> {metadata.id}

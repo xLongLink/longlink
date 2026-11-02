@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import ViewLayout from './ViewLayout';
 import { Stack } from '@/components/ui/Stack';
 import { Token } from '@/components/ui/Token';
@@ -48,11 +47,10 @@ export default function TokenPage() {
                     description: 'Shows a remove button and runs when it is clicked.',
                 },
             ]}
-            examples={[
-                {
-                    title: 'Interests',
-                    preview: <TokenExample />,
-                    code: `function Example() {
+            example={{
+                title: 'Interests',
+                preview: <TokenExample />,
+                code: `function Example() {
   return (
     <Stack direction="horizontal" wrap="wrap" gap={2}>
       <Token label="Research" />
@@ -60,16 +58,7 @@ export default function TokenPage() {
     </Stack>
   );
 }`,
-                },
-                {
-                    title: 'Removable selection',
-                    preview: <RemovableTokenExample />,
-                    code: `function Example() {
-  const [selected, setSelected] = useState(true);
-  return selected ? <Token label="Research" onRemove={() => setSelected(false)} /> : null;
-}`,
-                },
-            ]}
+            }}
         />
     );
 }
@@ -83,12 +72,4 @@ export function TokenExample() {
             <Token label="Open source" />
         </Stack>
     );
-}
-
-/** Demonstrates removing a selected tag. */
-function RemovableTokenExample() {
-    // Remove the selection only after its accessible remove button is activated.
-    const [selected, setSelected] = useState(true);
-
-    return selected ? <Token label="Research" onRemove={() => setSelected(false)} /> : null;
 }

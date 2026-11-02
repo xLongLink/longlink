@@ -1,6 +1,5 @@
 from uuid import UUID, uuid4
 from sqlmodel import col
-from src.utils import names
 from sqlalchemy import select
 from collections.abc import Sequence
 from src.models.roles import OrganizationRoles
@@ -115,7 +114,7 @@ async def create_organization(owner: User, name: str = "acme", compute: ComputeR
         compute = await create_compute()
 
     # Construct fixture rows directly rather than reproducing production quota or selection rules.
-    organization = Organization(name=name, slug=names.slugify(name), compute_id=compute.id, created_id=owner.id)
+    organization = Organization(name=name, compute_id=compute.id, created_id=owner.id)
     membership = UserOrganization(user_id=owner.id, organization_id=organization.id, role=OrganizationRoles.owner)
 
     # Persist the Organization and owner membership in the same transaction.

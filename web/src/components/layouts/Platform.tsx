@@ -1,145 +1,41 @@
 import { useLocation } from 'react-router';
-import { Card } from '@astryxdesign/core/Card';
-import { Link } from '@astryxdesign/core/Link';
-import type { LucideIcon } from 'lucide-react';
-import { Wordmark } from '@/components/Wordmark';
-import { Stack } from '@astryxdesign/core/Stack';
-import { TopNav } from '@astryxdesign/core/TopNav';
-import { AppShell } from '@astryxdesign/core/AppShell';
-import { Tab, TabList } from '@astryxdesign/core/TabList';
-import { isValidElement, type ReactElement, type ReactNode } from 'react';
-
-export type NavigationTab = {
-    href: string;
-    icon?: LucideIcon | ReactElement;
-    label: string;
-};
-
-type PlatformProps = {
-    action: ReactNode;
-    activeTab?: string;
-    breadcrumb?: ReactNode;
-    children: ReactNode;
-    /** Lets compact application views use AppShell's header-aware scroll region. */
-    height?: 'auto' | 'fill';
-    tabs: readonly NavigationTab[];
-};
+import Topbar from '@/components/layouts/Topbar';
+import Sidebar from '@/components/layouts/Sidebar';
+import { useAppearance } from '@/lib/hooks/use-appearance';
+import type { NavigationTab, PlatformProps } from '@/components/layouts/types';
 
 /** Finds the longest platform tab path that matches a pathname. */
 function findActiveTab(tabs: readonly NavigationTab[], pathname: string): string | undefined {
     const normalizedPathname = pathname.replace(/\/+$/, '') || '/';
+    let bestTab: NavigationTab | undefined;
+    let bestMatchLength = 0;
 
-    return tabs.reduce<string | undefined>((best, tab) => {
+    // Rank normalized paths while retaining the original tab identity.
+    for (const tab of tabs) {
         const tabPathname = tab.href.replace(/\/+$/, '') || '/';
 
         if (tabPathname !== normalizedPathname && !normalizedPathname.startsWith(`${tabPathname}/`)) {
-            return best;
+            continue;
         }
 
-        return best === undefined || tabPathname.length > best.length ? tabPathname : best;
-    }, undefined);
+        if (tabPathname.length > bestMatchLength) {
+            bestTab = tab;
+            bestMatchLength = tabPathname.length;
+        }
+    }
+
+    return bestTab?.href;
 }
 
-/** Renders the shared Platform frame with contextual navigation and actions. */
-export default function Platform({ action, activeTab, breadcrumb, children, height = 'auto', tabs }: PlatformProps) {
+/** Selects application navigation without knowing the route's domain or identity. */
+export default function Platform({ activeTab, isNavigationLoading = false, ...props }: PlatformProps) {
     const { pathname } = useLocation();
+    const { appearance } = useAppearance();
+    const selectedTab = activeTab ?? findActiveTab(props.tabs, pathname) ?? '';
 
-    // Keep route selection outside the presentation frame so previews need no account or router state.
-    return (
-        <PlatformFrame
-            action={action}
-            breadcrumb={breadcrumb}
-            height={height}
-            navigation={
-                tabs.length > 0 ? (
-                    <TabList
-                        aria-label="Section navigation"
-                        onChange={() => undefined}
-                        size="sm"
-                        value={activeTab ?? findActiveTab(tabs, pathname) ?? ''}
-                    >
-                        {tabs.map((tab) => {
-                            const Icon = tab.icon;
+    // Keep pages without navigation in the topbar frame, including failed manifest loads.
+    const Layout =
+        appearance.navigation === 'sidebar' && (isNavigationLoading || props.tabs.length > 0) ? Sidebar : Topbar;
 
-                            return (
-                                <Tab
-                                    href={tab.href}
-                                    icon={
-                                        isValidElement(Icon) ? (
-                                            Icon
-                                        ) : Icon ? (
-                                            <Icon aria-hidden="true" size={16} />
-                                        ) : undefined
-                                    }
-                                    key={tab.href}
-                                    label={tab.label}
-                                    value={tab.href}
-                                />
-                            );
-                        })}
-                    </TabList>
-                ) : undefined
-            }
-        >
-            {children}
-        </PlatformFrame>
-    );
-}
-
-/** Shares the actual Platform chrome and content frame without authentication or route-dependent navigation. */
-export function PlatformFrame({
-    action,
-    breadcrumb,
-    children,
-    className,
-    height = 'auto',
-    navigation,
-}: Omit<PlatformProps, 'tabs' | 'activeTab'> & { className?: string; navigation?: ReactNode }) {
-    return (
-        <AppShell
-            className={className}
-            height={height}
-            mobileNav={false}
-            topNav={
-                <Stack>
-                    <TopNav
-                        className="min-h-11 px-7"
-                        endContent={action}
-                        heading={
-                            breadcrumb ?? (
-                                <Link href="/" label="LongLink home" color="inherit">
-                                    <Wordmark />
-                                </Link>
-                            )
-                        }
-                        label="Platform navigation"
-                    />
-                    {navigation && (
-                        <Stack direction="horizontal" paddingInline={4} width="100%">
-                            {navigation}
-                        </Stack>
-                    )}
-                </Stack>
-            }
-            variant="wash"
-        >
-            {/* Cover at least the main region and grow the background with overflowing View content. */}
-            <Stack
-                className="relative"
-                minHeight={height === 'fill' ? '100%' : 'calc(100dvh - var(--_app-shell-header-height, 0px))'}
-            >
-                <Card
-                    aria-hidden="true"
-                    className="pointer-events-none absolute z-0 inset-0 overflow-clip bg-body px-2 pb-2 pt-0"
-                    padding={0}
-                    variant="transparent"
-                >
-                    <Card className="border-0" height="100%" width="100%" />
-                </Card>
-                <Stack className="relative z-10" minHeight={height === 'fill' ? 0 : undefined} padding={2}>
-                    {children}
-                </Stack>
-            </Stack>
-        </AppShell>
-    );
+    return <Layout {...props} activeTab={selectedTab} />;
 }

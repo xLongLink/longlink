@@ -35,17 +35,16 @@ async def reconcile(organization_id: UUID) -> None:
     cluster = Kubernetes(compute.kubeconfig)
 
     # Card registration can expand capacity independently of the free pricing allowance.
-    async with cluster:
-        if organization.stripe_payment_method_id is not None:
-            await database_resources.resize(
-                cluster, organization.id, size_mib=organization.database_size_mib, instances=organization.database_instances
-            )
-        storage = Storage(compute, cluster)
-        await storage.apply(organization.id, quota_bytes=organization.storage_quota_bytes)
+    if organization.stripe_payment_method_id is not None:
+        await database_resources.resize(
+            cluster, organization.id, size_mib=organization.database_size_mib, instances=organization.database_instances
+        )
+    storage = Storage(compute, cluster)
+    await storage.apply(organization.id, quota_bytes=organization.storage_quota_bytes)
 
-        # Apply shared tenant infrastructure after storage capacity is configured.
-        await organizations.apply(cluster, organization.id)
-        await registries.synchronize(cluster, organization.id)
+    # Apply shared tenant infrastructure after storage capacity is configured.
+    await organizations.apply(cluster, organization.id)
+    await registries.synchronize(cluster, organization.id)
 
     # Publish the Organization after its provider and Kubernetes boundaries are ready.
     async with session_scope() as session:
@@ -96,13 +95,12 @@ async def delete(organization_id: UUID) -> None:
         cluster = Kubernetes(compute.kubeconfig)
 
         # Namespace deletion cascades every Solution Kubernetes resource and waits for all Pods to terminate.
-        async with cluster:
-            await organizations.delete(cluster, organization.id)
+        await organizations.delete(cluster, organization.id)
 
-            # Delete the dedicated CNPG boundary only after compute Pods have terminated.
-            await database_resources.delete(cluster, organization.id)
-            storage = Storage(compute, cluster)
-            await storage.delete(organization.id, solution_ids)
+        # Delete the dedicated CNPG boundary only after compute Pods have terminated.
+        await database_resources.delete(cluster, organization.id)
+        storage = Storage(compute, cluster)
+        await storage.delete(organization.id, solution_ids)
 
         # Purge the tombstone only after all external resources are absent.
         async with session_scope() as session:

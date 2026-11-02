@@ -1,15 +1,15 @@
 // @vitest-environment happy-dom
-import { act, Suspense } from 'react';
+import { act } from 'react';
 import { createHash } from 'node:crypto';
 import { createRoot } from 'react-dom/client';
 import { MessagePort } from 'node:worker_threads';
-import { SolutionRuntime } from '@/components/Solution';
+import { SolutionPage } from '@/components/SolutionPage';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ApiErrorContext, createErrorReporter } from '@/lib/errors';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
-describe('SolutionRuntime', () => {
+describe('SolutionPage', () => {
     let root: ReturnType<typeof createRoot> | undefined;
     let mountedClient: QueryClient | undefined;
     let mountedContainer: HTMLDivElement | undefined;
@@ -65,7 +65,7 @@ describe('SolutionRuntime', () => {
         stubFetch(response);
 
         // Act
-        const output = await renderRuntime(initialPath);
+        const output = await renderPage(initialPath);
 
         // Assert
         await act(async () => vi.waitFor(() => expect(output.textContent).toContain(title)));
@@ -84,12 +84,14 @@ describe('SolutionRuntime', () => {
         );
 
         // Act
-        const output = await renderRuntime('/');
+        const output = await renderPage('/');
 
         // Assert
         // Router navigation does not settle inside act, so observe it directly.
         await vi.waitFor(() => expect(output.querySelector('[data-path]')?.getAttribute('data-path')).toBe('/home'));
-        expect(output.querySelector('[data-path]')?.getAttribute('data-tabs')).toBe('/home');
+        expect(
+            output.querySelector('[aria-label="Section navigation"] a[aria-current="page"]')?.getAttribute('href')
+        ).toBe('/home');
         await vi.waitFor(() => expect(output.querySelector('iframe')?.srcdoc).toContain('Content-Security-Policy'));
     });
 
@@ -104,7 +106,7 @@ describe('SolutionRuntime', () => {
         stubFetch(fetchRequest);
 
         // Act
-        const output = await renderRuntime('/home');
+        const output = await renderPage('/home');
 
         // Assert
         await act(async () => vi.waitFor(() => expect(output.textContent).toContain('Unable to load this solution')));
@@ -124,7 +126,7 @@ describe('SolutionRuntime', () => {
         });
 
         // Act
-        const output = await renderRuntime('/issues/42');
+        const output = await renderPage('/issues/42');
 
         // Assert
         const { frame, session, transfer } = await observeView(output);
@@ -135,7 +137,7 @@ describe('SolutionRuntime', () => {
         );
         expect(transfer).toHaveBeenCalledOnce();
         expect(transfer.mock.calls[0]?.[0]).toHaveProperty('params', { issueId: '42' });
-        expect(output.querySelector('[data-title]')?.getAttribute('data-title')).toBe('Item');
+        expect(document.title).toBe('Item | Solution');
 
         // A successful handshake cancels the startup deadline without removing the frame.
         await act(async () => vi.advanceTimersByTimeAsync(10_000));
@@ -155,7 +157,7 @@ describe('SolutionRuntime', () => {
                 ? manifestResponse([{ path: 'home.jsx', route: '/home' }])
                 : sourceResponse(source)
         );
-        const output = await renderRuntime('/home');
+        const output = await renderPage('/home');
         const { frame, session, transfer } = await observeView(output);
         const handshake = { source: frame.contentWindow, origin: 'null', data: session };
 
@@ -174,7 +176,7 @@ describe('SolutionRuntime', () => {
             source,
             params: {},
             navigationBaseUrl: 'http://localhost:3000/',
-            appearance: { theme: 'system', accent: 'neutral' },
+            appearance: { theme: 'system', accent: 'neutral', navigation: 'sidebar' },
         });
         await act(async () => vi.advanceTimersByTimeAsync(10_000));
         expect(output.querySelector('iframe')).toBe(frame);
@@ -191,7 +193,7 @@ describe('SolutionRuntime', () => {
 
             return Response.json({ value: 'accepted' });
         });
-        const port = await connectView(await renderRuntime('/home'));
+        const port = await connectView(await renderPage('/home'));
         const replies: unknown[] = [];
         port.on('message', replies.push.bind(replies));
 
@@ -226,7 +228,7 @@ describe('SolutionRuntime', () => {
 
             return response;
         });
-        const port = await connectView(await renderRuntime('/home'));
+        const port = await connectView(await renderPage('/home'));
         const replies: unknown[] = [];
         port.on('message', replies.push.bind(replies));
         const barrier = new MessageChannel();
@@ -277,7 +279,7 @@ describe('SolutionRuntime', () => {
         });
 
         // Act
-        const output = await renderRuntime('/home', '/proxy/views.json?version=1#manifest');
+        const output = await renderPage('/home', '/proxy/views.json?version=1#manifest');
 
         // Assert
         await vi.waitFor(() => expect(output.querySelector('iframe')?.srcdoc).toContain('Content-Security-Policy'));
@@ -309,7 +311,7 @@ describe('SolutionRuntime', () => {
         );
 
         // Wait until the isolated frame has started before advancing its readiness deadline.
-        const output = await renderRuntime('/home');
+        const output = await renderPage('/home');
         await vi.waitFor(() => expect(output.querySelector('iframe')?.srcdoc).toContain('Content-Security-Policy'));
 
         // Missing bootstrap readiness fails visibly instead of leaving a blank sandbox indefinitely.
@@ -329,7 +331,7 @@ describe('SolutionRuntime', () => {
         stubFetch(response);
 
         // Act
-        const output = await renderRuntime('/missing');
+        const output = await renderPage('/missing');
 
         // Assert
         await act(async () => vi.waitFor(() => expect(output.textContent).toContain("We can't find that page")));
@@ -371,8 +373,8 @@ describe('SolutionRuntime', () => {
         return ports[0];
     }
 
-    /** Mounts the real runtime with isolated queries and routing. */
-    async function renderRuntime(initialPath = '/', viewsUrl = '/views.json'): Promise<HTMLDivElement> {
+    /** Mounts the real page with isolated queries and routing. */
+    async function renderPage(initialPath = '/', viewsUrl = '/views.json'): Promise<HTMLDivElement> {
         const container = document.createElement('div');
         mountedContainer = container;
         document.body.append(container);
@@ -387,26 +389,22 @@ describe('SolutionRuntime', () => {
                 <ApiErrorContext value={createErrorReporter(vi.fn())}>
                     <QueryClientProvider client={client}>
                         <MemoryRouter initialEntries={[initialPath]}>
-                            <Suspense fallback={null}>
-                                <Routes>
-                                    <Route
-                                        element={
-                                            <SolutionRuntime viewsUrl={viewsUrl}>
-                                                {({ content, tabs, title }) => (
-                                                    <>
-                                                        <Location
-                                                            tabs={tabs.map((tab) => tab.href).join(',')}
-                                                            title={title}
-                                                        />
-                                                        {content}
-                                                    </>
-                                                )}
-                                            </SolutionRuntime>
-                                        }
-                                        path="*"
-                                    />
-                                </Routes>
-                            </Suspense>
+                            <Routes>
+                                <Route
+                                    element={
+                                        <>
+                                            <Location />
+                                            <SolutionPage
+                                                action={null}
+                                                breadcrumb={null}
+                                                formatTitle={(title) => `${title ?? 'Untitled'} | Solution`}
+                                                viewsUrl={viewsUrl}
+                                            />
+                                        </>
+                                    }
+                                    path="*"
+                                />
+                            </Routes>
                         </MemoryRouter>
                     </QueryClientProvider>
                 </ApiErrorContext>
@@ -418,16 +416,10 @@ describe('SolutionRuntime', () => {
 });
 
 /** Exposes the memory-router location for assertions. */
-function Location({ tabs, title }: { tabs: string; title?: string }) {
+function Location() {
     const location = useLocation();
 
-    return (
-        <output
-            data-path={`${location.pathname}${location.search}${location.hash}`}
-            data-tabs={tabs}
-            data-title={title}
-        />
-    );
+    return <output data-path={`${location.pathname}${location.search}${location.hash}`} />;
 }
 
 /** Stubs fetch at the runtime's HTTP boundary. */

@@ -37,12 +37,13 @@ async def test_get_me_returns_authenticated_user_profile_and_separate_org_member
         # Profile responses include the default personal appearance settings.
         "theme": "system",
         "accent": "neutral",
+        "navigation": "sidebar",
     }
 
     assert organizations_response.status_code == 200
     assert organizations_response.headers["cache-control"] == "no-store"
     assert organizations_response.json() == [
-        {"organization": {"id": str(organization.id), "name": "acme", "slug": "acme", "status": "creating"}, "role": "owner"}
+        {"organization": {"id": str(organization.id), "name": "acme", "status": "creating"}, "role": "owner"}
     ]
 
 
@@ -116,7 +117,7 @@ async def test_patch_me_persists_without_organization_database_access(
     monkeypatch.setattr("src.operations.databases.ready", unavailable)
 
     # Act
-    response = await clients[1].patch("/api/v1/me", json={"name": expected_name})
+    response = await clients[1].patch("/api/v1/me", json={"name": expected_name, "navigation": "sidebar"})
     retried = await clients[1].patch("/api/v1/me", json={"name": expected_name})
 
     # Assert
@@ -131,11 +132,13 @@ async def test_patch_me_persists_without_organization_database_access(
         # Name changes leave personal appearance settings intact.
         "theme": "system",
         "accent": "neutral",
+        "navigation": "sidebar",
     }
     async with session_scope() as session:
         persisted_user = await session.get(User, user.id)
         assert persisted_user is not None
         assert persisted_user.name == expected_name
+        assert persisted_user.navigation == "sidebar"
 
 
 async def test_accept_my_invitation_adds_membership(
@@ -164,7 +167,7 @@ async def test_accept_my_invitation_adds_membership(
             )
         )
         await session.commit()
-    organization_payload = {"id": str(organization.id), "name": "acme", "slug": "acme", "status": "creating"}
+    organization_payload = {"id": str(organization.id), "name": "acme", "status": "creating"}
 
     # Act
     invitations_response = await clients[1].get("/api/v1/me/invitations")
@@ -196,12 +199,13 @@ async def test_decline_my_invitation_removes_it_from_the_organization(
 
     # Act
     decline_response = await clients[1].delete(f"/api/v1/me/invitations/{invitation_id}")
-    details_response = await clients[0].get(f"/api/v1/organizations/{organization.id}")
+    invitations_response = await clients[0].get(f"/api/v1/organizations/{organization.id}/invitations")
     organizations_response = await clients[1].get("/api/v1/me/organizations")
 
     # Assert
     assert decline_response.status_code == 204
-    assert details_response.json()["invitations"] == []
+    assert invitations_response.status_code == 200
+    assert invitations_response.json() == []
     assert organizations_response.json() == []
 
 

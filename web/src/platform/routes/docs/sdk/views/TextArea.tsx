@@ -74,15 +74,14 @@ export default function TextAreaPage() {
                     description: 'Native autocomplete hint.',
                 },
             ]}
-            examples={[
-                {
-                    title: 'Notes form',
-                    preview: (
-                        <FormPreview>
-                            <TextAreaExample />
-                        </FormPreview>
-                    ),
-                    code: `/** Submits multi-line notes using a themed textarea. */
+            example={{
+                title: 'Notes form',
+                preview: (
+                    <FormPreview>
+                        <TextAreaExample />
+                    </FormPreview>
+                ),
+                code: `/** Submits multi-line notes using a themed textarea. */
 export default function NotesForm() {
   return (
     <Form action="/api/example" method="post">
@@ -94,8 +93,7 @@ export default function NotesForm() {
     </Form>
   );
 }`,
-                },
-            ]}
+            }}
         />
     );
 }

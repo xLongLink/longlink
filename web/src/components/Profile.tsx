@@ -1,40 +1,36 @@
-import type { z } from 'zod';
 import { api } from '@/lib/api';
-import { useState } from 'react';
+import { useContext, useState } from 'react';
+import { SidebarContext } from '@/lib/sidebar';
 import { Item } from '@astryxdesign/core/Item';
 import { Text } from '@astryxdesign/core/Text';
 import { Avatar } from '@/components/ui/Avatar';
 import { Stack } from '@astryxdesign/core/Stack';
+import { adminNavigation } from '@/platform/admin';
 import { Button } from '@astryxdesign/core/Button';
 import { Divider } from '@astryxdesign/core/Divider';
 import { Popover } from '@astryxdesign/core/Popover';
 import { clearAppearanceCache } from '@/lib/appearance';
 import { List, ListItem } from '@astryxdesign/core/List';
 import { IconButton } from '@astryxdesign/core/IconButton';
-import type { zUserSummary } from '@/lib/generated/platform-api-v1/zod.gen';
-import {
-    AppWindow,
-    ArrowUpDown,
-    BookOpen,
-    Building2,
-    ChevronRight,
-    ExternalLink,
-    Settings2,
-    Users,
-    Wrench,
-} from 'lucide-react';
+import { useAuthenticatedUser } from '@/lib/hooks/use-user';
+import { BookOpen, Building2, ChevronsUpDown, ExternalLink, Settings2 } from 'lucide-react';
 
 /** Renders a user profile popover with authentication and navigation actions. */
-export function ProfileMenu({ user }: { user: z.output<typeof zUserSummary> }) {
+export function ProfileMenu() {
+    const user = useAuthenticatedUser();
+    const sidebar = useContext(SidebarContext);
+    const isSidebar = sidebar !== null;
     const [isOpen, setIsOpen] = useState(false);
     const closeMenu = () => setIsOpen(false);
 
     return (
         <Popover
-            alignment="end"
+            alignment={isSidebar ? 'start' : 'end'}
+            className={isSidebar ? 'w-full' : undefined}
             isOpen={isOpen}
             label={user.name}
             onOpenChange={setIsOpen}
+            placement={isSidebar ? 'above' : 'below'}
             width={280}
             content={
                 <Stack gap={2} width="100%">
@@ -53,14 +49,12 @@ export function ProfileMenu({ user }: { user: z.output<typeof zUserSummary> }) {
                         }
                     >
                         <ListItem
-                            endContent={<ChevronRight aria-hidden="true" className="text-secondary" size={12} />}
                             href="/user/organizations"
                             label="Organizations"
                             onClickCapture={closeMenu}
                             startContent={<Building2 aria-hidden="true" className="text-secondary" size={16} />}
                         />
                         <ListItem
-                            endContent={<ChevronRight aria-hidden="true" className="text-secondary" size={12} />}
                             href="/user/settings"
                             label="Settings"
                             onClickCapture={closeMenu}
@@ -86,38 +80,15 @@ export function ProfileMenu({ user }: { user: z.output<typeof zUserSummary> }) {
                                     </Text>
                                 }
                             >
-                                <ListItem
-                                    href="/admin/users"
-                                    label="Users"
-                                    onClickCapture={closeMenu}
-                                    startContent={<Users aria-hidden="true" className="text-secondary" size={16} />}
-                                />
-                                <ListItem
-                                    href="/admin/solutions"
-                                    label="Solutions"
-                                    onClickCapture={closeMenu}
-                                    startContent={<AppWindow aria-hidden="true" className="text-secondary" size={16} />}
-                                />
-                                <ListItem
-                                    href="/admin/organizations"
-                                    label="Organizations"
-                                    onClickCapture={closeMenu}
-                                    startContent={<Building2 aria-hidden="true" className="text-secondary" size={16} />}
-                                />
-                                <ListItem
-                                    href="/admin/compute"
-                                    label="Compute"
-                                    onClickCapture={closeMenu}
-                                    startContent={<Wrench aria-hidden="true" className="text-secondary" size={16} />}
-                                />
-                                <ListItem
-                                    href="/admin/operations"
-                                    label="Operations"
-                                    onClickCapture={closeMenu}
-                                    startContent={
-                                        <ArrowUpDown aria-hidden="true" className="text-secondary" size={16} />
-                                    }
-                                />
+                                {adminNavigation.map(({ href, icon: Icon, label }) => (
+                                    <ListItem
+                                        key={href}
+                                        href={href}
+                                        label={label}
+                                        onClickCapture={closeMenu}
+                                        startContent={<Icon aria-hidden="true" className="text-secondary" size={16} />}
+                                    />
+                                ))}
                             </List>
                             <Divider />
                         </>
@@ -137,11 +108,28 @@ export function ProfileMenu({ user }: { user: z.output<typeof zUserSummary> }) {
                 </Stack>
             }
         >
-            <IconButton
-                icon={<Avatar src={user.avatar} name={user.name} seed={user.id} />}
-                label={user.name}
-                variant="ghost"
-            />
+            {sidebar === 'expanded' ? (
+                (trigger) => (
+                    <Item
+                        {...trigger}
+                        as="button"
+                        role="button"
+                        className="w-full rounded-lg px-2 py-1.5 text-left"
+                        description={user.email}
+                        descriptionLines={1}
+                        endContent={<ChevronsUpDown aria-hidden="true" className="text-secondary" size={16} />}
+                        label={user.name}
+                        labelLines={1}
+                        startContent={<Avatar src={user.avatar} name={user.name} seed={user.id} />}
+                    />
+                )
+            ) : (
+                <IconButton
+                    icon={<Avatar src={user.avatar} name={user.name} seed={user.id} />}
+                    label={user.name}
+                    variant="ghost"
+                />
+            )}
         </Popover>
     );
 }

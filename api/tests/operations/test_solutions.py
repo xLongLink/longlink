@@ -189,19 +189,18 @@ async def test_solution_creation_applies_user_and_managed_environment_values(
             return "solution"
 
     class FakeKubernetes(DatabaseKubernetes):
-        """Record the Kubernetes connection scope during deployment."""
+        """Record the database tunnel scope during deployment."""
 
-        def __init__(self, kubeconfig: dict[str, object]) -> None:
-            """Record client construction alongside shared fake ownership."""
+        @asynccontextmanager
+        async def forward_database(self, organization_id: UUID) -> AsyncGenerator[int]:
+            """Release the database tunnel after schema provisioning."""
 
-            super().__init__(kubeconfig)
             calls.append("open")
-
-        async def aclose(self) -> None:
-            """Provide the Kubernetes client cleanup contract."""
-
-            await super().aclose()
-            calls.append("close")
+            try:
+                async with super().forward_database(organization_id) as port:
+                    yield port
+            finally:
+                calls.append("close")
 
     async def apply(
         client: object,
@@ -230,9 +229,10 @@ async def test_solution_creation_applies_user_and_managed_environment_values(
     await solution_operations.deploy(solution.desired_revision_id)
 
     # User values and generated Platform values share the runtime Secret.
-    assert calls == ["open", "credentials", "schema", "workload", "close"]
+    assert calls == ["credentials", "open", "schema", "close", "workload"]
     calls.clear()
     assert captured["secrets"]["API_KEY"] == "runtime-secret"
+    assert captured["secrets"]["LONGLINK_ENV"] == "production"
     assert captured["secrets"]["LONGLINK_DATABASE_HOST"] == f"database-rw.longlink-database-{organization.id.hex}.svc.cluster.local"
     assert captured["secrets"]["LONGLINK_DATABASE_NAME"] == organization.id.hex
     assert captured["secrets"]["LONGLINK_DATABASE_PASSWORD"] == database_passwords[0]
@@ -247,6 +247,7 @@ async def test_solution_creation_applies_user_and_managed_environment_values(
     assert persisted is not None
     assert persisted.status == Status.running
     assert not {
+        "LONGLINK_ENV",
         "LONGLINK_DATABASE_HOST",
         "LONGLINK_DATABASE_NAME",
         "LONGLINK_DATABASE_PORT",
@@ -262,17 +263,20 @@ async def test_solution_creation_applies_user_and_managed_environment_values(
     # A subsequent revision reuses all generated credentials and stable data identities.
     async with session_scope() as session:
         current = await solutions.access(session, solution.id, owner.id)
+        revision = await session.get(Revision, current.desired_revision_id)
+        assert revision is not None
         metadata = LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:updated"), permissions=Catalog(endpoints=[]))
-        await solutions.deploy(session, current, owner.id, metadata, {"API_KEY": "replacement"})
+        await solutions._deploy(session, current, owner.id, metadata, {"API_KEY": "replacement"}, current=revision)
         await session.commit()
         revision_id = current.desired_revision_id
     await solution_operations.deploy(revision_id)
-    assert calls == ["open", "workload", "close"]
+    assert calls == ["workload"]
 
     # Updated environment values override retained runtime credentials only where allowed.
     assert captured["secrets"] == {
         "API_KEY": "replacement",
         **persisted.secrets,
+        "LONGLINK_ENV": "production",
         "LONGLINK_DATABASE_HOST": f"database-rw.longlink-database-{organization.id.hex}.svc.cluster.local",
         "LONGLINK_DATABASE_NAME": organization.id.hex,
         "LONGLINK_DATABASE_PORT": "5432",
@@ -354,7 +358,6 @@ async def test_solution_creation_retry_reuses_persisted_runtime_secrets(
     organization = await create_organization(users[0])
     solution = await create_solution(organization, envs={"API_KEY": "runtime-secret"})
     credentials = {
-        "LONGLINK_ENV": "production",
         "LONGLINK_DATABASE_PASSWORD": "persisted-database-password",
         "LONGLINK_DATABASE_USERNAME": "persisted-database-user",
         "LONGLINK_STORAGE_PASSWORD": "persisted-storage-password",
@@ -364,6 +367,7 @@ async def test_solution_creation_retry_reuses_persisted_runtime_secrets(
         credentials["LONGLINK_IDENTITY_SECRET"] = identity
     initial_secrets = {
         **credentials,
+        "LONGLINK_ENV": "production",
         "LONGLINK_STORAGE_BUCKET": organization.id.hex,
         "LONGLINK_DATABASE_HOST": "old-database.example",
         # Retained database credentials must survive a reconciliation replay.
@@ -435,6 +439,7 @@ async def test_solution_creation_retry_reuses_persisted_runtime_secrets(
         {
             "API_KEY": "runtime-secret",
             **persisted.secrets,
+            "LONGLINK_ENV": "production",
             "LONGLINK_DATABASE_HOST": f"database-rw.longlink-database-{organization.id.hex}.svc.cluster.local",
             "LONGLINK_DATABASE_NAME": organization.id.hex,
             "LONGLINK_DATABASE_PORT": "5432",
@@ -447,6 +452,15 @@ async def test_solution_creation_retry_reuses_persisted_runtime_secrets(
             "LONGLINK_STORAGE_ENDPOINT_URL": "https://longlink-storage.rustfs.svc:443",
         }
     ]
+
+    # Replay the cleaned record without regenerating provider credentials or the identity secret.
+    await solution_operations.deploy(solution.desired_revision_id)
+    assert len(captured) == 2
+    assert captured[1] == captured[0]
+    async with session_scope() as session:
+        replayed = await session.get(Solution, solution.id)
+        assert replayed is not None
+        assert replayed.secrets == persisted.secrets
 
 
 async def test_solution_creation_skips_removed_solution_provider_construction(
@@ -476,7 +490,15 @@ async def test_initial_deployment_failure_does_not_schedule_recovery(
     owner = users[0]
     organization = await create_organization(owner)
     solution = await create_solution(
-        organization, envs={"KEY": "old"}, runtime_secrets={"LONGLINK_ENV": "production", "LONGLINK_IDENTITY_SECRET": "stable"}
+        organization,
+        envs={"KEY": "old"},
+        runtime_secrets={
+            "LONGLINK_DATABASE_PASSWORD": "database-password",
+            "LONGLINK_DATABASE_USERNAME": "database-user",
+            "LONGLINK_STORAGE_PASSWORD": "storage-password",
+            "LONGLINK_STORAGE_USERNAME": "storage-user",
+            "LONGLINK_IDENTITY_SECRET": "stable",
+        },
     )
 
     async def apply(
@@ -527,7 +549,15 @@ async def test_shutdown_keeps_deployment_resumable(users: tuple[User, User, User
     owner = users[0]
     organization = await create_organization(owner)
     solution = await create_solution(
-        organization, envs={"KEY": "old"}, runtime_secrets={"LONGLINK_ENV": "production", "LONGLINK_IDENTITY_SECRET": "stable"}
+        organization,
+        envs={"KEY": "old"},
+        runtime_secrets={
+            "LONGLINK_DATABASE_PASSWORD": "database-password",
+            "LONGLINK_DATABASE_USERNAME": "database-user",
+            "LONGLINK_STORAGE_PASSWORD": "storage-password",
+            "LONGLINK_STORAGE_USERNAME": "storage-user",
+            "LONGLINK_IDENTITY_SECRET": "stable",
+        },
     )
 
     async def apply(
@@ -563,7 +593,9 @@ async def test_shutdown_keeps_deployment_resumable(users: tuple[User, User, User
     metadata = LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:new"), permissions=Catalog(endpoints=[]))
     async with session_scope() as session:
         current = await solutions.access(session, solution.id, owner.id)
-        await solutions.deploy(session, current, owner.id, metadata, {"KEY": "new"})
+        revision = await session.get(Revision, current.desired_revision_id)
+        assert revision is not None
+        await solutions._deploy(session, current, owner.id, metadata, {"KEY": "new"}, current=revision)
         await session.commit()
         desired_id = current.desired_revision_id
     update = await claim_operation()
@@ -594,7 +626,15 @@ async def test_failed_update_recovery(users: tuple[User, User, User], monkeypatc
     owner = users[0]
     organization = await create_organization(owner)
     solution = await create_solution(
-        organization, envs={"KEY": "old"}, runtime_secrets={"LONGLINK_ENV": "production", "LONGLINK_IDENTITY_SECRET": "stable"}
+        organization,
+        envs={"KEY": "old"},
+        runtime_secrets={
+            "LONGLINK_DATABASE_PASSWORD": "database-password",
+            "LONGLINK_DATABASE_USERNAME": "database-user",
+            "LONGLINK_STORAGE_PASSWORD": "storage-password",
+            "LONGLINK_STORAGE_USERNAME": "storage-user",
+            "LONGLINK_IDENTITY_SECRET": "stable",
+        },
     )
     calls: list[tuple[str, dict[str, str], bool]] = []
     rollout_finalized = asyncio.Event()
@@ -654,7 +694,9 @@ async def test_failed_update_recovery(users: tuple[User, User, User], monkeypatc
     metadata = LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:new"), permissions=Catalog(endpoints=[]))
     async with session_scope() as session:
         current = await solutions.access(session, solution.id, owner.id)
-        await solutions.deploy(session, current, owner.id, metadata, {"KEY": "new"})
+        revision = await session.get(Revision, current.desired_revision_id)
+        assert revision is not None
+        await solutions._deploy(session, current, owner.id, metadata, {"KEY": "new"}, current=revision)
         await session.commit()
         desired_id = current.desired_revision_id
     failing = True
@@ -683,7 +725,6 @@ async def test_failed_update_recovery(users: tuple[User, User, User], monkeypatc
     if failure in {"deleted_during_rollout", "deleted_before_recovery"}:
         if failure == "deleted_before_recovery":
             async with session_scope() as session:
-
                 # Queue deletion while failed rollout recovery is still pending.
                 await solutions.delete(session, solution.id, owner.id)
                 await session.commit()
@@ -758,6 +799,7 @@ async def test_failed_update_recovery(users: tuple[User, User, User], monkeypatc
     assert calls[-1][1] == {
         "KEY": "old",
         **solution.secrets,
+        "LONGLINK_ENV": "production",
         "LONGLINK_DATABASE_HOST": f"database-rw.longlink-database-{organization.id.hex}.svc.cluster.local",
         "LONGLINK_DATABASE_NAME": organization.id.hex,
         "LONGLINK_DATABASE_PORT": "5432",
@@ -778,7 +820,15 @@ async def test_queued_deployments_keep_exact_targets(users: tuple[User, User, Us
 
     organization = await create_organization(users[0])
     solution = await create_solution(
-        organization, envs={"KEY": "first"}, runtime_secrets={"LONGLINK_ENV": "production", "LONGLINK_IDENTITY_SECRET": "stable"}
+        organization,
+        envs={"KEY": "first"},
+        runtime_secrets={
+            "LONGLINK_DATABASE_PASSWORD": "database-password",
+            "LONGLINK_DATABASE_USERNAME": "database-user",
+            "LONGLINK_STORAGE_PASSWORD": "storage-password",
+            "LONGLINK_STORAGE_USERNAME": "storage-user",
+            "LONGLINK_IDENTITY_SECRET": "stable",
+        },
     )
     initial = await claim_operation()
     assert initial is not None
@@ -814,19 +864,21 @@ async def test_queued_deployments_keep_exact_targets(users: tuple[User, User, Us
         assert image == expected_images[secrets["KEY"]]
         assert revision_id == {"first": initial.target_id, "second": second_id, "third": third_id}[secrets["KEY"]]
         if second_id is None:
-
             # A newer request during an active rollout must not change its captured target.
             async with session_scope() as session:
                 current = await solutions.access(session, solution.id, users[0].id)
-                await solutions.deploy(session, current, users[0].id, second, {"KEY": "second"})
+                revision = await session.get(Revision, current.desired_revision_id)
+                assert revision is not None
+                await solutions._deploy(session, current, users[0].id, second, {"KEY": "second"}, current=revision)
                 await session.commit()
                 second_id = current.desired_revision_id
         elif third_id is None:
-
             # The second rollout still uses its snapshot while a third revision becomes desired.
             async with session_scope() as session:
                 current = await solutions.access(session, solution.id, users[0].id)
-                await solutions.deploy(session, current, users[0].id, third, {"KEY": "third"})
+                revision = await session.get(Revision, current.desired_revision_id)
+                assert revision is not None
+                await solutions._deploy(session, current, users[0].id, third, {"KEY": "third"}, current=revision)
                 await session.commit()
                 third_id = current.desired_revision_id
 
@@ -865,7 +917,6 @@ async def test_queued_deployments_keep_exact_targets(users: tuple[User, User, Us
     assert applied == ["first", "second", "third"]
     assert await claim_operation() is None
     async with session_scope() as session:
-
         # Reload the final Solution state after all captured rollouts complete.
         current = await session.get(Solution, solution.id)
         assert current is not None

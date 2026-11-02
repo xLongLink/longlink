@@ -1,31 +1,27 @@
 from uuid import UUID
 from typing import cast
 from fastapi import HTTPException
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 from sqlmodel import col
-from src.utils import names, roles
-from sqlalchemy import Select, or_, func, delete, select
+from src.utils import roles
+from sqlalchemy import Select, func, delete, select
 from sqlalchemy import update as sql_update
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import load_only, joinedload, selectinload, contains_eager
 from collections.abc import Sequence
 from src.models.tags import TagIcon, TagKind
 from src.models.roles import OrganizationRoles
 from sqlalchemy.engine import CursorResult
 from src.database.types import attr
-from src.models.pricing import FREE_USERS
 from src.database.services import operations
 from src.models.operations import OperationKind
 from src.models.pagination import Pagination
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.tags import OrganizationTag
-from src.models.organizations import OrganizationInvitationCreate
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
 from src.database.models.solutions import Revision, Solution
 from src.database.models.operations import Operation
 from src.database.models.association import UserOrganization
-from src.database.models.invitations import OrganizationInvitation
 from src.database.models.organizations import Organization
 
 
@@ -39,7 +35,6 @@ def _membership_query(user_id: UUID) -> Select[UserOrganization]:
             contains_eager(attr(UserOrganization.organization)).load_only(
                 attr(Organization.id),
                 attr(Organization.name),
-                attr(Organization.slug),
                 # Include lifecycle and quota data without decrypting infrastructure credentials.
                 attr(Organization.status),
                 attr(Organization.storage_quota_bytes),
@@ -64,11 +59,11 @@ async def require_membership(
     return access
 
 
-async def membership_by_slug(session: AsyncSession, user_id: UUID, organization_slug: str) -> UserOrganization:
-    """Return one user's active membership for an active Organization slug."""
+async def membership_by_id(session: AsyncSession, user_id: UUID, organization_id: UUID) -> UserOrganization:
+    """Return one user's active membership for an active Organization UUID."""
 
     # Load only the requested Organization membership and its response-ready Organization.
-    statement = _membership_query(user_id).where(col(Organization.slug) == organization_slug)
+    statement = _membership_query(user_id).where(col(Organization.id) == organization_id)
     membership = await session.scalar(statement)
     if membership is None:
         raise HTTPException(status_code=404, detail="Organization not found")
@@ -78,7 +73,7 @@ async def membership_by_slug(session: AsyncSession, user_id: UUID, organization_
 async def memberships(session: AsyncSession, user_id: UUID) -> Sequence[UserOrganization]:
     """Return one user's active memberships with response-ready Organizations."""
 
-    # Reuse the active membership query shared by identifier and slug access.
+    # Reuse the active membership query shared by identifier and list access.
     result = await session.scalars(_membership_query(user_id))
     return result.all()
 
@@ -204,8 +199,7 @@ def _infrastructure_query() -> Select[Organization, ComputeRegistry]:
             load_only(
                 attr(ComputeRegistry.id),
                 attr(ComputeRegistry.kubeconfig),
-                # Provisioning owns both database placement and object storage setup.
-                attr(ComputeRegistry.database_storage_class),
+                # Database provisioning selects placement separately from lifecycle storage access.
                 attr(ComputeRegistry.storage_endpoint),
                 attr(ComputeRegistry.storage_access_key),
                 attr(ComputeRegistry.storage_secret_key),
@@ -267,16 +261,14 @@ async def solution_infrastructure(session: AsyncSession, solution_id: UUID) -> t
 async def fetch(session: AsyncSession, pagination: Pagination, search: str = "") -> tuple[Sequence[Organization], int]:
     """Return one newest-first page of active organizations for administrator views."""
 
-    # Match literal names and slugs while retaining active Organization visibility.
+    # Match literal names while retaining active Organization visibility.
     query = select(Organization).where(col(Organization.deleted_at).is_(None))
     if search:
-        query = query.where(
-            or_(col(Organization.name).icontains(search, autoescape=True), col(Organization.slug).icontains(search, autoescape=True))
-        )
+        query = query.where(col(Organization.name).icontains(search, autoescape=True))
 
     # Load only Organization identity fields using a stable page order.
     statement = (
-        query.options(load_only(attr(Organization.id), attr(Organization.name), attr(Organization.slug), attr(Organization.status)))
+        query.options(load_only(attr(Organization.id), attr(Organization.name), attr(Organization.status)))
         .order_by(col(Organization.created_at).desc(), col(Organization.id).desc())
         .offset(pagination.offset)
         .limit(pagination.page_size)
@@ -298,7 +290,6 @@ async def solutions(session: AsyncSession, organization_id: UUID) -> Sequence[So
             load_only(
                 attr(Solution.id),
                 attr(Solution.name),
-                attr(Solution.slug),
                 attr(Solution.description),
                 attr(Solution.status),
                 attr(Solution.desired_revision_id),
@@ -314,25 +305,6 @@ async def solutions(session: AsyncSession, organization_id: UUID) -> Sequence[So
     )
 
     # Consume the read-only query within its owning session.
-    result = await session.scalars(statement)
-    return result.all()
-
-
-async def invitations(session: AsyncSession, organization_id: UUID) -> Sequence[OrganizationInvitation]:
-    """Return active email grants for one organization."""
-
-    # Query unexpired organization invitations in one session.
-    statement = (
-        select(OrganizationInvitation)
-        .join(Organization, col(Organization.id) == col(OrganizationInvitation.organization_id))
-        .where(
-            col(OrganizationInvitation.organization_id) == organization_id,
-            col(OrganizationInvitation.created_at) > datetime.now(UTC) - timedelta(days=7),
-            col(Organization.deleted_at).is_(None),
-        )
-        # Show the newest invitations first.
-        .order_by(col(OrganizationInvitation.created_at).desc())
-    )
     result = await session.scalars(statement)
     return result.all()
 
@@ -363,14 +335,21 @@ async def member_count(session: AsyncSession, organization_id: UUID) -> int:
     return result.scalar_one()
 
 
-async def lock(session: AsyncSession, organization_id: UUID) -> Organization:
-    """Serialize organization commands and membership admission on every supported database."""
+async def lock_row(session: AsyncSession, organization_id: UUID) -> Organization | None:
+    """Lock and refresh an Organization, including tombstones, in the caller's transaction."""
 
     # A no-op write also takes a lock on SQLite, where FOR UPDATE is ignored.
     await session.execute(
         sql_update(Organization).where(col(Organization.id) == organization_id).values(updated_at=col(Organization.updated_at))
     )
-    organization = await session.get(Organization, organization_id, populate_existing=True)
+    return await session.get(Organization, organization_id, populate_existing=True)
+
+
+async def lock(session: AsyncSession, organization_id: UUID) -> Organization:
+    """Serialize organization commands and membership admission on every supported database."""
+
+    # Keep command availability policy separate from row acquisition.
+    organization = await lock_row(session, organization_id)
     if organization is None:
         raise HTTPException(status_code=403, detail="Organization unavailable")
     return organization
@@ -390,25 +369,24 @@ async def locked_membership(
     return membership
 
 
-async def _lock_active_membership(
+async def lock_active_access(
     session: AsyncSession, user_id: UUID, organization_id: UUID, minimum_role: OrganizationRoles
-) -> UserOrganization:
-    """Lock an active Organization before refreshing and authorizing its caller membership."""
+) -> tuple[Organization, UserOrganization]:
+    """Reserve an Organization command write before authorizing active caller access."""
 
-    # Lock and refresh the Organization before checking active access.
-    organization = await session.get(Organization, organization_id, populate_existing=True, with_for_update=True)
-    if organization is None or organization.deleted_at is not None:
+    # Refresh active Organization state under the write lock before checking membership.
+    organization = await lock(session, organization_id)
+    if organization.deleted_at is not None:
         raise HTTPException(status_code=403, detail="Access required")
-
-    # Refresh and authorize caller access only after locking the active Organization.
-    return await locked_membership(session, user_id, organization_id, minimum_role)
+    membership = await locked_membership(session, user_id, organization_id, minimum_role)
+    return organization, membership
 
 
 async def update_member_role(session: AsyncSession, organization_id: UUID, member_id: UUID, role: OrganizationRoles, user_id: UUID) -> None:
     """Change one active Organization membership role."""
 
     # Lock the Organization before revalidating the caller's active access.
-    caller_membership = await _lock_active_membership(session, user_id, organization_id, OrganizationRoles.admin)
+    _, caller_membership = await lock_active_access(session, user_id, organization_id, OrganizationRoles.admin)
 
     # Lock the member role after locking the Organization and caller access.
     statement = (
@@ -462,10 +440,9 @@ async def remove_member(session: AsyncSession, organization_id: UUID, member_id:
     """Remove access without removing historical user records or charging the organization."""
 
     # Serialize member changes and revalidate the caller after taking the organization lock.
-    organization = await lock(session, organization_id)
-    if organization.deleted_at is not None:
-        raise HTTPException(status_code=403, detail="Access required")
-    caller = await locked_membership(session, user_id, organization_id, OrganizationRoles.admin)
+    _, caller = await lock_active_access(session, user_id, organization_id, OrganizationRoles.admin)
+
+    # Lock the target membership after authorizing the caller.
     membership = await session.get(UserOrganization, (member_id, organization_id), populate_existing=True, with_for_update=True)
     if membership is None:
         raise HTTPException(status_code=404, detail="Organization member not found")
@@ -538,102 +515,23 @@ async def create(session: AsyncSession, name: str, user: User) -> Organization:
         raise HTTPException(status_code=503, detail="No compute registry available")
 
     # Build the Organization with its immutable infrastructure assignments.
-    organization = Organization(name=name, slug=names.slugify(name), compute_id=compute_id)
+    organization = Organization(name=name, compute_id=compute_id)
 
     # Attach the creator as the initial owner for every organization.
     organization.created_id = user.id
 
-    # Translate unique conflicts from autoflush without invalidating the caller's transaction.
-    try:
-        async with session.begin_nested():
-            session.add(UserOrganization(user_id=user.id, organization_id=organization.id, role=OrganizationRoles.owner))
-            session.add(organization)
-            await session.flush()
+    # Persist the Organization and its initial owner together.
+    session.add(UserOrganization(user_id=user.id, organization_id=organization.id, role=OrganizationRoles.owner))
+    session.add(organization)
+    await session.flush()
 
-            # Store the All filter once so later renames and deletions remain permanent.
-            session.add(OrganizationTag(organization_id=organization.id, name="All", kind=TagKind.all, icon=TagIcon.app_window))
-            await session.flush()
-
-    # Keep Organization uniqueness collisions at the service boundary as an API conflict.
-    except IntegrityError:
-        raise HTTPException(status_code=409, detail="Organization already exists")
+    # Store the All filter once so later renames and deletions remain permanent.
+    session.add(OrganizationTag(organization_id=organization.id, name="All", kind=TagKind.all, icon=TagIcon.app_window))
+    await session.flush()
 
     # Queue infrastructure creation in the caller's transaction after persisting the Organization.
     await operations.enqueue(session, kind=OperationKind.organization_create, target_id=organization.id)
     return organization
-
-
-async def create_invitation(session: AsyncSession, organization_id: UUID, payload: OrganizationInvitationCreate, user_id: UUID) -> None:
-    """Authorize and create one Organization invitation."""
-
-    # Lock the Organization before revalidating the caller's active invitation permission.
-    organization = await lock(session, organization_id)
-    if organization.deleted_at is not None:
-        raise HTTPException(status_code=403, detail="Access required")
-    membership = await locked_membership(session, user_id, organization_id, OrganizationRoles.maintain)
-    if not roles.atleast(membership.role, payload.role):
-        raise HTTPException(status_code=403, detail="Invitation role permissions required")
-
-    # Pending invitations do not count against the organization's member allowance.
-    if organization.stripe_payment_method_id is None and await member_count(session, organization_id) >= FREE_USERS:
-        raise HTTPException(status_code=409, detail=f"Register a card before adding more than {FREE_USERS} members.")
-
-    # Reject emails that already belong to the locked Organization.
-    if (
-        await session.scalar(
-            select(col(User.id))
-            .join(UserOrganization, col(UserOrganization.user_id) == col(User.id))
-            .where(col(UserOrganization.organization_id) == organization_id, col(User.email) == payload.email)
-        )
-        is not None
-    ):
-        raise HTTPException(status_code=409, detail="User is already a member")
-
-    # Re-inviting replaces the existing active grant and refreshes its delivery timestamp.
-    invitation_statement = (
-        select(OrganizationInvitation)
-        .where(col(OrganizationInvitation.organization_id) == organization_id, col(OrganizationInvitation.email) == payload.email)
-        .with_for_update()
-    )
-    invitation = await session.scalar(invitation_statement)
-
-    # Resolve concurrent re-invites to the one database-enforced active grant.
-    if invitation is None:
-        try:
-
-            # Isolate invitation creation so uniqueness races can be recovered.
-            async with session.begin_nested():
-                invitation = OrganizationInvitation(organization_id=organization_id, email=payload.email, role=payload.role)
-                session.add(invitation)
-                await session.flush()
-            return
-
-        # Recover a competing invitation insert from the nested transaction.
-        except IntegrityError:
-            invitation = await session.scalar(invitation_statement)
-
-            # A uniqueness collision must resolve to the competing invitation.
-            if invitation is None:
-                raise HTTPException(status_code=409, detail="Invitation could not be created")
-
-    invitation.role = payload.role
-    invitation.created_at = datetime.now(UTC)
-
-
-async def revoke_invitation(session: AsyncSession, organization_id: UUID, invitation_id: UUID, user_id: UUID) -> None:
-    """Authorize and revoke one active Organization invitation."""
-
-    # Lock the Organization before revalidating the caller's active invitation permission.
-    membership = await _lock_active_membership(session, user_id, organization_id, OrganizationRoles.maintain)
-
-    # Resolve only an invitation belonging to the locked Organization.
-    invitation = await session.get(OrganizationInvitation, invitation_id, with_for_update=True)
-    if invitation is None or invitation.organization_id != organization_id:
-        raise HTTPException(status_code=404, detail="Invitation not found")
-    if not roles.atleast(membership.role, invitation.role):
-        raise HTTPException(status_code=403, detail="Invitation role permissions required")
-
-    await session.delete(invitation)
 
 
 async def soft_delete(session: AsyncSession, organization_id: UUID, user: User) -> Organization:

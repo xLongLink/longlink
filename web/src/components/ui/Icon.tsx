@@ -1,14 +1,12 @@
+import { useContext } from 'react';
+import { IconRequestContext } from './contexts';
 import { useQuery } from '@tanstack/react-query';
-import { createContext, useContext } from 'react';
 import { stoneIconComponents } from '@/lib/glyphs';
 import type { IconName } from 'lucide-react/dynamic';
 import { Icon as AstryxIcon } from '@astryxdesign/core/Icon';
-import { AlertTriangle, createLucideIcon, type LucideIconData } from 'lucide-react';
+import { AlertTriangle, createLucideIcon } from 'lucide-react';
 
 export type StoneIconName = keyof typeof stoneIconComponents | IconName | `lucide:${IconName}`;
-
-// Native pages and isolated Views supply separate loaders for the same public icon contract.
-export const IconRequestContext = createContext<((name: string) => Promise<LucideIconData>) | null>(null);
 
 // A blank Lucide glyph retains the requested Astryx dimensions while an icon loads.
 const emptyIcon = createLucideIcon({ size: 24, node: [] });

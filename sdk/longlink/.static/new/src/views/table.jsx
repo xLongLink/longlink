@@ -11,7 +11,7 @@ export default function ProjectTable() {
                 <Text color="secondary">This can be used for reviewing projects in a table.</Text>
             </Stack>
             <Table
-                data={projects}
+                data={projects.slice(0, 6)}
                 hasHover
                 columns={[
                     {
@@ -19,26 +19,21 @@ export default function ProjectTable() {
                         header: 'Project',
                         width: proportional(2),
                         renderCell: (project) => (
-                            <Stack direction="horizontal" align="center" gap={2}>
-                                <Stack width="var(--size-element-lg)">
-                                    <Image src={`/api/demo/photos/${project.photo}`} alt={`${project.name} building`} />
+                            <Stack gap={0}>
+                                <Stack direction="horizontal" align="center" gap={2} wrap="wrap">
+                                    <Link to={`/projects/${project.id}`}>{project.name}</Link>
+                                    <Badge
+                                        label={project.status}
+                                        variant={
+                                            project.status === 'Completed'
+                                                ? 'success'
+                                                : project.status === 'In progress'
+                                                  ? 'warning'
+                                                  : 'neutral'
+                                        }
+                                    />
                                 </Stack>
-                                <Stack gap={0}>
-                                    <Stack direction="horizontal" align="center" gap={2} wrap="wrap">
-                                        <Link to={`/projects/${project.id}`}>{project.name}</Link>
-                                        <Badge
-                                            label={project.status}
-                                            variant={
-                                                project.status === 'Completed'
-                                                    ? 'success'
-                                                    : project.status === 'In progress'
-                                                      ? 'warning'
-                                                      : 'neutral'
-                                            }
-                                        />
-                                    </Stack>
-                                    <Text type="supporting">{project.description}</Text>
-                                </Stack>
+                                <Text type="supporting">{project.description}</Text>
                             </Stack>
                         ),
                     },

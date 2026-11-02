@@ -2,15 +2,15 @@ from uuid import UUID
 from fastapi import HTTPException
 from datetime import UTC, datetime
 from sqlmodel import col
-from src.utils import names, roles, images
+from src.utils import roles, images
 from sqlalchemy import or_, func, select, update
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import defer, selectinload, contains_eager
 from collections.abc import Mapping, Sequence
 from src.models.roles import OrganizationRoles
+from src.models.types import Image
 from src.database.types import attr
 from src.models.metadata import LongLinkMetadata
-from src.models.solutions import SolutionCreate, validate_environment_variables
+from src.models.solutions import SolutionPatch, SolutionCreate, validate_environment_variables
 from src.database.services import operations, registries, organizations
 from src.models.operations import OperationKind
 from src.models.pagination import Pagination
@@ -33,7 +33,6 @@ async def fetch(session: AsyncSession, pagination: Pagination, search: str = "")
         query = query.where(
             or_(
                 col(Solution.name).icontains(search, autoescape=True),
-                col(Solution.slug).icontains(search, autoescape=True),
                 col(Solution.description).icontains(search, autoescape=True),
                 # Administrators can also locate Solutions by their owning Organization.
                 col(Organization.name).icontains(search, autoescape=True),
@@ -44,7 +43,7 @@ async def fetch(session: AsyncSession, pagination: Pagination, search: str = "")
     statement = (
         query.options(
             contains_eager(attr(Solution.organization)).load_only(
-                attr(Organization.id), attr(Organization.name), attr(Organization.slug), attr(Organization.status)
+                attr(Organization.id), attr(Organization.name), attr(Organization.status)
             ),
             defer(attr(Solution.secrets)),
             selectinload(attr(Solution.desired_revision)).load_only(attr(Revision.image), attr(Revision.failed), raiseload=True),
@@ -75,14 +74,8 @@ async def create(
 ) -> Solution:
     """Create an Organization-owned LongLink Solution."""
 
-    # Lock the Organization before creating a Solution against its assignment.
-    if session.get_bind().dialect.name == "sqlite":
-        await session.execute(
-            update(Organization).where(col(Organization.id) == organization_id).values(updated_at=col(Organization.updated_at))
-        )
-
     # Serialize creation against Organization deletion and capacity checks.
-    organization = await session.scalar(select(Organization).where(col(Organization.id) == organization_id).with_for_update())
+    organization = await organizations.lock_row(session, organization_id)
     if organization is None:
         raise HTTPException(status_code=404, detail="Organization not found")
     if organization.deleted_at is not None:
@@ -106,23 +99,13 @@ async def create(
             status_code=409, detail="Solution limit reached during the beta. Contact LongLink to request additional solutions."
         )
 
-    # Build the Solution row before checking its Organization-scoped uniqueness.
-    solution = Solution(
-        organization_id=organization_id, name=payload.name, slug=names.slugify(payload.name), description=payload.description, secrets={}
-    )
-
-    # Let the Organization-scoped database constraint arbitrate slug uniqueness.
-    try:
-        async with session.begin_nested():
-            session.add(solution)
-            await session.flush()
-
-    # Expose slug collisions without discarding the surrounding transaction.
-    except IntegrityError:
-        raise HTTPException(status_code=409, detail="Solution slug already exists")
+    # Persist the Solution with its UUID identity independently of its display name.
+    solution = Solution(organization_id=organization_id, name=payload.name, description=payload.description, secrets={})
+    session.add(solution)
+    await session.flush()
 
     # Creation uses the same immutable release boundary as subsequent updates.
-    await deploy(session, solution, user_id, metadata, payload.envs, registry_connection_id=registry_connection_id)
+    await _deploy(session, solution, user_id, metadata, payload.envs, current=None, registry_connection_id=registry_connection_id)
 
     return solution
 
@@ -164,13 +147,58 @@ async def access(session: AsyncSession, solution_id: UUID, user_id: UUID, *, loc
     return solution
 
 
-async def deploy(
+async def inspect_update(
+    session: AsyncSession, solution: Solution, user_id: UUID, expected_revision_id: UUID | None = None
+) -> tuple[Solution, Revision, LongLinkMetadata]:
+    """Inspect the repository's latest image and revalidate the desired revision."""
+
+    # Reuse authorized Solution access without holding command locks across registry calls.
+    solution_id = solution.id
+    if expected_revision_id is not None and expected_revision_id != solution.desired_revision_id:
+        raise HTTPException(status_code=409, detail="Desired revision changed since review. Check again.")
+    revision = (
+        await session.get(Revision, solution.desired_revision_id, populate_existing=True)
+        if solution.desired_revision_id is not None
+        else None
+    )
+    if revision is None:
+        raise HTTPException(status_code=409, detail="Solution has no desired revision")
+
+    # Follow latest for updates, including Solutions created with a version tag or digest.
+    source = Image(revision.image)
+    source = Image(f"{source.registry}/{source.repository}:latest")
+    revision_id = revision.id
+    connection = await registries.resolve(session, solution.organization_id, revision.registry_connection_id, source)
+    await session.commit()
+    metadata = await images.required_metadata(source, connection)
+
+    # Revalidate permissions and the source after inspection before returning a candidate.
+    if revision.registry_connection_id is not None:
+        await registries.lock(session, solution.organization_id)
+    solution = await access(session, solution_id, user_id)
+    if solution.desired_revision_id != revision_id:
+        raise HTTPException(status_code=409, detail="Desired revision changed during inspection. Check again.")
+    return solution, revision, metadata
+
+
+async def apply_update(session: AsyncSession, solution: Solution, user_id: UUID, payload: SolutionPatch) -> None:
+    """Inspect and admit an update in the caller's final transaction."""
+
+    # Inspect without command locks, then revalidate the desired state and maintenance access.
+    solution, revision, metadata = await inspect_update(session, solution, user_id, payload.expected_revision_id)
+
+    # Compare and merge only against the current serialized desired state.
+    await _deploy(session, solution, user_id, metadata, payload.envs, current=revision)
+
+
+async def _deploy(
     session: AsyncSession,
     solution: Solution,
     user_id: UUID,
     metadata: LongLinkMetadata,
     envs: Mapping[str, str | None],
     *,
+    current: Revision | None,
     registry_connection_id: UUID | None = None,
 ) -> None:
     """Append a snapshot and queue its exact deployment target."""
@@ -179,18 +207,10 @@ async def deploy(
     if metadata.permissions is None:
         raise HTTPException(status_code=422, detail="Rebuild the Solution with build-time permission metadata before deploying")
 
-    # Load the complete desired snapshot even if a listing cached only its image and failure state.
-    current = (
-        await session.get(Revision, solution.desired_revision_id, populate_existing=True)
-        if solution.desired_revision_id is not None
-        else None
-    )
-
-    # Keep the registry connection immutable and serialize admission with connection deletion.
+    # Keep the registry connection immutable under the caller's Organization lock.
     if current is not None:
         registry_connection_id = current.registry_connection_id
     if registry_connection_id is not None:
-        await registries.lock(session, solution.organization_id)
         await registries.resolve(session, solution.organization_id, registry_connection_id, metadata.image)
 
     # Apply explicit environment edits while preserving untouched secrets.

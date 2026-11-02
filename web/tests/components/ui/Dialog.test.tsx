@@ -4,6 +4,21 @@ import { it, expect, vi } from 'vitest';
 import { withMounted } from '../../render';
 import { Dialog } from '@/components/ui/Dialog';
 
+it('invokes caller-owned dismissal without submitting a form', async () => {
+    // Arrange
+    const close = vi.fn();
+
+    // Act
+    await withMounted(<Dialog isOpen onOpenChange={close} />, async () => {
+        const button = document.querySelector<HTMLButtonElement>('button[aria-label="Close dialog"]');
+        await act(async () => button?.click());
+
+        // Assert
+        expect(close).toHaveBeenCalledExactlyOnceWith(false);
+        expect(button?.getAttribute('type')).toBe('button');
+    });
+});
+
 it('conditionally unmounts an open dialog without changing caller-owned state', async () => {
     // Arrange
     const change = vi.fn();

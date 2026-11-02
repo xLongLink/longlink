@@ -81,10 +81,11 @@ class StorageKubernetes:
 class DatabaseKubernetes(Kubernetes):
     """Provide the CNPG provider boundary without opening Kubernetes connections."""
 
-    async def forward_database(self, organization_id: UUID) -> int:
+    @asynccontextmanager
+    async def forward_database(self, organization_id: UUID) -> AsyncGenerator[int]:
         """Supply a local transport port consumed only by the SQL fake."""
 
-        return 15432
+        yield 15432
 
 
 class DatabasePostgres:
@@ -152,8 +153,8 @@ def database_runtime(monkeypatch: pytest.MonkeyPatch) -> None:
     ) -> None:
         """Accept Organization cluster provisioning."""
 
-    async def resume(client: object, organization: UUID) -> None:
-        """Accept database resumption."""
+    async def wait_ready(client: object, organization: UUID) -> None:
+        """Accept database readiness verification."""
 
     async def certificate(client: object, organization: UUID) -> str:
         """Return a synthetic certificate consumed only by the SQL fake."""
@@ -162,7 +163,7 @@ def database_runtime(monkeypatch: pytest.MonkeyPatch) -> None:
 
     monkeypatch.setattr(databases, "Kubernetes", DatabaseKubernetes)
     monkeypatch.setattr(database_resources, "apply", apply)
-    monkeypatch.setattr(database_resources, "resume", resume)
+    monkeypatch.setattr(database_resources, "wait_ready", wait_ready)
     monkeypatch.setattr(database_resources, "certificate", certificate)
     monkeypatch.setattr(database_resources.postgres, "Postgres", DatabasePostgres)
 

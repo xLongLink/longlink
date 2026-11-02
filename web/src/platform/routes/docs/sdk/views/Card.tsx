@@ -92,23 +92,21 @@ export default function CardPage() {
                 },
             ]}
             introduction="Card has one shared set of props. onChange makes it selectable, onClick or href makes it clickable, and otherwise it is a plain content card. Selection takes priority when both kinds of interaction props are supplied."
-            examples={[
-                {
-                    title: 'Plain card',
-                    preview: (
-                        <Card padding={3}>
-                            <Text>Order details</Text>
-                        </Card>
-                    ),
-                    code: `function Example() {
+            example={{
+                title: 'Plain card',
+                preview: (
+                    <Card padding={3}>
+                        <Text>Order details</Text>
+                    </Card>
+                ),
+                code: `function Example() {
   return (
     <Card padding={3}>
       <Text>Order details</Text>
     </Card>
   );
 }`,
-                },
-            ]}
+            }}
         />
     );
 }

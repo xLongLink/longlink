@@ -51,15 +51,14 @@ export default function CheckboxInputPage() {
                     description: 'Callback fired when the checkbox state changes.',
                 },
             ]}
-            examples={[
-                {
-                    title: 'Approval form',
-                    preview: (
-                        <FormPreview>
-                            <CheckboxInputExample />
-                        </FormPreview>
-                    ),
-                    code: `/** Submits approval only when the checkbox is checked. */
+            example={{
+                title: 'Approval form',
+                preview: (
+                    <FormPreview>
+                        <CheckboxInputExample />
+                    </FormPreview>
+                ),
+                code: `/** Submits approval only when the checkbox is checked. */
 export default function ApprovalForm() {
   return (
     <Form action="/api/example" method="post">
@@ -71,8 +70,7 @@ export default function ApprovalForm() {
     </Form>
   );
 }`,
-                },
-            ]}
+            }}
         />
     );
 }

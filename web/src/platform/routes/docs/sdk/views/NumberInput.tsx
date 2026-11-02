@@ -86,15 +86,14 @@ export default function NumberInputPage() {
                     description: 'Receives committed edits, step changes, or cleared values.',
                 },
             ]}
-            examples={[
-                {
-                    title: 'Quantity form',
-                    preview: (
-                        <FormPreview>
-                            <NumberInputExample />
-                        </FormPreview>
-                    ),
-                    code: `/** Submits a bounded integer quantity as a form field. */
+            example={{
+                title: 'Quantity form',
+                preview: (
+                    <FormPreview>
+                        <NumberInputExample />
+                    </FormPreview>
+                ),
+                code: `/** Submits a bounded integer quantity as a form field. */
 export default function QuantityForm() {
   return (
     <Form action="/api/example" method="post">
@@ -106,8 +105,7 @@ export default function QuantityForm() {
     </Form>
   );
 }`,
-                },
-            ]}
+            }}
         />
     );
 }

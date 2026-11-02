@@ -32,6 +32,6 @@ class PaymentInvoice(BaseModel):
     currency: str = Field(pattern=r"^[a-z]{3}$")
     created_at: datetime
 
-    # Stripe-hosted documents
-    invoice_pdf: HttpUrl | None
+    # Documents
+    has_pdf: bool
     hosted_invoice_url: HttpUrl | None

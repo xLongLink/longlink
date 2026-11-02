@@ -169,10 +169,10 @@ async def test_operations_service_failed_creation_updates_targets_and_resolves_r
     # Arrange
     compute_registry = await create_compute()
     async with session_scope() as session:
-        organization = Organization(name="Acme", slug="acme", compute_id=compute_registry.id)
+        organization = Organization(name="Acme", compute_id=compute_registry.id)
         session.add(organization)
         await session.flush()
-        solution = Solution(organization_id=organization.id, name="Dashboard", slug="dashboard", secrets={})
+        solution = Solution(organization_id=organization.id, name="Dashboard", secrets={})
         session.add(solution)
         await session.flush()
         revision = Revision(solution_id=solution.id, image="ghcr.io/longlink/dashboard@sha256:resolved", envs={})
@@ -254,10 +254,10 @@ async def test_operations_service_complete_reenqueues_stale_effective_revision()
     # Create both revisions in the same Organization before either operation runs.
     compute_registry = await create_compute()
     async with session_scope() as session:
-        organization = Organization(name="Acme", slug="acme", compute_id=compute_registry.id)
+        organization = Organization(name="Acme", compute_id=compute_registry.id)
         session.add(organization)
         await session.flush()
-        solution = Solution(organization_id=organization.id, name="Dashboard", slug="dashboard", secrets={})
+        solution = Solution(organization_id=organization.id, name="Dashboard", secrets={})
         session.add(solution)
         await session.flush()
 

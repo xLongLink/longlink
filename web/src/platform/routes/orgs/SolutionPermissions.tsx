@@ -25,7 +25,11 @@ export default function SolutionPermissions({
 }) {
     const base = `/api/v1/solutions/${solutionId}`;
     const [settings] = useApi(`${base}/permissions`, schemas.zPermissionSettings);
-    const [{ members }] = useApi(`/api/v1/organizations/${organizationId}`, schemas.zOrganizationDetails);
+
+    const [members] = useApi(
+        `/api/v1/organizations/${organizationId}/members`,
+        schemas.zOrganizationMemberAccessResponse.array()
+    );
 
     return (
         <Stack gap={4} padding={6}>
@@ -49,7 +53,7 @@ function MemberPermissions({
     onClose,
 }: {
     base: string;
-    members: z.output<typeof schemas.zOrganizationDetails>['members'];
+    members: z.output<typeof schemas.zOrganizationMemberAccessResponse>[];
     settings: z.output<typeof schemas.zPermissionSettings>;
     onClose: () => void;
 }) {

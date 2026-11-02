@@ -71,15 +71,14 @@ export default function DateInputPage() {
                     description: 'Placeholder text shown in the text input.',
                 },
             ]}
-            examples={[
-                {
-                    title: 'Due date form',
-                    preview: (
-                        <FormPreview>
-                            <DateInputExample />
-                        </FormPreview>
-                    ),
-                    code: `/** Submits an ISO date using the themed calendar picker. */
+            example={{
+                title: 'Due date form',
+                preview: (
+                    <FormPreview>
+                        <DateInputExample />
+                    </FormPreview>
+                ),
+                code: `/** Submits an ISO date using the themed calendar picker. */
 export default function DueDateForm() {
   return (
     <Form action="/api/example" method="post">
@@ -91,31 +90,7 @@ export default function DueDateForm() {
     </Form>
   );
 }`,
-                },
-                {
-                    title: 'Date range with two fields',
-                    preview: (
-                        <FormPreview>
-                            <DateInput name="start_date" label="Start date" defaultValue="2026-10-02" required />
-                            <DateInput name="end_date" label="End date" defaultValue="2026-10-09" required />
-                        </FormPreview>
-                    ),
-                    code: `/** Submits a range as two independently named dates. */
-export default function PeriodForm() {
-  // Validate end_date >= start_date in the receiving backend schema.
-  return (
-    <Form action="/api/example" method="post">
-      <DateInput name="start_date" label="Start date" defaultValue="2026-10-02" required />
-      <DateInput name="end_date" label="End date" defaultValue="2026-10-09" required />
-      <Stack direction="horizontal" gap={2}>
-        <Button type="submit" label="Submit" variant="primary" />
-        <Button type="reset" label="Reset" />
-      </Stack>
-    </Form>
-  );
-}`,
-                },
-            ]}
+            }}
         />
     );
 }

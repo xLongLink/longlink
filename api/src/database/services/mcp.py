@@ -141,15 +141,6 @@ async def authenticate(session: AsyncSession, credential: str, solution_id: UUID
     return await token.credential_user(session, grant.user_id, grant.fingerprint)
 
 
-async def register(session: AsyncSession, payload: mcp.ClientRegistration) -> UUID:
-    """Persist immutable callbacks and return the unprivileged client identifier."""
-
-    # Registration is public; the only assigned identity is an unprivileged client identifier.
-    client = MCPClient(name=payload.client_name, redirects=payload.redirect_uris)
-    session.add(client)
-    return client.id
-
-
 async def consent(session: AsyncSession, user: User, request: mcp.AuthorizationRequest) -> dict[str, object]:
     """Describe the actual client and Solution only after current permission checks."""
 
@@ -223,7 +214,6 @@ async def exchange(session: AsyncSession, payload: mcp.TokenExchange) -> dict[st
     try:
         await _permitted_solution(session, user, solution_id)
     except HTTPException as exc:
-
         # Only revoked access becomes an invalid grant; infrastructure errors propagate.
         if exc.status_code != 403:
             raise

@@ -171,7 +171,8 @@ export const zCurrentUser = z.object({
         'fuchsia',
         'pink',
         'rose'
-    ])
+    ]),
+    navigation: z.enum(['topbar', 'sidebar'])
 });
 
 /**
@@ -320,24 +321,22 @@ export const zOperationResponse = z.object({
 });
 
 /**
+ * OrganizationByteUsage
+ *
+ * Report measured resource bytes against an Organization's configured capacity.
+ */
+export const zOrganizationByteUsage = z.object({
+    space_used: z.int().gte(0),
+    quota_bytes: z.int().gte(0)
+});
+
+/**
  * OrganizationCreate
  *
  * Validate organization creation payloads.
  */
 export const zOrganizationCreate = z.object({
     name: z.string().min(1).max(128)
-});
-
-/**
- * OrganizationDatabaseUsageResponse
- *
- * Report PostgreSQL database bytes against the Organization's provisioned capacity.
- *
- * Database bytes include every schema and index, but not WAL, backups, or replicas.
- */
-export const zOrganizationDatabaseUsageResponse = z.object({
-    space_used: z.int().gte(0),
-    quota_bytes: z.int().gte(0)
 });
 
 /**
@@ -394,16 +393,6 @@ export const zOrganizationInvitationResponse = z.object({
  */
 export const zOrganizationMemberUpdate = z.object({
     role: zOrganizationRoles
-});
-
-/**
- * OrganizationStorageUsageResponse
- *
- * Report current logical object usage and quota for one Organization bucket.
- */
-export const zOrganizationStorageUsageResponse = z.object({
-    space_used: z.int().gte(0),
-    quota_bytes: z.int().gte(0)
 });
 
 /**
@@ -503,7 +492,7 @@ export const zPaymentInvoice = z.object({
     status: z.string().nullable(),
     currency: z.string().regex(/^[a-z]{3}$/),
     created_at: z.iso.datetime(),
-    invoice_pdf: z.url().min(1).max(2083).nullable(),
+    has_pdf: z.boolean(),
     hosted_invoice_url: z.url().min(1).max(2083).nullable()
 });
 
@@ -665,7 +654,6 @@ export const zStatus = z.enum([
 export const zOrganizationIdentity = z.object({
     id: z.uuid(),
     name: z.string(),
-    slug: z.string(),
     status: zStatus
 });
 
@@ -677,7 +665,6 @@ export const zOrganizationIdentity = z.object({
 export const zOrganizationSolutionSummary = z.object({
     id: z.uuid(),
     name: z.string(),
-    slug: z.string(),
     description: z.string().nullish(),
     tag_ids: z.array(z.uuid()).optional(),
     status: zStatus,
@@ -702,7 +689,6 @@ export const zPageOrganizationIdentity = z.object({
 export const zSolutionResponse = z.object({
     id: z.uuid(),
     name: z.string(),
-    slug: z.string(),
     description: z.string().nullable(),
     tag_ids: z.array(z.uuid()).optional(),
     status: zStatus,
@@ -830,17 +816,6 @@ export const zOrganizationMemberAccessResponse = z.object({
 });
 
 /**
- * OrganizationDetails
- *
- * Represent an Organization with its member access.
- */
-export const zOrganizationDetails = z.object({
-    organization: zOrganizationIdentity,
-    members: z.array(zOrganizationMemberAccessResponse),
-    invitations: z.array(zOrganizationInvitationResponse)
-});
-
-/**
  * UserOrganizationInvitation
  *
  * Represent one pending Organization invitation for the current user.
@@ -906,7 +881,8 @@ export const zUserUpdate = z.object({
         'fuchsia',
         'pink',
         'rose'
-    ]).nullish()
+    ]).nullish(),
+    navigation: z.enum(['topbar', 'sidebar']).nullish()
 });
 
 /**

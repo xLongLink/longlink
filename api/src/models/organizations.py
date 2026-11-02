@@ -6,7 +6,6 @@ from longlink.types import Email
 from src.models.roles import OrganizationRoles
 from src.models.users import UserIdentity
 from src.models.pricing import UsageRates
-from src.models.resources import OrganizationIdentity
 
 MAX_SOLUTIONS = 9
 
@@ -34,6 +33,16 @@ class OrganizationUsage(UsageRates):
     max_solutions: int = MAX_SOLUTIONS
     stripe_enabled: bool
     has_payment_method: bool
+
+
+class OrganizationByteUsage(BaseModel):
+    """Report measured resource bytes against an Organization's configured capacity."""
+
+    # Measurement
+    space_used: int = Field(ge=0)
+
+    # Capacity
+    quota_bytes: int = Field(ge=0)
 
 
 class OrganizationQuotasResponse(BaseModel):
@@ -97,14 +106,3 @@ class OrganizationMemberAccessResponse(BaseModel):
 
     # Access
     role: OrganizationRoles
-
-
-class OrganizationDetails(BaseModel):
-    """Represent an Organization with its member access."""
-
-    # Organization
-    organization: OrganizationIdentity
-
-    # Relationships
-    members: list[OrganizationMemberAccessResponse]
-    invitations: list[OrganizationInvitationResponse]

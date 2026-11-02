@@ -3,6 +3,7 @@ import { renderStatic } from '../render';
 import { ApiErrorContext } from '@/lib/errors';
 import { Outlet, Route, Routes } from 'react-router';
 import { AuthenticatedUserContext } from '@/lib/hooks/use-user';
+import type { OrganizationContext } from '@/platform/layouts/Organization';
 import { zCurrentUser, zUserOrganizationMembership } from '@/lib/generated/platform-api-v1/zod.gen';
 
 export const user = zCurrentUser.parse({
@@ -13,10 +14,11 @@ export const user = zCurrentUser.parse({
     administrator: false,
     theme: 'system',
     accent: 'neutral',
+    navigation: 'topbar',
 });
 
 export const membership = zUserOrganizationMembership.parse({
-    organization: { id: '00000000-0000-4000-8000-000000000002', name: 'Acme', slug: 'acme', status: 'running' },
+    organization: { id: '00000000-0000-4000-8000-000000000002', name: 'Acme', status: 'running' },
     role: 'owner',
 });
 
@@ -25,13 +27,14 @@ export function renderPlatform(
     children: ReactNode,
     path = '/',
     resources: ReadonlyArray<readonly [string, object]> = [],
-    pattern = '*'
+    pattern = '*',
+    context: typeof membership | OrganizationContext = membership
 ) {
     return renderStatic(
         <ApiErrorContext value={() => undefined}>
             <AuthenticatedUserContext value={user}>
                 <Routes>
-                    <Route element={<Outlet context={membership} />}>
+                    <Route element={<Outlet context={context} />}>
                         <Route path={pattern} element={children} />
                     </Route>
                 </Routes>

@@ -20,15 +20,13 @@ export default function LinkPage() {
                     description: 'Link content',
                 },
             ]}
-            examples={[
-                {
-                    title: 'Link',
-                    preview: <LinkExample />,
-                    code: `function Example() {
+            example={{
+                title: 'Link',
+                preview: <LinkExample />,
+                code: `function Example() {
   return <Link to="/orders">Orders</Link>;
 }`,
-                },
-            ]}
+            }}
         />
     );
 }

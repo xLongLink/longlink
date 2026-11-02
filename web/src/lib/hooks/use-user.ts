@@ -1,8 +1,8 @@
 import type { z } from 'zod';
 import { api } from '@/lib/api';
-import { useQuery } from '@tanstack/react-query';
 import { createContext, useContext } from 'react';
-import { zCurrentUser } from '@/lib/generated/platform-api-v1/zod.gen';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { zUserUpdate, zCurrentUser } from '@/lib/generated/platform-api-v1/zod.gen';
 
 // Share the user validated by the authenticated route boundary.
 export const AuthenticatedUserContext = createContext<z.output<typeof zCurrentUser> | undefined>(undefined);
@@ -16,6 +16,50 @@ export function useCurrentUser() {
         staleTime: 0,
         refetchOnWindowFocus: true,
         retry: false,
+    });
+}
+
+/** Serializes profile writes and caches their validated responses across account controls. */
+export function useUpdateUser() {
+    const queryClient = useQueryClient();
+
+    // Share a scope so overlapping controls cannot publish older profile snapshots out of order.
+    return useMutation({
+        scope: { id: 'current-user' },
+        mutationKey: ['current-user'],
+        networkMode: 'always',
+        mutationFn: async (payload: z.input<typeof zUserUpdate>) => {
+            const update = zUserUpdate.parse(payload);
+            await queryClient.cancelQueries({ queryKey: ['api', '/api/v1/me'], exact: true });
+
+            // Preview appearance only when this serialized write starts, leaving other profile fields unchanged.
+            const previous = queryClient.getQueryData<z.output<typeof zCurrentUser>>(['api', '/api/v1/me']);
+
+            const preview =
+                previous && (update.theme || update.accent || update.navigation)
+                    ? queryClient.setQueryData(['api', '/api/v1/me'], {
+                          ...previous,
+                          theme: update.theme ?? previous.theme,
+                          accent: update.accent ?? previous.accent,
+                          navigation: update.navigation ?? previous.navigation,
+                      })
+                    : undefined;
+
+            try {
+                return await api.patch('/api/v1/me', { json: update }).json(zCurrentUser);
+            } catch (error) {
+                // A newer account response must not be replaced by this attempt's rollback.
+                if (preview && queryClient.getQueryData(['api', '/api/v1/me']) === preview) {
+                    queryClient.setQueryData(['api', '/api/v1/me'], previous);
+                }
+
+                throw error;
+            }
+        },
+        onSuccess: async (user) => {
+            await queryClient.cancelQueries({ queryKey: ['api', '/api/v1/me'], exact: true });
+            queryClient.setQueryData(['api', '/api/v1/me'], user);
+        },
     });
 }
 

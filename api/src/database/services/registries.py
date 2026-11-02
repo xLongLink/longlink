@@ -2,30 +2,24 @@ from uuid import UUID
 from fastapi import HTTPException
 from sqlmodel import col
 from src.utils import github, images
-from sqlalchemy import select, update
+from sqlalchemy import select
 from src.models.roles import OrganizationRoles
 from src.models.types import Image
 from src.models.metadata import LongLinkMetadata
+from src.database.session import session_scope
 from src.database.services import operations, organizations
 from src.models.operations import OperationKind
 from src.models.registries import RegistryCreate
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.solutions import Revision
 from src.database.models.registries import RegistryConnection
-from src.database.models.organizations import Organization
 
 
 async def lock(session: AsyncSession, organization_id: UUID) -> None:
     """Serialize registry mutations, secret synchronization, and revision admission."""
 
-    # SQLite requires a write reservation rather than SELECT FOR UPDATE.
-    if session.get_bind().dialect.name == "sqlite":
-        await session.execute(
-            update(Organization).where(col(Organization.id) == organization_id).values(updated_at=col(Organization.updated_at))
-        )
-
     # Lock and refresh Organization state before checking availability.
-    organization = await session.get(Organization, organization_id, populate_existing=True, with_for_update=True)
+    organization = await organizations.lock_row(session, organization_id)
     if organization is None or organization.deleted_at is not None:
         raise HTTPException(status_code=409, detail="Organization is not available")
 
@@ -92,8 +86,8 @@ async def resolve(session: AsyncSession, organization_id: UUID, connection_id: U
     return connection
 
 
-async def inspect(session: AsyncSession, organization_id: UUID | None, image: Image) -> tuple[LongLinkMetadata, UUID | None]:
-    """Inspect anonymously first, then find an authorized organization-scoped pull credential."""
+async def inspect(organization_id: UUID, image: Image) -> tuple[LongLinkMetadata, UUID | None]:
+    """Inspect anonymously first, then try tenant-owned credentials outside a database session."""
 
     # Public images must not depend on saved credentials; retry only registry access denials.
     try:
@@ -102,14 +96,17 @@ async def inspect(session: AsyncSession, organization_id: UUID | None, image: Im
 
     # Retry only GHCR authorization failures with tenant-owned credentials.
     except HTTPException as exc:
-        if exc.status_code != 403 or organization_id is None or image.registry != RegistryConnection.host:
+        if exc.status_code != 403 or image.registry != RegistryConnection.host:
             raise
 
     # Only matching credentials in the caller-authorized organization may reach this registry.
-    result = await session.scalars(
-        select(RegistryConnection).where(col(RegistryConnection.organization_id) == organization_id).order_by(col(RegistryConnection.id))
-    )
-    connections = result.all()
+    async with session_scope() as session:
+        result = await session.scalars(
+            select(RegistryConnection)
+            .where(col(RegistryConnection.organization_id) == organization_id)
+            .order_by(col(RegistryConnection.id))
+        )
+        connections = result.all()
 
     # Stop on a successful lookup or a non-authentication error, never masking invalid metadata.
     for connection in connections:

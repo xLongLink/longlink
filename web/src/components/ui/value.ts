@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useEffectEvent, useRef, useState } from 'react';
 
 /**
  * Adapts controls to optional local state with native form reset behavior.
@@ -15,21 +15,26 @@ export function useValue<T, Element extends HTMLElement = HTMLDivElement>(
     const ref = useRef<Element>(null);
 
     // Synchronize with the real form's reset event, respecting canceled resets.
+    const reset = useEffectEvent((event: Event) => {
+        const resetValue = defaultValue;
+
+        queueMicrotask(() => {
+            if (!event.defaultPrevented) setLocal(resetValue);
+        });
+    });
+
+    // Subscribe only while this control owns its value.
     useEffect(() => {
         const form = ref.current?.closest('form');
 
         if (!form || controlled) return;
 
-        const reset = (event: Event) => {
-            queueMicrotask(() => {
-                if (!event.defaultPrevented) setLocal(defaultValue);
-            });
-        };
+        const onReset = (event: Event) => reset(event);
 
-        form.addEventListener('reset', reset);
+        form.addEventListener('reset', onReset);
 
-        return () => form.removeEventListener('reset', reset);
-    }, [controlled, defaultValue]);
+        return () => form.removeEventListener('reset', onReset);
+    }, [controlled]);
 
     // Controlled callers receive changes without acquiring duplicate state.
     const change = (next: T) => {

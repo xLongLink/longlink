@@ -1,13 +1,14 @@
 import { Outlet } from 'react-router';
+import { Wordmark } from '@/components/Wordmark';
 import { ProfileMenu } from '@/components/Profile';
+import { adminNavigation } from '@/platform/admin';
 import Platform from '@/components/layouts/Platform';
 import NotFoundLayout from '@/components/layouts/NotFound';
 import { PageContainer } from '@/components/PageContainer';
 import { useAuthenticatedUser } from '@/lib/hooks/use-user';
-import { PageBreadcrumb } from '@/components/PageBreadcrumb';
-import { AppWindow, ArrowUpDown, Building2, Users, Wrench } from 'lucide-react';
+import { BreadcrumbItem, Breadcrumbs } from '@astryxdesign/core/Breadcrumbs';
 
-/** Renders the authorized admin shell with tabbed navigation. */
+/** Renders authorized administration within the shared application layouts. */
 export default function Admin() {
     const user = useAuthenticatedUser();
 
@@ -18,15 +19,25 @@ export default function Admin() {
 
     return (
         <Platform
-            action={<ProfileMenu user={user} />}
-            breadcrumb={<PageBreadcrumb />}
-            tabs={[
-                { href: '/admin/users', icon: Users, label: 'Users' },
-                { href: '/admin/solutions', icon: AppWindow, label: 'Solutions' },
-                { href: '/admin/organizations', icon: Building2, label: 'Organizations' },
-                { href: '/admin/compute', icon: Wrench, label: 'Compute' },
-                { href: '/admin/operations', icon: ArrowUpDown, label: 'Operations' },
-            ]}
+            action={<ProfileMenu />}
+            homeHref="/user/organizations"
+            breadcrumb={
+                <Breadcrumbs separator=">" variant="supporting">
+                    <BreadcrumbItem isCurrent>Admin</BreadcrumbItem>
+                </Breadcrumbs>
+            }
+            topbarHeading={
+                <Breadcrumbs separator=">" variant="supporting">
+                    <BreadcrumbItem href="/user/organizations">
+                        <Wordmark />
+                    </BreadcrumbItem>
+                    <BreadcrumbItem isCurrent>Admin</BreadcrumbItem>
+                </Breadcrumbs>
+            }
+            tabs={adminNavigation.map(({ icon: Icon, ...tab }) => ({
+                ...tab,
+                icon: <Icon aria-hidden="true" size={16} />,
+            }))}
         >
             <PageContainer gap={8} padding={2}>
                 <Outlet />

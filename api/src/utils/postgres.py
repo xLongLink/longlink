@@ -3,7 +3,6 @@ from uuid import UUID
 from sqlalchemy import String, text
 from collections.abc import Generator, AsyncGenerator
 from longlink.storage import tls
-from src.models.types import DatabaseSSLMode
 from sqlalchemy.engine import URL
 from sqlalchemy.schema import CreateSchema
 from sqlalchemy.ext.asyncio import AsyncConnection, create_async_engine
@@ -22,7 +21,6 @@ class Postgres:
         port: int,
         username: str,
         password: str,
-        sslmode: DatabaseSSLMode,
         certificate: str | None = None,
         *,
         # Tunnels can override the socket address without changing TLS identity.
@@ -35,14 +33,13 @@ class Postgres:
             port: PostgreSQL port.
             username: PostgreSQL username.
             password: PostgreSQL password.
-            sslmode: PostgreSQL SSL mode.
             certificate: PEM CA certificate; when supplied, require certificate and hostname verification.
             hostaddr: Optional transport IP; host remains the PostgreSQL TLS identity.
 
         """
 
         # Configure the immutable cluster URL without acquiring certificate files or connections.
-        query = {"sslmode": "verify-full" if certificate is not None else sslmode.value, "options": "-c timezone=UTC"}
+        query = {"sslmode": "verify-full" if certificate is not None else "disable", "options": "-c timezone=UTC"}
 
         # A tunnel changes only the transport address, preserving hostname verification.
         if hostaddr is not None:

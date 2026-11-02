@@ -1,18 +1,11 @@
 import { ReportedError } from '@/lib/reported';
 import type { ViewData } from '@/views/protocol';
 import { Stack } from '@astryxdesign/core/Stack';
-import { FormValidationContext, type FormValidation } from './FormField';
-import { use, createContext, useEffect, useRef, useState, type ReactNode } from 'react';
+import type { FormValidation } from './FormField';
+import { FormValidationContext, FormRequestContext } from './contexts';
+import { use, useEffect, useRef, useState, type ReactNode } from 'react';
 
 const methods = { post: 'POST', put: 'PUT', patch: 'PATCH', delete: 'DELETE' } as const;
-
-export const FormRequestContext = createContext<
-    | ((
-          path: string,
-          options: { method: (typeof methods)[keyof typeof methods]; form: [string, string | Blob][] }
-      ) => Promise<ViewData>)
-    | null
->(null);
 
 /** Validates named fields and submits through a Platform callback or the Solution bridge. */
 export function Form(props: {

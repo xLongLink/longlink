@@ -47,11 +47,10 @@ export default function FormPage() {
             introduction={
                 'Form submits named fields to a Solution API without draft state, imports, or page navigation. Form owns validation, submission, and pending state; unexpected submission failures reach the shared error boundary. Python schemas remain authoritative. For multiple steps, place a Stepper with variant="wizard" inside Form and put a submit Button in its last Step. Stepper owns Next/Back navigation and keeps inactive fields mounted. Final validation reveals the first invalid step before focusing its field. Without a Stepper, Form works as a regular form.'
             }
-            examples={[
-                {
-                    title: 'Create an item form',
-                    preview: <FormExample />,
-                    code: `/** Creates an item using persistent steps and one final submission. */
+            example={{
+                title: 'Create an item form',
+                preview: <FormExample />,
+                code: `/** Creates an item using persistent steps and one final submission. */
 export default function CreateItem() {
   return (
     <Form action="/api/items" method="post">
@@ -67,8 +66,7 @@ export default function CreateItem() {
     </Form>
   );
 }`,
-                },
-            ]}
+            }}
         />
     );
 }

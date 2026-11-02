@@ -12,7 +12,7 @@ from src.models.roles import OrganizationRoles
 from botocore.exceptions import ClientError, BotoCoreError
 from src.models.statuses import Status
 from src.database.session import session_scope
-from src.database.services import organizations
+from src.database.services import invitations, organizations
 from src.models.operations import OperationKind
 from src.models.organizations import DatabaseState
 from src.database.models.users import User
@@ -42,7 +42,6 @@ async def test_create_organization_persists_desired_state_and_queues_creation(
         assert organization is not None
         memberships = await organizations.members(session, organization.id)
     assert organization.name == "acme"
-    assert organization.slug == "acme"
 
     # Creation persists an active Organization before asynchronous provisioning.
     assert organization.deleted_at is None
@@ -114,46 +113,46 @@ async def test_create_organization_rejects_when_compute_registry_is_unavailable(
     assert await fetch_operations() == []
 
 
-async def test_get_organization_by_slug_returns_owner_membership(
+async def test_get_organization_by_id_returns_owner_membership(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient], users: tuple[User, User, User]
 ) -> None:
-    """Return the authenticated owner's membership for an Organization slug."""
+    """Return the authenticated owner's membership for an Organization UUID."""
 
     # Arrange
     organization = await create_organization(users[0])
 
     # Act
-    response = await clients[0].get(f"/api/v1/organizations/slug/{organization.slug}")
+    response = await clients[0].get(f"/api/v1/organizations/{organization.id}")
 
     # Assert
     assert response.status_code == 200
     assert response.headers["cache-control"] == "no-store"
     assert response.json() == {
-        "organization": {"id": str(organization.id), "name": "acme", "slug": "acme", "status": "creating"},
+        "organization": {"id": str(organization.id), "name": "acme", "status": "creating"},
         "role": "owner",
     }
 
 
-async def test_get_organization_by_slug_hides_cross_tenant_organization(
+async def test_get_organization_by_id_hides_cross_tenant_organization(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient], users: tuple[User, User, User]
 ) -> None:
-    """Hide an Organization slug from authenticated users without membership."""
+    """Hide an Organization UUID from authenticated users without membership."""
 
     # Arrange
     organization = await create_organization(users[0])
 
     # Act
-    response = await clients[1].get(f"/api/v1/organizations/slug/{organization.slug}")
+    response = await clients[1].get(f"/api/v1/organizations/{organization.id}")
 
     # Assert
     assert response.status_code == 404
     assert response.json() == {"detail": "Organization not found"}
 
 
-async def test_get_organization_by_slug_hides_deleted_organization(
+async def test_get_organization_by_id_hides_deleted_organization(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient], users: tuple[User, User, User]
 ) -> None:
-    """Hide deleted organization slugs even from their former owner."""
+    """Hide deleted organizations even from their former owner."""
 
     # Arrange
     organization = await create_organization(users[0])
@@ -161,17 +160,17 @@ async def test_get_organization_by_slug_hides_deleted_organization(
     assert deletion.status_code == 202
 
     # Act
-    response = await clients[0].get(f"/api/v1/organizations/slug/{organization.slug}")
+    response = await clients[0].get(f"/api/v1/organizations/{organization.id}")
 
     # Assert
     assert response.status_code == 404
     assert response.json() == {"detail": "Organization not found"}
 
 
-async def test_get_organization_returns_member_payload(
+async def test_get_organization_members_returns_access_roles(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient], users: tuple[User, User, User]
 ) -> None:
-    """Return one organization with its members and access roles."""
+    """Return organization members and their access roles."""
 
     # Arrange
     owner = users[0]
@@ -180,17 +179,15 @@ async def test_get_organization_returns_member_payload(
     client = clients[0]
 
     # Act
-    response = await client.get(f"/api/v1/organizations/{organization.id}")
+    response = await client.get(f"/api/v1/organizations/{organization.id}/members")
 
     # Assert
     assert response.status_code == 200
     assert response.headers["cache-control"] == "no-store"
 
     payload = response.json()
-    assert payload["organization"]["id"] == str(organization.id)
-    assert payload["organization"]["name"] == "acme"
-    assert payload["members"][0]["user"]["id"] == str(owner.id)
-    assert payload["members"][0]["role"] == "owner"
+    assert payload[0]["user"]["id"] == str(owner.id)
+    assert payload[0]["role"] == "owner"
 
 
 async def test_get_organization_solutions_omits_deleted_solutions(
@@ -514,10 +511,10 @@ async def test_organization_storage_endpoint_rejects_non_members(
     assert response.json() == {"detail": "Access required"}
 
 
-async def test_get_organization_returns_invitations(
+async def test_get_organization_invitations_restricts_visibility(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient], users: tuple[User, User, User]
 ) -> None:
-    """Return pending invitations with the organization payload."""
+    """Return pending invitations only to Organization managers."""
 
     # Arrange
     owner, invitee, regular_member = users
@@ -538,18 +535,18 @@ async def test_get_organization_returns_invitations(
         await session.commit()
 
     # Act
-    response = await clients[0].get(f"/api/v1/organizations/{organization.id}")
-    regular_member_response = await clients[2].get(f"/api/v1/organizations/{organization.id}")
+    response = await clients[0].get(f"/api/v1/organizations/{organization.id}/invitations")
+    regular_member_response = await clients[2].get(f"/api/v1/organizations/{organization.id}/invitations")
 
     # Assert
     assert response.status_code == 200
     assert regular_member_response.status_code == 200
-    assert len(response.json()["invitations"]) == 1
-    invitation_payload = response.json()["invitations"][0]
+    assert len(response.json()) == 1
+    invitation_payload = response.json()[0]
     assert invitation_payload["id"] == str(invitation.id)
     assert invitation_payload["email"] == invitee.email
     assert invitation_payload["role"] == "write"
-    assert regular_member_response.json()["invitations"] == []
+    assert regular_member_response.json() == []
 
 
 async def test_list_organizations_returns_stable_page_and_active_total(
@@ -568,7 +565,7 @@ async def test_list_organizations_returns_stable_page_and_active_total(
 
     # Assert
     assert response.status_code == 200
-    assert response.json() == {"items": [{"id": str(organization.id), "name": "acme", "slug": "acme", "status": "creating"}], "total": 2}
+    assert response.json() == {"items": [{"id": str(organization.id), "name": "acme", "status": "creating"}], "total": 2}
 
 
 async def test_delete_organization_returns_not_found_for_unknown_identifier(clients: tuple[AsyncClient, AsyncClient, AsyncClient]) -> None:
@@ -582,7 +579,7 @@ async def test_delete_organization_returns_not_found_for_unknown_identifier(clie
     assert response.json() == {"detail": "Organization not found"}
 
 
-async def test_get_organization_returns_403_for_non_member(
+async def test_get_organization_members_returns_403_for_non_member(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient], users: tuple[User, User, User]
 ) -> None:
     """Reject access when the authenticated user is not a member of the org."""
@@ -593,7 +590,7 @@ async def test_get_organization_returns_403_for_non_member(
     client = clients[1]
 
     # Act
-    response = await client.get(f"/api/v1/organizations/{organization.id}")
+    response = await client.get(f"/api/v1/organizations/{organization.id}/members")
 
     # Assert
     assert response.status_code == 403
@@ -630,7 +627,7 @@ async def test_organization_member_creates_organization_invitation(
     assert response.status_code == 204
     assert response.content == b""
     async with session_scope() as session:
-        invitations_list = await organizations.invitations(session, organization.id)
+        invitations_list = await invitations.fetch(session, organization.id)
     assert [(item.email, item.role) for item in invitations_list] == [(invitee.email, OrganizationRoles.write)]
     assert captured_mail[0][0] == invitee.email
     assert f"http://localhost:5173/login?{urlencode({'email': invitee.email})}" in captured_mail[0][2]
@@ -662,7 +659,7 @@ async def test_organization_invitation_reports_email_delivery_failure_and_keeps_
         "detail": "The invitation was saved, but its email could not be sent. Invite the same address again to resend it."
     }
     async with session_scope() as session:
-        invitations_list = await organizations.invitations(session, organization.id)
+        invitations_list = await invitations.fetch(session, organization.id)
     assert [(item.email, item.role) for item in invitations_list] == [(invitee.email, OrganizationRoles.write)]
 
 
@@ -685,7 +682,7 @@ async def test_organization_invitation_rejects_invalid_payload_without_side_effe
     assert response.status_code == 422
     assert response.json() == {"detail": "Invalid request. Please check your input and try again."}
     async with session_scope() as session:
-        assert await organizations.invitations(session, organization.id) == []
+        assert await invitations.fetch(session, organization.id) == []
     assert captured_mail == []
 
 
@@ -708,7 +705,7 @@ async def test_reinviting_email_replaces_pending_organization_role(
         f"/api/v1/organizations/{organization.id}/invitations", json={"email": invitee.email, "role": "write"}
     )
     async with session_scope() as session:
-        invitations_list = await organizations.invitations(session, organization.id)
+        invitations_list = await invitations.fetch(session, organization.id)
 
     # Assert
     assert first_response.status_code == 204
@@ -812,7 +809,7 @@ async def test_create_organization_invitation_rejects_active_member(
     assert response.status_code == 409
     assert response.json() == {"detail": "User is already a member"}
     async with session_scope() as session:
-        assert await organizations.invitations(session, organization.id) == []
+        assert await invitations.fetch(session, organization.id) == []
     assert captured_mail == []
 
 
@@ -838,7 +835,7 @@ async def test_create_organization_invitation_rejects_role_above_caller(
     assert response.status_code == 403
     assert response.json() == {"detail": "Invitation role permissions required"}
     async with session_scope() as session:
-        assert await organizations.invitations(session, organization.id) == []
+        assert await invitations.fetch(session, organization.id) == []
     assert captured_mail == []
 
 
@@ -1090,16 +1087,16 @@ async def test_create_organization_invitation_returns_403_without_maintainer_acc
     assert response.status_code == 403
     assert response.json() == {"detail": expected_detail}
     async with session_scope() as session:
-        assert await organizations.invitations(session, organization.id) == []
+        assert await invitations.fetch(session, organization.id) == []
     assert captured_mail == []
 
 
 @pytest.mark.no_db
-async def test_get_organization_rejects_anonymous_without_membership_lookup(client: AsyncClient) -> None:
+async def test_get_organization_members_rejects_anonymous_without_membership_lookup(client: AsyncClient) -> None:
     """Reject unauthenticated organization reads before membership checks."""
 
     # Act
-    response = await client.get(f"/api/v1/organizations/{uuid4()}")
+    response = await client.get(f"/api/v1/organizations/{uuid4()}/members")
 
     # Assert
     assert response.status_code == 401
@@ -1117,12 +1114,12 @@ async def test_deleted_organization_returns_forbidden_to_former_owner(
     assert delete_response.status_code == 202
 
     # Act
-    detail_response = await clients[0].get(f"/api/v1/organizations/{organization.id}")
+    members_response = await clients[0].get(f"/api/v1/organizations/{organization.id}/members")
     solutions_response = await clients[0].get(f"/api/v1/organizations/{organization.id}/solutions")
 
     # Assert
-    assert detail_response.status_code == 403
-    assert detail_response.json() == {"detail": "Access required"}
+    assert members_response.status_code == 403
+    assert members_response.json() == {"detail": "Access required"}
     assert solutions_response.status_code == 403
     assert solutions_response.json() == {"detail": "Access required"}
 
@@ -1133,10 +1130,10 @@ async def test_deleted_organization_returns_forbidden_to_former_owner(
         assert persisted.deleted_at is not None
 
 
-async def test_create_organization_rejects_too_long_slug_without_persisting_state(
+async def test_create_organization_accepts_long_display_name(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
 ) -> None:
-    """Reject valid-schema names whose slug exceeds the 63-character limit."""
+    """Accept display names beyond the former slug length limit."""
 
     # Arrange
     await create_compute()
@@ -1145,8 +1142,12 @@ async def test_create_organization_rejects_too_long_slug_without_persisting_stat
     response = await clients[0].post("/api/v1/organizations", json={"name": "a" * 70})
 
     # Assert
-    assert response.status_code == 409
-    assert response.json() == {"detail": "Invalid name"}
+    assert response.status_code == 202
+    assert response.json()["name"] == "a" * 70
     async with session_scope() as session:
-        assert await session.scalar(select(Organization)) is None
-    assert await fetch_operations() == []
+        organization = await session.get(Organization, UUID(response.json()["id"]))
+        assert organization is not None
+        assert organization.name == "a" * 70
+    operations = await fetch_operations()
+    assert len(operations) == 1
+    assert operations[0].target_id == organization.id

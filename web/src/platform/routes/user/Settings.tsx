@@ -1,25 +1,22 @@
 import type { z } from 'zod';
-import { api } from '@/lib/api';
 import { useState } from 'react';
+import { useApiError } from '@/lib/errors';
 import { useLocation } from 'react-router';
 import AppearanceSettings from './Appearance';
 import { Text } from '@astryxdesign/core/Text';
 import { Avatar } from '@/components/ui/Avatar';
 import { Stack } from '@astryxdesign/core/Stack';
-import { Button } from '@astryxdesign/core/Button';
 import { UserRound, Building2 } from 'lucide-react';
 import { Divider } from '@astryxdesign/core/Divider';
 import { Heading } from '@astryxdesign/core/Heading';
 import { ApiBoundary } from '@/components/ApiBoundary';
-import { useQueryClient } from '@tanstack/react-query';
 import { TextInput } from '@astryxdesign/core/TextInput';
-import { SideNavItem } from '@/components/ui/SideNavItem';
 import { PageContainer } from '@/components/PageContainer';
-import { useAuthenticatedUser } from '@/lib/hooks/use-user';
 import OrganizationManagement from './OrganizationManagement';
 import { Layout, LayoutPanel } from '@astryxdesign/core/Layout';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
-import { SideNav, SideNavSection } from '@astryxdesign/core/SideNav';
+import { useUpdateUser, useAuthenticatedUser } from '@/lib/hooks/use-user';
+import { SideNav, SideNavItem, SideNavSection } from '@astryxdesign/core/SideNav';
 
 /** Renders account metadata and resets drafts when the authenticated identity changes. */
 export default function Settings() {
@@ -36,24 +33,25 @@ export default function Settings() {
 /** Edits the authenticated profile and manages owned organizations. */
 function SettingsPage({ user }: { user: z.output<typeof schemas.zCurrentUser> }) {
     const [name, setName] = useState(user.name);
-    const queryClient = useQueryClient();
+    const userUpdate = useUpdateUser();
     const location = useLocation();
+    const reportError = useApiError();
 
     // Unknown fragments select Account without loading organization memberships.
     const section = location.hash === '#organizations' ? 'organizations' : 'account';
 
     /** Saves the validated account name and refreshes the profile. */
     async function saveAccount() {
-        if (!name.trim()) return;
+        if (userUpdate.isPending || !name.trim() || name.trim() === user.name) return;
 
-        // Refresh the authoritative profile only after saving succeeds.
-        await api.patch('/api/v1/me', {
-            json: schemas.zUserUpdate.parse({ name: name.trim() }),
-        });
-        await queryClient.invalidateQueries({
-            queryKey: ['api', '/api/v1/me'],
-            exact: true,
-        });
+        // Cache the authoritative profile returned by a successful save.
+        try {
+            const updatedUser = await userUpdate.mutateAsync({ name: name.trim() });
+            setName(updatedUser.name);
+        } catch (error) {
+            setName(user.name);
+            reportError(error);
+        }
     }
 
     // Keep account editing independent of organization loading and failures.
@@ -104,25 +102,22 @@ function SettingsPage({ user }: { user: z.output<typeof schemas.zCurrentUser> })
                         </ApiBoundary>
                     ) : (
                         <Stack gap={8}>
-                            <form action={saveAccount}>
-                                <Stack gap={4}>
-                                    <Stack justify="end" minHeight="var(--size-element-md)">
-                                        <Heading level={2} hasCapsize>
-                                            Account
-                                        </Heading>
-                                    </Stack>
-                                    <Divider />
-                                    <TextInput label="Username" value={name} isRequired onChange={setName} />
-                                    <Stack direction="horizontal" justify="end">
-                                        <Button
-                                            label="Save account"
-                                            variant="primary"
-                                            type="submit"
-                                            isDisabled={!name.trim()}
-                                        />
-                                    </Stack>
+                            <Stack gap={4}>
+                                <Stack justify="end" minHeight="var(--size-element-md)">
+                                    <Heading level={2} hasCapsize>
+                                        Account
+                                    </Heading>
                                 </Stack>
-                            </form>
+                                <Divider />
+                                <TextInput
+                                    label="Username"
+                                    value={name}
+                                    isRequired
+                                    isReadOnly={userUpdate.isPending}
+                                    onChange={setName}
+                                    onBlur={() => void saveAccount()}
+                                />
+                            </Stack>
                             <AppearanceSettings />
                         </Stack>
                     )}

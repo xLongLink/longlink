@@ -1,7 +1,7 @@
 import re
 import httpx2
 import logging
-from typing import Any, Self
+from typing import Any
 from fastapi import FastAPI, APIRouter
 from fastmcp import FastMCP
 from pathlib import Path
@@ -47,15 +47,6 @@ class RuntimeState:
     storage: AbstractFileSystem
     database: Database
 
-    @classmethod
-    def from_settings(cls, settings: Envs) -> Self:
-        """Construct the services owned by one application runtime."""
-
-        # Preserve eager storage creation and lazy database initialization.
-        storage = create_fs(settings)
-        database = Database(settings)
-        return cls(storage=storage, database=database)
-
 
 def _view_handler(content: bytes) -> Callable[[], Awaitable[Response]]:
     """Capture JSX source without exposing it as a request parameter."""
@@ -67,12 +58,6 @@ def _view_handler(content: bytes) -> Callable[[], Awaitable[Response]]:
         return Response(content, media_type="text/plain")
 
     return view
-
-
-def _is_automatic_tab(view: views.ViewDefinition) -> bool:
-    """Identify non-root, top-level static Views for automatic navigation."""
-
-    return view.route != "/" and "/" not in view.route[1:] and ":" not in view.route
 
 
 class LongLink(RouteDecorators, FastAPI):
@@ -111,7 +96,9 @@ class LongLink(RouteDecorators, FastAPI):
         view_manifest = views.ViewManifest(views=view_definitions, runtime=view_runtime)
 
         # Initialize Solution storage and database connections.
-        runtime = RuntimeState.from_settings(settings)
+        storage = create_fs(settings)
+        database = Database(settings)
+        runtime = RuntimeState(storage=storage, database=database)
 
         # Supply safe defaults while preserving Solution-owned exception handlers.
         install_error_handlers(self)
@@ -149,7 +136,7 @@ class LongLink(RouteDecorators, FastAPI):
             self.add_api_route(f"/{definition.path}", _view_handler(content), methods=["GET"], include_in_schema=False)
 
         # Reserve the root redirect only when automatic navigation has a target.
-        if any(_is_automatic_tab(definition) for definition in view_definitions):
+        if view_manifest.resolved_tabs():
             self.add_api_route("/", self._redirect_root, methods=["GET"], include_in_schema=False)
 
         # Share the manifest catalog after registering Views so they cannot collide with themselves.
@@ -271,6 +258,7 @@ class LongLink(RouteDecorators, FastAPI):
         if tabs is not None and any(tab.route == definition.route for tab in tabs):
             raise ValueError(f"View is already included: {path}")
 
+        needs_root_redirect = not self._view_manifest.resolved_tabs()
         if tabs is None:
             tabs = []
             self._view_manifest.tabs = tabs
@@ -279,7 +267,7 @@ class LongLink(RouteDecorators, FastAPI):
         tabs.append(tab)
 
         # Explicit nested tabs need a redirect even when there were no automatic root tabs.
-        if len(tabs) == 1 and not any(_is_automatic_tab(view) for view in self._view_manifest.views):
+        if needs_root_redirect:
             self.add_api_route("/", self._redirect_root, methods=["GET"], include_in_schema=False)
             self._runtime_routes.add(id(self.routes[-1]))
 
@@ -287,12 +275,7 @@ class LongLink(RouteDecorators, FastAPI):
         """Resolve the first tab after Solution navigation registration is complete."""
 
         # A root redirect is registered only when automatic or explicit tabs exist.
-        tabs = self._view_manifest.tabs
-        if tabs is not None:
-            return RedirectResponse(tabs[0].route)
-
-        first_route = next(view.route for view in self._view_manifest.views if _is_automatic_tab(view))
-        return RedirectResponse(first_route)
+        return RedirectResponse(self._view_manifest.resolved_tabs()[0].route)
 
     # FastAPI accepts framework-defined router options with heterogeneous values.
     def include_router(self, router: APIRouter, **kwargs: Any) -> None:

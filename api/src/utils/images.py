@@ -85,20 +85,12 @@ async def registry_json(
 async def required_metadata(image: Image, connection: RegistryConnection | None = None) -> LongLinkMetadata:
     """Fetch image metadata or raise the stable missing-image response."""
 
-    # Only supported registry origins may receive image requests.
-    base = {"ghcr.io": GHCR_ORIGIN, "localhost:15000": LOCAL_ORIGIN}.get(image.registry)
-    if base is None:
-        raise HTTPException(status_code=403, detail="Image registry is not allowed")
-    if connection is not None and connection.host != image.registry:
-        raise HTTPException(status_code=403, detail="Registry connection does not match the image host")
-
     # Keep registry inspection and transport cleanup within one client lifetime.
     async with httpx2.AsyncClient(follow_redirects=False, timeout=5.0, trust_env=False) as client:
-
         # Bound the whole lookup as well as individual network reads.
         try:
             async with asyncio.timeout(20):
-                result = await inspect(client, image, base, connection)
+                result = await inspect(client, image, connection)
 
         # Unavailable or malformed registry metadata remains an unresolved image.
         except (httpx2.HTTPError, TimeoutError, TypeError, ValueError):
@@ -110,10 +102,15 @@ async def required_metadata(image: Image, connection: RegistryConnection | None 
     return result
 
 
-async def inspect(
-    client: httpx2.AsyncClient, image: Image, base: str, connection: RegistryConnection | None = None
-) -> LongLinkMetadata | None:
+async def inspect(client: httpx2.AsyncClient, image: Image, connection: RegistryConnection | None = None) -> LongLinkMetadata | None:
     """Resolve one manifest or linux/amd64 index child and inspect its configuration."""
+
+    # Only the image's supported registry origin may receive requests or credentials.
+    base = {"ghcr.io": GHCR_ORIGIN, "localhost:15000": LOCAL_ORIGIN}.get(image.registry)
+    if base is None:
+        raise HTTPException(status_code=403, detail="Image registry is not allowed")
+    if connection is not None and connection.host != image.registry:
+        raise HTTPException(status_code=403, detail="Registry connection does not match the image host")
 
     # GHCR exchanges anonymous or explicit credentials for a repository-scoped pull token.
     is_ghcr = base == GHCR_ORIGIN

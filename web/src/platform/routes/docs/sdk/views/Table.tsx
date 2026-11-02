@@ -30,11 +30,10 @@ export default function TablePage() {
                     description: 'Columns with custom cells and proportional() or pixel() widths.',
                 },
             ]}
-            examples={[
-                {
-                    title: 'Table',
-                    preview: <TableExample />,
-                    code: `function Example() {
+            example={{
+                title: 'Table',
+                preview: <TableExample />,
+                code: `function Example() {
   return (
     <Table
       data={[{ id: '1', name: 'Order', status: 'Open' }]}
@@ -45,8 +44,7 @@ export default function TablePage() {
     />
   );
 }`,
-                },
-            ]}
+            }}
         />
     );
 }

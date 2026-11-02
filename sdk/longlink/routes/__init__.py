@@ -25,10 +25,10 @@ def router(manifest: ViewManifest) -> APIRouter:
         return {"ok": True}
 
     @routes.get("/views.json", response_model=ViewManifest, response_model_exclude_none=True)
-    async def get_views() -> ViewManifest:
+    async def get_views() -> dict[str, object]:
         """Return the registered SDK runtime views."""
 
         # View handlers are registered from the SDK views directory during app startup.
-        return manifest
+        return {"views": manifest.views, "runtime": manifest.runtime, "tabs": manifest.resolved_tabs()}
 
     return routes

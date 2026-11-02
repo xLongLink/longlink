@@ -1,7 +1,7 @@
 import aiobotocore.session
 from typing import TYPE_CHECKING, cast
 from itertools import chain, batched
-from contextlib import asynccontextmanager
+from contextlib import nullcontext, asynccontextmanager
 from dataclasses import field, dataclass
 from collections.abc import Iterable, AsyncGenerator
 from longlink.storage import tls
@@ -37,7 +37,7 @@ class S3:
         """Keep the CA file alive for the entire S3 transport lifetime."""
 
         # Private CA verification follows the same lifetime as the client session.
-        with tls.verified_location(self._certificate) as certificate:
+        with tls.certificate_file(self._certificate) if self._certificate is not None else nullcontext(None) as certificate:
             verify: bool | str = certificate if certificate is not None else True
 
             # Bound path-style requests through the operator-configured endpoint.

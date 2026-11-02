@@ -6,7 +6,6 @@ import { useApi } from '@/lib/hooks/use-api';
 import CreateSolution from './CreateSolution';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
-import { useSearchParams } from 'react-router';
 import { Dialog } from '@/components/ui/Dialog';
 import { OpenAI } from '@/components/svg/OpenAI';
 import { Button } from '@astryxdesign/core/Button';
@@ -23,6 +22,7 @@ import { Stack, StackItem } from '@astryxdesign/core/Stack';
 import { Table, proportional } from '@astryxdesign/core/Table';
 import DeploymentReview, { type Update } from './DeploymentReview';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
+import type { OrganizationContext } from '@/platform/layouts/Organization';
 import { Layout, LayoutPanel, LayoutContent } from '@astryxdesign/core/Layout';
 import { ExternalLink, Logs, Plug, Plus, RefreshCw, Shield, Tags, Trash } from 'lucide-react';
 
@@ -40,11 +40,12 @@ type SolutionAction =
 /** Owns Solution loading and dialogs for the overview and active settings section. */
 export default function SolutionManagement({
     organization,
+    tags,
+    activeTag,
     canMaintain,
     canAdminister = false,
     presentation,
-}: {
-    organization: z.output<typeof schemas.zUserOrganizationMembership>['organization'];
+}: Pick<OrganizationContext, 'organization' | 'tags' | 'activeTag'> & {
     canMaintain: boolean;
     canAdminister?: boolean;
     presentation: 'overview' | 'settings';
@@ -55,14 +56,7 @@ export default function SolutionManagement({
 
     // Keep solution refreshes scoped to the section's resource.
     const [solutions, invalidateSolutions] = useApi(`${base}/solutions`, schemas.zOrganizationSolutionSummary.array());
-    const [tags] = useApi(`${base}/tags`, schemas.zOrganizationTagResponse.array());
-    const [searchParams] = useSearchParams();
     const onboarding = presentation === 'overview' && solutions.length === 0;
-
-    // Deleted or unknown tab links select the first remaining saved filter.
-    const requestedTag = searchParams.get('tag');
-
-    const activeTag = tags.find((tag) => tag.id === requestedTag) ?? tags[0];
 
     const categoryName = activeTag?.name ?? 'Solutions';
 
@@ -70,6 +64,11 @@ export default function SolutionManagement({
         presentation === 'settings' || activeTag?.kind === 'all'
             ? solutions
             : solutions.filter((solution) => activeTag && solution.tag_ids?.includes(activeTag.id));
+
+    /** Opens creation without replacing an already active creation attempt. */
+    function openCreate() {
+        setSelected((current) => (current?.kind === 'create' ? current : { kind: 'create' }));
+    }
 
     /** Closes only this selection, leaving a replacement dialog open after an older operation finishes. */
     function closeSelected() {
@@ -107,33 +106,14 @@ export default function SolutionManagement({
                             <Heading level={2} hasCapsize>
                                 Solutions
                             </Heading>
-                            {canMaintain && (
-                                <Button
-                                    label="New Solution"
-                                    size="sm"
-                                    onClick={() =>
-                                        setSelected((current) =>
-                                            current?.kind === 'create' ? current : { kind: 'create' }
-                                        )
-                                    }
-                                />
-                            )}
+                            {canMaintain && <Button label="New Solution" size="sm" onClick={openCreate} />}
                         </Stack>
                         <Divider />
                     </>
                 ) : solutions.length > 0 ? (
                     <Stack direction="horizontal" justify="between" align="center" wrap="wrap" className="min-h-12">
                         <Heading level={1}>{categoryName}</Heading>
-                        {canMaintain && (
-                            <Button
-                                label="New Solution"
-                                onClick={() =>
-                                    setSelected((current) =>
-                                        current?.kind === 'create' ? current : { kind: 'create' }
-                                    )
-                                }
-                            />
-                        )}
+                        {canMaintain && <Button label="New Solution" onClick={openCreate} />}
                     </Stack>
                 ) : null}
                 {presentation === 'overview' && tags.length === 0 ? (
@@ -172,11 +152,7 @@ export default function SolutionManagement({
                                     label="Create solution"
                                     variant="primary"
                                     icon={<Plus className="size-4" aria-hidden="true" />}
-                                    onClick={() =>
-                                        setSelected((current) =>
-                                            current?.kind === 'create' ? current : { kind: 'create' }
-                                        )
-                                    }
+                                    onClick={openCreate}
                                 />
                             )}
                         </Stack>
@@ -200,7 +176,7 @@ export default function SolutionManagement({
                                     <Stack gap={presentation === 'overview' ? 0 : undefined}>
                                         {presentation === 'overview' ? (
                                             <Stack direction="horizontal" gap={1} align="center">
-                                                <Link href={`/orgs/${organization.slug}/solutions/${row.slug}`}>
+                                                <Link href={`/orgs/${organization.id}/solutions/${row.id}`}>
                                                     {row.name}
                                                 </Link>
                                                 {row.status !== 'running' && (
@@ -217,7 +193,7 @@ export default function SolutionManagement({
                                                 )}
                                             </Stack>
                                         ) : (
-                                            <Link href={`/orgs/${organization.slug}/solutions/${row.slug}`}>
+                                            <Link href={`/orgs/${organization.id}/solutions/${row.id}`}>
                                                 {row.name}
                                             </Link>
                                         )}
@@ -321,11 +297,7 @@ export default function SolutionManagement({
                                                           id: 'mcp',
                                                           label: 'MCP',
                                                           icon: <Plug className="size-4" aria-hidden="true" />,
-                                                          onClick: () =>
-                                                              setSelected({
-                                                                  kind: 'mcp',
-                                                                  id: row.id,
-                                                              }),
+                                                          onClick: () => setSelected({ kind: 'mcp', id: row.id }),
                                                       },
                                                       {
                                                           id: 'delete',

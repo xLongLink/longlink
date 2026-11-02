@@ -89,15 +89,13 @@ export default function TextPage() {
                     description: 'Use tabular (monospace) numbers for aligned numeric data.',
                 },
             ]}
-            examples={[
-                {
-                    title: 'Text',
-                    preview: <TextExample />,
-                    code: `function Example() {
+            example={{
+                title: 'Text',
+                preview: <TextExample />,
+                code: `function Example() {
   return <Text>Order details</Text>;
 }`,
-                },
-            ]}
+            }}
         />
     );
 }

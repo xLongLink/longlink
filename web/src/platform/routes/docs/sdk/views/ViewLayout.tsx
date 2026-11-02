@@ -8,10 +8,10 @@ import { useState, type ReactNode } from 'react';
 import { Switch } from '@astryxdesign/core/Switch';
 import { Heading } from '@astryxdesign/core/Heading';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
-import { componentDocumentation } from '@/platform/routes';
 import { Blockquote } from '@astryxdesign/core/Blockquote';
 import { Table, proportional } from '@/components/ui/Table';
 import { documentationLastUpdated } from '@/lib/documentation';
+import { componentDocumentation } from '@/platform/publications';
 import { DocumentationArticle } from '@/components/layouts/Article';
 import { Layout, LayoutContent, LayoutHeader } from '@astryxdesign/core/Layout';
 
@@ -67,7 +67,7 @@ export default function ViewLayout({
     introduction,
     properties = [],
     isLongLinkSpecific = false,
-    examples = [],
+    example,
     children,
     toc,
 }: {
@@ -75,7 +75,7 @@ export default function ViewLayout({
     introduction: string;
     properties?: ViewProperty[];
     isLongLinkSpecific?: boolean;
-    examples?: ViewExample[];
+    example?: ViewExample;
     children?: ReactNode;
     toc?: { id: string; label: string; level: number }[];
 }) {
@@ -84,7 +84,6 @@ export default function ViewLayout({
 
     if (!component) throw new Error(`Missing View documentation: ${name}`);
     const runtime = component.category === 'Runtime';
-    const [example] = examples;
 
     // Prepare property tables below the example.
     const groups = new Map<string, ViewProperty[]>();
@@ -167,27 +166,26 @@ export default function ViewLayout({
                                 Properties
                             </Heading>
                             {[...groups].map(([name, properties]) => (
-                                <Stack key={name} gap={0}>
-                                    <Table
-                                        data={properties}
-                                        columns={[
-                                            {
-                                                key: 'name',
-                                                header: `${name} - Properties`,
-                                                width: proportional(1),
-                                                renderCell: (property) => (
-                                                    <Stack gap={0}>
-                                                        <Stack direction="horizontal" align="center" gap={2}>
-                                                            <Text>{property.name}</Text>
-                                                            <Code className="text-sm">{property.type}</Code>
-                                                        </Stack>
-                                                        <Text type="supporting">{property.description}</Text>
+                                <Table
+                                    key={name}
+                                    data={properties}
+                                    columns={[
+                                        {
+                                            key: 'name',
+                                            header: `${name} - Properties`,
+                                            width: proportional(1),
+                                            renderCell: (property) => (
+                                                <Stack gap={0}>
+                                                    <Stack direction="horizontal" align="center" gap={2}>
+                                                        <Text>{property.name}</Text>
+                                                        <Code className="text-sm">{property.type}</Code>
                                                     </Stack>
-                                                ),
-                                            },
-                                        ]}
-                                    />
-                                </Stack>
+                                                    <Text type="supporting">{property.description}</Text>
+                                                </Stack>
+                                            ),
+                                        },
+                                    ]}
+                                />
                             ))}
                         </Stack>
                     </Stack>

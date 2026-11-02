@@ -1,34 +1,32 @@
-import type { z } from 'zod';
+import { z } from 'zod';
 import { api } from '@/lib/api';
 import * as tabs from '@/platform/tabs';
+import { FormDialog } from './FormDialog';
 import { useApiError } from '@/lib/errors';
 import { Form } from '@/components/ui/Form';
-import { useApi } from '@/lib/hooks/use-api';
 import { Text } from '@astryxdesign/core/Text';
-import { Dialog } from '@/components/ui/Dialog';
 import { Stack } from '@astryxdesign/core/Stack';
 import { useState, isValidElement } from 'react';
 import { Button } from '@astryxdesign/core/Button';
 import { Heading } from '@astryxdesign/core/Heading';
+import { TextInput } from '@/components/ui/TextInput';
 import { DeletionDialog } from '@/components/Deletion';
 import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { Selector } from '@astryxdesign/core/Selector';
 import { useQueryClient } from '@tanstack/react-query';
-import { TextInput } from '@astryxdesign/core/TextInput';
 import { Table, proportional } from '@astryxdesign/core/Table';
 import { MultiSelector } from '@astryxdesign/core/MultiSelector';
 import { ArrowDown, ArrowUp, Pencil, Trash } from 'lucide-react';
-import { Layout, LayoutContent } from '@astryxdesign/core/Layout';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 
 type Tag = z.output<typeof schemas.zOrganizationTagResponse>;
 
+type TagAction = { kind: 'create' } | { kind: 'edit' | 'delete'; tag: Tag };
+
 /** Lists and manages the shared tags used as top-level Organization tabs. */
-export default function TabsSection({ base, canMaintain }: { base: string; canMaintain: boolean }) {
-    const [tags, invalidateTags] = useApi(`${base}/tags`, schemas.zOrganizationTagResponse.array());
+export default function TabsSection({ base, tags, canMaintain }: { base: string; tags: Tag[]; canMaintain: boolean }) {
     const queryClient = useQueryClient();
-    const [editing, setEditing] = useState<Tag | 'create' | null>(null);
-    const [deleting, setDeleting] = useState<Tag | null>(null);
+    const [action, setAction] = useState<TagAction | null>(null);
     const [isMoving, setIsMoving] = useState(false);
     const reportError = useApiError();
 
@@ -39,20 +37,12 @@ export default function TabsSection({ base, canMaintain }: { base: string; canMa
         try {
             const json = schemas.zOrganizationTagMove.parse({ direction });
             await api.post(`${base}/tags/${tag.id}/move`, { json });
-            await invalidateTags();
+            await queryClient.invalidateQueries({ queryKey: ['api', `${base}/tags`], exact: true });
         } catch (failure) {
             reportError(failure);
         } finally {
             setIsMoving(false);
         }
-    }
-
-    /** Refreshes navigation and removes stale assignments from cached Solution lists. */
-    async function invalidate() {
-        await Promise.all([
-            invalidateTags(),
-            queryClient.invalidateQueries({ queryKey: ['api', `${base}/solutions`], exact: true }),
-        ]);
     }
 
     // Keep category editing separate from Solution deployments and assignments.
@@ -63,7 +53,7 @@ export default function TabsSection({ base, canMaintain }: { base: string; canMa
                     <Heading level={4} accessibilityLevel={3}>
                         Tabs
                     </Heading>
-                    {canMaintain && <Button label="New tab" size="sm" onClick={() => setEditing('create')} />}
+                    {canMaintain && <Button label="New tab" size="sm" onClick={() => setAction({ kind: 'create' })} />}
                 </Stack>
                 <Table
                     data={tags}
@@ -102,7 +92,7 @@ export default function TabsSection({ base, canMaintain }: { base: string; canMa
                                                       id: 'edit',
                                                       label: 'Edit',
                                                       icon: <Pencil className="size-4" aria-hidden="true" />,
-                                                      onClick: () => setEditing(tag),
+                                                      onClick: () => setAction({ kind: 'edit', tag }),
                                                   },
                                                   {
                                                       id: 'up',
@@ -127,7 +117,7 @@ export default function TabsSection({ base, canMaintain }: { base: string; canMa
                                                       label: 'Delete',
                                                       variant: 'destructive',
                                                       icon: <Trash className="size-4" aria-hidden="true" />,
-                                                      onClick: () => setDeleting(tag),
+                                                      onClick: () => setAction({ kind: 'delete', tag }),
                                                   },
                                               ]}
                                           />
@@ -138,35 +128,41 @@ export default function TabsSection({ base, canMaintain }: { base: string; canMa
                     ]}
                 />
             </Stack>
-            {editing && (
+            {action && action.kind !== 'delete' && (
                 <TagForm
-                    key={editing === 'create' ? 'create' : editing.id}
+                    key={action.kind === 'create' ? 'create' : action.tag.id}
                     base={base}
-                    tag={editing === 'create' ? null : editing}
-                    onCancel={() => setEditing(null)}
+                    tag={action.kind === 'create' ? null : action.tag}
+                    onCancel={() => setAction(null)}
                     onSuccess={async () => {
                         // Refresh shared data before dismissing only the completed edit.
-                        await invalidate();
-                        setEditing((current) => (current === editing ? null : current));
+                        await queryClient.invalidateQueries({ queryKey: ['api', `${base}/tags`], exact: true });
+                        setAction((current) => (current === action ? null : current));
                     }}
                 />
             )}
             <DeletionDialog
                 confirmation={
-                    deleting
+                    action?.kind === 'delete'
                         ? {
                               title: 'Delete tab',
-                              description: `Delete tab ${deleting.name}? Solutions will not be deleted and will keep their other tags.`,
+                              description: `Delete tab ${action.tag.name}? Solutions will not be deleted and will keep their other tags.`,
                               onDelete: async () => {
                                   // Cascading assignments disappear with the tag, never the Solutions.
-                                  await api.delete(`${base}/tags/${deleting.id}`);
-                                  await invalidate();
-                                  setDeleting(null);
+                                  await api.delete(`${base}/tags/${action.tag.id}`);
+                                  await Promise.all([
+                                      queryClient.invalidateQueries({ queryKey: ['api', `${base}/tags`], exact: true }),
+                                      queryClient.invalidateQueries({
+                                          queryKey: ['api', `${base}/solutions`],
+                                          exact: true,
+                                      }),
+                                  ]);
+                                  setAction((current) => (current === action ? null : current));
                               },
                           }
                         : null
                 }
-                onClose={() => setDeleting(null)}
+                onClose={() => setAction(null)}
             />
         </>
     );
@@ -184,82 +180,47 @@ function TagForm({
     onSuccess: () => Promise<void>;
     onCancel: () => void;
 }) {
-    const [name, setName] = useState(tag?.name ?? '');
     const [icon, setIcon] = useState(tag?.icon ?? 'tag');
-    const reportError = useApiError();
 
     /** Saves presentation without changing the tab's filtering or assignments. */
-    async function save() {
-        try {
-            const json = schemas.zOrganizationTagWrite.parse({ name: name.trim(), icon });
+    async function save(data: FormData) {
+        const json = schemas.zOrganizationTagWrite.parse({ name: z.string().trim().parse(data.get('name')), icon });
 
-            if (tag) {
-                await api.patch(`${base}/tags/${tag.id}`, { json });
-            } else {
-                await api.post(`${base}/tags`, { json });
-            }
-
-            await onSuccess();
-        } catch (failure) {
-            reportError(failure);
-            throw failure;
+        if (tag) {
+            await api.patch(`${base}/tags/${tag.id}`, { json });
+        } else {
+            await api.post(`${base}/tags`, { json });
         }
+
+        await onSuccess();
     }
 
     return (
-        <Dialog
-            isOpen
-            onOpenChange={(open) => {
-                if (!open) onCancel();
-            }}
-        >
-            <Stack height="min(560px, calc(100dvh - var(--spacing-10) * 4))">
-                <Layout
-                    padding={0}
-                    content={
-                        <LayoutContent padding={8}>
-                            <Stack
-                                gap={6}
-                                minHeight="100%"
-                                justify="center"
-                                width="100%"
-                                maxWidth={640}
-                                className="mx-auto"
-                            >
-                                <Heading level={2} justify="center">
-                                    {tag ? 'Edit tab' : 'New tab'}
-                                </Heading>
-                                <Form action={save} submitDisabled={!name.trim()}>
-                                    <Stack gap={3}>
-                                        <TextInput label="Name" value={name} onChange={setName} isRequired />
-                                        <Selector
-                                            label="Icon"
-                                            value={icon}
-                                            onChange={(value) => setIcon(schemas.zTagIcon.parse(value))}
-                                            options={Object.entries(tabs.icons).map(([value, option]) => ({
-                                                value,
-                                                label: option.label,
-                                                icon: <option.component className="size-4" aria-hidden="true" />,
-                                            }))}
-                                            hasSearch
-                                        />
-                                        <Stack direction="horizontal" gap={2}>
-                                            <Button
-                                                label={tag ? 'Save' : 'Create tab'}
-                                                type="submit"
-                                                variant="primary"
-                                                isDisabled={!name.trim()}
-                                            />
-                                            <Button label="Cancel" type="button" variant="ghost" onClick={onCancel} />
-                                        </Stack>
-                                    </Stack>
-                                </Form>
-                            </Stack>
-                        </LayoutContent>
-                    }
-                />
-            </Stack>
-        </Dialog>
+        <FormDialog gap={6} onClose={onCancel}>
+            <Heading level={2} justify="center">
+                {tag ? 'Edit tab' : 'New tab'}
+            </Heading>
+            <Form action={save}>
+                <Stack gap={3}>
+                    <TextInput label="Name" name="name" defaultValue={tag?.name ?? ''} required />
+                    <Selector
+                        label="Icon"
+                        value={icon}
+                        onChange={(value) => setIcon(schemas.zTagIcon.parse(value))}
+                        options={Object.entries(tabs.icons).map(([value, option]) => ({
+                            value,
+                            label: option.label,
+                            icon: <option.component className="size-4" aria-hidden="true" />,
+                        }))}
+                        hasSearch
+                    />
+                    <Stack direction="horizontal" gap={2}>
+                        <Button label={tag ? 'Save' : 'Create tab'} type="submit" variant="primary" />
+                        <Button label="Cancel" type="button" variant="ghost" onClick={onCancel} />
+                    </Stack>
+                </Stack>
+            </Form>
+        </FormDialog>
     );
 }
 
@@ -273,88 +234,59 @@ export function SolutionTags({
 }: {
     base: string;
     tags: Tag[];
-    solution: z.output<typeof schemas.zOrganizationSolutionSummary>;
+    solution: Pick<z.output<typeof schemas.zOrganizationSolutionSummary>, 'id' | 'name' | 'tag_ids'>;
     onSuccess: () => Promise<void>;
     onClose: () => void;
 }) {
     const [tagIds, setTagIds] = useState(solution.tag_ids ?? []);
-    const reportError = useApiError();
 
     /** Submits the complete selection so clearing all tags is supported. */
     async function save() {
-        try {
-            const json = schemas.zSolutionTagsWrite.parse({ tag_ids: tagIds });
-            await api.patch(`${base}/solutions/${solution.id}/tags`, { json });
-            await onSuccess();
-        } catch (failure) {
-            reportError(failure);
-            throw failure;
-        }
+        const json = schemas.zSolutionTagsWrite.parse({ tag_ids: tagIds });
+        await api.patch(`${base}/solutions/${solution.id}/tags`, { json });
+        await onSuccess();
     }
 
     return (
-        <Dialog
-            isOpen
-            onOpenChange={(open) => {
-                if (!open) onClose();
-            }}
-        >
-            <Stack height="min(560px, calc(100dvh - var(--spacing-10) * 4))">
-                <Layout
-                    padding={0}
-                    content={
-                        <LayoutContent padding={8}>
-                            <Stack
-                                gap={6}
-                                minHeight="100%"
-                                justify="center"
-                                width="100%"
-                                maxWidth={640}
-                                className="mx-auto"
-                            >
-                                <Heading level={2} justify="center">
-                                    Tags for {solution.name}
-                                </Heading>
-                                <Form action={save}>
-                                    <Stack gap={4}>
-                                        <MultiSelector
-                                            label="Tags"
-                                            value={tagIds}
-                                            onChange={setTagIds}
-                                            options={tags
-                                                .filter((tag) => tag.kind === 'tag')
-                                                .map((tag) => {
-                                                    const Icon = tabs.icons[tag.icon].component;
+        <FormDialog gap={6} onClose={onClose}>
+            <Heading level={2} justify="center">
+                Tags for {solution.name}
+            </Heading>
+            <Form action={save}>
+                <Stack gap={4}>
+                    <MultiSelector
+                        label="Tags"
+                        value={tagIds}
+                        onChange={setTagIds}
+                        options={tags
+                            .filter((tag) => tag.kind === 'tag')
+                            .map((tag) => {
+                                const Icon = tabs.icons[tag.icon].component;
 
-                                                    return {
-                                                        value: tag.id,
-                                                        label: tag.name,
-                                                        icon: <Icon className="size-4" aria-hidden="true" />,
-                                                    };
-                                                })}
-                                            renderOption={(option) => (
-                                                <Stack direction="horizontal" gap={2} align="center">
-                                                    {isValidElement(option.icon) && option.icon}
-                                                    <Text>{option.label}</Text>
-                                                </Stack>
-                                            )}
-                                            triggerDisplay="labels"
-                                            placeholder="Select tags"
-                                            hasSearch
-                                            hasClear
-                                            emptyText="Create tabs in organization settings under General first."
-                                        />
-                                        <Stack direction="horizontal" gap={2} justify="end">
-                                            <Button label="Cancel" type="button" variant="ghost" onClick={onClose} />
-                                            <Button label="Save" type="submit" variant="primary" />
-                                        </Stack>
-                                    </Stack>
-                                </Form>
+                                return {
+                                    value: tag.id,
+                                    label: tag.name,
+                                    icon: <Icon className="size-4" aria-hidden="true" />,
+                                };
+                            })}
+                        renderOption={(option) => (
+                            <Stack direction="horizontal" gap={2} align="center">
+                                {isValidElement(option.icon) && option.icon}
+                                <Text>{option.label}</Text>
                             </Stack>
-                        </LayoutContent>
-                    }
-                />
-            </Stack>
-        </Dialog>
+                        )}
+                        triggerDisplay="labels"
+                        placeholder="Select tags"
+                        hasSearch
+                        hasClear
+                        emptyText="Create tabs in organization settings under General first."
+                    />
+                    <Stack direction="horizontal" gap={2} justify="end">
+                        <Button label="Cancel" type="button" variant="ghost" onClick={onClose} />
+                        <Button label="Save" type="submit" variant="primary" />
+                    </Stack>
+                </Stack>
+            </Form>
+        </FormDialog>
     );
 }

@@ -5,6 +5,38 @@ from src.models.computes import ComputeRegistryCreate
 pytestmark = pytest.mark.no_db
 
 
+@pytest.mark.parametrize(
+    "gateway_url",
+    [
+        pytest.param("http://gateway.example", id="http-scheme"),
+        pytest.param("https://user@gateway.example", id="username"),
+        pytest.param("https://:secret@gateway.example", id="password"),
+        pytest.param("https://gateway.example/ready", id="path"),
+        # Endpoint configuration accepts origins, not resource-specific URLs.
+        pytest.param("https://gateway.example?next=1", id="query"),
+        pytest.param("https://gateway.example#ready", id="fragment"),
+    ],
+)
+def test_compute_registry_create_rejects_non_origin_gateway_url(gateway_url: str) -> None:
+    """Reject Compute gateway endpoints that are not bare HTTPS origins."""
+
+    # Act and assert
+    with pytest.raises(ValidationError, match="Endpoint must be an HTTPS origin"):
+        ComputeRegistryCreate.model_validate(
+            {
+                "name": "Compute",
+                "gateway_url": gateway_url,
+                "storage_endpoint": "https://storage.example",
+                "kubeconfig": {
+                    "clusters": [{"name": "cluster", "cluster": {}}],
+                    "contexts": [{"name": "context", "context": {"cluster": "cluster", "user": "user"}}],
+                    "current-context": "context",
+                    "users": [{"name": "user", "user": {}}],
+                },
+            }
+        )
+
+
 def test_compute_registry_create_parses_yaml_kubeconfig() -> None:
     """Accept YAML kubeconfigs and persist their JSON-compatible mapping."""
 

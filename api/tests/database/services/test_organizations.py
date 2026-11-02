@@ -1,14 +1,14 @@
 import pytest
 from uuid import uuid4
 from fastapi import HTTPException
-from factories import add_member, create_compute, fetch_operations, create_organization, assert_no_new_operations
+from factories import add_member, create_compute, fetch_operations, create_organization
 from src.models.roles import OrganizationRoles
 from src.models.types import Image
 from src.models.metadata import LongLinkMetadata
 from longlink.permissions import Catalog
 from src.database.session import session_scope
 from src.models.solutions import SolutionCreate
-from src.database.services import solutions, organizations
+from src.database.services import solutions, invitations, organizations
 from src.models.pagination import Pagination
 from src.models.organizations import OrganizationInvitationCreate
 from src.database.models.users import User
@@ -61,13 +61,13 @@ async def test_membership_mutation_services_revalidate_demoted_administrator_acc
 
     # Preserve legitimate owner invitation access before revoking the administrator.
     async with session_scope() as session:
-        await organizations.create_invitation(
+        await invitations.create(
             session, organization.id, OrganizationInvitationCreate(email="owner-invited@example.com", role=OrganizationRoles.read), owner.id
         )
         await session.commit()
 
     async with session_scope() as session:
-        invitation_id = (await organizations.invitations(session, organization.id))[0].id
+        invitation_id = (await invitations.fetch(session, organization.id))[0].id
 
     # Cache authorization in independent request sessions before concurrently demoting the administrator.
     async with session_scope() as create_invitation_session, session_scope() as revoke_invitation_session, session_scope() as role_session:
@@ -84,22 +84,26 @@ async def test_membership_mutation_services_revalidate_demoted_administrator_acc
 
         # Act and assert every service refreshes the persisted membership under its Organization lock.
         with pytest.raises(HTTPException, match="403: Permission required"):
-            await organizations.create_invitation(
+            await invitations.create(
                 create_invitation_session,
                 organization.id,
                 OrganizationInvitationCreate(email="blocked-invited@example.com", role=OrganizationRoles.read),
                 administrator.id,
             )
 
+        # Release the rejected command's write reservation before the next request.
+        await create_invitation_session.rollback()
+
         # Cached membership must not authorize a command after demotion.
         with pytest.raises(HTTPException, match="403: Permission required"):
-            await organizations.revoke_invitation(revoke_invitation_session, organization.id, invitation_id, administrator.id)
+            await invitations.revoke(revoke_invitation_session, organization.id, invitation_id, administrator.id)
+        await revoke_invitation_session.rollback()
         with pytest.raises(HTTPException, match="403: Permission required"):
             await organizations.update_member_role(role_session, organization.id, owner.id, OrganizationRoles.admin, administrator.id)
 
     # Verify none of the rejected mutations persisted in an independent session.
     async with session_scope() as session:
-        remaining_invitations = await organizations.invitations(session, organization.id)
+        remaining_invitations = await invitations.fetch(session, organization.id)
         owner_membership = await session.get(UserOrganization, (owner.id, organization.id))
         administrator_membership = await session.get(UserOrganization, (administrator.id, organization.id))
 
@@ -152,27 +156,33 @@ async def test_create_selects_least_assigned_infrastructure(users: tuple[User, U
     assert organization.compute_id == available_compute.id
 
 
-async def test_create_rejects_duplicate_organization_name(users: tuple[User, User, User]) -> None:
-    """Reject duplicate Organization names without persisting a second membership."""
+async def test_create_accepts_duplicate_organization_name(users: tuple[User, User, User]) -> None:
+    """Keep same-named Organizations distinct with their own owners and lifecycle work."""
 
     # Arrange
     organization = await create_organization(users[0])
     previous_operations = await fetch_operations()
 
-    # Act and assert
+    # Act
     async with session_scope() as session:
-        with pytest.raises(HTTPException, match="409: Organization already exists"):
-            await organizations.create(session, "acme", users[0])
+        duplicate = await organizations.create(session, "acme", users[1])
         await session.commit()
 
-    # The savepoint retains the original Organization and owner without queueing duplicate work.
+    # Each UUID retains a separate owner despite the identical display names.
     async with session_scope() as session:
         fetched, total = await organizations.fetch(session, Pagination())
         memberships = await organizations.members(session, organization.id)
-    assert [item.id for item in fetched] == [organization.id]
-    assert total == 1
+        duplicate_memberships = await organizations.members(session, duplicate.id)
+    assert {item.id for item in fetched} == {organization.id, duplicate.id}
+    assert total == 2
+    assert duplicate.id != organization.id
+    assert duplicate.name == organization.name
     assert [(membership.user_id, membership.role) for membership in memberships] == [(users[0].id, OrganizationRoles.owner)]
-    await assert_no_new_operations(previous_operations)
+    assert [(membership.user_id, membership.role) for membership in duplicate_memberships] == [(users[1].id, OrganizationRoles.owner)]
+    operations = await fetch_operations()
+    new_operations = [operation for operation in operations if operation.id not in {previous.id for previous in previous_operations}]
+    assert len(new_operations) == 1
+    assert new_operations[0].target_id == duplicate.id
 
 
 async def test_soft_delete_tombstones_solutions_and_retains_memberships(users: tuple[User, User, User]) -> None:
@@ -214,7 +224,7 @@ async def test_soft_delete_tombstones_solutions_and_retains_memberships(users: t
     assert deleted_organization is not None
     async with session_scope() as session:
         members = await organizations.members(session, organization.id)
-        assert await organizations.invitations(session, organization.id) == []
+        assert await invitations.fetch(session, organization.id) == []
         assert await organizations.solutions(session, organization.id) == []
         assert all(operation.target_id != solution.id for operation in await fetch_operations())
     assert {member.user_id for member in members} == {owner.id, member.id}

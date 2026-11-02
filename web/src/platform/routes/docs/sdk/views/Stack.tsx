@@ -99,11 +99,10 @@ export default function StackPage() {
                         "Overrides this item's cross-axis alignment; omitted values inherit the parent alignment.",
                 },
             ]}
-            examples={[
-                {
-                    title: 'Stack',
-                    preview: <StackExample />,
-                    code: `function Example() {
+            example={{
+                title: 'Stack',
+                preview: <StackExample />,
+                code: `function Example() {
   return (
     <Stack direction="horizontal" gap={3}>
       <Text>Label</Text>
@@ -113,8 +112,7 @@ export default function StackPage() {
     </Stack>
   );
 }`,
-                },
-            ]}
+            }}
         />
     );
 }

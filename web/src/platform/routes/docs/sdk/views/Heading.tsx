@@ -20,15 +20,13 @@ export default function HeadingPage() {
                     description: 'Heading level from h1 to h6.',
                 },
             ]}
-            examples={[
-                {
-                    title: 'Heading',
-                    preview: <HeadingExample />,
-                    code: `function Example() {
+            example={{
+                title: 'Heading',
+                preview: <HeadingExample />,
+                code: `function Example() {
   return <Heading level={2}>Order details</Heading>;
 }`,
-                },
-            ]}
+            }}
         />
     );
 }

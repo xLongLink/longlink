@@ -1,9 +1,9 @@
+from src import auth
 from stripe import Webhook, SignatureVerificationError
 from fastapi import Request, APIRouter, HTTPException
 from sqlmodel import col
 from src.utils import stripe
 from sqlalchemy import select
-from src.context import Context
 from src.environments import env
 from src.database.services import payments, organizations
 from src.database.models.organizations import Organization
@@ -12,7 +12,7 @@ router = APIRouter()
 
 
 @router.post("/stripe/webhook", status_code=204)
-async def receive_webhook(ctx: Context, request: Request):
+async def receive_webhook(session: auth.Session, request: Request):
     """Verify card-registration events and apply them directly to the Organization."""
 
     # Signed webhooks do not use browser credentials, and unconfigured deployments reject them.
@@ -46,10 +46,10 @@ async def receive_webhook(ctx: Context, request: Request):
         return
 
     # Bind the event to the locally owned customer, not webhook metadata.
-    organization_id = await ctx.database.scalar(select(col(Organization.id)).where(col(Organization.stripe_customer_id) == customer_id))
+    organization_id = await session.scalar(select(col(Organization.id)).where(col(Organization.stripe_customer_id) == customer_id))
     if organization_id is None:
         return
-    organization = await organizations.lock(ctx.database, organization_id)
+    organization = await organizations.lock(session, organization_id)
     if (
         organization.deleted_at is None
         and organization.stripe_checkout_id is not None
@@ -58,5 +58,5 @@ async def receive_webhook(ctx: Context, request: Request):
     ):
         async with stripe.client() as connection:
             hosted = await connection.v1.checkout.sessions.retrieve_async(organization.stripe_checkout_id)
-            await payments.save_card(ctx.database, organization, hosted, connection)
-    await ctx.database.commit()
+            await payments.save_card(session, organization, hosted, connection)
+    await session.commit()

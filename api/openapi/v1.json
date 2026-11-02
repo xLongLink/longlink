@@ -2241,19 +2241,20 @@
         }
       }
     },
-    "/api/v1/organizations/slug/{organization_slug}": {
+    "/api/v1/organizations/{organization_id}": {
       "get": {
-        "summary": "Get Organization By Slug",
-        "description": "Return the current user's membership for one Organization slug.",
-        "operationId": "get_organization_by_slug_api_v1_organizations_slug__organization_slug__get",
+        "summary": "Get Organization",
+        "description": "Return the current user's membership for one Organization UUID.",
+        "operationId": "get_organization_api_v1_organizations__organization_id__get",
         "parameters": [
           {
-            "name": "organization_slug",
+            "name": "organization_id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
-              "title": "Organization Slug"
+              "format": "uuid",
+              "title": "Organization Id"
             }
           },
           {
@@ -2295,9 +2296,7 @@
             }
           }
         }
-      }
-    },
-    "/api/v1/organizations/{organization_id}": {
+      },
       "delete": {
         "summary": "Delete Organization",
         "description": "Mark one Organization absent and queue lifecycle cleanup.",
@@ -2337,61 +2336,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/OrganizationIdentity"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      },
-      "get": {
-        "summary": "Get Organization",
-        "description": "Return one organization and its metadata.",
-        "operationId": "get_organization_api_v1_organizations__organization_id__get",
-        "parameters": [
-          {
-            "name": "organization_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Organization Id"
-            }
-          },
-          {
-            "name": "longlink_auth",
-            "in": "cookie",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Longlink Auth"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/OrganizationDetails"
                 }
               }
             }
@@ -3731,6 +3675,186 @@
         }
       }
     },
+    "/api/v1/organizations/{organization_id}/members": {
+      "get": {
+        "summary": "Get Organization Members",
+        "description": "Return the active Organization members without unrelated invitation data.",
+        "operationId": "get_organization_members_api_v1_organizations__organization_id__members_get",
+        "parameters": [
+          {
+            "name": "organization_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Organization Id"
+            }
+          },
+          {
+            "name": "longlink_auth",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Longlink Auth"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/OrganizationMemberAccessResponse"
+                  },
+                  "title": "Response Get Organization Members Api V1 Organizations  Organization Id  Members Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/organizations/{organization_id}/invitations": {
+      "get": {
+        "summary": "Get Organization Invitations",
+        "description": "Return pending invitations only to Organization managers.",
+        "operationId": "get_organization_invitations_api_v1_organizations__organization_id__invitations_get",
+        "parameters": [
+          {
+            "name": "organization_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Organization Id"
+            }
+          },
+          {
+            "name": "longlink_auth",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Longlink Auth"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/OrganizationInvitationResponse"
+                  },
+                  "title": "Response Get Organization Invitations Api V1 Organizations  Organization Id  Invitations Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create Organization Invitation",
+        "description": "Create one invitation for an organization member.",
+        "operationId": "create_organization_invitation_api_v1_organizations__organization_id__invitations_post",
+        "parameters": [
+          {
+            "name": "organization_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Organization Id"
+            }
+          },
+          {
+            "name": "longlink_auth",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Longlink Auth"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OrganizationInvitationCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/organizations/{organization_id}/usage": {
       "get": {
         "summary": "Get Organization Usage",
@@ -3791,7 +3915,7 @@
     "/api/v1/organizations/{organization_id}/storage": {
       "get": {
         "summary": "Get Organization Storage Usage",
-        "description": "Return live usage for the Organization bucket.",
+        "description": "Return live logical object bytes against the Organization bucket's quota.",
         "operationId": "get_organization_storage_usage_api_v1_organizations__organization_id__storage_get",
         "parameters": [
           {
@@ -3827,7 +3951,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/OrganizationStorageUsageResponse"
+                  "$ref": "#/components/schemas/OrganizationByteUsage"
                 }
               }
             }
@@ -3848,7 +3972,7 @@
     "/api/v1/organizations/{organization_id}/database": {
       "get": {
         "summary": "Get Organization Database Usage",
-        "description": "Return live PostgreSQL usage against provisioned capacity for an authorized Organization.",
+        "description": "Return PostgreSQL schema and index bytes, excluding WAL, backups, and replicas, against provisioned capacity.",
         "operationId": "get_organization_database_usage_api_v1_organizations__organization_id__database_get",
         "parameters": [
           {
@@ -3884,70 +4008,10 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/OrganizationDatabaseUsageResponse"
+                  "$ref": "#/components/schemas/OrganizationByteUsage"
                 }
               }
             }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/organizations/{organization_id}/invitations": {
-      "post": {
-        "summary": "Create Organization Invitation",
-        "description": "Create one invitation for an organization member.",
-        "operationId": "create_organization_invitation_api_v1_organizations__organization_id__invitations_post",
-        "parameters": [
-          {
-            "name": "organization_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Organization Id"
-            }
-          },
-          {
-            "name": "longlink_auth",
-            "in": "cookie",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Longlink Auth"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/OrganizationInvitationCreate"
-              }
-            }
-          }
-        },
-        "responses": {
-          "204": {
-            "description": "Successful Response"
           },
           "422": {
             "description": "Validation Error",
@@ -4713,6 +4777,14 @@
               "rose"
             ],
             "title": "Accent"
+          },
+          "navigation": {
+            "type": "string",
+            "enum": [
+              "topbar",
+              "sidebar"
+            ],
+            "title": "Navigation"
           }
         },
         "type": "object",
@@ -4723,7 +4795,8 @@
           "avatar",
           "administrator",
           "theme",
-          "accent"
+          "accent",
+          "navigation"
         ],
         "title": "CurrentUser",
         "description": "Include personal preferences only in the account's own profile."
@@ -5082,23 +5155,7 @@
         "title": "OperationStatus",
         "description": "Supported long-running operation lifecycle states."
       },
-      "OrganizationCreate": {
-        "properties": {
-          "name": {
-            "type": "string",
-            "maxLength": 128,
-            "minLength": 1,
-            "title": "Name"
-          }
-        },
-        "type": "object",
-        "required": [
-          "name"
-        ],
-        "title": "OrganizationCreate",
-        "description": "Validate organization creation payloads."
-      },
-      "OrganizationDatabaseUsageResponse": {
+      "OrganizationByteUsage": {
         "properties": {
           "space_used": {
             "type": "integer",
@@ -5116,37 +5173,24 @@
           "space_used",
           "quota_bytes"
         ],
-        "title": "OrganizationDatabaseUsageResponse",
-        "description": "Report PostgreSQL database bytes against the Organization's provisioned capacity.\n\nDatabase bytes include every schema and index, but not WAL, backups, or replicas."
+        "title": "OrganizationByteUsage",
+        "description": "Report measured resource bytes against an Organization's configured capacity."
       },
-      "OrganizationDetails": {
+      "OrganizationCreate": {
         "properties": {
-          "organization": {
-            "$ref": "#/components/schemas/OrganizationIdentity"
-          },
-          "members": {
-            "items": {
-              "$ref": "#/components/schemas/OrganizationMemberAccessResponse"
-            },
-            "type": "array",
-            "title": "Members"
-          },
-          "invitations": {
-            "items": {
-              "$ref": "#/components/schemas/OrganizationInvitationResponse"
-            },
-            "type": "array",
-            "title": "Invitations"
+          "name": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Name"
           }
         },
         "type": "object",
         "required": [
-          "organization",
-          "members",
-          "invitations"
+          "name"
         ],
-        "title": "OrganizationDetails",
-        "description": "Represent an Organization with its member access."
+        "title": "OrganizationCreate",
+        "description": "Validate organization creation payloads."
       },
       "OrganizationIdentity": {
         "properties": {
@@ -5159,10 +5203,6 @@
             "type": "string",
             "title": "Name"
           },
-          "slug": {
-            "type": "string",
-            "title": "Slug"
-          },
           "status": {
             "$ref": "#/components/schemas/Status"
           }
@@ -5171,7 +5211,6 @@
         "required": [
           "id",
           "name",
-          "slug",
           "status"
         ],
         "title": "OrganizationIdentity",
@@ -5309,10 +5348,6 @@
             "type": "string",
             "title": "Name"
           },
-          "slug": {
-            "type": "string",
-            "title": "Slug"
-          },
           "description": {
             "anyOf": [
               {
@@ -5368,34 +5403,12 @@
         "required": [
           "id",
           "name",
-          "slug",
           "status",
           "deployment_pending",
           "desired_revision_id"
         ],
         "title": "OrganizationSolutionSummary",
         "description": "Represent a compact LongLink Solution in nested Organization responses."
-      },
-      "OrganizationStorageUsageResponse": {
-        "properties": {
-          "space_used": {
-            "type": "integer",
-            "minimum": 0.0,
-            "title": "Space Used"
-          },
-          "quota_bytes": {
-            "type": "integer",
-            "minimum": 0.0,
-            "title": "Quota Bytes"
-          }
-        },
-        "type": "object",
-        "required": [
-          "space_used",
-          "quota_bytes"
-        ],
-        "title": "OrganizationStorageUsageResponse",
-        "description": "Report current logical object usage and quota for one Organization bucket."
       },
       "OrganizationTagMove": {
         "properties": {
@@ -5762,19 +5775,9 @@
             "format": "date-time",
             "title": "Created At"
           },
-          "invoice_pdf": {
-            "anyOf": [
-              {
-                "type": "string",
-                "maxLength": 2083,
-                "minLength": 1,
-                "format": "uri"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Invoice Pdf"
+          "has_pdf": {
+            "type": "boolean",
+            "title": "Has Pdf"
           },
           "hosted_invoice_url": {
             "anyOf": [
@@ -5799,7 +5802,7 @@
           "status",
           "currency",
           "created_at",
-          "invoice_pdf",
+          "has_pdf",
           "hosted_invoice_url"
         ],
         "title": "PaymentInvoice",
@@ -6203,10 +6206,6 @@
             "type": "string",
             "title": "Name"
           },
-          "slug": {
-            "type": "string",
-            "title": "Slug"
-          },
           "description": {
             "anyOf": [
               {
@@ -6286,7 +6285,6 @@
         "required": [
           "id",
           "name",
-          "slug",
           "description",
           "status",
           "deployment_pending",
@@ -6675,6 +6673,21 @@
               }
             ],
             "title": "Accent"
+          },
+          "navigation": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "topbar",
+                  "sidebar"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Navigation"
           }
         },
         "type": "object",

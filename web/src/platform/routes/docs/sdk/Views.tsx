@@ -44,12 +44,12 @@ import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { Tab, TabList } from '@astryxdesign/core/TabList';
 import { DropdownMenuExample } from './views/DropdownMenu';
 import { MetadataListExample } from './views/MetadataList';
-import { componentDocumentation } from '@/platform/routes';
 import { Blockquote } from '@astryxdesign/core/Blockquote';
 import { CheckboxInputExample } from './views/CheckboxInput';
 import { MultiSelectorExample } from './views/MultiSelector';
 import { Collapsible } from '@astryxdesign/core/Collapsible';
 import { Table, proportional } from '@astryxdesign/core/Table';
+import { componentDocumentation } from '@/platform/publications';
 import { DocumentationArticle } from '@/components/layouts/Article';
 import { viewHooks, documentationCategories } from '@/lib/documentation';
 import { SideNav, SideNavItem, SideNavSection } from '@astryxdesign/core/SideNav';
@@ -186,7 +186,7 @@ export default function Item({ params }) {
                             {
                                 name: 'request(path, options)',
                                 description:
-                                    'Requests a Solution operation and returns its data. Options support the HTTP method, JSON, form data, and binary responses. Requests and responses are limited to 2,000,000 bytes, with at most 32 form entries and 8 pending operations. Successful writes refresh cached View data. Failed HTTP requests reject with an Error containing an optional numeric status and a bounded client-facing message.',
+                                    'Requests a Solution operation and returns its data. Options support the HTTP method, JSON, form data, and binary responses. Successful writes refresh cached View data. Failed HTTP requests reject with an Error containing an optional numeric status and a bounded client-facing message.',
                             },
                             ...viewHooks,
                         ]}

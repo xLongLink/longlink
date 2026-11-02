@@ -51,15 +51,14 @@ export default function SwitchPage() {
                     description: 'Callback fired when the switch state changes.',
                 },
             ]}
-            examples={[
-                {
-                    title: 'Preference form',
-                    preview: (
-                        <FormPreview>
-                            <SwitchExample />
-                        </FormPreview>
-                    ),
-                    code: `/** Submits an enabled preference using checkbox semantics. */
+            example={{
+                title: 'Preference form',
+                preview: (
+                    <FormPreview>
+                        <SwitchExample />
+                    </FormPreview>
+                ),
+                code: `/** Submits an enabled preference using checkbox semantics. */
 export default function PreferenceForm() {
   return (
     <Form action="/api/example" method="post">
@@ -71,8 +70,7 @@ export default function PreferenceForm() {
     </Form>
   );
 }`,
-                },
-            ]}
+            }}
         />
     );
 }

@@ -7,6 +7,7 @@ from src.models.roles import OrganizationRoles
 from src.models.resources import OrganizationIdentity
 
 ThemeMode = Literal["system", "light", "dark"]
+NavigationLayout = Literal["topbar", "sidebar"]
 AccentColor = Literal[
     "neutral",
     "red",
@@ -39,6 +40,7 @@ class UserUpdate(BaseModel):
     # Appearance
     theme: ThemeMode | None = None
     accent: AccentColor | None = None
+    navigation: NavigationLayout | None = None
 
 
 class UserIdentity(BaseModel):
@@ -95,6 +97,7 @@ class CurrentUser(UserSummary):
     # Appearance
     theme: ThemeMode
     accent: AccentColor
+    navigation: NavigationLayout
 
 
 class AdminUserSummary(UserSummary):

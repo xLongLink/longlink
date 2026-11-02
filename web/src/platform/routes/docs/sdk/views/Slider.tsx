@@ -78,15 +78,14 @@ export default function SliderPage() {
                         'Minimum number of steps between thumbs in range mode; prevents thumbs from overlapping.',
                 },
             ]}
-            examples={[
-                {
-                    title: 'Progress form',
-                    preview: (
-                        <FormPreview>
-                            <SliderExample />
-                        </FormPreview>
-                    ),
-                    code: `/** Submits progress without keeping a separate draft value. */
+            example={{
+                title: 'Progress form',
+                preview: (
+                    <FormPreview>
+                        <SliderExample />
+                    </FormPreview>
+                ),
+                code: `/** Submits progress without keeping a separate draft value. */
 export default function ProgressForm() {
   return (
     <Form action="/api/example" method="post">
@@ -98,8 +97,7 @@ export default function ProgressForm() {
     </Form>
   );
 }`,
-                },
-            ]}
+            }}
         />
     );
 }

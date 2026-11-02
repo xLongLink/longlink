@@ -36,7 +36,7 @@ export default function ResetPassword() {
         resolver: zodResolver(resetPasswordSchema),
     });
 
-    const [reset, setReset] = useState<{ status: 'saved' } | { status: 'error' } | null>(null);
+    const [invalidCredential, setInvalidCredential] = useState(false);
 
     /** Returns the credential outcome while preserving cancellation of token-storage cleanup. */
     async function verify({
@@ -76,7 +76,7 @@ export default function ResetPassword() {
     const pageMetadata = <title>Set a New Password | LongLink</title>;
 
     // Invalid and expired credentials require a replacement email.
-    if (verification?.status === 'error' || reset?.status === 'error') {
+    if (verification?.status === 'error' || invalidCredential) {
         return (
             <AuthLayout
                 title="Set a new password"
@@ -93,7 +93,7 @@ export default function ResetPassword() {
             {pageMetadata}
             {verification?.status !== 'verified' ? (
                 <Button isLoading label="Reset password" variant="primary" />
-            ) : reset?.status === 'saved' ? (
+            ) : form.formState.isSubmitSuccessful ? (
                 <Stack gap={4}>
                     <Banner status="success" title="Your password has been reset. You can now sign in." />
                     <Button href="/login" label="Back to sign in" variant="primary" />
@@ -107,13 +107,12 @@ export default function ResetPassword() {
                                 await api('/api/v1/auth/reset-password', { json: payload, method: 'POST' });
                             } catch (cause: unknown) {
                                 if (!isBadTokenError(cause)) throw cause;
-                                setReset({ status: 'error' });
+                                setInvalidCredential(true);
 
                                 return;
                             }
 
                             // Announce only the completed password change, not a banner render.
-                            setReset({ status: 'saved' });
                             announce('Your password has been reset. You can now sign in.');
                         })()
                     }

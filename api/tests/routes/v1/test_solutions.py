@@ -277,30 +277,35 @@ async def test_create_app_rejects_non_member_without_creating_state(
     await assert_no_new_operations(previous_operations)
 
 
-async def test_create_app_rejects_duplicate_organization_slug_without_queuing_work(
+async def test_create_solution_accepts_duplicate_name_with_separate_lifecycle_work(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient], users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Reject duplicate Solution slugs without adding a lifecycle operation."""
+    """Keep same-named Solutions distinct within the same Organization."""
 
     # Arrange
     organization = await create_organization(users[0])
-    await create_solution(organization, name="Dashboard")
+    original = await create_solution(organization, name="Dashboard")
     mock_image_metadata(monkeypatch)
     previous_operations = await fetch_operations()
 
     # Act
     response = await clients[0].post(
-        f"/api/v1/organizations/{organization.id}/solutions", json={"name": "dashboard", "image": "ghcr.io/longlink/dashboard:latest"}
+        f"/api/v1/organizations/{organization.id}/solutions", json={"name": "Dashboard", "image": "ghcr.io/longlink/dashboard:latest"}
     )
 
     # Assert
-    assert response.status_code == 409
-    assert response.json() == {"detail": "Solution slug already exists"}
+    assert response.status_code == 204
     async with session_scope() as session:
         result = await session.scalars(select(Solution).where(col(Solution.organization_id) == organization.id))
         solutions = result.all()
-    assert len(solutions) == 1
-    await assert_no_new_operations(previous_operations)
+    assert len(solutions) == 2
+    duplicate = next(solution for solution in solutions if solution.id != original.id)
+    assert {solution.name for solution in solutions} == {"Dashboard"}
+    operations = await fetch_operations()
+    previous_ids = {operation.id for operation in previous_operations}
+    new_operations = [operation for operation in operations if operation.id not in previous_ids]
+    assert len(new_operations) == 1
+    assert new_operations[0].target_id == duplicate.desired_revision_id
 
 
 async def test_solution_responses_do_not_expose_environment_secrets(
@@ -662,10 +667,10 @@ async def test_create_solution_rejects_invalid_payload_without_mutating_state(
     await assert_no_new_operations(previous_operations)
 
 
-async def test_create_solution_rejects_too_long_slug_without_queuing_work(
+async def test_create_solution_accepts_long_display_name(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient], users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Reject valid-schema solution names whose slug exceeds the 63-character limit."""
+    """Accept display names beyond the former slug length limit."""
 
     # Arrange
     organization = await create_organization(users[0])
@@ -684,11 +689,16 @@ async def test_create_solution_rejects_too_long_slug_without_queuing_work(
     )
 
     # Assert
-    assert response.status_code == 409
-    assert response.json() == {"detail": "Invalid name"}
+    assert response.status_code == 204
     async with session_scope() as session:
-        assert await session.scalar(select(Solution).where(col(Solution.organization_id) == organization.id)) is None
-    await assert_no_new_operations(previous_operations)
+        solution = await session.scalar(select(Solution).where(col(Solution.organization_id) == organization.id))
+        assert solution is not None
+        assert solution.name == "a" * 70
+    operations = await fetch_operations()
+    previous_ids = {operation.id for operation in previous_operations}
+    new_operations = [operation for operation in operations if operation.id not in previous_ids]
+    assert len(new_operations) == 1
+    assert new_operations[0].target_id == solution.desired_revision_id
 
 
 async def test_plugin_download_packages_only_the_selected_solution_without_credentials(
@@ -1053,7 +1063,9 @@ async def test_release_inspection_revalidates_concurrent_desired_changes(
         nonlocal replacement_id
         async with session_scope() as session:
             current = await solutions.access(session, solution.id, users[0].id)
-            await solutions.deploy(session, current, users[0].id, metadata, {"OTHER": "concurrent-secret"})
+            revision = await session.get(Revision, current.desired_revision_id)
+            assert revision is not None
+            await solutions._deploy(session, current, users[0].id, metadata, {"OTHER": "concurrent-secret"}, current=revision)
             replacement_id = current.desired_revision_id
             await session.commit()
         return metadata
@@ -1071,15 +1083,11 @@ async def test_release_inspection_revalidates_concurrent_desired_changes(
 
 
 # Recheck authorization after every unlocked metadata lookup.
-@pytest.mark.parametrize(("method", "demotion_wait"), [("GET", 1), ("POST", 1), ("GET", 2)])
+@pytest.mark.parametrize("method", ["GET", "POST"])
 async def test_release_inspection_rejects_demotion_during_metadata_wait(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-    users: tuple[User, User, User],
-    monkeypatch: pytest.MonkeyPatch,
-    method: str,
-    demotion_wait: int,
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient], users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch, method: str
 ) -> None:
-    """Recheck committed membership after both candidate and old-digest inspection."""
+    """Recheck committed membership after candidate inspection."""
 
     # Arrange
     organization = await create_organization(users[0])
@@ -1090,25 +1098,21 @@ async def test_release_inspection_rejects_demotion_during_metadata_wait(
         result = await session.scalars(select(col(Revision.id)).where(col(Revision.solution_id) == solution.id))
         previous_revisions = set(result.all())
     previous_operations = await fetch_operations()
-    inspected: list[Image] = []
 
     # Keep the inspected candidate distinct from the concurrently desired image.
     candidate = LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:candidate"), permissions=Catalog(endpoints=[]))
 
-    async def metadata(image: Image, _connection: object | None = None) -> LongLinkMetadata:
+    async def metadata(_image: Image, _connection: object | None = None) -> LongLinkMetadata:
         """Commit demotion while the request has released its registry-wait transaction."""
 
-        # Revoke the otherwise valid maintainer at the selected external wait.
-        inspected.append(image)
-        if len(inspected) == demotion_wait:
-            async with session_scope() as session:
-                membership = await session.get(UserOrganization, (users[1].id, organization.id))
-                assert membership is not None
-                membership.role = OrganizationRoles.read
-                await session.commit()
+        # Revoke the otherwise valid maintainer during the external wait.
+        async with session_scope() as session:
+            membership = await session.get(UserOrganization, (users[1].id, organization.id))
+            assert membership is not None
+            membership.role = OrganizationRoles.read
+            await session.commit()
 
-        # Later inspection observes the release changed by the competing command.
-        return candidate if len(inspected) == 1 else LongLinkMetadata(image=image, permissions=Catalog(endpoints=[]))
+        return candidate
 
     monkeypatch.setattr(images, "required_metadata", metadata)
 
@@ -1120,7 +1124,6 @@ async def test_release_inspection_rejects_demotion_during_metadata_wait(
     # Assert
     assert response.status_code == 403
     assert response.json() == {"detail": "Permission required"}
-    assert inspected == [Image("ghcr.io/longlink/dashboard:latest"), Image("ghcr.io/longlink/dashboard@sha256:test")][:demotion_wait]
     async with session_scope() as session:
         current = await session.get(Solution, solution.id, options=(selectinload(Solution.desired_revision),))
         assert current is not None
@@ -1168,7 +1171,6 @@ async def test_update_rolls_back_revision_and_pointer_after_queue_insert_failure
     monkeypatch.setattr(images, "required_metadata", metadata)
     event.listen(Operation, "after_insert", fail_insert)
     try:
-
         # Act
         async with AsyncClient(
             transport=ASGITransport(app=app, raise_app_exceptions=False),
@@ -1182,7 +1184,6 @@ async def test_update_rolls_back_revision_and_pointer_after_queue_insert_failure
                 json={"expected_revision_id": str(solution.desired_revision_id), "envs": {"NEW": "new-value"}},
             )
     finally:
-
         # Restore the narrow late-write seam even if the request fails unexpectedly.
         event.remove(Operation, "after_insert", fail_insert)
 
@@ -1318,7 +1319,6 @@ async def test_local_registry_release_roundtrip(
     try:
         metadata = await images.required_metadata(source)
     except HTTPException as exc:
-
         # Only absence is expected when probing a deleted Solution.
         if exc.status_code != 404:
             raise

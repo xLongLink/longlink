@@ -7,8 +7,8 @@ import { resolveNavigationUrl } from '@/lib/url';
 import { useQuery } from '@tanstack/react-query';
 import type { ViewRuntime } from '@/views/manifest';
 import { useEffect, useRef, useState } from 'react';
-import { useAppearance } from '@/components/Appearance';
 import { ViewBackdrop } from '@/components/ViewBackdrop';
+import { useAppearance } from '@/lib/hooks/use-appearance';
 import { PageError, PageLoading } from '@/components/Utils';
 import { commandSchema, parametersSchema, iconDataSchema, type ViewData } from '@/views/protocol';
 
@@ -313,7 +313,8 @@ export function JsxView({
                 className="block w-full shrink-0 border-0 bg-transparent"
                 style={{
                     height,
-                    minHeight: 'calc(100dvh - var(--_app-shell-header-height, 0px) - var(--spacing-2) * 4)',
+                    minHeight:
+                        'calc(100dvh - var(--_app-shell-header-height, 0px) - var(--platform-toolbar-height, 0px) - var(--spacing-2) * 4)',
                 }}
             />
         </>

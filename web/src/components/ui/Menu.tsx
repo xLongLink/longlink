@@ -1,9 +1,10 @@
 import type { Spacing } from './types';
 import { Stack } from '@astryxdesign/core/Stack';
+import { MenuNavigationContext } from './contexts';
 import { useMediaQuery } from '@astryxdesign/core/hooks';
 import { Icon, type StoneIconName } from '@/components/ui/Icon';
 import { Layout, LayoutPanel } from '@astryxdesign/core/Layout';
-import { Children, createContext, isValidElement, useContext, type ReactElement, type ReactNode } from 'react';
+import { Children, isValidElement, useContext, type ReactElement, type ReactNode } from 'react';
 import {
     SideNav as AstryxSideNav,
     SideNavItem as AstryxSideNavItem,
@@ -31,9 +32,6 @@ type MenuItemProps = {
 type MenuEntry =
     | { kind: 'item'; item: ReactElement<MenuItemProps> }
     | { kind: 'subsection'; group: ReactElement<MenuItemProps>; items: ReactElement<MenuItemProps>[] };
-
-// Each runtime supplies its own fragment navigation without exposing a router to Views.
-export const MenuNavigationContext = createContext<{ hash: string; select: (id: string) => void } | null>(null);
 
 /** Derives each item's navigation fragment from its label. */
 function menuItemId(item: ReactElement<MenuItemProps>): string {

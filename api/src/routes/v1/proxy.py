@@ -2,13 +2,12 @@ import ssl
 import json
 import httpx2
 import asyncio
-from src import mcp
+from src import mcp, auth
 from uuid import UUID
 from fastapi import Depends, Request, Response, APIRouter, HTTPException
 from datetime import UTC
 from longlink import identity
 from contextlib import AsyncExitStack
-from src.context import Context
 from src.kubernetes import namespace
 from collections.abc import AsyncIterator, AsyncGenerator
 from fastapi.responses import JSONResponse, StreamingResponse
@@ -33,7 +32,7 @@ async def runtime_scope() -> AsyncGenerator[AsyncExitStack]:
 @router.api_route("/solutions/{solution_id}/proxy", methods=sorted(METHODS), include_in_schema=False)
 @router.api_route("/solutions/{solution_id}/proxy/{path:path}", methods=sorted(METHODS), include_in_schema=False)
 async def proxy_solution_request(
-    ctx: Context,
+    session: auth.Session,
     request: Request,
     solution_id: UUID,
     user: mcp.ProxyUser,
@@ -49,18 +48,18 @@ async def proxy_solution_request(
     is_mcp = path.rstrip("/") == "mcp"
 
     # Release the request snapshot before independent runtime transactions begin.
-    await ctx.database.commit()
+    await session.commit()
 
     # Resolve fresh Solution access immediately before runtime admission; never reuse a stale snapshot.
-    solution, registry = await organizations.solution_runtime_access(ctx.database, user.id, solution_id)
+    solution, registry = await organizations.solution_runtime_access(session, user.id, solution_id)
 
     # Report readiness explicitly; the frontend owns its loading presentation.
     if solution.status != Status.running:
         raise HTTPException(
             status_code=503, detail="Solution is not ready yet. Please try again shortly.", headers={"cache-control": "no-store"}
         )
-    access = await permissions.runtime_access(ctx.database, solution, user.id)
-    await ctx.database.commit()
+    access = await permissions.runtime_access(session, solution, user.id)
+    await session.commit()
 
     identity_secret = solution.secrets.get("LONGLINK_IDENTITY_SECRET")
     if not identity_secret:
@@ -69,7 +68,6 @@ async def proxy_solution_request(
     # Proxy authenticated API requests through the trusted HTTPS compute gateway boundary.
     try:
         async with asyncio.timeout(PROXY_REQUEST_TIMEOUT_SECONDS):
-
             # Register resources directly with the request scope, in acquisition order.
             try:
                 tls = ssl.create_default_context(cadata=registry.gateway_certificate)
@@ -91,7 +89,6 @@ async def proxy_solution_request(
 
                 # Keep negotiated sessions intact without forwarding bearer tokens or browser credentials.
                 if is_mcp:
-
                     # MCP forwards an explicit allowlist, never arbitrary browser credentials.
                     for name in ("accept", "mcp-session-id", "mcp-protocol-version", "mcp-method", "mcp-name", "last-event-id"):
                         value = request.headers.get(name)
@@ -136,7 +133,6 @@ async def proxy_solution_request(
         for name in ("mcp-session-id", "mcp-protocol-version"):
             value = upstream.headers.get(name)
             if value is not None:
-
                 # Preserve only the negotiated protocol response header.
                 response_headers[name] = value
 
@@ -154,7 +150,6 @@ async def proxy_solution_request(
 
                 # Bound upstream error buffering independently of normal response streaming.
                 async for chunk in upstream.aiter_bytes():
-
                     # Oversized diagnostics are discarded instead of buffered indefinitely.
                     if len(body) + len(chunk) > 64 * 1024:
                         break

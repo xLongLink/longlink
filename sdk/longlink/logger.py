@@ -44,23 +44,6 @@ class ApiAccessFilter(logging.Filter):
         return method in ("POST", "PUT", "PATCH", "DELETE") or path.startswith("/api/")
 
 
-def configure_logger(name: str) -> logging.Logger:
-    """Return a stream-configured LongLink logger."""
-
-    # Resolve the requested logger and install a fallback handler when needed.
-    configured = logging.getLogger(name)
-    if not configured.handlers:
-        handler = logging.StreamHandler()
-        handler.setFormatter(ColorFormatter("%(levelname)s:     %(message)s"))
-        configured.addHandler(handler)
-
-    # Finalize the logger's level and propagation policy.
-    configured.setLevel(logging.INFO)
-    configured.propagate = False
-
-    return configured
-
-
 # Configure uvicorn's default and access-log formatting.
 log_config["formatters"]["default"] = {"()": ColorFormatter, "fmt": "%(levelname)s:     %(message)s"}
 log_config["formatters"]["access"] = {"()": ColorFormatter, "fmt": "%(levelname)s:     %(message)s"}
@@ -70,5 +53,5 @@ log_config.setdefault("filters", {})["api_access"] = {"()": ApiAccessFilter}
 log_config["handlers"]["access"]["filters"] = ["api_access"]
 
 
-# Configure the shared LongLink Solution logger.
-logger = configure_logger("longlink")
+# Resolve the shared LongLink Solution logger without configuring its consumers.
+logger = logging.getLogger("longlink")

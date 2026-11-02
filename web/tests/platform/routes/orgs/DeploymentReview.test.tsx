@@ -153,7 +153,7 @@ describe('DeploymentReview', () => {
         vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
         await act(async () =>
             mountedRoot.render(
-                <MemoryRouter initialEntries={['/orgs/acme']}>
+                <MemoryRouter initialEntries={['/orgs/00000000-0000-4000-8000-000000000002']}>
                     <Routes>
                         <Route element={<PlatformRoot />}>
                             <Route

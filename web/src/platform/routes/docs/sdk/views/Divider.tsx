@@ -30,11 +30,10 @@ export default function DividerPage() {
                     description: 'Extend the divider to container edges with negative margins.',
                 },
             ]}
-            examples={[
-                {
-                    title: 'Divider',
-                    preview: <DividerExample />,
-                    code: `function Example() {
+            example={{
+                title: 'Divider',
+                preview: <DividerExample />,
+                code: `function Example() {
   return (
     <Stack gap={3}>
       <Text>Before</Text>
@@ -43,8 +42,7 @@ export default function DividerPage() {
     </Stack>
   );
 }`,
-                },
-            ]}
+            }}
         />
     );
 }

@@ -1,7 +1,6 @@
 import { api } from '@/lib/api';
 import { useState } from 'react';
 import { useApiError } from '@/lib/errors';
-import { useApi } from '@/lib/hooks/use-api';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Avatar } from '@/components/ui/Avatar';
@@ -16,6 +15,23 @@ import { Illustration } from '@/components/Illustration';
 import { Table, proportional } from '@astryxdesign/core/Table';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
+import { queryOptions, useQueryClient, useSuspenseQueries } from '@tanstack/react-query';
+
+const membershipsQuery = queryOptions({
+    queryKey: ['api', '/api/v1/me/organizations'],
+    queryFn: ({ signal }) =>
+        api('/api/v1/me/organizations', { signal }).json(schemas.zUserOrganizationMembership.array()),
+    retry: false,
+    staleTime: 0,
+});
+
+const invitationsQuery = queryOptions({
+    queryKey: ['api', '/api/v1/me/invitations'],
+    queryFn: ({ signal }) =>
+        api('/api/v1/me/invitations', { signal }).json(schemas.zUserOrganizationInvitation.array()),
+    retry: false,
+    staleTime: 0,
+});
 
 /** Owns membership loading, pending invitations, and organization creation for the overview and account settings. */
 export default function OrganizationManagement({ presentation }: { presentation: 'overview' | 'settings' }) {
@@ -24,13 +40,14 @@ export default function OrganizationManagement({ presentation }: { presentation:
     >(null);
 
     const reportError = useApiError();
+    const client = useQueryClient();
 
-    const [memberships, invalidate] = useApi('/api/v1/me/organizations', schemas.zUserOrganizationMembership.array());
+    // Start independent account reads together, retaining their separate cache entries.
+    const [{ data: memberships }, { data: invitations }] = useSuspenseQueries({
+        queries: [membershipsQuery, invitationsQuery],
+    });
 
-    const [invitations, invalidateInvitations] = useApi(
-        '/api/v1/me/invitations',
-        schemas.zUserOrganizationInvitation.array()
-    );
+    const invalidateMemberships = () => client.invalidateQueries({ queryKey: membershipsQuery.queryKey, exact: true });
 
     const onboarding = presentation === 'overview' && memberships.length === 0 && invitations.length === 0;
 
@@ -138,13 +155,13 @@ export default function OrganizationManagement({ presentation }: { presentation:
                                                 <Text>{row.organization.name}</Text>
                                             ) : presentation === 'settings' ? (
                                                 <Stack direction="horizontal" gap={1} align="center">
-                                                    <Link href={`/orgs/${row.organization.slug}`}>
+                                                    <Link href={`/orgs/${row.organization.id}`}>
                                                         {row.organization.name}
                                                     </Link>
                                                     <Badge label={row.role} />
                                                 </Stack>
                                             ) : (
-                                                <Link href={`/orgs/${row.organization.slug}`}>
+                                                <Link href={`/orgs/${row.organization.id}`}>
                                                     {row.organization.name}
                                                 </Link>
                                             )}
@@ -199,7 +216,16 @@ export default function OrganizationManagement({ presentation }: { presentation:
                     />
                 )}
             </Stack>
-            {selected?.type === 'create' && <CreateOrganization onClose={closeSelected} invalidate={invalidate} />}
+            {selected?.type === 'create' && (
+                <CreateOrganization
+                    onClose={closeSelected}
+                    onSuccess={async () => {
+                        // Refresh memberships before closing only this creation attempt.
+                        await invalidateMemberships();
+                        closeSelected();
+                    }}
+                />
+            )}
             {selected && selected.type !== 'create' && (
                 <Dialog
                     isOpen
@@ -236,8 +262,11 @@ export default function OrganizationManagement({ presentation }: { presentation:
                                     } finally {
                                         // Refresh even when the invitation expired or was revoked before confirmation.
                                         await Promise.all([
-                                            invalidateInvitations(),
-                                            ...(selected.type === 'accept' ? [invalidate()] : []),
+                                            client.invalidateQueries({
+                                                queryKey: invitationsQuery.queryKey,
+                                                exact: true,
+                                            }),
+                                            ...(selected.type === 'accept' ? [invalidateMemberships()] : []),
                                         ]);
                                         closeSelected();
                                     }

@@ -7,7 +7,6 @@ from src.mcp import MCPMiddleware
 from longlink import errors as solution_errors
 from pydantic import TypeAdapter
 from src.utils import jobs
-from src.logger import logger as logger
 from src.routes import v1, mcp
 from src.kubernetes import client
 from src.operations import invoices

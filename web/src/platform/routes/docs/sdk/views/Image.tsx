@@ -21,15 +21,13 @@ export default function ImagePage() {
                     description: 'Accessible description of the photo.',
                 },
             ]}
-            examples={[
-                {
-                    title: 'Card photo',
-                    preview: <Image src={photo} alt="Skyline office towers" />,
-                    code: `function Example() {
+            example={{
+                title: 'Card photo',
+                preview: <Image src={photo} alt="Skyline office towers" />,
+                code: `function Example() {
   return <Image src="/api/demo/photos/skyline" alt="Skyline office towers" />;
 }`,
-                },
-            ]}
+            }}
         />
     );
 }

@@ -7,20 +7,18 @@ import { Center } from '@astryxdesign/core/Center';
 import Platform from '@/components/layouts/Platform';
 import { Heading } from '@astryxdesign/core/Heading';
 import { ApiBoundary } from '@/components/ApiBoundary';
-import { SolutionRuntime } from '@/components/Solution';
+import { SolutionPage } from '@/components/SolutionPage';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import NotFoundLayout from '@/components/layouts/NotFound';
-import { PageContainer } from '@/components/PageContainer';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { useParams, useOutletContext } from 'react-router';
-import { useAuthenticatedUser } from '@/lib/hooks/use-user';
-import { PageBreadcrumb } from '@/components/PageBreadcrumb';
+import { OrganizationSwitcher } from '@/platform/components/OrganizationSwitcher';
+import { OrganizationBreadcrumb } from '@/platform/components/OrganizationBreadcrumb';
 import { zUserOrganizationMembership, zOrganizationSolutionSummary } from '@/lib/generated/platform-api-v1/zod.gen';
 
 /** Renders one proxy-backed organization solution after membership resolves. */
 export default function OrganizationSolution() {
     const { organization = '', solution = '' } = useParams();
-    const user = useAuthenticatedUser();
     const membership = useOutletContext<z.output<typeof zUserOrganizationMembership>>();
 
     // Fetch accessible solutions after membership resolves and poll pending deployments.
@@ -36,14 +34,18 @@ export default function OrganizationSolution() {
     );
 
     // Keep the solution lookup and its existence check together.
-    const solutionAccess = solutions.find((item) => item.slug === solution);
+    const solutionAccess = solutions.find((item) => item.id === solution);
 
     if (!solutionAccess) {
         return <NotFoundLayout />;
     }
 
-    const action = <ProfileMenu user={user} />;
-    const breadcrumb = <PageBreadcrumb solutionName={solutionAccess.name} />;
+    const action = <ProfileMenu />;
+
+    const breadcrumb = (
+        <OrganizationBreadcrumb organization={membership.organization} solutionName={solutionAccess.name} />
+    );
+
     const canMaintain = ['maintain', 'admin', 'owner'].includes(membership.role);
 
     const deploymentNotice =
@@ -97,19 +99,14 @@ export default function OrganizationSolution() {
     }
 
     return (
-        <SolutionRuntime
+        <SolutionPage
+            action={action}
+            breadcrumb={breadcrumb}
+            sidebarHeader={<OrganizationSwitcher organization={membership.organization} />}
+            formatTitle={(title) => `${title ?? solutionAccess.name} | LongLink`}
             navigationBaseUrl={`/orgs/${organization}/solutions/${solution}`}
             viewsUrl={`/api/v1/solutions/${solutionAccess.id}/proxy/views.json`}
-        >
-            {({ content, tabs, title }) => (
-                <Platform action={action} breadcrumb={breadcrumb} tabs={tabs}>
-                    <title>{`${title ?? solutionAccess.name} | LongLink`}</title>
-                    <PageContainer height="100%" minHeight={0} padding={2}>
-                        {content}
-                    </PageContainer>
-                </Platform>
-            )}
-        </SolutionRuntime>
+        />
     );
 }
 

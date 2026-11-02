@@ -40,10 +40,13 @@ def create_fs(settings: Envs) -> AbstractFileSystem:
 
     # Production uses remote object storage supplied by the platform.
     if settings.ENV == "production":
-
         # s3fs connects lazily, so transfer CA cleanup only after constructing its owning filesystem.
         with ExitStack() as files:
-            certificate = files.enter_context(tls.verified_location(settings.STORAGE_CERTIFICATE))
+            certificate = (
+                files.enter_context(tls.certificate_file(settings.STORAGE_CERTIFICATE))
+                if settings.STORAGE_CERTIFICATE is not None
+                else None
+            )
             filesystem = fsspec.filesystem(
                 "s3",
                 endpoint_url=settings.STORAGE_ENDPOINT_URL,
@@ -73,7 +76,6 @@ def create_fs(settings: Envs) -> AbstractFileSystem:
         weakref.finalize(filesystem, _remove_memory_directory, memory, directory)
         return filesystem
     else:
-
         # Development keeps generated files inside a dedicated local directory.
         storage_path = Path.cwd() / ".storage"
         if scope is not None:

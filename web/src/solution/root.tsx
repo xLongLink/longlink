@@ -7,8 +7,8 @@ import { ApiProvider } from '@/components/ApiProvider';
 import { appearanceBootstrap } from '@/lib/appearance';
 import { LinkProvider } from '@astryxdesign/core/Link';
 import { LayerProvider } from '@astryxdesign/core/Layer';
-import { IconRequestContext } from '@/components/ui/Icon';
 import { AppearanceProvider } from '@/components/Appearance';
+import { IconRequestContext } from '@/components/ui/contexts';
 import { Links, Meta, Outlet, Scripts, ScrollRestoration } from 'react-router';
 import '@/index.css';
 
@@ -45,7 +45,7 @@ export function Layout({ children }: { children: ReactNode }) {
             <head>
                 <meta charSet="utf-8" />
                 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-                <script dangerouslySetInnerHTML={{ __html: appearanceBootstrap }} />
+                <script>{appearanceBootstrap}</script>
                 <meta name="robots" content="noindex, nofollow" />
                 <Meta />
                 <Links />

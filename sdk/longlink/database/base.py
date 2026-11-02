@@ -1,6 +1,5 @@
 import ssl
 import asyncio
-import sqlalchemy
 from uuid import UUID
 from datetime import UTC, datetime
 from sqlmodel import Field, SQLModel
@@ -127,16 +126,12 @@ class Database:
 
                         # Seed the local user within the initialization transaction.
                         users = SQLModel.metadata.tables["users"]
-                        user_id = await conn.scalar(sqlalchemy.select(users.c.id).where(users.c.id == LOCAL_USER_ID))
-                        if user_id is None:
-
-                            # Seed only the fixed local identity, preserving existing profile changes.
-                            name = "Development user" if self._env.ENV == "development" else "Testing user"
-                            await conn.execute(
-                                sqlalchemy.insert(users).values(
-                                    id=LOCAL_USER_ID, name=name, email="local@example.com", avatar="", updated_at=datetime.now(UTC)
-                                )
-                            )
+                        name = "Development user" if self._env.ENV == "development" else "Testing user"
+                        await conn.execute(
+                            sqlite.insert(users)
+                            .values(id=LOCAL_USER_ID, name=name, email="local@example.com", avatar="", updated_at=datetime.now(UTC))
+                            .on_conflict_do_nothing(index_elements=[users.c.id])
+                        )
 
             # Failed or cancelled initialization must dispose the unpublished engine.
             except BaseException:
