@@ -10,8 +10,8 @@ export default function Projects() {
                 <Heading level={1}>Projects</Heading>
                 <Text color="secondary">This can be used for tracking projects in a gallery.</Text>
             </Stack>
-            <Grid columns={{ minWidth: 200, max: 4 }} gap={2} align="stretch">
-                {projects.map((project) => (
+            <Grid columns={{ minWidth: 240, max: 3 }} gap={4} align="stretch">
+                {projects.slice(0, 6).map((project) => (
                     <Card
                         key={project.id}
                         href={`/projects/${project.id}`}
@@ -21,30 +21,28 @@ export default function Projects() {
                         height="100%"
                         isClipped
                     >
-                        <Stack gap={0} height="100%">
+                        <Stack gap={0}>
                             <Image src={`/api/demo/photos/${project.photo}`} alt={`${project.name} building`} />
-                            <StackItem size="fill">
-                                <Stack gap={4} padding={3} height="100%" justify="between">
-                                    <Stack gap={0} align="start">
-                                        <Text as="h2" type="label" maxLines={1}>
-                                            {project.name}
-                                        </Text>
-                                        <Badge
-                                            label={project.status}
-                                            variant={
-                                                project.status === 'Completed'
-                                                    ? 'success'
-                                                    : project.status === 'In progress'
-                                                      ? 'warning'
-                                                      : 'neutral'
-                                            }
-                                        />
-                                    </Stack>
-                                    <Text type="supporting" maxLines={2}>
-                                        {project.description}
+                            <Stack gap={3} padding={4}>
+                                <Stack gap={2} align="start">
+                                    <Text as="h2" type="label" maxLines={1}>
+                                        {project.name}
                                     </Text>
+                                    <Badge
+                                        label={project.status}
+                                        variant={
+                                            project.status === 'Completed'
+                                                ? 'success'
+                                                : project.status === 'In progress'
+                                                  ? 'warning'
+                                                  : 'neutral'
+                                        }
+                                    />
                                 </Stack>
-                            </StackItem>
+                                <Text type="supporting" maxLines={2}>
+                                    {project.description}
+                                </Text>
+                            </Stack>
                         </Stack>
                     </Card>
                 ))}
