@@ -2,7 +2,6 @@ import { PanelLeft } from 'lucide-react';
 import { useLocation } from 'react-router';
 import { Card } from '@astryxdesign/core/Card';
 import { Link } from '@astryxdesign/core/Link';
-import type { LucideIcon } from 'lucide-react';
 import { Wordmark } from '@/components/Wordmark';
 import { Stack } from '@astryxdesign/core/Stack';
 import { TopNav } from '@astryxdesign/core/TopNav';
@@ -14,14 +13,14 @@ import { useMediaQuery } from '@astryxdesign/core/hooks';
 import { Tab, TabList } from '@astryxdesign/core/TabList';
 import { OrganizationSwitcher } from '@/components/PageBreadcrumb';
 import { BreadcrumbItem, Breadcrumbs } from '@astryxdesign/core/Breadcrumbs';
+import { createContext, useState, type ReactElement, type ReactNode } from 'react';
 import { SideNav, SideNavItem, SideNavCollapseButton } from '@astryxdesign/core/SideNav';
-import { createContext, isValidElement, useState, type ReactElement, type ReactNode } from 'react';
 
 export const SidebarContext = createContext<'expanded' | 'collapsed' | null>(null);
 
 export type NavigationTab = {
     href: string;
-    icon?: LucideIcon | ReactElement;
+    icon?: ReactElement;
     label: string;
 };
 
@@ -127,26 +126,16 @@ export default function Platform({
                         }
                     >
                         <Stack padding={2}>
-                            {tabs.map((tab) => {
-                                const Icon = tab.icon;
-
-                                return (
-                                    <SideNavItem
-                                        href={tab.href}
-                                        icon={
-                                            isValidElement(Icon) ? (
-                                                Icon
-                                            ) : Icon ? (
-                                                <Icon aria-hidden="true" size={16} />
-                                            ) : undefined
-                                        }
-                                        isSelected={selectedTab === tab.href}
-                                        key={tab.href}
-                                        label={tab.label}
-                                        onClick={() => setIsMobileCollapsed(true)}
-                                    />
-                                );
-                            })}
+                            {tabs.map((tab) => (
+                                <SideNavItem
+                                    href={tab.href}
+                                    icon={tab.icon}
+                                    isSelected={selectedTab === tab.href}
+                                    key={tab.href}
+                                    label={tab.label}
+                                    onClick={() => setIsMobileCollapsed(true)}
+                                />
+                            ))}
                         </Stack>
                     </SideNav>
                 ) : undefined
@@ -174,25 +163,15 @@ export default function Platform({
                                     size="sm"
                                     value={selectedTab}
                                 >
-                                    {tabs.map((tab) => {
-                                        const Icon = tab.icon;
-
-                                        return (
-                                            <Tab
-                                                href={tab.href}
-                                                icon={
-                                                    isValidElement(Icon) ? (
-                                                        Icon
-                                                    ) : Icon ? (
-                                                        <Icon aria-hidden="true" size={16} />
-                                                    ) : undefined
-                                                }
-                                                key={tab.href}
-                                                label={tab.label}
-                                                value={tab.href}
-                                            />
-                                        );
-                                    })}
+                                    {tabs.map((tab) => (
+                                        <Tab
+                                            href={tab.href}
+                                            icon={tab.icon}
+                                            key={tab.href}
+                                            label={tab.label}
+                                            value={tab.href}
+                                        />
+                                    ))}
                                 </TabList>
                             </Stack>
                         )}

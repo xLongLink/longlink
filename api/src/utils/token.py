@@ -17,6 +17,7 @@ PASSWORD_RESET_TOKEN_AUDIENCE = "longlink:reset-password"
 OAUTH_STATE_TOKEN_AUDIENCE = "longlink:oauth"
 EMAIL_TOKEN_LIFETIME_SECONDS = 3600
 OAUTH_STATE_TOKEN_LIFETIME_SECONDS = 600
+AUTH_SESSION_LIFETIME_SECONDS = 2592000
 
 # Compile canonical email validation once for all signed registration claims.
 EMAIL_ADAPTER = TypeAdapter(Email)
@@ -164,7 +165,7 @@ def create_auth_token(user: User) -> str:
             "aud": AUTH_TOKEN_AUDIENCE,
             # Browser sessions remain bounded even when the password does not change.
             "iat": issued_at,
-            "exp": issued_at + timedelta(days=30),
+            "exp": issued_at + timedelta(seconds=AUTH_SESSION_LIFETIME_SECONDS),
         },
         env.SESSION_KEY,
         algorithm=JWT_ALGORITHM,

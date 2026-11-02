@@ -31,7 +31,7 @@ async def set_auth_session(session: AsyncSession, response: Response, user: User
         await session.commit()
 
     # Publish authentication as a private, browser-only session only after persistence succeeds.
-    cookies.set_browser_cookie(response, cookies.AUTH_COOKIE, token.create_auth_token(user), 2592000)
+    cookies.set_browser_cookie(response, cookies.AUTH_COOKIE, token.create_auth_token(user), token.AUTH_SESSION_LIFETIME_SECONDS)
 
 
 def oauth_failure_response() -> RedirectResponse:

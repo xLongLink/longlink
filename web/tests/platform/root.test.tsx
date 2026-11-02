@@ -1,17 +1,20 @@
 // @vitest-environment happy-dom
 import { it, expect } from 'vitest';
-import { renderStatic } from '../render';
 import PlatformRoot from '@/platform/root';
-import { Route, Routes } from 'react-router';
+import { renderToStaticMarkup } from 'react-dom/server';
+import { MemoryRouter, Route, Routes } from 'react-router';
 
 it('retains the routed Platform content within shared providers', () => {
     // Act
-    const output = renderStatic(
-        <Routes>
-            <Route element={<PlatformRoot />}>
-                <Route path="/" element={<main>Platform page</main>} />
-            </Route>
-        </Routes>
+    const output = document.createElement('section');
+    output.innerHTML = renderToStaticMarkup(
+        <MemoryRouter>
+            <Routes>
+                <Route element={<PlatformRoot />}>
+                    <Route path="/" element={<main>Platform page</main>} />
+                </Route>
+            </Routes>
+        </MemoryRouter>
     );
 
     // Assert

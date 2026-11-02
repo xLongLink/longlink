@@ -1,9 +1,9 @@
 // @vitest-environment happy-dom
 import { it, expect } from 'vitest';
-import { renderStatic } from '../render';
 import { useApiError } from '@/lib/errors';
 import SolutionRoot from '@/solution/root';
-import { Route, Routes } from 'react-router';
+import { renderToStaticMarkup } from 'react-dom/server';
+import { MemoryRouter, Route, Routes } from 'react-router';
 
 it('supplies the shared request error boundary to routed children', () => {
     // Arrange
@@ -14,12 +14,15 @@ it('supplies the shared request error boundary to routed children', () => {
     }
 
     // Act
-    const output = renderStatic(
-        <Routes>
-            <Route element={<SolutionRoot />}>
-                <Route path="/" element={<Page />} />
-            </Route>
-        </Routes>
+    const output = document.createElement('section');
+    output.innerHTML = renderToStaticMarkup(
+        <MemoryRouter>
+            <Routes>
+                <Route element={<SolutionRoot />}>
+                    <Route path="/" element={<Page />} />
+                </Route>
+            </Routes>
+        </MemoryRouter>
     );
 
     // Assert
