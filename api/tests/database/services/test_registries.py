@@ -3,6 +3,7 @@ from uuid import UUID
 from fastapi import HTTPException
 from factories import create_organization
 from src.utils import images
+from sqlalchemy.orm import object_session
 from src.models.types import Image
 from src.models.metadata import LongLinkMetadata
 from src.database.session import session_scope
@@ -35,6 +36,8 @@ async def test_private_image_fallback_never_uses_foreign_credentials(
         """Model anonymous denial, a rejected local token, and an accepted local token."""
 
         assert requested == image
+        if connection is not None:
+            assert object_session(connection) is None
         attempts.append(connection.credential if connection is not None else None)
         if connection is None or connection.id == denied.id:
             raise HTTPException(status_code=403, detail="Registry denied access")
@@ -46,8 +49,7 @@ async def test_private_image_fallback_never_uses_foreign_credentials(
     monkeypatch.setattr(images, "required_metadata", required_metadata)
 
     # Act
-    async with session_scope() as session:
-        result = await registries.inspect(session, organization.id, image)
+    result = await registries.inspect(organization.id, image)
 
     # Assert
     assert result == (metadata, accepted.id)
@@ -81,9 +83,8 @@ async def test_private_image_fallback_stops_on_invalid_metadata(
     monkeypatch.setattr(images, "required_metadata", required_metadata)
 
     # Act
-    async with session_scope() as session:
-        with pytest.raises(HTTPException, match="422: Image is missing required LongLink metadata") as raised:
-            await registries.inspect(session, organization.id, Image("ghcr.io/acme/private:latest"))
+    with pytest.raises(HTTPException, match="422: Image is missing required LongLink metadata") as raised:
+        await registries.inspect(organization.id, Image("ghcr.io/acme/private:latest"))
 
     # Assert
     assert raised.value is failure

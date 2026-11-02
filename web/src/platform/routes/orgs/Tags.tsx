@@ -1,10 +1,10 @@
 import { z } from 'zod';
 import { api } from '@/lib/api';
 import * as tabs from '@/platform/tabs';
+import { FormDialog } from './FormDialog';
 import { useApiError } from '@/lib/errors';
 import { Form } from '@/components/ui/Form';
 import { Text } from '@astryxdesign/core/Text';
-import { Dialog } from '@/components/ui/Dialog';
 import { Stack } from '@astryxdesign/core/Stack';
 import { useState, isValidElement } from 'react';
 import { Button } from '@astryxdesign/core/Button';
@@ -17,7 +17,6 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Table, proportional } from '@astryxdesign/core/Table';
 import { MultiSelector } from '@astryxdesign/core/MultiSelector';
 import { ArrowDown, ArrowUp, Pencil, Trash } from 'lucide-react';
-import { Layout, LayoutContent } from '@astryxdesign/core/Layout';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 
 type Tag = z.output<typeof schemas.zOrganizationTagResponse>;
@@ -197,58 +196,31 @@ function TagForm({
     }
 
     return (
-        <Dialog
-            isOpen
-            onOpenChange={(open) => {
-                if (!open) onCancel();
-            }}
-        >
-            <Stack height="min(560px, calc(100dvh - var(--spacing-10) * 4))">
-                <Layout
-                    padding={0}
-                    content={
-                        <LayoutContent padding={8}>
-                            <Stack
-                                gap={6}
-                                minHeight="100%"
-                                justify="center"
-                                width="100%"
-                                maxWidth={640}
-                                className="mx-auto"
-                            >
-                                <Heading level={2} justify="center">
-                                    {tag ? 'Edit tab' : 'New tab'}
-                                </Heading>
-                                <Form action={save}>
-                                    <Stack gap={3}>
-                                        <TextInput label="Name" name="name" defaultValue={tag?.name ?? ''} required />
-                                        <Selector
-                                            label="Icon"
-                                            value={icon}
-                                            onChange={(value) => setIcon(schemas.zTagIcon.parse(value))}
-                                            options={Object.entries(tabs.icons).map(([value, option]) => ({
-                                                value,
-                                                label: option.label,
-                                                icon: <option.component className="size-4" aria-hidden="true" />,
-                                            }))}
-                                            hasSearch
-                                        />
-                                        <Stack direction="horizontal" gap={2}>
-                                            <Button
-                                                label={tag ? 'Save' : 'Create tab'}
-                                                type="submit"
-                                                variant="primary"
-                                            />
-                                            <Button label="Cancel" type="button" variant="ghost" onClick={onCancel} />
-                                        </Stack>
-                                    </Stack>
-                                </Form>
-                            </Stack>
-                        </LayoutContent>
-                    }
-                />
-            </Stack>
-        </Dialog>
+        <FormDialog gap={6} onClose={onCancel}>
+            <Heading level={2} justify="center">
+                {tag ? 'Edit tab' : 'New tab'}
+            </Heading>
+            <Form action={save}>
+                <Stack gap={3}>
+                    <TextInput label="Name" name="name" defaultValue={tag?.name ?? ''} required />
+                    <Selector
+                        label="Icon"
+                        value={icon}
+                        onChange={(value) => setIcon(schemas.zTagIcon.parse(value))}
+                        options={Object.entries(tabs.icons).map(([value, option]) => ({
+                            value,
+                            label: option.label,
+                            icon: <option.component className="size-4" aria-hidden="true" />,
+                        }))}
+                        hasSearch
+                    />
+                    <Stack direction="horizontal" gap={2}>
+                        <Button label={tag ? 'Save' : 'Create tab'} type="submit" variant="primary" />
+                        <Button label="Cancel" type="button" variant="ghost" onClick={onCancel} />
+                    </Stack>
+                </Stack>
+            </Form>
+        </FormDialog>
     );
 }
 
@@ -276,68 +248,45 @@ export function SolutionTags({
     }
 
     return (
-        <Dialog
-            isOpen
-            onOpenChange={(open) => {
-                if (!open) onClose();
-            }}
-        >
-            <Stack height="min(560px, calc(100dvh - var(--spacing-10) * 4))">
-                <Layout
-                    padding={0}
-                    content={
-                        <LayoutContent padding={8}>
-                            <Stack
-                                gap={6}
-                                minHeight="100%"
-                                justify="center"
-                                width="100%"
-                                maxWidth={640}
-                                className="mx-auto"
-                            >
-                                <Heading level={2} justify="center">
-                                    Tags for {solution.name}
-                                </Heading>
-                                <Form action={save}>
-                                    <Stack gap={4}>
-                                        <MultiSelector
-                                            label="Tags"
-                                            value={tagIds}
-                                            onChange={setTagIds}
-                                            options={tags
-                                                .filter((tag) => tag.kind === 'tag')
-                                                .map((tag) => {
-                                                    const Icon = tabs.icons[tag.icon].component;
+        <FormDialog gap={6} onClose={onClose}>
+            <Heading level={2} justify="center">
+                Tags for {solution.name}
+            </Heading>
+            <Form action={save}>
+                <Stack gap={4}>
+                    <MultiSelector
+                        label="Tags"
+                        value={tagIds}
+                        onChange={setTagIds}
+                        options={tags
+                            .filter((tag) => tag.kind === 'tag')
+                            .map((tag) => {
+                                const Icon = tabs.icons[tag.icon].component;
 
-                                                    return {
-                                                        value: tag.id,
-                                                        label: tag.name,
-                                                        icon: <Icon className="size-4" aria-hidden="true" />,
-                                                    };
-                                                })}
-                                            renderOption={(option) => (
-                                                <Stack direction="horizontal" gap={2} align="center">
-                                                    {isValidElement(option.icon) && option.icon}
-                                                    <Text>{option.label}</Text>
-                                                </Stack>
-                                            )}
-                                            triggerDisplay="labels"
-                                            placeholder="Select tags"
-                                            hasSearch
-                                            hasClear
-                                            emptyText="Create tabs in organization settings under General first."
-                                        />
-                                        <Stack direction="horizontal" gap={2} justify="end">
-                                            <Button label="Cancel" type="button" variant="ghost" onClick={onClose} />
-                                            <Button label="Save" type="submit" variant="primary" />
-                                        </Stack>
-                                    </Stack>
-                                </Form>
+                                return {
+                                    value: tag.id,
+                                    label: tag.name,
+                                    icon: <Icon className="size-4" aria-hidden="true" />,
+                                };
+                            })}
+                        renderOption={(option) => (
+                            <Stack direction="horizontal" gap={2} align="center">
+                                {isValidElement(option.icon) && option.icon}
+                                <Text>{option.label}</Text>
                             </Stack>
-                        </LayoutContent>
-                    }
-                />
-            </Stack>
-        </Dialog>
+                        )}
+                        triggerDisplay="labels"
+                        placeholder="Select tags"
+                        hasSearch
+                        hasClear
+                        emptyText="Create tabs in organization settings under General first."
+                    />
+                    <Stack direction="horizontal" gap={2} justify="end">
+                        <Button label="Cancel" type="button" variant="ghost" onClick={onClose} />
+                        <Button label="Save" type="submit" variant="primary" />
+                    </Stack>
+                </Stack>
+            </Form>
+        </FormDialog>
     );
 }

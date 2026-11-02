@@ -53,13 +53,5 @@ log_config.setdefault("filters", {})["api_access"] = {"()": ApiAccessFilter}
 log_config["handlers"]["access"]["filters"] = ["api_access"]
 
 
-# Configure the shared LongLink Solution logger.
+# Resolve the shared LongLink Solution logger without configuring its consumers.
 logger = logging.getLogger("longlink")
-if not logger.handlers:
-    handler = logging.StreamHandler()
-    handler.setFormatter(ColorFormatter("%(levelname)s:     %(message)s"))
-    logger.addHandler(handler)
-
-# Finalize the logger's level and propagation policy.
-logger.setLevel(logging.INFO)
-logger.propagate = False

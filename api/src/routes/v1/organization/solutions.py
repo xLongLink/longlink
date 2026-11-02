@@ -10,8 +10,11 @@ router = APIRouter()
 async def create_solution(session: auth.Session, payload: SolutionCreate, membership: auth.OrganizationMaintainer):
     """Create Solution state and queue its explicit deployment lifecycle."""
 
+    # Release the authorization transaction before registry I/O.
+    await session.commit()
+
     # Resolve immutable image metadata before creating durable Solution state.
-    metadata, connection_id = await registries.inspect(session, membership.organization_id, payload.image)
+    metadata, connection_id = await registries.inspect(membership.organization_id, payload.image)
 
     await solutions.create(
         session,

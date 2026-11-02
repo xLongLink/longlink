@@ -6,6 +6,7 @@ from sqlalchemy import select
 from src.models.roles import OrganizationRoles
 from src.models.types import Image
 from src.models.metadata import LongLinkMetadata
+from src.database.session import session_scope
 from src.database.services import operations, organizations
 from src.models.operations import OperationKind
 from src.models.registries import RegistryCreate
@@ -85,14 +86,8 @@ async def resolve(session: AsyncSession, organization_id: UUID, connection_id: U
     return connection
 
 
-async def inspect(session: AsyncSession, organization_id: UUID, image: Image) -> tuple[LongLinkMetadata, UUID | None]:
-    """Inspect anonymously first, then try tenant-owned credentials.
-
-    The caller must have no pending writes; read transactions are committed before registry I/O.
-    """
-
-    # Release the caller's read-only authorization transaction before registry I/O.
-    await session.commit()
+async def inspect(organization_id: UUID, image: Image) -> tuple[LongLinkMetadata, UUID | None]:
+    """Inspect anonymously first, then try tenant-owned credentials outside a database session."""
 
     # Public images must not depend on saved credentials; retry only registry access denials.
     try:
@@ -105,13 +100,13 @@ async def inspect(session: AsyncSession, organization_id: UUID, image: Image) ->
             raise
 
     # Only matching credentials in the caller-authorized organization may reach this registry.
-    result = await session.scalars(
-        select(RegistryConnection).where(col(RegistryConnection.organization_id) == organization_id).order_by(col(RegistryConnection.id))
-    )
-    connections = result.all()
-
-    # Loaded credentials remain available after commit without reopening a transaction.
-    await session.commit()
+    async with session_scope() as session:
+        result = await session.scalars(
+            select(RegistryConnection)
+            .where(col(RegistryConnection.organization_id) == organization_id)
+            .order_by(col(RegistryConnection.id))
+        )
+        connections = result.all()
 
     # Stop on a successful lookup or a non-authentication error, never masking invalid metadata.
     for connection in connections:

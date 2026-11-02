@@ -107,7 +107,6 @@ async def test_issue_recovers_remote_success_after_crash_without_duplicate_charg
         storage_bytes=2 * 1024**3 + 1,
     )
     async with session_scope() as session:
-
         # Persist pending usage before exercising remote issuance retries.
         session.add(invoice)
         await session.commit()
@@ -132,7 +131,6 @@ async def test_issue_recovers_remote_success_after_crash_without_duplicate_charg
             assert parse_qs(urlsplit(url).query)["customer"] == ["cus_retry"]
             payload = {"object": "list", "data": remote_invoices, "has_more": False, "url": path}
         elif method == "post" and path == "/v1/invoices":
-
             # New invoices must not absorb unrelated pending customer items.
             assert params["customer"] == ["cus_retry"]
             assert params["pending_invoice_items_behavior"] == ["exclude"]
@@ -219,7 +217,6 @@ async def test_issue_recovers_remote_success_after_crash_without_duplicate_charg
 
         # Finalization records the total that would become chargeable.
         elif method == "post" and path == "/v1/invoices/in_1/finalize":
-
             # Finalization opts into Stripe's normal automatic collection lifecycle.
             assert params["auto_advance"] == ["true"]
             remote_invoices[0]["status"] = "open"
@@ -253,8 +250,10 @@ async def test_issue_recovers_remote_success_after_crash_without_duplicate_charg
     crash_after = ""
     async with session_scope() as session:
         await invoices.issue(session, invoice.id)
+        await session.commit()
     async with session_scope() as session:
         await invoices.issue(session, invoice.id)
+        await session.commit()
 
     # Assert
     async with session_scope() as session:

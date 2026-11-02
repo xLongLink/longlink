@@ -103,7 +103,6 @@ async def issue(session: AsyncSession, invoice_id: UUID) -> None:
             # Recover an already-created invoice after a local commit interruption.
             async for candidate in existing.auto_paging_iter():
                 if (candidate.to_dict().get("metadata") or {}).get("longlink_invoice_id") == str(invoice.id):
-
                     # Multiple remote matches require manual review, not another charge.
                     if remote is not None:
                         raise HTTPException(status_code=409, detail="Duplicate Stripe invoices require administrator review")
@@ -164,7 +163,6 @@ async def issue(session: AsyncSession, invoice_id: UUID) -> None:
 
                 # Recovered items must match the expected price and quantity exactly.
                 if matched:
-
                     # Refuse ambiguous or modified invoice items instead of charging again.
                     if (
                         len(matched) != 1
@@ -201,7 +199,6 @@ async def issue(session: AsyncSession, invoice_id: UUID) -> None:
 
                 # Only a missing coupon permits creation during retry recovery.
                 except InvalidRequestError as error:
-
                     # Authentication and provider failures must not trigger coupon creation.
                     if error.code != "resource_missing":
                         raise
@@ -247,7 +244,6 @@ async def issue(session: AsyncSession, invoice_id: UUID) -> None:
 
     # Mark issuance complete only after Stripe accepts the invoice.
     invoice.issued_at = datetime.now(UTC)
-    await session.commit()
 
 
 async def run() -> None:
@@ -256,7 +252,6 @@ async def run() -> None:
     if not env.stripe_enabled:
         return
     while True:
-
         # Use the latest closed UTC month; outages never fabricate several months of historical usage.
         with contextlib.suppress(Exception):
             period_end = datetime.now(UTC).replace(day=1, hour=0, minute=0, second=0, microsecond=0)
@@ -285,8 +280,8 @@ async def run() -> None:
             # One failed Stripe request must not block other pending invoices.
             for invoice_id in invoice_ids:
                 with contextlib.suppress(Exception):
-
                     # Each pending invoice gets an independent issuance transaction.
                     async with session_scope() as session:
                         await issue(session, invoice_id)
+                        await session.commit()
         await asyncio.sleep(60)
