@@ -260,7 +260,6 @@ function MembersSection({ base, role }: { base: string; role: OrganizationContex
 
     const [member, setMember] = useState<{
         id: string;
-        name: string;
         action: { kind: 'role'; role: string } | { kind: 'remove' };
     } | null>(null);
 
@@ -327,7 +326,6 @@ function MembersSection({ base, role }: { base: string; role: OrganizationContex
                                                                         onClick: () =>
                                                                             setMember({
                                                                                 id: row.user.id,
-                                                                                name: row.user.name,
                                                                                 action: { kind: 'role', role },
                                                                             }),
                                                                     },
@@ -339,7 +337,6 @@ function MembersSection({ base, role }: { base: string; role: OrganizationContex
                                                           onClick: () =>
                                                               setMember({
                                                                   id: row.user.id,
-                                                                  name: row.user.name,
                                                                   action: { kind: 'remove' },
                                                               }),
                                                       },
@@ -367,8 +364,8 @@ function MembersSection({ base, role }: { base: string; role: OrganizationContex
                     <Stack gap={3}>
                         <Text color="secondary">
                             {member.action.kind === 'remove'
-                                ? `Remove ${member.name} from this organization? Access is revoked immediately.`
-                                : `Change ${member.name} to ${member.action.role}?`}
+                                ? `Remove ${selectedMember.user.name} from this organization? Access is revoked immediately.`
+                                : `Change ${selectedMember.user.name} to ${member.action.role}?`}
                         </Text>
                         <Stack direction="horizontal" gap={2} justify="end">
                             <Button label="Cancel" variant="ghost" onClick={() => setMember(null)} />
