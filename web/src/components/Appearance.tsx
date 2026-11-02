@@ -3,13 +3,9 @@ import type { ReactNode } from 'react';
 import { Theme } from '@astryxdesign/core/theme';
 import { stoneTheme } from '@/lib/generated/stone.js';
 import { useCurrentUser } from '@/lib/hooks/use-user';
+import { AppearanceContext, useAppearance } from '@/lib/hooks/use-appearance';
+import { useEffect, useLayoutEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import { appearanceSchema, clearAppearanceCache, defaultAppearance, type Appearance } from '@/lib/appearance';
-import { createContext, useContext, useEffect, useLayoutEffect, useMemo, useState, useSyncExternalStore } from 'react';
-
-const AppearanceContext = createContext({
-    appearance: defaultAppearance,
-    setAppearance: (_appearance: Appearance) => {},
-});
 
 /** Observes optional startup data without sharing state between documents. */
 function subscribeToCache(notify: () => void) {
@@ -67,11 +63,6 @@ export function AppearanceProvider({ children }: { children: ReactNode }) {
             </Theme>
         </AppearanceContext>
     );
-}
-
-/** Reads the current appearance and supports immediate previews while saving. */
-export function useAppearance() {
-    return useContext(AppearanceContext);
 }
 
 /** Refreshes account preferences on navigation/focus and clears them on session loss. */

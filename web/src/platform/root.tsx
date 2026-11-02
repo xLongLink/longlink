@@ -9,7 +9,7 @@ import { ApiProvider } from '@/components/ApiProvider';
 import { appearanceBootstrap } from '@/lib/appearance';
 import { LinkProvider } from '@astryxdesign/core/Link';
 import { LayerProvider } from '@astryxdesign/core/Layer';
-import { IconRequestContext } from '@/components/ui/Icon';
+import { IconRequestContext } from '@/components/ui/contexts';
 import { AppearanceProvider, AppearanceSync } from '@/components/Appearance';
 import { Links, Meta, Outlet, Scripts, ScrollRestoration, useLocation } from 'react-router';
 import '@/index.css';
