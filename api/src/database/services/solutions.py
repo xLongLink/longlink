@@ -158,7 +158,7 @@ async def access(session: AsyncSession, solution_id: UUID, user_id: UUID, *, loc
     return solution
 
 
-async def _update_candidate(
+async def inspect_update(
     session: AsyncSession, solution: Solution, user_id: UUID, expected_revision_id: UUID | None = None
 ) -> tuple[Solution, Revision, LongLinkMetadata]:
     """Inspect the repository's latest image and revalidate the desired revision."""
@@ -188,25 +188,11 @@ async def _update_candidate(
     return solution, revision, metadata
 
 
-async def check_update(session: AsyncSession, solution: Solution, user_id: UUID) -> dict[str, object]:
-    """Describe the inspected candidate without exposing release admission state."""
-
-    # Expose the reviewed revision and configured names, never environment values.
-    _solution, revision, metadata = await _update_candidate(session, solution, user_id)
-    return {
-        "current_image": revision.image,
-        "current_version": revision.version,
-        "metadata": metadata,
-        "revision_id": revision.id,
-        "configured_envs": sorted(revision.envs),
-    }
-
-
 async def apply_update(session: AsyncSession, solution: Solution, user_id: UUID, payload: SolutionPatch) -> None:
     """Inspect and admit an update in the caller's final transaction."""
 
     # Inspect without command locks, then revalidate the desired state and maintenance access.
-    solution, _revision, metadata = await _update_candidate(session, solution, user_id, payload.expected_revision_id)
+    solution, _revision, metadata = await inspect_update(session, solution, user_id, payload.expected_revision_id)
 
     # Compare and merge only against the current serialized desired state.
     await _deploy(session, solution, user_id, metadata, payload.envs)

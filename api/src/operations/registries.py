@@ -47,4 +47,3 @@ async def synchronize(cluster: Kubernetes, organization_id: UUID) -> None:
             secret = cast(Secret, candidate)
             if secret.name not in active:
                 await secret.delete()
-        await session.commit()

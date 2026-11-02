@@ -14,7 +14,7 @@ from src.environments import env
 from src.models.roles import OrganizationRoles
 from botocore.exceptions import ClientError, BotoCoreError
 from src.models.resources import OrganizationSolutionSummary
-from src.database.services import organizations
+from src.database.services import invitations, organizations
 from src.kubernetes.client import Kubernetes
 from src.kubernetes.storage import Storage
 from src.models.organizations import (
@@ -46,7 +46,7 @@ async def get_organization_invitations(session: auth.Session, membership: auth.O
     # Restrict invitation visibility to Organization managers.
     if not roles.atleast(membership.role, OrganizationRoles.maintain):
         return []
-    return await organizations.invitations(session, membership.organization_id)
+    return await invitations.fetch(session, membership.organization_id)
 
 
 @router.get("/organizations/{organization_id}/solutions", response_model=list[OrganizationSolutionSummary])
@@ -150,7 +150,7 @@ async def create_organization_invitation(
     # Preserve immutable delivery context before authorization refreshes the membership.
     organization_name = membership.organization.name
 
-    await organizations.create_invitation(session, membership.organization_id, payload, membership.user_id)
+    await invitations.create(session, membership.organization_id, payload, membership.user_id)
     await session.commit()
 
     # Deliver only after the invitation transaction commits, and tell the inviter when delivery fails.
@@ -166,7 +166,7 @@ async def create_organization_invitation(
 async def revoke_organization_invitation(session: auth.Session, invitation_id: UUID, membership: auth.OrganizationMaintainer):
     """Revoke one pending Organization invitation."""
 
-    await organizations.revoke_invitation(session, membership.organization_id, invitation_id, membership.user_id)
+    await invitations.revoke(session, membership.organization_id, invitation_id, membership.user_id)
     await session.commit()
 
 

@@ -9,8 +9,12 @@ export default function UserLayout() {
         <Platform
             action={<ProfileMenu />}
             tabs={[
-                { href: '/user/organizations', icon: Building2, label: 'Organizations' },
-                { href: '/user/settings', icon: Settings2, label: 'Settings' },
+                {
+                    href: '/user/organizations',
+                    icon: <Building2 aria-hidden="true" size={16} />,
+                    label: 'Organizations',
+                },
+                { href: '/user/settings', icon: <Settings2 aria-hidden="true" size={16} />, label: 'Settings' },
             ]}
         >
             <Outlet />

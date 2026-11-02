@@ -1,5 +1,5 @@
 // @vitest-environment happy-dom
-import { act, Suspense } from 'react';
+import { act } from 'react';
 import { createHash } from 'node:crypto';
 import { createRoot } from 'react-dom/client';
 import { MessagePort } from 'node:worker_threads';
@@ -387,26 +387,24 @@ describe('SolutionRuntime', () => {
                 <ApiErrorContext value={createErrorReporter(vi.fn())}>
                     <QueryClientProvider client={client}>
                         <MemoryRouter initialEntries={[initialPath]}>
-                            <Suspense fallback={null}>
-                                <Routes>
-                                    <Route
-                                        element={
-                                            <SolutionRuntime viewsUrl={viewsUrl}>
-                                                {({ content, tabs, title }) => (
-                                                    <>
-                                                        <Location
-                                                            tabs={tabs.map((tab) => tab.href).join(',')}
-                                                            title={title}
-                                                        />
-                                                        {content}
-                                                    </>
-                                                )}
-                                            </SolutionRuntime>
-                                        }
-                                        path="*"
-                                    />
-                                </Routes>
-                            </Suspense>
+                            <Routes>
+                                <Route
+                                    element={
+                                        <SolutionRuntime viewsUrl={viewsUrl}>
+                                            {({ content, tabs, title }) => (
+                                                <>
+                                                    <Location
+                                                        tabs={tabs.map((tab) => tab.href).join(',')}
+                                                        title={title}
+                                                    />
+                                                    {content}
+                                                </>
+                                            )}
+                                        </SolutionRuntime>
+                                    }
+                                    path="*"
+                                />
+                            </Routes>
                         </MemoryRouter>
                     </QueryClientProvider>
                 </ApiErrorContext>

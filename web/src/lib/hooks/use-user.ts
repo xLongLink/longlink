@@ -26,11 +26,35 @@ export function useUpdateUser() {
     // Share a scope so overlapping controls cannot publish older profile snapshots out of order.
     return useMutation({
         scope: { id: 'current-user' },
+        mutationKey: ['current-user'],
         networkMode: 'always',
         mutationFn: async (payload: z.input<typeof zUserUpdate>) => {
+            const update = zUserUpdate.parse(payload);
             await queryClient.cancelQueries({ queryKey: ['api', '/api/v1/me'], exact: true });
 
-            return api.patch('/api/v1/me', { json: zUserUpdate.parse(payload) }).json(zCurrentUser);
+            // Preview appearance only when this serialized write starts, leaving other profile fields unchanged.
+            const previous = queryClient.getQueryData<z.output<typeof zCurrentUser>>(['api', '/api/v1/me']);
+
+            const preview =
+                previous && (update.theme || update.accent || update.navigation)
+                    ? queryClient.setQueryData(['api', '/api/v1/me'], {
+                          ...previous,
+                          theme: update.theme ?? previous.theme,
+                          accent: update.accent ?? previous.accent,
+                          navigation: update.navigation ?? previous.navigation,
+                      })
+                    : undefined;
+
+            try {
+                return await api.patch('/api/v1/me', { json: update }).json(zCurrentUser);
+            } catch (error) {
+                // A newer account response must not be replaced by this attempt's rollback.
+                if (preview && queryClient.getQueryData(['api', '/api/v1/me']) === preview) {
+                    queryClient.setQueryData(['api', '/api/v1/me'], previous);
+                }
+
+                throw error;
+            }
         },
         onSuccess: async (user) => {
             await queryClient.cancelQueries({ queryKey: ['api', '/api/v1/me'], exact: true });

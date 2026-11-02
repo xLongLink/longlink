@@ -12,7 +12,7 @@ from src.models.roles import OrganizationRoles
 from botocore.exceptions import ClientError, BotoCoreError
 from src.models.statuses import Status
 from src.database.session import session_scope
-from src.database.services import organizations
+from src.database.services import invitations, organizations
 from src.models.operations import OperationKind
 from src.models.organizations import DatabaseState
 from src.database.models.users import User
@@ -628,7 +628,7 @@ async def test_organization_member_creates_organization_invitation(
     assert response.status_code == 204
     assert response.content == b""
     async with session_scope() as session:
-        invitations_list = await organizations.invitations(session, organization.id)
+        invitations_list = await invitations.fetch(session, organization.id)
     assert [(item.email, item.role) for item in invitations_list] == [(invitee.email, OrganizationRoles.write)]
     assert captured_mail[0][0] == invitee.email
     assert f"http://localhost:5173/login?{urlencode({'email': invitee.email})}" in captured_mail[0][2]
@@ -660,7 +660,7 @@ async def test_organization_invitation_reports_email_delivery_failure_and_keeps_
         "detail": "The invitation was saved, but its email could not be sent. Invite the same address again to resend it."
     }
     async with session_scope() as session:
-        invitations_list = await organizations.invitations(session, organization.id)
+        invitations_list = await invitations.fetch(session, organization.id)
     assert [(item.email, item.role) for item in invitations_list] == [(invitee.email, OrganizationRoles.write)]
 
 
@@ -683,7 +683,7 @@ async def test_organization_invitation_rejects_invalid_payload_without_side_effe
     assert response.status_code == 422
     assert response.json() == {"detail": "Invalid request. Please check your input and try again."}
     async with session_scope() as session:
-        assert await organizations.invitations(session, organization.id) == []
+        assert await invitations.fetch(session, organization.id) == []
     assert captured_mail == []
 
 
@@ -706,7 +706,7 @@ async def test_reinviting_email_replaces_pending_organization_role(
         f"/api/v1/organizations/{organization.id}/invitations", json={"email": invitee.email, "role": "write"}
     )
     async with session_scope() as session:
-        invitations_list = await organizations.invitations(session, organization.id)
+        invitations_list = await invitations.fetch(session, organization.id)
 
     # Assert
     assert first_response.status_code == 204
@@ -810,7 +810,7 @@ async def test_create_organization_invitation_rejects_active_member(
     assert response.status_code == 409
     assert response.json() == {"detail": "User is already a member"}
     async with session_scope() as session:
-        assert await organizations.invitations(session, organization.id) == []
+        assert await invitations.fetch(session, organization.id) == []
     assert captured_mail == []
 
 
@@ -836,7 +836,7 @@ async def test_create_organization_invitation_rejects_role_above_caller(
     assert response.status_code == 403
     assert response.json() == {"detail": "Invitation role permissions required"}
     async with session_scope() as session:
-        assert await organizations.invitations(session, organization.id) == []
+        assert await invitations.fetch(session, organization.id) == []
     assert captured_mail == []
 
 
@@ -1088,7 +1088,7 @@ async def test_create_organization_invitation_returns_403_without_maintainer_acc
     assert response.status_code == 403
     assert response.json() == {"detail": expected_detail}
     async with session_scope() as session:
-        assert await organizations.invitations(session, organization.id) == []
+        assert await invitations.fetch(session, organization.id) == []
     assert captured_mail == []
 
 

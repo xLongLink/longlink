@@ -14,7 +14,7 @@ from src.operations import invoices
 from src.environments import env
 from src.models.roles import OrganizationRoles
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from src.database.services import users, payments, organizations
+from src.database.services import users, payments, invitations, organizations
 from src.models.organizations import OrganizationInvitationCreate
 from src.database.models.invoices import Invoice
 from src.database.models.association import UserOrganization
@@ -163,7 +163,6 @@ async def create_sample(client: httpx2.AsyncClient, settings: SeedSettings, orga
         None,
     )
     if solution is not None:
-
         # Request normal lifecycle cleanup so the old schema, credentials, and attachments are removed together.
         print("Removing the local sample Solution, including its database and attachments.")
         response = await client.delete(f"/api/v1/solutions/{solution.id}")
@@ -179,7 +178,6 @@ async def create_sample(client: httpx2.AsyncClient, settings: SeedSettings, orga
                 # Wait for the actual deletion operation before recreating the sample.
                 operation = next((operation for operation in operations if operation.target_id == solution.id), None)
                 if operation is not None:
-
                     # Failed cleanup must not be mistaken for permission to recreate the sample.
                     if operation.status == "failed":
                         raise RuntimeError(f"Sample cleanup failed: {operation.failed}")
@@ -221,7 +219,6 @@ async def create_sample(client: httpx2.AsyncClient, settings: SeedSettings, orga
                 None,
             )
             if solution is not None:
-
                 # Surface a failed sample deployment instead of polling forever.
                 if solution.status == "failed":
                     raise RuntimeError("Sample deployment failed. Review its logs in the Platform.")
@@ -258,7 +255,7 @@ async def create_invited_organization(settings: SeedSettings) -> None:
 
         # Use the invitation service without delivering development-only email.
         invitation = OrganizationInvitationCreate(email=administrator.email, role=OrganizationRoles.maintain)
-        await organizations.create_invitation(database, organization.id, invitation, owner.id)
+        await invitations.create(database, organization.id, invitation, owner.id)
         await database.commit()
 
     print(f"Pending invitation to ACME Studio ready: {settings.PUBLIC_URL}/orgs")
@@ -327,7 +324,6 @@ async def create_invoice(organization_id: UUID) -> None:
             select(Invoice).where(Invoice.organization_id == organization_id).order_by(Invoice.period_end).limit(1)
         )
         if invoice is None:
-
             # Example invoicing requires completed development payment setup.
             if organization.stripe_customer_id is None or organization.stripe_payment_method_id is None:
                 raise RuntimeError("Register the development test card before creating an example invoice")
@@ -360,10 +356,8 @@ async def seed(settings: SeedSettings) -> None:
     async with httpx2.AsyncClient(
         base_url=settings.API_URL, headers={"Origin": settings.PUBLIC_URL}, timeout=10, trust_env=False
     ) as client:
-
         # Release the fixture database connection even when API provisioning fails.
         try:
-
             # Authenticate with the administrator that the API initializes during startup.
             response = await client.post(
                 "/api/v1/auth/password/login", json={"email": settings.ADMIN_EMAIL, "password": settings.ADMIN_PASSWORD}

@@ -1,5 +1,4 @@
 // @vitest-environment happy-dom
-import { Suspense } from 'react';
 import { it, expect } from 'vitest';
 import { renderStatic } from '../render';
 import { ApiErrorContext } from '@/lib/errors';
@@ -16,11 +15,9 @@ it('uses the caller-selected loading fallback for suspended reads', () => {
     // Act
     const output = renderStatic(
         <ApiErrorContext value={() => undefined}>
-            <Suspense>
-                <ApiBoundary fallback={<p>Loading orders</p>}>
-                    <Pending />
-                </ApiBoundary>
-            </Suspense>
+            <ApiBoundary fallback={<p>Loading orders</p>}>
+                <Pending />
+            </ApiBoundary>
         </ApiErrorContext>
     );
 

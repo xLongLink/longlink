@@ -173,12 +173,10 @@ function ArticleOutline({ items }: { items: ComponentProps<typeof Outline>['item
 export function ArticleFooter({
     lastUpdated,
     editUrl,
-    editLabel = 'Edit this page',
     paths = [],
 }: {
     lastUpdated: string;
     editUrl?: string;
-    editLabel?: string;
     paths?: readonly string[];
 }) {
     // Resolve adjacent pages only within the caller's reading order.
@@ -262,7 +260,7 @@ export function ArticleFooter({
                 <Text type="supporting">{`Last updated: ${dateFormatter.format(new Date(lastUpdated))}`}</Text>
                 {editUrl ? (
                     <Link href={editUrl} hasUnderline isExternalLink type="supporting">
-                        {editLabel}
+                        Edit this page
                     </Link>
                 ) : null}
             </Stack>

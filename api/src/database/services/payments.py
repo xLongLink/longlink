@@ -69,16 +69,24 @@ async def save_setup_intent(
         await operations.enqueue(session, kind=OperationKind.organization_create, target_id=organization.id, coalesce=False)
 
 
+async def _lock_checkout_owner(session: AsyncSession, organization_id: UUID, user_id: UUID) -> Organization:
+    """Lock the Organization and verify its active checkout owner."""
+
+    # Preserve the checkout lock order and authorization errors before checking deletion.
+    organization = await organizations.lock(session, organization_id)
+    await organizations.locked_membership(session, user_id, organization_id, OrganizationRoles.owner)
+    if organization.deleted_at is not None:
+        raise HTTPException(status_code=403, detail="Organization unavailable")
+    return organization
+
+
 async def checkout(session: AsyncSession, organization_id: UUID, user_id: UUID, connection: stripe.StripeClient) -> str:
     """Create or reuse an owner-authorized, durable hosted card-registration attempt."""
 
     # Serialize card registration with membership changes and deletion before contacting Stripe.
-    organization = await organizations.lock(session, organization_id)
-    await organizations.locked_membership(session, user_id, organization_id, OrganizationRoles.owner)
+    organization = await _lock_checkout_owner(session, organization_id, user_id)
 
     # Persist the Organization's customer before creating its hosted card-registration attempt.
-    if organization.deleted_at is not None:
-        raise HTTPException(status_code=403, detail="Organization unavailable")
     if organization.stripe_customer_id is None:
         customer = await connection.v1.customers.create_async(
             {"name": organization.name, "metadata": {"organization_id": str(organization.id)}},
@@ -88,10 +96,7 @@ async def checkout(session: AsyncSession, organization_id: UUID, user_id: UUID, 
         # Persist the idempotent customer before reacquiring local ownership locks.
         organization.stripe_customer_id = customer.id
         await session.commit()
-        organization = await organizations.lock(session, organization.id)
-        await organizations.locked_membership(session, user_id, organization.id, OrganizationRoles.owner)
-        if organization.deleted_at is not None:
-            raise HTTPException(status_code=403, detail="Organization unavailable")
+        organization = await _lock_checkout_owner(session, organization.id, user_id)
 
     # Reuse open attempts and recover completed setup when a webhook was delayed.
     if organization.stripe_checkout_id is not None:
@@ -112,10 +117,7 @@ async def checkout(session: AsyncSession, organization_id: UUID, user_id: UUID, 
     if organization.stripe_checkout_key is None:
         organization.stripe_checkout_key = uuid4()
     await session.commit()
-    organization = await organizations.lock(session, organization.id)
-    await organizations.locked_membership(session, user_id, organization.id, OrganizationRoles.owner)
-    if organization.deleted_at is not None:
-        raise HTTPException(status_code=403, detail="Organization unavailable")
+    organization = await _lock_checkout_owner(session, organization.id, user_id)
 
     # Another request may have published a checkout while the lock was released.
     if organization.stripe_checkout_id is not None:

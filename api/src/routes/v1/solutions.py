@@ -17,7 +17,15 @@ router = APIRouter()
 async def check_update(session: auth.Session, user: auth.CurrentUser, solution: auth.SolutionMaintainer):
     """Inspect the repository's latest image without changing deployment state."""
 
-    return await solutions.check_update(session, solution, user.id)
+    # Expose the reviewed revision and configured names, never environment values.
+    _solution, revision, metadata = await solutions.inspect_update(session, solution, user.id)
+    return {
+        "current_image": revision.image,
+        "current_version": revision.version,
+        "metadata": metadata,
+        "revision_id": revision.id,
+        "configured_envs": sorted(revision.envs),
+    }
 
 
 @router.post("/solutions/{solution_id}/update", status_code=204)

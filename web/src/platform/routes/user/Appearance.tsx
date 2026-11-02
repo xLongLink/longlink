@@ -12,11 +12,11 @@ import { accentColors, appearanceSchema, type Appearance } from '@/lib/appearanc
 
 /** Previews and saves personal appearance without changing any Solution configuration. */
 export default function AppearanceSettings() {
-    const { appearance, setAppearance } = useAppearance();
+    const { appearance } = useAppearance();
     const userUpdate = useUpdateUser();
     const reportError = useApiError();
 
-    /** Serializes changes and restores the previous preference when saving fails. */
+    /** Saves changed preferences through the shared profile mutation. */
     async function saveAppearance(next: Appearance) {
         if (
             userUpdate.isPending ||
@@ -25,13 +25,10 @@ export default function AppearanceSettings() {
                 next.navigation === appearance.navigation)
         )
             return;
-        const previous = appearance;
-        setAppearance(next);
 
         try {
             await userUpdate.mutateAsync(next);
         } catch (error) {
-            setAppearance(previous);
             reportError(error);
         }
     }

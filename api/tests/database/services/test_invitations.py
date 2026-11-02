@@ -5,7 +5,7 @@ from sqlmodel import col, select
 from factories import create_organization
 from src.models.roles import OrganizationRoles
 from src.database.session import session_scope
-from src.database.services import invitations, organizations
+from src.database.services import invitations
 from src.models.organizations import OrganizationInvitationCreate
 from src.database.models.users import User
 from src.database.models.association import UserOrganization
@@ -20,7 +20,7 @@ async def test_create_replaces_existing_invitation(users: tuple[User, User, User
     owner = users[0]
     organization = await create_organization(owner)
     async with session_scope() as session:
-        await organizations.create_invitation(
+        await invitations.create(
             session, organization.id, OrganizationInvitationCreate(email="Invited@EXAMPLE.COM", role=OrganizationRoles.write), owner.id
         )
         await session.commit()
@@ -39,7 +39,7 @@ async def test_create_replaces_existing_invitation(users: tuple[User, User, User
         await session.commit()
 
         # Act
-        await organizations.create_invitation(
+        await invitations.create(
             session, organization.id, OrganizationInvitationCreate(email="invited@example.com", role=OrganizationRoles.admin), owner.id
         )
         await session.commit()
