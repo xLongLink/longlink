@@ -1,0 +1,103 @@
+name: cleanup
+
+on:
+    workflow_dispatch:
+    workflow_call:
+        secrets:
+            OPENAI_API_KEY:
+                description: 'OpenAI API key for the cleanup agent'
+                required: true
+
+permissions:
+    contents: write
+    pull-requests: write
+
+concurrency:
+    group: opencode-cleanup
+    cancel-in-progress: false
+
+jobs:
+    cleanup:
+        runs-on: ubuntu-latest
+        timeout-minutes: 60
+        defaults:
+            run:
+                working-directory: repository
+                shell: bash
+        steps:
+            - name: Check out the default branch
+              uses: actions/checkout@v4
+              with:
+                  ref: ${{ github.event.repository.default_branch }}
+                  path: repository
+                  persist-credentials: false
+
+            - name: Initialize cleanup
+              id: base
+              run: |
+                  echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+                  echo "CLEANUP_REPORT=$RUNNER_TEMP/cleanup-report.md" >> "$GITHUB_ENV"
+
+            - name: Check for an existing cleanup PR
+              id: pending
+              env:
+                  GH_TOKEN: ${{ github.token }}
+                  GH_REPO: ${{ github.repository }}
+              run: |
+                  count=$(gh pr list --state open --head automation/opencode-cleanup --json number --jq 'length')
+                  if [[ "$count" != 0 ]]; then
+                    echo 'A cleanup PR is already awaiting review; skipping.' >> "$GITHUB_STEP_SUMMARY"
+                    echo 'skip=true' >> "$GITHUB_OUTPUT"
+                  fi
+
+            - name: Install OpenCode and configuration
+              if: steps.pending.outputs.skip != 'true'
+              run: |
+                  curl -fsSL https://opencode.ai/v2/install | bash -s -- --no-modify-path
+                  echo "$HOME/.opencode/bin" >> "$GITHUB_PATH"
+                  export PATH="$HOME/.opencode/bin:$PATH"
+                  git clone --branch main https://github.com/Sau1707/openconfig.git "$HOME/.config/opencode"
+                  opencode --version
+
+            - name: Implement cleanup findings
+              if: steps.pending.outputs.skip != 'true'
+              timeout-minutes: 35
+              env:
+                  OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+              run: |
+                  test -n "$OPENAI_API_KEY" || { echo 'Missing OPENAI_API_KEY secret.'; exit 1; }
+                  opencode run --standalone --auto --agent loop "@cleanup Find simplification opportunities"
+                  opencode run --standalone --auto --continue --agent build "Implement everything High or Medium"
+                  opencode run --standalone --auto --continue --agent build "Generate a Markdown pull request description based on the final diff and actual verification results from this session. Write the description to the absolute path in CLEANUP_REPORT. Use the headings ## Summary and ## Validation. Include a summary of the implemented changes, checks that passed or failed, and any remaining limitations. If nothing changed, state that explicitly. Do not include secrets or raw environment output. Do not modify repository files, commit, push, or create a pull request."
+
+            - name: Validate the resulting changes
+              if: steps.pending.outputs.skip != 'true'
+              env:
+                  BASE_SHA: ${{ steps.base.outputs.sha }}
+              run: |
+                  test -s "$CLEANUP_REPORT"
+                  test "$(git rev-parse HEAD)" = "$BASE_SHA"
+                  python3 - <<'PY'
+                  import subprocess
+
+                  changed = subprocess.check_output(['git', 'diff', 'HEAD', '--name-only', '-z'])
+                  untracked = subprocess.check_output(['git', 'ls-files', '--others', '--exclude-standard', '-z'])
+                  for path in (changed + untracked).decode().split('\0'):
+                      if path == '.github' or path.startswith('.github/'):
+                          raise SystemExit('Cleanup must not modify GitHub Actions configuration.')
+                  PY
+                  git diff --check HEAD
+
+            - name: Create cleanup pull request
+              if: steps.pending.outputs.skip != 'true'
+              id: pull-request
+              uses: peter-evans/create-pull-request@v7
+              with:
+                  token: ${{ github.token }}
+                  path: repository
+                  base: ${{ github.event.repository.default_branch }}
+                  branch: automation/opencode-cleanup
+                  commit-message: 'refactor: scoped OpenCode cleanup'
+                  title: 'refactor: scoped OpenCode cleanup'
+                  labels: refactor
+                  body-path: ${{ env.CLEANUP_REPORT }}
