@@ -68,7 +68,7 @@ class RustFS:
         )
         return {"Version": "2012-10-17", "Statement": statements}
 
-    async def _request(self, method: str, path: str, payload: dict[str, object] | None = None) -> dict[str, object]:
+    async def _request(self, method: str, path: str, payload: dict[str, object] | None = None) -> httpx2.Response:
         """Send one signed request to the native RustFS administration endpoint."""
 
         # Sign the exact JSON body accepted by the canonical RustFS admin routes.
@@ -86,17 +86,10 @@ class RustFS:
         signed_request = httpx2.Request(method, str(request.url), content=body, headers=dict(request.headers))
         response = await self._client.send(signed_request)
 
-        # Preserve administrative errors and require an object whenever a response body is present.
+        # Preserve administrative failures without interpreting unused response bodies.
         if response.is_error:
             raise Error(response.status_code, response.text)
-        if not response.content:
-            return {}
-        value = response.json()
-
-        # Administrative operations require object-shaped responses.
-        if not isinstance(value, dict):
-            raise RuntimeError("RustFS administration returned a non-object response")
-        return value
+        return response
 
     async def service_account(self, bucket: str, solution: UUID) -> s3.Credentials:
         """Create a stable scoped service account, replacing abandoned unpublished credentials."""
@@ -140,19 +133,21 @@ class RustFS:
         await self._request("PUT", f"/rustfs/admin/v3/quota/{bucket}", {"quota": quota_bytes, "quota_type": "HARD"})
         async with asyncio.timeout(300):
             while True:
-
                 # Wait for RustFS to publish the requested hard quota.
                 try:
-                    current = await self._request("GET", f"/rustfs/admin/v3/quota/{bucket}")
+                    response = await self._request("GET", f"/rustfs/admin/v3/quota/{bucket}")
                 except Error as error:
-
                     # Only temporary quota unavailability should be retried.
                     if error.status_code != 503:
                         raise
                     await asyncio.sleep(2)
                     continue
 
-                # Acknowledgement must match the requested byte quota exactly.
-                if current.get("quota") == quota_bytes:
-                    return
+                # Only an object acknowledging the exact byte quota completes admission.
+                if response.content:
+                    current = response.json()
+                    if not isinstance(current, dict):
+                        raise RuntimeError("RustFS administration returned a non-object response")
+                    if current.get("quota") == quota_bytes:
+                        return
                 await asyncio.sleep(2)
