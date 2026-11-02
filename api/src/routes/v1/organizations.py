@@ -9,12 +9,12 @@ from src.models.organizations import OrganizationCreate
 router = APIRouter()
 
 
-@router.get("/organizations/slug/{organization_slug}", response_model=UserOrganizationMembership)
-async def get_organization_by_slug(session: auth.Session, user: auth.CurrentUser, organization_slug: str):
-    """Return the current user's membership for one Organization slug."""
+@router.get("/organizations/{organization_id}", response_model=UserOrganizationMembership)
+async def get_organization(session: auth.Session, user: auth.CurrentUser, organization_id: UUID):
+    """Return the current user's membership for one Organization UUID."""
 
-    # Resolve the route slug within the authenticated user's active memberships.
-    return await organizations.membership_by_slug(session, user.id, organization_slug)
+    # Resolve the route UUID within the authenticated user's active memberships.
+    return await organizations.membership_by_id(session, user.id, organization_id)
 
 
 @router.post("/organizations", response_model=OrganizationIdentity, status_code=202)

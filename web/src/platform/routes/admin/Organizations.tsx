@@ -37,12 +37,7 @@ export default function Organizations() {
         <Stack gap={2}>
             <title>Organizations | LongLink</title>
             <Heading level={1}>Organizations</Heading>
-            <TextInput
-                label="Search organizations"
-                placeholder="Search by name or slug"
-                {...search}
-                startIcon={<Search />}
-            />
+            <TextInput label="Search organizations" placeholder="Search by name" {...search} startIcon={<Search />} />
             <Stack gap={1}>
                 <Table
                     data={organizations.items}
@@ -59,7 +54,7 @@ export default function Organizations() {
                                     <Avatar kind="organization" name={row.name} />
                                     <Stack align="start">
                                         <Stack direction="horizontal" gap={1} align="center">
-                                            <Link href={`/orgs/${row.slug}`}>{row.name}</Link>
+                                            <Link href={`/orgs/${row.id}`}>{row.name}</Link>
                                             {row.status !== 'running' && (
                                                 <Badge
                                                     label={row.status === 'creating' ? 'Creating' : 'Failed'}
@@ -104,9 +99,6 @@ export default function Organizations() {
                     <Stack gap={2} padding={8}>
                         <Text>
                             <b>Status</b> {metadata.status}
-                        </Text>
-                        <Text>
-                            <b>Slug</b> {metadata.slug}
                         </Text>
                         <Text>
                             <b>ID</b> {metadata.id}

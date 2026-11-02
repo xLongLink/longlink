@@ -34,7 +34,7 @@ export default function OrganizationSolution() {
     );
 
     // Keep the solution lookup and its existence check together.
-    const solutionAccess = solutions.find((item) => item.slug === solution);
+    const solutionAccess = solutions.find((item) => item.id === solution);
 
     if (!solutionAccess) {
         return <NotFoundLayout />;

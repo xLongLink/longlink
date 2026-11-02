@@ -579,7 +579,6 @@ export const zStatus = z.enum([
 export const zOrganizationIdentity = z.object({
     id: z.uuid(),
     name: z.string(),
-    slug: z.string(),
     status: zStatus
 });
 
@@ -591,7 +590,6 @@ export const zOrganizationIdentity = z.object({
 export const zOrganizationSolutionSummary = z.object({
     id: z.uuid(),
     name: z.string(),
-    slug: z.string(),
     description: z.string().nullish(),
     tag_ids: z.array(z.uuid()).optional(),
     status: zStatus,
@@ -616,7 +614,6 @@ export const zPageOrganizationIdentity = z.object({
 export const zSolutionResponse = z.object({
     id: z.uuid(),
     name: z.string(),
-    slug: z.string(),
     description: z.string().nullable(),
     tag_ids: z.array(z.uuid()).optional(),
     status: zStatus,

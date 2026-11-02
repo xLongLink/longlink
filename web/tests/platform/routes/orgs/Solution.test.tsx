@@ -9,7 +9,6 @@ it('does not mount the runtime while a resolved Solution is still deploying', ()
     const solution = zOrganizationSolutionSummary.parse({
         id: '00000000-0000-4000-8000-000000000003',
         name: 'Orders',
-        slug: 'orders',
         status: 'creating',
         deployment_pending: true,
         desired_revision_id: null,
@@ -19,7 +18,7 @@ it('does not mount the runtime while a resolved Solution is still deploying', ()
     // Act
     const output = renderPlatform(
         <Page />,
-        '/orgs/acme/solutions/orders',
+        `/orgs/${membership.organization.id}/solutions/${solution.id}`,
         [[`/api/v1/organizations/${membership.organization.id}/solutions`, [solution]]],
         '/orgs/:organization/solutions/:solution'
     );

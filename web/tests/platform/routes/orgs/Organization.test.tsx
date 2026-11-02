@@ -16,7 +16,7 @@ it('offers Solution onboarding for the resolved Organization', () => {
     // Act
     const output = renderPlatform(
         <Page />,
-        '/orgs/acme',
+        `/orgs/${membership.organization.id}`,
         [[`/api/v1/organizations/${membership.organization.id}/solutions`, []]],
         '/orgs/:organization',
         { ...membership, tags: [tag], activeTag: tag }

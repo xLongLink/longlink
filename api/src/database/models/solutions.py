@@ -24,7 +24,6 @@ class Solution(AuditTable, table=True):
 
     __tablename__: ClassVar[str] = "solutions"
     __table_args__ = (
-        UniqueConstraint("organization_id", "slug"),
         UniqueConstraint("organization_id", "id", name="uq_solutions_organization_id"),
         ForeignKeyConstraint(
             # A desired revision must belong to this Solution.
@@ -47,7 +46,6 @@ class Solution(AuditTable, table=True):
 
     # Metadata
     name: str = Field(max_length=100)
-    slug: str = Field(max_length=100)
     description: str | None = Field(default=None, max_length=255)
 
     # Desired release

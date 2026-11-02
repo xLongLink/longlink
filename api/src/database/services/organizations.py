@@ -3,10 +3,9 @@ from typing import cast
 from fastapi import HTTPException
 from datetime import UTC, datetime
 from sqlmodel import col
-from src.utils import names, roles
-from sqlalchemy import Select, or_, func, delete, select
+from src.utils import roles
+from sqlalchemy import Select, func, delete, select
 from sqlalchemy import update as sql_update
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import load_only, joinedload, selectinload, contains_eager
 from collections.abc import Sequence
 from src.models.tags import TagIcon, TagKind
@@ -36,7 +35,6 @@ def _membership_query(user_id: UUID) -> Select[UserOrganization]:
             contains_eager(attr(UserOrganization.organization)).load_only(
                 attr(Organization.id),
                 attr(Organization.name),
-                attr(Organization.slug),
                 # Include lifecycle and quota data without decrypting infrastructure credentials.
                 attr(Organization.status),
                 attr(Organization.storage_quota_bytes),
@@ -61,11 +59,11 @@ async def require_membership(
     return access
 
 
-async def membership_by_slug(session: AsyncSession, user_id: UUID, organization_slug: str) -> UserOrganization:
-    """Return one user's active membership for an active Organization slug."""
+async def membership_by_id(session: AsyncSession, user_id: UUID, organization_id: UUID) -> UserOrganization:
+    """Return one user's active membership for an active Organization UUID."""
 
     # Load only the requested Organization membership and its response-ready Organization.
-    statement = _membership_query(user_id).where(col(Organization.slug) == organization_slug)
+    statement = _membership_query(user_id).where(col(Organization.id) == organization_id)
     membership = await session.scalar(statement)
     if membership is None:
         raise HTTPException(status_code=404, detail="Organization not found")
@@ -75,7 +73,7 @@ async def membership_by_slug(session: AsyncSession, user_id: UUID, organization_
 async def memberships(session: AsyncSession, user_id: UUID) -> Sequence[UserOrganization]:
     """Return one user's active memberships with response-ready Organizations."""
 
-    # Reuse the active membership query shared by identifier and slug access.
+    # Reuse the active membership query shared by identifier and list access.
     result = await session.scalars(_membership_query(user_id))
     return result.all()
 
@@ -260,16 +258,14 @@ async def solution_infrastructure(session: AsyncSession, solution_id: UUID) -> t
 async def fetch(session: AsyncSession, pagination: Pagination, search: str = "") -> tuple[Sequence[Organization], int]:
     """Return one newest-first page of active organizations for administrator views."""
 
-    # Match literal names and slugs while retaining active Organization visibility.
+    # Match literal names while retaining active Organization visibility.
     query = select(Organization).where(col(Organization.deleted_at).is_(None))
     if search:
-        query = query.where(
-            or_(col(Organization.name).icontains(search, autoescape=True), col(Organization.slug).icontains(search, autoescape=True))
-        )
+        query = query.where(col(Organization.name).icontains(search, autoescape=True))
 
     # Load only Organization identity fields using a stable page order.
     statement = (
-        query.options(load_only(attr(Organization.id), attr(Organization.name), attr(Organization.slug), attr(Organization.status)))
+        query.options(load_only(attr(Organization.id), attr(Organization.name), attr(Organization.status)))
         .order_by(col(Organization.created_at).desc(), col(Organization.id).desc())
         .offset(pagination.offset)
         .limit(pagination.page_size)
@@ -291,7 +287,6 @@ async def solutions(session: AsyncSession, organization_id: UUID) -> Sequence[So
             load_only(
                 attr(Solution.id),
                 attr(Solution.name),
-                attr(Solution.slug),
                 attr(Solution.description),
                 attr(Solution.status),
                 attr(Solution.desired_revision_id),
@@ -517,25 +512,19 @@ async def create(session: AsyncSession, name: str, user: User) -> Organization:
         raise HTTPException(status_code=503, detail="No compute registry available")
 
     # Build the Organization with its immutable infrastructure assignments.
-    organization = Organization(name=name, slug=names.slugify(name), compute_id=compute_id)
+    organization = Organization(name=name, compute_id=compute_id)
 
     # Attach the creator as the initial owner for every organization.
     organization.created_id = user.id
 
-    # Translate unique conflicts from autoflush without invalidating the caller's transaction.
-    try:
-        async with session.begin_nested():
-            session.add(UserOrganization(user_id=user.id, organization_id=organization.id, role=OrganizationRoles.owner))
-            session.add(organization)
-            await session.flush()
+    # Persist the Organization and its initial owner together.
+    session.add(UserOrganization(user_id=user.id, organization_id=organization.id, role=OrganizationRoles.owner))
+    session.add(organization)
+    await session.flush()
 
-            # Store the All filter once so later renames and deletions remain permanent.
-            session.add(OrganizationTag(organization_id=organization.id, name="All", kind=TagKind.all, icon=TagIcon.app_window))
-            await session.flush()
-
-    # Keep Organization uniqueness collisions at the service boundary as an API conflict.
-    except IntegrityError:
-        raise HTTPException(status_code=409, detail="Organization already exists")
+    # Store the All filter once so later renames and deletions remain permanent.
+    session.add(OrganizationTag(organization_id=organization.id, name="All", kind=TagKind.all, icon=TagIcon.app_window))
+    await session.flush()
 
     # Queue infrastructure creation in the caller's transaction after persisting the Organization.
     await operations.enqueue(session, kind=OperationKind.organization_create, target_id=organization.id)

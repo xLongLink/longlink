@@ -16,7 +16,7 @@ uv, Vite+, and `storage.localhost` resolving to loopback.
 
 With the infrastructure and API running (`make up` and `make api`), run `make seed`.
 It regenerates `sdk/dev` from the current SDK starter, rebuilds the image, deletes
-the existing `acme-ink/invoices` sample through the Platform API, and creates a
+the existing `invoices` sample in the development Organization through the Platform API, and creates a
 fresh Solution. This resets the sample's database, attachments, and local edits
 so its initial migration seeds the four building projects again.
 

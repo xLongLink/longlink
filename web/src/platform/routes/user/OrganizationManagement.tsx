@@ -138,13 +138,13 @@ export default function OrganizationManagement({ presentation }: { presentation:
                                                 <Text>{row.organization.name}</Text>
                                             ) : presentation === 'settings' ? (
                                                 <Stack direction="horizontal" gap={1} align="center">
-                                                    <Link href={`/orgs/${row.organization.slug}`}>
+                                                    <Link href={`/orgs/${row.organization.id}`}>
                                                         {row.organization.name}
                                                     </Link>
                                                     <Badge label={row.role} />
                                                 </Stack>
                                             ) : (
-                                                <Link href={`/orgs/${row.organization.slug}`}>
+                                                <Link href={`/orgs/${row.organization.id}`}>
                                                     {row.organization.name}
                                                 </Link>
                                             )}

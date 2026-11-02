@@ -2,9 +2,8 @@ from uuid import UUID
 from fastapi import HTTPException
 from datetime import UTC, datetime
 from sqlmodel import col
-from src.utils import names, roles, images
+from src.utils import roles, images
 from sqlalchemy import or_, func, select, update
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import defer, selectinload, contains_eager
 from collections.abc import Mapping, Sequence
 from src.models.roles import OrganizationRoles
@@ -33,7 +32,6 @@ async def fetch(session: AsyncSession, pagination: Pagination, search: str = "")
         query = query.where(
             or_(
                 col(Solution.name).icontains(search, autoescape=True),
-                col(Solution.slug).icontains(search, autoescape=True),
                 col(Solution.description).icontains(search, autoescape=True),
                 # Administrators can also locate Solutions by their owning Organization.
                 col(Organization.name).icontains(search, autoescape=True),
@@ -44,7 +42,7 @@ async def fetch(session: AsyncSession, pagination: Pagination, search: str = "")
     statement = (
         query.options(
             contains_eager(attr(Solution.organization)).load_only(
-                attr(Organization.id), attr(Organization.name), attr(Organization.slug), attr(Organization.status)
+                attr(Organization.id), attr(Organization.name), attr(Organization.status)
             ),
             defer(attr(Solution.secrets)),
             selectinload(attr(Solution.desired_revision)).load_only(attr(Revision.image), attr(Revision.failed), raiseload=True),
@@ -100,20 +98,10 @@ async def create(
             status_code=409, detail="Solution limit reached during the beta. Contact LongLink to request additional solutions."
         )
 
-    # Build the Solution row before checking its Organization-scoped uniqueness.
-    solution = Solution(
-        organization_id=organization_id, name=payload.name, slug=names.slugify(payload.name), description=payload.description, secrets={}
-    )
-
-    # Let the Organization-scoped database constraint arbitrate slug uniqueness.
-    try:
-        async with session.begin_nested():
-            session.add(solution)
-            await session.flush()
-
-    # Expose slug collisions without discarding the surrounding transaction.
-    except IntegrityError:
-        raise HTTPException(status_code=409, detail="Solution slug already exists")
+    # Persist the Solution with its UUID identity independently of its display name.
+    solution = Solution(organization_id=organization_id, name=payload.name, description=payload.description, secrets={})
+    session.add(solution)
+    await session.flush()
 
     # Creation uses the same immutable release boundary as subsequent updates.
     await _deploy(session, solution, user_id, metadata, payload.envs, registry_connection_id=registry_connection_id)

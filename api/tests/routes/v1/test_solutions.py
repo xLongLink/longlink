@@ -268,30 +268,35 @@ async def test_create_app_rejects_non_member_without_creating_state(
     await assert_no_new_operations(previous_operations)
 
 
-async def test_create_app_rejects_duplicate_organization_slug_without_queuing_work(
+async def test_create_solution_accepts_duplicate_name_with_separate_lifecycle_work(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient], users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Reject duplicate Solution slugs without adding a lifecycle operation."""
+    """Keep same-named Solutions distinct within the same Organization."""
 
     # Arrange
     organization = await create_organization(users[0])
-    await create_solution(organization, name="Dashboard")
+    original = await create_solution(organization, name="Dashboard")
     mock_image_metadata(monkeypatch)
     previous_operations = await fetch_operations()
 
     # Act
     response = await clients[0].post(
-        f"/api/v1/organizations/{organization.id}/solutions", json={"name": "dashboard", "image": "ghcr.io/longlink/dashboard:latest"}
+        f"/api/v1/organizations/{organization.id}/solutions", json={"name": "Dashboard", "image": "ghcr.io/longlink/dashboard:latest"}
     )
 
     # Assert
-    assert response.status_code == 409
-    assert response.json() == {"detail": "Solution slug already exists"}
+    assert response.status_code == 204
     async with session_scope() as session:
         result = await session.scalars(select(Solution).where(col(Solution.organization_id) == organization.id))
         solutions = result.all()
-    assert len(solutions) == 1
-    await assert_no_new_operations(previous_operations)
+    assert len(solutions) == 2
+    duplicate = next(solution for solution in solutions if solution.id != original.id)
+    assert {solution.name for solution in solutions} == {"Dashboard"}
+    operations = await fetch_operations()
+    previous_ids = {operation.id for operation in previous_operations}
+    new_operations = [operation for operation in operations if operation.id not in previous_ids]
+    assert len(new_operations) == 1
+    assert new_operations[0].target_id == duplicate.desired_revision_id
 
 
 async def test_solution_responses_do_not_expose_environment_secrets(
@@ -653,10 +658,10 @@ async def test_create_solution_rejects_invalid_payload_without_mutating_state(
     await assert_no_new_operations(previous_operations)
 
 
-async def test_create_solution_rejects_too_long_slug_without_queuing_work(
+async def test_create_solution_accepts_long_display_name(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient], users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Reject valid-schema solution names whose slug exceeds the 63-character limit."""
+    """Accept display names beyond the former slug length limit."""
 
     # Arrange
     organization = await create_organization(users[0])
@@ -675,11 +680,16 @@ async def test_create_solution_rejects_too_long_slug_without_queuing_work(
     )
 
     # Assert
-    assert response.status_code == 409
-    assert response.json() == {"detail": "Invalid name"}
+    assert response.status_code == 204
     async with session_scope() as session:
-        assert await session.scalar(select(Solution).where(col(Solution.organization_id) == organization.id)) is None
-    await assert_no_new_operations(previous_operations)
+        solution = await session.scalar(select(Solution).where(col(Solution.organization_id) == organization.id))
+        assert solution is not None
+        assert solution.name == "a" * 70
+    operations = await fetch_operations()
+    previous_ids = {operation.id for operation in previous_operations}
+    new_operations = [operation for operation in operations if operation.id not in previous_ids]
+    assert len(new_operations) == 1
+    assert new_operations[0].target_id == solution.desired_revision_id
 
 
 async def test_plugin_download_packages_only_the_selected_solution_without_credentials(

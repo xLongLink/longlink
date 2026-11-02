@@ -131,7 +131,7 @@ async def checkout(session: AsyncSession, organization_id: UUID, user_id: UUID, 
         raise HTTPException(status_code=409, detail="Stripe customer unavailable. Refresh usage.")
 
     # Hosted consent covers the published month-end usage charges, not a subscription or immediate payment.
-    return_url = f"{env.PUBLIC_URL}/orgs/{organization.slug}/settings#payment-methods"
+    return_url = f"{env.PUBLIC_URL}/orgs/{organization.id}/settings#payment-methods"
     hosted = await connection.v1.checkout.sessions.create_async(
         {
             "mode": "setup",

@@ -3,11 +3,11 @@ import { it, expect } from 'vitest';
 import Layout from '@/platform/layouts/Organization';
 import { renderPlatform, membership } from '../render';
 
-it('scopes organization navigation to the selected slug', () => {
+it('scopes organization navigation to the selected UUID', () => {
     // Act
     const output = renderPlatform(
         <Layout />,
-        '/orgs/acme',
+        `/orgs/${membership.organization.id}`,
         [
             [
                 `/api/v1/organizations/${membership.organization.id}/tags`,
@@ -18,6 +18,6 @@ it('scopes organization navigation to the selected slug', () => {
     );
 
     // Assert
-    expect(output.querySelector('a[href="/orgs/acme"]')).not.toBeNull();
-    expect(output.querySelector('a[href="/orgs/acme/settings"]')).not.toBeNull();
+    expect(output.querySelector(`a[href="/orgs/${membership.organization.id}"]`)).not.toBeNull();
+    expect(output.querySelector(`a[href="/orgs/${membership.organization.id}/settings"]`)).not.toBeNull();
 });

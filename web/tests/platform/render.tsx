@@ -18,7 +18,7 @@ export const user = zCurrentUser.parse({
 });
 
 export const membership = zUserOrganizationMembership.parse({
-    organization: { id: '00000000-0000-4000-8000-000000000002', name: 'Acme', slug: 'acme', status: 'running' },
+    organization: { id: '00000000-0000-4000-8000-000000000002', name: 'Acme', status: 'running' },
     role: 'owner',
 });
 

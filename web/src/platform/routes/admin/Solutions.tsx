@@ -37,7 +37,7 @@ export default function Solutions() {
             <Heading level={1}>Solutions</Heading>
             <TextInput
                 label="Search solutions"
-                placeholder="Search by name, slug, description, or organization"
+                placeholder="Search by name, description, or organization"
                 {...search}
                 startIcon={<Search />}
             />
@@ -55,7 +55,7 @@ export default function Solutions() {
                             renderCell: (row) => (
                                 <Stack align="start">
                                     <Stack direction="horizontal" gap={1} align="center">
-                                        <Link href={`/orgs/${row.organization.slug}/solutions/${row.slug}`}>
+                                        <Link href={`/orgs/${row.organization.id}/solutions/${row.id}`}>
                                             {row.name}
                                         </Link>
                                         {row.status !== 'running' && (
@@ -83,7 +83,7 @@ export default function Solutions() {
                                 <Stack direction="horizontal" gap={3} align="center">
                                     <Avatar kind="organization" name={row.organization.name} />
                                     <Stack align="start">
-                                        <Link href={`/orgs/${row.organization.slug}`}>{row.organization.name}</Link>
+                                        <Link href={`/orgs/${row.organization.id}`}>{row.organization.name}</Link>
                                         <Text type="supporting">Organization</Text>
                                     </Stack>
                                 </Stack>
@@ -149,9 +149,6 @@ export default function Solutions() {
                         </Text>
                         <Text>
                             <b>ID</b> {metadata.id}
-                        </Text>
-                        <Text>
-                            <b>Slug</b> {metadata.slug}
                         </Text>
                         {metadata.description && (
                             <Text>
