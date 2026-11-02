@@ -104,7 +104,7 @@ async def create(
     await session.flush()
 
     # Creation uses the same immutable release boundary as subsequent updates.
-    await _deploy(session, solution, user_id, metadata, payload.envs, registry_connection_id=registry_connection_id)
+    await _deploy(session, solution, user_id, metadata, payload.envs, current=None, registry_connection_id=registry_connection_id)
 
     return solution
 
@@ -155,7 +155,11 @@ async def inspect_update(
     solution_id = solution.id
     if expected_revision_id is not None and expected_revision_id != solution.desired_revision_id:
         raise HTTPException(status_code=409, detail="Desired revision changed since review. Check again.")
-    revision = await session.get(Revision, solution.desired_revision_id) if solution.desired_revision_id is not None else None
+    revision = (
+        await session.get(Revision, solution.desired_revision_id, populate_existing=True)
+        if solution.desired_revision_id is not None
+        else None
+    )
     if revision is None:
         raise HTTPException(status_code=409, detail="Solution has no desired revision")
 
@@ -180,10 +184,10 @@ async def apply_update(session: AsyncSession, solution: Solution, user_id: UUID,
     """Inspect and admit an update in the caller's final transaction."""
 
     # Inspect without command locks, then revalidate the desired state and maintenance access.
-    solution, _revision, metadata = await inspect_update(session, solution, user_id, payload.expected_revision_id)
+    solution, revision, metadata = await inspect_update(session, solution, user_id, payload.expected_revision_id)
 
     # Compare and merge only against the current serialized desired state.
-    await _deploy(session, solution, user_id, metadata, payload.envs)
+    await _deploy(session, solution, user_id, metadata, payload.envs, current=revision)
 
 
 async def _deploy(
@@ -193,22 +197,15 @@ async def _deploy(
     metadata: LongLinkMetadata,
     envs: Mapping[str, str | None],
     *,
+    current: Revision | None,
     registry_connection_id: UUID | None = None,
 ) -> None:
     """Append a snapshot and queue its exact deployment target."""
 
-    # Load the complete desired snapshot even if a listing cached only its image and failure state.
-    current = (
-        await session.get(Revision, solution.desired_revision_id, populate_existing=True)
-        if solution.desired_revision_id is not None
-        else None
-    )
-
-    # Keep the registry connection immutable and serialize admission with connection deletion.
+    # Keep the registry connection immutable under the caller's Organization lock.
     if current is not None:
         registry_connection_id = current.registry_connection_id
     if registry_connection_id is not None:
-        await registries.lock(session, solution.organization_id)
         await registries.resolve(session, solution.organization_id, registry_connection_id, metadata.image)
 
     # Apply explicit environment edits while preserving untouched secrets.

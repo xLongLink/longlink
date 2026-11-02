@@ -481,6 +481,7 @@ def build_solution(
     # Apply a fixed context policy without interpreting project-specific ignore syntax.
     context_root = build_context.resolve()
     selected_paths = (root, *local_source_paths)
+    metadata_paths = {*project_manifests, lockfile}
     manifest_only_paths = {manifest.parent for manifest in project_manifests} - set(selected_paths)
     ignore_patterns = shutil.ignore_patterns(*CONTEXT_IGNORE_PATTERNS)
 
@@ -495,9 +496,9 @@ def build_solution(
             if name in ignored:
                 continue
 
-            # Leave separately selected directories to their own copy traversal.
+            # Leave selected directories and metadata to their explicit copy stages.
             path = Path(directory, name)
-            if path in selected_paths:
+            if path in selected_paths or path in metadata_paths:
                 ignored.add(name)
                 continue
 
