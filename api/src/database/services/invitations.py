@@ -48,7 +48,7 @@ async def pending(session: AsyncSession, user: User) -> Sequence[OrganizationInv
         _active_query()
         .options(
             contains_eager(attr(OrganizationInvitation.organization)).load_only(
-                attr(Organization.id), attr(Organization.name), attr(Organization.slug), attr(Organization.status)
+                attr(Organization.id), attr(Organization.name), attr(Organization.status)
             )
         )
         .where(col(OrganizationInvitation.email) == user.email)

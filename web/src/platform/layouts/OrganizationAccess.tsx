@@ -68,7 +68,7 @@ function OrganizationMembership() {
     const { organization = '' } = useParams();
 
     const [membership] = useApi(
-        `/api/v1/organizations/slug/${encodeURIComponent(organization)}`,
+        `/api/v1/organizations/${encodeURIComponent(organization)}`,
         zUserOrganizationMembership
     );
 

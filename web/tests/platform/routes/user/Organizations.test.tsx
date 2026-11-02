@@ -17,7 +17,7 @@ it('offers onboarding for a user without Organization memberships', () => {
 
 it('lists a pending invitation with accept and decline actions instead of onboarding', () => {
     // Arrange
-    const organization = { id: '00000000-0000-4000-8000-000000000001', name: 'Acme', slug: 'acme', status: 'running' };
+    const organization = { id: '00000000-0000-4000-8000-000000000001', name: 'Acme', status: 'running' };
 
     // Act
     const output = renderPlatform(<Page />, '/user/organizations', [

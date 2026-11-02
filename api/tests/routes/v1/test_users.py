@@ -43,7 +43,7 @@ async def test_get_me_returns_authenticated_user_profile_and_separate_org_member
     assert organizations_response.status_code == 200
     assert organizations_response.headers["cache-control"] == "no-store"
     assert organizations_response.json() == [
-        {"organization": {"id": str(organization.id), "name": "acme", "slug": "acme", "status": "creating"}, "role": "owner"}
+        {"organization": {"id": str(organization.id), "name": "acme", "status": "creating"}, "role": "owner"}
     ]
 
 
@@ -167,7 +167,7 @@ async def test_accept_my_invitation_adds_membership(
             )
         )
         await session.commit()
-    organization_payload = {"id": str(organization.id), "name": "acme", "slug": "acme", "status": "creating"}
+    organization_payload = {"id": str(organization.id), "name": "acme", "status": "creating"}
 
     # Act
     invitations_response = await clients[1].get("/api/v1/me/invitations")

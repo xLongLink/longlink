@@ -103,7 +103,6 @@ async def create_running_solution(user: User) -> tuple[Solution, ComputeRegistry
     solution = Solution(
         organization_id=organization.id,
         name="dashboard",
-        slug="dashboard",
         status=Status.running,
         secrets={"LONGLINK_IDENTITY_SECRET": "test-identity-secret-01234567890"},
     )

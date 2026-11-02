@@ -171,7 +171,7 @@ export default function SolutionManagement({
                                     <Stack gap={presentation === 'overview' ? 0 : undefined}>
                                         {presentation === 'overview' ? (
                                             <Stack direction="horizontal" gap={1} align="center">
-                                                <Link href={`/orgs/${organization.slug}/solutions/${row.slug}`}>
+                                                <Link href={`/orgs/${organization.id}/solutions/${row.id}`}>
                                                     {row.name}
                                                 </Link>
                                                 {row.status !== 'running' && (
@@ -188,7 +188,7 @@ export default function SolutionManagement({
                                                 )}
                                             </Stack>
                                         ) : (
-                                            <Link href={`/orgs/${organization.slug}/solutions/${row.slug}`}>
+                                            <Link href={`/orgs/${organization.id}/solutions/${row.id}`}>
                                                 {row.name}
                                             </Link>
                                         )}

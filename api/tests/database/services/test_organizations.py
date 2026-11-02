@@ -1,7 +1,7 @@
 import pytest
 from uuid import uuid4
 from fastapi import HTTPException
-from factories import add_member, create_compute, fetch_operations, create_organization, assert_no_new_operations
+from factories import add_member, create_compute, fetch_operations, create_organization
 from src.models.roles import OrganizationRoles
 from src.models.types import Image
 from src.models.metadata import LongLinkMetadata
@@ -155,27 +155,33 @@ async def test_create_selects_least_assigned_infrastructure(users: tuple[User, U
     assert organization.compute_id == available_compute.id
 
 
-async def test_create_rejects_duplicate_organization_name(users: tuple[User, User, User]) -> None:
-    """Reject duplicate Organization names without persisting a second membership."""
+async def test_create_accepts_duplicate_organization_name(users: tuple[User, User, User]) -> None:
+    """Keep same-named Organizations distinct with their own owners and lifecycle work."""
 
     # Arrange
     organization = await create_organization(users[0])
     previous_operations = await fetch_operations()
 
-    # Act and assert
+    # Act
     async with session_scope() as session:
-        with pytest.raises(HTTPException, match="409: Organization already exists"):
-            await organizations.create(session, "acme", users[0])
+        duplicate = await organizations.create(session, "acme", users[1])
         await session.commit()
 
-    # The savepoint retains the original Organization and owner without queueing duplicate work.
+    # Each UUID retains a separate owner despite the identical display names.
     async with session_scope() as session:
         fetched, total = await organizations.fetch(session, Pagination())
         memberships = await organizations.members(session, organization.id)
-    assert [item.id for item in fetched] == [organization.id]
-    assert total == 1
+        duplicate_memberships = await organizations.members(session, duplicate.id)
+    assert {item.id for item in fetched} == {organization.id, duplicate.id}
+    assert total == 2
+    assert duplicate.id != organization.id
+    assert duplicate.name == organization.name
     assert [(membership.user_id, membership.role) for membership in memberships] == [(users[0].id, OrganizationRoles.owner)]
-    await assert_no_new_operations(previous_operations)
+    assert [(membership.user_id, membership.role) for membership in duplicate_memberships] == [(users[1].id, OrganizationRoles.owner)]
+    operations = await fetch_operations()
+    new_operations = [operation for operation in operations if operation.id not in {previous.id for previous in previous_operations}]
+    assert len(new_operations) == 1
+    assert new_operations[0].target_id == duplicate.id
 
 
 async def test_soft_delete_tombstones_solutions_and_retains_memberships(users: tuple[User, User, User]) -> None:

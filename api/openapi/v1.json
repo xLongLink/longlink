@@ -1992,19 +1992,20 @@
         }
       }
     },
-    "/api/v1/organizations/slug/{organization_slug}": {
+    "/api/v1/organizations/{organization_id}": {
       "get": {
-        "summary": "Get Organization By Slug",
-        "description": "Return the current user's membership for one Organization slug.",
-        "operationId": "get_organization_by_slug_api_v1_organizations_slug__organization_slug__get",
+        "summary": "Get Organization",
+        "description": "Return the current user's membership for one Organization UUID.",
+        "operationId": "get_organization_api_v1_organizations__organization_id__get",
         "parameters": [
           {
-            "name": "organization_slug",
+            "name": "organization_id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
-              "title": "Organization Slug"
+              "format": "uuid",
+              "title": "Organization Id"
             }
           },
           {
@@ -2046,9 +2047,7 @@
             }
           }
         }
-      }
-    },
-    "/api/v1/organizations/{organization_id}": {
+      },
       "delete": {
         "summary": "Delete Organization",
         "description": "Mark one Organization absent and queue lifecycle cleanup.",
@@ -4780,10 +4779,6 @@
             "type": "string",
             "title": "Name"
           },
-          "slug": {
-            "type": "string",
-            "title": "Slug"
-          },
           "status": {
             "$ref": "#/components/schemas/Status"
           }
@@ -4792,7 +4787,6 @@
         "required": [
           "id",
           "name",
-          "slug",
           "status"
         ],
         "title": "OrganizationIdentity",
@@ -4930,10 +4924,6 @@
             "type": "string",
             "title": "Name"
           },
-          "slug": {
-            "type": "string",
-            "title": "Slug"
-          },
           "description": {
             "anyOf": [
               {
@@ -4989,7 +4979,6 @@
         "required": [
           "id",
           "name",
-          "slug",
           "status",
           "deployment_pending",
           "desired_revision_id"
@@ -5752,10 +5741,6 @@
             "type": "string",
             "title": "Name"
           },
-          "slug": {
-            "type": "string",
-            "title": "Slug"
-          },
           "description": {
             "anyOf": [
               {
@@ -5835,7 +5820,6 @@
         "required": [
           "id",
           "name",
-          "slug",
           "description",
           "status",
           "deployment_pending",

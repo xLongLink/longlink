@@ -26,10 +26,10 @@ export function PageBreadcrumb({ solutionName }: { solutionName?: string }) {
     const label = pathname.startsWith('/admin/') ? 'Admin' : formatPathSegment(organization);
     const isSolutionBreadcrumb = solutionName !== undefined;
     const isOrganizationSidebar = isOrganization && appearance.navigation === 'sidebar';
-    const membership = useOutletContext<{ organization: { name: string; slug: string } } | undefined>();
+    const membership = useOutletContext<{ organization: { id: string; name: string } } | undefined>();
 
     const organizationName =
-        (membership?.organization.slug === organization ? membership.organization.name : undefined) ??
+        (membership?.organization.id === organization ? membership.organization.name : undefined) ??
         formatPathSegment(organization);
 
     return (
@@ -67,7 +67,7 @@ export function OrganizationSwitcher({
     isCollapsed?: boolean;
 }) {
     const [isOpen, setIsOpen] = useState(false);
-    const membership = useOutletContext<{ organization: { name: string; slug: string } } | undefined>();
+    const membership = useOutletContext<{ organization: { id: string; name: string } } | undefined>();
 
     // Fetch memberships only when the switcher opens, without suspending the page header.
     const {
@@ -83,8 +83,8 @@ export function OrganizationSwitcher({
     });
 
     const name =
-        (membership?.organization.slug === organization ? membership.organization.name : undefined) ??
-        memberships?.find((item) => item.organization.slug === organization)?.organization.name ??
+        (membership?.organization.id === organization ? membership.organization.name : undefined) ??
+        memberships?.find((item) => item.organization.id === organization)?.organization.name ??
         formatPathSegment(organization);
 
     return (
@@ -113,10 +113,10 @@ export function OrganizationSwitcher({
                                 <ListItem
                                     description="Organization"
                                     endContent={
-                                        item.slug === organization ? <Check aria-hidden="true" size={16} /> : undefined
+                                        item.id === organization ? <Check aria-hidden="true" size={16} /> : undefined
                                     }
-                                    href={`/orgs/${item.slug}`}
-                                    isSelected={item.slug === organization}
+                                    href={`/orgs/${item.id}`}
+                                    isSelected={item.id === organization}
                                     key={item.id}
                                     label={item.name}
                                     onClickCapture={() => setIsOpen(false)}

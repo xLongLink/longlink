@@ -13,7 +13,6 @@ def test_solution_summary_keeps_observed_version_separate_from_desired_release()
     payload = {
         "id": uuid4(),
         "name": "Dashboard",
-        "slug": "dashboard",
         "status": "running",
         "deployment_pending": True,
         "desired_revision_id": desired_revision,

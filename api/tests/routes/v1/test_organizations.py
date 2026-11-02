@@ -42,7 +42,6 @@ async def test_create_organization_persists_desired_state_and_queues_creation(
         assert organization is not None
         memberships = await organizations.members(session, organization.id)
     assert organization.name == "acme"
-    assert organization.slug == "acme"
 
     # Creation persists an active Organization before asynchronous provisioning.
     assert organization.deleted_at is None
@@ -114,46 +113,46 @@ async def test_create_organization_rejects_when_compute_registry_is_unavailable(
     assert await fetch_operations() == []
 
 
-async def test_get_organization_by_slug_returns_owner_membership(
+async def test_get_organization_by_id_returns_owner_membership(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient], users: tuple[User, User, User]
 ) -> None:
-    """Return the authenticated owner's membership for an Organization slug."""
+    """Return the authenticated owner's membership for an Organization UUID."""
 
     # Arrange
     organization = await create_organization(users[0])
 
     # Act
-    response = await clients[0].get(f"/api/v1/organizations/slug/{organization.slug}")
+    response = await clients[0].get(f"/api/v1/organizations/{organization.id}")
 
     # Assert
     assert response.status_code == 200
     assert response.headers["cache-control"] == "no-store"
     assert response.json() == {
-        "organization": {"id": str(organization.id), "name": "acme", "slug": "acme", "status": "creating"},
+        "organization": {"id": str(organization.id), "name": "acme", "status": "creating"},
         "role": "owner",
     }
 
 
-async def test_get_organization_by_slug_hides_cross_tenant_organization(
+async def test_get_organization_by_id_hides_cross_tenant_organization(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient], users: tuple[User, User, User]
 ) -> None:
-    """Hide an Organization slug from authenticated users without membership."""
+    """Hide an Organization UUID from authenticated users without membership."""
 
     # Arrange
     organization = await create_organization(users[0])
 
     # Act
-    response = await clients[1].get(f"/api/v1/organizations/slug/{organization.slug}")
+    response = await clients[1].get(f"/api/v1/organizations/{organization.id}")
 
     # Assert
     assert response.status_code == 404
     assert response.json() == {"detail": "Organization not found"}
 
 
-async def test_get_organization_by_slug_hides_deleted_organization(
+async def test_get_organization_by_id_hides_deleted_organization(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient], users: tuple[User, User, User]
 ) -> None:
-    """Hide deleted organization slugs even from their former owner."""
+    """Hide deleted organizations even from their former owner."""
 
     # Arrange
     organization = await create_organization(users[0])
@@ -161,7 +160,7 @@ async def test_get_organization_by_slug_hides_deleted_organization(
     assert deletion.status_code == 202
 
     # Act
-    response = await clients[0].get(f"/api/v1/organizations/slug/{organization.slug}")
+    response = await clients[0].get(f"/api/v1/organizations/{organization.id}")
 
     # Assert
     assert response.status_code == 404
@@ -566,7 +565,7 @@ async def test_list_organizations_returns_stable_page_and_active_total(
 
     # Assert
     assert response.status_code == 200
-    assert response.json() == {"items": [{"id": str(organization.id), "name": "acme", "slug": "acme", "status": "creating"}], "total": 2}
+    assert response.json() == {"items": [{"id": str(organization.id), "name": "acme", "status": "creating"}], "total": 2}
 
 
 async def test_delete_organization_returns_not_found_for_unknown_identifier(clients: tuple[AsyncClient, AsyncClient, AsyncClient]) -> None:
@@ -1131,10 +1130,10 @@ async def test_deleted_organization_returns_forbidden_to_former_owner(
         assert persisted.deleted_at is not None
 
 
-async def test_create_organization_rejects_too_long_slug_without_persisting_state(
+async def test_create_organization_accepts_long_display_name(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
 ) -> None:
-    """Reject valid-schema names whose slug exceeds the 63-character limit."""
+    """Accept display names beyond the former slug length limit."""
 
     # Arrange
     await create_compute()
@@ -1143,8 +1142,12 @@ async def test_create_organization_rejects_too_long_slug_without_persisting_stat
     response = await clients[0].post("/api/v1/organizations", json={"name": "a" * 70})
 
     # Assert
-    assert response.status_code == 409
-    assert response.json() == {"detail": "Invalid name"}
+    assert response.status_code == 202
+    assert response.json()["name"] == "a" * 70
     async with session_scope() as session:
-        assert await session.scalar(select(Organization)) is None
-    assert await fetch_operations() == []
+        organization = await session.get(Organization, UUID(response.json()["id"]))
+        assert organization is not None
+        assert organization.name == "a" * 70
+    operations = await fetch_operations()
+    assert len(operations) == 1
+    assert operations[0].target_id == organization.id

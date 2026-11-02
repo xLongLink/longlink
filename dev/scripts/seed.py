@@ -6,6 +6,7 @@ from typing import Literal
 from pathlib import Path
 from datetime import UTC, datetime
 from pydantic import Field, BaseModel
+from sqlmodel import col
 from src.utils import stripe
 from sqlalchemy import select
 from src.models import pricing
@@ -22,9 +23,9 @@ from src.database.models.organizations import Organization
 
 API_ENVIRONMENT = Path(__file__).resolve().parents[2] / "api" / ".env"
 DEVELOPMENT_COMPUTE = "development compute"
-DEVELOPMENT_ORGANIZATION = "acme-ink"
-INVITED_ORGANIZATION = "acme-studio"
-SAMPLE_SOLUTION = "invoices"
+DEVELOPMENT_ORGANIZATION = "ACME Ink"
+INVITED_ORGANIZATION = "ACME Studio"
+SAMPLE_SOLUTION = "Invoices"
 
 
 class Resource(BaseModel):
@@ -35,7 +36,6 @@ class Resource(BaseModel):
 
     # Metadata
     name: str | None = None
-    slug: str | None = None
 
     # State
     status: Literal["creating", "failed", "running"] | None = None
@@ -127,10 +127,13 @@ async def register_compute(client: httpx2.AsyncClient, settings: SeedSettings) -
 async def development_organization(client: httpx2.AsyncClient) -> Resource | None:
     """Return the local development Organization when present."""
 
-    response = await client.get("/api/v1/organizations", params={"page_size": 100})
+    response = await client.get("/api/v1/me/organizations")
     response.raise_for_status()
-    organizations = Page.model_validate(response.json()).items
-    return next((organization for organization in organizations if organization.slug == DEVELOPMENT_ORGANIZATION), None)
+    organizations = [Resource.model_validate(membership["organization"]) for membership in response.json()]
+    matches = [organization for organization in organizations if organization.name == DEVELOPMENT_ORGANIZATION]
+    if len(matches) > 1:
+        raise RuntimeError("Multiple development Organizations match ACME Ink; select one before seeding")
+    return next(iter(matches), None)
 
 
 async def create_organization(client: httpx2.AsyncClient) -> Resource:
@@ -141,15 +144,9 @@ async def create_organization(client: httpx2.AsyncClient) -> Resource:
         return organization
 
     # Create the development Organization with Platform-owned infrastructure defaults.
-    response = await client.post("/api/v1/organizations", json={"name": "ACME Ink"})
-    if response.status_code != 409:
-        response.raise_for_status()
-        return Resource.model_validate(response.json())
-
-    organization = await development_organization(client)
-    if organization is None:
-        raise RuntimeError("Local Organization creation was not recorded")
-    return organization
+    response = await client.post("/api/v1/organizations", json={"name": DEVELOPMENT_ORGANIZATION})
+    response.raise_for_status()
+    return Resource.model_validate(response.json())
 
 
 async def create_sample(client: httpx2.AsyncClient, settings: SeedSettings, organization: Resource) -> None:
@@ -158,17 +155,19 @@ async def create_sample(client: httpx2.AsyncClient, settings: SeedSettings, orga
     # Find only the seeded sample; leave other Organization Solutions untouched.
     response = await client.get(f"/api/v1/organizations/{organization.id}/solutions")
     response.raise_for_status()
-    solution = next(
-        (solution for solution in (Resource.model_validate(payload) for payload in response.json()) if solution.slug == SAMPLE_SOLUTION),
-        None,
-    )
+    solutions = [Resource.model_validate(payload) for payload in response.json()]
+    previous_ids = {solution.id for solution in solutions}
+    matches = [solution for solution in solutions if solution.name == SAMPLE_SOLUTION]
+    if len(matches) > 1:
+        raise RuntimeError("Multiple development Solutions match Invoices; select one before seeding")
+    solution = next(iter(matches), None)
     if solution is not None:
         # Request normal lifecycle cleanup so the old schema, credentials, and attachments are removed together.
         print("Removing the local sample Solution, including its database and attachments.")
         response = await client.delete(f"/api/v1/solutions/{solution.id}")
         response.raise_for_status()
 
-        # The slug remains reserved until cleanup completes, not merely until the tombstone is recorded.
+        # Wait for resource cleanup, not merely for the tombstone to be recorded.
         async with asyncio.timeout(300):
             while True:
                 response = await client.get("/api/v1/operations", params={"search": "solution.delete", "page_size": 100})
@@ -192,7 +191,7 @@ async def create_sample(client: httpx2.AsyncClient, settings: SeedSettings, orga
     response = await client.post(
         f"/api/v1/organizations/{organization.id}/solutions",
         json={
-            "name": "Invoices",
+            "name": SAMPLE_SOLUTION,
             "image": "localhost:15000/sample:latest",
             "envs": settings.SAMPLE_ENVS,
             "description": "Track building projects and construction phases for ACME Ink.",
@@ -204,6 +203,18 @@ async def create_sample(client: httpx2.AsyncClient, settings: SeedSettings, orga
         raise RuntimeError("Sample image 'localhost:15000/sample:latest' was not found in the local registry; run 'make image' first")
     response.raise_for_status()
 
+    # Resolve the new UUID because Solution creation returns no response body.
+    response = await client.get(f"/api/v1/organizations/{organization.id}/solutions")
+    response.raise_for_status()
+    matches = [
+        solution
+        for solution in (Resource.model_validate(payload) for payload in response.json())
+        if solution.name == SAMPLE_SOLUTION and solution.id not in previous_ids
+    ]
+    if len(matches) != 1:
+        raise RuntimeError("Could not identify the newly created development Solution")
+    created = matches[0]
+
     # Do not report seed success while the new schema or View runtime is still being provisioned.
     async with asyncio.timeout(300):
         while True:
@@ -214,7 +225,7 @@ async def create_sample(client: httpx2.AsyncClient, settings: SeedSettings, orga
                     solution
                     # Validate response entries before selecting the recreated sample.
                     for solution in (Resource.model_validate(payload) for payload in response.json())
-                    if solution.slug == SAMPLE_SOLUTION
+                    if solution.id == created.id
                 ),
                 None,
             )
@@ -228,7 +239,7 @@ async def create_sample(client: httpx2.AsyncClient, settings: SeedSettings, orga
                     break
             await asyncio.sleep(1)
 
-    print(f"Sample ready: {settings.PUBLIC_URL}/orgs/{DEVELOPMENT_ORGANIZATION}/solutions/{SAMPLE_SOLUTION}/projects")
+    print(f"Sample ready: {settings.PUBLIC_URL}/orgs/{organization.id}/solutions/{created.id}/projects")
 
 
 async def create_invited_organization(settings: SeedSettings) -> None:
@@ -241,9 +252,16 @@ async def create_invited_organization(settings: SeedSettings) -> None:
             owner = await users.register(database, "Development Owner", "seed-owner@example.com", secrets.token_urlsafe(48))
 
         # Reuse only the dedicated invitation fixture Organization.
-        organization = await database.scalar(select(Organization).where(Organization.slug == INVITED_ORGANIZATION))
+        organization_result = await database.scalars(
+            select(Organization).where(
+                col(Organization.created_id) == owner.id,
+                col(Organization.name) == INVITED_ORGANIZATION,
+                col(Organization.deleted_at).is_(None),
+            )
+        )
+        organization = organization_result.one_or_none()
         if organization is None:
-            organization = await organizations.create(database, "ACME Studio", owner)
+            organization = await organizations.create(database, INVITED_ORGANIZATION, owner)
 
         # Reset accepted invitations so every seed run demonstrates the pending state again.
         administrator = await users.by_email(database, settings.ADMIN_EMAIL)

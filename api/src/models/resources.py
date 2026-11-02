@@ -13,7 +13,6 @@ class OrganizationIdentity(BaseModel):
 
     # Metadata
     name: str
-    slug: str
 
     # State
     status: Status
@@ -29,7 +28,6 @@ class OrganizationSolutionSummary(BaseModel):
 
     # Metadata
     name: str
-    slug: str
     description: str | None = None
 
     # Categories
