@@ -43,21 +43,15 @@ type ArticleMetadata = {
     toc: ComponentProps<typeof Outline>['items'];
 };
 
-type DocumentationArticleProps = {
-    article: ArticleMetadata;
-    children: ReactNode;
-    className?: string;
-};
-
 /** Publishes authored documentation within one shared metadata and navigation shell. */
-export function DocumentationArticle({
-    article,
-    children,
-    className = '[--text-body-size:var(--font-size-lg)] [--article-heading-spacing:calc(var(--spacing-9)*2)] [--font-family-heading:var(--font-family-handwritten)] [&_.astryx-heading:not(dialog_*)]:uppercase [&_.astryx-heading:not(dialog_*)]:tracking-wide',
-}: DocumentationArticleProps) {
+export function DocumentationArticle({ article, children }: { article: ArticleMetadata; children: ReactNode }) {
     // Keep documentation typography and reading order as wrapper-owned policy.
     return (
-        <ArticleRenderer article={article} className={className} paths={documentationPaths}>
+        <ArticleRenderer
+            article={article}
+            className="[--text-body-size:var(--font-size-lg)] [--article-heading-spacing:calc(var(--spacing-9)*2)] [--font-family-heading:var(--font-family-handwritten)] [&_.astryx-heading:not(dialog_*)]:uppercase [&_.astryx-heading:not(dialog_*)]:tracking-wide"
+            paths={documentationPaths}
+        >
             {children}
         </ArticleRenderer>
     );

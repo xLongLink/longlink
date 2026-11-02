@@ -199,7 +199,16 @@ export default function OrganizationManagement({ presentation }: { presentation:
                     />
                 )}
             </Stack>
-            {selected?.type === 'create' && <CreateOrganization onClose={closeSelected} invalidate={invalidate} />}
+            {selected?.type === 'create' && (
+                <CreateOrganization
+                    onClose={closeSelected}
+                    onSuccess={async () => {
+                        // Refresh memberships before closing only this creation attempt.
+                        await invalidate();
+                        closeSelected();
+                    }}
+                />
+            )}
             {selected && selected.type !== 'create' && (
                 <Dialog
                     isOpen

@@ -98,7 +98,11 @@ export default function Compute() {
             </Stack>
             {dialog?.kind === 'registration' && (
                 <ComputeRegistration
-                    invalidate={invalidate}
+                    onSuccess={async () => {
+                        // Refresh the list before closing only this registration attempt.
+                        await invalidate();
+                        setDialog((current) => (current === dialog ? null : current));
+                    }}
                     onClose={() => {
                         // An obsolete registration cannot dismiss a replacement dialog selection.
                         setDialog((current) => (current === dialog ? null : current));
@@ -161,7 +165,7 @@ export default function Compute() {
 }
 
 /** Owns a fresh registration draft for the lifetime of the form dialog. */
-function ComputeRegistration({ invalidate, onClose }: { invalidate: () => Promise<void>; onClose: () => void }) {
+function ComputeRegistration({ onSuccess, onClose }: { onSuccess: () => Promise<void>; onClose: () => void }) {
     const reportApiError = useApiError();
 
     // Opening a new dialog starts with blank fields; dismissal discards this draft.
@@ -209,7 +213,7 @@ function ComputeRegistration({ invalidate, onClose }: { invalidate: () => Promis
         };
     }, [file]);
 
-    /** Registers the validated Compute draft and refreshes the list. */
+    /** Registers the validated Compute draft before awaiting the parent's success workflow. */
     async function registerCompute(data: FormData) {
         // Validate the original field values and refresh the list only after registration succeeds.
         try {
@@ -221,8 +225,7 @@ function ComputeRegistration({ invalidate, onClose }: { invalidate: () => Promis
             });
 
             await api.post('/api/v1/computes', { json });
-            await invalidate();
-            onClose();
+            await onSuccess();
         } catch (cause) {
             reportApiError(cause);
 

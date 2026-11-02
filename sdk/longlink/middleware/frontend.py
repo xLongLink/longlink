@@ -1,7 +1,7 @@
 import re
 from starlette.types import Send, Scope, ASGIApp, Message, Receive
 from starlette.datastructures import Headers, MutableHeaders
-from starlette.middleware.gzip import GZipMiddleware
+from starlette.middleware.gzip import GZipResponder
 
 HASHED_ASSET_PATH = re.compile(r"^/assets/.+-[A-Za-z0-9_-]{8,}\.[A-Za-z0-9]+$")
 INCOMPRESSIBLE_SUFFIXES = (".avif", ".gif", ".gz", ".ico", ".jpeg", ".jpg", ".png", ".webp", ".woff2", ".zip")
@@ -54,7 +54,6 @@ class FrontendMiddleware:
         """Prepare identity and gzip response paths for one application."""
 
         self.app = app
-        self.gzip = GZipMiddleware(app, minimum_size=1000, compresslevel=6)
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         """Compress eligible responses and adjust their cache headers."""
@@ -96,7 +95,6 @@ class FrontendMiddleware:
                 if headers.get("content-type", "").startswith("text/html") and status in CACHEABLE_RESPONSE_STATUSES:
                     headers["cache-control"] = "no-cache"
                 elif HASHED_ASSET_PATH.fullmatch(path) and status in CACHEABLE_RESPONSE_STATUSES:
-
                     # Content-hashed assets remain immutable across deployments.
                     headers["cache-control"] = "public, max-age=31536000, immutable"
                 elif path.startswith("/assets/"):
@@ -110,7 +108,8 @@ class FrontendMiddleware:
 
         # Range responses retain identity byte offsets; other eligible responses may use gzip.
         if compression_candidate and accepts_gzip(request_headers.get("accept-encoding", "")):
-            await self.gzip(scope, receive, send_with_headers)
+            responder = GZipResponder(self.app, minimum_size=1000, compresslevel=6)
+            await responder(scope, receive, send_with_headers)
             return
 
         await self.app(scope, receive, send_with_headers)
