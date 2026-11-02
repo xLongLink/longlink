@@ -11,7 +11,7 @@ export const meta = () => [];
 export default function Solution() {
     return (
         <SolutionRuntime>
-            {({ content, tabs, title }) => (
+            {({ content, isNavigationLoading, tabs, title }) => (
                 <Platform
                     action={
                         <Link as="a" href="https://www.longlink.dev/docs/" isExternalLink isStandalone>
@@ -19,6 +19,7 @@ export default function Solution() {
                         </Link>
                     }
                     breadcrumb={<Wordmark />}
+                    isNavigationLoading={isNavigationLoading}
                     tabs={tabs}
                 >
                     <title>{title ? `${title} | LongLink` : 'LongLink'}</title>
