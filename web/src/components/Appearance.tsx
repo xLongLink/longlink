@@ -4,8 +4,8 @@ import { Theme } from '@astryxdesign/core/theme';
 import { stoneTheme } from '@/lib/generated/stone.js';
 import { useCurrentUser } from '@/lib/hooks/use-user';
 import { useIsMutating } from '@tanstack/react-query';
-import { AppearanceContext, useAppearance } from '@/lib/hooks/use-appearance';
-import { useEffect, useLayoutEffect, useMemo, useState, useSyncExternalStore } from 'react';
+import { AppearanceContext } from '@/lib/hooks/use-appearance';
+import { useEffect, useLayoutEffect, useMemo, useSyncExternalStore } from 'react';
 import { appearanceSchema, clearAppearanceCache, defaultAppearance, type Appearance } from '@/lib/appearance';
 
 /** Observes optional startup data without sharing state between documents. */
@@ -31,9 +31,8 @@ function readCache() {
 }
 
 /** Shares personal appearance across native pages and isolated Solution hosts. */
-export function AppearanceProvider({ children }: { children: ReactNode }) {
+export function AppearanceProvider({ children, preference }: { children: ReactNode; preference?: Appearance }) {
     const cache = useSyncExternalStore(subscribeToCache, readCache, () => null);
-    const [preference, setAppearance] = useState<Appearance>();
 
     // Read the browser snapshot before paint; validated account data takes precedence.
     const cached = useMemo(() => {
@@ -58,7 +57,7 @@ export function AppearanceProvider({ children }: { children: ReactNode }) {
     }, [appearance.accent]);
 
     return (
-        <AppearanceContext value={{ appearance, setAppearance }}>
+        <AppearanceContext value={{ appearance }}>
             <Theme theme={stoneTheme} mode={appearance.theme}>
                 {children}
             </Theme>
@@ -67,16 +66,21 @@ export function AppearanceProvider({ children }: { children: ReactNode }) {
 }
 
 /** Refreshes account preferences on navigation/focus and clears them on session loss. */
-export function AppearanceSync() {
+export function AccountAppearanceProvider({ children }: { children: ReactNode }) {
     const { data: user, error, refetch } = useCurrentUser();
-    const { setAppearance } = useAppearance();
     const isSaving = useIsMutating({ mutationKey: ['current-user'] }) > 0;
+
+    // Derive previews and saved preferences directly from the authoritative user query.
+    const preference = user
+        ? { theme: user.theme, accent: user.accent, navigation: user.navigation }
+        : error instanceof ApiError && error.status === 401
+          ? defaultAppearance
+          : undefined;
 
     // Never carry one account's cached colors into an anonymous or different account session.
     useEffect(() => {
         if (user) {
             const appearance = { theme: user.theme, accent: user.accent, navigation: user.navigation };
-            setAppearance(appearance);
 
             // Keep previews local until the profile write settles.
             if (!isSaving) {
@@ -90,10 +94,9 @@ export function AppearanceSync() {
                 }
             }
         } else if (error instanceof ApiError && error.status === 401) {
-            setAppearance(defaultAppearance);
             clearAppearanceCache();
         }
-    }, [user, error, setAppearance, isSaving]);
+    }, [user, error, isSaving]);
 
     // Revalidate the account rather than trusting another tab's cached identity.
     useEffect(() => {
@@ -102,5 +105,5 @@ export function AppearanceSync() {
         });
     }, [refetch]);
 
-    return null;
+    return <AppearanceProvider preference={preference}>{children}</AppearanceProvider>;
 }

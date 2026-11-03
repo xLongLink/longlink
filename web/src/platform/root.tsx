@@ -10,7 +10,7 @@ import { appearanceBootstrap } from '@/lib/appearance';
 import { LinkProvider } from '@astryxdesign/core/Link';
 import { LayerProvider } from '@astryxdesign/core/Layer';
 import { IconRequestContext } from '@/components/ui/contexts';
-import { AppearanceProvider, AppearanceSync } from '@/components/Appearance';
+import { AccountAppearanceProvider } from '@/components/Appearance';
 import { Links, Meta, Outlet, Scripts, ScrollRestoration, useLocation } from 'react-router';
 import '@/index.css';
 // Handwritten fonts belong only to native Platform pages, not the embedded SDK application.
@@ -37,10 +37,11 @@ export default function PlatformRoot() {
                         <Outlet />
                     ) : (
                         <ApiProvider>
-                            <AppearanceSync />
-                            <ApiBoundary>
-                                <Outlet />
-                            </ApiBoundary>
+                            <AccountAppearanceProvider>
+                                <ApiBoundary>
+                                    <Outlet />
+                                </ApiBoundary>
+                            </AccountAppearanceProvider>
                         </ApiProvider>
                     )}
                 </IconRequestContext>
@@ -53,7 +54,7 @@ export default function PlatformRoot() {
             {content}
         </Theme>
     ) : (
-        <AppearanceProvider>{content}</AppearanceProvider>
+        content
     );
 }
 

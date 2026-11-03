@@ -231,7 +231,7 @@ async def deploy(
 
     # Publish and enqueue the immutable snapshot in the caller's transaction.
     solution.desired_revision_id = revision.id
-    await operations.enqueue(session, kind=OperationKind.solution_deploy, target_id=revision.id)
+    await operations.enqueue(session, kind=OperationKind.solution_deploy, target_id=revision.id, coalesce=False)
 
 
 async def delete(session: AsyncSession, solution_id: UUID, user_id: UUID) -> None:
