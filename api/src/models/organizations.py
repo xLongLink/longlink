@@ -1,11 +1,12 @@
 from enum import StrEnum
 from uuid import UUID
+from decimal import Decimal
 from datetime import datetime
 from pydantic import Field, BaseModel, ConfigDict
+from src.models import pricing
 from longlink.types import Email
 from src.models.roles import OrganizationRoles
 from src.models.users import UserIdentity
-from src.models.pricing import UsageRates
 
 MAX_SOLUTIONS = 9
 
@@ -24,8 +25,18 @@ class OrganizationCreate(BaseModel):
     name: str = Field(min_length=1, max_length=128)
 
 
-class OrganizationUsage(UsageRates):
+class OrganizationUsage(BaseModel):
     """Describe current Organization usage, limits, and month-end pricing."""
+
+    # Included usage
+    free_users: int = pricing.FREE_USERS
+    free_storage_bytes: int = pricing.FREE_STORAGE_BYTES
+    free_database_bytes: int = pricing.FREE_DATABASE_BYTES
+
+    # Monthly prices
+    user_monthly_price: int = pricing.USER_MONTHLY_PRICE
+    storage_mib_monthly_price: Decimal = pricing.STORAGE_MIB_MONTHLY_PRICE
+    database_mib_monthly_price: Decimal = pricing.DATABASE_MIB_MONTHLY_PRICE
 
     # Usage and payments
     users: int = Field(ge=0)

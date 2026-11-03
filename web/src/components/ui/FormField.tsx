@@ -69,6 +69,8 @@ export function FormField({
     });
 
     // Only serialized binary values need a collector; strings use native controls or hidden carriers.
+    const hasBinaryValues = serialize && values.some((value) => value instanceof Blob);
+
     const collect = useEffectEvent((event: FormDataEvent) => {
         if (!serialize || !name || disabled || fieldRef.current?.closest('fieldset:disabled')) return;
 
@@ -94,16 +96,18 @@ export function FormField({
 
         form.addEventListener('submit', onValidate, true);
         form.addEventListener('longlink:validate', onValidate);
-        form.addEventListener('formdata', onCollect);
         form.addEventListener('reset', reset);
+
+        if (hasBinaryValues) form.addEventListener('formdata', onCollect);
 
         return () => {
             form.removeEventListener('submit', onValidate, true);
             form.removeEventListener('longlink:validate', onValidate);
-            form.removeEventListener('formdata', onCollect);
             form.removeEventListener('reset', reset);
+
+            if (hasBinaryValues) form.removeEventListener('formdata', onCollect);
         };
-    }, [fieldRef, name]);
+    }, [fieldRef, name, hasBinaryValues]);
 
     // Leave control presentation to Astryx and expose submission errors accessibly.
     return (

@@ -4,5 +4,5 @@
         "types": ["vite/client", "node"],
         "tsBuildInfoFile": "../node_modules/.tmp/tsconfig.tests.tsbuildinfo"
     },
-    "include": ["./**/*.ts", "./**/*.tsx", "../src/**/*.ts", "../src/**/*.tsx", "../.react-router/types/**/*"]
+    "include": ["./**/*.ts", "./**/*.tsx", "../src/**/*.ts", "../src/**/*.tsx"]
 }

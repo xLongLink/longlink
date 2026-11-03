@@ -338,9 +338,7 @@ async def lock_row(session: AsyncSession, organization_id: UUID) -> Organization
     await session.execute(
         sql_update(Organization).where(col(Organization.id) == organization_id).values(updated_at=col(Organization.updated_at))
     )
-    return await session.get(
-        Organization, organization_id, options=[defer(attr(Organization.database_password))], populate_existing=True
-    )
+    return await session.get(Organization, organization_id, options=[defer(attr(Organization.database_password))], populate_existing=True)
 
 
 async def lock(session: AsyncSession, organization_id: UUID) -> Organization:
@@ -528,7 +526,7 @@ async def create(session: AsyncSession, name: str, user: User) -> Organization:
     await session.flush()
 
     # Queue infrastructure creation in the caller's transaction after persisting the Organization.
-    await operations.enqueue(session, kind=OperationKind.organization_create, target_id=organization.id)
+    await operations.enqueue(session, kind=OperationKind.organization_create, target_id=organization.id, coalesce=False)
     return organization
 
 
