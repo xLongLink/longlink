@@ -1,15 +1,8 @@
 name: cleanup
 
 on:
-    pull_request_target:
-        types: [closed]
-        branches: [main]
-    workflow_dispatch:
-    workflow_call:
-        secrets:
-            OPENAI_API_KEY:
-                description: 'OpenAI API key for the cleanup agent'
-                required: true
+    schedule:
+        - cron: '0 */12 * * *'
 
 permissions:
     contents: write
@@ -21,7 +14,6 @@ concurrency:
 
 jobs:
     cleanup:
-        if: github.event_name != 'pull_request_target' || github.event.pull_request.merged == true
         runs-on: ubuntu-latest
         timeout-minutes: 60
         defaults:
