@@ -13,11 +13,11 @@ import { TextInput } from '@/components/ui/TextInput';
 import { DeletionDialog } from '@/components/Deletion';
 import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { Selector } from '@astryxdesign/core/Selector';
-import { useQueryClient } from '@tanstack/react-query';
 import { Table, proportional } from '@astryxdesign/core/Table';
 import { MultiSelector } from '@astryxdesign/core/MultiSelector';
 import { ArrowDown, ArrowUp, Pencil, Trash } from 'lucide-react';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 type Tag = z.output<typeof schemas.zOrganizationTagResponse>;
 
@@ -27,23 +27,19 @@ type TagAction = { kind: 'create' } | { kind: 'edit' | 'delete'; tag: Tag };
 export default function TabsSection({ base, tags, canMaintain }: { base: string; tags: Tag[]; canMaintain: boolean }) {
     const queryClient = useQueryClient();
     const [action, setAction] = useState<TagAction | null>(null);
-    const [isMoving, setIsMoving] = useState(false);
     const reportError = useApiError();
 
-    /** Persists relative moves and lets the shared query update navigation and table rows. */
-    async function move(tag: Tag, direction: 'up' | 'down') {
-        setIsMoving(true);
-
-        try {
+    // Keep moves pending until the shared navigation and table rows refresh.
+    const move = useMutation({
+        mutationFn: async ({ tag, direction }: { tag: Tag; direction: 'up' | 'down' }) => {
             const json = schemas.zOrganizationTagMove.parse({ direction });
             await api.post(`${base}/tags/${tag.id}/move`, { json });
             await queryClient.invalidateQueries({ queryKey: ['api', `${base}/tags`], exact: true });
-        } catch (failure) {
-            reportError(failure);
-        } finally {
-            setIsMoving(false);
-        }
-    }
+        },
+        onError: reportError,
+        retry: false,
+        networkMode: 'always',
+    });
 
     // Keep category editing separate from Solution deployments and assignments.
     return (
@@ -86,7 +82,7 @@ export default function TabsSection({ base, tags, canMaintain }: { base: string;
                                               label={`Actions for ${tag.name}`}
                                               size="sm"
                                               alignment="end"
-                                              isDisabled={isMoving}
+                                              isDisabled={move.isPending}
                                               items={[
                                                   {
                                                       id: 'edit',
@@ -99,18 +95,14 @@ export default function TabsSection({ base, tags, canMaintain }: { base: string;
                                                       label: 'Move Up',
                                                       icon: <ArrowUp className="size-4" aria-hidden="true" />,
                                                       isDisabled: tags[0]?.id === tag.id,
-                                                      onClick: () => {
-                                                          void move(tag, 'up');
-                                                      },
+                                                      onClick: () => move.mutate({ tag, direction: 'up' }),
                                                   },
                                                   {
                                                       id: 'down',
                                                       label: 'Move Down',
                                                       icon: <ArrowDown className="size-4" aria-hidden="true" />,
                                                       isDisabled: tags[tags.length - 1]?.id === tag.id,
-                                                      onClick: () => {
-                                                          void move(tag, 'down');
-                                                      },
+                                                      onClick: () => move.mutate({ tag, direction: 'down' }),
                                                   },
                                                   {
                                                       id: 'delete',

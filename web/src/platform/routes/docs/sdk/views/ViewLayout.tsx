@@ -9,8 +9,8 @@ import { Switch } from '@astryxdesign/core/Switch';
 import { Heading } from '@astryxdesign/core/Heading';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { Blockquote } from '@astryxdesign/core/Blockquote';
-import { Table, proportional } from '@/components/ui/Table';
 import { documentationLastUpdated } from '@/lib/documentation';
+import { Table, proportional } from '@astryxdesign/core/Table';
 import { componentDocumentation } from '@/platform/publications';
 import { DocumentationArticle } from '@/components/layouts/Article';
 import { Layout, LayoutContent, LayoutHeader } from '@astryxdesign/core/Layout';
@@ -169,6 +169,9 @@ export default function ViewLayout({
                                 <Table
                                     key={name}
                                     data={properties}
+                                    density="compact"
+                                    hasHover={false}
+                                    isStriped={false}
                                     columns={[
                                         {
                                             key: 'name',

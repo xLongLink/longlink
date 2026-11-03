@@ -24,10 +24,3 @@ async def apply(client: "Kubernetes", organization_id: UUID) -> None:
     await utils.apply(compute_boundary)
     boundary_policy = NetworkPolicy(network_policy, api=api)
     await utils.apply(boundary_policy)
-
-
-async def delete(client: "Kubernetes", organization_id: UUID) -> None:
-    """Delete one Organization Namespace and wait for completion."""
-
-    # Namespace termination is the completion boundary for compute cleanup.
-    await utils.delete_namespace(await client.api(), namespace.compute(organization_id))

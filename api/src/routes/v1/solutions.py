@@ -32,7 +32,11 @@ async def check_update(session: auth.Session, user: auth.CurrentUser, solution: 
 async def apply_update(session: auth.Session, user: auth.CurrentUser, solution: auth.SolutionMaintainer, payload: SolutionPatch):
     """Re-resolve latest and deploy a changed immutable image or configuration."""
 
-    await solutions.apply_update(session, solution, user.id, payload)
+    # Inspect without command locks, then revalidate the desired state and maintenance access.
+    revision, metadata = await solutions.inspect_update(session, solution, user.id, payload.expected_revision_id)
+
+    # Admit the reviewed deployment and queue it in the final transaction.
+    await solutions.deploy(session, solution, user.id, metadata, payload.envs, current=revision)
     await session.commit()
 
 
