@@ -41,25 +41,29 @@ export default function Sidebar({
                         aria-label="Section navigation"
                         collapsible={collapsible}
                         header={
-                            <Stack gap={3} padding={1}>
-                                {sidebarHeader ?? (
-                                    <Link
-                                        className={isCollapsed ? 'flex justify-center py-1.5' : 'w-full px-6 py-1.5'}
-                                        href={homeHref}
-                                        label="LongLink home"
-                                        color="inherit"
-                                    >
-                                        {isCollapsed ? (
-                                            <img
-                                                alt="LongLink"
-                                                className="size-8 object-contain"
-                                                src={`/longlink-logo-${mode}.png`}
-                                            />
-                                        ) : (
-                                            <Wordmark size="full" />
-                                        )}
-                                    </Link>
-                                )}
+                            <Stack className="w-full" gap={3}>
+                                <Stack className="h-14 w-full shrink-0" justify="center">
+                                    {sidebarHeader ?? (
+                                        <Link
+                                            className={
+                                                isCollapsed ? 'flex justify-center py-1.5' : 'w-full px-6 py-1.5'
+                                            }
+                                            href={homeHref}
+                                            label="LongLink home"
+                                            color="inherit"
+                                        >
+                                            {isCollapsed ? (
+                                                <img
+                                                    alt="LongLink"
+                                                    className="size-8 object-contain"
+                                                    src={`/longlink-logo-${mode}.png`}
+                                                />
+                                            ) : (
+                                                <Wordmark size="full" />
+                                            )}
+                                        </Link>
+                                    )}
+                                </Stack>
                                 <Divider />
                             </Stack>
                         }
@@ -70,18 +74,16 @@ export default function Sidebar({
                             </Stack>
                         }
                     >
-                        <Stack padding={2}>
-                            {tabs.map((tab) => (
-                                <SideNavItem
-                                    href={tab.href}
-                                    icon={tab.icon}
-                                    isSelected={activeTab === tab.href}
-                                    key={tab.href}
-                                    label={tab.label}
-                                    onClick={() => setIsMobileCollapsed(true)}
-                                />
-                            ))}
-                        </Stack>
+                        {tabs.map((tab) => (
+                            <SideNavItem
+                                href={tab.href}
+                                icon={tab.icon}
+                                isSelected={activeTab === tab.href}
+                                key={tab.href}
+                                label={tab.label}
+                                onClick={() => setIsMobileCollapsed(true)}
+                            />
+                        ))}
                     </SideNav>
                 }
                 variant="wash"

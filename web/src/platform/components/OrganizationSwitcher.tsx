@@ -11,7 +11,6 @@ import { Popover } from '@astryxdesign/core/Popover';
 import { Check, ChevronsUpDown } from 'lucide-react';
 import { List, ListItem } from '@astryxdesign/core/List';
 import { IconButton } from '@astryxdesign/core/IconButton';
-import { formatPathSegment } from '@/components/breadcrumb/text';
 import { zUserOrganizationMembership } from '@/lib/generated/platform-api-v1/zod.gen';
 
 export type OrganizationIdentity = {
@@ -41,7 +40,7 @@ export function OrganizationSwitcher({ organization }: { organization: Organizat
     const name =
         organization.name ??
         memberships?.find((item) => item.organization.id === organization.id)?.organization.name ??
-        formatPathSegment(organization.id);
+        'Organization';
 
     return (
         <Popover
