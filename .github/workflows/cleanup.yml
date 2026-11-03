@@ -90,7 +90,7 @@ jobs:
               id: pull-request
               uses: peter-evans/create-pull-request@v7
               with:
-                  token: ${{ github.token }}
+                  token: ${{ secrets.CLEANUP_TOKEN }}
                   path: repository
                   base: ${{ github.event.repository.default_branch }}
                   branch: automation/opencode-cleanup
