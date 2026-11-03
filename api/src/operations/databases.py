@@ -173,11 +173,10 @@ async def ready(organization_id: UUID) -> bool:
                 return False
 
             # Available databases can be reused only outside an active transition.
-            transition = await session.get(OrganizationActivity, organization_id)
-            if organization.database_state == DatabaseState.available and (
-                transition is None or transition.expires_at <= datetime.now(UTC)
-            ):
-                return True
+            if organization.database_state == DatabaseState.available:
+                transition = await session.get(OrganizationActivity, organization_id)
+                if transition is None or transition.expires_at <= datetime.now(UTC):
+                    return True
             lease = await _claim(session, organization_id)
             await session.commit()
 

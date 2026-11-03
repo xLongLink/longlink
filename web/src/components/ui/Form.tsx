@@ -65,7 +65,7 @@ export function Form(props: {
         }
 
         // Join themed control failures to the same document-ordered pass.
-        const validation: FormValidation = { scope: form, panel, invalid };
+        const validation: FormValidation = { panel, invalid };
         form.dispatchEvent(new CustomEvent('longlink:validate', { detail: validation, cancelable: true }));
         invalid.sort((left, right) =>
             left === right ? 0 : left.compareDocumentPosition(right) & Node.DOCUMENT_POSITION_PRECEDING ? 1 : -1

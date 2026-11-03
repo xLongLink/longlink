@@ -164,8 +164,8 @@ class LongLink(FastAPI):
         async def lifespan(app: FastAPI) -> AsyncGenerator[Mapping[str, Any]]:
             """Build the completed Solution catalog and close MCP sessions before runtime services."""
 
-            async with runtime_lifespan(app) as state:
-                try:
+            try:
+                async with runtime_lifespan(app) as state:
 
                     # Use a fresh schema, including routes registered after an earlier OpenAPI request.
                     schema = get_openapi(
@@ -197,10 +197,10 @@ class LongLink(FastAPI):
                             # Remove only these routes so later lifespans cannot reuse a closed transport.
                             for route in mcp_app.routes:
                                 self.router.routes.remove(route)
-                finally:
+            finally:
 
-                    # Close the active services after MCP, including when initialization fails.
-                    await self.state.longlink.database.dispose()
+                # Close the active services after application shutdown, including when initialization fails.
+                await self.state.longlink.database.dispose()
 
         self.router.lifespan_context = lifespan
 
