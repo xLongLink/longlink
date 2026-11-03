@@ -109,8 +109,8 @@ async def create(
     return solution
 
 
-async def access(session: AsyncSession, solution_id: UUID, user_id: UUID, *, lock: bool = True) -> Solution:
-    """Lock one active Solution and revalidate maintenance access."""
+async def access(session: AsyncSession, solution_id: UUID, user_id: UUID, *, lock: bool = True, include_deleted: bool = False) -> Solution:
+    """Revalidate maintenance access, including tombstones only for deletion retries."""
 
     # SQLite needs a write reservation because SELECT FOR UPDATE is a no-op there.
     if lock and session.get_bind().dialect.name == "sqlite":
@@ -124,7 +124,6 @@ async def access(session: AsyncSession, solution_id: UUID, user_id: UUID, *, loc
         .join(Organization, col(Organization.id) == col(Solution.organization_id))
         .where(
             col(Solution.id) == solution_id,
-            col(Solution.deleted_at).is_(None),
             col(Organization.deleted_at).is_(None),
             # Authorization is scoped to the requesting Organization member.
             col(UserOrganization.user_id) == user_id,
@@ -132,6 +131,8 @@ async def access(session: AsyncSession, solution_id: UUID, user_id: UUID, *, loc
         # Refresh any identity-map state before a command takes its lock.
         .execution_options(populate_existing=True)
     )
+    if not include_deleted:
+        statement = statement.where(col(Solution.deleted_at).is_(None))
     if lock:
         statement = statement.with_for_update(of=(Solution, UserOrganization))
     result = await session.execute(statement)
@@ -237,14 +238,15 @@ async def deploy(
 async def delete(session: AsyncSession, solution_id: UUID, user_id: UUID) -> None:
     """Authorize, tombstone, and queue cleanup for one LongLink Solution."""
 
-    # Use the same locked maintenance boundary as deployment commands.
-    solution = await access(session, solution_id, user_id)
+    # Revalidate current maintenance access while allowing unfinished deletion to resume.
+    solution = await access(session, solution_id, user_id, include_deleted=True)
 
     # Record the tombstone and schedule external cleanup in one transaction.
-    now = datetime.now(UTC)
-    solution.deleted_at = now
-    solution.deleted_id = user_id
-    solution.updated_at = now
-    solution.updated_id = user_id
+    if solution.deleted_at is None:
+        now = datetime.now(UTC)
+        solution.deleted_at = now
+        solution.deleted_id = user_id
+        solution.updated_at = now
+        solution.updated_id = user_id
 
     await operations.enqueue(session, kind=OperationKind.solution_delete, target_id=solution.id)
