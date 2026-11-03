@@ -1,14 +1,16 @@
 from main import app
 from longlink.testclient import TestClient
 
-client = TestClient(app)
-
 
 def test_solution_serves_health_check() -> None:
     """Serve the LongLink runtime health check."""
 
+    # Arrange
+    client = TestClient(app)
+
     # Act
-    response = client.get("/health")
+    with client:
+        response = client.get("/health")
 
     # Assert
     assert response.status_code == 200

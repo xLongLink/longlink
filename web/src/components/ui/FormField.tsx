@@ -4,7 +4,7 @@ import { Stack } from '@astryxdesign/core/Stack';
 import { useEffect, useEffectEvent, useState, type ReactNode, type RefObject } from 'react';
 
 /** Shares a scoped validation pass between Form and its non-native controls. */
-export type FormValidation = { scope: HTMLElement; panel?: HTMLElement; invalid: HTMLElement[] };
+export type FormValidation = { panel?: HTMLElement; invalid: HTMLElement[] };
 
 /** Connects themed controls to native submission and reports missing or invalid named values. */
 export function FormField({
@@ -42,7 +42,7 @@ export function FormField({
 
         const field = fieldRef.current;
 
-        if (validation && (!field || !validation.scope.contains(field))) return;
+        if (validation && !field) return;
 
         const panel = field?.closest<HTMLElement>('[data-step-panel]');
 
