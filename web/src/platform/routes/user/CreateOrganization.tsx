@@ -33,6 +33,7 @@ export default function CreateOrganization({
     return (
         <Dialog
             isOpen
+            paddingInline={0}
             onOpenChange={(open) => {
                 if (!open) onClose();
             }}

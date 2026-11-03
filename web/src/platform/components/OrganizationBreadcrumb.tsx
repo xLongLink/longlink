@@ -1,6 +1,5 @@
 import { useContext } from 'react';
 import { SidebarContext } from '@/lib/sidebar';
-import { formatPathSegment } from '@/components/breadcrumb/text';
 import { BreadcrumbItem, Breadcrumbs } from '@astryxdesign/core/Breadcrumbs';
 import { OrganizationSwitcher, type OrganizationIdentity } from '@/platform/components/OrganizationSwitcher';
 
@@ -13,7 +12,7 @@ export function OrganizationBreadcrumb({
     solutionName?: string;
 }) {
     const sidebar = useContext(SidebarContext);
-    const name = organization.name ?? formatPathSegment(organization.id);
+    const name = organization.name ?? 'Organization';
 
     return (
         <Breadcrumbs separator=">" variant="supporting">
