@@ -1,0 +1,29 @@
+name: Security Scan
+
+on:
+    pull_request:
+    workflow_dispatch:
+
+permissions:
+    contents: read
+
+jobs:
+    strix-scan:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+              with:
+                  fetch-depth: 0
+                  persist-credentials: false
+
+            - name: Install Strix
+              run: |
+                  curl -fsSL https://strix.ai/install | bash
+                  echo "$HOME/.strix/bin" >> "$GITHUB_PATH"
+
+            - name: Run Security Scan
+              env:
+                  STRIX_LLM: openai/gpt-6.1-sol
+                  STRIX_REASONING_EFFORT: medium
+                  LLM_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+              run: strix -n -t ./ --scan-mode quick
