@@ -4,7 +4,7 @@ import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Heading } from '@astryxdesign/core/Heading';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
-import { Table, proportional } from '@/components/ui/Table';
+import { Table, proportional } from '@astryxdesign/core/Table';
 import { DocumentationArticle } from '@/components/layouts/Article';
 
 const article = {
@@ -48,6 +48,9 @@ export default function Platform() {
                         for their settings.
                     </Text>
                     <Table
+                        density="compact"
+                        hasHover={false}
+                        isStriped={false}
                         data={[
                             {
                                 name: 'PUBLIC_URL',

@@ -75,15 +75,10 @@ def create_engine(env: Envs) -> AsyncEngine:
         engine_kwargs["pool_use_lifo"] = True
 
         # Verify the Platform CA and configure UTC PostgreSQL sessions.
-        server_settings = {"timezone": "UTC"}
-        if env.DATABASE_SCHEMA is not None:
-            server_settings["search_path"] = f'"{env.DATABASE_SCHEMA}"'
-        connect_args: dict[str, object] = {"server_settings": server_settings}
-        if env.DATABASE_CERTIFICATE is not None:
-            connect_args["ssl"] = ssl.create_default_context(cadata=env.DATABASE_CERTIFICATE)
-
-        # Forward schema and TLS settings through the PostgreSQL driver's connection options.
-        engine_kwargs["connect_args"] = connect_args
+        engine_kwargs["connect_args"] = {
+            "server_settings": {"timezone": "UTC", "search_path": f'"{env.DATABASE_SCHEMA}"'},
+            "ssl": ssl.create_default_context(cadata=env.DATABASE_CERTIFICATE),
+        }
 
     return create_async_engine(dburl, **engine_kwargs)
 
@@ -113,17 +108,14 @@ class Database:
 
             # Initialize the database without publishing partially initialized resources.
             try:
-
                 # Schema setup and local-user seeding commit together.
                 async with engine.begin() as conn:
-
                     # Testing creates all tables; other environments use committed migrations.
                     if self._env.ENV == "testing":
                         await conn.run_sync(SQLModel.metadata.create_all)
 
                     # Production identities arrive through signed Platform requests.
                     if self._env.ENV != "production":
-
                         # Seed the local user within the initialization transaction.
                         users = SQLModel.metadata.tables["users"]
                         name = "Development user" if self._env.ENV == "development" else "Testing user"

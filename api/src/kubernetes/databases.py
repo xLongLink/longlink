@@ -82,7 +82,6 @@ async def wait_ready(client: "Kubernetes", organization_id: UUID) -> None:
     database_namespace = namespace.database(organization_id)
     cluster = ClusterResource("database", namespace=database_namespace, api=api)
     async with asyncio.timeout(2 * 60):
-
         # Hibernation annotations alone do not prove that PostgreSQL is accepting traffic.
         while True:
             await cluster.refresh()
@@ -96,7 +95,6 @@ async def wait_ready(client: "Kubernetes", organization_id: UUID) -> None:
                 and any(condition.get("type") == "Ready" and condition.get("status") == "True" for condition in conditions)
                 and not any(condition.get("type") == "cnpg.io/hibernation" for condition in conditions)
             ):
-
                 # Controller conditions must be confirmed by ready instance Pods.
                 ready_pods = 0
                 async for candidate in Pod.list(
@@ -118,7 +116,6 @@ async def wait_ready(client: "Kubernetes", organization_id: UUID) -> None:
                         break
                     ready_pods += 1
                 else:
-
                     # Every configured PostgreSQL instance must be ready.
                     if ready_pods == cluster.spec["instances"]:
                         return
@@ -153,10 +150,3 @@ async def certificate(client: "Kubernetes", organization_id: UUID) -> str:
 
     # CNPG's default server CA Secret is named after its Cluster.
     return await tls.certificate(client, namespace.database(organization_id), "database-ca", entry="ca.crt")
-
-
-async def delete(client: "Kubernetes", organization_id: UUID) -> None:
-    """Delete the database namespace, including its Cluster, credentials, and PVCs."""
-
-    # Namespace termination is the completion boundary for destructive database cleanup.
-    await utils.delete_namespace(await client.api(), namespace.database(organization_id))

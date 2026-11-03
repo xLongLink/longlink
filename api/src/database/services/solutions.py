@@ -10,7 +10,7 @@ from src.models.roles import OrganizationRoles
 from src.models.types import Image
 from src.database.types import attr
 from src.models.metadata import LongLinkMetadata
-from src.models.solutions import SolutionPatch, SolutionCreate, validate_environment_variables
+from src.models.solutions import SolutionCreate, validate_environment_variables
 from src.database.services import operations, registries, organizations
 from src.models.operations import OperationKind
 from src.models.pagination import Pagination
@@ -104,7 +104,7 @@ async def create(
     await session.flush()
 
     # Creation uses the same immutable release boundary as subsequent updates.
-    await _deploy(session, solution, user_id, metadata, payload.envs, current=None, registry_connection_id=registry_connection_id)
+    await deploy(session, solution, user_id, metadata, payload.envs, current=None, registry_connection_id=registry_connection_id)
 
     return solution
 
@@ -180,17 +180,7 @@ async def inspect_update(
     return revision, metadata
 
 
-async def apply_update(session: AsyncSession, solution: Solution, user_id: UUID, payload: SolutionPatch) -> None:
-    """Inspect and admit an update in the caller's final transaction."""
-
-    # Inspect without command locks, then revalidate the desired state and maintenance access.
-    revision, metadata = await inspect_update(session, solution, user_id, payload.expected_revision_id)
-
-    # Compare and merge only against the current serialized desired state.
-    await _deploy(session, solution, user_id, metadata, payload.envs, current=revision)
-
-
-async def _deploy(
+async def deploy(
     session: AsyncSession,
     solution: Solution,
     user_id: UUID,

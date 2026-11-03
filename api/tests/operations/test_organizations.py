@@ -1,7 +1,7 @@
 import pytest
 from uuid import UUID, uuid4
 from fastapi import HTTPException
-from conftest import DatabasePostgres, StorageKubernetes, DatabaseKubernetes, reject_provider_construction
+from conftest import FakeKubernetes, DatabasePostgres, StorageKubernetes, DatabaseKubernetes, reject_provider_construction
 from datetime import UTC, datetime
 from factories import create_compute, create_solution, create_organization
 from src.operations import organizations as organization_operations
@@ -167,15 +167,15 @@ async def test_delete_stops_when_namespace_deletion_fails(users: tuple[User, Use
         # Commit deletion eligibility before observing external cleanup calls.
         await session.commit()
 
-    async def delete(client: object, organization_id: UUID) -> None:
+    async def delete(client: object, name: str) -> None:
         """Fail namespace deletion before destructive provider cleanup."""
 
-        assert organization_id == organization.id
+        assert name == f"longlink-compute-{organization.id.hex}"
         raise RuntimeError("namespace deletion failed")
 
-    monkeypatch.setattr(organization_operations, "Kubernetes", DatabaseKubernetes)
-    monkeypatch.setattr(organization_operations.organizations, "delete", delete)
-    reject_provider_construction(monkeypatch, (organization_operations.database_resources, "delete"), (organization_operations, "Storage"))
+    monkeypatch.setattr(organization_operations, "Kubernetes", FakeKubernetes)
+    monkeypatch.setattr(organization_operations.utils, "delete_namespace", delete)
+    reject_provider_construction(monkeypatch, (organization_operations, "Storage"))
 
     # Namespace failure must prevent destructive provider cleanup.
     with pytest.raises(RuntimeError, match="namespace deletion failed"):
@@ -200,12 +200,6 @@ async def test_delete_tears_down_organization_boundaries_in_order(users: tuple[U
         await session.commit()
     calls: list[str] = []
 
-    async def delete_database(client: object, organization_id: UUID) -> None:
-        """Record Organization database and scoped runtime-role deletion."""
-
-        assert organization_id == organization.id
-        calls.append("database")
-
     class Storage:
         def __init__(self, *args: object) -> None:
             """Accept registry connection settings."""
@@ -217,16 +211,18 @@ async def test_delete_tears_down_organization_boundaries_in_order(users: tuple[U
             assert list(solutions) == [solution.id]
             calls.append("bucket")
 
-    async def delete(client: object, organization_id: UUID) -> None:
-        """Record namespace deletion."""
+    async def delete(client: object, name: str) -> None:
+        """Record compute and database namespace deletion."""
 
-        assert organization_id == organization.id
-        calls.append("namespace")
+        if name == f"longlink-compute-{organization.id.hex}":
+            calls.append("namespace")
+        else:
+            assert name == f"longlink-database-{organization.id.hex}"
+            calls.append("database")
 
-    monkeypatch.setattr(organization_operations, "Kubernetes", DatabaseKubernetes)
-    monkeypatch.setattr(organization_operations.database_resources, "delete", delete_database)
+    monkeypatch.setattr(organization_operations, "Kubernetes", FakeKubernetes)
     monkeypatch.setattr(organization_operations, "Storage", Storage)
-    monkeypatch.setattr(organization_operations.organizations, "delete", delete)
+    monkeypatch.setattr(organization_operations.utils, "delete_namespace", delete)
 
     # Complete cleanup and inspect irreversible resource deletion order.
     assert await organization_operations.delete(organization.id) is None
