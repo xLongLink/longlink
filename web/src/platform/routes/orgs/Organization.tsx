@@ -9,14 +9,7 @@ export default function Organization() {
     return (
         <>
             <title>Organization Solutions | LongLink</title>
-            <SolutionManagement
-                organization={membership.organization}
-                tags={membership.tags}
-                activeTag={membership.activeTag}
-                canMaintain={['maintain', 'admin', 'owner'].includes(membership.role)}
-                canAdminister={['admin', 'owner'].includes(membership.role)}
-                presentation="overview"
-            />
+            <SolutionManagement membership={membership} presentation="overview" />
         </>
     );
 }

@@ -61,6 +61,13 @@ class Catalog(BaseModel):
 
         return sorted({"read", "write"} | {role for endpoint in self.endpoints for role in endpoint.roles})
 
+    def access(self, role: str) -> "Access":
+        """Resolve catalog-bound endpoint grants for a Solution role."""
+
+        # Bind endpoint indices to the exact catalog used to resolve the role.
+        indices = [index for index, endpoint in enumerate(self.endpoints) if role in endpoint.roles]
+        return Access(catalog=self.digest, endpoints=indices)
+
 
 class Access(BaseModel):
     """Carry bounded, Platform-signed endpoint grants for one runtime."""

@@ -1,9 +1,21 @@
 import { z } from 'zod';
-import { ApiError } from '@/lib/api';
-import { QueryCache, QueryClient } from '@tanstack/react-query';
+import { api, ApiError } from '@/lib/api';
+import type { StandardSchemaV1 } from 'ky';
 import { createErrorReporter, isCanceledRequest } from '@/lib/errors';
+import { QueryCache, QueryClient, queryOptions } from '@tanstack/react-query';
 
 const identitySchema = z.object({ id: z.string() });
+
+/** Defines a cancellable, validated API query keyed by its full request path. */
+export function apiQueryOptions<Schema extends StandardSchemaV1>(path: string, schema: Schema) {
+    // Keep cache identity and fetch policy identical for hooks and batched queries.
+    return queryOptions({
+        queryKey: ['api', path] as const,
+        queryFn: ({ signal }) => api(path, { signal }).json(schema),
+        retry: false,
+        staleTime: 0,
+    });
+}
 
 /** Creates an isolated query cache for one browser or prerendered document. */
 export function createQueryRuntime(notify: (message: string) => void, platformSession: boolean) {

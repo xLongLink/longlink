@@ -39,17 +39,17 @@ type SolutionAction =
 
 /** Owns Solution loading and dialogs for the overview and active settings section. */
 export default function SolutionManagement({
-    organization,
-    tags,
-    activeTag,
-    canMaintain,
-    canAdminister = false,
+    membership,
     presentation,
-}: Pick<OrganizationContext, 'organization' | 'tags' | 'activeTag'> & {
-    canMaintain: boolean;
-    canAdminister?: boolean;
+}: {
+    membership: OrganizationContext;
     presentation: 'overview' | 'settings';
 }) {
+    // Derive Solution actions from the same membership that supplies organization-scoped resources.
+    const { organization, tags, activeTag, role } = membership;
+    const canMaintain = ['maintain', 'admin', 'owner'].includes(role);
+    const canAdminister = ['admin', 'owner'].includes(role);
+
     // Own one dialog action; captured identity prevents old completions from closing its replacement.
     const [selected, setSelected] = useState<SolutionAction | null>(null);
     const base = `/api/v1/organizations/${organization.id}`;

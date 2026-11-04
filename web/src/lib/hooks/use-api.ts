@@ -1,5 +1,5 @@
-import { api } from '@/lib/api';
 import { useCallback } from 'react';
+import { apiQueryOptions } from '@/lib/react-query';
 import type { StandardSchemaV1, StandardSchemaV1InferOutput } from 'ky';
 import { useQueryClient, useSuspenseQuery, type UseSuspenseQueryOptions } from '@tanstack/react-query';
 
@@ -23,10 +23,7 @@ export function useApi<Schema extends StandardSchemaV1>(
     const { data } = useSuspenseQuery({
         ...options,
         meta: { polling: Boolean(options?.refetchInterval) },
-        queryKey: ['api', path],
-        queryFn: ({ signal }) => api(path, { signal }).json(schema),
-        retry: false,
-        staleTime: 0,
+        ...apiQueryOptions(path, schema),
     });
 
     const invalidate = useCallback(

@@ -11,7 +11,7 @@ router = APIRouter()
 async def settings(session: auth.Session, solution_id: UUID, user: auth.CurrentUser):
     """Inspect repository-defined defaults before configuring Solution access."""
 
-    solution = await permissions.solution_access(session, solution_id, user.id, manage=True)
+    solution = await permissions.load_solution(session, solution_id, user.id, manage=True)
     definition = await permissions.catalog(session, solution)
     return {
         "roles": definition.roles if definition is not None else [],
@@ -24,7 +24,7 @@ async def settings(session: auth.Session, solution_id: UUID, user: auth.CurrentU
 async def member_access(session: auth.Session, solution_id: UUID, member_id: UUID, user: auth.CurrentUser):
     """Explain one active member's saved and effective endpoint permissions."""
 
-    solution = await permissions.solution_access(session, solution_id, user.id, manage=True)
+    solution = await permissions.load_solution(session, solution_id, user.id, manage=True)
     return await permissions.member(session, solution, member_id)
 
 
@@ -32,7 +32,7 @@ async def member_access(session: auth.Session, solution_id: UUID, member_id: UUI
 async def update_access(session: auth.Session, solution_id: UUID, member_id: UUID, user: auth.CurrentUser, payload: models.AccessUpdate):
     """Assign an SDK-defined role or remove one member's Solution access with null."""
 
-    solution = await permissions.solution_access(session, solution_id, user.id, manage=True)
+    solution = await permissions.load_solution(session, solution_id, user.id, manage=True)
     await permissions.update_member(session, solution, member_id, payload, user.id)
     await session.commit()
 
@@ -41,5 +41,5 @@ async def update_access(session: auth.Session, solution_id: UUID, member_id: UUI
 async def current_access(session: auth.Session, solution_id: UUID, user: auth.CurrentUser):
     """Expose caller-effective permissions without allowing assignment changes."""
 
-    solution = await permissions.solution_access(session, solution_id, user.id)
+    solution = await permissions.load_solution(session, solution_id, user.id, manage=False)
     return await permissions.member(session, solution, user.id)
