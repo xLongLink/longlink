@@ -9,7 +9,7 @@ import { Heading } from '@astryxdesign/core/Heading';
 import { TextInput } from '@/components/ui/TextInput';
 import { Illustration } from '@/components/Illustration';
 import { zOrganizationCreate } from '@/lib/generated/platform-api-v1/zod.gen';
-import { Layout, LayoutPanel, LayoutContent } from '@astryxdesign/core/Layout';
+import { IllustratedDialogContent } from '@/platform/components/IllustratedDialogContent';
 
 /** Notifies the parent after a successful organization creation request. */
 export default function CreateOrganization({
@@ -38,74 +38,48 @@ export default function CreateOrganization({
                 if (!open) onClose();
             }}
         >
-            <Stack height="min(560px, calc(100dvh - var(--spacing-10) * 4))">
-                <Layout
-                    padding={0}
-                    end={
-                        <LayoutPanel width="50%" padding={0} className="hidden bg-muted md:flex">
-                            <Stack width="100%" height="100%" align="center" justify="center" padding={6}>
+            <IllustratedDialogContent
+                illustration={
+                    <Illustration
+                        src="/images/organization-city.png"
+                        alt="Hand-drawn city skyline reflected in water."
+                        className="h-full w-full object-contain"
+                        width={941}
+                        height={1672}
+                        decoding="async"
+                    />
+                }
+            >
+                <Stack height="100%" justify="center" width="max-content" maxWidth="100%" className="mx-auto">
+                    <Form action={createOrganization}>
+                        <Stack gap={10}>
+                            <Stack gap={2} align="center">
                                 <Illustration
-                                    src="/images/organization-city.png"
-                                    alt="Hand-drawn city skyline reflected in water."
-                                    className="h-full w-full object-contain"
-                                    width={941}
-                                    height={1672}
+                                    src="/images/organization.png"
+                                    alt=""
+                                    className="size-20 object-contain"
+                                    width={1254}
+                                    height={1254}
                                     decoding="async"
                                 />
+                                <Stack gap={0}>
+                                    <Heading level={2} justify="center">
+                                        New organization
+                                    </Heading>
+                                    <Text as="p" color="secondary" justify="center">
+                                        A place for your workflows and data
+                                    </Text>
+                                </Stack>
                             </Stack>
-                        </LayoutPanel>
-                    }
-                    content={
-                        <LayoutContent padding={8}>
-                            <Stack
-                                height="100%"
-                                justify="center"
-                                width="max-content"
-                                maxWidth="100%"
-                                className="mx-auto"
-                            >
-                                <Form action={createOrganization}>
-                                    <Stack gap={10}>
-                                        <Stack gap={2} align="center">
-                                            <Illustration
-                                                src="/images/organization.png"
-                                                alt=""
-                                                className="size-20 object-contain"
-                                                width={1254}
-                                                height={1254}
-                                                decoding="async"
-                                            />
-                                            <Stack gap={0}>
-                                                <Heading level={2} justify="center">
-                                                    New organization
-                                                </Heading>
-                                                <Text as="p" color="secondary" justify="center">
-                                                    A place for your workflows and data
-                                                </Text>
-                                            </Stack>
-                                        </Stack>
-                                        {/* Let the subtitle size the column, then stretch the controls to match. */}
-                                        <Stack gap={4} width={0} className="min-w-full">
-                                            <TextInput
-                                                label="Name"
-                                                name="name"
-                                                placeholder="Example LongLink"
-                                                required
-                                            />
-                                            <Button
-                                                label="Create organization"
-                                                variant="primary"
-                                                type="submit"
-                                                width="100%"
-                                            />
-                                        </Stack>
-                                    </Stack>
-                                </Form>
+                            {/* Let the subtitle size the column, then stretch the controls to match. */}
+                            <Stack gap={4} width={0} className="min-w-full">
+                                <TextInput label="Name" name="name" placeholder="Example LongLink" required />
+                                <Button label="Create organization" variant="primary" type="submit" width="100%" />
                             </Stack>
-                        </LayoutContent>
-                    }
-                />
-            </Stack>
+                        </Stack>
+                    </Form>
+                </Stack>
+            </IllustratedDialogContent>
         </Dialog>
     );
 }

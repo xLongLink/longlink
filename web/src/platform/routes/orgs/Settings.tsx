@@ -26,13 +26,14 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Illustration } from '@/components/Illustration';
 import { useAuthenticatedUser } from '@/lib/hooks/use-user';
 import { Table, proportional } from '@astryxdesign/core/Table';
+import { Layout, LayoutPanel } from '@astryxdesign/core/Layout';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { Boxes, Building2, CreditCard, Users } from 'lucide-react';
 import { useLocation, useNavigate, useOutletContext } from 'react-router';
 import type { OrganizationContext } from '@/platform/layouts/Organization';
-import { Layout, LayoutPanel, LayoutContent } from '@astryxdesign/core/Layout';
 import { Dialog as AstryxDialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import { SideNav, SideNavItem, SideNavSection } from '@astryxdesign/core/SideNav';
+import { IllustratedDialogContent } from '@/platform/components/IllustratedDialogContent';
 
 const organizationSections = [
     { id: 'general', label: 'General' },
@@ -518,94 +519,78 @@ function InvitationsSection({ base, role }: { base: string; role: OrganizationCo
                     if (!open) closeInvitation();
                 }}
             >
-                <Stack height="min(560px, calc(100dvh - var(--spacing-10) * 4))">
-                    <Layout
-                        padding={0}
-                        end={
-                            <LayoutPanel width="50%" padding={0} className="hidden bg-muted md:flex">
-                                <Stack width="100%" height="100%" align="center" justify="center" padding={6}>
+                <IllustratedDialogContent
+                    illustration={
+                        <Illustration
+                            src="/images/invitation.png"
+                            alt="Hand-drawn envelopes."
+                            className="h-full w-full object-contain"
+                            width={1223}
+                            height={1286}
+                            decoding="async"
+                        />
+                    }
+                >
+                    <Stack height="100%" justify="center" width="max-content" maxWidth="100%" className="mx-auto">
+                        <Form action={inviteMember}>
+                            <Stack gap={10}>
+                                <Stack gap={2} align="center">
                                     <Illustration
-                                        src="/images/invitation.png"
-                                        alt="Hand-drawn envelopes."
-                                        className="h-full w-full object-contain"
-                                        width={1223}
-                                        height={1286}
+                                        src="/images/organization.png"
+                                        alt=""
+                                        className="size-20 object-contain"
+                                        width={1254}
+                                        height={1254}
                                         decoding="async"
                                     />
+                                    <Stack gap={0}>
+                                        <Heading level={2} justify="center">
+                                            Invite user
+                                        </Heading>
+                                        <Text as="p" color="secondary" justify="center">
+                                            Send an invitation to join this organization.
+                                        </Text>
+                                    </Stack>
                                 </Stack>
-                            </LayoutPanel>
-                        }
-                        content={
-                            <LayoutContent padding={8}>
-                                <Stack
-                                    height="100%"
-                                    justify="center"
-                                    width="max-content"
-                                    maxWidth="100%"
-                                    className="mx-auto"
-                                >
-                                    <Form action={inviteMember}>
-                                        <Stack gap={10}>
-                                            <Stack gap={2} align="center">
-                                                <Illustration
-                                                    src="/images/organization.png"
-                                                    alt=""
-                                                    className="size-20 object-contain"
-                                                    width={1254}
-                                                    height={1254}
-                                                    decoding="async"
-                                                />
-                                                <Stack gap={0}>
-                                                    <Heading level={2} justify="center">
-                                                        Invite user
-                                                    </Heading>
-                                                    <Text as="p" color="secondary" justify="center">
-                                                        Send an invitation to join this organization.
-                                                    </Text>
-                                                </Stack>
-                                            </Stack>
-                                            {/* Let the subtitle size the column, then stretch the controls to match. */}
-                                            <Stack gap={4} width={0} className="min-w-full">
-                                                <TextInput
-                                                    label="Email"
-                                                    type="email"
-                                                    name="email"
-                                                    placeholder="user@example.com"
-                                                    required
-                                                />
-                                                <Selector
-                                                    label="Role"
-                                                    name="role"
-                                                    defaultValue="write"
-                                                    hasClear={false}
-                                                    options={[
-                                                        { value: 'read', label: 'read', icon: 'lucide:eye-off' },
-                                                        { value: 'write', label: 'write', icon: 'lucide:arrow-up' },
-                                                        {
-                                                            value: 'maintain',
-                                                            label: 'maintain',
-                                                            icon: 'lucide:wrench',
-                                                        },
-                                                        ...(canInviteAdmin
-                                                            ? [
-                                                                  {
-                                                                      value: 'admin',
-                                                                      label: 'admin',
-                                                                      icon: 'lucide:check-check' as const,
-                                                                  },
-                                                              ]
-                                                            : []),
-                                                    ]}
-                                                />
-                                                <Button label="Invite" variant="primary" type="submit" width="100%" />
-                                            </Stack>
-                                        </Stack>
-                                    </Form>
+                                {/* Let the subtitle size the column, then stretch the controls to match. */}
+                                <Stack gap={4} width={0} className="min-w-full">
+                                    <TextInput
+                                        label="Email"
+                                        type="email"
+                                        name="email"
+                                        placeholder="user@example.com"
+                                        required
+                                    />
+                                    <Selector
+                                        label="Role"
+                                        name="role"
+                                        defaultValue="write"
+                                        hasClear={false}
+                                        options={[
+                                            { value: 'read', label: 'read', icon: 'lucide:eye-off' },
+                                            { value: 'write', label: 'write', icon: 'lucide:arrow-up' },
+                                            {
+                                                value: 'maintain',
+                                                label: 'maintain',
+                                                icon: 'lucide:wrench',
+                                            },
+                                            ...(canInviteAdmin
+                                                ? [
+                                                      {
+                                                          value: 'admin',
+                                                          label: 'admin',
+                                                          icon: 'lucide:check-check' as const,
+                                                      },
+                                                  ]
+                                                : []),
+                                        ]}
+                                    />
+                                    <Button label="Invite" variant="primary" type="submit" width="100%" />
                                 </Stack>
-                            </LayoutContent>
-                        }
-                    />
-                </Stack>
+                            </Stack>
+                        </Form>
+                    </Stack>
+                </IllustratedDialogContent>
             </Dialog>
         </>
     );

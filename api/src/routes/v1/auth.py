@@ -223,10 +223,10 @@ async def reset_password(
     # Resolve the active account from one valid, current password-reset credential.
     user = await password_reset_user(session, password_reset_token or "")
 
-    # Replace the credential so password-bound browser sessions become invalid.
-    with audit.actor(user.id):
-        user.password = await asyncio.to_thread(users.PASSWORD_HASH.hash, payload.password)
-        await session.commit()
+    # Reject proof consumed by a competing reset before committing the replacement.
+    if not await users.replace_password(session, user, payload.password):
+        raise HTTPException(status_code=400, detail=INVALID_PASSWORD_RESET_LINK)
+    await session.commit()
 
     # Remove reset proof only after the replacement password commits.
     response.headers["Cache-Control"] = "no-store"
