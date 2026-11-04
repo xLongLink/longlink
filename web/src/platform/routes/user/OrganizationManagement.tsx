@@ -8,6 +8,7 @@ import { Badge } from '@astryxdesign/core/Badge';
 import { Stack } from '@astryxdesign/core/Stack';
 import { ExternalLink, Plus } from 'lucide-react';
 import { Button } from '@astryxdesign/core/Button';
+import { apiQueryOptions } from '@/lib/react-query';
 import { Divider } from '@astryxdesign/core/Divider';
 import { Heading } from '@astryxdesign/core/Heading';
 import CreateOrganization from './CreateOrganization';
@@ -15,23 +16,11 @@ import { Illustration } from '@/components/Illustration';
 import { Table, proportional } from '@astryxdesign/core/Table';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
-import { queryOptions, useQueryClient, useSuspenseQueries } from '@tanstack/react-query';
+import { useQueryClient, useSuspenseQueries } from '@tanstack/react-query';
 
-const membershipsQuery = queryOptions({
-    queryKey: ['api', '/api/v1/me/organizations'],
-    queryFn: ({ signal }) =>
-        api('/api/v1/me/organizations', { signal }).json(schemas.zUserOrganizationMembership.array()),
-    retry: false,
-    staleTime: 0,
-});
+const membershipsQuery = apiQueryOptions('/api/v1/me/organizations', schemas.zUserOrganizationMembership.array());
 
-const invitationsQuery = queryOptions({
-    queryKey: ['api', '/api/v1/me/invitations'],
-    queryFn: ({ signal }) =>
-        api('/api/v1/me/invitations', { signal }).json(schemas.zUserOrganizationInvitation.array()),
-    retry: false,
-    staleTime: 0,
-});
+const invitationsQuery = apiQueryOptions('/api/v1/me/invitations', schemas.zUserOrganizationInvitation.array());
 
 /** Owns membership loading, pending invitations, and organization creation for the overview and account settings. */
 export default function OrganizationManagement({ presentation }: { presentation: 'overview' | 'settings' }) {

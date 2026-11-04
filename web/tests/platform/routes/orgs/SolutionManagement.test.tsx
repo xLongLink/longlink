@@ -7,10 +7,7 @@ it('does not offer creation to readers of Organization settings', () => {
     // Act
     const output = renderPlatform(
         <Management
-            organization={membership.organization}
-            tags={[]}
-            activeTag={undefined}
-            canMaintain={false}
+            membership={{ ...membership, role: 'read', tags: [], activeTag: undefined }}
             presentation="settings"
         />,
         '/',

@@ -159,14 +159,7 @@ export default function OrganizationSettings() {
                         ) : section === 'invitations' ? (
                             <InvitationsSection base={base} role={membership.role} />
                         ) : section === 'solutions' ? (
-                            <SolutionManagement
-                                organization={membership.organization}
-                                tags={membership.tags}
-                                activeTag={membership.activeTag}
-                                canMaintain={canMaintain}
-                                presentation="settings"
-                                canAdminister={['admin', 'owner'].includes(membership.role)}
-                            />
+                            <SolutionManagement membership={membership} presentation="settings" />
                         ) : (
                             <GeneralSection
                                 base={base}

@@ -12,8 +12,8 @@ from src.database.models.solutions import Solution
 from src.database.models.permissions import PermissionCatalog, SolutionMemberAccess
 
 
-async def solution_access(session: AsyncSession, solution_id: UUID, user_id: UUID, *, manage: bool = False) -> Solution:
-    """Resolve the tenant before checking management authority or current membership."""
+async def load_solution(session: AsyncSession, solution_id: UUID, user_id: UUID, *, manage: bool) -> Solution:
+    """Load an active Solution, checking management authority for administrative operations."""
 
     # Avoid loading runtime credentials for permission-management requests.
     solution = await session.scalar(
@@ -34,8 +34,6 @@ async def solution_access(session: AsyncSession, solution_id: UUID, user_id: UUI
         solution = await session.get(Solution, solution_id, populate_existing=True, with_for_update=True)
         if solution is None or solution.deleted_at is not None:
             raise HTTPException(status_code=404, detail="Solution not found")
-    else:
-        await organizations.require_membership(session, user_id, solution.organization_id)
     return solution
 
 
@@ -109,6 +107,4 @@ async def runtime_access(session: AsyncSession, solution: Solution, user_id: UUI
         raise HTTPException(status_code=403, detail="Solution access required")
 
     # Resolve the same current user grants independently of the request transport.
-    indices = [index for index, endpoint in enumerate(definition.endpoints) if access.role in endpoint.roles]
-
-    return permissions.Access(catalog=definition.digest, endpoints=indices)
+    return definition.access(access.role)

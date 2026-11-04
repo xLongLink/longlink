@@ -86,124 +86,6 @@ function ViewLayout({ children }: { children: React.ReactNode }) {
     );
 }
 
-const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-
-const lifetime = new AbortController();
-
-const pending = new Map<
-    number,
-    {
-        resolve: (value: ViewData) => void;
-        reject: (error: Error) => void;
-        timer: ReturnType<typeof setTimeout>;
-    }
->();
-
-let sequence = 0;
-
-let port: MessagePort;
-
-/** Requests a scoped Solution operation and refreshes cached data after successful writes. */
-async function request(
-    path: string,
-    options: Omit<RequestCommand, 'type' | 'id' | 'path' | 'method'> & { method?: RequestCommand['method'] } = {}
-): Promise<ViewData> {
-    const id = sequence++;
-    const command = requestSchema.parse({ ...options, type: 'request', id, path, method: options.method ?? 'GET' });
-
-    // Chromium cannot upload disk-backed files received from an opaque-origin frame; copy bytes here.
-    for (const entry of command.form ?? []) {
-        const value = entry[1];
-
-        if (value instanceof Blob) {
-            const bytes = await value.arrayBuffer();
-            entry[1] =
-                value instanceof File
-                    ? new File([bytes], value.name, { type: value.type, lastModified: value.lastModified })
-                    : new Blob([bytes], { type: value.type });
-        }
-    }
-
-    const data = await exchange(command);
-
-    // Refresh active data and mark inactive resources stale only after the write succeeds.
-    if (command.method !== 'GET') await client.invalidateQueries({ queryKey: ['api'] });
-
-    return data;
-}
-
-/** Owns the deadline and channel transfer for each scoped operation. */
-function exchange(command: RequestCommand | DownloadCommand | IconCommand): Promise<ViewData> {
-    const { id } = command;
-
-    return new Promise<ViewData>((resolve, reject) => {
-        lifetime.signal.throwIfAborted();
-
-        const timer = setTimeout(() => {
-            pending.delete(id);
-            reject(new Error('Solution request timed out'));
-        }, REQUEST_TIMEOUT);
-
-        pending.set(id, { resolve, reject, timer });
-
-        // A failed transfer must release its slot and timer immediately, not at timeout.
-        try {
-            port.postMessage(command);
-        } catch (error) {
-            pending.delete(id);
-            clearTimeout(timer);
-            reject(error);
-        }
-    });
-}
-
-/** Requests validated icon geometry from the host. */
-async function loadIcon(name: string) {
-    const command = iconSchema.parse({ type: 'icon', id: sequence++, name });
-    const data = await exchange(command);
-
-    // Validate icon geometry at the receiving boundary before giving it to Lucide's renderer.
-    return iconDataSchema.parse(data);
-}
-
-/** Supplies binary previews without limiting concurrent image loads. */
-async function requestImage(path: string): Promise<Blob> {
-    // Binary previews must remain inert file data rather than arbitrary response objects.
-    const data = await request(path, { binary: true });
-
-    return z.instanceof(Blob).parse(data);
-}
-
-/** Asks the host to save an attachment without opening a document inside the sandbox. */
-async function download(path: string, filename: string): Promise<void> {
-    const command = downloadSchema.parse({ type: 'download', id: sequence++, path, filename });
-    await exchange(command);
-}
-
-// Supply image previews and downloads without exposing the general request API to file components.
-const fileRequests = { preview: requestImage, download };
-
-/** Requests scoped Solution navigation or opens an HTTP(S) URL in a new tab during user activation. */
-function navigate(path: string, newTab = false): void {
-    port.postMessage({ type: 'navigate', path, newTab });
-}
-
-/** Returns Solution data and an awaitable invalidator scoped to the full request path. */
-function useApi(path: string): readonly [ViewData, () => Promise<void>] {
-    // Use the full request path as cache identity, including pagination parameters.
-    const { data } = useSuspenseQuery({
-        queryKey: ['api', path],
-        queryFn: () => request(path),
-    });
-
-    const invalidate = React.useCallback(
-        () => client.invalidateQueries({ queryKey: ['api', path], exact: true }),
-        [path]
-    );
-
-    return [data, invalidate];
-}
-
 const initialization = z
     .object({
         session: z.string(),
@@ -221,7 +103,131 @@ function initialize(event: MessageEvent<unknown>): void {
 
     if (!parsed.success || parsed.data.session !== session) return;
     window.removeEventListener('message', initialize);
-    port = event.ports[0];
+    const port = event.ports[0];
+    const mount = document.getElementById('view');
+
+    if (!mount) {
+        port.close();
+
+        return;
+    }
+
+    // Scope requests and cache state to this admitted sandbox's lifetime.
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const lifetime = new AbortController();
+
+    const pending = new Map<
+        number,
+        {
+            resolve: (value: ViewData) => void;
+            reject: (error: Error) => void;
+            timer: ReturnType<typeof setTimeout>;
+        }
+    >();
+
+    let sequence = 0;
+
+    /** Requests a scoped Solution operation and refreshes cached data after successful writes. */
+    async function request(
+        path: string,
+        options: Omit<RequestCommand, 'type' | 'id' | 'path' | 'method'> & { method?: RequestCommand['method'] } = {}
+    ): Promise<ViewData> {
+        const id = sequence++;
+        const command = requestSchema.parse({ ...options, type: 'request', id, path, method: options.method ?? 'GET' });
+
+        // Chromium cannot upload disk-backed files received from an opaque-origin frame; copy bytes here.
+        for (const entry of command.form ?? []) {
+            const value = entry[1];
+
+            if (value instanceof Blob) {
+                const bytes = await value.arrayBuffer();
+                entry[1] =
+                    value instanceof File
+                        ? new File([bytes], value.name, { type: value.type, lastModified: value.lastModified })
+                        : new Blob([bytes], { type: value.type });
+            }
+        }
+
+        const data = await exchange(command);
+
+        // Refresh active data and mark inactive resources stale only after the write succeeds.
+        if (command.method !== 'GET') await client.invalidateQueries({ queryKey: ['api'] });
+
+        return data;
+    }
+
+    /** Owns the deadline and channel transfer for each scoped operation. */
+    function exchange(command: RequestCommand | DownloadCommand | IconCommand): Promise<ViewData> {
+        const { id } = command;
+
+        return new Promise<ViewData>((resolve, reject) => {
+            lifetime.signal.throwIfAborted();
+
+            const timer = setTimeout(() => {
+                pending.delete(id);
+                reject(new Error('Solution request timed out'));
+            }, REQUEST_TIMEOUT);
+
+            pending.set(id, { resolve, reject, timer });
+
+            // A failed transfer must release its slot and timer immediately, not at timeout.
+            try {
+                port.postMessage(command);
+            } catch (error) {
+                pending.delete(id);
+                clearTimeout(timer);
+                reject(error);
+            }
+        });
+    }
+
+    /** Requests validated icon geometry from the host. */
+    async function loadIcon(name: string) {
+        const command = iconSchema.parse({ type: 'icon', id: sequence++, name });
+        const data = await exchange(command);
+
+        // Validate icon geometry at the receiving boundary before giving it to Lucide's renderer.
+        return iconDataSchema.parse(data);
+    }
+
+    /** Supplies binary previews without limiting concurrent image loads. */
+    async function requestImage(path: string): Promise<Blob> {
+        // Binary previews must remain inert file data rather than arbitrary response objects.
+        const data = await request(path, { binary: true });
+
+        return z.instanceof(Blob).parse(data);
+    }
+
+    /** Asks the host to save an attachment without opening a document inside the sandbox. */
+    async function download(path: string, filename: string): Promise<void> {
+        const command = downloadSchema.parse({ type: 'download', id: sequence++, path, filename });
+        await exchange(command);
+    }
+
+    // Supply image previews and downloads without exposing the general request API to file components.
+    const fileRequests = { preview: requestImage, download };
+
+    /** Requests scoped Solution navigation or opens an HTTP(S) URL in a new tab during user activation. */
+    function navigate(path: string, newTab = false): void {
+        port.postMessage({ type: 'navigate', path, newTab });
+    }
+
+    /** Returns Solution data and an awaitable invalidator scoped to the full request path. */
+    function useApi(path: string): readonly [ViewData, () => Promise<void>] {
+        // Use the full request path as cache identity, including pagination parameters.
+        const { data } = useSuspenseQuery({
+            queryKey: ['api', path],
+            queryFn: () => request(path),
+        });
+
+        const invalidate = React.useCallback(
+            () => client.invalidateQueries({ queryKey: ['api', path], exact: true }),
+            [path]
+        );
+
+        return [data, invalidate];
+    }
+
     port.onmessage = (reply: MessageEvent<ViewReply | AppearanceMessage>) => {
         // Appearance updates are separate from replies to pending Solution operations.
         if ('type' in reply.data) {
@@ -246,14 +252,6 @@ function initialize(event: MessageEvent<unknown>): void {
             waiter.reject(Object.assign(error, { status: reply.data.status }));
         }
     };
-
-    const mount = document.getElementById('view');
-
-    if (!mount) {
-        port.close();
-
-        return;
-    }
 
     const root = createRoot(mount);
     let modalDepth = 0;

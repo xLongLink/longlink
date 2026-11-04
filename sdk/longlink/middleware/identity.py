@@ -1,6 +1,6 @@
 import jwt
 from uuid import UUID
-from longlink import identity, permissions
+from longlink import identity
 from pydantic import ValidationError
 from urllib.parse import unquote
 from starlette.types import Send, Scope, ASGIApp, Receive
@@ -69,11 +69,7 @@ class IdentityMiddleware:
             # Apply the same endpoint grants as a Platform-assigned Solution role.
             user = development_identity.user
             catalog = request.app.state.permission_catalog
-            access = permissions.Access(
-                catalog=catalog.digest,
-                endpoints=[index for index, endpoint in enumerate(catalog.endpoints) if development_identity.role in endpoint.roles],
-            )
-            scope["longlink.access"] = access
+            scope["longlink.access"] = catalog.access(development_identity.role)
 
         # Only Kubernetes liveness and readiness probes are anonymous in production.
         if self.require_identity and user is None and not (request.method == "GET" and request.url.path in {"/health", "/ready"}):

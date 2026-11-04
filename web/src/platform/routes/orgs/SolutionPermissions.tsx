@@ -5,6 +5,7 @@ import { useApi } from '@/lib/hooks/use-api';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
+import { apiQueryOptions } from '@/lib/react-query';
 import { Heading } from '@astryxdesign/core/Heading';
 import { ApiBoundary } from '@/components/ApiBoundary';
 import { Selector } from '@astryxdesign/core/Selector';
@@ -63,16 +64,7 @@ function MemberPermissions({
 
     // Load independent assignments together so every member appears in the table.
     const assignments = useSuspenseQueries({
-        queries: members.map(({ user }) => {
-            const path = `${base}/members/${user.id}/access`;
-
-            return {
-                queryKey: ['api', path],
-                queryFn: ({ signal }: { signal: AbortSignal }) => api(path, { signal }).json(schemas.zMemberAccess),
-                retry: false,
-                staleTime: 0,
-            };
-        }),
+        queries: members.map(({ user }) => apiQueryOptions(`${base}/members/${user.id}/access`, schemas.zMemberAccess)),
     });
 
     const rows = members.map(({ user }, index) => ({
