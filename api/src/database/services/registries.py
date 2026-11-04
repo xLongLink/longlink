@@ -43,7 +43,7 @@ async def create(session: AsyncSession, organization_id: UUID, payload: Registry
     session.add(connection)
 
     # Always queue fresh work: active reconciliation may have synchronized older credentials.
-    await operations.enqueue(session, kind=OperationKind.organization_create, target_id=organization_id, coalesce=False)
+    await operations.enqueue(session, kind=OperationKind.organization_create, target_id=organization_id)
     return connection
 
 
@@ -66,7 +66,7 @@ async def delete(session: AsyncSession, organization_id: UUID, connection_id: UU
     await session.delete(connection)
 
     # Do not coalesce deletion with reconciliation that already applied its captured secrets.
-    await operations.enqueue(session, kind=OperationKind.organization_create, target_id=organization_id, coalesce=False)
+    await operations.enqueue(session, kind=OperationKind.organization_create, target_id=organization_id)
 
 
 async def resolve(session: AsyncSession, organization_id: UUID, connection_id: UUID | None, image: Image) -> RegistryConnection | None:

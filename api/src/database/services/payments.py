@@ -66,7 +66,7 @@ async def save_setup_intent(
     if size_mib != organization.database_size_mib or storage_bytes != organization.storage_quota_bytes:
         organization.database_size_mib = size_mib
         organization.storage_quota_bytes = storage_bytes
-        await operations.enqueue(session, kind=OperationKind.organization_create, target_id=organization.id, coalesce=False)
+        await operations.enqueue(session, kind=OperationKind.organization_create, target_id=organization.id)
 
 
 async def _lock_checkout_owner(session: AsyncSession, organization_id: UUID, user_id: UUID) -> Organization:

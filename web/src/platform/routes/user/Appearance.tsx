@@ -1,4 +1,3 @@
-import { useApiError } from '@/lib/errors';
 import { Circle, Check } from 'lucide-react';
 import { Card } from '@astryxdesign/core/Card';
 import { Text } from '@astryxdesign/core/Text';
@@ -14,10 +13,9 @@ import { accentColors, appearanceSchema, type Appearance } from '@/lib/appearanc
 export default function AppearanceSettings() {
     const { appearance } = useAppearance();
     const userUpdate = useUpdateUser();
-    const reportError = useApiError();
 
     /** Saves changed preferences through the shared profile mutation. */
-    async function saveAppearance(next: Appearance) {
+    function saveAppearance(next: Appearance) {
         if (
             userUpdate.isPending ||
             (next.theme === appearance.theme &&
@@ -26,11 +24,7 @@ export default function AppearanceSettings() {
         )
             return;
 
-        try {
-            await userUpdate.mutateAsync(next);
-        } catch (error) {
-            reportError(error);
-        }
+        userUpdate.mutate(next);
     }
 
     return (
@@ -51,9 +45,7 @@ export default function AppearanceSettings() {
                             padding={2}
                             isSelected={appearance.theme === value}
                             isDisabled={userUpdate.isPending}
-                            onChange={() =>
-                                void saveAppearance(appearanceSchema.parse({ ...appearance, theme: value }))
-                            }
+                            onChange={() => saveAppearance(appearanceSchema.parse({ ...appearance, theme: value }))}
                         >
                             <Stack gap={2}>
                                 <Text>{label}</Text>
@@ -85,7 +77,7 @@ export default function AppearanceSettings() {
                             isSelected={appearance.navigation === value}
                             isDisabled={userUpdate.isPending}
                             onChange={() =>
-                                void saveAppearance(appearanceSchema.parse({ ...appearance, navigation: value }))
+                                saveAppearance(appearanceSchema.parse({ ...appearance, navigation: value }))
                             }
                         >
                             <Stack gap={2}>
@@ -129,7 +121,7 @@ export default function AppearanceSettings() {
                                                 />
                                             )
                                         }
-                                        onClick={() => void saveAppearance({ ...appearance, accent })}
+                                        onClick={() => saveAppearance({ ...appearance, accent })}
                                     />
                                 ))}
                             </Stack>

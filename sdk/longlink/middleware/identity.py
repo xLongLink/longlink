@@ -1,5 +1,6 @@
 import jwt
 from uuid import UUID
+from typing import Literal
 from longlink import identity
 from pydantic import ValidationError
 from urllib.parse import unquote
@@ -17,23 +18,21 @@ class IdentityMiddleware:
         app: ASGIApp,
         *,
         identity_secret: str | None,
-        require_identity: bool,
+        mode: Literal["development", "testing", "production"],
         local_user_id: UUID | None,
-        allow_development_identity: bool = False,
     ) -> None:
         """Store the application's identity admission policy."""
 
         self.app = app
         self.identity_secret = identity_secret
-        self.require_identity = require_identity
+        self.mode = mode
         self.local_user_id = local_user_id
-        self.allow_development_identity = allow_development_identity and not require_identity
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         """Keep request identity bound until the downstream application finishes."""
 
         # WebSockets cannot pass through the Platform's role-checked HTTP proxy.
-        if self.require_identity and scope["type"] == "websocket":
+        if self.mode == "production" and scope["type"] == "websocket":
             await send({"type": "websocket.close", "code": 1008})
             return
 
@@ -48,7 +47,7 @@ class IdentityMiddleware:
         if self.identity_secret:
             try:
                 user, access = identity.identity_token_data(request.headers.get("x-longlink-identity", ""), self.identity_secret)
-                if self.require_identity and access is None:
+                if self.mode == "production" and access is None:
                     raise jwt.InvalidTokenError("Endpoint permissions are required")
                 scope["longlink.access"] = access
 
@@ -57,7 +56,7 @@ class IdentityMiddleware:
                 user = None
 
         # Local profiles come from the SDK frontend, never from production credentials.
-        development_cookie = request.cookies.get("longlink-development-user") if self.allow_development_identity else None
+        development_cookie = request.cookies.get("longlink-development-user") if self.mode == "development" else None
         if user is None and development_cookie is not None:
             try:
                 development_identity = identity.DevelopmentIdentity.model_validate_json(unquote(development_cookie))
@@ -72,7 +71,7 @@ class IdentityMiddleware:
             scope["longlink.access"] = catalog.access(development_identity.role)
 
         # Only Kubernetes liveness and readiness probes are anonymous in production.
-        if self.require_identity and user is None and not (request.method == "GET" and request.url.path in {"/health", "/ready"}):
+        if self.mode == "production" and user is None and not (request.method == "GET" and request.url.path in {"/health", "/ready"}):
             response = JSONResponse({"detail": "Authentication required"}, status_code=401)
             await response(scope, receive, send)
             return

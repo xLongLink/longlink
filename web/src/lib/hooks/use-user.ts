@@ -1,5 +1,6 @@
 import type { z } from 'zod';
 import { api } from '@/lib/api';
+import { useApiError } from '@/lib/errors';
 import { createContext, useContext } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { zUserUpdate, zCurrentUser } from '@/lib/generated/platform-api-v1/zod.gen';
@@ -22,6 +23,7 @@ export function useCurrentUser() {
 /** Serializes profile writes and caches their validated responses across account controls. */
 export function useUpdateUser() {
     const queryClient = useQueryClient();
+    const reportError = useApiError();
 
     // Share a scope so overlapping controls cannot publish older profile snapshots out of order.
     return useMutation({
@@ -60,6 +62,7 @@ export function useUpdateUser() {
             await queryClient.cancelQueries({ queryKey: ['api', '/api/v1/me'], exact: true });
             queryClient.setQueryData(['api', '/api/v1/me'], user);
         },
+        onError: reportError,
     });
 }
 

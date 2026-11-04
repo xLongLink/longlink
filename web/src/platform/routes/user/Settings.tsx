@@ -1,6 +1,5 @@
 import type { z } from 'zod';
 import { useState } from 'react';
-import { useApiError } from '@/lib/errors';
 import { useLocation } from 'react-router';
 import AppearanceSettings from './Appearance';
 import { Text } from '@astryxdesign/core/Text';
@@ -35,7 +34,6 @@ function SettingsPage({ user }: { user: z.output<typeof schemas.zCurrentUser> })
     const [name, setName] = useState(user.name);
     const userUpdate = useUpdateUser();
     const location = useLocation();
-    const reportError = useApiError();
 
     // Unknown fragments select Account without loading organization memberships.
     const section = location.hash === '#organizations' ? 'organizations' : 'account';
@@ -48,9 +46,8 @@ function SettingsPage({ user }: { user: z.output<typeof schemas.zCurrentUser> })
         try {
             const updatedUser = await userUpdate.mutateAsync({ name: name.trim() });
             setName(updatedUser.name);
-        } catch (error) {
+        } catch {
             setName(user.name);
-            reportError(error);
         }
     }
 

@@ -2,6 +2,7 @@
 // @vitest-environment-options {"url":"http://localhost"}
 import { act } from 'react';
 import { it, expect, vi } from 'vitest';
+import { ApiErrorContext } from '@/lib/errors';
 import { renderStatic, withMounted } from '../../render';
 import { zCurrentUser } from '@/lib/generated/platform-api-v1/zod.gen';
 import { useQuery, QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -111,7 +112,9 @@ it('serializes independent account controls and publishes canonical responses be
     try {
         await withMounted(
             <QueryClientProvider client={client}>
-                <AccountControls />
+                <ApiErrorContext value={() => undefined}>
+                    <AccountControls />
+                </ApiErrorContext>
             </QueryClientProvider>,
             async (output) => {
                 // Act
@@ -203,7 +206,9 @@ it.each([
     try {
         await withMounted(
             <QueryClientProvider client={client}>
-                <AccountControls />
+                <ApiErrorContext value={() => undefined}>
+                    <AccountControls />
+                </ApiErrorContext>
             </QueryClientProvider>,
             async (output) => {
                 // Act

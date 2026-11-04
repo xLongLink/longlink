@@ -108,7 +108,6 @@ class LongLink(RouteDecorators, FastAPI):
 
         # Production containers attach API access filtering here.
         if settings.ENV == "production":
-
             # Built Solution containers run plain uvicorn, so attach the SDK access filter here.
             access_logger = logging.getLogger("uvicorn.access")
 
@@ -124,9 +123,8 @@ class LongLink(RouteDecorators, FastAPI):
         self.add_middleware(
             IdentityMiddleware,
             identity_secret=settings.IDENTITY_SECRET,
-            require_identity=settings.ENV == "production",
+            mode=settings.ENV,
             local_user_id=LOCAL_USER_ID if settings.ENV != "production" else None,
-            allow_development_identity=settings.ENV == "development",
         )
 
         self.state.longlink = runtime
@@ -162,13 +160,11 @@ class LongLink(RouteDecorators, FastAPI):
             guarded = []
             try:
                 async with runtime_lifespan(app) as state:
-
                     # Discover registered business routes once and guard before dependency execution.
                     business_routes = self.permission_routes()
                     catalog = permissions.discover(business_routes)
                     self.state.permission_catalog = catalog
                     for route in business_routes:
-
                         # FastAPI owns a separate executable handler for each included-router context.
                         target = route._route_context or route.original_route
                         original = getattr(target, "app")
@@ -196,17 +192,14 @@ class LongLink(RouteDecorators, FastAPI):
                         mcp_app = mcp.http_app(path="/mcp", json_response=True)
                         self.router.routes[0:0] = mcp_app.routes
                         try:
-
                             # Enter the public MCP lifespan before accepting Solution traffic.
                             async with mcp_app.lifespan(mcp_app):
                                 yield state or {}
                         finally:
-
                             # Remove only these routes so later lifespans cannot reuse a closed transport.
                             for route in mcp_app.routes:
                                 self.router.routes.remove(route)
             finally:
-
                 # Restore route handlers so restarted lifespans never stack guards.
                 for route, original in guarded:
                     setattr(route, "app", original)
@@ -306,7 +299,6 @@ class LongLink(RouteDecorators, FastAPI):
 
         # Remove the complete registration without handling framework errors.
         try:
-
             # Solution routes added after startup respect the same View endpoint contract.
             routes = self.router.routes[added:]
             for definition in manifest.views:

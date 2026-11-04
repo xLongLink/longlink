@@ -30,7 +30,7 @@ def test_context_middleware_treats_untrusted_identity_as_anonymous(secret: str, 
 
     # Install the real context middleware around the shared anonymous probe route.
     app = FastAPI()
-    app.add_middleware(IdentityMiddleware, identity_secret=secret, require_identity=False, local_user_id=None)
+    app.add_middleware(IdentityMiddleware, identity_secret=secret, mode="testing", local_user_id=None)
 
     @app.get("/", response_model=dict[str, bool])
     async def get_identity() -> dict[str, bool]:
@@ -60,7 +60,7 @@ def production_client() -> Iterator[TestClient]:
     app = FastAPI()
     database = Database(Envs(ENV="testing"))
     app.state.longlink = SimpleNamespace(database=database)
-    app.add_middleware(IdentityMiddleware, identity_secret=IDENTITY_SECRET, require_identity=True, local_user_id=None)
+    app.add_middleware(IdentityMiddleware, identity_secret=IDENTITY_SECRET, mode="production", local_user_id=None)
 
     @app.get("/views.json", response_model=dict[str, bool])
     async def views() -> dict[str, bool]:
@@ -159,7 +159,7 @@ async def test_context_middleware_isolates_concurrent_audit_identities() -> None
     app = FastAPI()
     database = Database(Envs(ENV="testing"))
     app.state.longlink = SimpleNamespace(database=database)
-    app.add_middleware(IdentityMiddleware, identity_secret=IDENTITY_SECRET, require_identity=False, local_user_id=None)
+    app.add_middleware(IdentityMiddleware, identity_secret=IDENTITY_SECRET, mode="testing", local_user_id=None)
 
     @app.get("/", response_model=dict[str, str | None])
     async def current_user() -> dict[str, str | None]:
@@ -187,7 +187,6 @@ async def test_context_middleware_isolates_concurrent_audit_identities() -> None
     try:
         async with client:
             async with asyncio.timeout(5):
-
                 # Overlap both handlers to exercise task-local identity isolation.
                 first_response, second_response = await asyncio.gather(
                     request(first_id, first_outer_id), request(second_id, second_outer_id)

@@ -226,12 +226,12 @@ async def test_operations_service_coalesces_claimed_work() -> None:
 
     # Seed and claim one operation.
     target_id = uuid4()
-    await queue(target_id=target_id)
+    await queue(kind=OperationKind.solution_delete, target_id=target_id)
     claimed = await claim_operation()
     assert claimed is not None
 
     # Create duplicate desired state while the claimed Operation remains immutable.
-    follow_up = await queue(target_id=target_id)
+    follow_up = await queue(kind=OperationKind.solution_delete, target_id=target_id)
 
     # Verify the request reuses the lease and shutdown can release it safely.
     assert claimed.status == OperationStatus.active
@@ -307,7 +307,6 @@ async def test_claim_globally_leases_one_operation_to_one_concurrent_worker(
         database_url = database_url.set(drivername="mysql+aiomysql")
     engine = create_async_engine(database_url, isolation_level="READ COMMITTED")
     try:
-
         # Create the queue and its audit-user dependency before binding the production session service.
         async with engine.begin() as connection:
             await connection.run_sync(User.__table__.create)
@@ -426,11 +425,9 @@ async def test_claim_globally_leases_one_operation_to_one_concurrent_worker(
         # Completed recovery leaves no work available to a new worker.
         assert await claim_operation() is None
         async with session_factory() as session:
-
             # Recovery must leave no unfinished queue entries.
             unfinished = await session.scalar(select(Operation).where(col(Operation.finished_at).is_(None)))
             assert unfinished is None
     finally:
-
         # Dispose database connections before the fixture removes the database.
         await engine.dispose()
