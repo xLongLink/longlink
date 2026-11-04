@@ -187,17 +187,17 @@ async def test_solution_creation_applies_user_and_managed_environment_values(
             calls.append("schema")
             return "solution"
 
-    class FakeKubernetes(DatabaseKubernetes):
+    class Service(solution_operations.database_resources.Service):
         """Record the database tunnel scope during deployment."""
 
         @asynccontextmanager
-        async def forward_database(self, organization_id: UUID) -> AsyncGenerator[int]:
+        async def portforward(self, port: int, *, local_port: str) -> AsyncGenerator[int]:
             """Release the database tunnel after schema provisioning."""
 
             calls.append("open")
             try:
-                async with super().forward_database(organization_id) as port:
-                    yield port
+                async with super().portforward(port, local_port=local_port) as forwarded_port:
+                    yield forwarded_port
             finally:
                 calls.append("close")
 
@@ -220,7 +220,8 @@ async def test_solution_creation_applies_user_and_managed_environment_values(
         calls.append("workload")
 
     monkeypatch.setattr(solution_operations.database_resources.postgres, "Postgres", FakePostgres)
-    monkeypatch.setattr(solution_operations, "Kubernetes", FakeKubernetes)
+    monkeypatch.setattr(solution_operations.database_resources, "Service", Service)
+    monkeypatch.setattr(solution_operations, "Kubernetes", DatabaseKubernetes)
     monkeypatch.setattr(solution_operations.solution_resources, "apply", apply)
     monkeypatch.setattr(solution_operations, "Storage", Storage)
 

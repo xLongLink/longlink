@@ -81,11 +81,10 @@ class StorageKubernetes:
 class DatabaseKubernetes(Kubernetes):
     """Provide the CNPG provider boundary without opening Kubernetes connections."""
 
-    @asynccontextmanager
-    async def forward_database(self, organization_id: UUID) -> AsyncGenerator[int]:
-        """Supply a local transport port consumed only by the SQL fake."""
+    async def api(self) -> Api:
+        """Return an opaque API client consumed only by the Service fake."""
 
-        yield 15432
+        return cast(Api, object())
 
 
 class DatabasePostgres:
@@ -148,6 +147,21 @@ def database_runtime(monkeypatch: pytest.MonkeyPatch) -> None:
 
     from src.operations import databases
 
+    class Service:
+        """Provide the external database tunnel without Kubernetes I/O."""
+
+        def __init__(self, name: str, *, namespace: str, api: Api) -> None:
+            """Accept the database Service lookup."""
+
+        async def refresh(self) -> None:
+            """Accept the database Service refresh."""
+
+        @asynccontextmanager
+        async def portforward(self, port: int, *, local_port: str) -> AsyncGenerator[int]:
+            """Supply a local transport port consumed only by the SQL fake."""
+
+            yield 15432
+
     async def apply(
         client: object, organization: UUID, password: str, storage_class: str, *, size_mib: int = 100, instances: int = 1
     ) -> None:
@@ -162,6 +176,7 @@ def database_runtime(monkeypatch: pytest.MonkeyPatch) -> None:
         return "test-database-ca"
 
     monkeypatch.setattr(databases, "Kubernetes", DatabaseKubernetes)
+    monkeypatch.setattr(database_resources, "Service", Service)
     monkeypatch.setattr(database_resources, "apply", apply)
     monkeypatch.setattr(database_resources, "wait_ready", wait_ready)
     monkeypatch.setattr(database_resources, "certificate", certificate)
@@ -308,7 +323,6 @@ async def reset_db(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, request: pyt
     monkeypatch.setattr(session, "Session", async_sessionmaker(engine, expire_on_commit=False))
 
     try:
-
         # Keep shared test services bound for the complete test lifecycle.
         yield
     finally:

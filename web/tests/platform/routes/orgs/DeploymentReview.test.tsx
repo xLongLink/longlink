@@ -160,7 +160,7 @@ describe('DeploymentReview', () => {
                                 path="/orgs/:organization"
                                 element={
                                     <DeploymentReview
-                                        update={{ key: 'review', item: { id: solutionId, name: 'Sample' } }}
+                                        item={{ id: solutionId, name: 'Sample' }}
                                         onSuccess={() => {}}
                                         onClose={() => {}}
                                     />

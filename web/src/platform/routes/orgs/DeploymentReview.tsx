@@ -14,14 +14,8 @@ import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
 import { Layout, LayoutContent } from '@astryxdesign/core/Layout';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 
-export type Update = {
-    // Scope inspection and drafts to one freshly opened review attempt.
-    key: string;
-    item: { id: string; name: string };
-};
-
 type DeploymentReviewProps = {
-    update: Update;
+    item: { id: string; name: string };
     onSuccess: () => void | Promise<void>;
     onClose: () => void;
 };
@@ -33,18 +27,20 @@ function imageDigest(image: string) {
 }
 
 /** Owns fresh inspection, the deployment draft, and submission for one review attempt. */
-export default function DeploymentReview({ update, onSuccess, onClose }: DeploymentReviewProps) {
+export default function DeploymentReview({ item, onSuccess, onClose }: DeploymentReviewProps) {
+    // Scope inspection and drafts to one freshly opened review attempt.
+    const [attemptId] = useState(() => crypto.randomUUID());
     const [envs, setEnvs] = useState<Record<string, { value?: string; removed?: boolean }>>({});
 
     // Keep inspection attempt-local, cancel on unmount, and never refresh beneath an edited draft.
-    const path = `/api/v1/solutions/${update.item.id}/update`;
+    const path = `/api/v1/solutions/${item.id}/update`;
 
     const {
         data: candidate,
         isPending,
         refetch,
     } = useQuery({
-        queryKey: ['api', path, update.key],
+        queryKey: ['api', path, attemptId],
         queryFn: ({ signal }) => api(path, { signal }).json(schemas.zSolutionUpdateCheck),
         gcTime: 0,
         staleTime: Infinity,
@@ -78,7 +74,7 @@ export default function DeploymentReview({ update, onSuccess, onClose }: Deploym
             else if (environment.value !== undefined) patchEnvs[name] = environment.value;
         }
 
-        await api.post(`/api/v1/solutions/${update.item.id}/update`, {
+        await api.post(`/api/v1/solutions/${item.id}/update`, {
             json: schemas.zSolutionPatch.parse({
                 envs: patchEnvs,
                 expected_revision_id: candidate.revision_id,
@@ -102,7 +98,7 @@ export default function DeploymentReview({ update, onSuccess, onClose }: Deploym
                         content={
                             <LayoutContent padding={8}>
                                 <Stack gap={4} align="center" justify="center" minHeight="100%">
-                                    <Heading level={2}>Update {update.item.name}</Heading>
+                                    <Heading level={2}>Update {item.name}</Heading>
                                     <Text as="p" role="status">
                                         {isPending ? 'Checking for updates…' : 'Could not check for updates.'}
                                     </Text>
@@ -127,7 +123,7 @@ export default function DeploymentReview({ update, onSuccess, onClose }: Deploym
                                 <Stack gap={3} align="center">
                                     <RefreshCw className="size-20 text-secondary" aria-hidden="true" />
                                     <Heading level={2} justify="center">
-                                        Update {update.item.name}
+                                        Update {item.name}
                                     </Heading>
                                 </Stack>
                                 <Stack direction="horizontal" gap={4} align="center">

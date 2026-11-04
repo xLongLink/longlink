@@ -2,7 +2,9 @@ import pytest
 from uuid import uuid4
 from contextlib import asynccontextmanager
 from src.kubernetes import client as kubernetes_client
+from src.kubernetes import databases
 from collections.abc import AsyncGenerator
+from src.database.models.organizations import Organization
 
 pytestmark = pytest.mark.no_db
 
@@ -41,7 +43,6 @@ async def test_kubernetes_api_is_lazy_and_cached(monkeypatch: pytest.MonkeyPatch
         assert second is api
         assert created == [{"kubeconfig": kubeconfig, "serviceaccount": ""}]
     finally:
-
         # Release this test loop's acquired client through the same owner as the Platform lifespan.
         await kubernetes_client.dispose_clients()
 
@@ -123,15 +124,16 @@ async def test_kubernetes_clients_leave_shared_http_session_to_lifespan(monkeypa
         return api
 
     monkeypatch.setattr(kubernetes_client.kr8s.asyncio, "api", create_api)
-    monkeypatch.setattr(kubernetes_client, "Service", Service)
+    monkeypatch.setattr(databases, "Service", Service)
     kubernetes = kubernetes_client.Kubernetes({"apiVersion": "v1"})
     other = kubernetes_client.Kubernetes({"apiVersion": "v1"})
     await kubernetes.api()
     assert await other.api() is api
 
+    organization = Organization(name="test", compute_id=uuid4())
+
     # Act
-    async with kubernetes.forward_database(uuid4()) as port:
-        assert port == 15432
+    async with databases.connection(organization, kubernetes, certificate="test-database-ca"):
         assert closed == []
 
     # Assert
