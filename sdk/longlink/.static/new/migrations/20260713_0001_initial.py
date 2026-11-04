@@ -9,7 +9,7 @@ depends_on = None
 
 
 def upgrade() -> None:
-    """Create the project schema and seed twelve example building projects."""
+    """Create users, tasks, and twelve example building projects."""
 
     # Preserve profiles in databases previously bootstrapped by the SDK.
     op.create_table(
@@ -23,7 +23,22 @@ def upgrade() -> None:
         if_not_exists=True,
     )
 
-    # Create the project table without attributing fictional contacts to Platform users.
+    # Persist tasks with attribution to request users.
+    op.create_table(
+        "task",
+        sa.Column("created_at", sqlmodel.sql.sqltypes.UTCDateTime(), nullable=False),
+        sa.Column("updated_at", sqlmodel.sql.sqltypes.UTCDateTime(), nullable=False),
+        sa.Column("created_id", sa.Uuid(), nullable=False),
+        sa.Column("updated_id", sa.Uuid(), nullable=False),
+        sa.Column("id", sa.Integer(), nullable=False),
+        sa.Column("title", sqlmodel.sql.sqltypes.AutoString(length=255), nullable=False),
+        sa.Column("description", sqlmodel.sql.sqltypes.AutoString(length=5000), nullable=False),
+        sa.ForeignKeyConstraint(["created_id"], ["users.id"]),
+        sa.ForeignKeyConstraint(["updated_id"], ["users.id"]),
+        sa.PrimaryKeyConstraint("id"),
+    )
+
+    # Create the project table without fictional owner contacts.
     op.create_table(
         "project",
         sa.Column("id", sa.Integer(), nullable=False),
@@ -31,8 +46,6 @@ def upgrade() -> None:
         sa.Column("photo", sa.String(length=32), nullable=False),
         sa.Column("description", sa.String(length=255), nullable=False),
         sa.Column("active_step", sa.Integer(), nullable=False),
-        sa.Column("owner", sa.String(length=255), nullable=False),
-        sa.Column("owner_email", sa.String(length=255), nullable=False),
         sa.PrimaryKeyConstraint("id"),
     )
 
@@ -43,8 +56,6 @@ def upgrade() -> None:
         sa.column("photo", sa.String()),
         sa.column("description", sa.String()),
         sa.column("active_step", sa.Integer()),
-        sa.column("owner", sa.String()),
-        sa.column("owner_email", sa.String()),
     )
     op.bulk_insert(
         projects,
@@ -54,96 +65,72 @@ def upgrade() -> None:
                 "description": "Modern riverside apartments.",
                 "photo": "riverside",
                 "active_step": 0,
-                "owner": "Anna Keller",
-                "owner_email": "anna.keller@example.com",
             },
             {
                 "name": "Skyline Tower",
                 "description": "A new landmark for the city.",
                 "photo": "skyline",
                 "active_step": 4,
-                "owner": "Marco Rossi",
-                "owner_email": "marco.rossi@example.com",
             },
             {
                 "name": "Meadow Park Homes",
                 "description": "Family homes around a shared neighborhood park.",
                 "photo": "garden",
                 "active_step": 0,
-                "owner": "Sofia Martin",
-                "owner_email": "sofia.martin@example.com",
             },
             {
                 "name": "Canal Walk Apartments",
                 "description": "Canalside apartments with pedestrian courtyards.",
                 "photo": "riverside",
                 "active_step": 1,
-                "owner": "Daniel Weber",
-                "owner_email": "daniel.weber@example.com",
             },
             {
                 "name": "Central Exchange",
                 "description": "Flexible offices beside the central station.",
                 "photo": "skyline",
                 "active_step": 1,
-                "owner": "Marco Rossi",
-                "owner_email": "marco.rossi@example.com",
             },
             {
                 "name": "Marina Business Center",
                 "description": "A waterfront business hub with shared meeting spaces.",
                 "photo": "harbor",
                 "active_step": 2,
-                "owner": "Sofia Martin",
-                "owner_email": "sofia.martin@example.com",
             },
             {
                 "name": "Oakwood Residences",
                 "description": "Low-rise apartments overlooking landscaped gardens.",
                 "photo": "garden",
                 "active_step": 3,
-                "owner": "Anna Keller",
-                "owner_email": "anna.keller@example.com",
             },
             {
                 "name": "Riverbank Lofts",
                 "description": "Open-plan homes along the riverside promenade.",
                 "photo": "riverside",
                 "active_step": 3,
-                "owner": "Daniel Weber",
-                "owner_email": "daniel.weber@example.com",
             },
             {
                 "name": "Summit Plaza",
                 "description": "A mixed-use tower with street-level retail.",
                 "photo": "skyline",
                 "active_step": 4,
-                "owner": "Sofia Martin",
-                "owner_email": "sofia.martin@example.com",
             },
             {
                 "name": "Dockside Studios",
                 "description": "Creative workspaces in the harbor district.",
                 "photo": "harbor",
                 "active_step": 5,
-                "owner": "Marco Rossi",
-                "owner_email": "marco.rossi@example.com",
             },
             {
                 "name": "Garden Apartments",
                 "description": "Light-filled homes with green spaces.",
                 "photo": "garden",
                 "active_step": 5,
-                "owner": "Anna Keller",
-                "owner_email": "anna.keller@example.com",
             },
             {
                 "name": "Harbor Offices",
                 "description": "Contemporary waterfront workspaces.",
                 "photo": "harbor",
                 "active_step": 2,
-                "owner": "Marco Rossi",
-                "owner_email": "marco.rossi@example.com",
             },
         ],
     )
@@ -154,4 +141,5 @@ def downgrade() -> None:
 
     # Drop dependent tables before users.
     op.drop_table("project")
+    op.drop_table("task")
     op.drop_table("users")
