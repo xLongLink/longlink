@@ -7,7 +7,7 @@ from contextlib import asynccontextmanager
 from src.kubernetes import tls, utils, databases, namespace
 from collections.abc import AsyncGenerator
 from importlib.resources import files
-from kr8s.asyncio.objects import Pod, Secret, ResourceQuota, new_class, object_from_spec
+from kr8s.asyncio.objects import Pod, Secret, Service, ResourceQuota, new_class, object_from_spec
 from src.database.models.organizations import Organization
 
 if TYPE_CHECKING:
@@ -128,8 +128,10 @@ async def connection(
 ) -> AsyncGenerator[postgres.Postgres]:
     """Own a private PostgreSQL tunnel using the caller's CA snapshot or a fresh cluster lookup."""
 
-    # Platform workers can run outside the compute cluster and its private DNS/network.
-    async with cluster.forward_database(organization.id) as port:
+    # Refresh the selector before kr8s resolves a ready Pod for the private database tunnel.
+    service = Service("database-rw", namespace=namespace.database(organization.id), api=await cluster.api())
+    await service.refresh()
+    async with service.portforward(5432, local_port="auto") as port:
         # Preserve the cluster DNS hostname for certificate verification even through a local tunnel.
         if certificate is None:
             certificate = await databases.certificate(cluster, organization.id)

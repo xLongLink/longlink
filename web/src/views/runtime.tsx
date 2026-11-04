@@ -13,7 +13,6 @@ import { stoneTheme } from '@/lib/generated/stone.js';
 import { LayerProvider } from '@astryxdesign/core/Layer';
 import { FileRequestContext } from '@/components/ui/preview';
 import { Layout, LayoutContent } from '@astryxdesign/core/Layout';
-import { appearanceSchema, type Appearance } from '@/lib/appearance';
 import { QueryClient, QueryClientProvider, QueryErrorResetBoundary, useSuspenseQuery } from '@tanstack/react-query';
 import {
     FormRequestContext,
@@ -37,6 +36,8 @@ import {
     iconDataSchema,
     appearanceMessageSchema,
     type AppearanceMessage,
+    viewAppearanceSchema,
+    type ViewAppearance,
 } from './protocol';
 import '../index.css';
 
@@ -208,7 +209,7 @@ const initialization = z
         session: z.string(),
         source: z.string(),
         params: parametersSchema,
-        appearance: appearanceSchema,
+        appearance: viewAppearanceSchema,
         navigationBaseUrl: z.url({ protocol: /^https?$/ }),
     })
     .strict();
@@ -413,7 +414,7 @@ function initialize(event: MessageEvent<unknown>): void {
     }
 
     /** Reconciles only the theme provider so the authored component keeps its state. */
-    function renderAppearance(appearance: Appearance) {
+    function renderAppearance(appearance: ViewAppearance) {
         document.documentElement.dataset.accent = appearance.accent;
         root.render(
             <Theme theme={stoneTheme} mode={appearance.theme}>

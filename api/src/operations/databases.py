@@ -77,7 +77,6 @@ class Lease:
                         self.expires_at = expires_at
                         await session.commit()
             except Exception:
-
                 # Losing renewal cancels the operation still running under this lease.
                 self.lost = True
                 if not task.done():
@@ -178,6 +177,16 @@ async def ready(organization_id: UUID) -> bool:
                 if transition is None or transition.expires_at <= datetime.now(UTC):
                     return True
             lease = await _claim(session, organization_id)
+            target = None
+
+            # Capture the admitted database assignment without decrypting unrelated storage credentials.
+            if lease is not None:
+                result = await session.execute(
+                    select(Organization, col(ComputeRegistry.kubeconfig), col(ComputeRegistry.database_storage_class))
+                    .join(ComputeRegistry, col(ComputeRegistry.id) == col(Organization.compute_id))
+                    .where(col(Organization.id) == organization_id)
+                )
+                target = result.one_or_none()
             await session.commit()
 
         # Another transition may finish while this caller waits for admission.
@@ -186,19 +195,8 @@ async def ready(organization_id: UUID) -> bool:
             continue
 
         async with lease.maintain():
-
-            # Load only the database assignment without decrypting unrelated storage credentials.
+            # Provision only from the committed admission snapshot.
             try:
-                async with session_scope() as session:
-                    result = await session.execute(
-                        # Fetch only the database provisioning assignment.
-                        select(Organization, col(ComputeRegistry.kubeconfig), col(ComputeRegistry.database_storage_class))
-                        .join(ComputeRegistry, col(ComputeRegistry.id) == col(Organization.compute_id))
-                        .where(col(Organization.id) == organization_id)
-                    )
-
-                    # Consume the query before releasing its session.
-                    target = result.one_or_none()
                 if target is None:
                     raise RuntimeError("Organization is unavailable")
                 organization, kubeconfig, database_storage_class = target
@@ -251,7 +249,6 @@ async def ready(organization_id: UUID) -> bool:
 
             # Interrupted provisioning is retried through the failed state.
             except BaseException:
-
                 # Persist failure without changing a replacement lease's state.
                 async with session_scope() as session:
                     organization = await organizations.lock_row(session, organization_id)
