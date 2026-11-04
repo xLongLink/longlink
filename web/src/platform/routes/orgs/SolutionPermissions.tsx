@@ -12,7 +12,7 @@ import { Selector } from '@astryxdesign/core/Selector';
 import { Ban, Eye, Pencil, Shield } from 'lucide-react';
 import { Table, proportional } from '@astryxdesign/core/Table';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
-import { useQueryClient, useSuspenseQueries } from '@tanstack/react-query';
+import { useMutation, useQueryClient, useSuspenseQueries } from '@tanstack/react-query';
 
 /** Assigns SDK-defined Solution roles without changing organization roles. */
 export default function SolutionPermissions({
@@ -60,7 +60,6 @@ function MemberPermissions({
 }) {
     const client = useQueryClient();
     const [roles, setRoles] = useState<Record<string, string>>({});
-    const [saving, setSaving] = useState(false);
 
     // Load independent assignments together so every member appears in the table.
     const assignments = useSuspenseQueries({
@@ -71,6 +70,35 @@ function MemberPermissions({
         ...user,
         role: roles[user.id] ?? assignments[index].data.role ?? '',
     }));
+
+    // Acknowledge each saved assignment before proceeding so failed saves can be retried safely.
+    const save = useMutation({
+        retry: false,
+        networkMode: 'always',
+        mutationFn: async () => {
+            for (const member of rows) {
+                if (!(member.id in roles)) continue;
+                const path = `${base}/members/${member.id}/access`;
+                await api.put(path, {
+                    json: schemas.zAccessUpdate.parse({
+                        role: member.role || null,
+                        revision_id: settings.revision_id,
+                    }),
+                });
+                client.setQueryData<z.output<typeof schemas.zMemberAccess>>(['api', path], (current) =>
+                    current ? { ...current, role: member.role || null } : current
+                );
+                setRoles((current) => {
+                    const updated = { ...current };
+                    delete updated[member.id];
+
+                    return updated;
+                });
+                await client.invalidateQueries({ queryKey: ['api', path], exact: true });
+            }
+        },
+        onSuccess: onClose,
+    });
 
     return (
         <Stack gap={4}>
@@ -98,7 +126,7 @@ function MemberPermissions({
                             <Selector
                                 label={`Role for ${member.name}`}
                                 isLabelHidden
-                                isDisabled={saving}
+                                isDisabled={save.isPending}
                                 value={member.role}
                                 options={[
                                     { value: '', label: 'No access', icon: Ban },
@@ -115,42 +143,14 @@ function MemberPermissions({
                 ]}
             />
             <Stack direction="horizontal" gap={2} justify="end">
-                <Button label="Cancel" size="sm" variant="ghost" isDisabled={saving} onClick={onClose} />
+                <Button label="Cancel" size="sm" variant="ghost" isDisabled={save.isPending} onClick={onClose} />
                 <Button
                     label="Save"
                     size="sm"
                     variant="primary"
-                    isDisabled={saving || Object.keys(roles).length === 0}
+                    isDisabled={save.isPending || Object.keys(roles).length === 0}
                     clickAction={async () => {
-                        // Acknowledge each saved assignment before proceeding so failed saves can be retried safely.
-                        setSaving(true);
-
-                        try {
-                            for (const member of rows) {
-                                if (!(member.id in roles)) continue;
-                                const path = `${base}/members/${member.id}/access`;
-                                await api.put(path, {
-                                    json: schemas.zAccessUpdate.parse({
-                                        role: member.role || null,
-                                        revision_id: settings.revision_id,
-                                    }),
-                                });
-                                client.setQueryData<z.output<typeof schemas.zMemberAccess>>(['api', path], (current) =>
-                                    current ? { ...current, role: member.role || null } : current
-                                );
-                                setRoles((current) => {
-                                    const updated = { ...current };
-                                    delete updated[member.id];
-
-                                    return updated;
-                                });
-                                await client.invalidateQueries({ queryKey: ['api', path], exact: true });
-                            }
-                        } finally {
-                            setSaving(false);
-                        }
-
-                        onClose();
+                        await save.mutateAsync();
                     }}
                 />
             </Stack>

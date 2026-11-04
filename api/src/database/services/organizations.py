@@ -530,7 +530,7 @@ async def create(session: AsyncSession, name: str, user: User) -> Organization:
     await session.flush()
 
     # Queue infrastructure creation in the caller's transaction after persisting the Organization.
-    await operations.enqueue(session, kind=OperationKind.organization_create, target_id=organization.id, coalesce=False)
+    await operations.enqueue(session, kind=OperationKind.organization_create, target_id=organization.id)
     return organization
 
 

@@ -89,11 +89,11 @@ async def fetch(session: AsyncSession, pagination: Pagination, search: str = "")
     return items, count_result.scalar_one()
 
 
-async def enqueue(session: AsyncSession, *, kind: OperationKind, target_id: UUID, coalesce: bool = True) -> Operation:
-    """Queue reconciliation, optionally reusing visible unfinished work."""
+async def enqueue(session: AsyncSession, *, kind: OperationKind, target_id: UUID) -> Operation:
+    """Queue fresh Organization reconciliation and reuse other visible unfinished work."""
 
-    # Reuse unfinished work, including an active or interrupted attempt at this exact target.
-    if coalesce:
+    # Mutable Organization state needs fresh work even when an earlier reconciliation is active.
+    if kind != OperationKind.organization_create:
         operation = await session.scalar(
             select(Operation)
             .where(col(Operation.kind) == kind, col(Operation.target_id) == target_id, col(Operation.finished_at).is_(None))

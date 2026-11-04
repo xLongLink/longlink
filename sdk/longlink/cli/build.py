@@ -11,7 +11,7 @@ from pathlib import Path
 from longlink import permissions
 from pydantic import TypeAdapter, ValidationError
 from longlink.cli import errors
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from importlib.metadata import PackageNotFoundError
 from importlib.metadata import version as package_version
 from importlib.resources import files
@@ -69,6 +69,30 @@ class EnvironmentEntry(TypedDict):
     description: NotRequired[str]
 
 
+def _inspect(root: Path, script: str, arguments: Sequence[str]) -> bytes:
+    """Run an SDK inspector with isolated imports and a separate metadata file."""
+
+    # Let the child own Solution imports and discard its metadata after reading it.
+    with tempfile.TemporaryDirectory(prefix=f"longlink-{script}-") as directory:
+        result_path = Path(directory) / "result.json"
+        result = subprocess.run(
+            [sys.executable, "-P", str(Path(__file__).with_name(f"{script}.py")), str(root.resolve()), *arguments, str(result_path)],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+
+        # Forward import-time output even when the inspector fails.
+        if result.stdout:
+            print(result.stdout, end="")
+        if result.stderr:
+            print(result.stderr, end="", file=sys.stderr)
+
+        # A successful exit must precede reading the metadata response.
+        result.check_returncode()
+        return result_path.read_bytes()
+
+
 def read_env_spec(root: Path, pyproject_data: Mapping[str, object]) -> list[EnvironmentEntry]:
     """Parse the configured Solution environment model."""
 
@@ -90,47 +114,22 @@ def read_env_spec(root: Path, pyproject_data: Mapping[str, object]) -> list[Envi
     if not envs_path.is_file():
         raise errors.Error(f"Environment model not found: {envs_path}")
 
-    # Let a child process own Solution imports and their global state until it exits.
-    with tempfile.TemporaryDirectory(prefix="longlink-env-") as directory:
-        result_path = Path(directory) / "environments.json"
-        result = subprocess.run(
-            [
-                sys.executable,
-                "-P",
-                str(Path(__file__).with_name("environments.py")),
-                str(root.resolve()),
-                environment_import,
-                # Transport metadata through a file, independently of child stdout.
-                str(result_path),
-            ],
-            capture_output=True,
-            text=True,
-            check=False,
-        )
+    # Validate the child response before using it as image metadata or a CLI error.
+    adapter = TypeAdapter(list[EnvironmentEntry] | str)
+    try:
+        response = _inspect(root, "environments", [environment_import])
+        environments = adapter.validate_json(response, strict=True)
+    except subprocess.CalledProcessError as error:
+        raise errors.Error(
+            f"Unable to inspect environment model {environment_import}: child process exited with code {error.returncode}"
+        ) from error
+    except (OSError, ValidationError) as error:
+        raise errors.Error(f"Unable to inspect environment model {environment_import}: invalid child response") from error
 
-        # Keep import-time output separate from the metadata transport.
-        if result.stdout:
-            print(result.stdout, end="")
-        if result.stderr:
-            print(result.stderr, end="", file=sys.stderr)
-
-        # Failed imports must not be interpreted as valid environment metadata.
-        if result.returncode:
-            raise errors.Error(
-                f"Unable to inspect environment model {environment_import}: child process exited with code {result.returncode}"
-            )
-
-        # Validate the child response before using it as image metadata or a CLI error.
-        adapter = TypeAdapter(list[EnvironmentEntry] | str)
-        try:
-            environments = adapter.validate_json(result_path.read_bytes(), strict=True)
-        except (OSError, ValidationError) as error:
-            raise errors.Error(f"Unable to inspect environment model {environment_import}: invalid child response") from error
-
-        # The inspector reports expected validation errors as strings.
-        if isinstance(environments, str):
-            raise errors.Error(environments)
-        return environments
+    # The inspector reports expected validation errors as strings.
+    if isinstance(environments, str):
+        raise errors.Error(environments)
+    return environments
 
 
 def read_permission_spec(root: Path) -> permissions.Catalog:
@@ -138,28 +137,16 @@ def read_permission_spec(root: Path) -> permissions.Catalog:
 
     # Inspect twice in fresh processes so import state cannot hide nondeterministic declarations.
     catalogs: list[permissions.Catalog] = []
-    with tempfile.TemporaryDirectory(prefix="longlink-permissions-") as directory:
-        for attempt in range(2):
-            result_path = Path(directory) / f"permissions-{attempt}.json"
-            result = subprocess.run(
-                [sys.executable, "-P", str(Path(__file__).with_name("permissions.py")), str(root.resolve()), str(result_path)],
-                capture_output=True,
-                text=True,
-                check=False,
-            )
-            if result.stdout:
-                print(result.stdout, end="")
-            if result.stderr:
-                print(result.stderr, end="", file=sys.stderr)
-            if result.returncode:
-                raise errors.Error("Unable to inspect main:app permissions; routes must be registered without runtime configuration")
-
-            # Validate child metadata before embedding it in the image configuration.
-            try:
-                catalog = permissions.Catalog.model_validate_json(result_path.read_bytes())
-            except (OSError, ValidationError) as error:
-                raise errors.Error("Unable to inspect main:app permissions: invalid child response") from error
-            catalogs.append(catalog)
+    for _ in range(2):
+        # Validate child metadata before embedding it in the image configuration.
+        try:
+            response = _inspect(root, "permissions", [])
+            catalog = permissions.Catalog.model_validate_json(response)
+        except subprocess.CalledProcessError as error:
+            raise errors.Error("Unable to inspect main:app permissions; routes must be registered without runtime configuration") from error
+        except (OSError, ValidationError) as error:
+            raise errors.Error("Unable to inspect main:app permissions: invalid child response") from error
+        catalogs.append(catalog)
     if catalogs[0] != catalogs[1]:
         raise errors.Error("Solution permissions must be deterministic at build time")
     return catalogs[0]
