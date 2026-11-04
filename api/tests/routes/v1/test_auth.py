@@ -2,6 +2,7 @@ import jwt
 import base64
 import httpx2
 import pytest
+import asyncio
 import hashlib
 from src import auth
 from main import app
@@ -11,12 +12,14 @@ from datetime import UTC, datetime, timedelta
 from sqlmodel import col, select
 from factories import create_organization
 from src.utils import oauth, token
+from src.routes import v1
 from urllib.parse import parse_qs, urlparse
 from collections.abc import AsyncIterator
 from src.environments import env
 from src.models.roles import OrganizationRoles
 from src.database.session import get_session, session_scope
 from src.database.services import users
+from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.users import User
 from src.database.models.association import UserOrganization
 from src.database.models.invitations import OrganizationInvitation
@@ -891,9 +894,7 @@ async def test_forgot_and_reset_password(
     reset_token = password_reset_token(captured_mail)
     verify_response = await client.post("/api/v1/auth/reset-password/verify", json={"token": reset_token})
     setup_response = await client.get("/api/v1/auth/reset-password/setup")
-    reset_response = await client.post(
-        "/api/v1/auth/reset-password", json={"password": "replacement-password"}, headers={"Origin": env.PUBLIC_URL}
-    )
+    reset_response = await client.post("/api/v1/auth/reset-password", json={"password": "replacement-password"})
     reused_token_response = await client.post("/api/v1/auth/reset-password/verify", json={"token": reset_token})
     revoked_session = await authenticated_client.get("/api/v1/me")
 
@@ -923,6 +924,59 @@ async def test_forgot_and_reset_password(
     assert old_login.status_code == 400
     assert old_login.json() == {"detail": "Invalid email or password."}
     assert new_login.status_code == 204
+
+    # Password replacement retains account metadata and attributes its audit update to the recovering user.
+    async with session_scope() as session:
+        updated_user = await session.get(User, user.id)
+        assert updated_user is not None
+        assert updated_user.updated_id == user.id
+        assert updated_user.updated_at.replace(tzinfo=UTC) > user.updated_at.replace(tzinfo=UTC)
+        assert updated_user.created_at.replace(tzinfo=UTC) == user.created_at.replace(tzinfo=UTC)
+        assert updated_user.email == user.email
+
+
+async def test_password_reset_rejects_overlapping_consumption(
+    client: AsyncClient, users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Keep exactly one replacement password when requests overlap after validating the same reset proof."""
+
+    # Arrange two independent browsers with real proof for the same account.
+    user = users[1]
+    credential = token.create_password_reset_token(user)
+    passwords = ("first-replacement-password", "second-replacement-password")
+    validated = asyncio.Barrier(2)
+    resolve_user = v1.auth.password_reset_user
+
+    async def synchronize_validation(session: AsyncSession, credential: str) -> User:
+        """Let both real validations finish before either request replaces the password."""
+
+        user = await resolve_user(session, credential)
+        await validated.wait()
+        return user
+
+    async with create_client() as other_client:
+        for browser in (client, other_client):
+            response = await browser.post("/api/v1/auth/reset-password/verify", json={"token": credential})
+            assert response.status_code == 204
+
+        # Act: Synchronize admission without replacing hashing, SQL, or transaction behavior.
+        with monkeypatch.context() as patch:
+            patch.setattr(v1.auth, "password_reset_user", synchronize_validation)
+            async with asyncio.timeout(10), asyncio.TaskGroup() as requests:
+                first = requests.create_task(client.post("/api/v1/auth/reset-password", json={"password": passwords[0]}))
+                second = requests.create_task(other_client.post("/api/v1/auth/reset-password", json={"password": passwords[1]}))
+        responses = (first.result(), second.result())
+
+    # Assert: One reset wins; the stale request cannot clear proof or replace the winning password.
+    assert sorted(response.status_code for response in responses) == [204, 400]
+    winner = 0 if responses[0].status_code == 204 else 1
+    rejected = responses[1 - winner]
+    assert rejected.json() == {"detail": "This password reset link is invalid or has expired. Please request a new one."}
+    assert "set-cookie" not in rejected.headers
+    winning_login = await client.post("/api/v1/auth/password/login", json={"email": user.email, "password": passwords[winner]})
+    losing_login = await client.post("/api/v1/auth/password/login", json={"email": user.email, "password": passwords[1 - winner]})
+    assert winning_login.status_code == 204
+    assert losing_login.status_code == 400
 
 
 @pytest.mark.parametrize("endpoint", ["/api/v1/auth/forgot-password", "/api/v1/auth/register"])

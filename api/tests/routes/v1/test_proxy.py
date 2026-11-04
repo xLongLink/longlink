@@ -709,23 +709,37 @@ async def test_solution_proxy_forwards_streamed_request_body(
 async def test_solution_proxy_allows_organization_read_members(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient], users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Allow explicitly assigned Solution access for an Organization read member."""
+    """Sign exact endpoint grants for an Organization read member's current Solution role."""
 
     # Give a regular Organization member read access.
     owner = users[0]
     user = users[1]
     solution, _infrastructure = await create_running_solution(owner)
-    called = False
+    definition = Catalog.model_validate(
+        {
+            "endpoints": [
+                {"key": "GET /api/tasks", "path": "/api/tasks", "method": "GET", "roles": ["read", "write"]},
+                {"key": "POST /api/approve", "path": "/api/approve", "method": "POST", "roles": ["approver"]},
+                {"key": "POST /api/tasks", "path": "/api/tasks", "method": "POST", "roles": ["write"]},
+            ]
+        }
+    )
+    grants: list[list[int]] = []
 
-    async def request(*_args: object, **_kwargs: object) -> httpx2.Response:
-        """Record the authorized gateway request."""
+    async def request(_transport: object, request: httpx2.Request) -> httpx2.Response:
+        """Observe the real signed grants delivered to the gateway."""
 
-        nonlocal called
-        called = True
+        _, access = identity.identity_token_data(request.headers["x-longlink-identity"], "test-identity-secret-01234567890")
+        assert access is not None
+        assert access.catalog == definition.digest
+        grants.append(access.endpoints)
         return make_upstream(200, {"content-type": "application/json"}, b"{}")
 
     monkeypatch.setattr(httpx2.AsyncHTTPTransport, "handle_async_request", request)
     async with session_scope() as session:
+        record = await session.get(PermissionCatalog, solution.deployed_revision_id)
+        assert record is not None
+        record.catalog = definition.model_dump(mode="json")
         session.add(UserOrganization(user_id=user.id, organization_id=solution.organization_id, role=OrganizationRoles.read))
         session.add(SolutionMemberAccess(user_id=user.id, solution_id=solution.id, organization_id=solution.organization_id, role="read"))
         await session.commit()
@@ -733,13 +747,17 @@ async def test_solution_proxy_allows_organization_read_members(
     # Send the request as the non-owner identity under test.
     client = clients[1]
 
-    # Request the Solution through the member's Organization access.
-    response = await client.get(f"/api/v1/solutions/{solution.id}/proxy/views.json")
-
-    # Verify read access reaches the configured compute gateway.
-    assert response.status_code == 200
-    assert response.json() == {}
-    assert called
+    # Role changes must produce current, ordered grants without changing Organization membership.
+    for role, expected in (("read", [0]), ("write", [0, 2]), ("approver", [1])):
+        async with session_scope() as session:
+            assignment = await session.get(SolutionMemberAccess, (user.id, solution.id))
+            assert assignment is not None
+            assignment.role = role
+            await session.commit()
+        response = await client.get(f"/api/v1/solutions/{solution.id}/proxy/views.json")
+        assert response.status_code == 200
+        assert response.json() == {}
+        assert grants[-1] == expected
 
 
 async def test_solution_proxy_rejects_cross_organization_access(

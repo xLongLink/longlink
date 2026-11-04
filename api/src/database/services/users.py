@@ -1,8 +1,9 @@
 import asyncio
 from uuid import UUID
 from pwdlib import PasswordHash
+from datetime import UTC, datetime
 from sqlmodel import col
-from sqlalchemy import or_, func, select
+from sqlalchemy import or_, func, select, update
 from longlink.types import Email
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import load_only
@@ -74,6 +75,22 @@ async def register(session: AsyncSession, name: str, email: str, password: str, 
     session.add(user)
     await session.flush()
     return user
+
+
+async def replace_password(session: AsyncSession, user: User, password: str) -> bool:
+    """Replace an active user's password only while its validated credential snapshot remains current, without committing."""
+
+    # Keep expensive credential hashing outside the request event loop.
+    hashed_password = await asyncio.to_thread(PASSWORD_HASH.hash, password)
+
+    # Consume proof atomically and preserve audit fields that bulk updates do not populate.
+    result = await session.execute(
+        update(User)
+        .where(col(User.id) == user.id, col(User.password) == user.password, col(User.deleted_at).is_(None))
+        .values(password=hashed_password, updated_at=datetime.now(UTC), updated_id=user.id)
+        .execution_options(synchronize_session=False)
+    )
+    return result.rowcount == 1
 
 
 async def ensure_administrator(session: AsyncSession) -> None:
