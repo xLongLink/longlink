@@ -28,14 +28,21 @@ function findActiveTab(tabs: readonly NavigationTab[], pathname: string): string
 }
 
 /** Selects application navigation without knowing the route's domain or identity. */
-export default function Platform({ activeTab, isNavigationLoading = false, ...props }: PlatformProps) {
+export default function Platform({
+    activeTab,
+    hasNavigationError = false,
+    isNavigationLoading = false,
+    ...props
+}: PlatformProps) {
     const { pathname } = useLocation();
     const { appearance } = useAppearance();
     const selectedTab = activeTab ?? findActiveTab(props.tabs, pathname) ?? '';
 
-    // Keep pages without navigation in the topbar frame, including failed manifest loads.
+    // Use the topbar for confirmed empty navigation, not loading or failed reads.
     const Layout =
-        appearance.navigation === 'sidebar' && (isNavigationLoading || props.tabs.length > 0) ? Sidebar : Topbar;
+        appearance.navigation === 'sidebar' && (isNavigationLoading || hasNavigationError || props.tabs.length > 0)
+            ? Sidebar
+            : Topbar;
 
     return <Layout {...props} activeTab={selectedTab} />;
 }

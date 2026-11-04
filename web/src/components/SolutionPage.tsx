@@ -176,6 +176,7 @@ export function SolutionPage({
         <Platform
             action={action}
             breadcrumb={breadcrumb}
+            hasNavigationError={viewsError !== null}
             sidebarHeader={sidebarHeader}
             topbarHeading={topbarHeading}
             isNavigationLoading={manifest === undefined && !viewsError}

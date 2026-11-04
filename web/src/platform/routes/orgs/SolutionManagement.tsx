@@ -90,7 +90,7 @@ export default function SolutionManagement({
                 justify={onboarding ? 'center' : undefined}
                 minHeight={
                     onboarding
-                        ? 'calc(100dvh - var(--_app-shell-header-height, 0px) * 2 - var(--spacing-8))'
+                        ? 'calc(100dvh - var(--_app-shell-header-height, 0px) - var(--platform-toolbar-height, 0px) - var(--spacing-2) * 4)'
                         : undefined
                 }
             >
