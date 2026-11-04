@@ -1,5 +1,6 @@
 import { Link } from '@astryxdesign/core/Link';
 import { Wordmark } from '@/components/Wordmark';
+import { DevelopmentProfile } from '@/solution/Profile';
 import { SolutionPage } from '@/components/SolutionPage';
 import { PathBreadcrumb } from '@/components/breadcrumb/Path';
 
@@ -16,6 +17,7 @@ export default function Solution() {
                 </Link>
             }
             breadcrumb={<PathBreadcrumb />}
+            developmentAction={<DevelopmentProfile />}
             topbarHeading={<Wordmark />}
             formatTitle={(title) => (title ? `${title} | LongLink` : 'LongLink')}
         />

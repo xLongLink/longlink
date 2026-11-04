@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { startCase } from 'es-toolkit/compat';
 import { JsxView } from '@/components/JsxView';
 import { PageError } from '@/components/Utils';
+import { Link } from '@astryxdesign/core/Link';
 import { manifestSchema } from '@/views/manifest';
 import { Center } from '@astryxdesign/core/Center';
 import { DeferredIcon } from '@/components/ui/Icon';
@@ -27,6 +28,7 @@ function viewLabel(path: string): string {
 export function SolutionPage({
     action,
     breadcrumb,
+    developmentAction,
     formatTitle,
     navigationBaseUrl = '/',
     sidebarHeader,
@@ -35,6 +37,7 @@ export function SolutionPage({
 }: {
     action: ReactNode;
     breadcrumb: ReactNode;
+    developmentAction?: ReactNode;
     formatTitle: (title: string | undefined) => string;
     navigationBaseUrl?: string;
     sidebarHeader?: ReactNode;
@@ -116,6 +119,9 @@ export function SolutionPage({
         icon: view.icon ? <DeferredIcon icon={view.icon} size="sm" /> : undefined,
     }));
 
+    // Keep wordmark navigation on the solution's first page.
+    const homeHref = tabs[0]?.href ?? navigationBaseUrl;
+
     let content: ReactNode;
 
     // The browser never requests the solution server root, so mirror its redirect client-side.
@@ -174,10 +180,17 @@ export function SolutionPage({
 
     return (
         <Platform
-            action={action}
+            action={manifest?.development ? (developmentAction ?? action) : action}
             breadcrumb={breadcrumb}
+            homeHref={homeHref}
             sidebarHeader={sidebarHeader}
-            topbarHeading={topbarHeading}
+            topbarHeading={
+                topbarHeading ? (
+                    <Link href={homeHref} label="LongLink home" color="inherit">
+                        {topbarHeading}
+                    </Link>
+                ) : undefined
+            }
             isNavigationLoading={manifest === undefined && !viewsError}
             tabs={tabs}
         >

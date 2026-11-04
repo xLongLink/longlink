@@ -114,14 +114,13 @@ class Database:
                     if self._env.ENV == "testing":
                         await conn.run_sync(SQLModel.metadata.create_all)
 
-                    # Production identities arrive through signed Platform requests.
-                    if self._env.ENV != "production":
-                        # Seed the local user within the initialization transaction.
+                    # Development and production identities arrive with requests.
+                    if self._env.ENV == "testing":
+                        # Keep the isolated test client's default identity available.
                         users = SQLModel.metadata.tables["users"]
-                        name = "Development user" if self._env.ENV == "development" else "Testing user"
                         await conn.execute(
                             sqlite.insert(users)
-                            .values(id=LOCAL_USER_ID, name=name, email="local@example.com", avatar="", updated_at=datetime.now(UTC))
+                            .values(id=LOCAL_USER_ID, name="Testing user", email="local@example.com", avatar="", updated_at=datetime.now(UTC))
                             .on_conflict_do_nothing(index_elements=[users.c.id])
                         )
 

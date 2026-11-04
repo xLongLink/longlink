@@ -72,7 +72,12 @@ const tabSchema = z.object({
 
 // Require one pinned Solution-wide runtime and valid navigation targets for the complete catalog.
 export const manifestSchema = z
-    .object({ views: viewsSchema, runtime: runtimeSchema, tabs: z.array(tabSchema).optional() })
+    .object({
+        views: viewsSchema,
+        runtime: runtimeSchema,
+        tabs: z.array(tabSchema).optional(),
+        development: z.boolean().optional(),
+    })
     .superRefine((manifest, context) => {
         const routes = new Set(manifest.views.map((view) => view.route));
         const tabs = new Set<string>();

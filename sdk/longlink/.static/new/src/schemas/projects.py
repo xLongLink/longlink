@@ -3,7 +3,7 @@ from pydantic import Field, BaseModel, ConfigDict
 
 
 class ProjectRead(BaseModel):
-    """Present a building project and its illustrative contact details."""
+    """Present a building project and its construction progress."""
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -14,10 +14,6 @@ class ProjectRead(BaseModel):
     status: Literal["Planning", "In progress", "Completed"]
     description: str
     active_step: int = Field(ge=0, le=5)
-
-    # Project contact
-    owner: str
-    owner_email: str
 
 
 class DocumentRead(BaseModel):
