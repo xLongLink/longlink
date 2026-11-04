@@ -1035,7 +1035,8 @@ def request_scope(monkeypatch: pytest.MonkeyPatch) -> SimpleNamespace:
             "method": "POST",
             "scheme": "https",
             "server": ("platform.example", 443),
-            "path": "/proxy/health%2Fstatus",
+            "path": "/proxy/health/status",
+            "raw_path": b"/proxy/health%2Fstatus",
             "query_string": b"verbose=true&raw=%2F+%25",
             "headers": [(b"content-type", b"application/json"), (b"authorization", b"untrusted"), (b"host", b"untrusted")],
         }
@@ -1048,7 +1049,7 @@ def request_scope(monkeypatch: pytest.MonkeyPatch) -> SimpleNamespace:
         kwargs={
             "request": request,
             "solution_id": solution.id,
-            "path": "health%2Fstatus",
+            "path": "health/status",
             "user": user,
             "session": SimpleNamespace(commit=commit),
         },
@@ -1196,7 +1197,7 @@ async def test_gateway_request_forwards_identity_and_defers_cleanup(
 
     monkeypatch.setattr(proxy_routes.httpx2, "AsyncClient", Client)
 
-    # Assert exact raw URL, routing authority, signed identity, and safe header forwarding.
+    # Assert the quoted decoded path, raw query, signed identity, and safe header forwarding.
     async with AsyncExitStack() as runtime:
         await proxy_routes.proxy_solution_request(**request_scope.kwargs, runtime=runtime)
         assert captured_request is not None
@@ -1204,10 +1205,10 @@ async def test_gateway_request_forwards_identity_and_defers_cleanup(
         identity_token = request.headers["x-longlink-identity"]
         assert proxy_routes.identity.identity_token_user(identity_token, "identity-secret-012345678901234567").id == request_scope.user.id
         assert request.method == "POST"
-        assert request.url == "https://gateway.example/health%2Fstatus?verbose=true&raw=%2F+%25"
-        assert request.url.raw_path == b"/health%2Fstatus?verbose=true&raw=%2F+%25"
+        assert request.url == "https://gateway.example/health/status?verbose=true&raw=%2F+%25"
+        assert request.url.raw_path == b"/health/status?verbose=true&raw=%2F+%25"
 
-        # Preserve the encoded path while routing with the internal Solution hostname.
+        # Route the normalized path with the internal Solution hostname.
         assert request.headers["host"] == (
             f"solution-{request_scope.solution.id}.longlink-compute-{request_scope.solution.organization_id.hex}.svc.cluster.local"
         )
