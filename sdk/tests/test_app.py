@@ -11,7 +11,6 @@ from pydantic import ValidationError
 from sqlalchemy import event
 from longlink.app import LongLink
 from urllib.parse import quote
-from fastapi.routing import iter_route_contexts
 from longlink.logger import ApiAccessFilter
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from longlink.database import audit, migrations
@@ -374,6 +373,12 @@ def test_mcp_discovers_late_routes_and_invokes_with_context(solution_source: Pat
 
         return value.user.name
 
+    @app.post("/views.json", response_model=int, operation_id="business_manifest_action")
+    async def business_manifest_action() -> int:
+        """Expose a business method sharing an SDK-owned path."""
+
+        return 42
+
     routes = APIRouter()
 
     @routes.get("/items/{item_id}", response_model=dict[str, int], operation_id="get_item")
@@ -403,6 +408,12 @@ def test_mcp_discovers_late_routes_and_invokes_with_context(solution_source: Pat
             "/mcp", json={"jsonrpc": "2.0", "id": 4, "method": "tools/call", "params": {"name": "current_user", "arguments": {}}}
         )
 
+        # Business methods remain available even when SDK infrastructure owns another method on the same path.
+        shared_path = client.post(
+            "/mcp",
+            json={"jsonrpc": "2.0", "id": 6, "method": "tools/call", "params": {"name": "business_manifest_action", "arguments": {}}},
+        )
+
         # Rejected tool calls must not alter the identity of later valid requests.
         invalid = client.post(
             "/mcp",
@@ -413,12 +424,13 @@ def test_mcp_discovers_late_routes_and_invokes_with_context(solution_source: Pat
         view = client.get("/views/index")
 
     # Keep schemas, HTTP APIs, contextual services, and frontend behavior intact.
-    assert {tool["name"] for tool in tools} == {"current_user", "get_item"}
+    assert {tool["name"] for tool in tools} == {"current_user", "get_item", "business_manifest_action"}
     item_tool = next(tool for tool in tools if tool["name"] == "get_item")
     assert item_tool["inputSchema"]["properties"]["item_id"]["type"] == "integer"
     assert invocation.json()["result"].get("isError") is not True
     assert json.loads(invocation.json()["result"]["content"][0]["text"]) == {"id": 7}
     assert context.json()["result"]["structuredContent"] == {"result": "Write user"}
+    assert shared_path.json()["result"]["structuredContent"] == {"result": 42}
     assert invalid.json()["result"]["isError"] is True
     assert direct.json() == {"id": 7}
     assert frontend.status_code == 200
@@ -450,6 +462,7 @@ def test_mcp_preserves_identity_and_endpoint_authorization(monkeypatch: pytest.M
             raise HTTPException(status_code=403, detail="Access denied")
         return str(audit.current_actor.get())
 
+    catalog = permissions.discover(app.permission_routes())
     client = TestClient(app)
     request = {"jsonrpc": "2.0", "id": 2, "method": "tools/call", "params": {"name": "private_data", "arguments": {}}}
 
@@ -457,7 +470,6 @@ def test_mcp_preserves_identity_and_endpoint_authorization(monkeypatch: pytest.M
     with client:
         anonymous = client.post("/mcp", json={"jsonrpc": "2.0", "id": 1, "method": "tools/list"})
         forged = client.post("/mcp", json=request, headers={"x-longlink-identity": "forged"})
-        catalog = app.state.permission_catalog
         access = permissions.Access(catalog=catalog.digest, endpoints=list(range(len(catalog.endpoints))))
         client.headers["x-longlink-identity"] = identity.create_identity_token(
             User(id=allowed_user, name="Allowed", email="allowed@example.com"), secret, access
@@ -649,9 +661,7 @@ def test_tool_arguments_cannot_override_request_credentials(monkeypatch: pytest.
     app.state.longlink.database = Database(Envs(ENV="testing"))
 
     # The signed HTTP identity must override any credentials embedded in tool metadata.
-    catalog = permissions.discover(
-        [route for route in iter_route_contexts(app.routes) if id(route.original_route) not in app._runtime_routes]
-    )
+    catalog = permissions.discover(app.permission_routes())
     access = permissions.Access(catalog=catalog.digest, endpoints=list(range(len(catalog.endpoints))))
     actual_identity = identity.create_identity_token(User(id=actual_user, name="Actual", email="actual@example.com"), secret, access)
     other_identity = identity.create_identity_token(User(id=UUID(int=1), name="Other", email="other@example.com"), secret, access)

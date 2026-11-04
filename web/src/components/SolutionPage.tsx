@@ -182,6 +182,7 @@ export function SolutionPage({
         <Platform
             action={manifest?.development ? (developmentAction ?? action) : action}
             breadcrumb={breadcrumb}
+            hasNavigationError={viewsError !== null}
             homeHref={homeHref}
             sidebarHeader={sidebarHeader}
             topbarHeading={

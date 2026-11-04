@@ -1,7 +1,6 @@
 import { z } from 'zod';
 import { useAdminList } from './use-list';
 import { api, ApiError } from '@/lib/api';
-import { useApiError } from '@/lib/errors';
 import { Form } from '@/components/ui/Form';
 import { Info, Search } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -166,8 +165,6 @@ export default function Compute() {
 
 /** Owns a fresh registration draft for the lifetime of the form dialog. */
 function ComputeRegistration({ onSuccess, onClose }: { onSuccess: () => Promise<void>; onClose: () => void }) {
-    const reportApiError = useApiError();
-
     // Opening a new dialog starts with blank fields; dismissal discards this draft.
     const [kubeconfig, setKubeconfig] = useState('');
 
@@ -227,12 +224,10 @@ function ComputeRegistration({ onSuccess, onClose }: { onSuccess: () => Promise<
             await api.post('/api/v1/computes', { json });
             await onSuccess();
         } catch (cause) {
-            reportApiError(cause);
+            if (cause instanceof ApiError) throw cause;
 
             // Keep submitted credentials and untrusted diagnostics out of the shared form's error banner.
-            throw new Error(
-                cause instanceof ApiError ? cause.message : 'The request could not be completed. Please try again.'
-            );
+            throw new Error('The request could not be completed. Please try again.');
         }
     }
 

@@ -24,10 +24,8 @@ from fastapi.openapi.utils import get_openapi
 from longlink.storage.base import create_fs
 from longlink.database.base import LOCAL_USER_ID, Database
 from longlink.utils.settings import Envs
-from fastmcp.utilities.openapi import HTTPRoute
 from fastmcp.server.dependencies import get_http_headers
 from longlink.middleware.identity import IdentityMiddleware
-from fastmcp.server.providers.openapi import MCPType
 
 
 class FrontendAssets(BaseModel):
@@ -121,7 +119,6 @@ class LongLink(RouteDecorators, FastAPI):
         # Mount SDK-managed routes before user-facing assets.
         runtime_router = router(view_manifest)
         self.include_router(runtime_router)
-        runtime_operation_ids = {route.unique_id for route in runtime_router.routes if isinstance(route, APIRoute)}
 
         # Only production requests with a valid Platform identity may reach Solution routes.
         self.add_middleware(
@@ -155,12 +152,6 @@ class LongLink(RouteDecorators, FastAPI):
                 if name in headers:
                     request.headers[name] = headers[name]
 
-        def map_route(route: HTTPRoute, mcp_type: MCPType) -> MCPType:
-            """Exclude SDK operations from MCP discovery and execution."""
-
-            # Filter by operation identity without hiding Solution methods sharing an SDK path.
-            return MCPType.EXCLUDE if route.operation_id in runtime_operation_ids else mcp_type
-
         # Preserve SDK startup and shutdown while giving MCP its own managed lifespan.
         runtime_lifespan = self.router.lifespan_context
 
@@ -190,7 +181,7 @@ class LongLink(RouteDecorators, FastAPI):
                         version=self.version,
                         openapi_version=self.openapi_version,
                         description=self.description,
-                        routes=self.routes,
+                        routes=business_routes,
                     )
 
                     # Keep MCP calls inside this application with request-scoped credentials.
@@ -199,7 +190,7 @@ class LongLink(RouteDecorators, FastAPI):
                         transport=transport, base_url="http://solution", timeout=10.0, event_hooks={"request": [forward_credentials]}
                     )
                     async with client:
-                        mcp = FastMCP.from_openapi(openapi_spec=schema, client=client, name=self.title, route_map_fn=map_route)
+                        mcp = FastMCP.from_openapi(openapi_spec=schema, client=client, name=self.title)
 
                         # Place MCP ahead of all frontend routes and own its public lifespan context.
                         mcp_app = mcp.http_app(path="/mcp", json_response=True)

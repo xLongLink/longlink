@@ -11,6 +11,7 @@ export type PlatformProps = {
     activeTab?: string;
     breadcrumb?: ReactNode;
     children: ReactNode;
+    hasNavigationError?: boolean;
     homeHref?: string;
     isNavigationLoading?: boolean;
     sidebarHeader?: ReactNode;
@@ -18,6 +19,6 @@ export type PlatformProps = {
     topbarHeading?: ReactNode;
 };
 
-export type NavigationLayoutProps = Omit<PlatformProps, 'activeTab' | 'isNavigationLoading'> & {
+export type NavigationLayoutProps = Omit<PlatformProps, 'activeTab' | 'hasNavigationError' | 'isNavigationLoading'> & {
     activeTab: string;
 };

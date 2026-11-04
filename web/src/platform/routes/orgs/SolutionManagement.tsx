@@ -23,7 +23,7 @@ import { Stack, StackItem } from '@astryxdesign/core/Stack';
 import { Table, proportional } from '@astryxdesign/core/Table';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import type { OrganizationContext } from '@/platform/layouts/Organization';
-import { Layout, LayoutPanel, LayoutContent } from '@astryxdesign/core/Layout';
+import { IllustratedDialogContent } from '@/platform/components/IllustratedDialogContent';
 import { ExternalLink, Logs, Plug, Plus, RefreshCw, Shield, Tags, Trash } from 'lucide-react';
 
 type Solution = z.output<typeof schemas.zOrganizationSolutionSummary>;
@@ -90,7 +90,7 @@ export default function SolutionManagement({
                 justify={onboarding ? 'center' : undefined}
                 minHeight={
                     onboarding
-                        ? 'calc(100dvh - var(--_app-shell-header-height, 0px) * 2 - var(--spacing-8))'
+                        ? 'calc(100dvh - var(--_app-shell-header-height, 0px) - var(--platform-toolbar-height, 0px) - var(--spacing-2) * 4)'
                         : undefined
                 }
             >
@@ -377,69 +377,53 @@ export default function SolutionManagement({
                         if (!open) closeSelected();
                     }}
                 >
-                    <Stack height="min(560px, calc(100dvh - var(--spacing-10) * 4))">
-                        <Layout
-                            padding={0}
-                            end={
-                                <LayoutPanel width="50%" padding={0} className="hidden bg-muted md:flex">
-                                    <Stack width="100%" height="100%" align="center" justify="center" padding={6}>
-                                        <Illustration
-                                            src="/images/mcp.png"
-                                            alt="Hand-drawn globe surrounded by orbiting spheres."
-                                            className="h-full w-full object-contain"
-                                            width={941}
-                                            height={1672}
-                                            decoding="async"
-                                        />
-                                    </Stack>
-                                </LayoutPanel>
-                            }
-                            content={
-                                <LayoutContent padding={8} isScrollable>
-                                    <Stack
-                                        minHeight="100%"
-                                        justify="center"
-                                        width="max-content"
-                                        maxWidth="100%"
-                                        gap={6}
-                                        className="mx-auto"
-                                    >
-                                        <Stack gap={2} align="center">
-                                            <Plug className="size-20 text-secondary" aria-hidden="true" />
-                                            <Stack gap={0}>
-                                                <Heading level={2} justify="center">
-                                                    Model Context Protocol
-                                                </Heading>
-                                                <Text as="p" color="secondary" justify="center">
-                                                    Connect your solution to AI tools
-                                                </Text>
-                                            </Stack>
-                                        </Stack>
-                                        {/* Match the creation dialog's content-sized column and control width. */}
-                                        <Stack gap={4} width={0} className="min-w-full">
-                                            <ApiBoundary key={selected.id}>
-                                                <SolutionMcpUrl solutionId={selected.id} onClose={closeSelected} />
-                                            </ApiBoundary>
-                                            <Button
-                                                as="a"
-                                                href={`/api/v1/solutions/${selected.id}/plugin`}
-                                                label="Download plugin ZIP"
-                                                variant="primary"
-                                                width="100%"
-                                                icon={
-                                                    <OpenAI
-                                                        className="size-5 scale-125"
-                                                        aria-hidden="true"
-                                                        focusable="false"
-                                                    />
-                                                }
-                                            />
-                                        </Stack>
-                                    </Stack>
-                                </LayoutContent>
-                            }
-                        />
-                    </Stack>
+                    <IllustratedDialogContent
+                        illustration={
+                            <Illustration
+                                src="/images/mcp.png"
+                                alt="Hand-drawn globe surrounded by orbiting spheres."
+                                className="h-full w-full object-contain"
+                                width={941}
+                                height={1672}
+                                decoding="async"
+                            />
+                        }
+                    >
+                        <Stack
+                            minHeight="100%"
+                            justify="center"
+                            width="max-content"
+                            maxWidth="100%"
+                            gap={6}
+                            className="mx-auto"
+                        >
+                            <Stack gap={2} align="center">
+                                <Plug className="size-20 text-secondary" aria-hidden="true" />
+                                <Stack gap={0}>
+                                    <Heading level={2} justify="center">
+                                        Model Context Protocol
+                                    </Heading>
+                                    <Text as="p" color="secondary" justify="center">
+                                        Connect your solution to AI tools
+                                    </Text>
+                                </Stack>
+                            </Stack>
+                            {/* Match the creation dialog's content-sized column and control width. */}
+                            <Stack gap={4} width={0} className="min-w-full">
+                                <ApiBoundary key={selected.id}>
+                                    <SolutionMcpUrl solutionId={selected.id} onClose={closeSelected} />
+                                </ApiBoundary>
+                                <Button
+                                    as="a"
+                                    href={`/api/v1/solutions/${selected.id}/plugin`}
+                                    label="Download plugin ZIP"
+                                    variant="primary"
+                                    width="100%"
+                                    icon={<OpenAI className="size-5 scale-125" aria-hidden="true" focusable="false" />}
+                                />
+                            </Stack>
+                        </Stack>
+                    </IllustratedDialogContent>
                 </Dialog>
             )}
             <DeletionDialog

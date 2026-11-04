@@ -109,7 +109,6 @@ async def runtime_access(session: AsyncSession, solution: Solution, user_id: UUI
         raise HTTPException(status_code=403, detail="Solution access required")
 
     # Resolve the same current user grants independently of the request transport.
-    effective = decisions(definition, access)
-    indices = [index for index, decision in enumerate(effective) if decision.allowed]
+    indices = [index for index, endpoint in enumerate(definition.endpoints) if access.role in endpoint.roles]
 
     return permissions.Access(catalog=definition.digest, endpoints=indices)
