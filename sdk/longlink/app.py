@@ -91,7 +91,9 @@ class LongLink(RouteDecorators, FastAPI):
         view_definitions = [definition for definition, _ in discovered_views]
 
         # Declare the pinned runtime once for the complete Solution catalog.
-        view_manifest = views.ViewManifest(views=view_definitions, runtime=view_runtime)
+        view_manifest = views.ViewManifest(
+            views=view_definitions, runtime=view_runtime, development=True if settings.ENV == "development" else None
+        )
 
         # Initialize Solution storage and database connections.
         storage = create_fs(settings)
@@ -124,6 +126,7 @@ class LongLink(RouteDecorators, FastAPI):
             identity_secret=settings.IDENTITY_SECRET,
             require_identity=settings.ENV == "production",
             local_user_id=LOCAL_USER_ID if settings.ENV != "production" else None,
+            allow_development_identity=settings.ENV == "development",
         )
 
         self.state.longlink = runtime
@@ -163,6 +166,7 @@ class LongLink(RouteDecorators, FastAPI):
                     # Discover registered business routes once and guard before dependency execution.
                     business_routes = self.permission_routes()
                     catalog = permissions.discover(business_routes)
+                    self.state.permission_catalog = catalog
                     for route in business_routes:
 
                         # FastAPI owns a separate executable handler for each included-router context.

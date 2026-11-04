@@ -39,29 +39,17 @@ export default function Phase({ params }) {
                         ]}
                     />
                 </GridSpan>
-                <Stack gap={2}>
-                    <Stack align="start">
-                        <Badge
-                            label={project.status}
-                            variant={
-                                project.status === 'Completed'
-                                    ? 'success'
-                                    : project.status === 'In progress'
-                                      ? 'warning'
-                                      : 'neutral'
-                            }
-                        />
-                    </Stack>
-                    <Stack gap={2}>
-                        <Text type="supporting">Project owner</Text>
-                        <Stack direction="horizontal" align="center" gap={2}>
-                            <Avatar name={project.owner} size="sm" />
-                            <Stack gap={0}>
-                                <Text>{project.owner}</Text>
-                                <Text type="supporting">{project.owner_email}</Text>
-                            </Stack>
-                        </Stack>
-                    </Stack>
+                <Stack align="start">
+                    <Badge
+                        label={project.status}
+                        variant={
+                            project.status === 'Completed'
+                                ? 'success'
+                                : project.status === 'In progress'
+                                  ? 'warning'
+                                  : 'neutral'
+                        }
+                    />
                 </Stack>
             </Grid>
         </Stack>

@@ -10,6 +10,7 @@ from longlink import app as longlink_app
 from pydantic import ValidationError
 from sqlalchemy import event
 from longlink.app import LongLink
+from urllib.parse import quote
 from longlink.logger import ApiAccessFilter
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from longlink.database import audit, migrations
@@ -20,9 +21,9 @@ from longlink.utils.settings import Envs
 
 
 @pytest.mark.usefixtures("solution_source")
-@pytest.mark.parametrize(("environment", "name"), [("development", "Development user"), ("testing", "Testing user")])
+@pytest.mark.parametrize(("environment", "name"), [("development", "Write user"), ("testing", "Testing user")])
 def test_longlink_solution_serves_runtime_routes_and_frontend(monkeypatch: pytest.MonkeyPatch, environment: str, name: str) -> None:
-    """Serve SDK routes and the frontend with each environment's local user."""
+    """Serve SDK routes and the frontend with each environment's request user."""
 
     # Arrange
     monkeypatch.setenv("LONGLINK_ENV", environment)
@@ -34,7 +35,7 @@ def test_longlink_solution_serves_runtime_routes_and_frontend(monkeypatch: pytes
 
     @app.get("/api/me", response_model=str)
     async def current_user(value: Context) -> str:
-        """Return the locally seeded user name."""
+        """Return the request user name."""
 
         # Observe actual engine shutdown after a request initializes the runtime database.
         event.listen(value.database.get_bind(), "engine_disposed", disposed.append)
@@ -42,6 +43,12 @@ def test_longlink_solution_serves_runtime_routes_and_frontend(monkeypatch: pytes
 
     # Act
     client = TestClient(app)
+    if environment == "development":
+        client.cookies.set(
+            "longlink-development-user",
+            quote(json.dumps({"role": "write", "user": {"id": str(UUID(int=3)), "name": name, "email": "write@example.com"}})),
+        )
+
     with client:
         frontend_response = client.get("/")
         frontend_route_response = client.get("/settings", headers={"accept": "text/html"})
@@ -199,7 +206,12 @@ def test_dynamic_view_is_registered_from_jsx_without_sidecar_metadata(solution_s
     assert "text/plain" in response.headers["content-type"]
     assert response.text == content
     assert views_response.status_code == 200
-    assert views_response.json() == {"views": [{"path": "views/issues/[issue]", "route": "/issues/:issue"}], "runtime": runtime, "tabs": []}
+    assert views_response.json() == {
+        "views": [{"path": "views/issues/[issue]", "route": "/issues/:issue"}],
+        "runtime": runtime,
+        "tabs": [],
+        "development": True,
+    }
 
 
 def test_view_catalog_orders_paths_and_redirects_to_first_static_view(solution_source: Path) -> None:
@@ -229,6 +241,7 @@ def test_view_catalog_orders_paths_and_redirects_to_first_static_view(solution_s
         ],
         "runtime": runtime,
         "tabs": [{"route": "/zebra"}],
+        "development": True,
     }
     assert root_response.status_code == 307
     assert root_response.headers["location"] == "/zebra"
@@ -376,6 +389,10 @@ def test_mcp_discovers_late_routes_and_invokes_with_context(solution_source: Pat
 
     app.include_router(routes, prefix="/api")
     client = TestClient(app)
+    client.cookies.set(
+        "longlink-development-user",
+        quote(json.dumps({"role": "write", "user": {"id": str(UUID(int=3)), "name": "Write user", "email": "write@example.com"}})),
+    )
 
     # Discover and invoke operations over the actual MCP endpoint.
     with client:
@@ -412,7 +429,7 @@ def test_mcp_discovers_late_routes_and_invokes_with_context(solution_source: Pat
     assert item_tool["inputSchema"]["properties"]["item_id"]["type"] == "integer"
     assert invocation.json()["result"].get("isError") is not True
     assert json.loads(invocation.json()["result"]["content"][0]["text"]) == {"id": 7}
-    assert context.json()["result"]["structuredContent"] == {"result": "Development user"}
+    assert context.json()["result"]["structuredContent"] == {"result": "Write user"}
     assert shared_path.json()["result"]["structuredContent"] == {"result": 42}
     assert invalid.json()["result"]["isError"] is True
     assert direct.json() == {"id": 7}

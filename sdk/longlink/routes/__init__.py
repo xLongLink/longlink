@@ -29,6 +29,11 @@ def router(manifest: ViewManifest) -> APIRouter:
         """Return the registered SDK runtime views."""
 
         # View handlers are registered from the SDK views directory during app startup.
-        return {"views": manifest.views, "runtime": manifest.runtime, "tabs": manifest.resolved_tabs()}
+        return {
+            "views": manifest.views,
+            "runtime": manifest.runtime,
+            "tabs": manifest.resolved_tabs(),
+            "development": manifest.development,
+        }
 
     return routes

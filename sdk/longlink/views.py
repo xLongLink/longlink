@@ -38,6 +38,7 @@ class ViewManifest:
     views: list[ViewDefinition]
     runtime: ViewRuntime
     tabs: list[ViewTab] | None = None
+    development: bool | None = None
 
     def resolved_tabs(self) -> list[ViewTab]:
         """Resolve explicit navigation or derive top-level static tabs in catalog order."""

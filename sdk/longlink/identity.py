@@ -1,12 +1,23 @@
 import jwt
+from typing import Literal, Annotated
 from datetime import UTC, datetime, timedelta
 from longlink import permissions
-from pydantic import ValidationError
+from pydantic import BaseModel, ConfigDict, BeforeValidator, ValidationError
 from longlink.database.users import User
 
 IDENTITY_TOKEN_ALGORITHM = "HS256"
 IDENTITY_TOKEN_AUDIENCE = "longlink:identity"
 IDENTITY_TOKEN_LIFETIME_SECONDS = 300
+
+
+class DevelopmentIdentity(BaseModel):
+    """Validate a frontend-defined identity accepted only in development."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    # Local profile and Solution role.
+    role: Literal["read", "write"]
+    user: Annotated[User, BeforeValidator(User.model_validate)]
 
 
 def create_identity_token(user: User, secret: str, access: permissions.Access | None = None) -> str:

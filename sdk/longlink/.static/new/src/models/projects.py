@@ -13,10 +13,6 @@ class Project(Model, table=True):
     description: str = Field(max_length=255)
     active_step: int = Field(default=0, ge=0, le=5)
 
-    # Project contact
-    owner: str = Field(max_length=255)
-    owner_email: str = Field(max_length=255)
-
     @property
     def status(self) -> Literal["Planning", "In progress", "Completed"]:
         """Derive the project state from its current construction phase."""
