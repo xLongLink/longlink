@@ -14,6 +14,7 @@ export default function Organization() {
                 tags={membership.tags}
                 activeTag={membership.activeTag}
                 canMaintain={['maintain', 'admin', 'owner'].includes(membership.role)}
+                canAdminister={['admin', 'owner'].includes(membership.role)}
                 presentation="overview"
             />
         </>

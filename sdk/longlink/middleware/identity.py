@@ -36,14 +36,17 @@ class IdentityMiddleware:
         user = None
         if self.identity_secret:
             try:
-                user = identity.identity_token_user(request.headers.get("x-longlink-identity", ""), self.identity_secret)
+                user, access = identity.identity_token_data(request.headers.get("x-longlink-identity", ""), self.identity_secret)
+                if self.require_identity and access is None:
+                    raise jwt.InvalidTokenError("Endpoint permissions are required")
+                scope["longlink.access"] = access
 
             # Invalid assertions remain anonymous until the route's identity policy is enforced.
             except jwt.PyJWTError:
-                pass
+                user = None
 
         # Only Kubernetes liveness and readiness probes are anonymous in production.
-        if self.require_identity and user is None and request.url.path not in {"/health", "/ready"}:
+        if self.require_identity and user is None and not (request.method == "GET" and request.url.path in {"/health", "/ready"}):
             response = JSONResponse({"detail": "Authentication required"}, status_code=401)
             await response(scope, receive, send)
             return

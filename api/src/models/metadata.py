@@ -1,5 +1,6 @@
 from pydantic import Field, BaseModel
 from src.models.types import Image
+from longlink.permissions import Catalog
 
 
 class EnvironmentMetadata(BaseModel):
@@ -22,4 +23,5 @@ class LongLinkMetadata(BaseModel):
     description: str | None = None
 
     # Relationships
+    permissions: Catalog | None = None
     environments: list[EnvironmentMetadata] = Field(default_factory=list)

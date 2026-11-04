@@ -81,7 +81,7 @@ async def authorize(session: auth.Session, request: Annotated[models.Authorizati
 @router.get("/consent", response_model=models.Consent)
 async def consent(
     session: auth.Session, user: auth.CurrentUser, request: Annotated[models.AuthorizationRequest, Query()]
-) -> dict[str, str]:
+) -> dict[str, object]:
     """Describe the registered callback and Solution only after current permission checks."""
 
     return await mcp.consent(session, user, request)

@@ -38,4 +38,6 @@ def test_platform_schema_is_complete_and_isolated_from_solution_metadata() -> No
         "mcp_clients",
         "mcp_codes",
         "mcp_tokens",
+        "permission_catalogs",
+        "solution_member_access",
     }

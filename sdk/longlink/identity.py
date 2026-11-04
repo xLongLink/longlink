@@ -1,5 +1,6 @@
 import jwt
 from datetime import UTC, datetime, timedelta
+from longlink import permissions
 from pydantic import ValidationError
 from longlink.database.users import User
 
@@ -8,7 +9,7 @@ IDENTITY_TOKEN_AUDIENCE = "longlink:identity"
 IDENTITY_TOKEN_LIFETIME_SECONDS = 300
 
 
-def create_identity_token(user: User, secret: str) -> str:
+def create_identity_token(user: User, secret: str, access: permissions.Access | None = None) -> str:
     """Create one short-lived Platform identity assertion for a Solution request."""
 
     # Bind the assertion to one user and a fixed runtime-only token purpose.
@@ -17,6 +18,7 @@ def create_identity_token(user: User, secret: str) -> str:
         {
             "sub": str(user.id),
             "profile": user.model_dump(mode="json", exclude={"id"}),
+            "access": access.model_dump(mode="json") if access is not None else None,
             "aud": IDENTITY_TOKEN_AUDIENCE,
             "iat": issued_at,
             "exp": issued_at + timedelta(seconds=IDENTITY_TOKEN_LIFETIME_SECONDS),
@@ -27,7 +29,7 @@ def create_identity_token(user: User, secret: str) -> str:
     )
 
 
-def identity_token_user(token: str, secret: str) -> User:
+def identity_token_data(token: str, secret: str) -> tuple[User, permissions.Access | None]:
     """Validate the user profile carried by a signed Platform identity assertion."""
 
     # Reject missing runtime credentials before attempting JWT verification.
@@ -54,7 +56,8 @@ def identity_token_user(token: str, secret: str) -> User:
         if user.updated_at.tzinfo is None:
             raise jwt.InvalidTokenError("Profile timestamp must include a timezone")
         user.updated_at = user.updated_at.astimezone(UTC)
-        return user
+        access = permissions.Access.model_validate(data["access"]) if data.get("access") is not None else None
+        return user, access
 
     # Invalid signed profiles share the JWT authentication error boundary.
     except ValidationError as exc:

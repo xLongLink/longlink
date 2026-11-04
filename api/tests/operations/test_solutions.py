@@ -14,6 +14,7 @@ from collections.abc import Callable, Awaitable, AsyncGenerator
 from src.models.types import Image
 from src.models.metadata import LongLinkMetadata
 from src.models.statuses import Status
+from longlink.permissions import Catalog
 from src.database.session import session_scope
 from src.database.services import solutions
 from src.models.operations import OperationKind, OperationStatus
@@ -265,7 +266,7 @@ async def test_solution_creation_applies_user_and_managed_environment_values(
         current = await solutions.access(session, solution.id, owner.id)
         revision = await session.get(Revision, current.desired_revision_id)
         assert revision is not None
-        metadata = LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:updated"))
+        metadata = LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:updated"), permissions=Catalog(endpoints=[]))
         await solutions.deploy(session, current, owner.id, metadata, {"API_KEY": "replacement"}, current=revision)
         await session.commit()
         revision_id = current.desired_revision_id
@@ -590,7 +591,7 @@ async def test_shutdown_keeps_deployment_resumable(users: tuple[User, User, User
         assert result.failed is None
 
     # The replacement image must remain distinct from the initial captured release.
-    metadata = LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:new"))
+    metadata = LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:new"), permissions=Catalog(endpoints=[]))
     async with session_scope() as session:
         current = await solutions.access(session, solution.id, owner.id)
         revision = await session.get(Revision, current.desired_revision_id)
@@ -691,7 +692,7 @@ async def test_failed_update_recovery(users: tuple[User, User, User], monkeypatc
     good_id = initial.target_id
 
     # Replace only release configuration, leaving credentials and successful identity intact.
-    metadata = LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:new"))
+    metadata = LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:new"), permissions=Catalog(endpoints=[]))
     async with session_scope() as session:
         current = await solutions.access(session, solution.id, owner.id)
         revision = await session.get(Revision, current.desired_revision_id)
@@ -832,8 +833,8 @@ async def test_queued_deployments_keep_exact_targets(users: tuple[User, User, Us
     )
     initial = await claim_operation()
     assert initial is not None
-    second = LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:second"))
-    third = LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:third"))
+    second = LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:second"), permissions=Catalog(endpoints=[]))
+    third = LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:third"), permissions=Catalog(endpoints=[]))
 
     # Track revisions requested while earlier rollouts are still active.
     second_id: UUID | None = None

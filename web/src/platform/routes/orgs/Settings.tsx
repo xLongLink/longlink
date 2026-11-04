@@ -164,6 +164,7 @@ export default function OrganizationSettings() {
                                 activeTag={membership.activeTag}
                                 canMaintain={canMaintain}
                                 presentation="settings"
+                                canAdminister={['admin', 'owner'].includes(membership.role)}
                             />
                         ) : (
                             <GeneralSection

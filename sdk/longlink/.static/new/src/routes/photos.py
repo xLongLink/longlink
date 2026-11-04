@@ -1,6 +1,6 @@
 from typing import Literal
-from fastapi import APIRouter
 from pathlib import Path
+from longlink import APIRouter
 from starlette import responses
 
 router = APIRouter(prefix="/api/demo/photos")

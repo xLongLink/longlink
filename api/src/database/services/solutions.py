@@ -18,6 +18,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.models.organizations import MAX_SOLUTIONS
 from src.database.models.solutions import Revision, Solution
 from src.database.models.association import UserOrganization
+from src.database.models.permissions import PermissionCatalog
 from src.database.models.organizations import Organization
 
 
@@ -193,6 +194,10 @@ async def deploy(
 ) -> None:
     """Append a snapshot and queue its exact deployment target."""
 
+    # Require build-time defaults before accepting an image for deployment.
+    if metadata.permissions is None:
+        raise HTTPException(status_code=422, detail="Rebuild the Solution with build-time permission metadata before deploying")
+
     # Keep the registry connection immutable under the caller's Organization lock.
     if current is not None:
         registry_connection_id = current.registry_connection_id
@@ -229,6 +234,10 @@ async def deploy(
     )
     session.add(revision)
     await session.flush()
+
+    # Retain image-defined defaults with the immutable revision, independently of workload readiness.
+    catalog = PermissionCatalog(revision_id=revision.id, catalog=metadata.permissions.model_dump(mode="json"), created_id=user_id)
+    session.add(catalog)
 
     # Publish and enqueue the immutable snapshot in the caller's transaction.
     solution.desired_revision_id = revision.id

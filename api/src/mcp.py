@@ -25,7 +25,9 @@ async def proxyuser(request: Request, solution_id: UUID, session: auth.Session, 
     if is_mcp and authorization is not None:
         scheme, _, credential = authorization.partition(" ")
         user = (
-            await mcp.authenticate(session, credential, solution_id) if scheme.lower() == "bearer" and 0 < len(credential) <= 128 else None
+            await mcp.authenticate(session, credential, solution_id)
+            if scheme.lower() == "bearer" and 0 < len(credential) <= 128
+            else None
         )
 
         # Invalid bearer proof must retain the resource discovery challenge.

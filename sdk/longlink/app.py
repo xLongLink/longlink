@@ -5,16 +5,17 @@ from typing import Any
 from fastapi import FastAPI, APIRouter
 from fastmcp import FastMCP
 from pathlib import Path
-from longlink import views
+from longlink import views, permissions
 from pydantic import FilePath, BaseModel
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from fsspec.spec import AbstractFileSystem
 from collections.abc import Mapping, Callable, Awaitable, AsyncGenerator
-from fastapi.routing import APIRoute
+from fastapi.routing import APIRoute, RouteContext, iter_route_contexts
 from longlink.errors import install_error_handlers
 from longlink.logger import ApiAccessFilter
 from longlink.routes import router
+from longlink.routing import RouteDecorators
 from fastapi.responses import Response, RedirectResponse
 from starlette.routing import Match
 from longlink.constants import ROOT
@@ -59,7 +60,7 @@ def _view_handler(content: bytes) -> Callable[[], Awaitable[Response]]:
     return view
 
 
-class LongLink(FastAPI):
+class LongLink(RouteDecorators, FastAPI):
     """LongLink runtime application with Platform services installed."""
 
     def __init__(self) -> None:
@@ -164,8 +165,21 @@ class LongLink(FastAPI):
         async def lifespan(app: FastAPI) -> AsyncGenerator[Mapping[str, Any]]:
             """Build the completed Solution catalog and close MCP sessions before runtime services."""
 
+            guarded = []
             try:
                 async with runtime_lifespan(app) as state:
+
+                    # Discover registered business routes once and guard before dependency execution.
+                    business_routes = self.permission_routes()
+                    catalog = permissions.discover(business_routes)
+                    self.state.permission_catalog = catalog
+                    for route in business_routes:
+
+                        # FastAPI owns a separate executable handler for each included-router context.
+                        target = route._route_context or route.original_route
+                        original = getattr(target, "app")
+                        guarded.append((target, original))
+                        setattr(target, "app", permissions.Guard(original, route.path or "", catalog))
 
                     # Use a fresh schema, including routes registered after an earlier OpenAPI request.
                     schema = get_openapi(
@@ -199,6 +213,10 @@ class LongLink(FastAPI):
                                 self.router.routes.remove(route)
             finally:
 
+                # Restore route handlers so restarted lifespans never stack guards.
+                for route, original in guarded:
+                    setattr(route, "app", original)
+
                 # Close the active services after application shutdown, including when initialization fails.
                 await self.state.longlink.database.dispose()
 
@@ -206,6 +224,16 @@ class LongLink(FastAPI):
 
         # Serve the embedded frontend as low-priority routes so Solution routes take precedence.
         self.frontend("/", directory=frontend_assets.index.parent)
+        self._runtime_routes = {id(route.original_route) for route in iter_route_contexts(self.routes)}
+
+    def permission_routes(self) -> list[RouteContext]:
+        """Select the same registered business routes during build inspection and startup."""
+
+        # Keep permission discovery independent of OpenAPI and application lifespan execution.
+        routes = [route for route in iter_route_contexts(self.routes) if id(route.original_route) not in self._runtime_routes]
+        if any(not isinstance(route.original_route, APIRoute) for route in routes):
+            raise ValueError("Solution permissions require FastAPI API routes; custom mounts are not supported")
+        return routes
 
     def include_view(self, path: str, *, label: str | None = None, icon: str | None = None) -> None:
         """Include a discovered JSX View as a tab, in registration order, with an optional label and Lucide icon name."""
@@ -244,6 +272,7 @@ class LongLink(FastAPI):
         # Explicit nested tabs need a redirect even when there were no automatic root tabs.
         if needs_root_redirect:
             self.add_api_route("/", self._redirect_root, methods=["GET"], include_in_schema=False)
+            self._runtime_routes.add(id(self.routes[-1]))
 
     async def _redirect_root(self) -> RedirectResponse:
         """Resolve the first tab after Solution navigation registration is complete."""

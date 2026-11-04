@@ -4,7 +4,7 @@ import { Text } from '@astryxdesign/core/Text';
 
 /** Documents plain, clickable, and selectable cards. */
 export default function CardPage() {
-    // Render the card contract alongside each supported interaction mode.
+    // Render the card contract alongside a plain card example.
     return (
         <ViewLayout
             name="Card"

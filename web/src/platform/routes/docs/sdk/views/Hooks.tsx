@@ -1,37 +1,9 @@
 import ViewLayout from './ViewLayout';
 import { Text } from '@astryxdesign/core/Text';
+import { viewHooks } from '@/lib/documentation';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Heading } from '@astryxdesign/core/Heading';
 import { Table, proportional } from '@astryxdesign/core/Table';
-
-// Describe the runtime bindings exposed to Views.
-const hooks = [
-    {
-        name: 'useState(initial)',
-        description:
-            'Returns the current state and a setter. Pass a value or an initializer function; updates can use the previous state.',
-    },
-    {
-        name: 'useEffect(effect, dependencies)',
-        description:
-            'Synchronizes with external systems after rendering. Return a cleanup function to release timers or subscriptions. Include every reactive value used by the effect in its dependencies.',
-    },
-    {
-        name: 'useMemo(factory, dependencies)',
-        description:
-            'Caches a calculated value until its dependencies change. Use it for expensive calculations, not required application state.',
-    },
-    {
-        name: 'useRef(initial)',
-        description:
-            'Returns a stable object with a mutable current property. Changing current does not trigger a render.',
-    },
-    {
-        name: 'useApi(path)',
-        description:
-            'Returns Solution data and an awaitable invalidator scoped to the full request path. The renderer handles initial loading, errors, and retry.',
-    },
-];
 
 /** Documents the hooks exposed by the View runtime. */
 export default function HooksPage() {
@@ -46,7 +18,7 @@ export default function HooksPage() {
                 Hooks
             </Heading>
             <Table
-                data={hooks}
+                data={viewHooks}
                 idKey="name"
                 density="compact"
                 columns={[

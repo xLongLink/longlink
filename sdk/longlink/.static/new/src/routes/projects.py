@@ -1,5 +1,5 @@
-from fastapi import APIRouter, HTTPException
-from longlink import Context
+from fastapi import HTTPException
+from longlink import Context, APIRouter
 from sqlmodel import select
 from collections.abc import Sequence
 from src.models.projects import Project

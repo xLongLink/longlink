@@ -6,7 +6,7 @@ import { Stack } from '@astryxdesign/core/Stack';
 
 /** Documents buttons and grouped button actions in LongLink Views. */
 export default function ButtonsPage() {
-    // Render both button contracts and their authored action examples.
+    // Render both button contracts and the authored action example.
     return (
         <ViewLayout
             name="Button"

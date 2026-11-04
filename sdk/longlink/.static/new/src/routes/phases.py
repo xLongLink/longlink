@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from longlink import APIRouter
 from src.schemas.projects import PhaseRead, DocumentRead
 
 router = APIRouter(prefix="/api/phases")

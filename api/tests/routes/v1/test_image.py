@@ -87,6 +87,7 @@ async def test_inspect_image_returns_declared_metadata(
         "image": "ghcr.io/longlink/dashboard@sha256:test",
         "version": None,
         "description": None,
+        "permissions": None,
         "environments": [{"name": "API_KEY", "description": "API key", "required": True}],
     }
 

@@ -16,6 +16,7 @@ from src.models.roles import OrganizationRoles
 from src.models.types import Image
 from sqlalchemy.engine import URL
 from src.models.metadata import LongLinkMetadata
+from longlink.permissions import Catalog
 from src.database.session import session_scope
 from src.models.solutions import SolutionCreate
 from src.database.services import solutions, organizations
@@ -38,7 +39,7 @@ async def test_create_rejects_tombstoned_organization(users: tuple[User, User, U
 
     # Act and assert
     payload = SolutionCreate(name="Dashboard", image=Image("ghcr.io/longlink/dashboard:latest"))
-    metadata = LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:test"))
+    metadata = LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:test"), permissions=Catalog(endpoints=[]))
     async with session_scope() as session:
         with pytest.raises(HTTPException, match="409: Organization is not available"):
             await solutions.create(
@@ -62,7 +63,7 @@ async def test_create_rejects_missing_organization() -> None:
 
     # Act and assert
     payload = SolutionCreate(name="Dashboard", image=Image("ghcr.io/longlink/dashboard:latest"))
-    metadata = LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:test"))
+    metadata = LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:test"), permissions=Catalog(endpoints=[]))
     async with session_scope() as session:
         with pytest.raises(HTTPException, match="404: Organization not found"):
             await solutions.create(
@@ -98,7 +99,7 @@ async def test_create_refreshes_cached_maintainer_access_before_authorizing(user
 
         # Act and assert the demoted maintainer cannot create a Solution, while the owner still can.
         payload = SolutionCreate(name="Blocked dashboard", image=Image("ghcr.io/longlink/dashboard:latest"))
-        metadata = LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:test"))
+        metadata = LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:test"), permissions=Catalog(endpoints=[]))
         with pytest.raises(HTTPException, match="403: Permission required"):
             await solutions.create(
                 session,
@@ -169,7 +170,7 @@ async def test_revision_ownership_constraints_and_cleanup(monkeypatch: pytest.Mo
             """Release both registry inspections together to exercise real row locking."""
 
             await asyncio.wait_for(barrier.wait(), timeout=5)
-            return LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:updated"))
+            return LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:updated"), permissions=Catalog(endpoints=[]))
 
         monkeypatch.setattr(images, "required_metadata", metadata)
         async with create_client(owner) as client:

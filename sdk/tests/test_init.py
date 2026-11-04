@@ -12,4 +12,14 @@ def test_public_sdk_imports_preserve_runtime_types() -> None:
     assert LongLink is Application
     assert Context is RequestContext
     assert Model is DatabaseModel
-    assert set(longlink.__all__) == {"Audit", "Context", "Environments", "LongLink", "Model", "User", "UserRelationship"}
+    assert set(longlink.__all__) == {
+        "APIRouter",
+        "Audit",
+        "Context",
+        "Environments",
+        "LongLink",
+        "Model",
+        "User",
+        "UserRelationship",
+        "permissions",
+    }
