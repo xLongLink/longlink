@@ -1,6 +1,7 @@
 import { useValue } from './value';
 import { FormField } from './FormField';
 import type { FieldProps } from './types';
+import { compareTime } from '@astryxdesign/core/utils';
 import { TimeInput as AstryxTimeInput, type ISOTimeString } from '@astryxdesign/core/TimeInput';
 
 /** Selects a constrained time using the standard picker. */
@@ -30,7 +31,9 @@ export function TimeInput(
             values={[field.value ?? '']}
             serialize
             error={
-                field.value && ((props.min && field.value < props.min) || (props.max && field.value > props.max))
+                field.value &&
+                ((props.min && compareTime(field.value, props.min) < 0) ||
+                    (props.max && compareTime(field.value, props.max) > 0))
                     ? 'Choose a time within the allowed range.'
                     : undefined
             }

@@ -148,7 +148,7 @@ async def test_create_app_persists_desired_state_and_queues_reconciliation(
 async def test_create_app_enforces_the_per_organization_beta_limit(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient], users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Allow ten solutions per organization and reject the eleventh."""
+    """Allow nine solutions per organization and reject the tenth."""
 
     # Arrange one Organization with image metadata available for every creation request.
     organization = await create_organization(users[0])
@@ -160,16 +160,16 @@ async def test_create_app_enforces_the_per_organization_beta_limit(
             f"/api/v1/organizations/{organization.id}/solutions",
             json={"name": f"dashboard-{number}", "image": "ghcr.io/longlink/dashboard:latest"},
         )
-        for number in range(11)
+        for number in range(10)
     ]
 
     # Assert
-    assert [response.status_code for response in responses] == [204] * 10 + [409]
+    assert [response.status_code for response in responses] == [204] * 9 + [409]
     assert responses[-1].json() == {"detail": "Solution limit reached during the beta. Contact LongLink to request additional solutions."}
     async with session_scope() as session:
         result = await session.scalars(select(Solution).where(col(Solution.organization_id) == organization.id))
         solutions = result.all()
-    assert len(solutions) == 10
+    assert len(solutions) == 9
 
 
 @pytest.mark.parametrize(
@@ -1065,7 +1065,7 @@ async def test_release_inspection_revalidates_concurrent_desired_changes(
             current = await solutions.access(session, solution.id, users[0].id)
             revision = await session.get(Revision, current.desired_revision_id)
             assert revision is not None
-            await solutions._deploy(session, current, users[0].id, metadata, {"OTHER": "concurrent-secret"}, current=revision)
+            await solutions.deploy(session, current, users[0].id, metadata, {"OTHER": "concurrent-secret"}, current=revision)
             replacement_id = current.desired_revision_id
             await session.commit()
         return metadata

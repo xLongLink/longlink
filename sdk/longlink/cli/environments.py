@@ -3,6 +3,7 @@ import json
 import importlib
 from pathlib import Path
 from pydantic import BaseModel
+from pydantic_settings import BaseSettings
 
 
 def read_model(root: Path, environment_import: str) -> list[dict[str, object]]:
@@ -25,10 +26,11 @@ def read_model(root: Path, environment_import: str) -> list[dict[str, object]]:
         raise ValueError(f"Environment model must be a Pydantic model: {environment_import}")
 
     # Emit only runtime requirements, string aliases, and authored descriptions, never defaults.
+    prefix = environment_model.model_config.get("env_prefix", "") if issubclass(environment_model, BaseSettings) else ""
     environments: list[dict[str, object]] = []
     for field_name, field in environment_model.model_fields.items():
         env_entry: dict[str, object] = {
-            "name": field.validation_alias if isinstance(field.validation_alias, str) and field.validation_alias else field_name,
+            "name": field.validation_alias if isinstance(field.validation_alias, str) and field.validation_alias else f"{prefix}{field_name}",
             "required": field.is_required(),
         }
 

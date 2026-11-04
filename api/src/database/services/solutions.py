@@ -10,7 +10,7 @@ from src.models.roles import OrganizationRoles
 from src.models.types import Image
 from src.database.types import attr
 from src.models.metadata import LongLinkMetadata
-from src.models.solutions import SolutionPatch, SolutionCreate, validate_environment_variables
+from src.models.solutions import SolutionCreate, validate_environment_variables
 from src.database.services import operations, registries, organizations
 from src.models.operations import OperationKind
 from src.models.pagination import Pagination
@@ -88,7 +88,7 @@ async def create(
     solution_limit_result = await session.execute(
         select(col(Solution.id))
         .where(col(Solution.organization_id) == organization_id, col(Solution.deleted_at).is_(None))
-        .offset(MAX_SOLUTIONS)
+        .offset(MAX_SOLUTIONS - 1)
         .limit(1)
         .with_for_update()
     )
@@ -105,13 +105,13 @@ async def create(
     await session.flush()
 
     # Creation uses the same immutable release boundary as subsequent updates.
-    await _deploy(session, solution, user_id, metadata, payload.envs, current=None, registry_connection_id=registry_connection_id)
+    await deploy(session, solution, user_id, metadata, payload.envs, current=None, registry_connection_id=registry_connection_id)
 
     return solution
 
 
-async def access(session: AsyncSession, solution_id: UUID, user_id: UUID, *, lock: bool = True) -> Solution:
-    """Lock one active Solution and revalidate maintenance access."""
+async def access(session: AsyncSession, solution_id: UUID, user_id: UUID, *, lock: bool = True, include_deleted: bool = False) -> Solution:
+    """Revalidate maintenance access, including tombstones only for deletion retries."""
 
     # SQLite needs a write reservation because SELECT FOR UPDATE is a no-op there.
     if lock and session.get_bind().dialect.name == "sqlite":
@@ -125,7 +125,6 @@ async def access(session: AsyncSession, solution_id: UUID, user_id: UUID, *, loc
         .join(Organization, col(Organization.id) == col(Solution.organization_id))
         .where(
             col(Solution.id) == solution_id,
-            col(Solution.deleted_at).is_(None),
             col(Organization.deleted_at).is_(None),
             # Authorization is scoped to the requesting Organization member.
             col(UserOrganization.user_id) == user_id,
@@ -133,6 +132,8 @@ async def access(session: AsyncSession, solution_id: UUID, user_id: UUID, *, loc
         # Refresh any identity-map state before a command takes its lock.
         .execution_options(populate_existing=True)
     )
+    if not include_deleted:
+        statement = statement.where(col(Solution.deleted_at).is_(None))
     if lock:
         statement = statement.with_for_update(of=(Solution, UserOrganization))
     result = await session.execute(statement)
@@ -181,17 +182,7 @@ async def inspect_update(
     return revision, metadata
 
 
-async def apply_update(session: AsyncSession, solution: Solution, user_id: UUID, payload: SolutionPatch) -> None:
-    """Inspect and admit an update in the caller's final transaction."""
-
-    # Inspect without command locks, then revalidate the desired state and maintenance access.
-    revision, metadata = await inspect_update(session, solution, user_id, payload.expected_revision_id)
-
-    # Compare and merge only against the current serialized desired state.
-    await _deploy(session, solution, user_id, metadata, payload.envs, current=revision)
-
-
-async def _deploy(
+async def deploy(
     session: AsyncSession,
     solution: Solution,
     user_id: UUID,
@@ -250,20 +241,21 @@ async def _deploy(
 
     # Publish and enqueue the immutable snapshot in the caller's transaction.
     solution.desired_revision_id = revision.id
-    await operations.enqueue(session, kind=OperationKind.solution_deploy, target_id=revision.id)
+    await operations.enqueue(session, kind=OperationKind.solution_deploy, target_id=revision.id, coalesce=False)
 
 
 async def delete(session: AsyncSession, solution_id: UUID, user_id: UUID) -> None:
     """Authorize, tombstone, and queue cleanup for one LongLink Solution."""
 
-    # Use the same locked maintenance boundary as deployment commands.
-    solution = await access(session, solution_id, user_id)
+    # Revalidate current maintenance access while allowing unfinished deletion to resume.
+    solution = await access(session, solution_id, user_id, include_deleted=True)
 
     # Record the tombstone and schedule external cleanup in one transaction.
-    now = datetime.now(UTC)
-    solution.deleted_at = now
-    solution.deleted_id = user_id
-    solution.updated_at = now
-    solution.updated_id = user_id
+    if solution.deleted_at is None:
+        now = datetime.now(UTC)
+        solution.deleted_at = now
+        solution.deleted_id = user_id
+        solution.updated_at = now
+        solution.updated_id = user_id
 
     await operations.enqueue(session, kind=OperationKind.solution_delete, target_id=solution.id)

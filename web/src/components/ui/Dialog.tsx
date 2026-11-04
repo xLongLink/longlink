@@ -17,6 +17,7 @@ export function Dialog(props: {
     onOpenChange: (open: boolean) => void;
     /** Spacing between the title and content; defaults to 3. */
     gap?: Spacing;
+    paddingInline?: Spacing;
 }) {
     const activity = use(DialogActivityContext);
 
@@ -55,7 +56,7 @@ export function Dialog(props: {
                 {props.title && <DialogHeader title={props.title} className="p-4 pe-12" />}
                 <Stack
                     minHeight={0}
-                    paddingInline={4}
+                    paddingInline={props.paddingInline ?? 4}
                     paddingBlockStart={props.title ? (props.gap ?? 3) : 0}
                     isScrollable
                     className="flex-1"

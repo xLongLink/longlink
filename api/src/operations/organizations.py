@@ -4,8 +4,8 @@ from sqlmodel import col
 from src.utils import stripe
 from sqlalchemy import delete as sql_delete
 from sqlalchemy import select, update
+from src.kubernetes import utils, namespace, organizations
 from src.kubernetes import databases as database_resources
-from src.kubernetes import organizations
 from src.operations import databases, registries
 from src.models.statuses import Status
 from src.database.session import session_scope
@@ -86,7 +86,6 @@ async def delete(organization_id: UUID) -> None:
 
                 # Expire all open sessions, including those from interrupted requests.
                 async for hosted in checkouts.auto_paging_iter():
-
                     # Closed checkout sessions no longer accept card-registration attempts.
                     if hosted.status == "open":
                         await connection.v1.checkout.sessions.expire_async(hosted.id)
@@ -95,10 +94,10 @@ async def delete(organization_id: UUID) -> None:
         cluster = Kubernetes(compute.kubeconfig)
 
         # Namespace deletion cascades every Solution Kubernetes resource and waits for all Pods to terminate.
-        await organizations.delete(cluster, organization.id)
+        await utils.delete_namespace(await cluster.api(), namespace.compute(organization.id))
 
         # Delete the dedicated CNPG boundary only after compute Pods have terminated.
-        await database_resources.delete(cluster, organization.id)
+        await utils.delete_namespace(await cluster.api(), namespace.database(organization.id))
         storage = Storage(compute, cluster)
         await storage.delete(organization.id, solution_ids)
 

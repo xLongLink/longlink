@@ -8,6 +8,7 @@ import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Dialog } from '@/components/ui/Dialog';
 import { OpenAI } from '@/components/svg/OpenAI';
+import DeploymentReview from './DeploymentReview';
 import { Button } from '@astryxdesign/core/Button';
 import { useToast } from '@astryxdesign/core/Toast';
 import { Divider } from '@astryxdesign/core/Divider';
@@ -20,7 +21,6 @@ import { Illustration } from '@/components/Illustration';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { Stack, StackItem } from '@astryxdesign/core/Stack';
 import { Table, proportional } from '@astryxdesign/core/Table';
-import DeploymentReview, { type Update } from './DeploymentReview';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import type { OrganizationContext } from '@/platform/layouts/Organization';
 import { Layout, LayoutPanel, LayoutContent } from '@astryxdesign/core/Layout';
@@ -31,7 +31,7 @@ type Solution = z.output<typeof schemas.zOrganizationSolutionSummary>;
 type SolutionAction =
     | { kind: 'create' }
     | { kind: 'tags'; solution: Solution }
-    | ({ kind: 'update' } & Update)
+    | { kind: 'update'; item: { id: string; name: string } }
     | { kind: 'logs'; id: string }
     | { kind: 'permissions'; id: string }
     | { kind: 'mcp'; id: string }
@@ -276,7 +276,6 @@ export default function SolutionManagement({
                                                                                 ? current
                                                                                 : {
                                                                                       kind: 'update',
-                                                                                      key: crypto.randomUUID(),
                                                                                       item: {
                                                                                           id: row.id,
                                                                                           name: row.name,
@@ -349,7 +348,12 @@ export default function SolutionManagement({
                 />
             )}
             {selected?.kind === 'update' && (
-                <DeploymentReview key={selected.key} update={selected} onSuccess={onSuccess} onClose={closeSelected} />
+                <DeploymentReview
+                    key={selected.item.id}
+                    item={selected.item}
+                    onSuccess={onSuccess}
+                    onClose={closeSelected}
+                />
             )}
             {selected?.kind === 'logs' && (
                 <Dialog

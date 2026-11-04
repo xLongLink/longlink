@@ -1,8 +1,12 @@
 import { z } from 'zod';
 import { appearanceSchema } from '@/lib/appearance';
 
+export const viewAppearanceSchema = appearanceSchema.pick({ theme: true, accent: true });
+
+export type ViewAppearance = z.output<typeof viewAppearanceSchema>;
+
 export const appearanceMessageSchema = z
-    .object({ type: z.literal('appearance'), appearance: appearanceSchema })
+    .object({ type: z.literal('appearance'), appearance: viewAppearanceSchema })
     .strict();
 
 export type AppearanceMessage = z.output<typeof appearanceMessageSchema>;

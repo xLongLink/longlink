@@ -37,7 +37,7 @@ async def test_organization_apply_creates_namespace_boundary_resources(monkeypat
     assert spec["egress"][0]["ports"] == [{"protocol": "TCP", "port": 8443}]
 
 
-async def test_organization_delete_waits_for_namespace_termination(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_delete_namespace_waits_for_termination(monkeypatch: pytest.MonkeyPatch) -> None:
     """Delete an Organization Namespace once and wait until it is absent."""
 
     # Arrange
@@ -59,7 +59,8 @@ async def test_organization_delete_waits_for_namespace_termination(monkeypatch: 
     monkeypatch.setattr(kubernetes_utils.Namespace, "wait", wait)
 
     # Act
-    await organizations.delete(kubernetes_client(), UUID("00000000-0000-4000-8000-000000000001"))
+    client = kubernetes_client()
+    await kubernetes_utils.delete_namespace(await client.api(), "longlink-compute-00000000000040008000000000000001")
 
     # Assert
     assert deleted == ["longlink-compute-00000000000040008000000000000001"]

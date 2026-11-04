@@ -1,6 +1,6 @@
-FROM ghcr.io/astral-sh/uv:0.13.6@sha256:af22a52f5eafef3d78e551599d405c02df61919d18028f0cea8eda93bc9986d0 AS uv
+FROM ghcr.io/astral-sh/uv:0.13.7@sha256:96f40d3904aad8d0bd010539001d36c8e2188b981e1334471a90c4a1d93bb490 AS uv
 
-FROM buildpack-deps:bookworm@sha256:88c9154b6b438be20b616e2e74c158cfd79feafc6bcf1d9a3b47874b38c91992 AS builder
+FROM buildpack-deps:bookworm@sha256:db73e309a26ddb362c11c0ee35b3d957c3a8fd2ef6a9d6c2cc76438fae2c0988 AS builder
 
 COPY --from=uv /uv /uvx /usr/local/bin/
 
@@ -30,7 +30,7 @@ COPY . /workspace
 
 RUN --mount=type=cache,target=/root/.cache/uv uv sync --locked --no-dev
 
-FROM debian:bookworm-slim@sha256:7c7b2c966bc9ee8cedfeef67e0e279108992c77681fa595db4a9d65c06ccc587
+FROM debian:bookworm-slim@sha256:99c0b25c46d0214d5a2091092e7908907dcaecd6a962cde0ac700acee222b6f3
 
 # Refresh certificate trust and retain network defaults and timezone data for Solution code.
 RUN apt-get update \

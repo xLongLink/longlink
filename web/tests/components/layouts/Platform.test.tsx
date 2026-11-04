@@ -53,9 +53,7 @@ it.each(['sidebar', 'topbar'] as const)(
 
         // Act
         await withMounted(
-            <AppearanceContext
-                value={{ appearance: { ...defaultAppearance, navigation }, setAppearance: () => undefined }}
-            >
+            <AppearanceContext value={{ appearance: { ...defaultAppearance, navigation } }}>
                 <LinkProvider component={Link}>
                     <Platform
                         action={null}
@@ -87,9 +85,7 @@ it.each(['sidebar', 'topbar'] as const)(
 
         // Act
         await withMounted(
-            <AppearanceContext
-                value={{ appearance: { ...defaultAppearance, navigation }, setAppearance: () => undefined }}
-            >
+            <AppearanceContext value={{ appearance: { ...defaultAppearance, navigation } }}>
                 <LinkProvider component={Link}>
                     <Platform
                         action={<button>Account</button>}

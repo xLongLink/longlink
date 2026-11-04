@@ -165,14 +165,16 @@ class LongLink(RouteDecorators, FastAPI):
         async def lifespan(app: FastAPI) -> AsyncGenerator[Mapping[str, Any]]:
             """Build the completed Solution catalog and close MCP sessions before runtime services."""
 
-            async with runtime_lifespan(app) as state:
-                guarded = []
-                try:
+            guarded = []
+            try:
+                async with runtime_lifespan(app) as state:
+
                     # Discover registered business routes once and guard before dependency execution.
                     business_routes = self.permission_routes()
                     catalog = permissions.discover(business_routes)
                     self.state.permission_catalog = catalog
                     for route in business_routes:
+
                         # FastAPI owns a separate executable handler for each included-router context.
                         target = route._route_context or route.original_route
                         original = getattr(target, "app")
@@ -209,13 +211,14 @@ class LongLink(RouteDecorators, FastAPI):
                             # Remove only these routes so later lifespans cannot reuse a closed transport.
                             for route in mcp_app.routes:
                                 self.router.routes.remove(route)
-                finally:
-                    # Restore route handlers so restarted lifespans never stack guards.
-                    for route, original in guarded:
-                        setattr(route, "app", original)
+            finally:
 
-                    # Close the active services after MCP, including when initialization fails.
-                    await self.state.longlink.database.dispose()
+                # Restore route handlers so restarted lifespans never stack guards.
+                for route, original in guarded:
+                    setattr(route, "app", original)
+
+                # Close the active services after application shutdown, including when initialization fails.
+                await self.state.longlink.database.dispose()
 
         self.router.lifespan_context = lifespan
 

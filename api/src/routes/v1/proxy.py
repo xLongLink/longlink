@@ -8,6 +8,7 @@ from fastapi import Depends, Request, Response, APIRouter, HTTPException
 from datetime import UTC
 from longlink import identity
 from contextlib import AsyncExitStack
+from urllib.parse import quote
 from src.kubernetes import namespace
 from collections.abc import AsyncIterator, AsyncGenerator
 from fastapi.responses import JSONResponse, StreamingResponse
@@ -97,15 +98,16 @@ async def proxy_solution_request(
                         if value is not None:
                             headers[name] = value
 
-                query = request.url.query
+                # Quote the decoded path so filename characters cannot become URL delimiters.
+                suffix = quote(path, safe="/").encode("ascii")
 
-                # Build the upstream request with the original method, path, and query.
-                upstream_request = client.build_request(
-                    request.method,
-                    f"{registry.gateway_url.rstrip('/')}/{path}{'?' + query if query else ''}",
-                    content=request.stream(),
-                    headers=headers,
-                )
+                # Preserve raw query bytes while keeping the trusted gateway authority fixed.
+                query = request.scope.get("query_string", b"")
+                target = b"/" + suffix + (b"?" + query if query else b"")
+                url = httpx2.URL(registry.gateway_url).copy_with(raw_path=target)
+
+                # Build the upstream request with the original method and encoded request target.
+                upstream_request = client.build_request(request.method, url, content=request.stream(), headers=headers)
                 upstream = await client.send(upstream_request, stream=True)
                 runtime.push_async_callback(upstream.aclose)
 
@@ -173,11 +175,23 @@ async def proxy_solution_request(
                 response_headers[name] = value
         return JSONResponse(status_code=upstream.status_code, content={"detail": detail}, headers=response_headers)
 
-    # Reject active documents before they can execute under the authenticated platform origin.
+    # Preserve browser file behavior without forwarding control characters or unknown dispositions.
+    disposition = upstream.headers.get("content-disposition")
+    if (
+        disposition is not None
+        and disposition.isascii()
+        and disposition.isprintable()
+        and disposition.partition(";")[0].strip().lower() in {"inline", "attachment"}
+    ):
+        response_headers["content-disposition"] = disposition
+
+    # Keep active previews blocked and serve explicit active-document attachments only as inert bytes.
     if response_content_type is not None and any(
         value.partition(";")[0].strip() in BLOCKED_PROXY_CONTENT_TYPES for value in response_content_type.lower().split(",")
     ):
-        raise HTTPException(status_code=502, detail="Solution proxy returned an unsupported content type")
+        if response_headers.get("content-disposition", "").partition(";")[0].strip().lower() != "attachment":
+            raise HTTPException(status_code=502, detail="Solution proxy returned an unsupported content type")
+        response_content_type = "application/octet-stream"
 
     # Preserve content type alongside the explicitly allowed MCP transport metadata.
     if response_content_type is not None:

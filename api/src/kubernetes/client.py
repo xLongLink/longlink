@@ -1,10 +1,8 @@
 import kr8s
 import asyncio
-from uuid import UUID
 from typing import cast
 from contextlib import AsyncExitStack, asynccontextmanager
 from kr8s.asyncio import Api
-from src.kubernetes import namespace
 from collections.abc import AsyncGenerator
 from kr8s.asyncio.objects import Service, Namespace
 
@@ -62,16 +60,6 @@ class Kubernetes:
         if not isinstance(uid, str) or not uid:
             raise RuntimeError("Kubernetes cluster identity is unavailable")
         return uid
-
-    @asynccontextmanager
-    async def forward_database(self, organization_id: UUID) -> AsyncGenerator[int, None]:
-        """Own the Organization database tunnel for one database workflow."""
-
-        # Refresh the selector before kr8s resolves a ready Pod for the Service.
-        service = Service("database-rw", namespace=namespace.database(organization_id), api=await self.api())
-        await service.refresh()
-        async with service.portforward(5432, local_port="auto") as port:
-            yield port
 
     @asynccontextmanager
     async def forward_storage(self) -> AsyncGenerator[int, None]:

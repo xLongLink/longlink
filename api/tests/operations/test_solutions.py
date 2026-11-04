@@ -188,17 +188,17 @@ async def test_solution_creation_applies_user_and_managed_environment_values(
             calls.append("schema")
             return "solution"
 
-    class FakeKubernetes(DatabaseKubernetes):
+    class Service(solution_operations.database_resources.Service):
         """Record the database tunnel scope during deployment."""
 
         @asynccontextmanager
-        async def forward_database(self, organization_id: UUID) -> AsyncGenerator[int]:
+        async def portforward(self, port: int, *, local_port: str) -> AsyncGenerator[int]:
             """Release the database tunnel after schema provisioning."""
 
             calls.append("open")
             try:
-                async with super().forward_database(organization_id) as port:
-                    yield port
+                async with super().portforward(port, local_port=local_port) as forwarded_port:
+                    yield forwarded_port
             finally:
                 calls.append("close")
 
@@ -221,7 +221,8 @@ async def test_solution_creation_applies_user_and_managed_environment_values(
         calls.append("workload")
 
     monkeypatch.setattr(solution_operations.database_resources.postgres, "Postgres", FakePostgres)
-    monkeypatch.setattr(solution_operations, "Kubernetes", FakeKubernetes)
+    monkeypatch.setattr(solution_operations.database_resources, "Service", Service)
+    monkeypatch.setattr(solution_operations, "Kubernetes", DatabaseKubernetes)
     monkeypatch.setattr(solution_operations.solution_resources, "apply", apply)
     monkeypatch.setattr(solution_operations, "Storage", Storage)
 
@@ -266,7 +267,7 @@ async def test_solution_creation_applies_user_and_managed_environment_values(
         revision = await session.get(Revision, current.desired_revision_id)
         assert revision is not None
         metadata = LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:updated"), permissions=Catalog(endpoints=[]))
-        await solutions._deploy(session, current, owner.id, metadata, {"API_KEY": "replacement"}, current=revision)
+        await solutions.deploy(session, current, owner.id, metadata, {"API_KEY": "replacement"}, current=revision)
         await session.commit()
         revision_id = current.desired_revision_id
     await solution_operations.deploy(revision_id)
@@ -595,7 +596,7 @@ async def test_shutdown_keeps_deployment_resumable(users: tuple[User, User, User
         current = await solutions.access(session, solution.id, owner.id)
         revision = await session.get(Revision, current.desired_revision_id)
         assert revision is not None
-        await solutions._deploy(session, current, owner.id, metadata, {"KEY": "new"}, current=revision)
+        await solutions.deploy(session, current, owner.id, metadata, {"KEY": "new"}, current=revision)
         await session.commit()
         desired_id = current.desired_revision_id
     update = await claim_operation()
@@ -696,7 +697,7 @@ async def test_failed_update_recovery(users: tuple[User, User, User], monkeypatc
         current = await solutions.access(session, solution.id, owner.id)
         revision = await session.get(Revision, current.desired_revision_id)
         assert revision is not None
-        await solutions._deploy(session, current, owner.id, metadata, {"KEY": "new"}, current=revision)
+        await solutions.deploy(session, current, owner.id, metadata, {"KEY": "new"}, current=revision)
         await session.commit()
         desired_id = current.desired_revision_id
     failing = True
@@ -869,7 +870,7 @@ async def test_queued_deployments_keep_exact_targets(users: tuple[User, User, Us
                 current = await solutions.access(session, solution.id, users[0].id)
                 revision = await session.get(Revision, current.desired_revision_id)
                 assert revision is not None
-                await solutions._deploy(session, current, users[0].id, second, {"KEY": "second"}, current=revision)
+                await solutions.deploy(session, current, users[0].id, second, {"KEY": "second"}, current=revision)
                 await session.commit()
                 second_id = current.desired_revision_id
         elif third_id is None:
@@ -878,7 +879,7 @@ async def test_queued_deployments_keep_exact_targets(users: tuple[User, User, Us
                 current = await solutions.access(session, solution.id, users[0].id)
                 revision = await session.get(Revision, current.desired_revision_id)
                 assert revision is not None
-                await solutions._deploy(session, current, users[0].id, third, {"KEY": "third"}, current=revision)
+                await solutions.deploy(session, current, users[0].id, third, {"KEY": "third"}, current=revision)
                 await session.commit()
                 third_id = current.desired_revision_id
 

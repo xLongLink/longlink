@@ -111,6 +111,7 @@ async def create(session: AsyncSession, organization_id: UUID, payload: Organiza
         select(OrganizationInvitation)
         .where(col(OrganizationInvitation.organization_id) == organization_id, col(OrganizationInvitation.email) == payload.email)
         .with_for_update()
+        .execution_options(populate_existing=True)
     )
     invitation = await session.scalar(invitation_statement)
 
@@ -120,6 +121,10 @@ async def create(session: AsyncSession, organization_id: UUID, payload: Organiza
         session.add(invitation)
         await session.flush()
         return
+
+    # Replacing a grant requires the same authority as revoking its existing role.
+    if not roles.atleast(membership.role, invitation.role):
+        raise HTTPException(status_code=403, detail="Invitation role permissions required")
 
     invitation.role = payload.role
     invitation.created_at = datetime.now(UTC)

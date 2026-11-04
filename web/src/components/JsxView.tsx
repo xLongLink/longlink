@@ -10,7 +10,7 @@ import { useEffect, useRef, useState } from 'react';
 import { ViewBackdrop } from '@/components/ViewBackdrop';
 import { useAppearance } from '@/lib/hooks/use-appearance';
 import { PageError, PageLoading } from '@/components/Utils';
-import { commandSchema, parametersSchema, iconDataSchema, type ViewData } from '@/views/protocol';
+import { commandSchema, parametersSchema, iconDataSchema, type ViewData, type ViewAppearance } from '@/views/protocol';
 
 const BOOTSTRAP_TIMEOUT_MS = 10_000;
 
@@ -36,8 +36,12 @@ export function JsxView({
     runtime: ViewRuntime;
 }) {
     const frame = useRef<HTMLIFrameElement>(null);
-    const { appearance } = useAppearance();
-    const currentAppearance = useRef(appearance);
+
+    const {
+        appearance: { theme, accent },
+    } = useAppearance();
+
+    const currentAppearance = useRef<ViewAppearance>({ theme, accent });
 
     const appearancePort = useRef<MessagePort | null>(null);
     const navigate = useNavigate();
@@ -55,9 +59,9 @@ export function JsxView({
 
     // Update the mounted View without replacing its document or losing authored state.
     useEffect(() => {
-        currentAppearance.current = appearance;
-        appearancePort.current?.postMessage({ type: 'appearance', appearance });
-    }, [appearance]);
+        currentAppearance.current = { theme, accent };
+        appearancePort.current?.postMessage({ type: 'appearance', appearance: currentAppearance.current });
+    }, [theme, accent]);
 
     const { data: kernel, error: runtimeError } = useQuery({
         queryKey: ['view-runtime', requestBaseUrl, runtime],
