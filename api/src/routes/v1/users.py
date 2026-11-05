@@ -53,19 +53,7 @@ async def patch_me(session: auth.Session, payload: UserUpdate, user: auth.Curren
     """Update the authenticated user's details."""
 
     # Persist the authoritative profile; Solutions refresh it on the user's next request.
-    if payload.name is not None:
-        user.name = payload.name
-    if payload.avatar is not None:
-        user.avatar = payload.avatar
-
-    # Keep appearance changes personal and independent of Organization settings.
-    if payload.theme is not None:
-        user.theme = payload.theme
-    if payload.accent is not None:
-        user.accent = payload.accent
-    if payload.navigation is not None:
-        user.navigation = payload.navigation
-
+    user.sqlmodel_update(payload.model_dump(exclude_none=True))
     await session.commit()
 
     return user

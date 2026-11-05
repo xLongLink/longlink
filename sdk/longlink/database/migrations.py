@@ -1,5 +1,5 @@
 import sys
-import importlib.util
+import importlib
 from alembic import command
 from pathlib import Path
 from alembic.config import Config
@@ -25,30 +25,17 @@ def load_solution_models() -> None:
 
     root = Path.cwd()
 
-    # Load each discovered model module exactly once.
+    # Resolve Solution packages through Python's importer while discovering their models.
     model_path = root / "src" / "models"
-    for py_file in sorted(py_file for py_file in model_path.rglob("*.py") if not py_file.name.startswith("__")):
-        module_name = ".".join(py_file.with_suffix("").relative_to(root).parts)
-
-        # Skip modules already loaded by the Solution.
-        if module_name in sys.modules:
-            continue
-
-        # Build an import spec from the discovered Python source file.
-        spec = importlib.util.spec_from_file_location(module_name, py_file)
-        if spec is None or spec.loader is None:
-            raise RuntimeError(f"Could not load Solution model: {py_file}")
-
-        # Execute the Solution model module to populate database metadata.
-        module = importlib.util.module_from_spec(spec)
-        sys.modules[module_name] = module
-        try:
-            spec.loader.exec_module(module)
-        except BaseException:
-
-            # Failed imports must not leave a partially initialized model module cached.
-            del sys.modules[module_name]
-            raise
+    previous_path = sys.path.copy()
+    sys.path.insert(0, str(root))
+    try:
+        for py_file in sorted(py_file for py_file in model_path.rglob("*.py") if not py_file.name.startswith("__")):
+            module_name = ".".join(py_file.with_suffix("").relative_to(root).parts)
+            importlib.import_module(module_name)
+    finally:
+        # Restore the caller's import paths even if a Solution model fails to load.
+        sys.path[:] = previous_path
 
 
 def make_migrations() -> bool:
@@ -97,6 +84,5 @@ def apply_migrations() -> None:
 
 
 if __name__ == "__main__":
-
     # Kubernetes runs this module directly before starting a Solution workload.
     apply_migrations()

@@ -181,11 +181,6 @@ export function ArticleFooter({
     const previousPage = paths[currentPage - 1];
     const nextPage = paths[currentPage + 1];
 
-    /** Scrolls to the start of the newly selected article after navigation. */
-    const scrollToArticleTop = () => {
-        void requestAnimationFrame(() => window.scrollTo({ top: 0 }));
-    };
-
     // Keep unmodified arrow shortcuts available outside native text-entry controls.
     const handleKeyDown = useEffectEvent((event: KeyboardEvent) => {
         if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) {
@@ -208,10 +203,9 @@ export function ArticleFooter({
             return;
         }
 
-        // Match button navigation and reset the reading position.
+        // Match button navigation and let the router restore the reading position.
         event.preventDefault();
         void navigate(`${destination}/`);
-        scrollToArticleTop();
     });
 
     // Scope the document listener to articles that belong to a reading collection.
@@ -237,7 +231,6 @@ export function ArticleFooter({
                         icon={<ArrowLeft aria-hidden size={16} />}
                         isDisabled={previousPage === undefined}
                         label="Previous"
-                        onClick={scrollToArticleTop}
                     />
                     <Button
                         aria-keyshortcuts="ArrowRight"
@@ -245,7 +238,6 @@ export function ArticleFooter({
                         href={nextPage ? `${nextPage}/` : undefined}
                         isDisabled={nextPage === undefined}
                         label="Next"
-                        onClick={scrollToArticleTop}
                     />
                 </Stack>
             ) : null}

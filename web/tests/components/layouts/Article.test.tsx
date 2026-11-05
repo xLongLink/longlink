@@ -1,10 +1,10 @@
 // @vitest-environment happy-dom
+import { it, expect, vi } from 'vitest';
 import { act, type ReactNode } from 'react';
 import { LinkProvider } from '@astryxdesign/core/Link';
 import { renderStatic, withMounted } from '../../render';
 import { ArticleFooter } from '@/components/layouts/Article';
 import { Link as RouterLink, useLocation } from 'react-router';
-import { afterEach, beforeEach, it, expect, vi } from 'vitest';
 
 /** Keeps the footer mounted across real collection and unrelated route transitions. */
 function ArticleNavigation({ children }: { children?: ReactNode }) {
@@ -27,15 +27,6 @@ async function pressArrow(target: EventTarget, key: string, modifiers: KeyboardE
 
     return event;
 }
-
-beforeEach(() => {
-    // Scrolling is an external layout effect; keep routing and animation frames real.
-    vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
-});
-
-afterEach(() => {
-    vi.restoreAllMocks();
-});
 
 it('does not offer unrelated collection navigation for an unlisted article', () => {
     // Act
@@ -71,7 +62,6 @@ it.each([
             // Assert
             expect(boundaryEvent.defaultPrevented).toBe(false);
             expect(output.querySelector('output')?.textContent).toBe(path);
-            expect(window.scrollTo).not.toHaveBeenCalled();
 
             // Act
             const availableEvent = await pressArrow(document, availableKey);
@@ -79,13 +69,12 @@ it.each([
             // Assert
             expect(availableEvent.defaultPrevented).toBe(true);
             await vi.waitFor(() => expect(output.querySelector('output')?.textContent).toBe('/docs/middle/'));
-            await vi.waitFor(() => expect(window.scrollTo).toHaveBeenCalledWith({ top: 0 }));
         },
         path
     );
 });
 
-it('uses the same routed destinations and scroll reset for buttons and keyboard shortcuts', async () => {
+it('uses the same routed destinations for buttons and keyboard shortcuts', async () => {
     // Act
     await withMounted(
         <ArticleNavigation />,
@@ -96,22 +85,18 @@ it('uses the same routed destinations and scroll reset for buttons and keyboard 
 
             // Assert
             await vi.waitFor(() => expect(output.querySelector('output')?.textContent).toBe('/docs/last/'));
-            await vi.waitFor(() => expect(window.scrollTo).toHaveBeenCalledTimes(1));
-            expect(window.scrollTo).toHaveBeenLastCalledWith({ top: 0 });
 
             // Act
             await pressArrow(document, 'ArrowLeft');
 
             // Assert
             await vi.waitFor(() => expect(output.querySelector('output')?.textContent).toBe('/docs/middle/'));
-            await vi.waitFor(() => expect(window.scrollTo).toHaveBeenCalledTimes(2));
 
             // Act
             await pressArrow(document, 'ArrowRight');
 
             // Assert
             await vi.waitFor(() => expect(output.querySelector('output')?.textContent).toBe('/docs/last/'));
-            await vi.waitFor(() => expect(window.scrollTo).toHaveBeenCalledTimes(3));
 
             // Act
             const previous = output.querySelector<HTMLAnchorElement>('a[aria-keyshortcuts="ArrowLeft"]');
@@ -120,8 +105,6 @@ it('uses the same routed destinations and scroll reset for buttons and keyboard 
 
             // Assert
             await vi.waitFor(() => expect(output.querySelector('output')?.textContent).toBe('/docs/middle/'));
-            await vi.waitFor(() => expect(window.scrollTo).toHaveBeenCalledTimes(4));
-            expect(window.scrollTo).toHaveBeenLastCalledWith({ top: 0 });
         },
         '/docs/middle/'
     );
@@ -142,14 +125,12 @@ it.each([
             // Assert
             expect(event.defaultPrevented).toBe(false);
             expect(output.querySelector('output')?.textContent).toBe('/docs/middle/');
-            expect(window.scrollTo).not.toHaveBeenCalled();
 
             // Act
             await pressArrow(document, 'ArrowRight');
 
             // Assert
             await vi.waitFor(() => expect(output.querySelector('output')?.textContent).toBe('/docs/last/'));
-            await vi.waitFor(() => expect(window.scrollTo).toHaveBeenCalledWith({ top: 0 }));
         },
         '/docs/middle/'
     );
@@ -169,14 +150,12 @@ it('respects an arrow event already handled by a child control', async () => {
             // Assert
             expect(event.defaultPrevented).toBe(true);
             expect(output.querySelector('output')?.textContent).toBe('/docs/middle/');
-            expect(window.scrollTo).not.toHaveBeenCalled();
 
             // Act
             await pressArrow(document, 'ArrowRight');
 
             // Assert
             await vi.waitFor(() => expect(output.querySelector('output')?.textContent).toBe('/docs/last/'));
-            await vi.waitFor(() => expect(window.scrollTo).toHaveBeenCalledWith({ top: 0 }));
         },
         '/docs/middle/'
     );
@@ -226,14 +205,12 @@ it.each([
             // Assert
             expect(event.defaultPrevented).toBe(false);
             expect(output.querySelector('output')?.textContent).toBe('/docs/middle/');
-            expect(window.scrollTo).not.toHaveBeenCalled();
 
             // Act
             await pressArrow(document, 'ArrowRight');
 
             // Assert
             await vi.waitFor(() => expect(output.querySelector('output')?.textContent).toBe('/docs/last/'));
-            await vi.waitFor(() => expect(window.scrollTo).toHaveBeenCalledWith({ top: 0 }));
         },
         '/docs/middle/'
     );
@@ -246,8 +223,6 @@ it('stops handling collection shortcuts after navigation to an unlisted article'
         async (output) => {
             await pressArrow(document, 'ArrowRight');
             await vi.waitFor(() => expect(output.querySelector('output')?.textContent).toBe('/docs/last/'));
-            await vi.waitFor(() => expect(window.scrollTo).toHaveBeenCalledWith({ top: 0 }));
-            vi.mocked(window.scrollTo).mockClear();
             await act(async () => output.querySelector<HTMLAnchorElement>('a[href="/outside/"]')?.click());
 
             // Assert
@@ -262,7 +237,6 @@ it('stops handling collection shortcuts after navigation to an unlisted article'
             expect(left.defaultPrevented).toBe(false);
             expect(right.defaultPrevented).toBe(false);
             expect(output.querySelector('output')?.textContent).toBe('/outside/');
-            expect(window.scrollTo).not.toHaveBeenCalled();
         },
         '/docs/middle/'
     );
@@ -275,16 +249,13 @@ it('releases the document shortcut listener when the footer unmounts', async () 
         async (output) => {
             await pressArrow(document, 'ArrowRight');
             await vi.waitFor(() => expect(output.querySelector('output')?.textContent).toBe('/docs/last/'));
-            await vi.waitFor(() => expect(window.scrollTo).toHaveBeenCalledWith({ top: 0 }));
         },
         '/docs/middle/'
     );
-    vi.mocked(window.scrollTo).mockClear();
 
     // Act
     const event = await pressArrow(document, 'ArrowLeft');
 
     // Assert
     expect(event.defaultPrevented).toBe(false);
-    expect(window.scrollTo).not.toHaveBeenCalled();
 });
