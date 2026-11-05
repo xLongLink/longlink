@@ -43,7 +43,7 @@ export default function Home() {
                 >
                     <img
                         alt=""
-                        className="absolute inset-0 size-full -scale-x-100 bg-black object-contain"
+                        className="absolute inset-0 size-full -scale-x-100 bg-black object-cover"
                         fetchPriority="high"
                         height={941}
                         src="/images/landing-earth.png"
