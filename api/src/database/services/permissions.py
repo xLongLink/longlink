@@ -44,12 +44,6 @@ async def catalog(session: AsyncSession, solution: Solution) -> permissions.Cata
     return permissions.Catalog.model_validate(record.catalog) if record is not None else None
 
 
-async def configuration(session: AsyncSession, solution: Solution, user_id: UUID) -> SolutionMemberAccess | None:
-    """Read a member's current assignment without caching permission decisions."""
-
-    return await session.get(SolutionMemberAccess, (user_id, solution.id), populate_existing=True)
-
-
 def decisions(definition: permissions.Catalog, access: SolutionMemberAccess | None) -> list[models.EndpointDecision]:
     """Resolve endpoint access solely from the member's SDK-defined role."""
 
@@ -71,7 +65,7 @@ async def member(session: AsyncSession, solution: Solution, user_id: UUID) -> mo
     definition = await catalog(session, solution)
     if definition is None or solution.deployed_revision_id is None:
         raise HTTPException(status_code=409, detail="Rebuild and deploy the Solution to load endpoint permissions")
-    access = await configuration(session, solution, user_id)
+    access = await session.get(SolutionMemberAccess, (user_id, solution.id), populate_existing=True)
     return models.MemberAccess(
         role=access.role if access else None, revision_id=solution.deployed_revision_id, endpoints=decisions(definition, access)
     )
@@ -88,7 +82,7 @@ async def update_member(session: AsyncSession, solution: Solution, member_id: UU
         raise HTTPException(status_code=422, detail="Unknown Solution role")
 
     # The parent lock serializes both existing assignments and first-time inserts.
-    access = await configuration(session, solution, member_id)
+    access = await session.get(SolutionMemberAccess, (member_id, solution.id), populate_existing=True)
     if access is None:
         access = SolutionMemberAccess(
             role=payload.role, user_id=member_id, solution_id=solution.id, organization_id=solution.organization_id, created_id=actor_id
@@ -102,7 +96,7 @@ async def runtime_access(session: AsyncSession, solution: Solution, user_id: UUI
     """Resolve the user's current endpoint permissions for browser and MCP requests."""
 
     definition = await catalog(session, solution)
-    access = await configuration(session, solution, user_id)
+    access = await session.get(SolutionMemberAccess, (user_id, solution.id), populate_existing=True)
     if definition is None or access is None or access.role is None or solution.deployed_revision_id is None:
         raise HTTPException(status_code=403, detail="Solution access required")
 
