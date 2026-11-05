@@ -5,7 +5,7 @@
     "": {
       "name": "web",
       "dependencies": {
-        "@astryxdesign/core": "0.7.5",
+        "@astryxdesign/core": "0.7.8",
         "@dicebear/core": "^10.7.0",
         "@dicebear/styles": "^10.6.0",
         "@fontsource/figtree": "^5.3.0",
@@ -27,7 +27,7 @@
         "zod": "^4.6.7",
       },
       "devDependencies": {
-        "@astryxdesign/cli": "0.7.5",
+        "@astryxdesign/cli": "0.7.8",
         "@hey-api/openapi-ts": "0.99.0",
         "@oxlint/plugins": "1.90.0",
         "@react-router/dev": "8.5.1",
@@ -50,9 +50,9 @@
     "vite": "npm:@voidzero-dev/vite-plus-core@1.4.0",
   },
   "packages": {
-    "@astryxdesign/cli": ["@astryxdesign/cli@0.7.5", "", { "dependencies": { "@babel/core": "7.29.7", "@babel/parser": "7.29.8", "@babel/plugin-transform-typescript": "7.29.7", "@babel/types": "7.29.8", "@stylexjs/babel-plugin": "^0.19.0", "ast-types": "0.16.3", "commander": "^12.1.0", "ignore": "^7.0.5", "jiti": "^2.7.0", "jscodeshift": "^17.3.0", "node-diff3": "3.2.1", "postcss": "^8.5.23", "postcss-selector-parser": "^7.1.6", "recast": "0.23.21", "zod": "^4.4.3" }, "peerDependencies": { "@astryxdesign/charts": "*", "@astryxdesign/core": "*", "@astryxdesign/lab": "*", "@astryxdesign/theme-neutral": "*" }, "optionalPeers": ["@astryxdesign/charts", "@astryxdesign/core", "@astryxdesign/lab", "@astryxdesign/theme-neutral"], "bin": { "cli": "./clients/cli/bin/astryx.mjs", "astryx": "./clients/cli/bin/astryx.mjs" } }, "sha512-CwQsLhXqQXUC7YkGQF0Uj14MEUvHDJE4nkydqSAxr1sE/kY8z+NqiaJUqS36Rqzch0Rru0y7AM7e6tKiTE0+cw=="],
+    "@astryxdesign/cli": ["@astryxdesign/cli@0.7.8", "", { "dependencies": { "@babel/core": "7.29.7", "@babel/parser": "7.29.8", "@babel/plugin-transform-typescript": "7.29.7", "@babel/types": "7.29.8", "@stylexjs/babel-plugin": "^0.19.0", "ast-types": "0.16.3", "commander": "^12.1.0", "ignore": "^7.0.5", "jiti": "^2.7.0", "jscodeshift": "^17.3.0", "node-diff3": "3.2.1", "postcss": "^8.5.23", "postcss-selector-parser": "^7.1.6", "recast": "0.23.21", "zod": "^4.4.3" }, "peerDependencies": { "@astryxdesign/charts": "*", "@astryxdesign/core": "*", "@astryxdesign/lab": "*", "@astryxdesign/theme-neutral": "*" }, "optionalPeers": ["@astryxdesign/charts", "@astryxdesign/core", "@astryxdesign/lab", "@astryxdesign/theme-neutral"], "bin": { "cli": "./clients/cli/bin/astryx.mjs", "astryx": "./clients/cli/bin/astryx.mjs" } }, "sha512-/SL1KtqGxC/LBBAMC/cRQHKMj9KvTMEdFEz4+OxaSvxNThfkAn+qHJzKz1NNz1XSLUVDoO9rwFEwrTMSGhBrOw=="],
 
-    "@astryxdesign/core": ["@astryxdesign/core@0.7.5", "", { "dependencies": { "intl-messageformat": "^11.2.9" }, "peerDependencies": { "@stylexjs/stylex": "^0.19.0", "react": ">=19.0.0", "react-dom": ">=19.0.0" } }, "sha512-nqFT7xiPiz5FYr0aUjyPVsf5AJwcKqnHTw1tFjy25uUvbvHvAVpcG3W84euq1w2C2soE2ZZRqRJ/OjbVKPbFBw=="],
+    "@astryxdesign/core": ["@astryxdesign/core@0.7.8", "", { "dependencies": { "intl-messageformat": "^11.2.9" }, "peerDependencies": { "@stylexjs/stylex": "^0.19.0", "react": ">=19.0.0", "react-dom": ">=19.0.0" } }, "sha512-p5uVgBMoMo6uyieIBWJXEGMH5y1XG0HTZm9AKXXZuA/xMAO0xyF+BvQrr5sYc849On7jlQdbSojGpAPZDN0J6w=="],
 
     "@babel/code-frame": ["@babel/code-frame@7.29.7", "", { "dependencies": { "@babel/helper-validator-identifier": "^7.29.7", "js-tokens": "^4.0.0", "picocolors": "^1.1.1" } }, "sha512-Aup7aUOfpbAUg2ROOJN6Iw5f9DMBlzu0mIkm/malLQFN/YQgO48wCj0Kxa3sEHJvPVFg7siR+qRInwXd2qhQKw=="],
 

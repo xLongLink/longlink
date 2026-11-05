@@ -138,9 +138,9 @@ it('expands landing navigation only at the top, including an initially scrolled 
     });
 });
 
-it('keeps non-landing navigation constrained without subscribing to scroll', async () => {
+it('keeps non-landing navigation constrained without reading the scroll position', async () => {
     // Arrange
-    const subscribe = vi.spyOn(window, 'addEventListener');
+    const scrollPosition = vi.spyOn(window, 'scrollY', 'get');
 
     await withMounted(
         <Navbar />,
@@ -152,6 +152,7 @@ it('keeps non-landing navigation constrained without subscribing to scroll', asy
             expect(content.style.maxWidth).toBe('1000px');
 
             // Act
+            scrollPosition.mockClear();
             await act(async () => {
                 window.scrollTo(0, 100);
                 window.dispatchEvent(new Event('scroll'));
@@ -159,7 +160,7 @@ it('keeps non-landing navigation constrained without subscribing to scroll', asy
 
             // Assert
             expect(content.style.maxWidth).toBe('1000px');
-            expect(subscribe.mock.calls.filter(([type]) => type === 'scroll')).toEqual([]);
+            expect(scrollPosition).not.toHaveBeenCalled();
         },
         '/docs/'
     );
