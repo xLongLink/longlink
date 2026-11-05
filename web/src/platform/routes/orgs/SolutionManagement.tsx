@@ -204,16 +204,6 @@ export default function SolutionManagement({
                             ...(presentation === 'settings'
                                 ? [
                                       {
-                                          key: 'tag_ids',
-                                          header: 'Tags',
-                                          width: proportional(0.5),
-                                          renderCell: (row: Solution) =>
-                                              tags
-                                                  .filter((tag) => row.tag_ids?.includes(tag.id))
-                                                  .map((tag) => tag.name)
-                                                  .join(', ') || '—',
-                                      },
-                                      {
                                           key: 'deployed_version',
                                           header: 'Version',
                                           align: 'end' as const,
