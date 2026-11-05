@@ -7,12 +7,19 @@ export default function LinkPage() {
     return (
         <ViewLayout
             name="Link"
-            introduction={'Navigates within the Solution or opens an external HTTP(S) URL in a new tab.'}
+            introduction={
+                'Navigates within the Solution or opens an external HTTP(S) URL in a new tab. Set download to a filename to save a scoped Solution attachment without navigating or showing a preview. An empty string uses attachment. Downloads retain scoped authentication and authorization; external URLs are not supported for downloads.'
+            }
             properties={[
                 {
                     name: 'to',
                     type: 'string',
                     description: 'Link destination.',
+                },
+                {
+                    name: 'download',
+                    type: 'string',
+                    description: 'Download filename for a scoped Solution attachment instead of navigation.',
                 },
                 {
                     name: 'children',
@@ -24,7 +31,14 @@ export default function LinkPage() {
                 title: 'Link',
                 preview: <LinkExample />,
                 code: `function Example() {
-  return <Link to="/orders">Orders</Link>;
+  return (
+    <Stack>
+      <Link to="/orders">Orders</Link>
+      <Link to="/api/documents/sample" download="sample-document.txt">
+        sample-document.txt
+      </Link>
+    </Stack>
+  );
 }`,
             }}
         />

@@ -32,7 +32,7 @@ def upgrade() -> None:
         sa.Column("updated_id", sa.Uuid(), nullable=False),
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("title", sqlmodel.sql.sqltypes.AutoString(length=255), nullable=False),
-        sa.Column("description", sqlmodel.sql.sqltypes.AutoString(length=5000), nullable=False),
+        sa.Column("attachment", sqlmodel.sql.sqltypes.AutoString(length=256), nullable=True),
         sa.ForeignKeyConstraint(["created_id"], ["users.id"]),
         sa.ForeignKeyConstraint(["updated_id"], ["users.id"]),
         sa.PrimaryKeyConstraint("id"),

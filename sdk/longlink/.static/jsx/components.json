@@ -1042,12 +1042,17 @@
         {
             "name": "Link",
             "category": "Action",
-            "introduction": "Navigates within the Solution or opens an external HTTP(S) URL in a new tab.",
+            "introduction": "Navigates within the Solution, opens an external HTTP(S) URL in a new tab, or downloads a scoped Solution attachment without navigating.",
             "properties": [
                 {
                     "name": "to",
                     "type": "string",
                     "description": "Link destination."
+                },
+                {
+                    "name": "download",
+                    "type": "string",
+                    "description": "Downloads a scoped Solution attachment with this filename instead of navigating. An empty string uses attachment."
                 },
                 {
                     "name": "children",
