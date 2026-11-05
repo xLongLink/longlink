@@ -508,6 +508,7 @@ function InvitationsSection({ base, role }: { base: string; role: OrganizationCo
             {/* Match organization creation with a centered form and a desktop-only illustration. */}
             <Dialog
                 isOpen={invitationAttempt !== null}
+                paddingInline={0}
                 onOpenChange={(open) => {
                     if (!open) closeInvitation();
                 }}

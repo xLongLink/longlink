@@ -116,7 +116,15 @@ export default function DeploymentReview({ item, onSuccess, onClose }: Deploymen
                     <Stepper
                         variant="wizard"
                         height="min(560px, calc(100dvh - var(--spacing-10) * 4))"
-                        onCancel={onClose}
+                        backVariant="ghost"
+                        finalAction={
+                            <Button
+                                type="submit"
+                                label="Update solution"
+                                variant="primary"
+                                isDisabled={missingRequired || !hasChanges}
+                            />
+                        }
                     >
                         <Step label="Image">
                             <Stack gap={4}>
@@ -216,12 +224,6 @@ export default function DeploymentReview({ item, onSuccess, onClose }: Deploymen
                                     );
                                 })}
                             </Stack>
-                            <Button
-                                type="submit"
-                                label="Update solution"
-                                variant="primary"
-                                isDisabled={missingRequired || !hasChanges}
-                            />
                         </Step>
                     </Stepper>
                 </Form>

@@ -42,6 +42,7 @@ type StepperProps = {
     /** Runs a step-specific action after validation; false prevents advancement. */
     next?: (step: number) => { label: string; action: () => void | boolean | Promise<void | boolean> } | undefined;
     onCancel?: () => void;
+    finalAction?: ReactNode;
     backVariant?: 'secondary' | 'ghost';
 };
 
@@ -215,8 +216,10 @@ function Wizard(props: StepperProps) {
                         />
                     )}
                 </Stack>
-                {activeStep < steps.length - 1 && (
+                {activeStep < steps.length - 1 ? (
                     <Button label={next?.label ?? 'Next'} variant="primary" onClick={advance} disabled={advancing} />
+                ) : (
+                    props.finalAction
                 )}
             </Stack>
             {error && <Banner status="error" title={error} icon={<Icon icon="error" size="md" />} />}
