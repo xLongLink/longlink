@@ -87,6 +87,8 @@ class MCPMiddleware:
         path = scope.get("path", "")
         public = path in {
             "/.well-known/oauth-authorization-server",
+            "/.well-known/oauth-protected-resource/api/v1/mcp",
+            "/api/v1/mcp",
             "/api/v1/mcp/register",
             "/api/v1/mcp/token",
             "/api/v1/mcp/revoke",

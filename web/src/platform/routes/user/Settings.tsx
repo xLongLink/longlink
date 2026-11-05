@@ -1,15 +1,16 @@
 import type { z } from 'zod';
+import McpSettings from './Mcp';
 import { useState } from 'react';
 import { useLocation } from 'react-router';
 import AppearanceSettings from './Appearance';
 import { Text } from '@astryxdesign/core/Text';
 import { Avatar } from '@/components/ui/Avatar';
 import { Stack } from '@astryxdesign/core/Stack';
-import { UserRound, Building2 } from 'lucide-react';
 import { Divider } from '@astryxdesign/core/Divider';
 import { Heading } from '@astryxdesign/core/Heading';
 import { ApiBoundary } from '@/components/ApiBoundary';
 import { TextInput } from '@astryxdesign/core/TextInput';
+import { Plug, UserRound, Building2 } from 'lucide-react';
 import { PageContainer } from '@/components/PageContainer';
 import OrganizationManagement from './OrganizationManagement';
 import { Layout, LayoutPanel } from '@astryxdesign/core/Layout';
@@ -35,8 +36,8 @@ function SettingsPage({ user }: { user: z.output<typeof schemas.zCurrentUser> })
     const userUpdate = useUpdateUser();
     const location = useLocation();
 
-    // Unknown fragments select Account without loading organization memberships.
-    const section = location.hash === '#organizations' ? 'organizations' : 'account';
+    // Unknown fragments select Account without loading the other settings sections.
+    const section = location.hash === '#organizations' ? 'organizations' : location.hash === '#mcp' ? 'mcp' : 'account';
 
     /** Saves the validated account name and refreshes the profile. */
     async function saveAccount() {
@@ -87,6 +88,12 @@ function SettingsPage({ user }: { user: z.output<typeof schemas.zCurrentUser> })
                                     isSelected={section === 'organizations'}
                                     label="Organizations"
                                 />
+                                <SideNavItem
+                                    href={`${location.pathname}${location.search}#mcp`}
+                                    icon={<Plug className="size-4" aria-hidden="true" />}
+                                    isSelected={section === 'mcp'}
+                                    label="MCP connections"
+                                />
                             </SideNavSection>
                         </SideNav>
                     </LayoutPanel>
@@ -96,6 +103,10 @@ function SettingsPage({ user }: { user: z.output<typeof schemas.zCurrentUser> })
                     {section === 'organizations' ? (
                         <ApiBoundary>
                             <OrganizationManagement presentation="settings" />
+                        </ApiBoundary>
+                    ) : section === 'mcp' ? (
+                        <ApiBoundary>
+                            <McpSettings />
                         </ApiBoundary>
                     ) : (
                         <Stack gap={8}>

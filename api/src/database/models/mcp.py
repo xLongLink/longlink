@@ -26,7 +26,8 @@ class MCPCode(PlatformModel, table=True):
     hash: str = Field(primary_key=True, max_length=64)
     user_id: UUID = Field(foreign_key="users.id")
     client_id: UUID = Field(foreign_key="mcp_clients.id")
-    solution_id: UUID = Field(foreign_key="solutions.id")
+    solution_id: UUID | None = Field(default=None, foreign_key="solutions.id")
+    organization_ids: list[str] = Field(default_factory=list, sa_column=Column(JSON, nullable=False))
 
     # Authorization binding
     resource: str = Field(max_length=2048)
@@ -48,7 +49,8 @@ class MCPToken(PlatformModel, table=True):
     hash: str = Field(unique=True, max_length=64)
     user_id: UUID = Field(foreign_key="users.id", index=True)
     client_id: UUID = Field(foreign_key="mcp_clients.id")
-    solution_id: UUID = Field(foreign_key="solutions.id")
+    solution_id: UUID | None = Field(default=None, foreign_key="solutions.id")
+    organization_ids: list[str] = Field(default_factory=list, sa_column=Column(JSON, nullable=False))
 
     # Authorization binding
     resource: str = Field(max_length=2048)

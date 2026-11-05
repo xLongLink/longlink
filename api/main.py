@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import contextlib
+from src import gateway
 from fastapi import FastAPI, Request, Response
 from pathlib import Path
 from src.mcp import MCPMiddleware
@@ -15,6 +16,7 @@ from longlink.logger import ApiAccessFilter
 from src.environments import env
 from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
 from src.utils.cookies import AUTH_COOKIE, OAUTH_STATE_COOKIE, REGISTRATION_COOKIE, PASSWORD_RESET_COOKIE
+from starlette.routing import Route
 from longlink.middleware import FrontendMiddleware
 from src.database.session import dispose_engine
 
@@ -30,6 +32,8 @@ async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:
     async with contextlib.AsyncExitStack() as stack:
         stack.push_async_callback(dispose_engine)
         stack.push_async_callback(client.dispose_clients)
+        _app.state.mcp_gateway = gateway.create_manager()
+        await stack.enter_async_context(_app.state.mcp_gateway.run())
         tasks: tuple[asyncio.Task[None], ...] = ()
 
         try:
@@ -115,6 +119,7 @@ async def redirect_public_hostname(request: Request, call_next: Callable[[Reques
 # Register the versioned Platform API after constructing the application.
 app.include_router(v1.router)
 app.include_router(mcp.router)
+app.router.routes.append(Route("/api/v1/mcp", gateway.Gateway(), methods=["GET", "POST", "DELETE"]))
 static_dir = Path(__file__).resolve().parent / "src" / ".static" / "web"
 if static_dir.exists():
 
