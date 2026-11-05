@@ -21,7 +21,13 @@ export default function Tasks() {
                         renderCell: (task) => (
                             <Stack gap={0}>
                                 <Text>{task.title}</Text>
-                                <Text type="supporting">{task.description}</Text>
+                                {task.attachment ? (
+                                    <Link to={`/api/tasks/${task.id}/attachment`} download={task.attachment}>
+                                        {task.attachment}
+                                    </Link>
+                                ) : (
+                                    <Text color="secondary">No attachment</Text>
+                                )}
                             </Stack>
                         ),
                     },
@@ -50,7 +56,7 @@ export default function Tasks() {
                 {isOpen && (
                     <Form action="/api/tasks" onSuccess={() => setIsOpen(false)}>
                         <TextInput name="title" label="Title" maxLength={255} required />
-                        <TextArea name="description" label="Description" maxLength={5000} required />
+                        <FileInput name="attachment" label="Attachment" maxSize={10485760} required />
                         <Stack direction="horizontal" justify="end" gap={2}>
                             <Button label="Cancel" onClick={() => setIsOpen(false)} />
                             <Button label="Create task" type="submit" variant="primary" />

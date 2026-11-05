@@ -8,4 +8,4 @@ class Task(Audit, table=True):
     # Task fields
     id: int | None = Field(default=None, primary_key=True)
     title: str = Field(max_length=255)
-    description: str = Field(max_length=5000)
+    attachment: str | None = Field(default=None, max_length=256)

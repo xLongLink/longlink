@@ -5125,7 +5125,12 @@ declare function Icon(props: {
 }): React.JSX.Element;
 
 /** @category Action */
-declare function Link(props: { to: string; children?: ViewNode }): React.JSX.Element;
+declare function Link(props: {
+    to: string;
+    /** Downloads a scoped Solution attachment with this filename instead of navigating. */
+    download?: string;
+    children?: ViewNode;
+}): React.JSX.Element;
 
 /** @category Display */
 declare function Currency(props: {

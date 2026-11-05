@@ -1,15 +1,5 @@
 from longlink import User
-from pydantic import Field, BaseModel, ConfigDict
-
-
-class TaskCreate(BaseModel):
-    """Validate a task submitted through the creation form."""
-
-    model_config = ConfigDict(str_strip_whitespace=True)
-
-    # Task fields
-    title: str = Field(min_length=1, max_length=255)
-    description: str = Field(min_length=1, max_length=5000)
+from pydantic import BaseModel, ConfigDict
 
 
 class TaskRead(BaseModel):
@@ -20,7 +10,7 @@ class TaskRead(BaseModel):
     # Task fields
     id: int
     title: str
-    description: str
+    attachment: str | None
 
     # Audit fields
     created_by: User
