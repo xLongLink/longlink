@@ -15,7 +15,6 @@ from src.database.models.computes import ComputeRegistry
 from src.database.models.solutions import Solution
 from src.database.models.operations import Operation
 from src.database.models.association import UserOrganization
-from src.database.models.permissions import SolutionMemberAccess
 from src.database.models.organizations import Organization
 
 
@@ -158,10 +157,5 @@ async def create_solution(
         if catalog is not None:
             assert solution.desired_revision_id is not None
             solution.deployed_revision_id = solution.desired_revision_id
-            session.add(
-                SolutionMemberAccess(
-                    user_id=organization.created_id, solution_id=solution.id, organization_id=organization.id, role="write"
-                )
-            )
         await session.commit()
         return solution

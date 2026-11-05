@@ -18,7 +18,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.models.organizations import MAX_SOLUTIONS
 from src.database.models.solutions import Revision, Solution
 from src.database.models.association import UserOrganization
-from src.database.models.permissions import PermissionCatalog
+from src.database.models.permissions import PermissionCatalog, SolutionMemberAccess
 from src.database.models.organizations import Organization
 
 
@@ -103,6 +103,19 @@ async def create(
     solution = Solution(organization_id=organization_id, name=payload.name, description=payload.description, secrets={})
     session.add(solution)
     await session.flush()
+
+    # Default Organization administrators and owners to write access for the new Solution.
+    administrators = await session.scalars(
+        select(UserOrganization).where(
+            col(UserOrganization.organization_id) == organization_id,
+            col(UserOrganization.role).in_((OrganizationRoles.admin, OrganizationRoles.owner)),
+        )
+    )
+    for administrator in administrators.all():
+        access = SolutionMemberAccess(
+            role="write", user_id=administrator.user_id, solution_id=solution.id, organization_id=organization_id, created_id=user_id
+        )
+        session.add(access)
 
     # Creation uses the same immutable release boundary as subsequent updates.
     await deploy(session, solution, user_id, metadata, payload.envs, current=None, registry_connection_id=registry_connection_id)
