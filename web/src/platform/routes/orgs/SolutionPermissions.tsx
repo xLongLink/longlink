@@ -3,6 +3,7 @@ import { api } from '@/lib/api';
 import { useState } from 'react';
 import { useApi } from '@/lib/hooks/use-api';
 import { Text } from '@astryxdesign/core/Text';
+import { Avatar } from '@/components/ui/Avatar';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
 import { apiQueryOptions } from '@/lib/react-query';
@@ -112,9 +113,12 @@ function MemberPermissions({
                         header: 'Member',
                         width: proportional(2),
                         renderCell: (member) => (
-                            <Stack gap={0}>
-                                <Text>{member.name}</Text>
-                                <Text type="supporting">{member.email}</Text>
+                            <Stack direction="horizontal" gap={3} align="center">
+                                <Avatar name={member.name} src={member.avatar} seed={member.id} />
+                                <Stack gap={0}>
+                                    <Text>{member.name}</Text>
+                                    <Text type="supporting">{member.email}</Text>
+                                </Stack>
                             </Stack>
                         ),
                     },
