@@ -1,3 +1,6 @@
+import io
+import json
+import zipfile
 from src import auth
 from uuid import UUID
 from typing import Annotated
@@ -57,6 +60,54 @@ class OAuthRoute(APIRoute):
 router = APIRouter(prefix="/mcp", tags=["mcp"], route_class=OAuthRoute, responses={400: {"model": models.OAuthFailure}})
 
 
+@router.get(
+    "/plugin",
+    response_model=None,
+    response_class=Response,
+    responses={200: {"content": {"application/zip": {"schema": {"type": "string", "format": "binary"}}}}},
+)
+async def download_plugin(_user: auth.CurrentUser) -> Response:
+    """Download a credential-free plugin for the shared LongLink gateway."""
+
+    # Keep the package reusable; users select Organizations during OAuth consent.
+    manifest = {
+        "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+        "name": "longlink",
+        "version": "1.0.0",
+        "description": "Use your installed LongLink applications with your current permissions.",
+        "extensions": {
+            "com.openai": {
+                "interface": {
+                    "displayName": "LongLink",
+                    "shortDescription": "LongLink application tools",
+                    "longDescription": "Connect your LongLink applications across explicitly approved Organizations.",
+                    "developerName": "LongLink",
+                    "category": "Productivity",
+                }
+            }
+        },
+    }
+    connection = {
+        "$schema": "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json",
+        "mcpServers": {"longlink": {"type": "streamable-http", "url": mcp.resource()}},
+    }
+
+    # Package only public connection metadata, never a user's identity or credentials.
+    content = io.BytesIO()
+    with zipfile.ZipFile(content, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+        archive.writestr("plugin.json", json.dumps(manifest, indent=2) + "\n")
+        archive.writestr("mcp.json", json.dumps(connection, indent=2) + "\n")
+    return Response(
+        content.getvalue(),
+        media_type="application/zip",
+        headers={
+            "Content-Disposition": 'attachment; filename="longlink.zip"',
+            "Cache-Control": "no-store",
+            "X-Content-Type-Options": "nosniff",
+        },
+    )
+
+
 @router.post("/register", status_code=201, response_model=models.RegisteredClient)
 async def register(session: auth.Session, payload: models.ClientRegistration) -> dict[str, object]:
     """Register immutable callbacks for a public client; registration grants no access."""
@@ -78,7 +129,7 @@ async def authorize(session: auth.Session, request: Annotated[models.Authorizati
     return RedirectResponse(f"{env.PUBLIC_URL}/mcp/authorize?{query}", status_code=302)
 
 
-@router.get("/consent", response_model=models.Consent)
+@router.get("/consent", response_model=models.Consent, response_model_exclude_unset=True)
 async def consent(
     session: auth.Session, user: auth.CurrentUser, request: Annotated[models.AuthorizationRequest, Query()]
 ) -> dict[str, object]:

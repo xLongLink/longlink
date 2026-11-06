@@ -41,14 +41,20 @@ def digest(credential: str) -> str:
     return hashlib.sha256(credential.encode()).hexdigest()
 
 
-def resource(solution_id: UUID) -> str:
-    """Return the exact audience for one Solution's MCP credential."""
+def resource(solution_id: UUID | None = None) -> str:
+    """Return the exact audience for a gateway or Solution MCP credential."""
 
+    if solution_id is None:
+        return f"{env.PUBLIC_URL}/api/v1/mcp"
     return f"{env.PUBLIC_URL}/api/v1/solutions/{solution_id}/proxy/mcp"
 
 
-def resource_id(value: str) -> UUID:
+def resource_id(value: str) -> UUID | None:
     """Reject foreign audiences, alternate paths, queries, and noncanonical identifiers."""
+
+    # The shared gateway is a distinct audience, never an alias for Solution grants.
+    if value == resource():
+        return None
 
     # Extract only a candidate; compare the complete resource before accepting it.
     try:
@@ -76,7 +82,7 @@ def redirect(uri: str, values: dict[str, str]) -> str:
     return urlunsplit((parsed.scheme, parsed.netloc, parsed.path, query, ""))
 
 
-async def validate_request(session: AsyncSession, request: mcp.AuthorizationRequest) -> tuple[MCPClient, UUID]:
+async def validate_request(session: AsyncSession, request: mcp.AuthorizationRequest) -> tuple[MCPClient, UUID | None]:
     """Require an immutable registered callback and an exact local Solution audience."""
 
     # Keep callback lookup and validation together before permitting any navigation.
@@ -141,10 +147,32 @@ async def authenticate(session: AsyncSession, credential: str, solution_id: UUID
     return await token.credential_user(session, grant.user_id, grant.fingerprint)
 
 
+async def authenticate_gateway(session: AsyncSession, credential: str) -> tuple[User, MCPToken] | None:
+    """Admit only a live credential explicitly issued for the shared gateway."""
+
+    # Never accept a Solution credential or a browser session as a gateway grant.
+    grant = await session.scalar(select(MCPToken).where(col(MCPToken.hash) == digest(credential)))
+    if grant is None or grant.solution_id is not None or grant.resource != resource() or grant.expires_at <= datetime.now(UTC):
+        return None
+    user = await token.credential_user(session, grant.user_id, grant.fingerprint)
+    if user is None:
+        return None
+    return user, grant
+
+
 async def consent(session: AsyncSession, user: User, request: mcp.AuthorizationRequest) -> dict[str, object]:
     """Describe the actual client and Solution only after current permission checks."""
 
     client, solution_id = await validate_request(session, request)
+    if solution_id is None:
+        memberships = await organizations.memberships(session, user.id)
+        return {
+            "client_name": client.name,
+            "redirect_uri": request.redirect_uri,
+            "solution_name": None,
+            "organizations": [{"id": membership.organization.id, "name": membership.organization.name} for membership in memberships],
+            "expires_in": ACCESS_LIFETIME_SECONDS,
+        }
     solution = await _permitted_solution(session, user, solution_id)
     return {
         "client_name": client.name,
@@ -159,9 +187,20 @@ async def approve(session: AsyncSession, user: User, payload: mcp.Approval) -> s
 
     # Revalidate both the client callback and user permissions at the approval boundary.
     client, solution_id = await validate_request(session, payload)
-    await _permitted_solution(session, user, solution_id)
+    if solution_id is not None:
+        await _permitted_solution(session, user, solution_id)
     if not payload.approve:
         return redirect(payload.redirect_uri, {"error": "access_denied", "state": payload.state})
+
+    # Only explicit Organization selections authorize present and future installed Solutions.
+    organization_ids = sorted({str(identifier) for identifier in payload.organization_ids})
+    if solution_id is None:
+        if not organization_ids:
+            raise HTTPException(status_code=422, detail="Select at least one Organization")
+        for identifier in organization_ids:
+            await organizations.require_membership(session, user.id, UUID(identifier))
+    elif organization_ids:
+        raise HTTPException(status_code=422, detail="Organization selections require the LongLink gateway")
 
     # Expire stale proof and store only the hash of the new code in the same transaction.
     await session.execute(delete(MCPCode).where(col(MCPCode.expires_at) <= datetime.now(UTC)))
@@ -172,6 +211,7 @@ async def approve(session: AsyncSession, user: User, payload: mcp.Approval) -> s
         user_id=user.id,
         client_id=client.id,
         solution_id=solution_id,
+        organization_ids=organization_ids,
         resource=payload.resource,
         redirect_uri=payload.redirect_uri,
         # Bind the short-lived proof to PKCE and the user's current password.
@@ -212,7 +252,11 @@ async def exchange(session: AsyncSession, payload: mcp.TokenExchange) -> dict[st
 
     # Recheck access because membership can change after browser approval.
     try:
-        await _permitted_solution(session, user, solution_id)
+        if solution_id is not None:
+            await _permitted_solution(session, user, solution_id)
+        else:
+            for identifier in proof.organization_ids:
+                await organizations.require_membership(session, user.id, UUID(identifier))
     except HTTPException as exc:
         # Only revoked access becomes an invalid grant; infrastructure errors propagate.
         if exc.status_code != 403:
@@ -234,6 +278,7 @@ async def exchange(session: AsyncSession, payload: mcp.TokenExchange) -> dict[st
         user_id=user.id,
         client_id=payload.client_id,
         solution_id=solution_id,
+        organization_ids=proof.organization_ids,
         resource=payload.resource,
         fingerprint=proof.fingerprint,
         expires_at=datetime.now(UTC) + timedelta(seconds=ACCESS_LIFETIME_SECONDS),
@@ -250,15 +295,25 @@ async def revoke(session: AsyncSession, credential: str, client_id: UUID) -> Non
     await session.execute(delete(MCPToken).where(col(MCPToken.hash) == digest(credential), col(MCPToken.client_id) == client_id))
 
 
-async def tokens(session: AsyncSession, user_id: UUID) -> Sequence[MCPToken]:
+async def tokens(session: AsyncSession, user_id: UUID) -> Sequence[dict[str, object]]:
     """Load only the current user's unexpired public revocation handles."""
 
-    result = await session.scalars(
-        select(MCPToken)
-        .options(load_only(attr(MCPToken.id), attr(MCPToken.client_id), attr(MCPToken.expires_at), attr(MCPToken.solution_id)))
+    result = await session.execute(
+        select(MCPToken.id, MCPToken.client_id, MCPToken.expires_at, MCPToken.solution_id, MCPToken.organization_ids, MCPClient.name)
+        .join(MCPClient, col(MCPClient.id) == col(MCPToken.client_id))
         .where(col(MCPToken.user_id) == user_id, col(MCPToken.expires_at) > datetime.now(UTC))
     )
-    return result.all()
+    return [
+        {
+            "id": identifier,
+            "client_id": client_id,
+            "expires_at": expires_at,
+            "solution_id": solution_id,
+            "organization_ids": organization_ids,
+            "client_name": name,
+        }
+        for identifier, client_id, expires_at, solution_id, organization_ids, name in result.all()
+    ]
 
 
 async def delete_token(session: AsyncSession, user_id: UUID, token_id: UUID) -> None:

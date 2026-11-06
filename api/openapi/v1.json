@@ -425,6 +425,67 @@
         }
       }
     },
+    "/api/v1/mcp/plugin": {
+      "get": {
+        "tags": [
+          "mcp"
+        ],
+        "summary": "Download Plugin",
+        "description": "Download a credential-free plugin for the shared LongLink gateway.",
+        "operationId": "download_plugin_api_v1_mcp_plugin_get",
+        "parameters": [
+          {
+            "name": "longlink_auth",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Longlink Auth"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/zip": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OAuthFailure"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/mcp/register": {
       "post": {
         "tags": [
@@ -4311,6 +4372,38 @@
           }
         }
       }
+    },
+    "/.well-known/oauth-protected-resource/api/v1/mcp": {
+      "get": {
+        "tags": [
+          "mcp"
+        ],
+        "summary": "Gateway Metadata",
+        "description": "Publish the gateway audience independently of any caller-supplied Solution.",
+        "operationId": "gateway_metadata__well_known_oauth_protected_resource_api_v1_mcp_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResourceMetadata"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OAuthFailure"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -4465,6 +4558,15 @@
           "approve": {
             "type": "boolean",
             "title": "Approve"
+          },
+          "organization_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "maxItems": 100,
+            "title": "Organization Ids"
           }
         },
         "type": "object",
@@ -4694,6 +4796,11 @@
       },
       "Consent": {
         "properties": {
+          "expires_in": {
+            "type": "integer",
+            "title": "Expires In",
+            "default": 2592000
+          },
           "client_name": {
             "type": "string",
             "title": "Client Name"
@@ -4702,14 +4809,23 @@
             "type": "string",
             "title": "Redirect Uri"
           },
-          "solution_name": {
-            "type": "string",
-            "title": "Solution Name"
+          "organizations": {
+            "items": {
+              "$ref": "#/components/schemas/OrganizationChoice"
+            },
+            "type": "array",
+            "title": "Organizations"
           },
-          "expires_in": {
-            "type": "integer",
-            "title": "Expires In",
-            "default": 2592000
+          "solution_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Solution Name"
           }
         },
         "type": "object",
@@ -4719,7 +4835,7 @@
           "solution_name"
         ],
         "title": "Consent",
-        "description": "Describe the actual client callback and selected Solution to the user."
+        "description": "Describe the actual client callback and available access to the user."
       },
       "CurrentUser": {
         "properties": {
@@ -5175,6 +5291,26 @@
         ],
         "title": "OrganizationByteUsage",
         "description": "Report measured resource bytes against an Organization's configured capacity."
+      },
+      "OrganizationChoice": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "OrganizationChoice",
+        "description": "Identify an Organization available for explicit gateway consent."
       },
       "OrganizationCreate": {
         "properties": {
@@ -6478,9 +6614,28 @@
             "title": "Expires At"
           },
           "solution_id": {
-            "type": "string",
-            "format": "uuid",
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Solution Id"
+          },
+          "client_name": {
+            "type": "string",
+            "title": "Client Name"
+          },
+          "organization_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "title": "Organization Ids"
           }
         },
         "type": "object",
@@ -6488,7 +6643,9 @@
           "id",
           "client_id",
           "expires_at",
-          "solution_id"
+          "solution_id",
+          "client_name",
+          "organization_ids"
         ],
         "title": "TokenSummary",
         "description": "Expose revocation handles without access credentials or hashes."

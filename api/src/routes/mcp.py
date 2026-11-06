@@ -31,3 +31,10 @@ async def resource_metadata(solution_id: UUID) -> dict[str, str | list[str]]:
     """Expose authentication discovery without revealing whether a Solution exists."""
 
     return {"resource": mcp.resource(solution_id), "authorization_servers": [env.PUBLIC_URL], "scopes_supported": ["mcp"]}
+
+
+@router.get("/.well-known/oauth-protected-resource/api/v1/mcp", response_model=models.ResourceMetadata)
+async def gateway_metadata() -> dict[str, str | list[str]]:
+    """Publish the gateway audience independently of any caller-supplied Solution."""
+
+    return {"resource": mcp.resource(), "authorization_servers": [env.PUBLIC_URL], "scopes_supported": ["mcp"]}

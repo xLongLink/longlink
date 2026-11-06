@@ -81,16 +81,26 @@ class Approval(AuthorizationRequest):
 
     # Consent decision
     approve: bool
+    organization_ids: list[UUID] = Field(default_factory=list, max_length=100)
+
+
+class OrganizationChoice(BaseModel):
+    """Identify an Organization available for explicit gateway consent."""
+
+    # Organization identity
+    id: UUID
+    name: str
 
 
 class Consent(BaseModel):
-    """Describe the actual client callback and selected Solution to the user."""
+    """Describe the actual client callback and available access to the user."""
 
     # Approval context
+    expires_in: int = 30 * 24 * 60 * 60
     client_name: str
     redirect_uri: str
-    solution_name: str
-    expires_in: int = 30 * 24 * 60 * 60
+    organizations: list[OrganizationChoice] = Field(default_factory=list)
+    solution_name: str | None
 
 
 class AuthorizationRedirect(BaseModel):
@@ -147,7 +157,9 @@ class TokenSummary(BaseModel):
     id: UUID
     client_id: UUID
     expires_at: datetime
-    solution_id: UUID
+    solution_id: UUID | None
+    client_name: str
+    organization_ids: list[UUID]
 
 
 class ResourceMetadata(BaseModel):

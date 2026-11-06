@@ -52,7 +52,8 @@ export const zApproval = z.object({
     response_type: z.literal('code'),
     code_challenge: z.string().regex(/^[A-Za-z0-9_-]{43}$/),
     code_challenge_method: z.literal('S256'),
-    approve: z.boolean()
+    approve: z.boolean(),
+    organization_ids: z.array(z.uuid()).max(100).optional()
 });
 
 /**
@@ -122,18 +123,6 @@ export const zComputeRegistryResponse = z.object({
     gateway_url: z.string(),
     database_storage_class: z.string(),
     storage_endpoint: z.string()
-});
-
-/**
- * Consent
- *
- * Describe the actual client callback and selected Solution to the user.
- */
-export const zConsent = z.object({
-    client_name: z.string(),
-    redirect_uri: z.string(),
-    solution_name: z.string(),
-    expires_in: z.int().optional().default(2592000)
 });
 
 /**
@@ -328,6 +317,29 @@ export const zOperationResponse = z.object({
 export const zOrganizationByteUsage = z.object({
     space_used: z.int().gte(0),
     quota_bytes: z.int().gte(0)
+});
+
+/**
+ * OrganizationChoice
+ *
+ * Identify an Organization available for explicit gateway consent.
+ */
+export const zOrganizationChoice = z.object({
+    id: z.uuid(),
+    name: z.string()
+});
+
+/**
+ * Consent
+ *
+ * Describe the actual client callback and available access to the user.
+ */
+export const zConsent = z.object({
+    expires_in: z.int().optional().default(2592000),
+    client_name: z.string(),
+    redirect_uri: z.string(),
+    organizations: z.array(zOrganizationChoice).optional(),
+    solution_name: z.string().nullable()
 });
 
 /**
@@ -790,7 +802,9 @@ export const zTokenSummary = z.object({
     id: z.uuid(),
     client_id: z.uuid(),
     expires_at: z.iso.datetime(),
-    solution_id: z.uuid()
+    solution_id: z.uuid().nullable(),
+    client_name: z.string(),
+    organization_ids: z.array(z.uuid())
 });
 
 /**
