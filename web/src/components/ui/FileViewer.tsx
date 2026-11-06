@@ -1,10 +1,9 @@
 import { Stack } from './Stack';
+import { useState } from 'react';
 import { Button } from './Button';
-import { useContext, useState } from 'react';
-import { ReportedError } from '@/lib/reported';
 import { Text } from '@astryxdesign/core/Text';
+import { useDownload, usePreview } from './preview';
 import { Spinner } from '@astryxdesign/core/Spinner';
-import { FileRequestContext, usePreview } from './preview';
 
 /** Previews images on demand and downloads any attachment through the scoped host capability. */
 export function FileViewer({
@@ -20,8 +19,7 @@ export function FileViewer({
     size?: 'sm' | 'md' | 'lg';
 }) {
     const [open, setOpen] = useState(false);
-    const [error, setError] = useState<string>();
-    const files = useContext(FileRequestContext);
+    const attachment = useDownload();
 
     // Each opened attachment owns a fresh preview and its blob URL.
     return (
@@ -33,22 +31,11 @@ export function FileViewer({
                     size={size}
                     label={`Download ${title}`}
                     onClick={async () => {
-                        // Normalize an attachment label into a bounded filename, never a filesystem path.
-                        setError(undefined);
-
-                        try {
-                            if (!files) throw new Error('Downloads require the Solution runtime');
-                            const filename = title.replace(/[/\\\p{Cc}]/gu, '_').slice(0, 256) || 'attachment';
-                            await files.download(src, filename);
-                        } catch (failure) {
-                            if (!(failure instanceof ReportedError)) {
-                                setError(failure instanceof Error ? failure.message : 'Download failed');
-                            }
-                        }
+                        await attachment.download(src, title);
                     }}
                 />
             </Stack>
-            {error && <Text role="alert">{error}</Text>}
+            {attachment.error && <Text role="alert">{attachment.error}</Text>}
             {open && <FilePreview key={src} src={src} title={title} />}
         </Stack>
     );
