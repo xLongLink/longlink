@@ -44,7 +44,7 @@ async def catalog(session: AsyncSession, solution: Solution) -> permissions.Cata
     return permissions.Catalog.model_validate(record.catalog) if record is not None else None
 
 
-def decisions(definition: permissions.Catalog, access: SolutionMemberAccess | None) -> list[models.EndpointDecision]:
+def decisions(definition: permissions.Catalog, access: SolutionMemberAccess | None) -> list[dict[str, str | bool]]:
     """Resolve endpoint access solely from the member's SDK-defined role."""
 
     result = []
@@ -54,11 +54,11 @@ def decisions(definition: permissions.Catalog, access: SolutionMemberAccess | No
         else:
             allowed = access.role in endpoint.roles
             source = f"Role: {access.role}" if allowed else "No matching grant"
-        result.append(models.EndpointDecision(key=endpoint.key, source=source, allowed=allowed))
+        result.append({"key": endpoint.key, "source": source, "allowed": allowed})
     return result
 
 
-async def member(session: AsyncSession, solution: Solution, user_id: UUID) -> models.MemberAccess:
+async def member(session: AsyncSession, solution: Solution, user_id: UUID) -> dict[str, object]:
     """Return saved configuration with an explanation for every current endpoint."""
 
     await organizations.require_membership(session, user_id, solution.organization_id)
@@ -66,9 +66,11 @@ async def member(session: AsyncSession, solution: Solution, user_id: UUID) -> mo
     if definition is None or solution.deployed_revision_id is None:
         raise HTTPException(status_code=409, detail="Rebuild and deploy the Solution to load endpoint permissions")
     access = await session.get(SolutionMemberAccess, (user_id, solution.id), populate_existing=True)
-    return models.MemberAccess(
-        role=access.role if access else None, revision_id=solution.deployed_revision_id, endpoints=decisions(definition, access)
-    )
+    return {
+        "role": access.role if access else None,
+        "revision_id": solution.deployed_revision_id,
+        "endpoints": decisions(definition, access),
+    }
 
 
 async def update_member(session: AsyncSession, solution: Solution, member_id: UUID, payload: models.AccessUpdate, actor_id: UUID) -> None:

@@ -1,6 +1,6 @@
 import { z } from 'zod';
+import { api } from '@/lib/api';
 import { useAdminList } from './use-list';
-import { api, ApiError } from '@/lib/api';
 import { Form } from '@/components/ui/Form';
 import { Info, Search } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -213,22 +213,15 @@ function ComputeRegistration({ onSuccess, onClose }: { onSuccess: () => Promise<
     /** Registers the validated Compute draft before awaiting the parent's success workflow. */
     async function registerCompute(data: FormData) {
         // Validate the original field values and refresh the list only after registration succeeds.
-        try {
-            const json = registrationSchema.parse({
-                name: data.get('name'),
-                gateway_url: data.get('gateway_url'),
-                storage_endpoint: data.get('storage_endpoint'),
-                kubeconfig,
-            });
+        const json = registrationSchema.parse({
+            name: data.get('name'),
+            gateway_url: data.get('gateway_url'),
+            storage_endpoint: data.get('storage_endpoint'),
+            kubeconfig,
+        });
 
-            await api.post('/api/v1/computes', { json });
-            await onSuccess();
-        } catch (cause) {
-            if (cause instanceof ApiError) throw cause;
-
-            // Keep submitted credentials and untrusted diagnostics out of the shared form's error banner.
-            throw new Error('The request could not be completed. Please try again.');
-        }
+        await api.post('/api/v1/computes', { json });
+        await onSuccess();
     }
 
     // Let the shared wizard own navigation, validation, and persistent fields within the creation dialog shell.

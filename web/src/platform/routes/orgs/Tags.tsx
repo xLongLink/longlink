@@ -8,11 +8,11 @@ import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { useState, isValidElement } from 'react';
 import { Button } from '@astryxdesign/core/Button';
+import { Selector } from '@/components/ui/Selector';
 import { Heading } from '@astryxdesign/core/Heading';
 import { TextInput } from '@/components/ui/TextInput';
 import { DeletionDialog } from '@/components/Deletion';
 import { MoreMenu } from '@astryxdesign/core/MoreMenu';
-import { Selector } from '@astryxdesign/core/Selector';
 import { Table, proportional } from '@astryxdesign/core/Table';
 import { MultiSelector } from '@astryxdesign/core/MultiSelector';
 import { ArrowDown, ArrowUp, Pencil, Trash } from 'lucide-react';
@@ -172,11 +172,12 @@ function TagForm({
     onSuccess: () => Promise<void>;
     onCancel: () => void;
 }) {
-    const [icon, setIcon] = useState(tag?.icon ?? 'tag');
-
     /** Saves presentation without changing the tab's filtering or assignments. */
     async function save(data: FormData) {
-        const json = schemas.zOrganizationTagWrite.parse({ name: z.string().trim().parse(data.get('name')), icon });
+        const json = schemas.zOrganizationTagWrite.parse({
+            name: z.string().trim().parse(data.get('name')),
+            icon: data.get('icon'),
+        });
 
         if (tag) {
             await api.patch(`${base}/tags/${tag.id}`, { json });
@@ -197,14 +198,15 @@ function TagForm({
                     <TextInput label="Name" name="name" defaultValue={tag?.name ?? ''} required />
                     <Selector
                         label="Icon"
-                        value={icon}
-                        onChange={(value) => setIcon(schemas.zTagIcon.parse(value))}
+                        name="icon"
+                        defaultValue={tag?.icon ?? 'tag'}
                         options={Object.entries(tabs.icons).map(([value, option]) => ({
                             value,
                             label: option.label,
-                            icon: <option.component className="size-4" aria-hidden="true" />,
+                            icon: schemas.zTagIcon.parse(value),
                         }))}
                         hasSearch
+                        hasClear={false}
                     />
                     <Stack direction="horizontal" gap={2}>
                         <Button label={tag ? 'Save' : 'Create tab'} type="submit" variant="primary" />

@@ -1,3 +1,4 @@
+import { ReportedError } from '@/lib/reported';
 import { createContext, useContext, useEffect, useState } from 'react';
 
 // Only the isolated runtime supplies scoped preview and download capabilities.
@@ -5,6 +6,30 @@ export const FileRequestContext = createContext<{
     preview: (path: string) => Promise<Blob>;
     download: (path: string, filename: string) => Promise<void>;
 } | null>(null);
+
+/** Shares filename handling and local failures without duplicating host notifications. */
+export function useDownload() {
+    const files = useContext(FileRequestContext);
+    const [error, setError] = useState<string>();
+
+    /** Downloads an attachment through the scoped host capability. */
+    async function download(path: string, name: string) {
+        setError(undefined);
+
+        // Normalize display names before crossing the runtime capability boundary.
+        try {
+            if (!files) throw new Error('Downloads require the Solution runtime');
+            const filename = name.replace(/[/\\\p{Cc}]/gu, '_').slice(0, 256) || 'attachment';
+            await files.download(path, filename);
+        } catch (failure) {
+            if (!(failure instanceof ReportedError)) {
+                setError(failure instanceof Error ? failure.message : 'Download failed');
+            }
+        }
+    }
+
+    return { download, error };
+}
 
 type PreviewState =
     | { status: 'loading' }
