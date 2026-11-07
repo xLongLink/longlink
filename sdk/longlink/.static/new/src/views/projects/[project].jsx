@@ -12,7 +12,7 @@ export default function Project({ params }) {
         <Stack gap={4} paddingInline={8} paddingBlock={2}>
             <Stack direction="horizontal" align="center" gap={2}>
                 <Stack width="var(--size-element-lg)">
-                    <Image src={`/api/demo/photos/${project.photo}`} alt={`${project.name} building`} />
+                    <Image src={`/assets/${project.photo}.jpg`} alt={`${project.name} building`} />
                 </Stack>
                 <Stack gap={0}>
                     <Heading level={1}>{project.name}</Heading>

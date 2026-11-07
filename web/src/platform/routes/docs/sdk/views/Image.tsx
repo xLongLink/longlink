@@ -4,7 +4,7 @@ import photo from '../../../../../../../sdk/longlink/.static/new/src/assets/skyl
 
 /** Documents landscape photos in LongLink Views. */
 export default function ImagePage() {
-    // Show a bundled photo alongside the scoped image API used by Solutions.
+    // Show a bundled photo alongside the scoped asset path used by Solutions.
     return (
         <ViewLayout
             name="Image"
@@ -25,7 +25,7 @@ export default function ImagePage() {
                 title: 'Card photo',
                 preview: <Image src={photo} alt="Skyline office towers" />,
                 code: `function Example() {
-  return <Image src="/api/demo/photos/skyline" alt="Skyline office towers" />;
+  return <Image src="/assets/skyline.jpg" alt="Skyline office towers" />;
 }`,
             }}
         />

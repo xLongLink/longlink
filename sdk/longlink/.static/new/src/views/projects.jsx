@@ -22,7 +22,7 @@ export default function Projects() {
                         isClipped
                     >
                         <Stack gap={0}>
-                            <Image src={`/api/demo/photos/${project.photo}`} alt={`${project.name} building`} />
+                            <Image src={`/assets/${project.photo}.jpg`} alt={`${project.name} building`} />
                             <Stack gap={3} padding={4}>
                                 <Stack gap={2} align="start">
                                     <Text as="h2" type="label" maxLines={1}>
