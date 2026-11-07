@@ -17,11 +17,12 @@ from longlink.logger import ApiAccessFilter
 from longlink.routes import router
 from longlink.routing import RouteDecorators
 from fastapi.responses import Response, RedirectResponse
-from starlette.routing import Match
+from starlette.routing import Match, Mount
 from longlink.constants import ROOT
 from longlink.middleware import FrontendMiddleware
 from fastapi.openapi.utils import get_openapi
 from longlink.storage.base import create_fs
+from starlette.staticfiles import StaticFiles
 from longlink.database.base import LOCAL_USER_ID, Database
 from longlink.utils.settings import Envs
 from fastmcp.server.dependencies import get_http_headers
@@ -217,9 +218,15 @@ class LongLink(RouteDecorators, FastAPI):
         """Select the same registered business routes during build inspection and startup."""
 
         # Keep permission discovery independent of OpenAPI and application lifespan execution.
-        routes = [route for route in iter_route_contexts(self.routes) if id(route.original_route) not in self._runtime_routes]
+        # Static assets use application-wide identity admission, not business endpoint grants.
+        routes = [
+            route
+            for route in iter_route_contexts(self.routes)
+            if id(route.original_route) not in self._runtime_routes
+            and not (isinstance(route.original_route, Mount) and isinstance(route.original_route.app, StaticFiles))
+        ]
         if any(not isinstance(route.original_route, APIRoute) for route in routes):
-            raise ValueError("Solution permissions require FastAPI API routes; custom mounts are not supported")
+            raise ValueError("Solution permissions require FastAPI API routes; only StaticFiles mounts are supported")
         return routes
 
     def include_view(self, path: str, *, label: str | None = None, icon: str | None = None) -> None:
