@@ -106,28 +106,27 @@ class Database:
 
             engine = create_engine(self._env)
 
-            # Initialize the database without publishing partially initialized resources.
-            try:
-                # Schema setup and local-user seeding commit together.
-                async with engine.begin() as conn:
-                    # Testing creates all tables; other environments use committed migrations.
-                    if self._env.ENV == "testing":
+            # Testing creates its schema and default identity; other environments use migrations.
+            if self._env.ENV == "testing":
+                try:
+                    # Schema setup and local-user seeding commit together.
+                    async with engine.begin() as conn:
                         await conn.run_sync(SQLModel.metadata.create_all)
 
-                    # Development and production identities arrive with requests.
-                    if self._env.ENV == "testing":
                         # Keep the isolated test client's default identity available.
                         users = SQLModel.metadata.tables["users"]
                         await conn.execute(
                             sqlite.insert(users)
-                            .values(id=LOCAL_USER_ID, name="Testing user", email="local@example.com", avatar="", updated_at=datetime.now(UTC))
+                            .values(
+                                id=LOCAL_USER_ID, name="Testing user", email="local@example.com", avatar="", updated_at=datetime.now(UTC)
+                            )
                             .on_conflict_do_nothing(index_elements=[users.c.id])
                         )
 
-            # Failed or cancelled initialization must dispose the unpublished engine.
-            except BaseException:
-                await engine.dispose()
-                raise
+                # Failed or cancelled initialization must dispose the unpublished engine.
+                except BaseException:
+                    await engine.dispose()
+                    raise
 
             # Publish the engine only after initialization succeeds.
             self._engine = engine
