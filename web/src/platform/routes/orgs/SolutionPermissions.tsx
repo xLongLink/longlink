@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { api } from '@/lib/api';
 import { useState } from 'react';
+import { useApiError } from '@/lib/errors';
 import { useApi } from '@/lib/hooks/use-api';
 import { Text } from '@astryxdesign/core/Text';
 import { Avatar } from '@/components/ui/Avatar';
@@ -60,6 +61,7 @@ function MemberPermissions({
     onClose: () => void;
 }) {
     const client = useQueryClient();
+    const reportError = useApiError();
     const [roles, setRoles] = useState<Record<string, string>>({});
 
     // Load independent assignments together so every member appears in the table.
@@ -98,6 +100,7 @@ function MemberPermissions({
                 await client.invalidateQueries({ queryKey: ['api', path], exact: true });
             }
         },
+        onError: reportError,
         onSuccess: onClose,
     });
 
@@ -152,10 +155,9 @@ function MemberPermissions({
                     label="Save"
                     size="sm"
                     variant="primary"
+                    isLoading={save.isPending}
                     isDisabled={save.isPending || Object.keys(roles).length === 0}
-                    clickAction={async () => {
-                        await save.mutateAsync();
-                    }}
+                    onClick={() => save.mutate()}
                 />
             </Stack>
         </Stack>

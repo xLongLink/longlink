@@ -1,5 +1,6 @@
 import { api } from '@/lib/api';
 import { AuthLayout } from './AuthLayout';
+import { Form } from '@/components/ui/Form';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { useQuery } from '@tanstack/react-query';
@@ -26,12 +27,17 @@ export default function McpAuthorization() {
     });
 
     /** Posts an explicit decision; the server validates permissions and the callback again. */
-    async function decide(approve: boolean) {
+    async function decide(data: FormData) {
+        const decision = data.get('decision');
+
+        if (decision !== 'allow' && decision !== 'deny') throw new Error('An explicit consent decision is required');
+
+        // Preserve the validated request parameters and redirect contract.
         const result = await api
             .post('/api/v1/mcp/consent', {
                 json: {
                     ...Object.fromEntries(params),
-                    approve,
+                    approve: decision === 'allow',
                 },
             })
             .json(zAuthorizationRedirect);
@@ -53,28 +59,37 @@ export default function McpAuthorization() {
             {isLoading ? <Text as="p">Loading authorization request…</Text> : null}
             {error ? <Text as="p">This request is invalid or you do not have access to the Solution.</Text> : null}
             {consent ? (
-                <Stack gap={4}>
-                    <Stack gap={2}>
-                        <Text as="p">
-                            {consent.client_name} requests access to {consent.solution_name}.
-                        </Text>
-                        <Text as="p" type="supporting">
-                            This client uses your current Solution permissions. Permission changes apply automatically.{' '}
-                            Access expires after {Math.round(consent.expires_in / 86400)} days.
-                        </Text>
-                        <Text as="p" type="label">
-                            Client callback
-                        </Text>
-                        <Text as="p" type="supporting" className="break-all">
-                            {consent.redirect_uri}
-                        </Text>
-                        <Text as="p" type="supporting">
-                            Client names are self-reported. Approve only if you recognize this callback.
-                        </Text>
+                <Form action={decide}>
+                    <Stack gap={4}>
+                        <Stack gap={2}>
+                            <Text as="p">
+                                {consent.client_name} requests access to {consent.solution_name}.
+                            </Text>
+                            <Text as="p" type="supporting">
+                                This client uses your current Solution permissions. Permission changes apply
+                                automatically. Access expires after {Math.round(consent.expires_in / 86400)} days.
+                            </Text>
+                            <Text as="p" type="label">
+                                Client callback
+                            </Text>
+                            <Text as="p" type="supporting" className="break-all">
+                                {consent.redirect_uri}
+                            </Text>
+                            <Text as="p" type="supporting">
+                                Client names are self-reported. Approve only if you recognize this callback.
+                            </Text>
+                        </Stack>
+                        <Button
+                            label="Allow access"
+                            variant="primary"
+                            width="100%"
+                            type="submit"
+                            name="decision"
+                            value="allow"
+                        />
+                        <Button label="Deny" width="100%" type="submit" name="decision" value="deny" />
                     </Stack>
-                    <Button label="Allow access" variant="primary" width="100%" clickAction={() => decide(true)} />
-                    <Button label="Deny" width="100%" clickAction={() => decide(false)} />
-                </Stack>
+                </Form>
             ) : null}
         </AuthLayout>
     );

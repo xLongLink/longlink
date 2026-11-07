@@ -1,7 +1,7 @@
 import contextlib
 from uuid import UUID
 from sqlalchemy import String, text
-from collections.abc import Generator, AsyncGenerator
+from collections.abc import AsyncGenerator
 from longlink.storage import tls
 from sqlalchemy.engine import URL
 from sqlalchemy.schema import CreateSchema
@@ -49,20 +49,6 @@ class Postgres:
         self._url = URL.create("postgresql+psycopg", username=username, password=password, host=host, port=port, query=query)
         self._certificate = certificate
 
-    @contextlib.contextmanager
-    def url(self, database: str) -> Generator[URL]:
-        """Yield a libpq URL whose CA file lives until exit; dispose all consuming engines inside this context."""
-
-        # Derive operation-local settings without accumulating changes on the cluster URL.
-        url = self._url.set(database=database)
-
-        # Local connections need no certificate file; hosted connections must verify the server hostname and CA.
-        if self._certificate is None:
-            yield url
-        else:
-            with tls.certificate_file(self._certificate) as name:
-                yield url.update_query_dict({"sslrootcert": name})
-
     @contextlib.asynccontextmanager
     async def connection(self, database: str, *, autocommit: bool = False) -> AsyncGenerator[AsyncConnection, None]:
         """Open one managed SQLAlchemy connection for a database.
@@ -70,8 +56,14 @@ class Postgres:
         The provisioning utility owns the engine lifecycle and disposes it after every operation.
         """
 
-        # Build a short-lived engine with autocommit only for PostgreSQL database lifecycle statements.
-        with self.url(database) as url:
+        # Keep the optional CA file alive until the connection and engine have been released.
+        with contextlib.ExitStack() as stack:
+            url = self._url.set(database=database)
+            if self._certificate is not None:
+                name = stack.enter_context(tls.certificate_file(self._certificate))
+                url = url.update_query_dict({"sslrootcert": name})
+
+            # Build a short-lived engine with autocommit only for PostgreSQL database lifecycle statements.
             engine = create_async_engine(url, hide_parameters=True, **({"isolation_level": "AUTOCOMMIT"} if autocommit else {}))
 
             # Use explicit connections for autocommit operations and transactions otherwise.
@@ -99,7 +91,6 @@ class Postgres:
 
         # Create the organization database from the maintenance database when it is missing.
         async with self.connection("postgres", autocommit=True) as conn:
-
             # CREATE DATABASE needs an identifier quoted by SQLAlchemy's dialect preparer.
             if await conn.scalar(text("SELECT 1 FROM pg_database WHERE datname = :name"), {"name": organization.hex}) is None:
                 quoted_database_name = conn.engine.sync_engine.dialect.identifier_preparer.quote(organization.hex)

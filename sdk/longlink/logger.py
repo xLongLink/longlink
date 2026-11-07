@@ -6,20 +6,6 @@ from uvicorn.config import LOGGING_CONFIG
 log_config = copy.deepcopy(LOGGING_CONFIG)
 
 
-class ColorFormatter(logging.Formatter):
-    """Format log records with ANSI colors for selected levels."""
-
-    def format(self, record: logging.LogRecord) -> str:
-        """Render INFO logs with a green level label."""
-
-        # Color a private record copy so handlers sharing this record see its original level name.
-        if record.levelno == logging.INFO:
-            record = copy.copy(record)
-            record.levelname = "\x1b[32mINFO\x1b[0m"
-
-        return super().format(record)
-
-
 class ApiAccessFilter(logging.Filter):
     """Allow relevant access logs while hiding frontend and successful probe noise."""
 
@@ -43,10 +29,6 @@ class ApiAccessFilter(logging.Filter):
         # Always show mutating and API requests while hiding frontend and asset requests.
         return method in ("POST", "PUT", "PATCH", "DELETE") or path.startswith("/api/")
 
-
-# Configure uvicorn's default and access-log formatting.
-log_config["formatters"]["default"] = {"()": ColorFormatter, "fmt": "%(levelname)s:     %(message)s"}
-log_config["formatters"]["access"] = {"()": ColorFormatter, "fmt": "%(levelname)s:     %(message)s"}
 
 # Keep uvicorn access logs focused on Solution API traffic.
 log_config.setdefault("filters", {})["api_access"] = {"()": ApiAccessFilter}

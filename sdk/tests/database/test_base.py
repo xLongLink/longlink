@@ -64,7 +64,6 @@ async def test_create_engine_selects_database_url_and_options(
     engine = database_base.create_engine(env)
 
     try:
-
         # Assert the real engine uses the selected URL and preserve its forwarded options.
         assert engine.url == expected_url
         [engine_kwargs] = captured
@@ -87,7 +86,6 @@ async def test_create_engine_selects_database_url_and_options(
         # Verify the remaining connection options.
         assert engine_kwargs == expected_kwargs
     finally:
-
         # Release the real engine even when an assertion fails.
         await engine.dispose()
 
@@ -107,7 +105,6 @@ async def test_concurrent_sessions_share_a_usable_engine_until_disposal() -> Non
             return session.bind
 
     try:
-
         # Act
         first_engine, second_engine = await asyncio.gather(open_session(), open_session())
 
@@ -124,44 +121,35 @@ async def test_concurrent_sessions_share_a_usable_engine_until_disposal() -> Non
         await database.dispose()
 
 
-async def test_session_retries_initialization_after_database_connection_failure(
+async def test_session_connects_lazily_and_retries_after_database_connection_failure(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path, production_settings: dict[str, str | int]
 ) -> None:
-    """Retry session initialization after its initial connection fails."""
+    """Defer connection failures until the first query and allow a later session to retry."""
 
     # Arrange
-    engine = create_async_engine(URL.create("sqlite+aiosqlite", database=str(tmp_path)))
-    original_pool = engine.pool
+    database_path = tmp_path / "database" / "runtime.db"
+    engine = create_async_engine(URL.create("sqlite+aiosqlite", database=str(database_path)))
     database = database_base.Database(Envs.model_validate(production_settings))
-    create_engine = database_base.create_engine
+    monkeypatch.setattr(database_base, "create_engine", lambda _env: engine)
 
     try:
-
-        # Act and assert
-        with monkeypatch.context() as failing_engine:
-            failing_engine.setattr(database_base, "create_engine", lambda _env: engine)
+        # Opening a non-testing session does not require a working database connection.
+        async with database.session() as database_session:
+            assert database_session.bind is engine
             with pytest.raises(OperationalError, match="unable to open database file") as error:
+                await database_session.scalar(text("SELECT 1"))
 
-                # Failed initialization must not publish a usable session.
-                async with database.session():
-                    pass
-
-        # Assert the real connection error survives cleanup and disposal replaces the pool.
+        # Preserve the real connection error without discarding the lazy engine.
         assert isinstance(error.value.orig, sqlite3.OperationalError)
         assert error.value.orig.args == ("unable to open database file",)
 
-        # Disposal replaces the old connection pool instead of retaining stale handles.
-        assert engine.pool is not original_pool
-
-        # Retry the production connection path against a real isolated SQLite engine.
-        with monkeypatch.context() as retry_engine:
-            retry_engine.setattr(database_base, "create_engine", lambda _env: create_engine(Envs(ENV="testing")))
-            async with database.session() as database_session:
-                assert await database_session.scalar(text("SELECT 1")) == 1
+        # Restore availability and retry through the same Solution-owned engine.
+        database_path.parent.mkdir()
+        async with database.session() as database_session:
+            assert database_session.bind is engine
+            assert await database_session.scalar(text("SELECT 1")) == 1
     finally:
-
-        # Release both engines even if the disposal regression assertions fail.
-        await engine.dispose()
+        # Release the engine even if a connection or retry assertion fails.
         await database.dispose()
 
 
@@ -192,7 +180,6 @@ async def test_session_disposes_sqlite_engine_after_schema_initialization_failur
     database = database_base.Database(Envs(ENV="testing"))
 
     try:
-
         # Act and assert
         with pytest.raises(RuntimeError, match="schema unavailable") as error:
             async with database.session():
@@ -203,7 +190,6 @@ async def test_session_disposes_sqlite_engine_after_schema_initialization_failur
         assert len(closed_connections) == 1
         assert engine.pool is not original_pool
     finally:
-
         # Release resources even if the disposal regression assertions fail.
         await engine.dispose()
 
@@ -250,14 +236,12 @@ async def test_session_disposes_sqlite_engine_after_initialization_timeout(monke
     event.listen(engine.sync_engine, "close", record_connection_close)
 
     try:
-
         # Act with a scoped suspension seam and a bounded diagnostic watchdog.
         with monkeypatch.context() as suspended_initialization:
             suspended_initialization.setattr(database_base, "create_engine", lambda _env: engine)
             suspended_initialization.setattr(AsyncConnection, "run_sync", suspend_schema_creation)
             task = asyncio.create_task(open_session())
             try:
-
                 # Cancel only after schema creation has actually started.
                 async with asyncio.timeout(5):
                     await schema_started.wait()
@@ -276,7 +260,6 @@ async def test_session_disposes_sqlite_engine_after_initialization_timeout(monke
                 assert len(closed_connections) == 1
                 assert engine.pool is not original_pool
             finally:
-
                 # Reap the initialization task even if a diagnostic assertion fails.
                 task.cancel()
                 await asyncio.gather(task, return_exceptions=True)
@@ -285,7 +268,6 @@ async def test_session_disposes_sqlite_engine_after_initialization_timeout(monke
         async with database.session() as database_session:
             assert await database_session.scalar(text("SELECT 1")) == 1
     finally:
-
         # Release failed and recovered engines even when the test fails.
         await engine.dispose()
         await database.dispose()
