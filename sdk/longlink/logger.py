@@ -1,9 +1,4 @@
-import copy
 import logging
-from uvicorn.config import LOGGING_CONFIG
-
-# Copy uvicorn's logging defaults before applying LongLink-specific policies.
-log_config = copy.deepcopy(LOGGING_CONFIG)
 
 
 class ApiAccessFilter(logging.Filter):
@@ -28,11 +23,6 @@ class ApiAccessFilter(logging.Filter):
 
         # Always show mutating and API requests while hiding frontend and asset requests.
         return method in ("POST", "PUT", "PATCH", "DELETE") or path.startswith("/api/")
-
-
-# Keep uvicorn access logs focused on Solution API traffic.
-log_config.setdefault("filters", {})["api_access"] = {"()": ApiAccessFilter}
-log_config["handlers"]["access"]["filters"] = ["api_access"]
 
 
 # Resolve the shared LongLink Solution logger without configuring its consumers.

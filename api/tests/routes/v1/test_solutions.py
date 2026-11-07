@@ -1065,7 +1065,14 @@ async def test_release_inspection_revalidates_concurrent_desired_changes(
             current = await solutions.access(session, solution.id, users[0].id)
             revision = await session.get(Revision, current.desired_revision_id)
             assert revision is not None
-            await solutions.deploy(session, current, users[0].id, metadata, {"OTHER": "concurrent-secret"}, current=revision)
+            await solutions.deploy(
+                session,
+                current,
+                users[0].id,
+                metadata,
+                {**revision.envs, "OTHER": "concurrent-secret"},
+                registry_connection_id=revision.registry_connection_id,
+            )
             replacement_id = current.desired_revision_id
             await session.commit()
         return metadata

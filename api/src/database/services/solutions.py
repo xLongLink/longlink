@@ -118,7 +118,7 @@ async def create(
         session.add(access)
 
     # Creation uses the same immutable release boundary as subsequent updates.
-    await deploy(session, solution, user_id, metadata, payload.envs, current=None, registry_connection_id=registry_connection_id)
+    await deploy(session, solution, user_id, metadata, payload.envs, registry_connection_id=registry_connection_id)
 
     return solution
 
@@ -200,10 +200,9 @@ async def deploy(
     solution: Solution,
     user_id: UUID,
     metadata: LongLinkMetadata,
-    envs: Mapping[str, str | None],
+    envs: Mapping[str, str],
     *,
-    current: Revision | None,
-    registry_connection_id: UUID | None = None,
+    registry_connection_id: UUID | None,
 ) -> None:
     """Append a snapshot and queue its exact deployment target."""
 
@@ -211,28 +210,19 @@ async def deploy(
     if metadata.permissions is None:
         raise HTTPException(status_code=422, detail="Rebuild the Solution with build-time permission metadata before deploying")
 
-    # Keep the registry connection immutable under the caller's Organization lock.
-    if current is not None:
-        registry_connection_id = current.registry_connection_id
+    # Validate the registry connection under the caller's Organization lock.
     if registry_connection_id is not None:
         await registries.resolve(session, solution.organization_id, registry_connection_id, metadata.image)
 
-    # Apply explicit environment edits while preserving untouched secrets.
-    merged = dict(current.envs) if current is not None else {}
-    for name, value in envs.items():
-        if value is None:
-            merged.pop(name, None)
-        else:
-            merged[name] = value
-
-    # Validate the resulting environment, including unchanged variables.
+    # Validate the complete environment, including unchanged variables.
+    environment = dict(envs)
     try:
-        validate_environment_variables(merged)
+        validate_environment_variables(environment)
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc))
-    missing = images.missing_envs(metadata, merged)
+    missing = images.missing_envs(metadata, environment)
 
-    # Required image variables must exist in the complete merged environment.
+    # Required image variables must exist in the complete environment.
     if missing:
         raise HTTPException(status_code=422, detail=f"Solution environment does not satisfy required image variables: {', '.join(missing)}")
 
@@ -241,7 +231,7 @@ async def deploy(
         solution_id=solution.id,
         image=metadata.image,
         version=metadata.version,
-        envs=merged,
+        envs=environment,
         created_id=user_id,
         registry_connection_id=registry_connection_id,
     )

@@ -35,8 +35,16 @@ async def apply_update(session: auth.Session, user: auth.CurrentUser, solution: 
     # Inspect without command locks, then revalidate the desired state and maintenance access.
     revision, metadata = await solutions.inspect_update(session, solution, user.id, payload.expected_revision_id)
 
+    # Apply explicit environment edits while preserving untouched secrets.
+    environment = dict(revision.envs)
+    for name, value in payload.envs.items():
+        if value is None:
+            environment.pop(name, None)
+        else:
+            environment[name] = value
+
     # Admit the reviewed deployment and queue it in the final transaction.
-    await solutions.deploy(session, solution, user.id, metadata, payload.envs, current=revision)
+    await solutions.deploy(session, solution, user.id, metadata, environment, registry_connection_id=revision.registry_connection_id)
     await session.commit()
 
 

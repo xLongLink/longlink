@@ -1,7 +1,7 @@
 import logging
 import uvicorn
 from pathlib import Path
-from longlink.logger import logger, log_config
+from longlink.logger import logger
 from uvicorn.logging import DefaultFormatter
 from longlink.constants import ROOT
 from longlink.database.migrations import apply_migrations
@@ -40,4 +40,4 @@ def dev_command(*, host: str = "127.0.0.1") -> None:
     apply_migrations()
 
     # Delegate process supervision and file watching to Uvicorn.
-    uvicorn.run("main:app", host=host, port=1707, reload=True, reload_includes=["*.jsx"], app_dir=str(Path.cwd()), log_config=log_config)
+    uvicorn.run("main:app", host=host, port=1707, reload=True, reload_includes=["*.jsx"], app_dir=str(Path.cwd()))
