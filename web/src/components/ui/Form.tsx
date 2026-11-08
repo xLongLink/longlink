@@ -3,7 +3,7 @@ import type { ViewData } from '@/views/protocol';
 import { Stack } from '@astryxdesign/core/Stack';
 import type { FormValidation } from './FormField';
 import { FormValidationContext, FormRequestContext } from './contexts';
-import { use, useEffect, useRef, useState, type ReactNode } from 'react';
+import { use, useEffect, useRef, useState, useTransition, type ReactNode } from 'react';
 
 const methods = { post: 'POST', put: 'PUT', patch: 'PATCH', delete: 'DELETE' } as const;
 
@@ -27,7 +27,7 @@ export function Form(props: {
     const request = use(FormRequestContext);
     const formRef = useRef<HTMLFormElement>(null);
     const pending = useRef(false);
-    const [submission, setSubmission] = useState<{ submitting: boolean; error?: unknown }>({ submitting: false });
+    const [isSubmitting, startSubmission] = useTransition();
     const [failure, setFailure] = useState<{ control: HTMLElement } | null>(null);
 
     // Wait for a Stepper to reveal an invalid panel before moving focus into it.
@@ -80,37 +80,34 @@ export function Form(props: {
     }
 
     /** Serializes before disabling controls and guards against duplicate writes. */
-    async function submit(form: HTMLFormElement, submitter: HTMLElement | null) {
+    function submit(form: HTMLFormElement, submitter: HTMLElement | null) {
         pending.current = true;
 
-        // Keep repeated names, binary values, and the submit button's value intact.
-        try {
-            const data = new FormData(form, submitter);
-            setSubmission({ submitting: true });
+        startSubmission(async () => {
+            // Keep repeated names, binary values, and the submit button's value intact.
+            try {
+                const data = new FormData(form, submitter);
 
-            // Platform callbacks own their requests; Solution paths use the scoped bridge.
-            // oxlint-disable-next-line anti-slop/no-runtime-typeof -- The action contract is a callback or scoped path.
-            if (typeof props.action === 'function') {
-                await props.action(data);
-            } else {
-                if (!request) throw new Error('Forms require the Solution runtime');
-                const method = props.method ?? 'post';
+                // Platform callbacks own their requests; Solution paths use the scoped bridge.
+                // oxlint-disable-next-line anti-slop/no-runtime-typeof -- The action contract is a callback or scoped path.
+                if (typeof props.action === 'function') {
+                    await props.action(data);
+                } else {
+                    if (!request) throw new Error('Forms require the Solution runtime');
+                    const method = props.method ?? 'post';
 
-                if (!Object.hasOwn(methods, method)) throw new Error('Forms support post, put, patch, or delete');
+                    if (!Object.hasOwn(methods, method)) throw new Error('Forms support post, put, patch, or delete');
 
-                const result = await request(props.action, { method: methods[method], form: [...data.entries()] });
-                await props.onSuccess?.(result);
+                    const result = await request(props.action, { method: methods[method], form: [...data.entries()] });
+                    await props.onSuccess?.(result);
+                }
+            } catch (failure) {
+                if (!(failure instanceof ReportedError)) throw failure;
+            } finally {
+                pending.current = false;
             }
-        } catch (failure) {
-            if (!(failure instanceof ReportedError)) setSubmission({ submitting: false, error: failure });
-        } finally {
-            pending.current = false;
-            setSubmission((current) => ({ ...current, submitting: false }));
-        }
+        });
     }
-
-    // Forward asynchronous failures to the existing render error boundary.
-    if ('error' in submission) throw submission.error;
 
     // Keep a real form and persistent controls while descendants own their presentation.
     return (
@@ -121,7 +118,7 @@ export function Form(props: {
                 method="post"
                 noValidate
                 data-longlink-form=""
-                aria-busy={submission.submitting || undefined}
+                aria-busy={isSubmitting || undefined}
                 onReset={(event) => {
                     const nativeEvent = event.nativeEvent;
 
@@ -138,10 +135,10 @@ export function Form(props: {
 
                     // Stepper intercepts intermediate submits before the final form validation.
                     if (pending.current || props.submitDisabled || !validate()) return;
-                    void submit(event.currentTarget, event.nativeEvent.submitter);
+                    submit(event.currentTarget, event.nativeEvent.submitter);
                 }}
             >
-                <fieldset disabled={submission.submitting} className="m-0 min-w-0 border-0 p-0">
+                <fieldset disabled={isSubmitting} className="m-0 min-w-0 border-0 p-0">
                     <Stack gap={3} height={props.height}>
                         {props.children}
                     </Stack>

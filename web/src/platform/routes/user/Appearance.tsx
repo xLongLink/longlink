@@ -1,31 +1,18 @@
 import { Circle, Check } from 'lucide-react';
 import { Card } from '@astryxdesign/core/Card';
 import { Text } from '@astryxdesign/core/Text';
+import { accentColors } from '@/lib/appearance';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
 import { useUpdateUser } from '@/lib/hooks/use-user';
 import { Heading } from '@astryxdesign/core/Heading';
 import { useAppearance } from '@/lib/hooks/use-appearance';
 import { SelectableCard } from '@astryxdesign/core/SelectableCard';
-import { accentColors, appearanceSchema, type Appearance } from '@/lib/appearance';
 
 /** Previews and saves personal appearance without changing any Solution configuration. */
 export default function AppearanceSettings() {
     const { appearance } = useAppearance();
     const userUpdate = useUpdateUser();
-
-    /** Saves changed preferences through the shared profile mutation. */
-    function saveAppearance(next: Appearance) {
-        if (
-            userUpdate.isPending ||
-            (next.theme === appearance.theme &&
-                next.accent === appearance.accent &&
-                next.navigation === appearance.navigation)
-        )
-            return;
-
-        userUpdate.mutate(next);
-    }
 
     return (
         <Stack gap={6}>
@@ -34,18 +21,23 @@ export default function AppearanceSettings() {
                     Theme
                 </Heading>
                 <Stack direction="horizontal" wrap="wrap" gap={3}>
-                    {[
-                        { value: 'system', label: 'System', image: 'theme_auto.png' },
-                        { value: 'light', label: 'Light', image: 'theme_light.png' },
-                        { value: 'dark', label: 'Dark', image: 'theme_dark.png' },
-                    ].map(({ value, label, image }) => (
+                    {(
+                        [
+                            { value: 'system', label: 'System', image: 'theme_auto.png' },
+                            { value: 'light', label: 'Light', image: 'theme_light.png' },
+                            { value: 'dark', label: 'Dark', image: 'theme_dark.png' },
+                        ] as const
+                    ).map(({ value, label, image }) => (
                         <SelectableCard
                             key={value}
                             label={label}
                             padding={2}
                             isSelected={appearance.theme === value}
                             isDisabled={userUpdate.isPending}
-                            onChange={() => saveAppearance(appearanceSchema.parse({ ...appearance, theme: value }))}
+                            onChange={() => {
+                                if (!userUpdate.isPending && appearance.theme !== value)
+                                    userUpdate.mutate({ theme: value });
+                            }}
                         >
                             <Stack gap={2}>
                                 <Text>{label}</Text>
@@ -66,19 +58,22 @@ export default function AppearanceSettings() {
                     Layout
                 </Heading>
                 <Stack direction="horizontal" wrap="wrap" gap={3}>
-                    {[
-                        { value: 'sidebar', label: 'Sidebar', image: 'layout_sidebar.png' },
-                        { value: 'topbar', label: 'Topbar', image: 'layout_topbar.png' },
-                    ].map(({ value, label, image }) => (
+                    {(
+                        [
+                            { value: 'sidebar', label: 'Sidebar', image: 'layout_sidebar.png' },
+                            { value: 'topbar', label: 'Topbar', image: 'layout_topbar.png' },
+                        ] as const
+                    ).map(({ value, label, image }) => (
                         <SelectableCard
                             key={value}
                             label={label}
                             padding={2}
                             isSelected={appearance.navigation === value}
                             isDisabled={userUpdate.isPending}
-                            onChange={() =>
-                                saveAppearance(appearanceSchema.parse({ ...appearance, navigation: value }))
-                            }
+                            onChange={() => {
+                                if (!userUpdate.isPending && appearance.navigation !== value)
+                                    userUpdate.mutate({ navigation: value });
+                            }}
                         >
                             <Stack gap={2}>
                                 <Text>{label}</Text>
@@ -121,7 +116,10 @@ export default function AppearanceSettings() {
                                                 />
                                             )
                                         }
-                                        onClick={() => saveAppearance({ ...appearance, accent })}
+                                        onClick={() => {
+                                            if (!userUpdate.isPending && appearance.accent !== accent)
+                                                userUpdate.mutate({ accent });
+                                        }}
                                     />
                                 ))}
                             </Stack>

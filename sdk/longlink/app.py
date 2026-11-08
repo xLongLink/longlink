@@ -107,9 +107,8 @@ class LongLink(RouteDecorators, FastAPI):
         # Compress the embedded frontend and apply safe browser cache policies.
         self.add_middleware(FrontendMiddleware)
 
-        # Production containers attach API access filtering here.
-        if settings.ENV == "production":
-            # Built Solution containers run plain uvicorn, so attach the SDK access filter here.
+        # Development and production share the same API access filtering.
+        if settings.ENV != "testing":
             access_logger = logging.getLogger("uvicorn.access")
 
             # Avoid installing the access filter more than once.

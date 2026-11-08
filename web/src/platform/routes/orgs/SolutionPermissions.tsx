@@ -2,7 +2,6 @@ import { z } from 'zod';
 import { api } from '@/lib/api';
 import { useState } from 'react';
 import { useApiError } from '@/lib/errors';
-import { useApi } from '@/lib/hooks/use-api';
 import { Text } from '@astryxdesign/core/Text';
 import { Avatar } from '@/components/ui/Avatar';
 import { Stack } from '@astryxdesign/core/Stack';
@@ -27,12 +26,17 @@ export default function SolutionPermissions({
     onClose: () => void;
 }) {
     const base = `/api/v1/solutions/${solutionId}`;
-    const [settings] = useApi(`${base}/permissions`, schemas.zPermissionSettings);
 
-    const [members] = useApi(
-        `/api/v1/organizations/${organizationId}/members`,
-        schemas.zOrganizationMemberAccessResponse.array()
-    );
+    // Load independent settings and membership data together.
+    const [{ data: settings }, { data: members }] = useSuspenseQueries({
+        queries: [
+            apiQueryOptions(`${base}/permissions`, schemas.zPermissionSettings),
+            apiQueryOptions(
+                `/api/v1/organizations/${organizationId}/members`,
+                schemas.zOrganizationMemberAccessResponse.array()
+            ),
+        ],
+    });
 
     return (
         <Stack gap={4} padding={6}>
