@@ -5126,9 +5126,14 @@ declare function Icon(props: {
 
 /** @category Action */
 declare function Link(props: {
-    to: string;
+    /** Omit for a link-styled button action. */
+    to?: string;
     /** Downloads a scoped Solution attachment with this filename instead of navigating. */
     download?: string;
+    /** Disables navigation, downloads, and actions. */
+    disabled?: boolean;
+    /** Runs an action with automatic async loading and duplicate-click prevention. */
+    onClick?: (event: ViewMouseEvent) => void | Promise<void>;
     children?: ViewNode;
 }): React.JSX.Element;
 

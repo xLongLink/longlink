@@ -1,9 +1,11 @@
 import { useDownload } from './preview';
+import { ReportedError } from '@/lib/reported';
 import { Text } from '@astryxdesign/core/Text';
 import { resolveNavigationUrl } from '@/lib/url';
 import { LinkNavigationContext } from './contexts';
+import { Spinner } from '@astryxdesign/core/Spinner';
 import { Link as AstryxLink } from '@astryxdesign/core/Link';
-import { useContext, type ComponentPropsWithRef, type ReactNode } from 'react';
+import { useContext, useRef, useTransition, type ComponentPropsWithRef, type MouseEvent, type ReactNode } from 'react';
 
 /** Preserves native link gestures while routing ordinary internal clicks through the host. */
 export function NavigationLink({ href, target, onClick, ...props }: ComponentPropsWithRef<'a'>) {
@@ -63,9 +65,24 @@ export function NavigationLink({ href, target, onClick, ...props }: ComponentPro
     );
 }
 
-/** Navigates to a destination or downloads an attachment through the scoped host capability. */
-export function Link({ to, download, children }: { to: string; download?: string; children?: ReactNode }) {
+/** Navigates, downloads an attachment, or runs a link-styled button action. */
+export function Link({
+    to,
+    download,
+    disabled = false,
+    onClick,
+    children,
+}: {
+    to?: string;
+    download?: string;
+    disabled?: boolean;
+    /** Runs an action with automatic async loading and duplicate-click prevention. Omit to for button semantics. */
+    onClick?: (event: MouseEvent<HTMLAnchorElement | HTMLButtonElement>) => void | Promise<void>;
+    children?: ReactNode;
+}) {
     const attachment = useDownload();
+    const actionInFlight = useRef(false);
+    const [isPending, startTransition] = useTransition();
 
     // Download links use the host capability instead of navigating inside the sandbox.
     return (
@@ -74,12 +91,39 @@ export function Link({ to, download, children }: { to: string; download?: string
                 as={NavigationLink}
                 href={to}
                 download={download}
+                isDisabled={disabled || isPending}
+                aria-busy={isPending || undefined}
                 onClick={(event) => {
-                    if (download === undefined) return;
-                    event.preventDefault();
-                    void attachment.download(to, download);
+                    // Block same-tick activations before React renders the pending state.
+                    if (disabled || actionInFlight.current) {
+                        event.preventDefault();
+                        event.stopPropagation();
+
+                        return;
+                    }
+
+                    // Keep download navigation inside the scoped host capability.
+                    if (download !== undefined && to !== undefined) event.preventDefault();
+
+                    if (!onClick && download === undefined) return;
+                    actionInFlight.current = true;
+                    startTransition(async () => {
+                        try {
+                            await onClick?.(event);
+
+                            if (download !== undefined && to !== undefined) {
+                                await attachment.download(to, download);
+                            }
+                        } catch (error) {
+                            // Avoid replacing the View after a request failure was already reported.
+                            if (!(error instanceof ReportedError)) throw error;
+                        } finally {
+                            actionInFlight.current = false;
+                        }
+                    });
                 }}
             >
+                {isPending && <Spinner size="sm" label="Loading" />}
                 {children}
             </AstryxLink>
             {attachment.error && <Text role="alert">{attachment.error}</Text>}
