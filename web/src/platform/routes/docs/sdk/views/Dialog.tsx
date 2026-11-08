@@ -24,6 +24,12 @@ export default function DialogPage() {
                     description: 'Shows a dialog header when a title is provided.',
                 },
                 {
+                    name: 'variant',
+                    type: '"standard" | "fullscreen"',
+                    description:
+                        'Standard uses the fixed frame. Fullscreen fills about 95% of the screen, including over Platform navigation.',
+                },
+                {
                     name: 'isOpen',
                     type: 'boolean',
                     description: 'Whether the dialog is open.',
@@ -39,7 +45,7 @@ export default function DialogPage() {
                     description: 'Spacing between the title and content; defaults to 3.',
                 },
             ]}
-            introduction="Dialog uses the Platform's 960px-wide, 560px-high frame, reduced to fit shorter viewports. A title adds a visible header; otherwise only the close control is shown. The gap between title and content defaults to spacing step 3, matching Stack and Grid. Escape and the close button dismiss it; clicking the backdrop does not. Content owns its padding, and the body scrolls when needed while the header stays visible. The modal stays within the isolated View viewport without blocking the surrounding Platform navigation."
+            introduction="Dialog defaults to the Platform's 960px-wide, 560px-high frame, reduced to fit shorter viewports. Set variant to fullscreen to fill about 95% of the screen, including over Platform navigation. Fullscreen keeps Solution content sandboxed and temporarily blocks the surrounding Platform controls. Closing it restores the View layout without losing state. A title adds a visible header; otherwise only the close control is shown. The gap between title and content defaults to spacing step 3, matching Stack and Grid. Escape and the close button dismiss it; clicking the backdrop does not. The body scrolls while the header stays visible."
             example={{
                 title: 'Dialog',
                 preview: <DialogExample />,
@@ -48,8 +54,9 @@ export default function DialogPage() {
 
   return (
     <Stack gap={3}>
-      <Button label="Open dialog" onClick={() => setIsOpen(true)} />
+      <Button label="Open fullscreen dialog" onClick={() => setIsOpen(true)} />
       <Dialog
+        variant="fullscreen"
         title="Order details"
         isOpen={isOpen}
         onOpenChange={setIsOpen}
@@ -74,8 +81,8 @@ export function DialogExample() {
     // Let the actual dialog wrapper own modal behavior and focus management.
     return (
         <>
-            <Button label="Open dialog" onClick={() => setIsOpen(true)} />
-            <Dialog title="Order details" isOpen={isOpen} onOpenChange={setIsOpen}>
+            <Button label="Open fullscreen dialog" onClick={() => setIsOpen(true)} />
+            <Dialog variant="fullscreen" title="Order details" isOpen={isOpen} onOpenChange={setIsOpen}>
                 <Stack gap={3} padding={4}>
                     <Text>Order details</Text>
                     <Button label="Close" onClick={() => setIsOpen(false)} />

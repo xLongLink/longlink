@@ -539,7 +539,7 @@
         {
             "name": "Dialog",
             "category": "Layouts",
-            "introduction": "Displays an accessible modal that closes with Escape or its close button, not backdrop clicks.",
+            "introduction": "Displays an accessible modal that closes with Escape or its close button, not backdrop clicks. Set variant to fullscreen to fill about 95% of the screen, including over Platform navigation, while keeping Solution content sandboxed.",
             "keywords": [
                 "modal",
                 "confirmation",
@@ -555,6 +555,12 @@
                     "name": "title",
                     "type": "string",
                     "description": "Shows a dialog header when a title is provided."
+                },
+                {
+                    "name": "variant",
+                    "type": "\"standard\" | \"fullscreen\"",
+                    "description": "Standard uses the fixed frame. Fullscreen fills about 95% of the screen, including over Platform navigation.",
+                    "default": "standard"
                 },
                 {
                     "name": "isOpen",

@@ -7,6 +7,7 @@ export default function ProjectSettings() {
     const [approvalThreshold, setApprovalThreshold] = useState(1000);
     const [pendingNotifications, setPendingNotifications] = useState(true);
     const [approvedNotifications, setApprovedNotifications] = useState(false);
+    const [isFullscreenOpen, setIsFullscreenOpen] = useState(false);
 
     // Present the landing-page settings layout using only shared View components.
     return (
@@ -20,6 +21,7 @@ export default function ProjectSettings() {
                     <MenuItem label="General">
                         <Stack gap={4} maxWidth={640}>
                             <Heading level={2}>General</Heading>
+                            <Button label="Open fullscreen settings" onClick={() => setIsFullscreenOpen(true)} />
                             <TextInput label="Company name" value={company} onChange={setCompany} />
                             <Selector
                                 label="Default currency"
@@ -63,6 +65,24 @@ export default function ProjectSettings() {
                     </MenuItem>
                 </MenuSection>
             </Menu>
+            <Dialog
+                variant="fullscreen"
+                title="Fullscreen settings"
+                isOpen={isFullscreenOpen}
+                onOpenChange={setIsFullscreenOpen}
+            >
+                <Stack gap={4}>
+                    <TextInput label="Company name" value={company} onChange={setCompany} />
+                    <Selector
+                        label="Default currency"
+                        value={currency}
+                        onChange={setCurrency}
+                        options={['CHF', 'EUR', 'USD']}
+                    />
+                    <Switch label="Require project approval" value={approvalRequired} onChange={setApprovalRequired} />
+                    <Button label="Done" onClick={() => setIsFullscreenOpen(false)} />
+                </Stack>
+            </Dialog>
         </Stack>
     );
 }
