@@ -36,6 +36,8 @@ import {
     iconDataSchema,
     appearanceMessageSchema,
     type AppearanceMessage,
+    viewportMessageSchema,
+    type ViewportMessage,
     viewAppearanceSchema,
     type ViewAppearance,
 } from './protocol';
@@ -228,7 +230,20 @@ function initialize(event: MessageEvent<unknown>): void {
         return [data, invalidate];
     }
 
-    port.onmessage = (reply: MessageEvent<ViewReply | AppearanceMessage>) => {
+    port.onmessage = (reply: MessageEvent<ViewReply | AppearanceMessage | ViewportMessage>) => {
+        // Host viewport geometry keeps native dialogs inside the visible portion of long Views.
+        if ('type' in reply.data && reply.data.type === 'viewport') {
+            const viewport = viewportMessageSchema.safeParse(reply.data);
+
+            if (viewport.success) {
+                document.documentElement.style.setProperty('--view-viewport-top', `${viewport.data.top}px`);
+                document.documentElement.style.setProperty('--view-viewport-bottom', `${viewport.data.bottom}px`);
+                document.documentElement.style.setProperty('--view-viewport-height', `${viewport.data.height}px`);
+            }
+
+            return;
+        }
+
         // Appearance updates are separate from replies to pending Solution operations.
         if ('type' in reply.data) {
             const appearance = appearanceMessageSchema.safeParse(reply.data);

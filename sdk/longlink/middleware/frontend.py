@@ -3,7 +3,7 @@ from starlette.types import Send, Scope, ASGIApp, Message, Receive
 from starlette.datastructures import Headers, MutableHeaders
 from starlette.middleware.gzip import GZipResponder
 
-HASHED_ASSET_PATH = re.compile(r"^/assets/.+-[A-Za-z0-9_-]{8,}\.[A-Za-z0-9]+$")
+HASHED_ASSET_PATH = re.compile(r"^/_longlink/assets/.+-[A-Za-z0-9_-]{8,}\.[A-Za-z0-9]+$")
 INCOMPRESSIBLE_SUFFIXES = (".avif", ".gif", ".gz", ".ico", ".jpeg", ".jpg", ".png", ".webp", ".woff2", ".zip")
 CACHEABLE_RESPONSE_STATUSES = frozenset((200, 206, 304))
 
@@ -97,7 +97,7 @@ class FrontendMiddleware:
                 elif HASHED_ASSET_PATH.fullmatch(path) and status in CACHEABLE_RESPONSE_STATUSES:
                     # Content-hashed assets remain immutable across deployments.
                     headers["cache-control"] = "public, max-age=31536000, immutable"
-                elif path.startswith("/assets/"):
+                elif path.startswith("/_longlink/assets/"):
                     headers["cache-control"] = "no-store" if status >= 400 else "no-cache"
 
                 # The unversioned favicon uses bounded rather than immutable caching.

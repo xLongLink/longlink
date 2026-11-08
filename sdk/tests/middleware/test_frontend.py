@@ -163,11 +163,13 @@ async def test_frontend_middleware_passes_websocket_scopes_through_unchanged() -
     [
         pytest.param("/dashboard", "text/html", 200, "no-cache", id="html"),
         pytest.param("/dashboard", "text/html", 206, "no-cache", id="partial-html"),
-        pytest.param("/assets/app-abcdef12.js", "text/javascript", 200, "public, max-age=31536000, immutable", id="hashed-asset"),
-        pytest.param("/assets/app-abcdef12.js", "text/javascript", 304, "public, max-age=31536000, immutable", id="not-modified-asset"),
-        pytest.param("/assets/app.js", "text/javascript", 200, "no-cache", id="unhashed-asset"),
+        pytest.param("/_longlink/assets/app-abcdef12.js", "text/javascript", 200, "public, max-age=31536000, immutable", id="hashed-asset"),
+        pytest.param(
+            "/_longlink/assets/app-abcdef12.js", "text/javascript", 304, "public, max-age=31536000, immutable", id="not-modified-asset"
+        ),
+        pytest.param("/_longlink/assets/app.js", "text/javascript", 200, "no-cache", id="unhashed-asset"),
         # Failed asset requests must not inherit immutable caching.
-        pytest.param("/assets/app-abcdef12.js", "text/javascript", 404, "no-store", id="missing-hashed-asset"),
+        pytest.param("/_longlink/assets/app-abcdef12.js", "text/javascript", 404, "no-store", id="missing-hashed-asset"),
         pytest.param("/favicon.ico", "image/x-icon", 200, "public, max-age=86400", id="favicon"),
     ],
 )

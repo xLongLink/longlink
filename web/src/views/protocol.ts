@@ -11,6 +11,17 @@ export const appearanceMessageSchema = z
 
 export type AppearanceMessage = z.output<typeof appearanceMessageSchema>;
 
+export const viewportMessageSchema = z
+    .object({
+        type: z.literal('viewport'),
+        top: z.number().nonnegative(),
+        bottom: z.number().nonnegative(),
+        height: z.number().nonnegative(),
+    })
+    .strict();
+
+export type ViewportMessage = z.output<typeof viewportMessageSchema>;
+
 // Allow the Platform's 120-second Solution proxy timeout to finish, including cold starts.
 export const REQUEST_TIMEOUT = 130_000;
 
