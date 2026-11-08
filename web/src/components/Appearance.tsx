@@ -72,7 +72,7 @@ export function AccountAppearanceProvider({ children }: { children: ReactNode })
 
     // Derive previews and saved preferences directly from the authoritative user query.
     const preference = user
-        ? { theme: user.theme, accent: user.accent, navigation: user.navigation }
+        ? { theme: user.theme, accent: user.accent }
         : error instanceof ApiError && error.status === 401
           ? defaultAppearance
           : undefined;
@@ -80,7 +80,7 @@ export function AccountAppearanceProvider({ children }: { children: ReactNode })
     // Never carry one account's cached colors into an anonymous or different account session.
     useEffect(() => {
         if (user) {
-            const appearance = { theme: user.theme, accent: user.accent, navigation: user.navigation };
+            const appearance = { theme: user.theme, accent: user.accent };
 
             // Keep previews local until the profile write settles.
             if (!isSaving) {

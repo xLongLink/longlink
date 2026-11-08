@@ -3,7 +3,6 @@ import type { ReactNode } from 'react';
 import { startCase } from 'es-toolkit/compat';
 import { JsxView } from '@/components/JsxView';
 import { PageError } from '@/components/Utils';
-import { Link } from '@astryxdesign/core/Link';
 import { manifestSchema } from '@/views/manifest';
 import { Center } from '@astryxdesign/core/Center';
 import { DeferredIcon } from '@/components/ui/Icon';
@@ -32,7 +31,6 @@ export function SolutionPage({
     formatTitle,
     navigationBaseUrl = '/',
     sidebarHeader,
-    topbarHeading,
     viewsUrl = '/views.json',
 }: {
     action: ReactNode;
@@ -41,7 +39,6 @@ export function SolutionPage({
     formatTitle: (title: string | undefined) => string;
     navigationBaseUrl?: string;
     sidebarHeader?: ReactNode;
-    topbarHeading?: ReactNode;
     viewsUrl?: string;
 }) {
     const { '*': routePath = '' } = useParams();
@@ -182,17 +179,8 @@ export function SolutionPage({
         <Platform
             action={manifest?.development ? (developmentAction ?? action) : action}
             breadcrumb={breadcrumb}
-            hasNavigationError={viewsError !== null}
             homeHref={homeHref}
             sidebarHeader={sidebarHeader}
-            topbarHeading={
-                topbarHeading ? (
-                    <Link href={homeHref} label="LongLink home" color="inherit">
-                        {topbarHeading}
-                    </Link>
-                ) : undefined
-            }
-            isNavigationLoading={manifest === undefined && !viewsError}
             tabs={tabs}
         >
             <title>{formatTitle(isNotFound ? 'Page Not Found' : activeViewTitle)}</title>

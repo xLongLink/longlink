@@ -30,7 +30,6 @@ export default function OrganizationAccess() {
                         action={<ProfileMenu />}
                         breadcrumb={<OrganizationBreadcrumb organization={{ id: organization }} />}
                         sidebarHeader={<OrganizationSwitcher organization={{ id: organization }} />}
-                        isNavigationLoading
                         tabs={[]}
                     >
                         <PageContainer gap={8} padding={2}>
@@ -53,7 +52,6 @@ export default function OrganizationAccess() {
                     <Platform
                         action={<ProfileMenu />}
                         breadcrumb={<OrganizationBreadcrumb organization={{ id: organization }} />}
-                        hasNavigationError
                         tabs={[]}
                     >
                         <PageContainer gap={8} padding={2}>

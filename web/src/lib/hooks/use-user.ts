@@ -38,12 +38,11 @@ export function useUpdateUser() {
             const previous = queryClient.getQueryData<z.output<typeof zCurrentUser>>(['api', '/api/v1/me']);
 
             const preview =
-                previous && (update.theme || update.accent || update.navigation)
+                previous && (update.theme || update.accent)
                     ? queryClient.setQueryData(['api', '/api/v1/me'], {
                           ...previous,
                           theme: update.theme ?? previous.theme,
                           accent: update.accent ?? previous.accent,
-                          navigation: update.navigation ?? previous.navigation,
                       })
                     : undefined;
 

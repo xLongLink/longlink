@@ -53,42 +53,6 @@ export default function AppearanceSettings() {
                     ))}
                 </Stack>
             </Stack>
-            <Stack gap={3} role="group" aria-label="Navigation layout">
-                <Heading level={4} accessibilityLevel={3}>
-                    Layout
-                </Heading>
-                <Stack direction="horizontal" wrap="wrap" gap={3}>
-                    {(
-                        [
-                            { value: 'sidebar', label: 'Sidebar', image: 'layout_sidebar.png' },
-                            { value: 'topbar', label: 'Topbar', image: 'layout_topbar.png' },
-                        ] as const
-                    ).map(({ value, label, image }) => (
-                        <SelectableCard
-                            key={value}
-                            label={label}
-                            padding={2}
-                            isSelected={appearance.navigation === value}
-                            isDisabled={userUpdate.isPending}
-                            onChange={() => {
-                                if (!userUpdate.isPending && appearance.navigation !== value)
-                                    userUpdate.mutate({ navigation: value });
-                            }}
-                        >
-                            <Stack gap={2}>
-                                <Text>{label}</Text>
-                                <img
-                                    src={`/images/${image}`}
-                                    alt=""
-                                    width={1448}
-                                    height={1086}
-                                    className="aspect-3/2 w-40 max-w-full rounded-md object-contain p-2"
-                                />
-                            </Stack>
-                        </SelectableCard>
-                    ))}
-                </Stack>
-            </Stack>
             <Stack gap={3}>
                 <Heading level={4} accessibilityLevel={3}>
                     Appearance

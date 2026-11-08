@@ -1,14 +1,12 @@
 // @vitest-environment happy-dom
+import { act } from 'react';
 import { Link } from 'react-router';
-import { act, useState } from 'react';
 import type { Window } from 'happy-dom';
 import { Home, Users } from 'lucide-react';
 import Platform from '@/components/layouts/Platform';
-import { defaultAppearance } from '@/lib/appearance';
 import { LinkProvider } from '@astryxdesign/core/Link';
 import { renderStatic, withMounted } from '../../render';
 import { it, expect, afterEach, beforeEach } from 'vitest';
-import { AppearanceContext } from '@/lib/hooks/use-appearance';
 
 // SAFETY: The configured happy-dom environment supplies this viewport API on its window.
 const viewport = (window as typeof window & Pick<Window, 'happyDOM'>).happyDOM;
@@ -45,112 +43,79 @@ it('selects the longest matching navigation path', () => {
     expect(output.querySelector('[aria-current="page"]')?.textContent).toContain('Users');
 });
 
-it.each(['sidebar', 'topbar'] as const)(
-    'preserves the original trailing-slash tab href in the %s appearance',
-    async (navigation) => {
-        // Arrange
-        viewport.setViewport({ width: 1280 });
-
-        // Act
-        await withMounted(
-            <AppearanceContext value={{ appearance: { ...defaultAppearance, navigation } }}>
-                <LinkProvider component={Link}>
-                    <Platform
-                        action={null}
-                        tabs={[
-                            { href: '/admin/users/', label: 'Users' },
-                            { href: '/admin', label: 'Overview' },
-                        ]}
-                    >
-                        <h1>User details</h1>
-                    </Platform>
-                </LinkProvider>
-            </AppearanceContext>,
-            async (output) => {
-                // Assert
-                expect(
-                    Array.from(output.querySelectorAll('a[aria-current]'), (link) => link.getAttribute('href'))
-                ).toEqual(['/admin/users/']);
-            },
-            '/admin/users/42/'
-        );
-    }
-);
-
-it.each(['sidebar', 'topbar'] as const)(
-    'uses the %s appearance and selects the longest nested route with a trailing slash',
-    async (navigation) => {
-        // Arrange
-        viewport.setViewport({ width: 1280 });
-
-        // Act
-        await withMounted(
-            <AppearanceContext value={{ appearance: { ...defaultAppearance, navigation } }}>
-                <LinkProvider component={Link}>
-                    <Platform
-                        action={<button>Account</button>}
-                        tabs={[
-                            { href: '/admin', label: 'Overview' },
-                            { href: '/admin/users', label: 'Users' },
-                            { href: '/admin/users/active', label: 'Active users' },
-                        ]}
-                    >
-                        <h1>User details</h1>
-                    </Platform>
-                </LinkProvider>
-            </AppearanceContext>,
-            async (output) => {
-                // Assert
-                expect(output.querySelector('nav[aria-label="Platform navigation"]') !== null).toBe(
-                    navigation === 'topbar'
-                );
-                expect(output.querySelector('button[aria-label="Collapse sidebar"]') !== null).toBe(
-                    navigation === 'sidebar'
-                );
-                expect(
-                    Array.from(output.querySelectorAll('a[aria-current]'), (link) => link.getAttribute('href'))
-                ).toEqual(['/admin/users/active']);
-                expect(output.querySelector('h1')?.textContent).toBe('User details');
-                expect(Array.from(output.querySelectorAll('button'), (button) => button.textContent)).toContain(
-                    'Account'
-                );
-            },
-            '/admin/users/active/42/'
-        );
-    }
-);
-
-it('keeps loading navigation in the sidebar, then uses the topbar for an empty result', async () => {
+it('preserves the original trailing-slash tab href', async () => {
     // Arrange
-    function LoadingNavigation() {
-        const [isLoading, setIsLoading] = useState(true);
-
-        return (
-            <Platform action={null} tabs={[]} isNavigationLoading={isLoading}>
-                <button onClick={() => setIsLoading(false)}>Finish loading</button>
-                <h1>Solution content</h1>
-            </Platform>
-        );
-    }
+    viewport.setViewport({ width: 1280 });
 
     // Act
-    await withMounted(<LoadingNavigation />, async (output) => {
-        // Assert
-        expect(output.querySelector('nav[aria-label="Section navigation"]')).not.toBeNull();
-        expect(output.querySelector('nav[aria-label="Platform navigation"]')).toBeNull();
+    await withMounted(
+        <LinkProvider component={Link}>
+            <Platform
+                action={null}
+                tabs={[
+                    { href: '/admin/users/', label: 'Users' },
+                    { href: '/admin', label: 'Overview' },
+                ]}
+            >
+                <h1>User details</h1>
+            </Platform>
+        </LinkProvider>,
+        async (output) => {
+            // Assert
+            expect(Array.from(output.querySelectorAll('a[aria-current]'), (link) => link.getAttribute('href'))).toEqual(
+                ['/admin/users/']
+            );
+        },
+        '/admin/users/42/'
+    );
+});
 
-        // Act
-        await act(async () =>
-            Array.from(output.querySelectorAll('button'))
-                .find((button) => button.textContent === 'Finish loading')
-                ?.click()
-        );
+it('uses the sidebar and selects the longest nested route with a trailing slash', async () => {
+    // Arrange
+    viewport.setViewport({ width: 1280 });
 
-        // Assert
-        expect(output.querySelector('nav[aria-label="Platform navigation"]')).not.toBeNull();
-        expect(output.querySelector('nav[aria-label="Section navigation"]')).toBeNull();
-        expect(output.querySelector('h1')?.textContent).toBe('Solution content');
-    });
+    // Act
+    await withMounted(
+        <LinkProvider component={Link}>
+            <Platform
+                action={<button>Account</button>}
+                tabs={[
+                    { href: '/admin', label: 'Overview' },
+                    { href: '/admin/users', label: 'Users' },
+                    { href: '/admin/users/active', label: 'Active users' },
+                ]}
+            >
+                <h1>User details</h1>
+            </Platform>
+        </LinkProvider>,
+        async (output) => {
+            // Assert
+            expect(output.querySelector('nav[aria-label="Section navigation"]')).not.toBeNull();
+            expect(output.querySelector('button[aria-label="Collapse sidebar"]')).not.toBeNull();
+            expect(Array.from(output.querySelectorAll('a[aria-current]'), (link) => link.getAttribute('href'))).toEqual(
+                ['/admin/users/active']
+            );
+            expect(output.querySelector('h1')?.textContent).toBe('User details');
+            expect(Array.from(output.querySelectorAll('button'), (button) => button.textContent)).toContain('Account');
+        },
+        '/admin/users/active/42/'
+    );
+});
+
+it('keeps the sidebar when navigation is empty', async () => {
+    // Act
+    await withMounted(
+        <Platform action={null} tabs={[]}>
+            <h1>Solution content</h1>
+        </Platform>,
+        async (output) => {
+            // Assert
+            expect(output.querySelector('nav[aria-label="Section navigation"]')).not.toBeNull();
+            expect(output.querySelector('nav[aria-label="Platform navigation"]')).toBeNull();
+
+            expect(output.querySelector('h1')?.textContent).toBe('Solution content');
+        }
+    );
 });
 
 it('keeps mobile and desktop collapse preferences independent across viewport changes', async () => {

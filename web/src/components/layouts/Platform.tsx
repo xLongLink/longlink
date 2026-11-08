@@ -1,7 +1,5 @@
 import { useLocation } from 'react-router';
-import Topbar from '@/components/layouts/Topbar';
 import Sidebar from '@/components/layouts/Sidebar';
-import { useAppearance } from '@/lib/hooks/use-appearance';
 import type { NavigationTab, PlatformProps } from '@/components/layouts/types';
 
 /** Finds the longest platform tab path that matches a pathname. */
@@ -27,22 +25,10 @@ function findActiveTab(tabs: readonly NavigationTab[], pathname: string): string
     return bestTab?.href;
 }
 
-/** Selects application navigation without knowing the route's domain or identity. */
-export default function Platform({
-    activeTab,
-    hasNavigationError = false,
-    isNavigationLoading = false,
-    ...props
-}: PlatformProps) {
+/** Renders sidebar navigation without knowing the route's domain or identity. */
+export default function Platform({ activeTab, ...props }: PlatformProps) {
     const { pathname } = useLocation();
-    const { appearance } = useAppearance();
     const selectedTab = activeTab ?? findActiveTab(props.tabs, pathname) ?? '';
 
-    // Use the topbar for confirmed empty navigation, not loading or failed reads.
-    const Layout =
-        appearance.navigation === 'sidebar' && (isNavigationLoading || hasNavigationError || props.tabs.length > 0)
-            ? Sidebar
-            : Topbar;
-
-    return <Layout {...props} activeTab={selectedTab} />;
+    return <Sidebar {...props} activeTab={selectedTab} />;
 }

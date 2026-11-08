@@ -1,5 +1,4 @@
 import { Outlet } from 'react-router';
-import { Wordmark } from '@/components/Wordmark';
 import { ProfileMenu } from '@/components/Profile';
 import { adminNavigation } from '@/platform/admin';
 import Platform from '@/components/layouts/Platform';
@@ -23,14 +22,6 @@ export default function Admin() {
             homeHref="/user/organizations"
             breadcrumb={
                 <Breadcrumbs separator=">" variant="supporting">
-                    <BreadcrumbItem isCurrent>Admin</BreadcrumbItem>
-                </Breadcrumbs>
-            }
-            topbarHeading={
-                <Breadcrumbs separator=">" variant="supporting">
-                    <BreadcrumbItem href="/user/organizations">
-                        <Wordmark />
-                    </BreadcrumbItem>
                     <BreadcrumbItem isCurrent>Admin</BreadcrumbItem>
                 </Breadcrumbs>
             }
