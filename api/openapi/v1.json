@@ -4777,14 +4777,6 @@
               "rose"
             ],
             "title": "Accent"
-          },
-          "navigation": {
-            "type": "string",
-            "enum": [
-              "topbar",
-              "sidebar"
-            ],
-            "title": "Navigation"
           }
         },
         "type": "object",
@@ -4795,8 +4787,7 @@
           "avatar",
           "administrator",
           "theme",
-          "accent",
-          "navigation"
+          "accent"
         ],
         "title": "CurrentUser",
         "description": "Include personal preferences only in the account's own profile."
@@ -6673,21 +6664,6 @@
               }
             ],
             "title": "Accent"
-          },
-          "navigation": {
-            "anyOf": [
-              {
-                "type": "string",
-                "enum": [
-                  "topbar",
-                  "sidebar"
-                ]
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Navigation"
           }
         },
         "type": "object",
