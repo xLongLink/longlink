@@ -1,5 +1,6 @@
 from enum import StrEnum
 from uuid import UUID
+from typing import Literal
 from decimal import Decimal
 from datetime import datetime
 from pydantic import Field, BaseModel, ConfigDict
@@ -57,7 +58,7 @@ class OrganizationByteUsage(BaseModel):
 
 
 class OrganizationQuotasResponse(BaseModel):
-    """Represent stored per-Organization quotas in administrator responses."""
+    """Represent per-Organization quotas in administrator responses."""
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -66,7 +67,7 @@ class OrganizationQuotasResponse(BaseModel):
 
     # Database
     database_size_mib: int
-    database_instances: int
+    database_instances: Literal[1] = 1
 
     # Storage
     storage_quota_bytes: int

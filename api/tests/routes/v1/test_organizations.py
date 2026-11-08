@@ -127,10 +127,7 @@ async def test_get_organization_by_id_returns_owner_membership(
     # Assert
     assert response.status_code == 200
     assert response.headers["cache-control"] == "no-store"
-    assert response.json() == {
-        "organization": {"id": str(organization.id), "name": "acme", "status": "creating"},
-        "role": "owner",
-    }
+    assert response.json() == {"organization": {"id": str(organization.id), "name": "acme", "status": "creating"}, "role": "owner"}
 
 
 async def test_get_organization_by_id_hides_cross_tenant_organization(
@@ -234,7 +231,7 @@ async def test_get_organization_solutions_rejects_another_organization_owner(
 async def test_get_organization_quotas_requires_platform_administrator(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient], users: tuple[User, User, User]
 ) -> None:
-    """Return stored quotas only to platform administrators without membership."""
+    """Return quotas only to platform administrators without membership."""
 
     # Arrange
     organization = await create_organization(users[1])
@@ -242,7 +239,6 @@ async def test_get_organization_quotas_requires_platform_administrator(
         persisted = await session.get(Organization, organization.id)
         assert persisted is not None
         persisted.database_size_mib = 512
-        persisted.database_instances = 2
         persisted.storage_quota_bytes = 4096
         await session.commit()
 
@@ -255,7 +251,7 @@ async def test_get_organization_quotas_requires_platform_administrator(
     assert administrator_response.json() == {
         "id": str(organization.id),
         "database_size_mib": 512,
-        "database_instances": 2,
+        "database_instances": 1,
         "storage_quota_bytes": 4096,
     }
     assert member_response.status_code == 403
@@ -1130,9 +1126,7 @@ async def test_deleted_organization_returns_forbidden_to_former_owner(
         assert persisted.deleted_at is not None
 
 
-async def test_create_organization_accepts_long_display_name(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-) -> None:
+async def test_create_organization_accepts_long_display_name(clients: tuple[AsyncClient, AsyncClient, AsyncClient]) -> None:
     """Accept display names beyond the former slug length limit."""
 
     # Arrange

@@ -27,9 +27,6 @@ async def lock(session: AsyncSession, organization_id: UUID) -> None:
 async def create(session: AsyncSession, organization_id: UUID, payload: RegistryCreate, user_id: UUID) -> RegistryConnection:
     """Authorize a registry connection and queue secret synchronization in the caller's final transaction."""
 
-    # Authorize before using the submitted token to resolve its GitHub account.
-    await organizations.require_membership(session, user_id, organization_id, OrganizationRoles.maintain)
-
     # Release the transaction before waiting for GitHub.
     await session.commit()
     username = await github.username(payload.credential)

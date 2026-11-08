@@ -1,6 +1,7 @@
 from uuid import UUID
 from fastapi import HTTPException
 from longlink import permissions
+from sqlmodel import col
 from sqlalchemy import select
 from src.models import permissions as models
 from sqlalchemy.orm import defer
@@ -15,25 +16,30 @@ from src.database.models.permissions import PermissionCatalog, SolutionMemberAcc
 async def load_solution(session: AsyncSession, solution_id: UUID, user_id: UUID, *, manage: bool) -> Solution:
     """Load an active Solution, checking management authority for administrative operations."""
 
-    # Avoid loading runtime credentials for permission-management requests.
-    solution = await session.scalar(
+    # Serialize administrative edits with membership revocation and Solution commands.
+    if manage:
+        organization_id = await session.scalar(
+            select(col(Solution.organization_id)).where(Solution.id == solution_id, Solution.deleted_at.is_(None))
+        )
+        if organization_id is None:
+            raise HTTPException(status_code=404, detail="Solution not found")
+        organization = await organizations.lock(session, organization_id)
+        if organization.deleted_at is not None:
+            raise HTTPException(status_code=403, detail="Organization unavailable")
+        await organizations.locked_membership(session, user_id, organization_id, OrganizationRoles.admin)
+
+    # Load authoritative Solution state without runtime credentials, locking administrative reads.
+    statement = (
         select(Solution)
         .options(defer(attr(Solution.secrets)))
         .where(Solution.id == solution_id, Solution.deleted_at.is_(None))
         .execution_options(populate_existing=True)
     )
+    if manage:
+        statement = statement.with_for_update()
+    solution = await session.scalar(statement)
     if solution is None:
         raise HTTPException(status_code=404, detail="Solution not found")
-
-    # Serialize administrative edits with membership revocation and Solution commands.
-    if manage:
-        organization = await organizations.lock(session, solution.organization_id)
-        if organization.deleted_at is not None:
-            raise HTTPException(status_code=403, detail="Organization unavailable")
-        await organizations.locked_membership(session, user_id, solution.organization_id, OrganizationRoles.admin)
-        solution = await session.get(Solution, solution_id, populate_existing=True, with_for_update=True)
-        if solution is None or solution.deleted_at is not None:
-            raise HTTPException(status_code=404, detail="Solution not found")
     return solution
 
 

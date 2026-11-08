@@ -16,9 +16,7 @@ if TYPE_CHECKING:
 ClusterResource = new_class("Cluster", "postgresql.cnpg.io/v1", asyncio=True, plural="clusters")
 
 
-async def apply(
-    client: "Kubernetes", organization_id: UUID, password: str, storage_class: str, *, size_mib: int = 100, instances: int = 1
-) -> None:
+async def apply(client: "Kubernetes", organization_id: UUID, password: str, storage_class: str, *, size_mib: int = 100) -> None:
     """Create the database boundary and wait for a writable PostgreSQL cluster."""
 
     # Render the isolated database boundary before accessing Kubernetes.
@@ -29,11 +27,8 @@ async def apply(
         compute_namespace=namespace.compute(organization_id),
         storage_class=json.dumps(storage_class),
         size_mib=size_mib,
-        instances=instances,
-        quota_pods=2 * instances + 1,
-        quota_instances=instances + 1,
         # Reserve storage for an additional instance during replacement.
-        quota_storage_mib=size_mib * (instances + 1),
+        quota_storage_mib=size_mib * 2,
     )
     api = await client.api()
 
@@ -62,14 +57,14 @@ async def apply(
     await wait_ready(client, organization_id)
 
 
-async def resize(client: "Kubernetes", organization_id: UUID, *, size_mib: int, instances: int) -> None:
+async def resize(client: "Kubernetes", organization_id: UUID, *, size_mib: int) -> None:
     """Apply monotonically increasing desired database capacity without reprovisioning credentials."""
 
     # Desired capacity is retained on downgrades; expand namespace admission before CNPG requests larger PVCs.
     api = await client.api()
     database_namespace = namespace.database(organization_id)
     quota = ResourceQuota("longlink-database", namespace=database_namespace, api=api)
-    await quota.patch({"spec": {"hard": {"requests.storage": f"{size_mib * (instances + 1)}Mi"}}})
+    await quota.patch({"spec": {"hard": {"requests.storage": f"{size_mib * 2}Mi"}}})
     cluster = ClusterResource("database", namespace=database_namespace, api=api)
     await cluster.patch({"spec": {"storage": {"size": f"{size_mib}Mi"}}})
 

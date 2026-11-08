@@ -214,7 +214,6 @@ async def ready(organization_id: UUID) -> bool:
                         # Preserve the Compute's selected persistent storage class.
                         database_storage_class,
                         size_mib=organization.database_size_mib,
-                        instances=organization.database_instances,
                     )
 
                 # Existing infrastructure must be ready before using PostgreSQL.

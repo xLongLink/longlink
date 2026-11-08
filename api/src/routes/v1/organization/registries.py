@@ -30,7 +30,7 @@ async def list_registries(session: auth.Session, membership: auth.OrganizationMe
 async def create_registry(session: auth.Session, payload: RegistryCreate, membership: auth.OrganizationMaintainer) -> RegistryConnection:
     """Create an organization-owned connection and queue secret synchronization."""
 
-    # The service owns authorization and synchronization; the route commits the final command.
+    # The service revalidates access after GitHub I/O; the route commits the final command.
     connection = await registries.create(session, membership.organization_id, payload, membership.user_id)
     await session.commit()
     return connection

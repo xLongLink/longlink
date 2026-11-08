@@ -21,9 +21,9 @@ async def list_organizations(session: auth.Session, pagination: Pagination = Dep
 
 @router.get("/organizations/{organization_id}/quotas", response_model=OrganizationQuotasResponse)
 async def get_organization_quotas(session: auth.Session, organization_id: UUID):
-    """Return stored Organization quotas for administrator views."""
+    """Return Organization quotas for administrator views."""
 
-    # Read stored quotas without touching provider boundaries.
+    # Read Organization quotas without touching provider boundaries.
     organization = await session.get(Organization, organization_id)
     if organization is None or organization.deleted_at is not None:
         raise HTTPException(status_code=404, detail="Organization not found")
