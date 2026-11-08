@@ -48,6 +48,7 @@ export function JsxView({
     const reportError = useApiError();
     const [height, setHeight] = useState(1);
     const [modalDepth, setModalDepth] = useState(0);
+    const [frameBounds, setFrameBounds] = useState<DOMRect>();
 
     const [bootstrapState, setBootstrapState] = useState<
         | { status: 'preparing' }
@@ -109,6 +110,30 @@ export function JsxView({
         const pending = new Set<number>();
         let handshakeTimer: ReturnType<typeof setTimeout> | undefined;
 
+        /** Sends host-measured visible bounds without giving the sandbox control of page geometry. */
+        function measureViewport(): void {
+            const element = frame.current;
+
+            if (!element || appearancePort.current !== channel.port1) return;
+            const bounds = element.getBoundingClientRect();
+
+            if (bounds.height === 0) return;
+            setFrameBounds(bounds);
+            const viewport = window.visualViewport;
+            const viewportTop = viewport?.offsetTop ?? 0;
+            const viewportHeight = viewport?.height ?? window.innerHeight;
+            const top = Math.max(0, Math.min(bounds.height, viewportTop - bounds.top));
+            const bottom = Math.max(0, Math.min(bounds.height - top, bounds.bottom - viewportTop - viewportHeight));
+            channel.port1.postMessage({ type: 'viewport', top, bottom, height: bounds.height - top - bottom });
+        }
+
+        // Track page-owned scrolling and resizing while the sandbox retains native modal ownership.
+        const viewportObserver = new ResizeObserver(measureViewport);
+        window.addEventListener('resize', measureViewport, { signal: controller.signal });
+        window.addEventListener('scroll', measureViewport, { capture: true, signal: controller.signal });
+        window.visualViewport?.addEventListener('resize', measureViewport, { signal: controller.signal });
+        window.visualViewport?.addEventListener('scroll', measureViewport, { signal: controller.signal });
+
         /** Reports safe Solution failures once in the page and returns them to the requesting View. */
         function rejectRequest(
             command: { id: number; type: 'request' | 'download' | 'icon' },
@@ -129,6 +154,7 @@ export function JsxView({
             setModalDepth(0);
             clearTimeout(handshakeTimer);
             window.removeEventListener('message', ready);
+            viewportObserver.disconnect();
 
             if (appearancePort.current === channel.port1) appearancePort.current = null;
             channel.port1.close();
@@ -168,6 +194,10 @@ export function JsxView({
                     [channel.port2]
                 );
                 appearancePort.current = channel.port1;
+
+                if (frame.current) viewportObserver.observe(frame.current);
+                viewportObserver.observe(document.body);
+                measureViewport();
                 clearTimeout(handshakeTimer);
             } catch (error) {
                 fail('transfer', error instanceof Error ? error.name : 'Error');
@@ -305,7 +335,7 @@ export function JsxView({
 
     return (
         <>
-            {modalDepth > 0 && <ViewBackdrop frame={frame} depth={modalDepth} />}
+            {modalDepth > 0 && frameBounds && <ViewBackdrop bounds={frameBounds} depth={modalDepth} />}
             {/* Keep modal viewport units usable on short Views while retaining page-owned scrolling for long content. */}
             <iframe
                 ref={frame}

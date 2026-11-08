@@ -115,6 +115,7 @@ export default defineConfig(({ mode }) => {
         envPrefix: ['VITE_', 'VERSION'],
 
         build: {
+            assetsDir: mode === 'sdk' ? '_longlink/assets' : 'assets',
             rolldownOptions: {
                 checks: {
                     moduleLevelDirective: false,

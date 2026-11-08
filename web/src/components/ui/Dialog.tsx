@@ -20,6 +20,7 @@ export function Dialog(props: {
     paddingInline?: Spacing;
 }) {
     const activity = use(DialogActivityContext);
+    const maxHeight = 'calc(var(--view-viewport-height, 100dvh) - var(--spacing-10) * 4)';
 
     // Let an isolated runtime extend the backdrop without moving the native dialog out of its document.
     useEffect(() => {
@@ -36,7 +37,8 @@ export function Dialog(props: {
             onOpenChange={props.onOpenChange}
             purpose="form"
             width={960}
-            maxHeight="calc(100dvh - var(--spacing-10) * 4)"
+            className="top-(--view-viewport-top) bottom-(--view-viewport-bottom)"
+            maxHeight={maxHeight}
             padding={0}
         >
             <IconButton
@@ -47,12 +49,7 @@ export function Dialog(props: {
                 className="absolute top-3 end-3 z-10"
                 onClick={() => props.onOpenChange(false)}
             />
-            <Stack
-                gap={0}
-                height="min(560px, calc(100dvh - var(--spacing-10) * 4))"
-                minHeight={0}
-                className="overflow-hidden"
-            >
+            <Stack gap={0} height={`min(560px, ${maxHeight})`} minHeight={0} className="overflow-hidden">
                 {props.title && <DialogHeader title={props.title} className="p-4 pe-12" />}
                 <Stack
                     minHeight={0}
