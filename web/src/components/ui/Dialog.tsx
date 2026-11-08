@@ -13,6 +13,8 @@ export function Dialog(props: {
     children?: ReactNode;
     /** Shows a dialog header when a title is provided. */
     title?: string;
+    /** Fullscreen fills about 95% of the screen, including over Platform navigation. */
+    variant?: 'standard' | 'fullscreen';
     isOpen: boolean;
     onOpenChange: (open: boolean) => void;
     /** Spacing between the title and content; defaults to 3. */
@@ -20,15 +22,16 @@ export function Dialog(props: {
     paddingInline?: Spacing;
 }) {
     const activity = use(DialogActivityContext);
-    const maxHeight = 'calc(var(--view-viewport-height, 100dvh) - var(--spacing-10) * 4)';
+    const fullscreen = props.variant === 'fullscreen';
+    const maxHeight = fullscreen ? '95dvh' : 'calc(var(--view-viewport-height, 100dvh) - var(--spacing-10) * 4)';
 
     // Let an isolated runtime extend the backdrop without moving the native dialog out of its document.
     useEffect(() => {
         if (!props.isOpen || !activity) return;
-        activity(true);
+        activity(true, fullscreen);
 
-        return () => activity(false);
-    }, [props.isOpen, activity]);
+        return () => activity(false, fullscreen);
+    }, [props.isOpen, activity, fullscreen]);
 
     // Keep the header fixed while bounding the content to the available viewport height.
     return (
@@ -36,8 +39,8 @@ export function Dialog(props: {
             isOpen={props.isOpen}
             onOpenChange={props.onOpenChange}
             purpose="form"
-            width={960}
-            className="top-(--view-viewport-top) bottom-(--view-viewport-bottom)"
+            width={fullscreen ? '95dvw' : 960}
+            className={fullscreen ? undefined : 'top-(--view-viewport-top) bottom-(--view-viewport-bottom)'}
             maxHeight={maxHeight}
             padding={0}
         >
@@ -49,7 +52,12 @@ export function Dialog(props: {
                 className="absolute top-3 end-3 z-10"
                 onClick={() => props.onOpenChange(false)}
             />
-            <Stack gap={0} height={`min(560px, ${maxHeight})`} minHeight={0} className="overflow-hidden">
+            <Stack
+                gap={0}
+                height={fullscreen ? maxHeight : `min(560px, ${maxHeight})`}
+                minHeight={0}
+                className="overflow-hidden"
+            >
                 {props.title && <DialogHeader title={props.title} className="p-4 pe-12" />}
                 <Stack
                     minHeight={0}

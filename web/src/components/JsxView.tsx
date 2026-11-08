@@ -4,12 +4,14 @@ import * as host from '@/views/host';
 import { useApiError } from '@/lib/errors';
 import { useNavigate } from 'react-router';
 import { resolveNavigationUrl } from '@/lib/url';
+import { Stack } from '@astryxdesign/core/Stack';
 import { useQuery } from '@tanstack/react-query';
 import type { ViewRuntime } from '@/views/manifest';
-import { useEffect, useRef, useState } from 'react';
 import { ViewBackdrop } from '@/components/ViewBackdrop';
+import { useScrollLock } from '@astryxdesign/core/hooks';
 import { useAppearance } from '@/lib/hooks/use-appearance';
 import { PageError, PageLoading } from '@/components/Utils';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { commandSchema, parametersSchema, iconDataSchema, type ViewData, type ViewAppearance } from '@/views/protocol';
 
 const BOOTSTRAP_TIMEOUT_MS = 10_000;
@@ -47,8 +49,40 @@ export function JsxView({
     const navigate = useNavigate();
     const reportError = useApiError();
     const [height, setHeight] = useState(1);
-    const [modalDepth, setModalDepth] = useState(0);
     const [frameBounds, setFrameBounds] = useState<DOMRect>();
+    const [modal, setModal] = useState({ depth: 0, fullscreen: false });
+
+    // Reuse Astryx's shared scroll lock while the sandbox covers the Platform.
+    useScrollLock(modal.fullscreen);
+
+    // Promote the existing frame without reparenting it, which would reload its document and lose View state.
+    useLayoutEffect(() => {
+        const element = frame.current;
+
+        if (!modal.fullscreen || !element) return;
+        element.showPopover();
+        const siblings = new Map<HTMLElement, boolean>();
+
+        // Keep host controls out of keyboard and assistive-technology navigation during the fullscreen modal.
+        for (
+            let ancestor: HTMLElement = element;
+            ancestor.parentElement && ancestor !== document.body;
+            ancestor = ancestor.parentElement
+        ) {
+            for (const sibling of ancestor.parentElement.children) {
+                if (sibling instanceof HTMLElement && sibling !== ancestor) {
+                    siblings.set(sibling, sibling.inert);
+                    sibling.inert = true;
+                }
+            }
+        }
+
+        return () => {
+            if (element.matches(':popover-open')) element.hidePopover();
+
+            for (const [sibling, inert] of siblings) sibling.inert = inert;
+        };
+    }, [modal.fullscreen]);
 
     const [bootstrapState, setBootstrapState] = useState<
         | { status: 'preparing' }
@@ -151,7 +185,7 @@ export function JsxView({
         /** Revokes the attempt's capabilities and startup deadline on failure or unmount. */
         function dispose(): void {
             controller.abort();
-            setModalDepth(0);
+            setModal({ depth: 0, fullscreen: false });
             clearTimeout(handshakeTimer);
             window.removeEventListener('message', ready);
             viewportObserver.disconnect();
@@ -219,9 +253,9 @@ export function JsxView({
                 return;
             }
 
-            // Extend only the visual backdrop; native modality and View code stay inside the sandbox.
+            // Keep modal content sandboxed; only the host can promote its frame over Platform navigation.
             if (command.type === 'modal') {
-                setModalDepth(command.depth);
+                setModal({ depth: command.depth, fullscreen: command.depth > 0 && command.fullscreen === true });
 
                 return;
             }
@@ -334,9 +368,13 @@ export function JsxView({
     if (bootstrapState.status === 'preparing') return <PageLoading label="Preparing View" />;
 
     return (
-        <>
-            {modalDepth > 0 && frameBounds && <ViewBackdrop bounds={frameBounds} depth={modalDepth} />}
-            {/* Keep modal viewport units usable on short Views while retaining page-owned scrolling for long content. */}
+        <Stack
+            height={height}
+            minHeight="calc(100dvh - var(--_app-shell-header-height, 0px) - var(--platform-toolbar-height, 0px) - var(--spacing-2) * 4)"
+        >
+            {modal.depth > 0 && !modal.fullscreen && frameBounds && (
+                <ViewBackdrop bounds={frameBounds} depth={modal.depth} />
+            )}
             <iframe
                 ref={frame}
                 title="Solution View"
@@ -344,13 +382,13 @@ export function JsxView({
                 sandbox="allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox"
                 referrerPolicy="no-referrer"
                 srcDoc={bootstrapState.document}
-                className="block w-full shrink-0 border-0 bg-transparent"
-                style={{
-                    height,
-                    minHeight:
-                        'calc(100dvh - var(--_app-shell-header-height, 0px) - var(--platform-toolbar-height, 0px) - var(--spacing-2) * 4)',
-                }}
+                popover={modal.fullscreen ? 'manual' : undefined}
+                className={
+                    modal.fullscreen
+                        ? 'fixed inset-0 m-0 h-dvh max-h-none w-screen max-w-none border-0 bg-transparent p-0'
+                        : 'block h-full w-full flex-1 shrink-0 border-0 bg-transparent'
+                }
             />
-        </>
+        </Stack>
     );
 }

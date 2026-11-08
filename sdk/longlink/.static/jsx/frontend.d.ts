@@ -4726,6 +4726,8 @@ declare function Dialog(props: {
     children?: ViewNode;
     /** Shows a dialog header when a title is provided. */
     title?: string;
+    /** Fullscreen fills about 95% of the screen, including over Platform navigation. Defaults to standard. */
+    variant?: 'standard' | 'fullscreen';
     isOpen: boolean;
     onOpenChange: (open: boolean) => void;
     /** Spacing between the title and content; defaults to 3. */

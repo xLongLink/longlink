@@ -111,7 +111,13 @@ export const commandSchema = z.discriminatedUnion('type', [
     requestSchema,
     // Only bounded dimensions cross the sandbox boundary; the host owns page scrolling.
     z.object({ type: z.literal('resize'), height: z.number().int().min(1).max(1_000_000) }).strict(),
-    z.object({ type: z.literal('modal'), depth: z.number().int().min(0).max(MAX_MODAL_DEPTH) }).strict(),
+    z
+        .object({
+            type: z.literal('modal'),
+            depth: z.number().int().min(0).max(MAX_MODAL_DEPTH),
+            fullscreen: z.boolean().optional(),
+        })
+        .strict(),
     z.object({ type: z.literal('navigate'), path: z.string().min(1), newTab: z.boolean().optional() }).strict(),
     downloadSchema,
     iconSchema,

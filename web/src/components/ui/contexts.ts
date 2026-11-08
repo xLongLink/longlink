@@ -13,7 +13,7 @@ export const FormRequestContext = createContext<
     | null
 >(null);
 
-export const DialogActivityContext = createContext<((open: boolean) => void) | null>(null);
+export const DialogActivityContext = createContext<((open: boolean, fullscreen: boolean) => void) | null>(null);
 
 // Native pages and isolated Views supply separate loaders for the same public icon contract.
 export const IconRequestContext = createContext<((name: string) => Promise<LucideIconData>) | null>(null);

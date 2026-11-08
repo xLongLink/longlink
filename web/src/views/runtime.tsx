@@ -270,12 +270,21 @@ function initialize(event: MessageEvent<unknown>): void {
 
     const root = createRoot(mount);
     let modalDepth = 0;
+    let fullscreenDepth = 0;
 
     /** Report bounded modal nesting without granting the sandbox control over host geometry or styles. */
-    function modalActivity(open: boolean): void {
+    function modalActivity(open: boolean, fullscreen: boolean): void {
         if (lifetime.signal.aborted) return;
         modalDepth += open ? 1 : -1;
-        port.postMessage({ type: 'modal', depth: Math.min(MAX_MODAL_DEPTH, Math.max(0, modalDepth)) });
+
+        if (fullscreen) fullscreenDepth += open ? 1 : -1;
+
+        const command = {
+            type: 'modal',
+            depth: Math.min(MAX_MODAL_DEPTH, Math.max(0, modalDepth)),
+        };
+
+        port.postMessage(fullscreenDepth > 0 ? { ...command, fullscreen: true } : command);
     }
 
     // Report natural content height, including async data and wrapping, over the private channel.
