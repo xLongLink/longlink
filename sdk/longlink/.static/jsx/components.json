@@ -968,6 +968,10 @@
                 {
                     "name": "useApi(path)",
                     "description": "Returns Solution data and an awaitable invalidator scoped to the full request path. The renderer handles initial loading, errors, and retry."
+                },
+                {
+                    "name": "useConfirm()",
+                    "description": "Returns show(options), hide(), isOpen, and element; render element once in JSX. Options require title, actionLabel, and onAction: () => void | Promise<void>. Optional description, cancelLabel (default Cancel), and actionVariant: primary | secondary | destructive (default primary). Cancel receives initial focus; Escape cancels and backdrop clicks do not dismiss. Async actions show loading, prevent duplicate submissions, and close only after success. Failure keeps the dialog open for retry; scoped request errors are reported by the host, other errors appear inside the dialog. While pending, Cancel, Escape, show(), and hide() are ignored. Example: const confirmation = useConfirm(); confirmation.show({ title: 'Conferma variante A', cancelLabel: 'Annulla', actionLabel: 'Continua', onAction: async () => { await request('/api/variants', { method: 'POST', json: { variant: 'A' } }); } }); Render {confirmation.element} beside the trigger Button."
                 }
             ]
         },
@@ -2454,6 +2458,17 @@
         "Layouts": "Arranging content, panels, navigation, dialogs, tabs, and steps."
     },
     "patterns": [
+        {
+            "name": "Confirmation",
+            "description": "Ask for Continue or Cancel before a scoped Solution operation, without managing dialog-open state.",
+            "keywords": ["confirmation", "confirm", "continue cancel", "alert dialog"],
+            "components": ["Hooks", "Button", "Functions"],
+            "steps": [
+                "Call useConfirm() at the top level and render its element once beside the trigger Button.",
+                "Call show({ title, actionLabel, cancelLabel, onAction }) from the trigger. Description is optional; use translated labels when needed.",
+                "Await request(path, { method: 'POST', json: payload }) inside onAction. Successful actions dismiss automatically; failures stay open for retry."
+            ]
+        },
         {
             "name": "Data table",
             "description": "Present searchable records using data-driven rows and explicit query state.",

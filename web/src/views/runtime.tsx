@@ -11,6 +11,7 @@ import { Spinner } from '@astryxdesign/core/Spinner';
 import { ErrorBoundary } from 'react-error-boundary';
 import { stoneTheme } from '@/lib/generated/stone.js';
 import { LayerProvider } from '@astryxdesign/core/Layer';
+import { useConfirm } from '@/components/ui/confirmation';
 import { FileRequestContext } from '@/components/ui/preview';
 import { Layout, LayoutContent } from '@astryxdesign/core/Layout';
 import { QueryClient, QueryClientProvider, QueryErrorResetBoundary, useSuspenseQuery } from '@tanstack/react-query';
@@ -340,6 +341,7 @@ function initialize(event: MessageEvent<unknown>): void {
             request,
             navigate,
             useApi,
+            useConfirm,
         };
 
         type ViewComponent = React.ComponentType<{ params: Readonly<Record<string, string>> }>;
