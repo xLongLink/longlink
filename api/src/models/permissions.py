@@ -1,6 +1,5 @@
 from uuid import UUID
 from pydantic import Field, BaseModel, ConfigDict
-from longlink.permissions import Catalog
 
 
 class PermissionSettings(BaseModel):
@@ -8,7 +7,6 @@ class PermissionSettings(BaseModel):
 
     # Deployed catalog.
     roles: list[str]
-    catalog: Catalog | None
     revision_id: UUID | None
 
 
@@ -22,21 +20,9 @@ class AccessUpdate(BaseModel):
     revision_id: UUID
 
 
-class EndpointDecision(BaseModel):
-    """Explain effective endpoint access in the management interface."""
-
-    # Decision and its origin.
-    key: str
-    source: str
-    allowed: bool
-
-
 class MemberAccess(BaseModel):
-    """Return saved assignments and derived effective access."""
+    """Return the saved role and its deployed revision."""
 
     # Saved configuration.
     role: str | None
     revision_id: UUID
-
-    # Derived decisions.
-    endpoints: list[EndpointDecision]

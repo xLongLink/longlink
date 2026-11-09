@@ -1,5 +1,5 @@
 import { ReportedError } from '@/lib/reported';
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useEffectEvent, useState } from 'react';
 
 // Only the isolated runtime supplies scoped preview and download capabilities.
 export const FileRequestContext = createContext<{
@@ -34,13 +34,13 @@ export function useDownload() {
 type PreviewState =
     | { status: 'loading' }
     | { status: 'unsupported' }
-    | { status: 'opened' }
     | { status: 'error'; cause: unknown }
     | { status: 'ready'; url: string };
 
 /** Owns a mounted preview; inline images remain caller-owned and documents open in the host. */
-export function usePreview(src: string, inline = false, title?: string): PreviewState {
+export function usePreview(src: string, inline = false, title?: string, onOpened?: () => void): PreviewState {
     const request = useContext(FileRequestContext)?.preview;
+    const notifyOpened = useEffectEvent(() => onOpened?.());
 
     // Store only scoped previews that wait for their host response.
     const [preview, setPreview] = useState<PreviewState>({ status: 'loading' });
@@ -60,7 +60,7 @@ export function usePreview(src: string, inline = false, title?: string): Preview
                 if (!active) return;
 
                 if (value === null && title !== undefined) {
-                    setPreview({ status: 'opened' });
+                    notifyOpened();
 
                     return;
                 }

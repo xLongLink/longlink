@@ -214,17 +214,6 @@ export const zCatalog = z.object({
 });
 
 /**
- * EndpointDecision
- *
- * Explain effective endpoint access in the management interface.
- */
-export const zEndpointDecision = z.object({
-    key: z.string(),
-    source: z.string(),
-    allowed: z.boolean()
-});
-
-/**
  * EnvironmentMetadata
  *
  * Typed metadata for a single environment variable.
@@ -251,12 +240,11 @@ export const zLongLinkMetadata = z.object({
 /**
  * MemberAccess
  *
- * Return saved assignments and derived effective access.
+ * Return the saved role and its deployed revision.
  */
 export const zMemberAccess = z.object({
     role: z.string().nullable(),
-    revision_id: z.uuid(),
-    endpoints: z.array(zEndpointDecision)
+    revision_id: z.uuid()
 });
 
 /**
@@ -511,7 +499,6 @@ export const zPaymentRedirect = z.object({
  */
 export const zPermissionSettings = z.object({
     roles: z.array(z.string()),
-    catalog: zCatalog.nullable(),
     revision_id: z.uuid().nullable()
 });
 

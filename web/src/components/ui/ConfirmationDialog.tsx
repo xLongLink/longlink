@@ -22,7 +22,7 @@ export function ConfirmationDialog({
     isPending: boolean;
     error: string | null;
     onCancel: () => void;
-    onAction: () => Promise<void>;
+    onAction: () => void;
 }) {
     const activity = use(DialogActivityContext);
     const titleId = useId();
@@ -55,9 +55,7 @@ export function ConfirmationDialog({
             variant={options.actionVariant ?? 'primary'}
             isLoading={isPending}
             isDisabled={isPending}
-            onClick={() => {
-                void onAction();
-            }}
+            onClick={onAction}
         />
     );
 

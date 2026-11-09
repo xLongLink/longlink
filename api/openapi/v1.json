@@ -1384,7 +1384,7 @@
     "/api/v1/solutions/{solution_id}/members/{member_id}/access": {
       "get": {
         "summary": "Member Access",
-        "description": "Explain one active member's saved and effective endpoint permissions.",
+        "description": "Return one active member's saved Solution role.",
         "operationId": "member_access_api_v1_solutions__solution_id__members__member_id__access_get",
         "parameters": [
           {
@@ -1502,63 +1502,6 @@
         "responses": {
           "204": {
             "description": "Successful Response"
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/solutions/{solution_id}/access": {
-      "get": {
-        "summary": "Current Access",
-        "description": "Expose caller-effective permissions without allowing assignment changes.",
-        "operationId": "current_access_api_v1_solutions__solution_id__access_get",
-        "parameters": [
-          {
-            "name": "solution_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Solution Id"
-            }
-          },
-          {
-            "name": "longlink_auth",
-            "in": "cookie",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Longlink Auth"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/MemberAccess"
-                }
-              }
-            }
           },
           "422": {
             "description": "Validation Error",
@@ -4859,30 +4802,6 @@
         "title": "Endpoint",
         "description": "Describe one registered business operation."
       },
-      "EndpointDecision": {
-        "properties": {
-          "key": {
-            "type": "string",
-            "title": "Key"
-          },
-          "source": {
-            "type": "string",
-            "title": "Source"
-          },
-          "allowed": {
-            "type": "boolean",
-            "title": "Allowed"
-          }
-        },
-        "type": "object",
-        "required": [
-          "key",
-          "source",
-          "allowed"
-        ],
-        "title": "EndpointDecision",
-        "description": "Explain effective endpoint access in the management interface."
-      },
       "EnvironmentMetadata": {
         "properties": {
           "name": {
@@ -4996,23 +4915,15 @@
             "type": "string",
             "format": "uuid",
             "title": "Revision Id"
-          },
-          "endpoints": {
-            "items": {
-              "$ref": "#/components/schemas/EndpointDecision"
-            },
-            "type": "array",
-            "title": "Endpoints"
           }
         },
         "type": "object",
         "required": [
           "role",
-          "revision_id",
-          "endpoints"
+          "revision_id"
         ],
         "title": "MemberAccess",
-        "description": "Return saved assignments and derived effective access."
+        "description": "Return the saved role and its deployed revision."
       },
       "OAuthAvailability": {
         "properties": {
@@ -5826,16 +5737,6 @@
             "type": "array",
             "title": "Roles"
           },
-          "catalog": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/Catalog"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
           "revision_id": {
             "anyOf": [
               {
@@ -5852,7 +5753,6 @@
         "type": "object",
         "required": [
           "roles",
-          "catalog",
           "revision_id"
         ],
         "title": "PermissionSettings",
