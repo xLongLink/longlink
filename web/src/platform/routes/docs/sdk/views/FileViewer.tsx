@@ -3,9 +3,9 @@ import ViewLayout from './ViewLayout';
 import { FileViewer } from '@/components/ui/FileViewer';
 import { FileRequestContext } from '@/components/ui/preview';
 
-/** Documents image previews and attachment downloads through the scoped Solution API. */
+/** Documents file previews and attachment downloads through the scoped Solution API. */
 export default function FileViewerPage() {
-    // Render image preview guidance and an authored example.
+    // Render file preview guidance and an authored example.
     return (
         <ViewLayout
             name="FileViewer"
@@ -28,7 +28,7 @@ export default function FileViewerPage() {
                 },
             ]}
             introduction={
-                'FileViewer previews images and downloads attachments through the scoped Solution API. Other documents, including PDFs, are downloaded rather than executed inside the View. Set size="sm" for compact table actions; omit size to retain inherited sizing.'
+                'FileViewer previews images inline, opens PDFs in a fullscreen dialog using the browser’s native PDF viewer, and shows text and code files in a read-only viewer with line numbers, wrapping, and a copy button. Syntax highlighting follows the title’s filename extension, including Python, JavaScript, TypeScript, JSON, YAML, HTML, CSS, SQL, Markdown, and other Astryx-supported languages. Text files must use UTF-8 encoding; unknown filenames with a text media type appear as plain text. PDF responses must use Content-Type: application/pdf. Other documents, including PowerPoint and Word files, are download-only. Native PDF controls and availability depend on the browser; Download remains available for every file. Set size="sm" for compact table actions; omit size to retain inherited sizing.'
             }
             example={{
                 title: 'FileViewer',

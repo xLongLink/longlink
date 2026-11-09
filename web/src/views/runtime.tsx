@@ -29,8 +29,10 @@ import {
     MAX_MODAL_DEPTH,
     type RequestCommand,
     type DownloadCommand,
+    type PreviewCommand,
     type IconCommand,
     downloadSchema,
+    previewSchema,
     type ViewReply,
     type ViewData,
     iconSchema,
@@ -160,7 +162,7 @@ function initialize(event: MessageEvent<unknown>): void {
     }
 
     /** Owns the deadline and channel transfer for each scoped operation. */
-    function exchange(command: RequestCommand | DownloadCommand | IconCommand): Promise<ViewData> {
+    function exchange(command: RequestCommand | DownloadCommand | PreviewCommand | IconCommand): Promise<ViewData> {
         const { id } = command;
 
         return new Promise<ViewData>((resolve, reject) => {
@@ -193,8 +195,15 @@ function initialize(event: MessageEvent<unknown>): void {
         return iconDataSchema.parse(data);
     }
 
-    /** Supplies binary previews without limiting concurrent image loads. */
-    async function requestImage(path: string): Promise<Blob> {
+    /** Keeps images in the sandbox and delegates document previews to the host. */
+    async function requestPreview(path: string, title?: string): Promise<Blob | null> {
+        if (title !== undefined) {
+            const command = previewSchema.parse({ type: 'preview', id: sequence++, path, title: title.slice(0, 256) });
+            const data = await exchange(command);
+
+            return z.instanceof(Blob).nullable().parse(data);
+        }
+
         // Binary previews must remain inert file data rather than arbitrary response objects.
         const data = await request(path, { binary: true });
 
@@ -207,8 +216,8 @@ function initialize(event: MessageEvent<unknown>): void {
         await exchange(command);
     }
 
-    // Supply image previews and downloads without exposing the general request API to file components.
-    const fileRequests = { preview: requestImage, download };
+    // Supply file previews and downloads without exposing the general request API to file components.
+    const fileRequests = { preview: requestPreview, download };
 
     /** Requests scoped Solution navigation or opens an HTTP(S) URL in a new tab during user activation. */
     function navigate(path: string, newTab = false): void {

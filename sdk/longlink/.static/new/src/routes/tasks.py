@@ -63,7 +63,7 @@ async def task_post_endpoint(
 
 @router.get("/{task_id}/attachment", response_model=None, response_class=FileResponse)
 async def task_attachment_get_endpoint(task_id: int, ctx: Context) -> FileResponse:
-    """Download the attachment belonging to an existing task."""
+    """Serve the attachment belonging to an existing task for preview or download."""
 
     # Resolve the task before looking up its fixed storage path.
     task = await ctx.database.get(Task, task_id)
@@ -74,4 +74,4 @@ async def task_attachment_get_endpoint(task_id: int, ctx: Context) -> FileRespon
     path = f"tasks/{task.id}/attachment"
     if not await run_in_threadpool(ctx.storage.isfile, path):
         raise HTTPException(status_code=404, detail="Attachment not found")
-    return ctx.download(path, filename=task.attachment)
+    return ctx.file(path, filename=task.attachment)

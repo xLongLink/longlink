@@ -2,11 +2,14 @@ import { ApiError } from '@/lib/api';
 import * as icons from '@/lib/icons';
 import * as host from '@/views/host';
 import { useApiError } from '@/lib/errors';
+import { textLanguage } from '@/lib/files';
 import { useNavigate } from 'react-router';
 import { resolveNavigationUrl } from '@/lib/url';
 import { Stack } from '@astryxdesign/core/Stack';
 import { useQuery } from '@tanstack/react-query';
 import type { ViewRuntime } from '@/views/manifest';
+import { PdfPreview } from '@/components/PdfPreview';
+import { TextPreview } from '@/components/TextPreview';
 import { ViewBackdrop } from '@/components/ViewBackdrop';
 import { useScrollLock } from '@astryxdesign/core/hooks';
 import { useAppearance } from '@/lib/hooks/use-appearance';
@@ -51,6 +54,10 @@ export function JsxView({
     const [height, setHeight] = useState(1);
     const [frameBounds, setFrameBounds] = useState<DOMRect>();
     const [modal, setModal] = useState({ depth: 0, fullscreen: false });
+
+    const [filePreview, setFilePreview] = useState<
+        { title: string } & ({ type: 'pdf'; body: Blob } | { type: 'text'; text: string })
+    >();
 
     // Reuse Astryx's shared scroll lock while the sandbox covers the Platform.
     useScrollLock(modal.fullscreen);
@@ -170,7 +177,7 @@ export function JsxView({
 
         /** Reports safe Solution failures once in the page and returns them to the requesting View. */
         function rejectRequest(
-            command: { id: number; type: 'request' | 'download' | 'icon' },
+            command: { id: number; type: 'request' | 'download' | 'preview' | 'icon' },
             failure: ReturnType<typeof host.requestError>
         ): void {
             if (controller.signal.aborted) return;
@@ -186,6 +193,7 @@ export function JsxView({
         function dispose(): void {
             controller.abort();
             setModal({ depth: 0, fullscreen: false });
+            setFilePreview(undefined);
             clearTimeout(handshakeTimer);
             window.removeEventListener('message', ready);
             viewportObserver.disconnect();
@@ -316,6 +324,28 @@ export function JsxView({
                     data = iconDataSchema.parse(icon);
                 } else if (command.type === 'download') {
                     data = await host.download(requestBaseUrl, command, controller.signal);
+                } else if (command.type === 'preview') {
+                    // Admit declared PDFs and recognized text files to host-owned previews.
+                    const body = await host.load(host.requestUrl(requestBaseUrl, command.path), {
+                        cache: 'no-cache',
+                        signal: controller.signal,
+                    });
+
+                    controller.signal.throwIfAborted();
+
+                    if (body.type === 'application/pdf') {
+                        setFilePreview({ type: 'pdf', body, title: command.title });
+                        data = null;
+                    } else if (textLanguage(command.title, body.type) !== undefined) {
+                        // Render text as inert content, never as a document in the host origin.
+                        const bytes = await body.arrayBuffer();
+                        const text = new TextDecoder('utf-8', { fatal: true }).decode(bytes);
+                        controller.signal.throwIfAborted();
+                        setFilePreview({ type: 'text', text, title: command.title });
+                        data = null;
+                    } else {
+                        data = body;
+                    }
                 } else {
                     data = await host.request(requestBaseUrl, command, controller.signal);
                 }
@@ -389,6 +419,20 @@ export function JsxView({
                         : 'block h-full w-full flex-1 shrink-0 border-0 bg-transparent'
                 }
             />
+            {filePreview?.type === 'pdf' && (
+                <PdfPreview
+                    body={filePreview.body}
+                    title={filePreview.title}
+                    onClose={() => setFilePreview(undefined)}
+                />
+            )}
+            {filePreview?.type === 'text' && (
+                <TextPreview
+                    text={filePreview.text}
+                    title={filePreview.title}
+                    onClose={() => setFilePreview(undefined)}
+                />
+            )}
         </Stack>
     );
 }

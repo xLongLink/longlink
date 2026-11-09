@@ -1,0 +1,7 @@
+LongLink attachment example
+
+PNG, JPEG, GIF, and WebP images can be previewed inline.
+PDF documents open in the browser's native PDF viewer.
+Plain-text files open in a read-only viewer with line numbers and a copy button.
+Code and configuration files use syntax highlighting based on their filenames.
+Other file formats can be downloaded.

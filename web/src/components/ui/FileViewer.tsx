@@ -1,11 +1,11 @@
 import { Stack } from './Stack';
-import { useState } from 'react';
 import { Button } from './Button';
+import { useEffect, useState } from 'react';
 import { Text } from '@astryxdesign/core/Text';
 import { useDownload, usePreview } from './preview';
 import { Spinner } from '@astryxdesign/core/Spinner';
 
-/** Previews images on demand and downloads any attachment through the scoped host capability. */
+/** Previews images, PDFs, and plain text on demand and downloads attachments through the scoped host capability. */
 export function FileViewer({
     src,
     title,
@@ -36,18 +36,23 @@ export function FileViewer({
                 />
             </Stack>
             {attachment.error && <Text role="alert">{attachment.error}</Text>}
-            {open && <FilePreview key={src} src={src} title={title} />}
+            {open && <FilePreview key={src} src={src} title={title} onOpened={() => setOpen(false)} />}
         </Stack>
     );
 }
 
-/** Releases image resources when the preview closes or its request capability changes. */
-function FilePreview({ src, title }: { src: string; title: string }) {
-    const preview = usePreview(src);
+/** Releases image resources locally while the host owns document previews. */
+function FilePreview({ src, title, onOpened }: { src: string; title: string; onOpened: () => void }) {
+    const preview = usePreview(src, false, title);
+
+    // Reset the action after the host opens a document so it can be opened again after closing.
+    useEffect(() => {
+        if (preview.status === 'opened') onOpened();
+    }, [preview.status, onOpened]);
 
     // Render only the current mounted attempt's loading, error, or image state.
-    return preview.status === 'unsupported' ? (
-        <Text role="status">No image preview is available. Use Download to save this file.</Text>
+    return preview.status === 'opened' ? null : preview.status === 'unsupported' ? (
+        <Text role="status">No preview is available. Use Download to save this file.</Text>
     ) : preview.status === 'error' ? (
         <Text role="status">{preview.cause instanceof Error ? preview.cause.message : 'Preview failed'}</Text>
     ) : preview.status === 'ready' ? (

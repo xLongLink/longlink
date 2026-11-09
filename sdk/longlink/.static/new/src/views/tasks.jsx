@@ -22,9 +22,11 @@ export default function Tasks() {
                             <Stack gap={0}>
                                 <Text>{task.title}</Text>
                                 {task.attachment ? (
-                                    <Link to={`/api/tasks/${task.id}/attachment`} download={task.attachment}>
-                                        {task.attachment}
-                                    </Link>
+                                    <FileViewer
+                                        src={`/api/tasks/${task.id}/attachment`}
+                                        title={task.attachment}
+                                        size="sm"
+                                    />
                                 ) : (
                                     <Text color="secondary">No attachment</Text>
                                 )}
@@ -48,6 +50,33 @@ export default function Tasks() {
                                     <Text type="supporting">{task.created_by.email}</Text>
                                 </Stack>
                             </Stack>
+                        ),
+                    },
+                ]}
+            />
+            <Heading level={2}>Example attachments</Heading>
+            <Table
+                data={[
+                    { format: 'PNG', filename: 'example.png', preview: 'Inline image' },
+                    { format: 'JPEG', filename: 'garden.jpg', preview: 'Inline image' },
+                    { format: 'GIF', filename: 'example.gif', preview: 'Inline image' },
+                    { format: 'WebP', filename: 'example.webp', preview: 'Inline image' },
+                    { format: 'PDF', filename: 'example.pdf', preview: 'Native PDF viewer' },
+                    { format: 'Text', filename: 'example.txt', preview: 'Text viewer' },
+                    { format: 'Python', filename: 'example.py', preview: 'Syntax highlighting' },
+                    { format: 'JSON', filename: 'example.json', preview: 'Syntax highlighting' },
+                    { format: 'TSX', filename: 'example.tsx', preview: 'Syntax highlighting' },
+                    { format: 'YAML', filename: 'example.yaml', preview: 'Syntax highlighting' },
+                ]}
+                columns={[
+                    { key: 'format', header: 'Format', width: proportional(1) },
+                    { key: 'preview', header: 'Preview', width: proportional(1) },
+                    {
+                        key: 'filename',
+                        header: 'File',
+                        width: proportional(2),
+                        renderCell: (file) => (
+                            <FileViewer src={`/assets/${file.filename}`} title={file.filename} size="sm" />
                         ),
                     },
                 ]}
