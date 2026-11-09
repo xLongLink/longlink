@@ -205,6 +205,40 @@ export default function Item({ params }) {
                         ]}
                     />
                 </Collapsible>
+                <Heading level={2}>Compact confirmations</Heading>
+                <Text as="p">
+                    Use useConfirm() for title-only Continue/Cancel confirmations. Render its element once; no separate
+                    open state is needed. Description is optional. Cancel receives initial focus and Escape cancels;
+                    backdrop clicks do not dismiss. While an action runs, loading prevents repeated submissions and
+                    dismissal, including hide() and replacement through show(). Success closes the confirmation; failure
+                    keeps it open for retry. Scoped request failures are reported by the host; other failures appear in
+                    the dialog. Focus returns to the trigger after dismissal.
+                </Text>
+                <CodeBlock
+                    language="jsx"
+                    title="variants.jsx"
+                    hasLanguageLabel={false}
+                    code={`export default function Variants() {
+  const confirmation = useConfirm();
+
+  return (
+    <>
+      <Button label="Nuova variante" onClick={() => confirmation.show({
+        title: 'Conferma variante A',
+        cancelLabel: 'Annulla',
+        actionLabel: 'Continua',
+        onAction: async () => {
+          await request('/api/variants', {
+            method: 'POST',
+            json: { variant: 'A' },
+          });
+        },
+      })} />
+      {confirmation.element}
+    </>
+  );
+}`}
+                />
                 {documentationCategories
                     .filter((category) => category !== 'Runtime')
                     .map((category) => (

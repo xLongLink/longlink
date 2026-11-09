@@ -8,6 +8,31 @@ type ViewJson = string | number | boolean | null | ViewJson[] | { [key: string]:
 type ViewData = ViewJson | Blob;
 type Spacing = 0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10;
 
+/** Options for a compact confirmation. @category Runtime @group Hooks */
+type ConfirmOptions = {
+    title: string;
+    description?: string;
+    cancelLabel?: string;
+    actionLabel: string;
+    actionVariant?: 'primary' | 'secondary' | 'destructive';
+    onAction: () => void | Promise<void>;
+};
+
+/**
+ * Render element once. show(options) opens a compact confirmation with Cancel focused.
+ * Actions show loading and close only after success. Failures keep the dialog open for retry.
+ * While pending, duplicate actions, show(), hide(), Cancel, and Escape are ignored.
+ * Cancel defaults to "Cancel"; actionVariant defaults to "primary". Description is optional.
+ * Scoped request errors are reported by the host; other errors appear in the dialog.
+ * @category Runtime @group Hooks
+ */
+declare function useConfirm(): {
+    show: (options: ConfirmOptions) => void;
+    hide: () => void;
+    isOpen: boolean;
+    element: ViewNode;
+};
+
 /** @category Action @group Button */
 type ViewMouseEvent = Omit<MouseEvent, 'currentTarget'> & { currentTarget: HTMLElement; nativeEvent: MouseEvent };
 
