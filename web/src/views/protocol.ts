@@ -72,6 +72,15 @@ export const iconSchema = z
     })
     .strict();
 
+export const previewSchema = z
+    .object({
+        type: z.literal('preview'),
+        id: z.number().int().nonnegative(),
+        path: z.string().min(1),
+        title: z.string().min(1).max(256),
+    })
+    .strict();
+
 // The icon bridge carries inert SVG geometry, never markup, URLs, or executable element attributes.
 export const iconDataSchema = z.object({
     name: z.string().max(64).optional(),
@@ -120,12 +129,15 @@ export const commandSchema = z.discriminatedUnion('type', [
         .strict(),
     z.object({ type: z.literal('navigate'), path: z.string().min(1), newTab: z.boolean().optional() }).strict(),
     downloadSchema,
+    previewSchema,
     iconSchema,
 ]);
 
 export type RequestCommand = z.output<typeof requestSchema>;
 
 export type DownloadCommand = z.output<typeof downloadSchema>;
+
+export type PreviewCommand = z.output<typeof previewSchema>;
 
 export type IconCommand = z.output<typeof iconSchema>;
 

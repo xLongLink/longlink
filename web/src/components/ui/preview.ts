@@ -3,7 +3,7 @@ import { createContext, useContext, useEffect, useState } from 'react';
 
 // Only the isolated runtime supplies scoped preview and download capabilities.
 export const FileRequestContext = createContext<{
-    preview: (path: string) => Promise<Blob>;
+    preview: (path: string, title?: string) => Promise<Blob | null>;
     download: (path: string, filename: string) => Promise<void>;
 } | null>(null);
 
@@ -34,11 +34,12 @@ export function useDownload() {
 type PreviewState =
     | { status: 'loading' }
     | { status: 'unsupported' }
+    | { status: 'opened' }
     | { status: 'error'; cause: unknown }
     | { status: 'ready'; url: string };
 
-/** Owns a mounted image preview; inline sources remain caller-owned and never acquire a request. */
-export function usePreview(src: string, inline = false): PreviewState {
+/** Owns a mounted preview; inline images remain caller-owned and documents open in the host. */
+export function usePreview(src: string, inline = false, title?: string): PreviewState {
     const request = useContext(FileRequestContext)?.preview;
 
     // Store only scoped previews that wait for their host response.
@@ -51,12 +52,18 @@ export function usePreview(src: string, inline = false): PreviewState {
         let active = true;
         let objectUrl: string | undefined;
 
-        /** Accepts only image bytes and ignores responses after this attempt has closed. */
+        /** Accepts image bytes or a completed host preview and ignores responses after closing. */
         async function load() {
             try {
-                const value = await request?.(src);
+                const value = await request?.(src, title);
 
                 if (!active) return;
+
+                if (value === null && title !== undefined) {
+                    setPreview({ status: 'opened' });
+
+                    return;
+                }
 
                 // Reject non-image responses without exposing their contents in the View.
                 if (!(value instanceof Blob) || !value.type.startsWith('image/')) {
@@ -80,7 +87,7 @@ export function usePreview(src: string, inline = false): PreviewState {
 
             if (objectUrl) URL.revokeObjectURL(objectUrl);
         };
-    }, [inline, request, src]);
+    }, [inline, request, src, title]);
 
     // Inline images are immediately ready without duplicating their source in state.
     return inline ? { status: 'ready', url: src } : preview;
