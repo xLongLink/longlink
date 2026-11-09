@@ -15,7 +15,3 @@ export type PlatformProps = {
     sidebarHeader?: ReactNode;
     tabs: readonly NavigationTab[];
 };
-
-export type NavigationLayoutProps = Omit<PlatformProps, 'activeTab'> & {
-    activeTab: string;
-};

@@ -36,9 +36,7 @@ async def reconcile(organization_id: UUID) -> None:
 
     # Card registration can expand capacity independently of the free pricing allowance.
     if organization.stripe_payment_method_id is not None:
-        await database_resources.resize(
-            cluster, organization.id, size_mib=organization.database_size_mib, instances=organization.database_instances
-        )
+        await database_resources.resize(cluster, organization.id, size_mib=organization.database_size_mib)
     storage = Storage(compute, cluster)
     await storage.apply(organization.id, quota_bytes=organization.storage_quota_bytes)
 

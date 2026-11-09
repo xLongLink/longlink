@@ -32,7 +32,6 @@ class Organization(AuditTable, table=True):
     # Database
     database_password: str = Field(default_factory=token_urlsafe, sa_column=Column(EncryptedType(env.ENCRYPTION_KEY), nullable=False))
     database_size_mib: int = Field(default=FREE_DATABASE_BYTES // 1024**2, ge=100)
-    database_instances: int = Field(default=1, ge=1)
     database_state: DatabaseState = Field(
         default=DatabaseState.failed,
         sa_column=Column(

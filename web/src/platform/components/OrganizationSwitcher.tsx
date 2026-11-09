@@ -18,10 +18,9 @@ export type OrganizationIdentity = {
     name?: string;
 };
 
-/** Switches Organizations from a compact breadcrumb or a full-width sidebar account row. */
+/** Switches Organizations from the sidebar account row. */
 export function OrganizationSwitcher({ organization }: { organization: OrganizationIdentity }) {
     const sidebar = useContext(SidebarContext);
-    const isSidebar = sidebar !== null;
     const [isOpen, setIsOpen] = useState(false);
 
     // Fetch memberships only when the switcher opens, without suspending the page header.
@@ -44,7 +43,7 @@ export function OrganizationSwitcher({ organization }: { organization: Organizat
 
     return (
         <Popover
-            className={isSidebar ? 'w-full' : undefined}
+            className="w-full"
             isOpen={isOpen}
             label="Switch organization"
             onOpenChange={setIsOpen}
@@ -85,7 +84,7 @@ export function OrganizationSwitcher({ organization }: { organization: Organizat
         >
             {sidebar === 'collapsed' ? (
                 <IconButton icon={<Avatar kind="organization" name={name} />} label={name} variant="ghost" />
-            ) : isSidebar ? (
+            ) : (
                 (trigger) => (
                     <Item
                         {...trigger}
@@ -100,14 +99,6 @@ export function OrganizationSwitcher({ organization }: { organization: Organizat
                         startContent={<Avatar kind="organization" name={name} />}
                     />
                 )
-            ) : (
-                <Button
-                    icon={<Avatar kind="organization" name={name} size="sm" />}
-                    endContent={<ChevronsUpDown aria-hidden="true" className="text-secondary" size={16} />}
-                    label={name}
-                    size="sm"
-                    variant="ghost"
-                />
             )}
         </Popover>
     );

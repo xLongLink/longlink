@@ -162,9 +162,7 @@ def database_runtime(monkeypatch: pytest.MonkeyPatch) -> None:
 
             yield 15432
 
-    async def apply(
-        client: object, organization: UUID, password: str, storage_class: str, *, size_mib: int = 100, instances: int = 1
-    ) -> None:
+    async def apply(client: object, organization: UUID, password: str, storage_class: str, *, size_mib: int = 100) -> None:
         """Accept Organization cluster provisioning."""
 
     async def wait_ready(client: object, organization: UUID) -> None:

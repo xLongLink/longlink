@@ -12,13 +12,13 @@ metadata:
     namespace: '$namespace'
 spec:
     hard:
-        # Budget all instances, concurrent bootstrap/join Jobs, and one backup/replacement Pod.
-        pods: '$quota_pods'
-        requests.cpu: '$quota_pods'
-        requests.memory: '${quota_pods}Gi'
-        limits.cpu: '$quota_pods'
-        limits.memory: '${quota_pods}Gi'
-        persistentvolumeclaims: '$quota_instances'
+        # Budget one instance, its bootstrap/join Job, and one backup/replacement Pod.
+        pods: '3'
+        requests.cpu: '3'
+        requests.memory: '3Gi'
+        limits.cpu: '3'
+        limits.memory: '3Gi'
+        persistentvolumeclaims: '2'
         requests.storage: '${quota_storage_mib}Mi'
 ---
 apiVersion: networking.k8s.io/v1
@@ -64,7 +64,7 @@ metadata:
     name: database
     namespace: '$namespace'
 spec:
-    instances: $instances
+    instances: 1
     enableSuperuserAccess: true
     superuserSecret:
         name: database-superuser

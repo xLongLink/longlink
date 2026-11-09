@@ -341,12 +341,12 @@ export const zOrganizationCreate = z.object({
 /**
  * OrganizationQuotasResponse
  *
- * Represent stored per-Organization quotas in administrator responses.
+ * Represent per-Organization quotas in administrator responses.
  */
 export const zOrganizationQuotasResponse = z.object({
     id: z.uuid(),
     database_size_mib: z.int(),
-    database_instances: z.int(),
+    database_instances: z.literal(1).optional().default(1),
     storage_quota_bytes: z.int()
 });
 
