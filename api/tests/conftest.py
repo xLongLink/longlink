@@ -31,12 +31,12 @@ os.environ["SMTP_PORT"] = "587"
 os.environ["SMTP_TRANSPORT"] = "starttls"
 
 # Prevent optional workstation credentials from changing test capabilities.
-os.environ.pop("SMTP_PASSWORD", None)
-os.environ.pop("SMTP_USERNAME", None)
-os.environ.pop("GITHUB_OAUTH_CLIENT_ID", None)
-os.environ.pop("GOOGLE_OAUTH_CLIENT_ID", None)
-os.environ.pop("GITHUB_OAUTH_CLIENT_SECRET", None)
-os.environ.pop("GOOGLE_OAUTH_CLIENT_SECRET", None)
+os.environ["SMTP_PASSWORD"] = "null"
+os.environ["SMTP_USERNAME"] = "null"
+os.environ["GITHUB_OAUTH_CLIENT_ID"] = "null"
+os.environ["GOOGLE_OAUTH_CLIENT_ID"] = "null"
+os.environ["GITHUB_OAUTH_CLIENT_SECRET"] = "null"
+os.environ["GOOGLE_OAUTH_CLIENT_SECRET"] = "null"
 
 from src.utils import mail, token
 from src.database import models, session
