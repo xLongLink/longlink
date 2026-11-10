@@ -7,7 +7,7 @@ from fastmcp import FastMCP
 from pathlib import Path
 from longlink import views, permissions
 from pydantic import FilePath, BaseModel
-from contextlib import asynccontextmanager
+from contextlib import ExitStack, AsyncExitStack, asynccontextmanager
 from dataclasses import dataclass
 from fsspec.spec import AbstractFileSystem
 from collections.abc import Mapping, Callable, Awaitable, AsyncGenerator
@@ -157,55 +157,48 @@ class LongLink(RouteDecorators, FastAPI):
         async def lifespan(app: FastAPI) -> AsyncGenerator[Mapping[str, Any]]:
             """Build the completed Solution catalog and close MCP sessions before runtime services."""
 
-            guarded = []
-            try:
-                async with runtime_lifespan(app) as state:
-                    # Discover registered business routes once and guard before dependency execution.
-                    business_routes = self.permission_routes()
-                    catalog = permissions.discover(business_routes)
-                    self.state.permission_catalog = catalog
-                    for route in business_routes:
-                        # FastAPI owns a separate executable handler for each included-router context.
-                        target = route._route_context or route.original_route
-                        original = getattr(target, "app")
-                        guarded.append((target, original))
-                        setattr(target, "app", permissions.Guard(original, route.path or "", catalog))
+            async with AsyncExitStack() as stack:
+                # Dispose the active database last, even when startup replaces its runtime state.
+                stack.push_async_callback(lambda: self.state.longlink.database.dispose())
+                guards = ExitStack()
+                stack.enter_context(guards)
+                state = await stack.enter_async_context(runtime_lifespan(app))
 
-                    # Use a fresh schema, including routes registered after an earlier OpenAPI request.
-                    schema = get_openapi(
-                        title=self.title,
-                        version=self.version,
-                        openapi_version=self.openapi_version,
-                        description=self.description,
-                        routes=business_routes,
-                    )
+                # Discover registered business routes once and restore guards after application shutdown.
+                business_routes = self.permission_routes()
+                catalog = permissions.discover(business_routes)
+                self.state.permission_catalog = catalog
+                for route in business_routes:
+                    # FastAPI owns a separate executable handler for each included-router context.
+                    target = route._route_context or route.original_route
+                    original = getattr(target, "app")
+                    setattr(target, "app", permissions.Guard(original, route.path or "", catalog))
+                    guards.callback(setattr, target, "app", original)
 
-                    # Keep MCP calls inside this application with request-scoped credentials.
-                    transport = httpx2.ASGITransport(app=self, raise_app_exceptions=False)
-                    client = httpx2.AsyncClient(
-                        transport=transport, base_url="http://solution", timeout=10.0, event_hooks={"request": [forward_credentials]}
-                    )
-                    async with client:
-                        mcp = FastMCP.from_openapi(openapi_spec=schema, client=client, name=self.title)
+                # Use a fresh schema, including routes registered after an earlier OpenAPI request.
+                schema = get_openapi(
+                    title=self.title,
+                    version=self.version,
+                    openapi_version=self.openapi_version,
+                    description=self.description,
+                    routes=business_routes,
+                )
 
-                        # Place MCP ahead of all frontend routes and own its public lifespan context.
-                        mcp_app = mcp.http_app(path="/mcp", json_response=True)
-                        self.router.routes[0:0] = mcp_app.routes
-                        try:
-                            # Enter the public MCP lifespan before accepting Solution traffic.
-                            async with mcp_app.lifespan(mcp_app):
-                                yield state or {}
-                        finally:
-                            # Remove only these routes so later lifespans cannot reuse a closed transport.
-                            for route in mcp_app.routes:
-                                self.router.routes.remove(route)
-            finally:
-                # Restore route handlers so restarted lifespans never stack guards.
-                for route, original in guarded:
-                    setattr(route, "app", original)
+                # Keep MCP calls inside this application with request-scoped credentials.
+                transport = httpx2.ASGITransport(app=self, raise_app_exceptions=False)
+                client = httpx2.AsyncClient(
+                    transport=transport, base_url="http://solution", timeout=10.0, event_hooks={"request": [forward_credentials]}
+                )
+                await stack.enter_async_context(client)
+                mcp = FastMCP.from_openapi(openapi_spec=schema, client=client, name=self.title)
 
-                # Close the active services after application shutdown, including when initialization fails.
-                await self.state.longlink.database.dispose()
+                # Close MCP and remove its temporary routes before closing the client and application.
+                mcp_app = mcp.http_app(path="/mcp", json_response=True)
+                self.router.routes[0:0] = mcp_app.routes
+                for route in mcp_app.routes:
+                    stack.callback(self.router.routes.remove, route)
+                await stack.enter_async_context(mcp_app.lifespan(mcp_app))
+                yield state or {}
 
         self.router.lifespan_context = lifespan
 

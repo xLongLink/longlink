@@ -113,10 +113,8 @@ async def solution_runtime_access(session: AsyncSession, user_id: UUID, solution
     return access
 
 
-async def solution_logs_access(
-    session: AsyncSession, user_id: UUID, solution_id: UUID
-) -> tuple[UUID, OrganizationRoles, dict[str, object]]:
-    """Return active Solution log access without loading runtime or gateway credentials."""
+async def solution_logs_access(session: AsyncSession, user_id: UUID, solution_id: UUID) -> tuple[UUID, dict[str, object]]:
+    """Require maintenance access to Solution logs without loading runtime or gateway credentials."""
 
     # Resolve the Organization, current membership role, and cluster connection in one query.
     result = await session.execute(
@@ -136,7 +134,12 @@ async def solution_logs_access(
     access = result.one_or_none()
     if access is None:
         raise HTTPException(status_code=403, detail="Access required")
-    return access
+
+    # Require maintenance privileges before returning the scoped cluster connection.
+    organization_id, role, kubeconfig = access
+    if not roles.atleast(role, OrganizationRoles.maintain):
+        raise HTTPException(status_code=403, detail="Permission required")
+    return organization_id, kubeconfig
 
 
 async def storage_infrastructure(session: AsyncSession, organization_id: UUID) -> ComputeRegistry:

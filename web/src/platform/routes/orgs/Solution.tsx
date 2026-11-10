@@ -6,6 +6,7 @@ import { ProfileMenu } from '@/components/Profile';
 import { Center } from '@astryxdesign/core/Center';
 import Platform from '@/components/layouts/Platform';
 import { Heading } from '@astryxdesign/core/Heading';
+import * as permissions from '@/platform/permissions';
 import { ApiBoundary } from '@/components/ApiBoundary';
 import { SolutionPage } from '@/components/SolutionPage';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
@@ -46,7 +47,7 @@ export default function OrganizationSolution() {
         <OrganizationBreadcrumb organization={membership.organization} solutionName={solutionAccess.name} />
     );
 
-    const canMaintain = ['maintain', 'admin', 'owner'].includes(membership.role);
+    const canMaintain = permissions.canMaintain(membership.role);
 
     const deploymentNotice =
         solutionAccess.status === 'creating'

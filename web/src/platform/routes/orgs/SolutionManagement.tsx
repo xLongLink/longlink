@@ -13,6 +13,7 @@ import { Button } from '@astryxdesign/core/Button';
 import { useToast } from '@astryxdesign/core/Toast';
 import { Divider } from '@astryxdesign/core/Divider';
 import { Heading } from '@astryxdesign/core/Heading';
+import * as permissions from '@/platform/permissions';
 import { ApiBoundary } from '@/components/ApiBoundary';
 import { DeletionDialog } from '@/components/Deletion';
 import { MoreMenu } from '@astryxdesign/core/MoreMenu';
@@ -47,8 +48,8 @@ export default function SolutionManagement({
 }) {
     // Derive Solution actions from the same membership that supplies organization-scoped resources.
     const { organization, tags, activeTag, role } = membership;
-    const canMaintain = ['maintain', 'admin', 'owner'].includes(role);
-    const canAdminister = ['admin', 'owner'].includes(role);
+    const canMaintain = permissions.canMaintain(role);
+    const canAdminister = permissions.canAdminister(role);
 
     // Own one dialog action; captured identity prevents old completions from closing its replacement.
     const [selected, setSelected] = useState<SolutionAction | null>(null);

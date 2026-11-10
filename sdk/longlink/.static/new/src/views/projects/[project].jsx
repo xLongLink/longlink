@@ -24,11 +24,7 @@ export default function Project({ params }) {
                 <GridSpan columns={2}>
                     <Stepper
                         activeStep={project.active_step}
-                        onStepClick={(index) =>
-                            navigate(
-                                `/projects/${project.id}/${phases[index].label.toLowerCase().replaceAll(' ', '-')}`
-                            )
-                        }
+                        onStepClick={(index) => navigate(`/projects/${project.id}/${phases[index].slug}`)}
                         orientation="vertical"
                     >
                         {phases.map((step, index) => (

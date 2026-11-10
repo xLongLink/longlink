@@ -128,11 +128,8 @@ SolutionMaintainer = Annotated[Solution, Depends(authsolutionmaintainer)]
 async def authsolutionlogs(solution_id: UUID, user: CurrentUser, session: Session) -> tuple[UUID, dict[str, object]]:
     """Authenticate Solution log access and return its scoped cluster connection."""
 
-    # Resolve active Solution access before enforcing runtime permissions.
-    organization_id, role, kubeconfig = await organizations.solution_logs_access(session, user.id, solution_id)
-    if not roles.atleast(role, OrganizationRoles.maintain):
-        raise HTTPException(status_code=403, detail="Permission required")
-    return organization_id, kubeconfig
+    # Resolve the authorized Solution's scoped cluster connection.
+    return await organizations.solution_logs_access(session, user.id, solution_id)
 
 
 SolutionLogAccess = Annotated[tuple[UUID, dict[str, object]], Depends(authsolutionlogs)]
