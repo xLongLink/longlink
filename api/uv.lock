@@ -1513,12 +1513,10 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "docker", specifier = ">=7.2.0" },
     { name = "pytest", specifier = ">=9.1.1" },
     { name = "pytest-asyncio", specifier = ">=1.4.0" },
     { name = "pytest-cov", specifier = ">=7.0.0" },
     { name = "ruff", specifier = ">=0.16.2" },
-    { name = "testcontainers", specifier = ">=4.15.0" },
     { name = "ty", specifier = ">=0.0.69" },
 ]
 

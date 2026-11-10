@@ -5,7 +5,6 @@ import asyncio
 from uuid import UUID, uuid4
 from types import SimpleNamespace
 from httpx2 import AsyncClient
-from typing import Unpack, TypedDict
 from fastapi import Request
 from conftest import UNTRUSTED_ORIGINS, assert_origin_rejected, untrusted_origin_headers
 from longlink import identity
@@ -211,38 +210,17 @@ async def test_solution_proxy_strips_credential_headers_and_pins_gateway_tls(
 
         return real_create_context()
 
-    class ClientKwargs(TypedDict, total=False):
-        """Type the gateway client's recorded constructor options."""
-
-        follow_redirects: bool
-        trust_env: bool
-
-        # Capture the security-relevant client configuration.
-        timeout: float
-        verify: ssl.SSLContext
-
-    def record_client(*args: object, **kwargs: Unpack[ClientKwargs]) -> httpx2.AsyncClient:
+    def record_client(*, follow_redirects: bool, trust_env: bool, timeout: float, verify: ssl.SSLContext) -> httpx2.AsyncClient:
         """Record client trust configuration while delegating to the real client."""
 
-        follow_redirects = kwargs.get("follow_redirects")
-        trust_env = kwargs.get("trust_env")
-        timeout = kwargs.get("timeout")
-        verify = kwargs.get("verify")
-
-        assert not args
-        assert isinstance(follow_redirects, bool)
-        assert isinstance(trust_env, bool)
-        assert isinstance(timeout, float)
+        assert follow_redirects is False
+        assert trust_env is False
+        assert timeout == 300.0
 
         # Upstream HTTPS must receive an actual configured trust context.
         assert isinstance(verify, ssl.SSLContext)
 
-        # Record validated transport options for the assertions below.
-        captured["follow_redirects"] = follow_redirects
-        captured["trust_env"] = trust_env
-        captured["timeout"] = timeout
-
-        return real_client(*args, **kwargs)
+        return real_client(follow_redirects=follow_redirects, trust_env=trust_env, timeout=timeout, verify=verify)
 
     async def send(_transport: object, request: httpx2.Request) -> httpx2.Response:
         """Record the exact headers crossing into the tenant workload."""
@@ -294,9 +272,6 @@ async def test_solution_proxy_strips_credential_headers_and_pins_gateway_tls(
     assert "mcp-session-id" not in response.headers
     assert "mcp-protocol-version" not in response.headers
     assert captured.get("cadata") == "test-gateway-ca"
-    assert captured.get("follow_redirects") is False
-    assert captured.get("trust_env") is False
-    assert captured.get("timeout") == 300.0
 
 
 # Both MCP endpoint spellings preserve the protocol's session metadata.

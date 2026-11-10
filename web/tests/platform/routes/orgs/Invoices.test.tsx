@@ -2,7 +2,6 @@
 // @vitest-environment-options {"url":"http://localhost"}
 import { flushSync } from 'react-dom';
 import { it, vi, expect } from 'vitest';
-import type { AddressInfo } from 'node:net';
 import { MemoryRouter } from 'react-router';
 import { createRoot } from 'react-dom/client';
 import { ApiErrorContext } from '@/lib/errors';
@@ -10,7 +9,6 @@ import { Theme } from '@astryxdesign/core/theme';
 import { stoneTheme } from '@/lib/generated/stone.js';
 import Invoices from '@/platform/routes/orgs/Invoices';
 import { LayerProvider } from '@astryxdesign/core/Layer';
-import { createServer, type RequestListener } from 'node:http';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 const invoice = {
@@ -26,32 +24,16 @@ const invoice = {
 
 /** Mounts the section with real providers and an isolated HTTP API boundary. */
 async function withInvoices(
-    respond: RequestListener,
+    respond: (request: Request) => Response | Promise<Response>,
     check: (output: HTMLElement, render: (canManage: boolean) => void, errors: unknown[]) => Promise<void>
 ) {
-    const server = createServer((request, response) => {
-        response.setHeader('Access-Control-Allow-Origin', 'http://localhost');
-        response.setHeader('Access-Control-Allow-Credentials', 'true');
-        response.setHeader('Access-Control-Allow-Headers', 'Accept, Content-Type');
-        response.setHeader('Access-Control-Allow-Methods', 'GET');
+    const transport = vi.spyOn(globalThis, 'fetch').mockImplementation(async (input, options) => {
+        const request = input instanceof Request ? input : new Request(input, options);
 
-        // Let the DOM HTTP client complete its local cross-origin preflight.
-        if (request.method === 'OPTIONS') {
-            response.writeHead(204);
-            response.end();
-
-            return;
-        }
-
-        respond(request, response);
+        return respond(request);
     });
 
-    await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
-
-    // SAFETY: Listening on a TCP port guarantees an IP address rather than a Unix socket.
-    const address = server.address() as AddressInfo;
-
-    const base = `http://127.0.0.1:${address.port}/api/v1/organizations/acme`;
+    const base = '/api/v1/organizations/acme';
     const output = document.createElement('section');
     document.body.append(output);
     const root = createRoot(output, { onCaughtError: () => undefined });
@@ -83,8 +65,7 @@ async function withInvoices(
         root.unmount();
         client.clear();
         output.remove();
-        server.closeAllConnections();
-        await new Promise<void>((resolve, reject) => server.close((error) => (error ? reject(error) : resolve())));
+        transport.mockRestore();
     }
 }
 
@@ -97,64 +78,67 @@ it('loads private invoices only with owner access and hides them when access is 
         release = resolve;
     });
 
-    await withInvoices(
-        (request, response) => {
-            requests.push(`${request.method} ${request.url}`);
-            void pending.then(() => {
-                response.writeHead(200, { 'Content-Type': 'application/json' });
-                response.end(JSON.stringify([invoice]));
-            });
-        },
-        async (output, render) => {
-            // Act
-            render(false);
+    try {
+        await withInvoices(
+            async (request) => {
+                requests.push(`${request.method} ${new URL(request.url).pathname}`);
+                await pending;
 
-            // Assert
-            expect(output.querySelector('h2')?.textContent).toBe('Invoices');
-            expect(output.textContent).toContain('An organization owner can view invoices.');
-            expect(output.textContent).not.toContain('Loading invoices…');
-            expect(requests).toEqual([]);
+                return Response.json([invoice]);
+            },
+            async (output, render) => {
+                // Act
+                render(false);
 
-            // Act
-            render(true);
-            await vi.waitFor(() => expect(requests).toEqual(['GET /api/v1/organizations/acme/invoices']));
+                // Assert
+                expect(output.querySelector('h2')?.textContent).toBe('Invoices');
+                expect(output.textContent).toContain('An organization owner can view invoices.');
+                expect(output.textContent).not.toContain('Loading invoices…');
+                expect(requests).toEqual([]);
 
-            // Assert
-            expect(output.querySelector('h2')?.textContent).toBe('Invoices');
-            expect(output.textContent).toContain('Loading invoices…');
-            expect(output.textContent).not.toContain('An organization owner can view invoices.');
-            expect(output.querySelector('table')).toBeNull();
+                // Act
+                render(true);
+                await vi.waitFor(() => expect(requests).toEqual(['GET /api/v1/organizations/acme/invoices']));
 
-            // Act
-            release();
+                // Assert
+                expect(output.querySelector('h2')?.textContent).toBe('Invoices');
+                expect(output.textContent).toContain('Loading invoices…');
+                expect(output.textContent).not.toContain('An organization owner can view invoices.');
+                expect(output.querySelector('table')).toBeNull();
 
-            // Assert
-            await vi.waitFor(() => expect(output.querySelector('table')?.textContent).toContain('ACME-001'));
-            expect(output.textContent).not.toContain('Loading invoices…');
-            expect(output.querySelector('a[href="https://example.com/invoices/acme"]')?.textContent).toContain(
-                'ACME-001'
-            );
-            expect(
-                output.querySelector('a[href$="/api/v1/organizations/acme/invoices/in_acme/pdf"]')?.textContent
-            ).toContain('PDF');
-            expect(
-                output
-                    .querySelector('a[href$="/api/v1/organizations/acme/invoices/in_acme/pdf"]')
-                    ?.getAttribute('target')
-            ).toBe('_blank');
-            expect(requests).toHaveLength(1);
+                // Act
+                release();
 
-            // Act
-            render(false);
+                // Assert
+                await vi.waitFor(() => expect(output.querySelector('table')?.textContent).toContain('ACME-001'));
+                expect(output.textContent).not.toContain('Loading invoices…');
+                expect(output.querySelector('a[href="https://example.com/invoices/acme"]')?.textContent).toContain(
+                    'ACME-001'
+                );
+                expect(
+                    output.querySelector('a[href$="/api/v1/organizations/acme/invoices/in_acme/pdf"]')?.textContent
+                ).toContain('PDF');
+                expect(
+                    output
+                        .querySelector('a[href$="/api/v1/organizations/acme/invoices/in_acme/pdf"]')
+                        ?.getAttribute('target')
+                ).toBe('_blank');
+                expect(requests).toHaveLength(1);
 
-            // Assert
-            expect(output.textContent).toContain('An organization owner can view invoices.');
-            expect(output.textContent).not.toContain('ACME-001');
-            expect(output.querySelector('table')).toBeNull();
-            expect(output.querySelector('a[href="https://example.com/invoices/acme"]')).toBeNull();
-            expect(output.querySelector('a[href$="/api/v1/organizations/acme/invoices/in_acme/pdf"]')).toBeNull();
-        }
-    );
+                // Act
+                render(false);
+
+                // Assert
+                expect(output.textContent).toContain('An organization owner can view invoices.');
+                expect(output.textContent).not.toContain('ACME-001');
+                expect(output.querySelector('table')).toBeNull();
+                expect(output.querySelector('a[href="https://example.com/invoices/acme"]')).toBeNull();
+                expect(output.querySelector('a[href$="/api/v1/organizations/acme/invoices/in_acme/pdf"]')).toBeNull();
+            }
+        );
+    } finally {
+        release();
+    }
 });
 
 it('keeps a failed invoice read inside the section and retries it successfully', async () => {
@@ -162,11 +146,13 @@ it('keeps a failed invoice read inside the section and retries it successfully',
     const requests: string[] = [];
 
     await withInvoices(
-        (request, response) => {
-            requests.push(`${request.method} ${request.url}`);
+        (request) => {
+            requests.push(`${request.method} ${new URL(request.url).pathname}`);
             const failed = requests.length === 1;
-            response.writeHead(failed ? 503 : 200, { 'Content-Type': 'application/json' });
-            response.end(JSON.stringify(failed ? { detail: 'Invoice provider unavailable' } : [invoice]));
+
+            return Response.json(failed ? { detail: 'Invoice provider unavailable' } : [invoice], {
+                status: failed ? 503 : 200,
+            });
         },
         async (output, render, errors) => {
             // Act

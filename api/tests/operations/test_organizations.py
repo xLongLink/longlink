@@ -4,7 +4,7 @@ import stripe
 import asyncio
 from uuid import UUID, uuid4
 from fastapi import HTTPException
-from conftest import FakeKubernetes, DatabasePostgres, StorageKubernetes, DatabaseKubernetes, reject_provider_construction
+from conftest import DatabasePostgres, StorageKubernetes, DatabaseKubernetes, reject_provider_construction
 from datetime import UTC, datetime
 from factories import create_compute, create_solution, create_organization
 from urllib.parse import parse_qs, urlsplit
@@ -179,7 +179,7 @@ async def test_delete_stops_when_namespace_deletion_fails(users: tuple[User, Use
         assert name == f"longlink-compute-{organization.id.hex}"
         raise RuntimeError("namespace deletion failed")
 
-    monkeypatch.setattr(organization_operations, "Kubernetes", FakeKubernetes)
+    monkeypatch.setattr(organization_operations, "Kubernetes", DatabaseKubernetes)
     monkeypatch.setattr(organization_operations.utils, "delete_namespace", delete)
     reject_provider_construction(monkeypatch, (organization_operations, "Storage"))
 
@@ -226,7 +226,7 @@ async def test_delete_tears_down_organization_boundaries_in_order(users: tuple[U
             assert name == f"longlink-database-{organization.id.hex}"
             calls.append("database")
 
-    monkeypatch.setattr(organization_operations, "Kubernetes", FakeKubernetes)
+    monkeypatch.setattr(organization_operations, "Kubernetes", DatabaseKubernetes)
     monkeypatch.setattr(organization_operations, "Storage", Storage)
     monkeypatch.setattr(organization_operations.utils, "delete_namespace", delete)
 
@@ -281,7 +281,7 @@ async def test_delete_retains_tombstones_and_releases_lease_after_storage_failur
         calls.append("storage failed")
         raise OSError("storage deletion unavailable")
 
-    monkeypatch.setattr(organization_operations, "Kubernetes", FakeKubernetes)
+    monkeypatch.setattr(organization_operations, "Kubernetes", DatabaseKubernetes)
     monkeypatch.setattr(organization_operations.utils, "delete_namespace", delete_namespace)
     monkeypatch.setattr(organization_operations.Storage, "delete", delete_storage)
 
@@ -380,7 +380,7 @@ async def test_delete_expires_only_open_checkouts_across_pages_before_namespaces
         calls.append("storage")
 
     monkeypatch.setattr(stripe.HTTPXClient, "request_async", request)
-    monkeypatch.setattr(organization_operations, "Kubernetes", FakeKubernetes)
+    monkeypatch.setattr(organization_operations, "Kubernetes", DatabaseKubernetes)
     monkeypatch.setattr(organization_operations.utils, "delete_namespace", delete_namespace)
     monkeypatch.setattr(organization_operations.Storage, "delete", delete_storage)
 

@@ -215,20 +215,11 @@ def reject_provider_construction(monkeypatch: pytest.MonkeyPatch, *targets: tupl
         monkeypatch.setattr(holder, name, unexpected_provider)
 
 
-class FakeKubernetes(Kubernetes):
-    """Provide an opaque Kubernetes API client."""
-
-    async def api(self) -> Api:
-        """Return the fake API client used by resource fakes."""
-
-        return cast(Api, object())
-
-
 def kubernetes_client() -> Kubernetes:
     """Return a lazy Kubernetes client with an opaque external API boundary."""
 
     # Initialize the real lifecycle without opening a cluster connection.
-    return FakeKubernetes({})
+    return DatabaseKubernetes({})
 
 
 class RegistryKubernetes(Kubernetes):
