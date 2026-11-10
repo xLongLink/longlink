@@ -98,8 +98,16 @@ export default function Login() {
                     <form
                         action={() =>
                             form.handleSubmit(async (payload) => {
+                                // Keep failed submissions in the form instead of the page error boundary.
+                                try {
+                                    await api('/api/v1/auth/password/login', { json: payload, method: 'POST' });
+                                } catch (cause: unknown) {
+                                    reportApiError(cause);
+
+                                    return;
+                                }
+
                                 // Clear previous identity data only after sign-in succeeds.
-                                await api('/api/v1/auth/password/login', { json: payload, method: 'POST' });
                                 await clearSessionQueries(queryClient);
                                 void navigate(destination, { replace: true });
                             })()
