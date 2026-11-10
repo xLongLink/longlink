@@ -54,7 +54,9 @@ describe('DeploymentReview', () => {
 
         // Act
         await act(async () => button('Next').click());
-        await act(async () => vi.waitFor(() => expect(button('Update solution').disabled).toBe(false)));
+        await act(async () =>
+            vi.waitFor(() => expect(button('Update solution').getAttribute('aria-disabled')).toBeNull())
+        );
         await act(async () => button('Update solution').click());
 
         // Assert
@@ -85,7 +87,7 @@ describe('DeploymentReview', () => {
         expect([...document.querySelectorAll('[role="status"]')].map((item) => item.textContent)).toContain(
             'Could not check for updates.'
         );
-        expect(button('Retry').disabled).toBe(false);
+        expect(button('Retry').getAttribute('aria-disabled')).toBeNull();
         expect([...document.querySelectorAll('button')].map((item) => item.textContent)).not.toContain('Next');
         expect([...document.querySelectorAll('button')].map((item) => item.textContent)).not.toContain(
             'Update solution'
@@ -107,7 +109,9 @@ describe('DeploymentReview', () => {
 
         // Act
         await act(async () => button('Next').click());
-        await act(async () => vi.waitFor(() => expect(button('Update solution').disabled).toBe(false)));
+        await act(async () =>
+            vi.waitFor(() => expect(button('Update solution').getAttribute('aria-disabled')).toBeNull())
+        );
         await act(async () => button('Update solution').click());
 
         // Assert
@@ -131,12 +135,16 @@ describe('DeploymentReview', () => {
         // Act
         // The image already changed, so only the missing required value blocks submission.
         expect(input('REQUIRED_SECRET').value).toBe('');
-        expect(button('Update solution').disabled).toBe(true);
+        expect(button('Update solution').getAttribute('aria-disabled')).toBe('true');
+        await act(async () => button('Update solution').click());
+        expect(submissions).toEqual([]);
         await act(async () => user.type(input('NEW_SECRET'), '   '));
-        expect(button('Update solution').disabled).toBe(true);
+        expect(button('Update solution').getAttribute('aria-disabled')).toBe('true');
+        await act(async () => button('Update solution').click());
+        expect(submissions).toEqual([]);
         await act(async () => user.clear(input('NEW_SECRET')));
         await act(async () => user.type(input('NEW_SECRET'), 'new-fixture-value'));
-        expect(button('Update solution').disabled).toBe(false);
+        expect(button('Update solution').getAttribute('aria-disabled')).toBeNull();
         await act(async () => user.type(input('OPTIONAL_SECRET'), 'replacement-fixture-value'));
         await act(async () => input('Remove OPTIONAL_SECRET').click());
         await act(async () => button('Update solution').click());

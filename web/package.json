@@ -23,7 +23,7 @@
         "routes": "react-router routes"
     },
     "dependencies": {
-        "@astryxdesign/core": "0.7.8",
+        "@astryxdesign/core": "0.7.12",
         "@dicebear/core": "^10.7.0",
         "@dicebear/styles": "^10.6.0",
         "@fontsource/figtree": "^5.3.0",
@@ -45,7 +45,7 @@
         "zod": "^4.6.7"
     },
     "devDependencies": {
-        "@astryxdesign/cli": "0.7.8",
+        "@astryxdesign/cli": "0.7.12",
         "@hey-api/openapi-ts": "0.99.0",
         "@oxlint/plugins": "1.90.0",
         "@react-router/dev": "8.5.1",
