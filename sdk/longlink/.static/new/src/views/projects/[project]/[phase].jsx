@@ -6,7 +6,7 @@ export default function Phase({ params }) {
     // Resolve both levels of the nested project route.
     const [project] = useApi(`/api/projects/${params.project}`);
     const [phases] = useApi('/api/phases');
-    const phase = phases.find((item) => item.label.toLowerCase().replaceAll(' ', '-') === params.phase);
+    const phase = phases.find((item) => item.slug === params.phase);
 
     if (!phase) return <EmptyState title="Phase not found" />;
 

@@ -1,5 +1,5 @@
 from typing import Literal
-from pydantic import Field, BaseModel, ConfigDict
+from pydantic import Field, BaseModel, ConfigDict, computed_field
 
 
 class ProjectRead(BaseModel):
@@ -31,3 +31,10 @@ class PhaseRead(BaseModel):
     label: str
     documents: list[DocumentRead]
     description: str
+
+    @computed_field
+    @property
+    def slug(self) -> str:
+        """Identify this phase in project navigation without storing a second value."""
+
+        return self.label.lower().replace(" ", "-")

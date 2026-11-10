@@ -1,6 +1,6 @@
 from uuid import UUID, uuid4
 from typing import ClassVar
-from datetime import UTC, datetime
+from datetime import datetime
 from sqlmodel import Field
 from sqlalchemy import BigInteger, UniqueConstraint
 from src.database.models.base import PlatformModel
@@ -18,10 +18,9 @@ class Invoice(PlatformModel, table=True):
     organization_id: UUID | None = Field(default=None, foreign_key="organizations.id", ondelete="SET NULL", index=True)
     stripe_invoice_id: str | None = Field(default=None, max_length=255, unique=True)
 
-    # Billing period and measurement timestamps
+    # Billing period and issuance timestamp
     issued_at: datetime | None = None
     period_end: datetime
-    measured_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
     # Month-end usage
     users: int = Field(ge=0)

@@ -19,6 +19,7 @@ import { Divider } from '@astryxdesign/core/Divider';
 import { Heading } from '@astryxdesign/core/Heading';
 import SolutionManagement from './SolutionManagement';
 import { TextInput } from '@/components/ui/TextInput';
+import * as permissions from '@/platform/permissions';
 import { ApiBoundary } from '@/components/ApiBoundary';
 import { DeletionDialog } from '@/components/Deletion';
 import { MoreMenu } from '@astryxdesign/core/MoreMenu';
@@ -65,7 +66,7 @@ export default function OrganizationSettings() {
         )?.id ?? 'general';
 
     // Share the layout-resolved identity and permissions without loading inactive sections.
-    const canMaintain = ['maintain', 'admin', 'owner'].includes(membership.role);
+    const canMaintain = permissions.canMaintain(membership.role);
 
     return (
         <Stack gap={8}>
@@ -250,7 +251,7 @@ function MembersSection({ base, role }: { base: string; role: OrganizationContex
     const user = useAuthenticatedUser();
     const client = useQueryClient();
     const navigate = useNavigate();
-    const canAdminister = ['admin', 'owner'].includes(role);
+    const canAdminister = permissions.canAdminister(role);
     const canManageOwners = role === 'owner';
 
     const [member, setMember] = useState<{
@@ -418,8 +419,8 @@ function MembersSection({ base, role }: { base: string; role: OrganizationContex
 function InvitationsSection({ base, role }: { base: string; role: OrganizationContext['role'] }) {
     const [invitationAttempt, setInvitationAttempt] = useState<{ kind: 'invite' } | null>(null);
     const reportError = useApiError();
-    const canMaintain = ['maintain', 'admin', 'owner'].includes(role);
-    const canInviteAdmin = ['admin', 'owner'].includes(role);
+    const canMaintain = permissions.canMaintain(role);
+    const canInviteAdmin = permissions.canAdminister(role);
 
     // Load and invalidate invitations independently of member access.
     const [invitations, invalidateInvitations] = useApi(
