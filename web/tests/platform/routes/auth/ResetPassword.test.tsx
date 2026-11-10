@@ -25,7 +25,6 @@ it('does not expose password editing before reset proof has been verified', () =
 it('allows password editing only after the reset token exchange succeeds', async () => {
     // Arrange
     const storageKey = 'longlink.password-reset.token';
-    const originalToken = sessionStorage.getItem(storageKey);
     const originalUrl = window.location.href;
     const originalState: unknown = window.history.state;
     const requests: Request[] = [];
@@ -80,8 +79,6 @@ it('allows password editing only after the reset token exchange succeeds', async
         resolveVerification(new Response(null, { status: 204 }));
         transport.mockRestore();
         window.history.replaceState(originalState, '', originalUrl);
-
-        if (originalToken === null) sessionStorage.removeItem(storageKey);
-        else sessionStorage.setItem(storageKey, originalToken);
+        sessionStorage.removeItem(storageKey);
     }
 });
