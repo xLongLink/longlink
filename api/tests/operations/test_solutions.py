@@ -156,6 +156,101 @@ async def test_solution_delete_removes_provider_state_and_tombstone(
         assert await session.get(Solution, solution.id) is None
 
 
+async def test_solution_delete_storage_failure_preserves_revisions_for_retry(
+    users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Retain the tombstone and both release pointers until storage cleanup succeeds."""
+
+    # Arrange
+    owner = users[0]
+    organization = await create_organization(owner)
+    solution = await create_solution(organization, envs={"KEY": "deployed"}, catalog=Catalog(endpoints=[]))
+    metadata = LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:pending"), permissions=Catalog(endpoints=[]))
+    async with session_scope() as session:
+        current = await solutions.access(session, solution.id, owner.id)
+        await solutions.deploy(session, current, owner.id, metadata, {"KEY": "desired"}, registry_connection_id=None)
+        await solutions.delete(session, solution.id, owner.id)
+        await session.commit()
+
+    # Snapshot committed deletion state independently of the command transaction.
+    async with session_scope() as session:
+        tombstone = await session.get(Solution, solution.id)
+        assert tombstone is not None
+        deleted_at = tombstone.deleted_at
+        desired_id = tombstone.desired_revision_id
+        deployed_id = tombstone.deployed_revision_id
+        assert deleted_at is not None
+        assert desired_id is not None
+        assert deployed_id is not None
+        assert desired_id != deployed_id
+        desired = await session.get(Revision, desired_id)
+        assert desired is not None
+        desired_snapshot = desired.model_dump()
+        deployed = await session.get(Revision, deployed_id)
+        assert deployed is not None
+        deployed_snapshot = deployed.model_dump()
+
+    calls: list[tuple[str, UUID]] = []
+    failure = RuntimeError("storage cleanup failed")
+
+    async def delete(client: object, organization_id: UUID, solution_id: UUID) -> None:
+        """Complete external workload cleanup before storage fails."""
+
+        assert organization_id == organization.id
+        calls.append(("workload", solution_id))
+
+    class Postgres(DatabasePostgres):
+        """Complete external schema cleanup without provider I/O."""
+
+        async def delete_solution_schema(self, organization_id: UUID, solution_id: UUID) -> None:
+            """Record successful schema cleanup."""
+
+            assert organization_id == organization.id
+            calls.append(("schema", solution_id))
+
+    async def fail_storage(self: StorageKubernetes, organization_id: UUID, solution_id: UUID) -> None:
+        """Fail only the final external cleanup boundary."""
+
+        assert organization_id == organization.id
+        calls.append(("storage", solution_id))
+        raise failure
+
+    monkeypatch.setattr(solution_operations, "Kubernetes", DatabaseKubernetes)
+    monkeypatch.setattr(solution_operations.solution_resources, "delete", delete)
+    monkeypatch.setattr(solution_operations.database_resources.postgres, "Postgres", Postgres)
+    monkeypatch.setattr(solution_operations, "Storage", StorageKubernetes)
+
+    # Act
+    with monkeypatch.context() as storage_failure:
+        storage_failure.setattr(StorageKubernetes, "delete_solution", fail_storage)
+        with pytest.raises(RuntimeError, match="^storage cleanup failed$") as raised:
+            await solution_operations.delete(solution.id)
+
+    # Assert
+    assert raised.value is failure
+    assert calls == [("workload", solution.id), ("schema", solution.id), ("storage", solution.id)]
+    async with session_scope() as session:
+        retained = await session.get(Solution, solution.id)
+        assert retained is not None
+        assert retained.deleted_at == deleted_at
+        assert retained.deleted_id == owner.id
+        assert retained.desired_revision_id == desired_id
+        assert retained.deployed_revision_id == deployed_id
+        desired = await session.get(Revision, desired_id)
+        assert desired is not None
+        assert desired.model_dump() == desired_snapshot
+        deployed = await session.get(Revision, deployed_id)
+        assert deployed is not None
+        assert deployed.model_dump() == deployed_snapshot
+
+    # Retry the real lifecycle after restoring successful external storage cleanup.
+    await solution_operations.delete(solution.id)
+    async with session_scope() as session:
+        assert await session.get(Solution, solution.id) is None
+        assert await session.get(Revision, desired_id) is None
+        assert await session.get(Revision, deployed_id) is None
+
+
 async def test_solution_creation_applies_user_and_managed_environment_values(
     users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch
 ) -> None:

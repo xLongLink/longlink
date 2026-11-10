@@ -12,6 +12,7 @@ from datetime import UTC, datetime, timedelta
 from sqlmodel import col, select
 from factories import create_organization
 from src.utils import oauth, token
+from sqlalchemy import or_
 from src.routes import v1
 from urllib.parse import parse_qs, urlparse
 from collections.abc import AsyncIterator
@@ -51,7 +52,14 @@ def configure_oauth_env(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 @pytest.fixture
-def oauth_responses(monkeypatch: pytest.MonkeyPatch, users: tuple[User, User, User]) -> dict[str, object]:
+def oauth_requests() -> list[str]:
+    """Record outbound OAuth endpoints for transport-boundary assertions."""
+
+    return []
+
+
+@pytest.fixture
+def oauth_responses(monkeypatch: pytest.MonkeyPatch, users: tuple[User, User, User], oauth_requests: list[str]) -> dict[str, object]:
     """Supply provider HTTP responses while retaining real identity verification."""
 
     # Arrange local credentials and verified control responses.
@@ -67,6 +75,9 @@ def oauth_responses(monkeypatch: pytest.MonkeyPatch, users: tuple[User, User, Us
     async def respond(_transport: httpx2.AsyncHTTPTransport, request: httpx2.Request) -> httpx2.Response:
         """Intercept only outbound HTTP and reject unexpected provider endpoints."""
 
+        # Record actual provider traffic, including any forbidden profile fetch.
+        oauth_requests.append(str(request.url))
+
         # Verify callback proof reaches the real provider code exchange.
         if str(request.url) in (oauth.GOOGLE_TOKEN_URL, oauth.GITHUB_TOKEN_URL):
             fields = parse_qs(request.content.decode())
@@ -75,7 +86,11 @@ def oauth_responses(monkeypatch: pytest.MonkeyPatch, users: tuple[User, User, Us
             assert fields["code_verifier"] == ["pkce-verifier"]
 
         # Return deterministic JSON at the network boundary.
-        return httpx2.Response(200, json=responses[str(request.url)], request=request)
+        response = responses[str(request.url)]
+        if isinstance(response, httpx2.Response):
+            response.request = request
+            return response
+        return httpx2.Response(200, json=response, request=request)
 
     monkeypatch.setattr(httpx2.AsyncHTTPTransport, "handle_async_request", respond)
     return responses
@@ -313,6 +328,46 @@ async def test_oauth_callback_rejects_unresolved_identity_without_account_change
     assert {(user.id, user.google_id, user.github_id) for user in persisted_users} == {(user.id, None, None) for user in users}
 
 
+@pytest.mark.parametrize("provider", OAUTH_PROVIDERS)
+async def test_oauth_callback_rejects_token_shaped_http_error_without_profile_fetch_or_account_changes(
+    client: AsyncClient,
+    users: tuple[User, User, User],
+    oauth_responses: dict[str, object],
+    oauth_requests: list[str],
+    provider: oauth.OAuthProvider,
+) -> None:
+    """Reject failed token exchanges even when their JSON could authenticate an existing account."""
+
+    # Arrange
+    token_url = oauth.GOOGLE_TOKEN_URL if provider == "google" else oauth.GITHUB_TOKEN_URL
+    oauth_responses[token_url] = httpx2.Response(400, json={"access_token": "private-provider-token", "token_type": "Bearer"})
+    credential = token.create_oauth_state_token(provider, "expected-state", "pkce-verifier")
+    client.cookies.set("longlink_oauth", credential, domain="testserver.local", path="/api/v1/auth/oauth")
+
+    # Act
+    response = await client.get(
+        f"/api/v1/auth/oauth/{provider}/callback", params={"code": "provider-code", "state": "expected-state"}, follow_redirects=False
+    )
+
+    # Assert
+    assert response.status_code == 302
+    assert response.content == b""
+    assert response.headers["location"] == f"{env.PUBLIC_URL}/login?oauth_error=1"
+    assert response.headers["cache-control"] == "no-store"
+    assert "longlink_oauth=" in response.headers["set-cookie"]
+    assert "Max-Age=0" in response.headers["set-cookie"]
+    assert "longlink_auth=" not in response.headers["set-cookie"]
+    assert client.cookies.get("longlink_oauth") is None
+    assert client.cookies.get("longlink_auth") is None
+    assert oauth_requests == [token_url]
+    async with session_scope() as session:
+        result = await session.execute(select(User))
+        persisted_users = result.scalars().all()
+    assert {(user.id, user.email, user.google_id, user.github_id) for user in persisted_users} == {
+        (user.id, user.email, None, None) for user in users
+    }
+
+
 # Redirect destinations remain local even when supplied through OAuth state.
 @pytest.mark.parametrize("provider", OAUTH_PROVIDERS)
 @pytest.mark.parametrize(
@@ -355,13 +410,87 @@ async def test_oauth_callback_links_existing_email_and_authenticates_browser(
     assert profile_response.status_code == 200
     assert profile_response.json()["id"] == str(user.id)
     async with session_scope() as session:
-
         # Inspect the persisted identity link in a fresh session.
         linked_user = await session.get(User, user.id)
 
     # Verify the provider subject was persisted on the existing local account.
     assert linked_user is not None
     assert getattr(linked_user, f"{provider}_id") == "12345"
+
+
+@pytest.mark.parametrize("provider", OAUTH_PROVIDERS)
+async def test_oauth_first_login_commits_regular_account_and_repeat_login_reuses_it(
+    client: AsyncClient, oauth_responses: dict[str, object], provider: oauth.OAuthProvider
+) -> None:
+    """Create one linked ordinary account for a new verified email and reuse it on a fresh login."""
+
+    # Arrange
+    email = "new-oauth-user@example.com"
+    oauth_responses[oauth.GOOGLE_USERINFO_URL] = {"sub": "67890", "email": email, "email_verified": True, "name": "New OAuth User"}
+    oauth_responses[oauth.GITHUB_USER_URL] = {"id": 67890, "email": email, "name": "New OAuth User"}
+    oauth_responses[oauth.GITHUB_EMAILS_URL] = [{"email": email, "primary": True, "verified": True}]
+    identity_column = col(User.google_id) if provider == "google" else col(User.github_id)
+    matching_accounts = select(User).where(or_(col(User.email) == email, identity_column == "67890"))
+    async with session_scope() as session:
+        result = await session.execute(matching_accounts)
+        assert result.scalars().all() == []
+    credential = token.create_oauth_state_token(provider, "first-login-state", "pkce-verifier")
+    client.cookies.set("longlink_oauth", credential, domain="testserver.local", path="/api/v1/auth/oauth")
+
+    # Act
+    response = await client.get(
+        f"/api/v1/auth/oauth/{provider}/callback", params={"code": "provider-code", "state": "first-login-state"}, follow_redirects=False
+    )
+    profile_response = await client.get("/api/v1/me")
+
+    # Assert
+    assert response.status_code == 302
+    assert response.headers["location"] == f"{env.PUBLIC_URL}/user/organizations"
+    assert client.cookies.get("longlink_oauth") is None
+    assert client.cookies.get("longlink_auth") is not None
+    assert profile_response.status_code == 200
+    assert profile_response.json()["email"] == email
+    assert profile_response.json()["name"] == "New OAuth User"
+    assert profile_response.json()["administrator"] is False
+    async with session_scope() as session:
+        result = await session.execute(matching_accounts)
+        created_user = result.scalars().one()
+    assert str(created_user.id) == profile_response.json()["id"]
+    assert created_user.email == email
+    assert created_user.name == "New OAuth User"
+    assert created_user.administrator is False
+    assert created_user.deleted_at is None
+    assert created_user.google_id == ("67890" if provider == "google" else None)
+    assert created_user.github_id == ("67890" if provider == "github" else None)
+
+    # Arrange a fresh browser and valid state without carrying the first authenticated session.
+    async with create_client() as repeat_client:
+        repeat_credential = token.create_oauth_state_token(provider, "repeat-login-state", "pkce-verifier")
+        repeat_client.cookies.set("longlink_oauth", repeat_credential, domain="testserver.local", path="/api/v1/auth/oauth")
+
+        # Act
+        repeat_response = await repeat_client.get(
+            f"/api/v1/auth/oauth/{provider}/callback",
+            params={"code": "provider-code", "state": "repeat-login-state"},
+            follow_redirects=False,
+        )
+        repeat_profile = await repeat_client.get("/api/v1/me")
+
+        # Assert
+        assert repeat_response.status_code == 302
+        assert repeat_response.headers["location"] == f"{env.PUBLIC_URL}/user/organizations"
+        assert repeat_client.cookies.get("longlink_oauth") is None
+        assert repeat_client.cookies.get("longlink_auth") is not None
+        assert repeat_profile.status_code == 200
+        assert repeat_profile.json() == profile_response.json()
+    async with session_scope() as session:
+        result = await session.execute(matching_accounts)
+        repeated_user = result.scalars().one()
+    assert repeated_user.id == created_user.id
+    assert repeated_user.email == email
+    assert repeated_user.administrator is False
+    assert repeated_user.google_id == created_user.google_id
+    assert repeated_user.github_id == created_user.github_id
 
 
 @pytest.mark.parametrize(("provider", "verification"), UNVERIFIED_OAUTH_RESPONSES)
@@ -394,7 +523,6 @@ async def test_oauth_callback_rejects_unverified_email_without_account_changes(
     assert client.cookies.get("longlink_oauth") is None
     assert client.cookies.get("longlink_auth") is None
     async with session_scope() as session:
-
         # Query persisted accounts rather than relying on the callback's in-memory user.
         result = await session.execute(select(User))
 
@@ -443,7 +571,6 @@ async def test_oauth_callback_prefers_linked_subject_over_another_accounts_email
     assert profile_response.json()["id"] == str(account_a.id)
     assert profile_response.json()["email"] == account_a.email
     async with session_scope() as session:
-
         # Inspect all persisted accounts after the attempted provider link.
         result = await session.execute(select(User))
         persisted_users = result.scalars().all()

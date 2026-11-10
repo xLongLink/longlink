@@ -1,6 +1,7 @@
 import json
 import pytest
 import logging
+import longlink
 from uuid import UUID
 from typing import Annotated
 from fastapi import Header, Depends, Response, APIRouter, HTTPException
@@ -442,6 +443,108 @@ def test_mcp_discovers_late_routes_and_invokes_with_context(solution_source: Pat
 
 
 @pytest.mark.usefixtures("solution_source", "production_environment")
+@pytest.mark.parametrize("denial", ["missing-grant", "stale-catalog"])
+def test_endpoint_permissions_reject_requests_before_dependencies(monkeypatch: pytest.MonkeyPatch, denial: str) -> None:
+    """Reject otherwise valid identities before any business dependency or handler runs."""
+
+    # Arrange
+    secret = "test-http-identity-secret-01234567890"
+    monkeypatch.setenv("LONGLINK_IDENTITY_SECRET", secret)
+    app = LongLink()
+    app.state.longlink.database = Database(Envs(ENV="testing"))
+    effects: list[str] = []
+    router = longlink.APIRouter()
+
+    async def business_dependency() -> None:
+        """Record a business effect that authorization must prevent."""
+
+        effects.append("dependency")
+
+    @router.post("/items/{item_id}", response_model=int, dependencies=[Depends(business_dependency)])
+    async def update_item(item_id: int) -> int:
+        """Record the requested business operation."""
+
+        effects.append("handler")
+        return item_id
+
+    app.include_router(router, prefix="/api")
+    catalog = permissions.discover(app.permission_routes())
+    user = User(id=UUID(int=2), name="Writer", email="writer@example.com")
+    denied_access = permissions.Access(
+        catalog="0" * 64 if denial == "stale-catalog" else catalog.digest, endpoints=[0] if denial == "stale-catalog" else []
+    )
+    allowed_access = permissions.Access(catalog=catalog.digest, endpoints=[0])
+
+    # Act
+    with TestClient(app) as client:
+        denied = client.post("/api/items/7", headers={"x-longlink-identity": identity.create_identity_token(user, secret, denied_access)})
+
+        # Assert rejection before attempting the authorized control.
+        assert denied.status_code == 403
+        assert denied.json() == {"detail": "Endpoint permission required"}
+        assert denied.headers["cache-control"] == "no-store"
+        assert effects == []
+
+        # Act with the same identity and endpoint but a current, sufficient grant.
+        allowed = client.post("/api/items/7", headers={"x-longlink-identity": identity.create_identity_token(user, secret, allowed_access)})
+
+    # Assert
+    assert allowed.status_code == 200
+    assert allowed.json() == 7
+    assert effects == ["dependency", "handler"]
+
+
+@pytest.mark.usefixtures("solution_source")
+def test_permission_catalog_preserves_included_router_roles_and_hidden_routes() -> None:
+    """Discover prefixed operations and explicit roles independently of OpenAPI visibility."""
+
+    # Arrange
+    router = longlink.APIRouter()
+
+    @router.get("/items", response_model=int)
+    async def read_items() -> int:
+        """Read items using the default read and write roles."""
+
+        return 1
+
+    @router.post("/items", response_model=int)
+    async def write_items() -> int:
+        """Write items using the default write role."""
+
+        return 1
+
+    @router.get("/hidden", response_model=int, roles=[], include_in_schema=False)
+    async def hidden_items() -> int:
+        """Require an explicit grant without providing any default role."""
+
+        return 1
+
+    @router.get("/reports", response_model=int, roles=["reviewer"])
+    async def review_reports() -> int:
+        """Replace method defaults with a custom role."""
+
+        return 1
+
+    app = LongLink()
+    app.include_router(router, prefix="/api")
+
+    # Act
+    catalog = permissions.discover(app.permission_routes())
+
+    # Assert
+    assert [(endpoint.key, endpoint.roles) for endpoint in catalog.endpoints] == [
+        ("GET /api/hidden", []),
+        ("GET /api/items", ["read", "write"]),
+        ("GET /api/reports", ["reviewer"]),
+        ("POST /api/items", ["write"]),
+    ]
+    assert catalog.roles == ["read", "reviewer", "write"]
+    assert catalog.access("read") == permissions.Access(catalog=catalog.digest, endpoints=[1])
+    assert catalog.access("write") == permissions.Access(catalog=catalog.digest, endpoints=[1, 3])
+    assert catalog.access("reviewer") == permissions.Access(catalog=catalog.digest, endpoints=[2])
+
+
+@pytest.mark.usefixtures("solution_source", "production_environment")
 @pytest.mark.parametrize("protocol_version", ["2025-11-25", "2026-07-28"])
 def test_mcp_preserves_identity_and_endpoint_authorization(monkeypatch: pytest.MonkeyPatch, protocol_version: str) -> None:
     """Reject unauthenticated MCP requests and authorize every invocation independently."""
@@ -526,7 +629,6 @@ def test_empty_mcp_catalog_does_not_allow_internal_tools() -> None:
     app = LongLink()
     client = TestClient(app)
     with client:
-
         # Initialize a real MCP session for the first application lifespan.
         initialize_mcp(client)
         discovery = client.post("/mcp", json={"jsonrpc": "2.0", "id": 2, "method": "tools/list"})

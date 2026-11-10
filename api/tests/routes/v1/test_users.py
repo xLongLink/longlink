@@ -98,6 +98,60 @@ async def test_list_users_rejects_anonymous_requests(client: AsyncClient) -> Non
     assert response.json() == {"detail": "Not authenticated"}
 
 
+async def test_list_users_rejects_authenticated_non_administrator(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient], users: tuple[User, User, User]
+) -> None:
+    """Deny regular authenticated users access to the populated administrator directory."""
+
+    # Arrange
+    assert not users[1].administrator
+
+    # Act
+    response = await clients[1].get("/api/v1/users")
+
+    # Assert
+    assert response.status_code == 403
+    assert response.json() == {"detail": "Permission required"}
+
+
+async def test_patch_me_ignores_privileged_fields_while_persisting_name(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient], users: tuple[User, User, User]
+) -> None:
+    """Allow profile changes without accepting administrator, password, or email updates."""
+
+    # Arrange
+    user = users[1]
+    assert not user.administrator
+    original_password = user.password
+    original_email = user.email
+    expected_name = "Updated Regular User"
+
+    # Act
+    response = await clients[1].patch(
+        "/api/v1/me",
+        json={"name": expected_name, "administrator": True, "password": "replacement-password", "email": "replacement@example.com"},
+    )
+
+    # Assert
+    assert response.status_code == 200
+    assert response.json() == {
+        "id": str(user.id),
+        "name": expected_name,
+        "email": original_email,
+        "avatar": user.avatar,
+        "administrator": False,
+        "theme": "system",
+        "accent": "neutral",
+    }
+    async with session_scope() as session:
+        persisted_user = await session.get(User, user.id)
+        assert persisted_user is not None
+        assert persisted_user.name == expected_name
+        assert persisted_user.administrator is False
+        assert persisted_user.password == original_password
+        assert persisted_user.email == original_email
+
+
 async def test_patch_me_persists_without_organization_database_access(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient], users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch
 ) -> None:

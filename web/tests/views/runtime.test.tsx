@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 import { it, expect, vi } from 'vitest';
-import { commandSchema, type ViewReply } from '@/views/protocol';
+import { commandSchema, REQUEST_TIMEOUT, type ViewReply } from '@/views/protocol';
 
 it('ignores a mismatched session and releases an admitted port when its mount is absent', async () => {
     // Arrange
@@ -109,3 +109,82 @@ it('loads gallery images concurrently without a request cap', async () => {
         mount.remove();
     }
 }, 30_000);
+
+it('rejects an unfinished authored request with View closed on pagehide before its deadline', async () => {
+    // Arrange
+    vi.resetModules();
+    const previousSession = window.__VIEW_SESSION__;
+    const previousAccent = document.documentElement.getAttribute('data-accent');
+    window.__VIEW_SESSION__ = 'pagehide-test-session';
+    const mount = document.createElement('div');
+    mount.id = 'view';
+    document.body.append(mount);
+    const channel = new MessageChannel();
+    const close = vi.spyOn(channel.port1, 'close');
+    const received = vi.fn();
+    channel.port2.onmessage = (event: MessageEvent<unknown>) => {
+        const command = commandSchema.parse(event.data);
+
+        if (command.type === 'request') received(command);
+    };
+
+    try {
+        await import('@/views/runtime');
+        const started = performance.now();
+        window.dispatchEvent(
+            new MessageEvent('message', {
+                source: window,
+                ports: [channel.port1],
+                data: {
+                    session: 'pagehide-test-session',
+                    source: `export default function View() {
+                        const [caughtError, setCaughtError] = useState(null);
+                        useEffect(() => {
+                            request('/api/pending').then(
+                                () => setCaughtError('Request completed'),
+                                error => setCaughtError(error.message)
+                            );
+                        }, []);
+                        return <p role="status">{caughtError ?? 'Request pending'}</p>;
+                    }`,
+                    params: {},
+                    navigationBaseUrl: 'https://platform.example/',
+                    appearance: { theme: 'system', accent: 'neutral' },
+                },
+            })
+        );
+
+        // Act
+        await vi.waitFor(() =>
+            expect(received).toHaveBeenCalledExactlyOnceWith(
+                expect.objectContaining({
+                    type: 'request',
+                    path: '/api/pending',
+                    method: 'GET',
+                })
+            )
+        );
+        expect(mount.querySelector('[role="status"]')?.textContent).toBe('Request pending');
+        expect(close).not.toHaveBeenCalled();
+        window.dispatchEvent(new Event('pagehide'));
+
+        // Assert
+        expect(close).toHaveBeenCalled();
+        await vi.waitFor(() => expect(mount.querySelector('[role="status"]')?.textContent).toBe('View closed'), {
+            timeout: 2_000,
+        });
+        expect(performance.now() - started).toBeLessThan(REQUEST_TIMEOUT);
+    } finally {
+        window.dispatchEvent(new Event('pagehide'));
+        channel.port1.close();
+        channel.port2.close();
+        close.mockRestore();
+        mount.remove();
+        window.__VIEW_SESSION__ = previousSession;
+
+        if (previousAccent === null) document.documentElement.removeAttribute('data-accent');
+        else document.documentElement.setAttribute('data-accent', previousAccent);
+
+        vi.resetModules();
+    }
+}, 10_000);

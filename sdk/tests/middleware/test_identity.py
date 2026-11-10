@@ -120,6 +120,20 @@ def test_production_context_requires_signed_http_identity(
     assert response.json() == payload
 
 
+def test_production_context_rejects_signed_identity_without_endpoint_permissions(production_client: TestClient) -> None:
+    """Require endpoint permissions even when the Platform signature and user profile are valid."""
+
+    # Arrange
+    headers = identity_headers(UUID(int=1))
+
+    # Act
+    response = production_client.get("/views.json", headers=headers)
+
+    # Assert
+    assert response.status_code == 401
+    assert response.json() == {"detail": "Authentication required"}
+
+
 @pytest.mark.parametrize("path", ["/health", "/ready"])
 def test_production_context_allows_anonymous_probes(production_client: TestClient, path: str) -> None:
     """Allow anonymous liveness and readiness requests."""

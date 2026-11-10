@@ -710,6 +710,40 @@ async def test_reinviting_email_replaces_pending_organization_role(
     assert [item[0] for item in captured_mail] == [invitee.email, invitee.email]
 
 
+async def test_organization_maintainer_cannot_replace_pending_owner_invitation(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+    captured_mail: list[tuple[str, str, str, str | None]],
+) -> None:
+    """Reject replacing an existing grant above the caller's role with an allowed role."""
+
+    # Arrange
+    owner, maintainer, invitee = users
+    organization = await create_organization(owner)
+    invitation = OrganizationInvitation(organization_id=organization.id, email=invitee.email, role=OrganizationRoles.owner)
+    async with session_scope() as session:
+        session.add(UserOrganization(user_id=maintainer.id, organization_id=organization.id, role=OrganizationRoles.maintain))
+        session.add(invitation)
+        await session.commit()
+    async with session_scope() as session:
+        original = await session.get(OrganizationInvitation, invitation.id)
+        assert original is not None
+        original_created_at = original.created_at
+
+    # Act
+    response = await clients[1].post(f"/api/v1/organizations/{organization.id}/invitations", json={"email": invitee.email, "role": "write"})
+
+    # Assert
+    assert response.status_code == 403
+    assert response.json() == {"detail": "Invitation role permissions required"}
+    assert captured_mail == []
+    async with session_scope() as session:
+        invitations_list = await invitations.fetch(session, organization.id)
+        assert [(item.id, item.email, item.role, item.created_at) for item in invitations_list] == [
+            (invitation.id, invitee.email, OrganizationRoles.owner, original_created_at)
+        ]
+
+
 async def test_organization_owner_revokes_pending_invitation(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient], users: tuple[User, User, User]
 ) -> None:

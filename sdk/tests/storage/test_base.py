@@ -1,4 +1,6 @@
+import gc
 import pytest
+import weakref
 from s3fs import S3FileSystem
 from pathlib import Path
 from pydantic import ValidationError
@@ -46,7 +48,6 @@ def test_testing_storage_isolates_files_across_simultaneous_instances() -> None:
     second_storage = storage_base.create_fs(settings)
 
     try:
-
         # Act
         first_storage.pipe_file("report.txt", b"first report")
         second_storage.pipe_file("report.txt", b"second report")
@@ -60,7 +61,6 @@ def test_testing_storage_isolates_files_across_simultaneous_instances() -> None:
         assert not first_storage.exists("report.txt")
         assert second_storage.cat_file("report.txt") == b"second report"
     finally:
-
         # Remove only these files without clearing fsspec's process-global store.
         with suppress(FileNotFoundError):
             first_storage.rm("report.txt")
@@ -83,8 +83,10 @@ def test_production_storage_scopes_paths_to_configured_bucket_prefix(production_
     assert isinstance(scoped_filesystem.fs, S3FileSystem)
 
 
-def test_production_storage_passes_configured_ca_to_s3_client(production_settings: dict[str, str | int], ca_certificate: str) -> None:
-    """Use the Platform storage CA to verify the remote S3 endpoint."""
+def test_production_storage_owns_configured_ca_for_its_backend_lifetime(
+    production_settings: dict[str, str | int], ca_certificate: str
+) -> None:
+    """Retain the Platform storage CA until its real S3 filesystem is released."""
 
     # Arrange
     settings = Envs.model_validate(production_settings | {"STORAGE_CERTIFICATE": ca_certificate})
@@ -95,7 +97,19 @@ def test_production_storage_passes_configured_ca_to_s3_client(production_setting
     # Assert
     assert isinstance(filesystem, DirFileSystem)
     certificate = Path(filesystem.fs.client_kwargs["verify"])
-    assert certificate.read_text(encoding="utf-8") == ca_certificate
+    try:
+        assert certificate.read_text(encoding="utf-8") == ca_certificate
+        backend = weakref.ref(filesystem.fs)
+
+        # Act
+        del filesystem
+        gc.collect()
+
+        # Assert
+        assert backend() is None
+        assert not certificate.exists()
+    finally:
+        certificate.unlink(missing_ok=True)
 
 
 @pytest.mark.parametrize("name", ["DATABASE_HOST", "DATABASE_PASSWORD", "STORAGE_BUCKET", "STORAGE_PREFIX"])

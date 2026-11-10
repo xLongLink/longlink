@@ -61,7 +61,9 @@ INVALID_SIGNED_TOKENS = [
     pytest.param(IDENTITY_SECRET, {"aud": "other-audience"}, jwt.InvalidAudienceError, id="wrong-audience"),
     pytest.param("other-identity-secret-01234567890", {}, jwt.InvalidSignatureError, id="wrong-secret"),
     pytest.param(IDENTITY_SECRET, {"profile": None}, jwt.InvalidTokenError, id="invalid-profile"),
-    pytest.param(IDENTITY_SECRET, {"profile": {}}, jwt.InvalidTokenError, id="missing-profile-timestamp"),
+    pytest.param(
+        IDENTITY_SECRET, {"profile": {"name": "User", "email": "user@example.com"}}, jwt.InvalidTokenError, id="missing-profile-timestamp"
+    ),
     # Signed profiles still require valid domain fields.
     pytest.param(
         IDENTITY_SECRET,

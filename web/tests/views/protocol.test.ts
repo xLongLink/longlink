@@ -58,3 +58,31 @@ describe('Solution request body admission', () => {
         }
     );
 });
+
+describe('Solution download filename admission', () => {
+    it.each(['report.csv', 'Résumé 2026.csv', 'x'.repeat(256)])('accepts a valid filename: %j', (filename) => {
+        // Arrange
+        const command = { type: 'download', id: 0, path: '/export', filename };
+
+        // Act
+        const parsed = commandSchema.parse(command);
+
+        // Assert
+        expect(parsed).toEqual(command);
+    });
+
+    it.each(['', '../report.csv', '..\\report.csv', 'report\n.csv', 'report\u0000.csv', 'x'.repeat(257)])(
+        'rejects an invalid filename: %j',
+        (filename) => {
+            // Arrange
+            const command = { type: 'download', id: 0, path: '/export', filename };
+
+            // Act
+            const result = commandSchema.safeParse(command);
+
+            // Assert
+            expect(result.success).toBe(false);
+            expect(result.error?.issues.map((issue) => issue.path)).toContainEqual(['filename']);
+        }
+    );
+});

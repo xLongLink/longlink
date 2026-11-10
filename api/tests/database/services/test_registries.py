@@ -13,6 +13,33 @@ from src.database.models.users import User
 from src.database.models.registries import RegistryConnection
 
 
+async def test_resolve_rejects_existing_connection_from_another_organization(users: tuple[User, User, User]) -> None:
+    """Resolve retained credentials only for their owning Organization."""
+
+    # Arrange
+    organization = await create_organization(users[0])
+    foreign_organization = await create_organization(users[2], name="foreign")
+    connection = RegistryConnection(organization_id=organization.id, username="owner", credential="owner-token")
+    async with session_scope() as session:
+        session.add(connection)
+        await session.commit()
+    image = Image("ghcr.io/acme/private:latest")
+
+    # Act
+    async with session_scope() as session:
+        resolved = await registries.resolve(session, organization.id, connection.id, image)
+        assert resolved is not None
+        assert resolved.id == connection.id
+        assert resolved.organization_id == organization.id
+        assert resolved.credential == "owner-token"
+        with pytest.raises(HTTPException) as error:
+            await registries.resolve(session, foreign_organization.id, connection.id, image)
+
+    # Assert
+    assert error.value.status_code == 404
+    assert error.value.detail == "Registry connection not found"
+
+
 async def test_private_image_fallback_never_uses_foreign_credentials(
     users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch
 ) -> None:

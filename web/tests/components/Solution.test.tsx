@@ -301,6 +301,58 @@ describe('SolutionPage', () => {
         expect(output.textContent).not.toContain('Welcome');
     });
 
+    it('rejects runtime assets that load successfully but do not match the manifest version', async () => {
+        // Arrange
+        const version = 'a'.repeat(64);
+        const assets: { path: string; version: string | null; status: number }[] = [];
+        stubFetch(
+            (url) => {
+                if (url.endsWith('/views.json'))
+                    return Response.json({
+                        views: [{ path: 'home.jsx', route: '/home' }],
+                        runtime: { version },
+                    });
+
+                if (url.endsWith('/home.jsx'))
+                    return sourceResponse('export default function Home() { return <Text>Home</Text>; }');
+
+                throw new Error(`Unexpected request ${url}`);
+            },
+            (url) => {
+                const response = sourceResponse('');
+                const assetUrl = new URL(url);
+                assets.push({
+                    path: assetUrl.pathname,
+                    version: assetUrl.searchParams.get('v'),
+                    status: response.status,
+                });
+
+                return response;
+            }
+        );
+
+        // Act
+        const output = await renderPage('/home');
+
+        // Assert
+        await act(async () =>
+            vi.waitFor(() =>
+                expect(output.textContent).toContain(
+                    'The View runtime assets could not be loaded or did not match the manifest.'
+                )
+            )
+        );
+        expect(output.textContent).toContain('Unable to load this View');
+        expect(assets).toHaveLength(2);
+        expect(assets).toEqual(
+            expect.arrayContaining([
+                { path: '/views/runtime.js', version, status: 200 },
+                { path: '/views/runtime.css', version, status: 200 },
+            ])
+        );
+        expect(output.querySelector('iframe')).toBeNull();
+    });
+
     it('renders a startup failure when the isolated View never becomes ready', async () => {
         // Arrange
         vi.useFakeTimers();
@@ -423,7 +475,10 @@ function Location() {
 }
 
 /** Stubs fetch at the runtime's HTTP boundary. */
-function stubFetch(response: (url: string, request: Request) => Response | Promise<Response>): void {
+function stubFetch(
+    response: (url: string, request: Request) => Response | Promise<Response>,
+    runtimeResponse: (url: string, request: Request) => Response | Promise<Response> = () => sourceResponse('')
+): void {
     vi.stubGlobal('fetch', async (input: RequestInfo | URL, init?: RequestInit) => {
         // Normalize standard fetch inputs without depending on Ky's argument representation.
         const request = input instanceof Request ? input : new Request(input, init);
@@ -432,7 +487,7 @@ function stubFetch(response: (url: string, request: Request) => Response | Promi
         const pathname = new URL(url).pathname;
 
         if (pathname.endsWith('/views/runtime.js') || pathname.endsWith('/views/runtime.css'))
-            return sourceResponse('');
+            return runtimeResponse(url, request);
 
         return response(url, request);
     });

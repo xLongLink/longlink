@@ -1,3 +1,5 @@
+import pytest
+import logging
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from longlink.errors import install_error_handlers
@@ -112,3 +114,33 @@ def test_installed_handlers_preserve_a_solution_owned_http_handler() -> None:
     # Assert
     assert response.status_code == 418
     assert response.json() == {"solution": "Custom response"}
+
+
+def test_installed_unexpected_error_handler_keeps_exception_values_out_of_logs_and_response(caplog: pytest.LogCaptureFixture) -> None:
+    """Retain diagnostic stack locations without logging or returning sensitive exception values."""
+
+    # Arrange
+    app = FastAPI()
+    secret = "submitted-password-must-not-leak"
+
+    @app.get("/orders", response_model=None)
+    async def fail_request() -> None:
+        """Raise an exception carrying a sensitive value at the real HTTP boundary."""
+
+        raise RuntimeError(secret)
+
+    install_error_handlers(app)
+    client = TestClient(app, raise_server_exceptions=False)
+
+    # Act
+    with client, caplog.at_level(logging.ERROR, logger="longlink.errors"):
+        response = client.get("/orders")
+
+    # Assert
+    assert response.status_code == 500
+    assert response.json() == {"detail": "An unexpected error occurred. Please try again later."}
+    assert response.headers["cache-control"] == "no-store"
+    assert "Unhandled error RuntimeError" in caplog.text
+    assert __file__ in caplog.text
+    assert "in fail_request" in caplog.text
+    assert secret not in caplog.text

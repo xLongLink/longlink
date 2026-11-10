@@ -52,7 +52,7 @@ def identity_headers(user: User) -> dict[str, str]:
 @pytest.mark.usefixtures("solution_source")
 @pytest.mark.parametrize("user_id", [UUID(int=2), UUID(int=3)])
 def test_data_resolves_request_services(user_id: UUID, monkeypatch: pytest.MonkeyPatch) -> None:
-    """Persist and refresh signed profiles before exposing request services."""
+    """Persist newer signed profiles and ignore equal or older snapshots."""
 
     # Arrange
     monkeypatch.setenv("LONGLINK_ENV", "testing")
@@ -66,20 +66,46 @@ def test_data_resolves_request_services(user_id: UUID, monkeypatch: pytest.Monke
 
         return {"name": value.user.name, "storage_matches": value.storage is app.state.longlink.storage}
 
+    async def read_profile() -> tuple[str, str, str]:
+        """Read committed profile fields outside the request's identity map."""
+
+        async with app.state.longlink.database.session() as session:
+            persisted = await session.get(User, user_id)
+            assert persisted is not None
+            return persisted.name, persisted.email, persisted.avatar
+
     client = TestClient(app)
 
     # Act
     with client:
         response = client.get("/", headers=identity_headers(user))
-        updated = user.model_copy(update={"name": "Updated", "updated_at": user.updated_at + timedelta(seconds=1)})
+        updated = user.model_copy(
+            update={
+                "name": "Updated",
+                "email": "updated@example.com",
+                "avatar": "https://example.com/updated.png",
+                "updated_at": user.updated_at + timedelta(seconds=1),
+            }
+        )
         refreshed = client.get("/", headers=identity_headers(updated))
+        conflicting = updated.model_copy(
+            update={"name": "Conflicting", "email": "conflicting@example.com", "avatar": "https://example.com/conflicting.png"}
+        )
+        same_version = client.get("/", headers=identity_headers(conflicting))
         stale = client.get("/", headers=identity_headers(user))
+        assert client.portal is not None
+        persisted_profile = client.portal.call(read_profile)
 
     # Assert
     assert response.status_code == 200
     assert response.json() == {"name": "Original", "storage_matches": True}
+    assert refreshed.status_code == 200
     assert refreshed.json() == {"name": "Updated", "storage_matches": True}
+    assert same_version.status_code == 200
+    assert same_version.json() == refreshed.json()
+    assert stale.status_code == 200
     assert stale.json() == refreshed.json()
+    assert persisted_profile == ("Updated", "updated@example.com", "https://example.com/updated.png")
 
 
 @pytest.mark.usefixtures("solution_source")

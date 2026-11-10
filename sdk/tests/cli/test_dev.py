@@ -100,3 +100,34 @@ def test_dev_command_applies_migrations_and_refreshes_declarations_before_servin
 
     # Assert
     assert applications == ["main:app"]
+
+
+def test_dev_command_does_not_serve_when_committed_migration_fails(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    """Propagate a real migration failure without starting the development server."""
+
+    # Arrange
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setenv("LONGLINK_ENV", "development")
+    migrations_path = tmp_path / "migrations"
+    migrations_path.mkdir()
+    migrations_path.joinpath("failure.py").write_text(
+        "revision = 'failure'\ndown_revision = None\n\n"
+        "def upgrade():\n    raise RuntimeError('committed migration failed')\n\n"
+        "def downgrade():\n    pass\n",
+        encoding="utf-8",
+    )
+    applications: list[str] = []
+
+    def run(application: str, **_kwargs: object) -> None:
+        """Record any unsafe attempt to start the server after a failed upgrade."""
+
+        applications.append(application)
+
+    monkeypatch.setattr(dev.uvicorn, "run", run)
+
+    # Act
+    with pytest.raises(RuntimeError, match="^committed migration failed$"):
+        main(["dev"])
+
+    # Assert
+    assert applications == []

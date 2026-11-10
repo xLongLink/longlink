@@ -1,8 +1,12 @@
 import json
 import pytest
 import stripe
+import asyncio
+import contextlib
 from uuid import UUID
+from types import SimpleNamespace
 from decimal import ROUND_HALF_UP, Decimal
+from fastapi import HTTPException
 from conftest import DatabaseKubernetes
 from datetime import UTC, datetime
 from factories import create_organization
@@ -12,6 +16,7 @@ from src.operations import invoices
 from src.environments import env
 from src.models.statuses import Status
 from src.database.session import session_scope
+from sqlalchemy.ext.asyncio import AsyncSession
 from src.models.organizations import DatabaseState
 from src.database.models.users import User
 from src.database.models.invoices import Invoice
@@ -285,3 +290,204 @@ async def test_issue_recovers_remote_success_after_crash_without_duplicate_charg
         }
     ]
     assert all(item["metadata"]["longlink_invoice_id"] == str(invoice.id) for item in remote_items)
+
+
+@pytest.mark.parametrize(("customer", "currency"), [("cus_foreign", "chf"), ("cus_recovered", "eur")])
+async def test_issue_rejects_recovered_invoice_with_wrong_customer_or_currency(
+    monkeypatch: pytest.MonkeyPatch, customer: str, currency: str
+) -> None:
+    """Reject mismatched recovered invoices before accepting remote finalization."""
+
+    # Arrange
+    invoice = Invoice(
+        customer_id="cus_recovered",
+        stripe_invoice_id="in_recovered",
+        period_end=datetime.now(UTC).replace(day=1, hour=0, minute=0, second=0, microsecond=0),
+        users=7,
+        database_bytes=0,
+        storage_bytes=0,
+    )
+    async with session_scope() as session:
+        session.add(invoice)
+        await session.commit()
+
+    monkeypatch.setattr(env, "STRIPE_SECRET_KEY", "sk_test_invoices")
+    monkeypatch.setattr(env, "STRIPE_WEBHOOK_SECRET", "whsec_invoices")
+    requests: list[tuple[str, str]] = []
+
+    async def request(
+        self: stripe.HTTPXClient, method: str, url: str, headers: object, post_data: str | None = None
+    ) -> tuple[bytes, int, dict[str, str]]:
+        """Return an otherwise valid finalized invoice through the real Stripe SDK."""
+
+        requests.append((method, urlsplit(url).path))
+        assert (method, urlsplit(url).path) == ("get", "/v1/invoices/in_recovered")
+        payload = {
+            "id": "in_recovered",
+            "object": "invoice",
+            "customer": customer,
+            "currency": currency,
+            "status": "open",
+            "total": 2000,
+            "metadata": {"longlink_invoice_id": str(invoice.id)},
+        }
+        return json.dumps(payload).encode(), 200, {}
+
+    monkeypatch.setattr(stripe.HTTPXClient, "request_async", request)
+
+    # Act
+    with pytest.raises(HTTPException) as error:
+        async with session_scope() as session:
+            await invoices.issue(session, invoice.id)
+
+    # Assert
+    assert error.value.status_code == 409
+    assert error.value.detail == "Stripe invoice customer or currency does not match"
+    assert requests == [("get", "/v1/invoices/in_recovered")]
+    async with session_scope() as session:
+        persisted = await session.get(Invoice, invoice.id)
+        assert persisted is not None
+        assert persisted.stripe_invoice_id == "in_recovered"
+        assert persisted.issued_at is None
+
+
+async def test_issue_rejects_resource_line_owned_by_another_invoice(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Matching resource amounts and quantities cannot authorize a foreign invoice line."""
+
+    # Arrange
+    invoice = Invoice(
+        customer_id="cus_recovered",
+        stripe_invoice_id="in_recovered",
+        period_end=datetime.now(UTC).replace(day=1, hour=0, minute=0, second=0, microsecond=0),
+        users=7,
+        database_bytes=0,
+        storage_bytes=0,
+    )
+    async with session_scope() as session:
+        session.add(invoice)
+        await session.commit()
+
+    monkeypatch.setattr(env, "STRIPE_SECRET_KEY", "sk_test_invoices")
+    monkeypatch.setattr(env, "STRIPE_WEBHOOK_SECRET", "whsec_invoices")
+    requests: list[tuple[str, str]] = []
+
+    async def request(
+        self: stripe.HTTPXClient, method: str, url: str, headers: object, post_data: str | None = None
+    ) -> tuple[bytes, int, dict[str, str]]:
+        """Expose the foreign users line without allowing provider mutations."""
+
+        path = urlsplit(url).path
+        requests.append((method, path))
+        assert method == "get"
+        if path == "/v1/invoices/in_recovered":
+            payload = {
+                "id": "in_recovered",
+                "object": "invoice",
+                "customer": "cus_recovered",
+                "currency": "chf",
+                "status": "draft",
+                "total": 7000,
+                "metadata": {"longlink_invoice_id": str(invoice.id)},
+            }
+        elif path == "/v1/invoiceitems":
+            assert parse_qs(urlsplit(url).query)["invoice"] == ["in_recovered"]
+            payload = {
+                "object": "list",
+                "url": path,
+                "has_more": False,
+                "data": [
+                    {
+                        "id": "ii_foreign",
+                        "object": "invoiceitem",
+                        "amount": 7000,
+                        "quantity": 7,
+                        "unit_amount_decimal": "1000",
+                        "metadata": {"resource": "users", "longlink_invoice_id": "00000000-0000-0000-0000-000000000001"},
+                    }
+                ],
+            }
+        else:
+            raise AssertionError(f"Unexpected Stripe request: {method} {url}")
+        return json.dumps(payload).encode(), 200, {}
+
+    monkeypatch.setattr(stripe.HTTPXClient, "request_async", request)
+
+    # Act
+    with pytest.raises(HTTPException) as error:
+        async with session_scope() as session:
+            await invoices.issue(session, invoice.id)
+
+    # Assert
+    assert error.value.status_code == 409
+    assert error.value.detail == "Stripe invoice items require administrator review"
+    assert requests == [("get", "/v1/invoices/in_recovered"), ("get", "/v1/invoiceitems")]
+    async with session_scope() as session:
+        persisted = await session.get(Invoice, invoice.id)
+        assert persisted is not None
+        assert persisted.stripe_invoice_id == "in_recovered"
+        assert persisted.issued_at is None
+
+
+async def test_polling_rolls_back_failed_invoice_and_commits_next_invoice(monkeypatch: pytest.MonkeyPatch) -> None:
+    """One failed issuance rolls back independently without blocking other pending invoices."""
+
+    # Arrange
+    issued_at = datetime.now(UTC)
+    period_end = issued_at.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    first = Invoice(customer_id="cus_first", period_end=period_end, users=7, database_bytes=0, storage_bytes=0)
+    second = Invoice(customer_id="cus_second", period_end=period_end, users=8, database_bytes=0, storage_bytes=0)
+    async with session_scope() as session:
+        session.add_all([first, second])
+        await session.commit()
+
+    monkeypatch.setattr(env, "STRIPE_SECRET_KEY", "sk_test_invoices")
+    monkeypatch.setattr(env, "STRIPE_WEBHOOK_SECRET", "whsec_invoices")
+    attempted: list[UUID] = []
+    sleeping = asyncio.Event()
+    stopped = asyncio.Event()
+
+    async def issue(session: AsyncSession, invoice_id: UUID) -> None:
+        """Flush real writes, failing whichever pending invoice is encountered first."""
+
+        attempted.append(invoice_id)
+        invoice = await session.get(Invoice, invoice_id)
+        assert invoice is not None
+        invoice.issued_at = issued_at
+        invoice.stripe_invoice_id = f"in_{invoice_id.hex}"
+        await session.flush()
+        if len(attempted) == 1:
+            raise RuntimeError("issuance interrupted after local write")
+
+    async def sleep(_delay: float) -> None:
+        """Park the poller after its first complete cycle until cancellation."""
+
+        sleeping.set()
+        await stopped.wait()
+
+    monkeypatch.setattr(invoices, "issue", issue)
+    monkeypatch.setattr(invoices, "asyncio", SimpleNamespace(sleep=sleep))
+
+    # Act
+    task = asyncio.create_task(invoices.run())
+    try:
+        await asyncio.wait_for(sleeping.wait(), timeout=5)
+
+        # Assert
+        assert len(attempted) == 2
+        assert set(attempted) == {first.id, second.id}
+    finally:
+        task.cancel()
+        with contextlib.suppress(asyncio.CancelledError):
+            await asyncio.wait_for(task, timeout=5)
+
+    # Assert
+    async with session_scope() as session:
+        failed = await session.get(Invoice, attempted[0])
+        assert failed is not None
+        assert failed.issued_at is None
+        assert failed.stripe_invoice_id is None
+    async with session_scope() as session:
+        succeeded = await session.get(Invoice, attempted[1])
+        assert succeeded is not None
+        assert succeeded.issued_at == issued_at
+        assert succeeded.stripe_invoice_id == f"in_{attempted[1].hex}"

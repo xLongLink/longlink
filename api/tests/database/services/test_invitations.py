@@ -1,11 +1,13 @@
 import pytest
+from uuid import UUID
 from fastapi import HTTPException
 from datetime import UTC, datetime, timedelta
 from sqlmodel import col, select
 from factories import create_organization
 from src.models.roles import OrganizationRoles
 from src.database.session import session_scope
-from src.database.services import invitations
+from src.database.services import invitations, organizations
+from sqlalchemy.ext.asyncio import AsyncSession
 from src.models.organizations import OrganizationInvitationCreate
 from src.database.models.users import User
 from src.database.models.association import UserOrganization
@@ -112,6 +114,53 @@ async def test_accept_preserves_active_membership_role(users: tuple[User, User, 
     # Assert
     assert membership is not None
     assert membership.role == OrganizationRoles.read
+    assert invitation is None
+
+
+async def test_accept_rejects_invitation_revoked_after_initial_lookup(
+    users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Refresh a cached invitation before admitting its recipient after revocation."""
+
+    # Arrange
+    owner, invitee = users[0], users[1]
+    organization = await create_organization(owner)
+    pending_invitation = OrganizationInvitation(
+        organization_id=organization.id, email=invitee.email, role=OrganizationRoles.write, created_at=datetime.now(UTC)
+    )
+    invitation_id = pending_invitation.id
+    async with session_scope() as session:
+        session.add(pending_invitation)
+        await session.commit()
+    real_lock = organizations.lock
+
+    async def revoke_before_lock(session: AsyncSession, organization_id: UUID) -> Organization:
+        """Commit revocation between the initial read and the real admission lock."""
+
+        # Control stale-read timing, not database lock contention.
+        async with session_scope() as revocation_session:
+            invitation = await revocation_session.get(OrganizationInvitation, invitation_id)
+            assert invitation is not None
+            await revocation_session.delete(invitation)
+            await revocation_session.commit()
+
+        return await real_lock(session, organization_id)
+
+    # Act
+    with monkeypatch.context() as patch:
+        patch.setattr(organizations, "lock", revoke_before_lock)
+        async with session_scope() as session:
+            with pytest.raises(HTTPException) as error:
+                await invitations.accept(session, invitee, invitation_id)
+            await session.commit()
+
+    # Assert
+    assert error.value.status_code == 404
+    assert error.value.detail == "Invitation not found"
+    async with session_scope() as session:
+        membership = await session.get(UserOrganization, (invitee.id, organization.id))
+        invitation = await session.get(OrganizationInvitation, invitation_id)
+    assert membership is None
     assert invitation is None
 
 
