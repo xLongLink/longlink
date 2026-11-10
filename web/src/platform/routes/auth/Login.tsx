@@ -3,18 +3,19 @@ import { TextField } from './Field';
 import { AuthLayout } from './AuthLayout';
 import { api, ApiError } from '@/lib/api';
 import { useApiError } from '@/lib/errors';
-import { Eye, EyeOff } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
-import { Wordmark } from '@/components/Wordmark';
 import { Stack } from '@astryxdesign/core/Stack';
+import { Eye, EyeOff, LogIn } from 'lucide-react';
 import { Button } from '@astryxdesign/core/Button';
 import { useForm, useWatch } from 'react-hook-form';
 import { Divider } from '@astryxdesign/core/Divider';
 import { useCurrentUser } from '@/lib/hooks/use-user';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { clearSessionQueries } from '@/lib/react-query';
+import { GitHubIcon } from '@/components/svg/GitHubIcon';
+import { GoogleIcon } from '@/components/svg/GoogleIcon';
 import { emailSchema, passwordSchema } from './validation';
 import { IconButton } from '@astryxdesign/core/IconButton';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -29,8 +30,8 @@ const loginSchema = z.object({
 type LoginValues = z.infer<typeof loginSchema>;
 
 const oauthProviders = [
-    { availability: 'google', label: 'Continue with Google', path: '/api/v1/auth/oauth/google' },
-    { availability: 'github', label: 'Continue with GitHub', path: '/api/v1/auth/oauth/github' },
+    { availability: 'google', label: 'Continue with Google', path: '/api/v1/auth/oauth/google', icon: GoogleIcon },
+    { availability: 'github', label: 'Continue with GitHub', path: '/api/v1/auth/oauth/github', icon: GitHubIcon },
 ] as const;
 
 /** Renders the standalone account sign-in page. */
@@ -85,7 +86,7 @@ export default function Login() {
         <AuthLayout
             title={
                 <Text display="block" justify="center" size="2xl" textWrap="nowrap" type="inherit">
-                    Welcome to <Wordmark size="inherit" />
+                    Welcome to LongLink
                 </Text>
             }
             description={null}
@@ -94,26 +95,6 @@ export default function Login() {
             <Stack gap={4}>
                 <Divider />
                 <Stack gap={2}>
-                    {availableOAuthProviders.length > 0 ? (
-                        <Stack gap={2}>
-                            <Divider label="Continue with social" />
-                            <Stack gap={2}>
-                                {availableOAuthProviders.map((provider) => (
-                                    <Button
-                                        key={provider.availability}
-                                        label={provider.label}
-                                        onClick={() =>
-                                            window.location.assign(
-                                                `${provider.path}?${new URLSearchParams({ return_to: destination })}`
-                                            )
-                                        }
-                                        width="100%"
-                                    />
-                                ))}
-                            </Stack>
-                            <Divider label="or sign in with email" />
-                        </Stack>
-                    ) : null}
                     <form
                         action={() =>
                             form.handleSubmit(async (payload) => {
@@ -168,9 +149,35 @@ export default function Login() {
                                     />
                                 </Stack>
                             </Stack>
-                            <Button label="Sign In" type="submit" variant="primary" width="100%" />
+                            <Button
+                                icon={<LogIn aria-hidden="true" size={16} />}
+                                label="Sign In"
+                                type="submit"
+                                variant="primary"
+                                width="100%"
+                            />
                         </Stack>
                     </form>
+                    {availableOAuthProviders.length > 0 ? (
+                        <Stack gap={2}>
+                            <Divider label="or" />
+                            <Stack gap={2}>
+                                {availableOAuthProviders.map((provider) => (
+                                    <Button
+                                        key={provider.availability}
+                                        icon={<provider.icon aria-hidden="true" className="size-4 shrink-0" />}
+                                        label={provider.label}
+                                        onClick={() =>
+                                            window.location.assign(
+                                                `${provider.path}?${new URLSearchParams({ return_to: destination })}`
+                                            )
+                                        }
+                                        width="100%"
+                                    />
+                                ))}
+                            </Stack>
+                        </Stack>
+                    ) : null}
                 </Stack>
 
                 <Divider
