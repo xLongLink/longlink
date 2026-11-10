@@ -1,6 +1,6 @@
 import { Stack } from './Stack';
+import { useState } from 'react';
 import { Button } from './Button';
-import { useEffect, useState } from 'react';
 import { Text } from '@astryxdesign/core/Text';
 import { useDownload, usePreview } from './preview';
 import { Spinner } from '@astryxdesign/core/Spinner';
@@ -43,15 +43,10 @@ export function FileViewer({
 
 /** Releases image resources locally while the host owns document previews. */
 function FilePreview({ src, title, onOpened }: { src: string; title: string; onOpened: () => void }) {
-    const preview = usePreview(src, false, title);
-
-    // Reset the action after the host opens a document so it can be opened again after closing.
-    useEffect(() => {
-        if (preview.status === 'opened') onOpened();
-    }, [preview.status, onOpened]);
+    const preview = usePreview(src, false, title, onOpened);
 
     // Render only the current mounted attempt's loading, error, or image state.
-    return preview.status === 'opened' ? null : preview.status === 'unsupported' ? (
+    return preview.status === 'unsupported' ? (
         <Text role="status">No preview is available. Use Download to save this file.</Text>
     ) : preview.status === 'error' ? (
         <Text role="status">{preview.cause instanceof Error ? preview.cause.message : 'Preview failed'}</Text>

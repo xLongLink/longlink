@@ -41,7 +41,7 @@ export default function SolutionPermissions({
     return (
         <Stack gap={4} padding={6}>
             <Heading level={2}>Solution permissions</Heading>
-            {!settings.catalog ? (
+            {settings.roles.length === 0 ? (
                 <Text>Rebuild and deploy the Solution to load its roles.</Text>
             ) : (
                 <ApiBoundary key={`${solutionId}:${settings.revision_id}`}>
