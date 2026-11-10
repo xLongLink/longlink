@@ -96,17 +96,26 @@ def test_production_storage_owns_configured_ca_for_its_backend_lifetime(
 
     # Assert
     assert isinstance(filesystem, DirFileSystem)
-    certificate = Path(filesystem.fs.client_kwargs["verify"])
+    backend = filesystem.fs
+    certificate = Path(backend.client_kwargs["verify"])
     try:
         assert certificate.read_text(encoding="utf-8") == ca_certificate
-        backend = weakref.ref(filesystem.fs)
+        backend_reference = weakref.ref(backend)
 
         # Act
         del filesystem
         gc.collect()
 
         # Assert
-        assert backend() is None
+        assert backend_reference() is backend
+        assert certificate.read_text(encoding="utf-8") == ca_certificate
+
+        # Act
+        del backend
+        gc.collect()
+
+        # Assert
+        assert backend_reference() is None
         assert not certificate.exists()
     finally:
         certificate.unlink(missing_ok=True)

@@ -52,15 +52,13 @@ it('loads gallery images concurrently without a request cap', async () => {
     mount.id = 'view';
     document.body.append(mount);
     const channel = new MessageChannel();
-    const requested: string[] = [];
-    let inFlight = 0;
-    let peak = 0;
+    const requests: { id: number; path: string }[] = [];
 
     // happy-dom clones Blobs into plain objects over MessagePort, so replies reach the runtime's handler directly.
     const reply = (data: ViewReply) =>
         channel.port1.onmessage?.call(channel.port1, new MessageEvent('message', { data }));
 
-    // Answer each image on a later task so concurrent requests accumulate like they do against a real host.
+    // Hold image responses until every request is in flight.
     channel.port2.onmessage = (event: MessageEvent<unknown>) => {
         const command = commandSchema.parse(event.data);
 
@@ -71,13 +69,7 @@ it('loads gallery images concurrently without a request cap', async () => {
         }
 
         if (command.type !== 'request') return;
-        requested.push(command.path);
-        inFlight += 1;
-        peak = Math.max(peak, inFlight);
-        setTimeout(() => {
-            inFlight -= 1;
-            reply({ id: command.id, ok: true, data: new Blob(['image'], { type: 'image/png' }) });
-        }, 10);
+        requests.push(command);
     };
 
     // Act
@@ -98,10 +90,17 @@ it('loads gallery images concurrently without a request cap', async () => {
         );
 
         // Assert
+        await vi.waitFor(() => expect(requests).toHaveLength(12), { timeout: 10_000 });
+        expect(new Set(requests.map((request) => request.path)).size).toBe(12);
+
+        // Act
+        for (const request of requests) {
+            reply({ id: request.id, ok: true, data: new Blob(['image'], { type: 'image/png' }) });
+        }
+
+        // Assert
         await vi.waitFor(() => expect(mount.querySelectorAll('img')).toHaveLength(12), { timeout: 10_000 });
         expect(mount.textContent).not.toContain('Photo unavailable');
-        expect(new Set(requested).size).toBe(12);
-        expect(peak).toBe(12);
     } finally {
         window.dispatchEvent(new Event('pagehide'));
         channel.port1.close();
