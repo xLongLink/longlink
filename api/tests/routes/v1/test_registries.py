@@ -109,6 +109,37 @@ async def test_registry_list_is_tenant_scoped_and_redacts_credentials(
     ]
 
 
+async def test_registry_delete_rejects_foreign_connection_without_mutation(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient], users: tuple[User, User, User]
+) -> None:
+    """Hide foreign credentials from an authorized Organization owner without queuing work."""
+
+    # Arrange
+    owner = users[1]
+    assert not owner.administrator
+    organization = await create_organization(owner)
+    foreign_organization = await create_organization(users[2], name="foreign")
+    connection = RegistryConnection(organization_id=foreign_organization.id, username="foreign-account", credential="foreign-token")
+    async with session_scope() as session:
+        session.add(connection)
+        await session.commit()
+    previous_operations = await fetch_operations()
+
+    # Act
+    response = await clients[1].delete(f"/api/v1/organizations/{organization.id}/registries/{connection.id}")
+
+    # Assert
+    assert response.status_code == 404
+    assert response.json() == {"detail": "Registry connection not found"}
+    async with session_scope() as session:
+        persisted_connection = await session.get(RegistryConnection, connection.id)
+        assert persisted_connection is not None
+        assert persisted_connection.organization_id == foreign_organization.id
+        assert persisted_connection.username == "foreign-account"
+        assert persisted_connection.credential == "foreign-token"
+    await assert_no_new_operations(previous_operations)
+
+
 async def test_registry_delete_preserves_credentials_used_by_historical_revision(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient], users: tuple[User, User, User]
 ) -> None:

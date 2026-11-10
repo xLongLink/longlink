@@ -39,6 +39,31 @@ async def test_github_lookup_uses_fixed_authenticated_endpoint() -> None:
     assert requests[0].headers["authorization"] == "Bearer private-token"
 
 
+@pytest.mark.parametrize("token", [pytest.param("private-tokén", id="non-ascii"), pytest.param("private-token\ninjected", id="newline")])
+async def test_github_rejects_invalid_credentials_before_transport(token: str) -> None:
+    """Reject malformed bearer credentials with the stable format error before HTTP access."""
+
+    # Arrange
+    requests: list[httpx2.Request] = []
+
+    async def send(request: httpx2.Request) -> httpx2.Response:
+        """Reject any attempt to send malformed credentials to the provider."""
+
+        requests.append(request)
+        pytest.fail("Invalid credentials must not reach the transport")
+
+    transport = httpx2.MockTransport(send)
+
+    # Act
+    with pytest.raises(HTTPException) as raised:
+        await github.username(SecretStr(token), transport=transport)
+
+    # Assert
+    assert raised.value.status_code == 422
+    assert raised.value.detail == "GitHub token has an invalid format"
+    assert requests == []
+
+
 @pytest.mark.parametrize(("status", "payload", "error_status", "message"), PROVIDER_FAILURES)
 async def test_github_provider_failures_are_classified(status: int, payload: dict, error_status: int, message: str) -> None:
     """Expose stable domain failures instead of trusting unusable provider responses."""

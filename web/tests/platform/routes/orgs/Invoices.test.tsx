@@ -88,7 +88,7 @@ async function withInvoices(
     }
 }
 
-it('does not request private invoices until the section is owner-accessible, then shows its loading state', async () => {
+it('loads private invoices only with owner access and hides them when access is revoked', async () => {
     // Arrange
     const requests: string[] = [];
     let release: () => void = () => undefined;
@@ -143,6 +143,16 @@ it('does not request private invoices until the section is owner-accessible, the
                     ?.getAttribute('target')
             ).toBe('_blank');
             expect(requests).toHaveLength(1);
+
+            // Act
+            render(false);
+
+            // Assert
+            expect(output.textContent).toContain('An organization owner can view invoices.');
+            expect(output.textContent).not.toContain('ACME-001');
+            expect(output.querySelector('table')).toBeNull();
+            expect(output.querySelector('a[href="https://example.com/invoices/acme"]')).toBeNull();
+            expect(output.querySelector('a[href$="/api/v1/organizations/acme/invoices/in_acme/pdf"]')).toBeNull();
         }
     );
 });

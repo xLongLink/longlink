@@ -35,6 +35,62 @@ describe('Solution request URLs', () => {
 });
 
 describe('Solution response loading', () => {
+    it('rejects redirects without requesting their destination', async () => {
+        // Arrange
+        let sourceRequests = 0;
+        let destinationRequests = 0;
+        const unexpectedRequests: string[] = [];
+        const controller = new AbortController();
+
+        const server = createServer((request, response) => {
+            if (request.url === '/source') {
+                sourceRequests += 1;
+                response.writeHead(302, { Location: '/destination' });
+                response.end();
+
+                return;
+            }
+
+            if (request.url === '/destination') {
+                destinationRequests += 1;
+                response.end('Redirected content');
+
+                return;
+            }
+
+            unexpectedRequests.push(`${request.method} ${request.url}`);
+            response.writeHead(404);
+            response.end();
+        });
+
+        await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
+
+        // SAFETY: TCP listen above guarantees an IP address rather than a Unix socket path.
+        const address = server.address() as AddressInfo;
+
+        // Act
+        const completion = load(`http://127.0.0.1:${address.port}/source`, { signal: controller.signal }).then(
+            () => ({ rejected: false, error: undefined }),
+            (error: Error) => ({ rejected: true, error })
+        );
+
+        try {
+            const result = await completion;
+
+            // Assert
+            expect(result.rejected).toBe(true);
+            expect(result.error).toBeInstanceOf(Error);
+            expect(sourceRequests).toBeGreaterThan(0);
+            expect(destinationRequests).toBe(0);
+            expect(unexpectedRequests).toEqual([]);
+        } finally {
+            controller.abort();
+            server.closeAllConnections();
+            await completion;
+            await new Promise<void>((resolve, reject) => server.close((error) => (error ? reject(error) : resolve())));
+        }
+    });
+
     it.each(['caller', 'deadline'] as const)(
         'interrupts a stalled response body on $0 cancellation',
         async (source) => {

@@ -311,6 +311,34 @@ def test_read_env_spec_rejects_malformed_child_response(build_project: Path, mon
         build.read_env_spec(build_project, config)
 
 
+def test_read_permission_spec_rejects_roles_that_change_between_fresh_imports(build_project: Path) -> None:
+    """Reject valid catalogs whose registered role defaults differ across processes."""
+
+    # Arrange
+    counter = build_project / "imports.txt"
+    counter.write_text("0", encoding="utf-8")
+    build_project.joinpath("main.py").write_text(
+        "from pathlib import Path\n"
+        "from longlink import LongLink\n\n"
+        "counter = Path(__file__).with_name('imports.txt')\n"
+        "imports = int(counter.read_text(encoding='utf-8')) + 1\n"
+        "counter.write_text(str(imports), encoding='utf-8')\n"
+        "app = LongLink()\n\n"
+        "@app.get('/api/reports', response_model=int, roles=[f'reviewer-{imports}'])\n"
+        "async def reports() -> int:\n"
+        "    return 1\n",
+        encoding="utf-8",
+    )
+
+    # Act
+    with pytest.raises(errors.Error) as failure:
+        build.read_permission_spec(build_project)
+
+    # Assert
+    assert str(failure.value) == "Solution permissions must be deterministic at build time"
+    assert counter.read_text(encoding="utf-8") == "2"
+
+
 def test_build_solution_generates_docker_artifacts_from_project_metadata(chdir_project: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Generate Docker instructions and ignore rules from project metadata."""
 
@@ -887,6 +915,85 @@ def test_build_command_reports_built_image(
     assert "- Built image: localhost:15000/demo:dev" in output
     assert ("- Pushed image: localhost:15000/demo:dev" in output) is bool(expected_commands)
     assert not temporary_context.exists()
+
+
+LATEST_BUILD_CASES = [
+    pytest.param(
+        "0.1.0",
+        ["-t", "localhost:15000/demo:0.1.0", "-t", "localhost:15000/demo:latest"],
+        [["/usr/bin/docker", "push", "localhost:15000/demo:0.1.0"], ["/usr/bin/docker", "push", "localhost:15000/demo:latest"]],
+        id="versioned-tag",
+    ),
+    pytest.param(
+        "latest", ["-t", "localhost:15000/demo:latest"], [["/usr/bin/docker", "push", "localhost:15000/demo:latest"]], id="already-latest"
+    ),
+]
+
+
+@pytest.mark.parametrize(("tag", "expected_tags", "expected_pushes"), LATEST_BUILD_CASES)
+@pytest.mark.usefixtures("chdir_project")
+def test_build_latest_pushes_each_built_tag_once(
+    docker_commands: Callable[[tuple[str, int] | None], list[list[str]]],
+    tag: str,
+    expected_tags: list[str],
+    expected_pushes: list[list[str]],
+) -> None:
+    """Publish the latest alias without duplicating an already-latest image tag."""
+
+    # Arrange
+    commands = docker_commands(None)
+
+    # Act
+    main(["build", "--tag", tag, "--registry", "localhost:15000", "--latest", "--push"])
+
+    # Assert
+    context = Path(commands[0][-1])
+    assert commands == [
+        ["/usr/bin/docker", "build", "--platform", "linux/amd64", "-f", str(context / "Dockerfile"), *expected_tags, str(context)],
+        *expected_pushes,
+    ]
+    assert not context.exists()
+
+
+def test_build_version_override_changes_only_the_embedded_version(
+    chdir_project: Path, docker_commands: Callable[[tuple[str, int] | None], list[list[str]]], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Keep the project version, image tag, and embedded release version independent."""
+
+    # Arrange
+    project_file = chdir_project / "pyproject.toml"
+    original_project = project_file.read_bytes()
+    project = build.read_pyproject(chdir_project)["project"]
+    assert isinstance(project, dict)
+    assert project["version"] == "0.1.0"
+    commands = docker_commands(None)
+    run_process = subprocess.run
+    version_labels: list[str] = []
+
+    def inspect_dockerfile(
+        command: list[str], check: bool, capture_output: bool = False, text: bool = False
+    ) -> subprocess.CompletedProcess[str] | None:
+        """Inspect the generated version label before the build context is released."""
+
+        # Observe only Docker artifacts and retain real child inspection through the fixture.
+        if command[:2] == ["/usr/bin/docker", "build"]:
+            instructions = Path(command[-1], "Dockerfile").read_text(encoding="utf-8").splitlines()
+            version_labels.extend(line for line in instructions if line.startswith("LABEL org.opencontainers.image.version="))
+        return run_process(command, check=check, capture_output=capture_output, text=text)
+
+    monkeypatch.setattr(build.subprocess, "run", inspect_dockerfile)
+
+    # Act
+    main(["build", "--tag", "candidate", "--version", "release-2026"])
+
+    # Assert
+    context = Path(commands[0][-1])
+    assert version_labels == ['LABEL org.opencontainers.image.version="release-2026"']
+    assert commands == [
+        ["/usr/bin/docker", "build", "--platform", "linux/amd64", "-f", str(context / "Dockerfile"), "-t", "demo:candidate", str(context)]
+    ]
+    assert project_file.read_bytes() == original_project
+    assert not context.exists()
 
 
 @pytest.mark.parametrize(

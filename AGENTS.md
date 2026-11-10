@@ -7,8 +7,6 @@
 - After creating a merge request, DO return the local checkout to its previous branch.
 - When they simplify implementation, PREFER the standard library or established libraries over handwritten implementations.
 - DO validate inputs at system boundaries.
-- DO test actual behavior instead of duplicating production logic in tests.
-- Unless the user explicitly requests tests, DON'T add them.
 - When duplication improves clarity, PREFER explicit duplication to helpers or shared code.
 - Where practical, PREFER real implementations and explicit dependency boundaries to mocks or global runtime-state changes.
 - NEVER EVER EVER add any new comment in markdown files, only fix existing one.
@@ -19,6 +17,22 @@
 - **Platform:** The system for building and operating process-specific business applications. It manages organizations, access, infrastructure, and deployment.
 - **Solution:** The simplest representation of a business process expressed as code.
 - **View:** A `.jsx` Solution interface definition rendered by the isolated shared Web runtime. Bundled Platform pages are trusted native `.tsx` modules.
+
+## Testing Guidelines
+
+- DO prioritize failures that matter to users: unauthorized access, data disclosure, lost updates, unusable credentials, misleading success, and broken recovery.
+- Before proposing tests, DO inspect the workflow, its actors, ownership boundaries, state transitions, failure paths, and existing protection across test layers.
+- Before writing a test, DO name the realistic regression it should detect and identify the observable assertion that would fail.
+- DO test actual behavior with independently specified expectations instead of duplicating production logic or asserting mock configuration.
+- DO cover meaningful contrasts: privileged versus restricted users, own versus another tenant's resources, and initial denial versus access revoked after data has loaded.
+- DO use otherwise valid inputs and existing resources so rejection is caused by the boundary under test, not an unrelated failure.
+- DO assert consequential outcomes and forbidden effects. An error response alone does not prove that no data was changed, disclosed, or queued for processing.
+- DO keep the mechanism establishing the guarantee real, including authorization, database constraints, transactions, form submission, cancellation, and recovery. Replace only boundaries outside the behavior under test.
+- PREFER the lowest test level that proves the contract. Add end-to-end coverage only when it protects a distinct integration boundary or user journey not already established by narrower tests.
+- DON'T add trivial getter/setter tests, duplicate happy paths, or surface-level interaction tests without a concrete regression risk.
+- DON'T treat line coverage, test counts, assertion counts, or mutation scores as evidence of behavioral completeness or as targets.
+- DO propose only consequential, evidence-backed gaps. DON'T invent scenarios to fill a requested batch; report when fewer worthwhile candidates remain.
+- DO report which behaviors were verified, which checks actually ran, and which material gaps remain. DON'T equate a passing suite with production readiness.
 
 ## Python Guidelines
 

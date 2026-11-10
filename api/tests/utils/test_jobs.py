@@ -62,7 +62,6 @@ async def test_execute_finishes_terminal_transition_when_cancelled(monkeypatch: 
         with pytest.raises(asyncio.CancelledError):
             await asyncio.wait_for(asyncio.shield(execution), timeout=3)
     finally:
-
         # Unblock persistence and reap the worker even if an assertion or wait fails.
         release.set()
         execution.cancel()
@@ -105,7 +104,6 @@ async def test_finish_transition_preserves_cancellation_when_terminal_persistenc
         with pytest.raises(asyncio.CancelledError):
             await asyncio.wait_for(asyncio.shield(transition), timeout=3)
     finally:
-
         # Unblock and reap the protected transition on failures as well as normal cancellation.
         release.set()
         transition.cancel()
@@ -195,19 +193,44 @@ async def test_execute_fails_operation_when_handler_times_out(monkeypatch: pytes
 
 
 async def test_execute_releases_operation_when_handler_is_cancelled(monkeypatch: pytest.MonkeyPatch, operation: Operation) -> None:
-    """Release an interrupted Operation before propagating handler cancellation."""
+    """Cancel unfinished handler work and release its Operation before shutdown propagates."""
 
     # Arrange
-    async def cancelled_handler(_target_id: UUID) -> None:
-        """Model worker shutdown while the handler is executing."""
+    handler_started = asyncio.Event()
+    handler_release = asyncio.Event()
+    handler_finished = asyncio.Event()
 
-        raise asyncio.CancelledError
+    async def cancelled_handler(target_id: UUID) -> None:
+        """Keep real handler work suspended until its worker is externally cancelled."""
+
+        assert target_id == operation.target_id
+        handler_started.set()
+        try:
+            await handler_release.wait()
+        finally:
+            handler_finished.set()
 
     monkeypatch.setitem(operation_worker.handlers, operation.kind, cancelled_handler)
 
-    # Act and assert
-    with pytest.raises(asyncio.CancelledError):
-        await operation_worker.execute(operation)
+    # Act
+    execution = asyncio.create_task(operation_worker.execute(operation))
+    try:
+        await asyncio.wait_for(handler_started.wait(), timeout=3)
+        assert not handler_finished.is_set()
+        execution.cancel()
+
+        # Assert cancellation and handler cleanup before any test teardown releases the handler.
+        with pytest.raises(asyncio.CancelledError):
+            await asyncio.wait_for(asyncio.shield(execution), timeout=3)
+        assert handler_finished.is_set()
+    finally:
+        # Release and reap even a handler incorrectly shielded from worker cancellation.
+        handler_release.set()
+        execution.cancel()
+        async with asyncio.timeout(3):
+            await asyncio.gather(execution, return_exceptions=True)
+            if handler_started.is_set():
+                await handler_finished.wait()
 
     # Verify shutdown committed only a lease release, not a terminal outcome or successor.
     [persisted] = await fetch_operations()
@@ -319,7 +342,6 @@ async def test_scheduler_recovers_from_worker_failures(
         async with asyncio.timeout(3):
             await idle.wait()
     finally:
-
         # Always stop and await the worker, even when recovery never reaches idle.
         scheduler.cancel()
         async with asyncio.timeout(1):

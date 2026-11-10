@@ -68,6 +68,60 @@ describe('DeploymentReview', () => {
         );
     });
 
+    it('retries a failed inspection and deploys the recovered reviewed revision', async () => {
+        // Arrange
+        const recoveredRevisionId = '00000000-0000-4000-8000-000000000003';
+        const recoveredCandidate = { ...candidate, revision_id: recoveredRevisionId };
+
+        const inspect = vi
+            .fn<() => Response>()
+            .mockImplementationOnce(() => Response.json({ detail: 'Image inspection unavailable' }, { status: 503 }))
+            .mockImplementation(() => Response.json(recoveredCandidate));
+
+        const onSuccess = vi.fn();
+        const submissions = await openReview(recoveredCandidate, inspect, onSuccess);
+
+        // Assert
+        expect([...document.querySelectorAll('[role="status"]')].map((item) => item.textContent)).toContain(
+            'Could not check for updates.'
+        );
+        expect(button('Retry').disabled).toBe(false);
+        expect([...document.querySelectorAll('button')].map((item) => item.textContent)).not.toContain('Next');
+        expect([...document.querySelectorAll('button')].map((item) => item.textContent)).not.toContain(
+            'Update solution'
+        );
+        expect(inspect).toHaveBeenCalledTimes(1);
+        expect(submissions).toEqual([]);
+        expect(onSuccess).not.toHaveBeenCalled();
+
+        // Act
+        await act(async () => button('Retry').click());
+        await act(async () => vi.waitFor(() => button('Next')));
+
+        // Assert
+        expect(document.body.textContent).toContain('sha256:bbbbbbbbbbbb');
+        expect(document.body.textContent).not.toContain('Could not check for updates.');
+        expect(inspect).toHaveBeenCalledTimes(2);
+        expect(submissions).toEqual([]);
+        expect(onSuccess).not.toHaveBeenCalled();
+
+        // Act
+        await act(async () => button('Next').click());
+        await act(async () => vi.waitFor(() => expect(button('Update solution').disabled).toBe(false)));
+        await act(async () => button('Update solution').click());
+
+        // Assert
+        await vi.waitFor(() => {
+            expect(submissions).toEqual([
+                {
+                    path: `/api/v1/solutions/${solutionId}/update`,
+                    body: { envs: {}, expected_revision_id: recoveredRevisionId },
+                },
+            ]);
+            expect(onSuccess).toHaveBeenCalledTimes(1);
+        });
+    });
+
     it('preserves untouched configured secrets and gives removal precedence over an edited value', async () => {
         // Arrange
         const submissions = await openReview(secretCandidate);
@@ -129,7 +183,11 @@ describe('DeploymentReview', () => {
     });
 
     /** Mounts the dialog with shared UI providers and an isolated HTTP boundary. */
-    async function openReview(inspection: typeof secretCandidate) {
+    async function openReview(
+        inspection: typeof secretCandidate,
+        inspect = () => Response.json(inspection),
+        onSuccess: () => void = () => {}
+    ) {
         const submissions: { path: string; body: unknown }[] = [];
         vi.stubGlobal('fetch', async (input: RequestInfo | URL, init?: RequestInit) => {
             const request = input instanceof Request ? input : new Request(input, init);
@@ -144,7 +202,7 @@ describe('DeploymentReview', () => {
                 return new Response(null, { status: 204 });
             }
 
-            return Response.json(inspection);
+            return inspect();
         });
         container = document.createElement('section');
         document.body.append(container);
@@ -161,7 +219,7 @@ describe('DeploymentReview', () => {
                                 element={
                                     <DeploymentReview
                                         item={{ id: solutionId, name: 'Sample' }}
-                                        onSuccess={() => {}}
+                                        onSuccess={onSuccess}
                                         onClose={() => {}}
                                     />
                                 }
@@ -172,7 +230,9 @@ describe('DeploymentReview', () => {
             )
         );
 
-        await act(async () => vi.waitFor(() => button('Next')));
+        await act(async () =>
+            vi.waitFor(() => expect(document.body.textContent).not.toContain('Checking for updates…'))
+        );
 
         return submissions;
     }

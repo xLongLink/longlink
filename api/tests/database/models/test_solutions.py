@@ -6,6 +6,7 @@ from sqlalchemy.exc import IntegrityError
 from src.database.session import session_scope
 from src.database.models.users import User
 from src.database.models.solutions import Revision, Solution
+from src.database.models.registries import RegistryConnection
 
 
 @pytest.mark.parametrize("reference", ["desired_revision_id", "deployed_revision_id"])
@@ -29,6 +30,7 @@ IMMUTABLE_REVISION_FIELDS = [
     ("id", uuid4()),
     ("solution_id", uuid4()),
     ("image", "ghcr.io/longlink/dashboard@sha256:replacement"),
+    ("version", "2.0.0"),
     ("envs", {"KEY": "replacement"}),
     ("created_at", datetime.now(UTC)),
     # Immutable snapshots also protect actor attribution.
@@ -58,3 +60,30 @@ async def test_revision_snapshot_cannot_be_modified(users: tuple[User, User, Use
         persisted = await session.get(Revision, solution.desired_revision_id)
     assert persisted is not None
     assert getattr(persisted, field) == original
+
+
+async def test_revision_snapshot_cannot_change_registry_connection(users: tuple[User, User, User]) -> None:
+    """Reject a valid replacement credential reference without rewriting the release."""
+
+    # Arrange
+    organization = await create_organization(users[0])
+    solution = await create_solution(organization)
+    connection = RegistryConnection(organization_id=organization.id, username="replacement", credential="replacement-token")
+    async with session_scope() as session:
+        session.add(connection)
+        await session.commit()
+
+    # Act / Assert
+    async with session_scope() as session:
+        revision = await session.get(Revision, solution.desired_revision_id)
+        assert revision is not None
+        assert revision.registry_connection_id is None
+        revision.registry_connection_id = connection.id
+        with pytest.raises(ValueError, match="Revision snapshots are immutable"):
+            await session.commit()
+
+    # Assert
+    async with session_scope() as session:
+        persisted = await session.get(Revision, solution.desired_revision_id)
+        assert persisted is not None
+        assert persisted.registry_connection_id is None

@@ -25,7 +25,6 @@ async def s3(monkeypatch: pytest.MonkeyPatch) -> AsyncIterator[tuple[S3, AioStub
         aws_secret_access_key="secret",
         aws_session_token="dummy",
     ) as client:
-
         # Keep the real storage adapter while replacing its network client.
         storage = S3("http://127.0.0.1:1", Credentials("access", "secret"))
 
@@ -189,6 +188,52 @@ async def test_delete_prefix_raises_on_partial_failures(s3: tuple[S3, AioStubber
     # Act and assert
     with pytest.raises(RuntimeError, match="S3 failed to delete 1 objects"):
         await storage.delete_prefix("org-bucket", "solutions/abc/")
+
+
+async def test_delete_prefix_cleans_uploads_versions_and_markers_across_listing_pages(s3: tuple[S3, AioStubber]) -> None:
+    """Follow both cleanup cursors and remove entries found on continuation pages."""
+
+    # Arrange
+    storage, stubber = s3
+    first_version = {"Key": "solutions/abc/first", "VersionId": "version-1"}
+    second_version = {"Key": "solutions/abc/second", "VersionId": "version-2"}
+    marker = {"Key": "solutions/abc/third-deleted", "VersionId": "marker-1"}
+    stubber.add_response(
+        "list_multipart_uploads",
+        {
+            "IsTruncated": True,
+            "NextKeyMarker": "solutions/abc/first-upload",
+            "NextUploadIdMarker": "upload-1",
+            "Uploads": [{"Key": "solutions/abc/first-upload", "UploadId": "upload-1"}],
+        },
+        {"Bucket": "org-bucket", "Prefix": "solutions/abc/"},
+    )
+    stubber.add_response(
+        "abort_multipart_upload", {}, {"Bucket": "org-bucket", "Key": "solutions/abc/first-upload", "UploadId": "upload-1"}
+    )
+    stubber.add_response(
+        "list_multipart_uploads",
+        {"IsTruncated": False, "Uploads": [{"Key": "solutions/abc/second-upload", "UploadId": "upload-2"}]},
+        {"Bucket": "org-bucket", "Prefix": "solutions/abc/", "KeyMarker": "solutions/abc/first-upload", "UploadIdMarker": "upload-1"},
+    )
+    stubber.add_response(
+        "abort_multipart_upload", {}, {"Bucket": "org-bucket", "Key": "solutions/abc/second-upload", "UploadId": "upload-2"}
+    )
+    stubber.add_response(
+        "list_object_versions",
+        {"IsTruncated": True, "NextKeyMarker": "solutions/abc/first", "NextVersionIdMarker": "version-1", "Versions": [first_version]},
+        {"Bucket": "org-bucket", "Prefix": "solutions/abc/"},
+    )
+    stubber.add_response("delete_objects", {}, {"Bucket": "org-bucket", "Delete": {"Objects": [first_version], "Quiet": True}})
+    stubber.add_response(
+        "list_object_versions",
+        {"IsTruncated": False, "Versions": [second_version], "DeleteMarkers": [marker]},
+        {"Bucket": "org-bucket", "Prefix": "solutions/abc/", "KeyMarker": "solutions/abc/first", "VersionIdMarker": "version-1"},
+    )
+    stubber.add_response("delete_objects", {}, {"Bucket": "org-bucket", "Delete": {"Objects": [second_version, marker], "Quiet": True}})
+
+    # Act
+    await storage.delete_prefix("org-bucket", "solutions/abc/")
 
 
 async def test_usage_sums_all_listing_pages(s3: tuple[S3, AioStubber]) -> None:

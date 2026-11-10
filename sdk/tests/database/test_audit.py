@@ -1,8 +1,9 @@
 import pytest
 import pytest_asyncio
 from uuid import UUID
+from types import SimpleNamespace
 from typing import ClassVar
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from sqlmodel import Field, SQLModel
 from collections.abc import Iterator, AsyncIterator
 from longlink.database import base as database_base
@@ -38,10 +39,12 @@ def audit_model_cleanup() -> Iterator[None]:
         metadata.remove(metadata.tables[table_name])
 
 
-async def test_audit_hook_persists_fields_and_leaves_deletes_hard(audit_engine: database_base.Database) -> None:
+async def test_audit_hook_persists_fields_and_leaves_deletes_hard(
+    audit_engine: database_base.Database, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Persist creation and update audit fields while retaining ordinary hard deletes."""
 
-    # Define one isolated mapped table for the real SQLite lifecycle.
+    # Arrange
     class AuditLifecycleItem(database_base.Audit, table=True):
         """Temporary SDK table used to verify the complete audit lifecycle."""
 
@@ -65,6 +68,10 @@ async def test_audit_hook_persists_fields_and_leaves_deletes_hard(audit_engine: 
     updater_id = UUID("00000000-0000-0000-0000-000000000003")
     deleter_id = UUID("00000000-0000-0000-0000-000000000005")
 
+    # Control only the listener's clock so a missing timestamp refresh cannot pass.
+    audit_time = datetime(2026, 7, 14, 10, 0, tzinfo=UTC)
+    monkeypatch.setattr(audit, "datetime", SimpleNamespace(now=lambda _timezone: audit_time))
+
     # Insert through AsyncSession so the registered sync before_flush listener runs.
     async with audit_engine.session() as session:
         item = AuditLifecycleItem(name="draft")
@@ -75,7 +82,10 @@ async def test_audit_hook_persists_fields_and_leaves_deletes_hard(audit_engine: 
         assert item.id is not None
         item_id = item.id
 
-        # Inspect audit defaults written by the actual flush listener.
+    # Reload committed defaults through a fresh session before updating the row.
+    async with audit_engine.session() as session:
+        item = await session.get(AuditLifecycleItem, item_id)
+        assert item is not None
         assert item.created_at is not None
         assert item.updated_at is not None
         assert item.created_at.tzinfo is UTC
@@ -84,20 +94,22 @@ async def test_audit_hook_persists_fields_and_leaves_deletes_hard(audit_engine: 
         updated_at = item.updated_at
         assert (item.updated_at, item.created_id, item.updated_id) == (created_at, creator_id, creator_id)
 
-        # Update the persisted row with a second audit identity.
+        # Act
+        audit_time += timedelta(hours=1)
         with audit.actor(updater_id):
             item.name = "reviewed"
             await session.commit()
 
-        assert item.created_at == created_at
-        assert item.created_id == creator_id
-        assert item.updated_id == updater_id
-        assert item.updated_at >= updated_at
-
-    # Delete the reloaded row through the ordinary hard-delete lifecycle.
+    # Assert committed update attribution before exercising the hard-delete lifecycle.
     async with audit_engine.session() as session:
         item = await session.get(AuditLifecycleItem, item_id)
         assert item is not None
+        assert item.name == "reviewed"
+        assert item.created_at == created_at
+        assert item.created_id == creator_id
+        assert item.updated_id == updater_id
+        assert item.updated_at == audit_time
+        assert item.updated_at > updated_at
 
         with audit.actor(deleter_id):
             await session.delete(item)
@@ -128,7 +140,6 @@ async def test_audit_hook_preserves_explicit_insert_fields_for_unchanged_rows(au
     updater_id = UUID("00000000-0000-0000-0000-000000000003")
 
     async with audit_engine.session() as session:
-
         # Explicit audit fields must survive the real flush listener unchanged.
         item = ExplicitAuditItem(name="draft", created_at=created_at, updated_at=updated_at, created_id=creator_id, updated_id=updater_id)
         session.add(item)
@@ -175,7 +186,6 @@ async def test_audit_hook_preserves_ordinary_model_inserts_and_updates(audit_eng
         item_id = item.id
 
     async with audit_engine.session() as session:
-
         # Plain lifecycle models do not opt into actor-attribution updates.
         item = await session.get(PlainLifecycleItem, item_id)
         assert item is not None

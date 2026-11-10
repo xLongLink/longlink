@@ -3,6 +3,7 @@ from uuid import UUID, uuid4
 from httpx2 import AsyncClient
 from conftest import RegistryKubernetes
 from factories import create_compute, fetch_operations, create_organization
+from sqlalchemy import select
 from src.database.session import session_scope
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
@@ -67,7 +68,6 @@ async def test_compute_list_returns_ordered_page_and_total(clients: tuple[AsyncC
         **expected_item,
     )
     async with session_scope() as session:
-
         # Persist fixtures out of display order to exercise the API's ordering.
         session.add_all([beta, alpha])
         await session.commit()
@@ -217,18 +217,22 @@ async def test_compute_registry_rejects_exec_authentication_before_constructing_
     assert await fetch_operations() == []
 
 
+@pytest.mark.parametrize("verification_boundary", ["gateway.verify", "Storage.verify"])
 async def test_compute_registry_creation_rejects_failed_inline_verification(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient], monkeypatch: pytest.MonkeyPatch, compute_runtime: None
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    monkeypatch: pytest.MonkeyPatch,
+    compute_runtime: None,
+    verification_boundary: str,
 ) -> None:
     """Return 503 without persistence when inline verification fails."""
 
     # Arrange
-    async def failed_gateway(_cluster: object, _url: str, _certificate: str | None, **_kwargs: object) -> None:
+    async def failed_verification(*_args: object, **_kwargs: object) -> None:
         """Report inline verification failure."""
 
-        raise RuntimeError("gateway unavailable")
+        raise RuntimeError("infrastructure unavailable")
 
-    monkeypatch.setattr("src.routes.v1.admin.computes.gateway.verify", failed_gateway)
+    monkeypatch.setattr(f"src.routes.v1.admin.computes.{verification_boundary}", failed_verification)
     name = "Unready Compute"
     payload = {
         "name": name,
@@ -248,10 +252,47 @@ async def test_compute_registry_creation_rejects_failed_inline_verification(
 
     # Assert
     assert response.status_code == 503
+    assert response.json() == {"detail": "Compute infrastructure is unavailable; verify endpoints, credentials, and certificates"}
     assert await fetch_operations() == []
-    list_response = await clients[0].get("/api/v1/computes")
-    assert list_response.json()["total"] == 0
-    assert name not in {item["name"] for item in list_response.json()["items"]}
+    async with session_scope() as session:
+        registries = await session.scalars(select(ComputeRegistry))
+        assert registries.all() == []
+
+
+async def test_compute_registry_creation_rejects_ambiguous_storage_classes(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient], monkeypatch: pytest.MonkeyPatch, compute_runtime: None
+) -> None:
+    """Translate ambiguous StorageClass discovery into a validation error without writes."""
+
+    # Arrange
+    async def ambiguous_storage_classes(_cluster: object) -> str:
+        """Report the discovery error for multiple classes without a default."""
+
+        raise ValueError("Compute cluster has multiple storage classes without a default")
+
+    monkeypatch.setattr("src.routes.v1.admin.computes.storageclasses.resolve", ambiguous_storage_classes)
+    payload = {
+        "name": "Ambiguous Storage Compute",
+        "gateway_url": "https://gateway.example",
+        "storage_endpoint": "https://storage.example",
+        "kubeconfig": {
+            "clusters": [{"name": "cluster", "cluster": {}}],
+            "contexts": [{"name": "context", "context": {"cluster": "cluster", "user": "user"}}],
+            "current-context": "context",
+            "users": [{"name": "user", "user": {}}],
+        },
+    }
+
+    # Act
+    response = await clients[0].post("/api/v1/computes", json=payload)
+
+    # Assert
+    assert response.status_code == 422
+    assert response.json() == {"detail": "Compute cluster has multiple storage classes without a default"}
+    assert await fetch_operations() == []
+    async with session_scope() as session:
+        registries = await session.scalars(select(ComputeRegistry))
+        assert registries.all() == []
 
 
 async def test_compute_registry_deletes_unused_registration(clients: tuple[AsyncClient, AsyncClient, AsyncClient]) -> None:

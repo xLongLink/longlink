@@ -281,20 +281,14 @@ async def test_mcp_exchange_is_single_use_and_stores_only_hashes(
     assert credential not in listing.text
 
 
-@pytest.mark.parametrize(
-    # Exchanges remain bound to the approved code, callback, and resource.
-    ("field", "value"),
-    [
-        ("code_verifier", "x" * 43),
-        ("client_id", str(UUID(int=2))),
-        ("redirect_uri", "https://attacker.example/callback"),
-        ("resource", f"{env.PUBLIC_URL}/api/v1/solutions/{UUID(int=2)}/proxy/mcp"),
-    ],
-)
+MISMATCHED_BINDINGS = [("code_verifier", "x" * 43), ("client_id", str(UUID(int=2))), ("redirect_uri", "https://attacker.example/callback")]
+
+
+@pytest.mark.parametrize(("field", "value"), MISMATCHED_BINDINGS)
 async def test_mcp_exchange_rejects_mismatched_bindings(
     client: httpx2.AsyncClient, authorization: tuple[Solution, dict[str, str], dict[str, str]], field: str, value: str
 ) -> None:
-    """Require the exact approved client, callback, Solution, and PKCE verifier."""
+    """Require the exact approved client, callback, and PKCE verifier."""
 
     # Act
     _, _, exchange = authorization
@@ -305,6 +299,33 @@ async def test_mcp_exchange_rejects_mismatched_bindings(
     assert invalid.status_code == 400
     assert invalid.json()["error"] == "invalid_grant"
     assert valid.status_code == 200
+
+
+async def test_mcp_exchange_rejects_another_accessible_solution_without_consuming_code(
+    client: httpx2.AsyncClient,
+    clients: tuple[httpx2.AsyncClient, httpx2.AsyncClient, httpx2.AsyncClient],
+    users: tuple[User, User, User],
+    authorization: tuple[Solution, dict[str, str], dict[str, str]],
+) -> None:
+    """Bind authorization proof to the approved Solution even when another Solution is accessible."""
+
+    # Arrange
+    _, request, exchange = authorization
+    organization = await create_organization(users[0])
+    other_solution = await create_solution(organization, name="other-solution", catalog=IDENTITY_CATALOG)
+    other_resource = mcp.resource(other_solution.id)
+    consent = await clients[0].get("/api/v1/mcp/consent", params={**request, "resource": other_resource})
+    assert consent.status_code == 200, consent.text
+    assert consent.json()["solution_name"] == other_solution.name
+
+    # Act
+    invalid = await client.post("/api/v1/mcp/token", data={**exchange, "resource": other_resource})
+    valid = await client.post("/api/v1/mcp/token", data=exchange)
+
+    # Assert
+    assert invalid.status_code == 400
+    assert invalid.json()["error"] == "invalid_grant"
+    assert valid.status_code == 200, valid.text
 
 
 @pytest.mark.parametrize(
@@ -390,7 +411,6 @@ async def test_mcp_grants_recheck_expiry_revocation_identity_and_permissions(
         assert response.status_code == 200
     else:
         async with session_scope() as session:
-
             # Invalidate a previously accepted token through persisted grant state.
             if invalidation == "expiry":
                 grant = await session.scalar(select(MCPToken))
