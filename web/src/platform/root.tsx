@@ -64,7 +64,17 @@ export function Layout({ children }: { children: ReactNode }) {
     const isHome = pathname === '/';
 
     return (
-        <html lang="en" data-astryx-theme="stone" data-theme={isHome ? 'dark' : undefined} suppressHydrationWarning>
+        <html
+            lang="en"
+            className={
+                /^\/(login|auth\/(register|forgot-password|reset-password))\/?$/.test(pathname)
+                    ? '[scrollbar-gutter:auto]'
+                    : undefined
+            }
+            data-astryx-theme="stone"
+            data-theme={isHome ? 'dark' : undefined}
+            suppressHydrationWarning
+        >
             <head>
                 <meta charSet="utf-8" />
                 <meta name="viewport" content="width=device-width, initial-scale=1.0" />

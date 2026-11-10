@@ -1,6 +1,6 @@
 import type { SVGProps } from 'react';
 
-/** Renders the GitHub brand glyph for the public footer. */
+/** Renders the GitHub brand glyph. */
 export function GitHubIcon(props: SVGProps<SVGSVGElement>) {
     return (
         <svg {...props} viewBox="0 0 1024 1024">

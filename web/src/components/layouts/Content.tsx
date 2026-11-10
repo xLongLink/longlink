@@ -15,7 +15,7 @@ export default function Content({ children, toolbar }: { children: ReactNode; to
         >
             <Card
                 aria-hidden="true"
-                className={`pointer-events-none absolute z-0 inset-0 overflow-clip bg-body px-2 pb-2 ${toolbar ? 'pt-2' : 'pt-0'}`}
+                className="pointer-events-none absolute z-0 inset-0 overflow-clip bg-body p-2"
                 padding={0}
                 variant="transparent"
             >

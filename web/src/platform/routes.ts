@@ -53,13 +53,18 @@ export default [
         ],
     },
     {
-        file: './layouts/Brand.tsx',
+        file: './layouts/Account.tsx',
         children: [
+            { path: 'login', file: './routes/auth/Login.tsx' },
             { path: 'auth/register', file: './routes/auth/Register.tsx' },
-            { path: 'auth/verify-email', file: './routes/auth/VerifyEmail.tsx' },
             { path: 'auth/forgot-password', file: './routes/auth/ForgotPassword.tsx' },
             { path: 'auth/reset-password', file: './routes/auth/ResetPassword.tsx' },
-            { path: 'login', file: './routes/auth/Login.tsx' },
+        ],
+    },
+    {
+        file: './layouts/Brand.tsx',
+        children: [
+            { path: 'auth/verify-email', file: './routes/auth/VerifyEmail.tsx' },
             { path: 'mcp/authorize', file: './routes/auth/Mcp.tsx' },
             { path: '404', file: '../components/layouts/NotFound.tsx', id: 'not-found' },
             { path: '*', file: '../components/layouts/NotFound.tsx' },

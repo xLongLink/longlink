@@ -8,6 +8,7 @@ import { passwordSchema } from './validation';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
+import { Divider } from '@astryxdesign/core/Divider';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useAnnounce } from '@astryxdesign/core/hooks';
 import { useFragmentToken } from '@/lib/hooks/use-fragment-token';
@@ -83,6 +84,7 @@ export default function ResetPassword() {
                 description="This password reset link is invalid or expired. Request a new link to continue."
             >
                 {pageMetadata}
+                <Divider />
                 <Button href="/auth/forgot-password" label="Request another reset link" variant="primary" />
             </AuthLayout>
         );
@@ -91,6 +93,7 @@ export default function ResetPassword() {
     return (
         <AuthLayout title="Set a new password" description="Choose a new password for your LongLink account.">
             {pageMetadata}
+            <Divider />
             {verification?.status !== 'verified' ? (
                 <Button isLoading label="Reset password" variant="primary" />
             ) : form.formState.isSubmitSuccessful ? (

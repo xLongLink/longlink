@@ -1,9 +1,10 @@
 import { api } from '@/lib/api';
 import { TextField } from './Field';
+import { Mail } from 'lucide-react';
 import { AuthLayout } from './AuthLayout';
 import { Link } from '@astryxdesign/core/Link';
+import { Text } from '@astryxdesign/core/Text';
 import { useSearchParams } from 'react-router';
-import { Welcome } from '@/components/Wordmark';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
 import { useToast } from '@astryxdesign/core/Toast';
@@ -26,9 +27,17 @@ export default function Register() {
     const signInSearch = trimmedEmail ? `?${new URLSearchParams({ email: trimmedEmail })}` : '';
 
     return (
-        <AuthLayout description={<Divider label="Please enter your email" />} title={<Welcome />}>
+        <AuthLayout
+            description={null}
+            title={
+                <Text display="block" justify="center" size="2xl" textWrap="nowrap" type="inherit">
+                    Welcome to LongLink
+                </Text>
+            }
+        >
             <title>Create Account | LongLink</title>
             <Stack gap={3}>
+                <Divider />
                 <form
                     action={() =>
                         form.handleSubmit(async (payload) => {
@@ -48,7 +57,13 @@ export default function Register() {
                             type="email"
                             width="100%"
                         />
-                        <Button label="Send registration link" type="submit" variant="primary" />
+                        <Button
+                            icon={<Mail aria-hidden="true" size={16} />}
+                            label="Send registration link"
+                            type="submit"
+                            variant="primary"
+                            width="100%"
+                        />
                     </Stack>
                 </form>
                 <Divider
