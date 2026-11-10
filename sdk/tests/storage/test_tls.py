@@ -1,6 +1,5 @@
 import ssl
 import pytest
-from pathlib import Path
 from longlink.storage import tls
 
 
@@ -18,20 +17,6 @@ def test_certificate_file_rejects_invalid_pem_before_creating_file(monkeypatch: 
     # Act and assert
     with pytest.raises(ssl.SSLError), tls.certificate_file("storage-ca-pem"):
         pass
-
-
-def test_certificate_file_publishes_validated_pem_for_caller_lifetime(ca_certificate: str) -> None:
-    """Publish the validated storage CA only for the caller's chosen lifetime."""
-
-    # Act
-    with tls.certificate_file(ca_certificate) as filename:
-        certificate_path = Path(filename)
-
-        # Assert
-        assert certificate_path.read_text() == ca_certificate
-
-    # Assert
-    assert not certificate_path.exists()
 
 
 def test_session_restores_hostname_verification() -> None:

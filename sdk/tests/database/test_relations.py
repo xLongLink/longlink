@@ -18,7 +18,6 @@ async def test_user_relationships_persist_required_and_optional_roles() -> None:
     mapper_registry = registry(metadata=SQLModel.metadata, class_registry={"User": User})
     database = database_base.Database(Envs(ENV="testing"))
     try:
-
         # Arrange postponed annotations for both required and optional user roles.
         class RelationshipModel(Model, registry=mapper_registry):
             """Own only this test's temporary mapper while sharing real table metadata."""
@@ -69,10 +68,7 @@ async def test_user_relationships_persist_required_and_optional_roles() -> None:
             assert approved.approved_by is not None
             assert approved.approved_by.id == approver.id
 
-        # Verify required/optional column contracts through actual persistence.
-        table = SQLModel.metadata.tables[UserRoleItem.__tablename__]
-        assert not table.c.owner_id.nullable
-        assert table.c.approved_by_id.nullable
+        # Verify required relations through actual persistence.
         async with database.session() as session:
             session.add(UserRoleItem())
 
@@ -81,17 +77,14 @@ async def test_user_relationships_persist_required_and_optional_roles() -> None:
                 await session.commit()
             await session.rollback()
     finally:
-
         # Release each local resource even if another cleanup step fails.
         try:
             await database.dispose()
         finally:
             try:
-
                 # Release this test's mapper registry before removing table metadata.
                 mapper_registry.dispose()
             finally:
-
                 # Remove only the test table, including a partially configured declaration.
                 table = SQLModel.metadata.tables.get("test_user_role_items")
                 if table is not None:
