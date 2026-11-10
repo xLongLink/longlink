@@ -156,6 +156,13 @@ async def test_payment_endpoints_require_the_organizations_owner_before_stripe(
     assert owner_response.status_code == 200
     assert owner_response.json() == expected
     provider.assert_called_once_with()
+    if endpoint == "cards":
+        connection.v1.customers.retrieve_async.assert_awaited_once_with("cus_acme")
+        connection.v1.payment_methods.list_async.assert_awaited_once_with({"customer": "cus_acme", "type": "card", "limit": 100})
+    elif endpoint == "invoices":
+        connection.v1.invoices.list_async.assert_awaited_once_with({"customer": "cus_acme", "limit": 100})
+    else:
+        connection.v1.checkout.sessions.retrieve_async.assert_awaited_once_with("cs_acme")
 
     # Act
     reject_provider_construction(monkeypatch, (stripe_provider, "client"))

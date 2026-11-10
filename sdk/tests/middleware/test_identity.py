@@ -3,7 +3,7 @@ import pytest
 import asyncio
 from uuid import UUID
 from types import SimpleNamespace
-from fastapi import FastAPI, WebSocket
+from fastapi import FastAPI, WebSocket, BackgroundTasks
 from longlink import User, identity, permissions
 from collections.abc import Iterator
 from longlink.database import audit
@@ -162,7 +162,7 @@ def test_production_context_rejects_websockets(production_client: TestClient, si
 
 
 async def test_context_middleware_isolates_concurrent_audit_identities() -> None:
-    """Keep audit identities isolated across concurrently handled requests."""
+    """Keep audit identities isolated across concurrent handlers and background work."""
 
     # Arrange
     first_id = UUID("00000000-0000-0000-0000-000000000006")
@@ -170,18 +170,29 @@ async def test_context_middleware_isolates_concurrent_audit_identities() -> None
     first_outer_id = UUID("00000000-0000-0000-0000-000000000008")
     second_outer_id = UUID("00000000-0000-0000-0000-000000000009")
     both_requests_arrived = asyncio.Barrier(2)
+    both_callbacks_arrived = asyncio.Barrier(2)
+    background_actors: list[tuple[UUID | None, UUID | None]] = []
     app = FastAPI()
     database = Database(Envs(ENV="testing"))
     app.state.longlink = SimpleNamespace(database=database)
     app.add_middleware(IdentityMiddleware, identity_secret=IDENTITY_SECRET, mode="testing", local_user_id=None)
 
     @app.get("/", response_model=dict[str, str | None])
-    async def current_user() -> dict[str, str | None]:
+    async def current_user(background_tasks: BackgroundTasks) -> dict[str, str | None]:
         """Return the audit identity after both requests reach the handler."""
 
         # Read each request's identity only after both handlers have arrived.
         await both_requests_arrived.wait()
         user_id = audit.current_actor.get()
+
+        async def record_background_actor() -> None:
+            """Record the request's audit actor after both callbacks overlap."""
+
+            await both_callbacks_arrived.wait()
+            background_actors.append((user_id, audit.current_actor.get()))
+
+        # Keep background attribution tied to the handler's request identity.
+        background_tasks.add_task(record_background_actor)
         return {"user_id": str(user_id) if user_id is not None else None}
 
     # Send requests in their own coroutine contexts and check restoration there.
@@ -213,3 +224,6 @@ async def test_context_middleware_isolates_concurrent_audit_identities() -> None
     assert first_response.json() == {"user_id": str(first_id)}
     assert second_response.status_code == 200
     assert second_response.json() == {"user_id": str(second_id)}
+    assert len(background_actors) == 2
+    assert (first_id, first_id) in background_actors
+    assert (second_id, second_id) in background_actors

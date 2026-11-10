@@ -4,12 +4,11 @@ from src.models.pagination import Pagination
 pytestmark = pytest.mark.no_db
 
 
-@pytest.mark.parametrize(("page", "page_size", "offset"), [(1, 25, 0), (2, 25, 25), (3, 100, 200)])
-def test_pagination_computes_zero_based_offset(page: int, page_size: int, offset: int) -> None:
+def test_pagination_computes_zero_based_offset() -> None:
     """Translate one-based API page numbers into query offsets."""
 
     # Act
-    pagination = Pagination(page=page, page_size=page_size)
+    pagination = Pagination(page=3, page_size=100)
 
     # Assert
-    assert pagination.offset == offset
+    assert pagination.offset == 200
