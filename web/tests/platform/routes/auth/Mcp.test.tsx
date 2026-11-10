@@ -35,7 +35,6 @@ it.each([
         };
 
         const requests: Request[] = [];
-        const decisions: unknown[] = [];
 
         const transport = vi.spyOn(globalThis, 'fetch').mockImplementation(async (input, options) => {
             const request = input instanceof Request ? input : new Request(input, options);
@@ -54,8 +53,6 @@ it.each([
             }
 
             if (request.method === 'POST' && pathname === '/api/v1/mcp/consent') {
-                decisions.push(await request.json());
-
                 return Response.json({ url });
             }
 
@@ -100,7 +97,7 @@ it.each([
                         if (!decisionRequest) throw new Error('Expected the decision request');
 
                         expect(new URL(decisionRequest.url).search).toBe('');
-                        expect(decisions).toEqual([{ ...authorization, approve }]);
+                        expect(await decisionRequest.clone().json()).toEqual({ ...authorization, approve });
                     },
                     `/mcp/authorize?${new URLSearchParams(authorization)}`
                 );

@@ -926,6 +926,16 @@ async def test_update_reresolves_moved_tag_and_enforces_required_envs(
     monkeypatch.setattr(images, "required_metadata", metadata)
     assert (await clients[0].post(url, json={})).status_code == 204
 
+    # Snapshot the committed release and queued work before any rejected update.
+    async with session_scope() as session:
+        current = await session.get(Solution, solution.id, options=(selectinload(Solution.desired_revision),))
+        assert current is not None
+        previous_revision_id = current.desired_revision_id
+        previous_envs = dict(current.desired_revision.envs)
+        result = await session.scalars(select(col(Revision.id)).where(col(Revision.solution_id) == solution.id))
+        previous_revisions = set(result.all())
+    previous_operations = await fetch_operations()
+
     # Act: the advisory check observes the moved tag without persisting it.
     resolved = LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:candidate"), permissions=Catalog(endpoints=[]))
     check = await clients[0].get(url)
@@ -943,16 +953,52 @@ async def test_update_reresolves_moved_tag_and_enforces_required_envs(
 
     # Act
     missing = await clients[0].post(url, json={})
-    invalid = await clients[0].post(url, json={"envs": {"LONGLINK_KEY": "private-value"}})
-    keep_removed = await clients[0].post(url, json={"envs": {"NEW": "new-value", "KEEP": None}})
-    success = await clients[0].post(url, json={"envs": {"NEW": "new-value", "DROP": None}})
 
     # Assert
     assert missing.status_code == 422
     assert "NEW" in missing.text
+    async with session_scope() as session:
+        current = await session.get(Solution, solution.id, options=(selectinload(Solution.desired_revision),))
+        assert current is not None
+        assert current.desired_revision_id == previous_revision_id
+        assert current.desired_revision.envs == previous_envs
+        result = await session.scalars(select(col(Revision.id)).where(col(Revision.solution_id) == solution.id))
+        assert set(result.all()) == previous_revisions
+    await assert_no_new_operations(previous_operations)
+
+    # Act
+    invalid = await clients[0].post(url, json={"envs": {"LONGLINK_KEY": "private-value"}})
+
+    # Assert
     assert invalid.status_code == 422
     assert "private-value" not in invalid.text
+    async with session_scope() as session:
+        current = await session.get(Solution, solution.id, options=(selectinload(Solution.desired_revision),))
+        assert current is not None
+        assert current.desired_revision_id == previous_revision_id
+        assert current.desired_revision.envs == previous_envs
+        result = await session.scalars(select(col(Revision.id)).where(col(Revision.solution_id) == solution.id))
+        assert set(result.all()) == previous_revisions
+    await assert_no_new_operations(previous_operations)
+
+    # Act
+    keep_removed = await clients[0].post(url, json={"envs": {"NEW": "new-value", "KEEP": None}})
+
+    # Assert
     assert keep_removed.status_code == 422
+    async with session_scope() as session:
+        current = await session.get(Solution, solution.id, options=(selectinload(Solution.desired_revision),))
+        assert current is not None
+        assert current.desired_revision_id == previous_revision_id
+        assert current.desired_revision.envs == previous_envs
+        result = await session.scalars(select(col(Revision.id)).where(col(Revision.solution_id) == solution.id))
+        assert set(result.all()) == previous_revisions
+    await assert_no_new_operations(previous_operations)
+
+    # Act
+    success = await clients[0].post(url, json={"envs": {"NEW": "new-value", "DROP": None}})
+
+    # Assert
     assert success.status_code == 204
     async with session_scope() as session:
         current = await session.get(Solution, solution.id, options=(selectinload(Solution.desired_revision),))

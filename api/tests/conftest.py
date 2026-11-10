@@ -31,12 +31,12 @@ os.environ["SMTP_PORT"] = "587"
 os.environ["SMTP_TRANSPORT"] = "starttls"
 
 # Prevent optional workstation credentials from changing test capabilities.
-os.environ.pop("SMTP_PASSWORD", None)
-os.environ.pop("SMTP_USERNAME", None)
-os.environ.pop("GITHUB_OAUTH_CLIENT_ID", None)
-os.environ.pop("GOOGLE_OAUTH_CLIENT_ID", None)
-os.environ.pop("GITHUB_OAUTH_CLIENT_SECRET", None)
-os.environ.pop("GOOGLE_OAUTH_CLIENT_SECRET", None)
+os.environ["SMTP_PASSWORD"] = "null"
+os.environ["SMTP_USERNAME"] = "null"
+os.environ["GITHUB_OAUTH_CLIENT_ID"] = "null"
+os.environ["GOOGLE_OAUTH_CLIENT_ID"] = "null"
+os.environ["GITHUB_OAUTH_CLIENT_SECRET"] = "null"
+os.environ["GOOGLE_OAUTH_CLIENT_SECRET"] = "null"
 
 from src.utils import mail, token
 from src.database import models, session
@@ -215,20 +215,11 @@ def reject_provider_construction(monkeypatch: pytest.MonkeyPatch, *targets: tupl
         monkeypatch.setattr(holder, name, unexpected_provider)
 
 
-class FakeKubernetes(Kubernetes):
-    """Provide an opaque Kubernetes API client."""
-
-    async def api(self) -> Api:
-        """Return the fake API client used by resource fakes."""
-
-        return cast(Api, object())
-
-
 def kubernetes_client() -> Kubernetes:
     """Return a lazy Kubernetes client with an opaque external API boundary."""
 
     # Initialize the real lifecycle without opening a cluster connection.
-    return FakeKubernetes({})
+    return DatabaseKubernetes({})
 
 
 class RegistryKubernetes(Kubernetes):

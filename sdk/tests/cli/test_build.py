@@ -875,24 +875,43 @@ def test_resolve_image_tag_rejects_invalid_image_references(solution_name: str, 
         build.resolve_image_tag(solution_name, version, registry)
 
 
-@pytest.mark.parametrize(
-    ("arguments", "expected_commands"),
-    [pytest.param(["--push"], [["/usr/bin/docker", "push", "localhost:15000/demo:dev"]], id="push"), pytest.param([], [], id="local-only")],
-)
+BUILD_SUCCESS_CASES = [
+    pytest.param("dev", [], ["localhost:15000/demo:dev"], [], id="local-only"),
+    pytest.param("dev", ["--push"], ["localhost:15000/demo:dev"], [["/usr/bin/docker", "push", "localhost:15000/demo:dev"]], id="push"),
+    pytest.param(
+        "0.1.0",
+        ["--latest", "--push"],
+        ["localhost:15000/demo:0.1.0", "localhost:15000/demo:latest"],
+        [["/usr/bin/docker", "push", "localhost:15000/demo:0.1.0"], ["/usr/bin/docker", "push", "localhost:15000/demo:latest"]],
+        id="versioned-latest-push",
+    ),
+    pytest.param(
+        "latest",
+        ["--latest", "--push"],
+        ["localhost:15000/demo:latest"],
+        [["/usr/bin/docker", "push", "localhost:15000/demo:latest"]],
+        id="already-latest",
+    ),
+]
+
+
+@pytest.mark.parametrize(("tag", "arguments", "expected_tags", "expected_pushes"), BUILD_SUCCESS_CASES)
 @pytest.mark.usefixtures("chdir_project")
 def test_build_command_reports_built_image(
     docker_commands: Callable[[tuple[str, int] | None], list[list[str]]],
     capsys: pytest.CaptureFixture[str],
+    tag: str,
     arguments: list[str],
-    expected_commands: list[list[str]],
+    expected_tags: list[str],
+    expected_pushes: list[list[str]],
 ) -> None:
-    """Build an image locally and optionally publish it."""
+    """Build and report each image tag once, optionally publishing it in order."""
 
     # Arrange
     commands = docker_commands(None)
 
     # Act
-    main(["build", "--tag", "dev", "--registry", "localhost:15000", *arguments])
+    main(["build", "--tag", tag, "--registry", "localhost:15000", *arguments])
 
     # Assert
     temporary_context = Path(commands[0][-1])
@@ -904,55 +923,17 @@ def test_build_command_reports_built_image(
             "linux/amd64",
             "-f",
             str(temporary_context / "Dockerfile"),
-            "-t",
-            # Compare the actual image tag and temporary context passed to Docker.
-            "localhost:15000/demo:dev",
+            *[argument for image_tag in expected_tags for argument in ("-t", image_tag)],
             str(temporary_context),
         ],
-        *expected_commands,
-    ]
-    output = capsys.readouterr().out
-    assert "- Built image: localhost:15000/demo:dev" in output
-    assert ("- Pushed image: localhost:15000/demo:dev" in output) is bool(expected_commands)
-    assert not temporary_context.exists()
-
-
-LATEST_BUILD_CASES = [
-    pytest.param(
-        "0.1.0",
-        ["-t", "localhost:15000/demo:0.1.0", "-t", "localhost:15000/demo:latest"],
-        [["/usr/bin/docker", "push", "localhost:15000/demo:0.1.0"], ["/usr/bin/docker", "push", "localhost:15000/demo:latest"]],
-        id="versioned-tag",
-    ),
-    pytest.param(
-        "latest", ["-t", "localhost:15000/demo:latest"], [["/usr/bin/docker", "push", "localhost:15000/demo:latest"]], id="already-latest"
-    ),
-]
-
-
-@pytest.mark.parametrize(("tag", "expected_tags", "expected_pushes"), LATEST_BUILD_CASES)
-@pytest.mark.usefixtures("chdir_project")
-def test_build_latest_pushes_each_built_tag_once(
-    docker_commands: Callable[[tuple[str, int] | None], list[list[str]]],
-    tag: str,
-    expected_tags: list[str],
-    expected_pushes: list[list[str]],
-) -> None:
-    """Publish the latest alias without duplicating an already-latest image tag."""
-
-    # Arrange
-    commands = docker_commands(None)
-
-    # Act
-    main(["build", "--tag", tag, "--registry", "localhost:15000", "--latest", "--push"])
-
-    # Assert
-    context = Path(commands[0][-1])
-    assert commands == [
-        ["/usr/bin/docker", "build", "--platform", "linux/amd64", "-f", str(context / "Dockerfile"), *expected_tags, str(context)],
         *expected_pushes,
     ]
-    assert not context.exists()
+    output = capsys.readouterr().out
+    assert [line for line in output.splitlines() if line.startswith(("- Built image:", "- Pushed image:"))] == [
+        *[f"- Built image: {image_tag}" for image_tag in expected_tags],
+        *[f"- Pushed image: {command[-1]}" for command in expected_pushes],
+    ]
+    assert not temporary_context.exists()
 
 
 def test_build_version_override_changes_only_the_embedded_version(

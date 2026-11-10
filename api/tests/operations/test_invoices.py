@@ -97,7 +97,7 @@ async def test_snapshot_measurement_failure_preserves_deadline_until_complete_re
         assert persisted.invoice_due_at == invoices.dates.next_month(period_end)
 
 
-@pytest.mark.parametrize("crash_after", ["invoice", "item", "finalize"])
+@pytest.mark.parametrize("crash_after", ["invoice", "item", "coupon", "finalize"])
 async def test_issue_recovers_remote_success_after_crash_without_duplicate_charges(
     monkeypatch: pytest.MonkeyPatch, crash_after: str
 ) -> None:
@@ -207,6 +207,7 @@ async def test_issue_recovers_remote_success_after_crash_without_duplicate_charg
                 "metadata": {"longlink_invoice_id": params["metadata[longlink_invoice_id]"][0]},
             }
             remote_coupons[coupon_id] = payload
+            event = "coupon"
 
         # Applying the allowance updates the remote invoice's actual charge total.
         elif method == "post" and path == "/v1/invoices/in_1":
