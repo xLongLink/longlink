@@ -3,8 +3,8 @@
 import * as icons from '@/lib/icons';
 import { act, Suspense } from 'react';
 import { it, expect, vi } from 'vitest';
+import { membership } from '../../render';
 import { withMounted } from '../../../render';
-import { renderPlatform, membership } from '../../render';
 import { IconRequestContext } from '@/components/ui/contexts';
 import Management from '@/platform/routes/orgs/SolutionManagement';
 import type { OrganizationContext } from '@/platform/layouts/Organization';
@@ -51,22 +51,6 @@ async function withSolutions(role: OrganizationContext['role'], check: (output: 
     }
 }
 
-it('does not offer creation to readers of Organization settings', () => {
-    // Act
-    const output = renderPlatform(
-        <Management
-            membership={{ ...membership, role: 'read', tags: [], activeTag: undefined }}
-            presentation="settings"
-        />,
-        '/',
-        [[`/api/v1/organizations/${membership.organization.id}/solutions`, []]]
-    );
-
-    // Assert
-    expect(output.querySelector('h2')?.textContent).toBe('Solutions');
-    expect(output.textContent).not.toContain('New Solution');
-});
-
 it('shows existing solutions without creation or row actions to readers', async () => {
     // Act
     await withSolutions('read', async (output) => {
@@ -75,6 +59,7 @@ it('shows existing solutions without creation or row actions to readers', async 
         if (!row) throw new Error('Expected the existing solution row');
 
         // Assert
+        expect(output.querySelector('h2')?.textContent).toBe('Solutions');
         expect(row.querySelector('a')?.getAttribute('href')).toBe(
             `/orgs/${membership.organization.id}/solutions/${solution.id}`
         );

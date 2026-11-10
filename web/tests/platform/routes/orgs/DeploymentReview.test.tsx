@@ -50,7 +50,7 @@ describe('DeploymentReview', () => {
 
     it('submits the reviewed revision with a source update', async () => {
         // Arrange
-        const submissions = await openReview(candidate);
+        const submissions = await openReview(() => Response.json(candidate));
 
         // Act
         await act(async () => button('Next').click());
@@ -79,7 +79,7 @@ describe('DeploymentReview', () => {
             .mockImplementation(() => Response.json(recoveredCandidate));
 
         const onSuccess = vi.fn();
-        const submissions = await openReview(recoveredCandidate, inspect, onSuccess);
+        const submissions = await openReview(inspect, onSuccess);
 
         // Assert
         expect([...document.querySelectorAll('[role="status"]')].map((item) => item.textContent)).toContain(
@@ -124,7 +124,7 @@ describe('DeploymentReview', () => {
 
     it('preserves untouched configured secrets and gives removal precedence over an edited value', async () => {
         // Arrange
-        const submissions = await openReview(secretCandidate);
+        const submissions = await openReview(() => Response.json(secretCandidate));
         const user = userEvent.setup();
         await act(async () => button('Next').click());
 
@@ -157,7 +157,7 @@ describe('DeploymentReview', () => {
 
     it('submits the retained secret draft after removal is toggled off', async () => {
         // Arrange
-        const submissions = await openReview(secretCandidate);
+        const submissions = await openReview(() => Response.json(secretCandidate));
         const user = userEvent.setup();
         await act(async () => button('Next').click());
         await act(async () => user.type(input('NEW_SECRET'), 'new-fixture-value'));
@@ -183,11 +183,7 @@ describe('DeploymentReview', () => {
     });
 
     /** Mounts the dialog with shared UI providers and an isolated HTTP boundary. */
-    async function openReview(
-        inspection: typeof secretCandidate,
-        inspect = () => Response.json(inspection),
-        onSuccess: () => void = () => {}
-    ) {
+    async function openReview(inspect: () => Response, onSuccess: () => void = () => {}) {
         const submissions: { path: string; body: unknown }[] = [];
         vi.stubGlobal('fetch', async (input: RequestInfo | URL, init?: RequestInit) => {
             const request = input instanceof Request ? input : new Request(input, init);
