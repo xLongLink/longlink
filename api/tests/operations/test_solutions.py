@@ -215,6 +215,12 @@ async def test_solution_delete_storage_failure_preserves_revisions_for_retry(
         calls.append(("storage", solution_id))
         raise failure
 
+    async def delete_storage(self: StorageKubernetes, organization_id: UUID, solution_id: UUID) -> None:
+        """Record successful storage cleanup on retry."""
+
+        assert organization_id == organization.id
+        calls.append(("storage", solution_id))
+
     monkeypatch.setattr(solution_operations, "Kubernetes", DatabaseKubernetes)
     monkeypatch.setattr(solution_operations.solution_resources, "delete", delete)
     monkeypatch.setattr(solution_operations.database_resources.postgres, "Postgres", Postgres)
@@ -244,7 +250,16 @@ async def test_solution_delete_storage_failure_preserves_revisions_for_retry(
         assert deployed.model_dump() == deployed_snapshot
 
     # Retry the real lifecycle after restoring successful external storage cleanup.
+    monkeypatch.setattr(StorageKubernetes, "delete_solution", delete_storage)
     await solution_operations.delete(solution.id)
+    assert calls == [
+        ("workload", solution.id),
+        ("schema", solution.id),
+        ("storage", solution.id),
+        ("workload", solution.id),
+        ("schema", solution.id),
+        ("storage", solution.id),
+    ]
     async with session_scope() as session:
         assert await session.get(Solution, solution.id) is None
         assert await session.get(Revision, desired_id) is None
@@ -854,7 +869,7 @@ async def test_failed_update_recovery(users: tuple[User, User, User], monkeypatc
         # Finishing deletion leaves no obsolete work claimable.
         await complete_operation(deletion.id)
         assert await claim_operation() is None
-        assert len(calls) == 2
+        assert [image for image, _, _ in calls] == ["ghcr.io/longlink/dashboard@sha256:test", "ghcr.io/longlink/dashboard@sha256:new"]
         async with session_scope() as session:
             current = await session.get(Solution, solution.id, options=(selectinload(Solution.desired_revision),))
             assert current is not None
@@ -903,6 +918,11 @@ async def test_failed_update_recovery(users: tuple[User, User, User], monkeypatc
 
         # Failed replacement preserves the last working runtime credentials.
         assert current.secrets == solution.secrets
+    assert [image for image, _, _ in calls] == [
+        "ghcr.io/longlink/dashboard@sha256:test",
+        "ghcr.io/longlink/dashboard@sha256:new",
+        "ghcr.io/longlink/dashboard@sha256:test",
+    ]
     assert calls[-1][1] == {
         "KEY": "old",
         **solution.secrets,

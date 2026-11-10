@@ -556,11 +556,14 @@ def test_mcp_preserves_identity_and_endpoint_authorization(monkeypatch: pytest.M
     allowed_user = UUID(int=1)
     denied_user = UUID(int=2)
     app.state.longlink.database = Database(Envs(ENV="testing"))
+    invocations: list[UUID | None] = []
 
     @app.get("/api/private", response_model=str, operation_id="private_data")
     async def private_data(credentials: Annotated[HTTPAuthorizationCredentials, Depends(HTTPBearer())]) -> str:
         """Return private data only to the authorized actor."""
 
+        # Record handler entry even when its own authorization rejects the actor.
+        invocations.append(audit.current_actor.get())
         if audit.current_actor.get() != allowed_user or credentials.credentials != "allowed-bearer":
             raise HTTPException(status_code=403, detail="Access denied")
         return str(audit.current_actor.get())
@@ -574,9 +577,10 @@ def test_mcp_preserves_identity_and_endpoint_authorization(monkeypatch: pytest.M
         anonymous = client.post("/mcp", json={"jsonrpc": "2.0", "id": 1, "method": "tools/list"})
         forged = client.post("/mcp", json=request, headers={"x-longlink-identity": "forged"})
         access = permissions.Access(catalog=catalog.digest, endpoints=list(range(len(catalog.endpoints))))
-        client.headers["x-longlink-identity"] = identity.create_identity_token(
+        allowed_identity = identity.create_identity_token(
             User(id=allowed_user, name="Allowed", email="allowed@example.com"), secret, access
         )
+        client.headers["x-longlink-identity"] = allowed_identity
         client.headers["authorization"] = "Bearer allowed-bearer"
 
         # Legacy negotiation uses the event-stream-compatible Accept header.
@@ -594,6 +598,21 @@ def test_mcp_preserves_identity_and_endpoint_authorization(monkeypatch: pytest.M
             initialize_mcp(client)
         allowed = client.post("/mcp", json=request)
         direct_allowed = client.get("/api/private")
+        assert invocations == [allowed_user, allowed_user]
+
+        # Revoke only the endpoint grant without changing the caller, bearer, catalog, or session.
+        client.headers["x-longlink-identity"] = identity.create_identity_token(
+            User(id=allowed_user, name="Allowed", email="allowed@example.com"),
+            secret,
+            permissions.Access(catalog=catalog.digest, endpoints=[]),
+        )
+        revoked = client.post("/mcp", json=request)
+        assert revoked.json()["result"]["isError"] is True
+        assert "403" in revoked.json()["result"]["content"][0]["text"]
+        assert invocations == [allowed_user, allowed_user]
+
+        # Restore endpoint access so later failures isolate bearer and actor checks.
+        client.headers["x-longlink-identity"] = allowed_identity
         del client.headers["authorization"]
         missing_bearer = client.post("/mcp", json=request)
         client.headers["authorization"] = "Bearer allowed-bearer"
