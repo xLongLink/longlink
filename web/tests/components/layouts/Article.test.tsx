@@ -52,11 +52,12 @@ it.each([
         async (output) => {
             // Assert
             const disabled = output.querySelector('button');
-            expect(disabled?.disabled).toBe(true);
+            expect(disabled?.getAttribute('aria-disabled')).toBe('true');
             expect(disabled?.getAttribute('aria-keyshortcuts')).toBe(boundaryKey);
             expect(output.querySelector('a[href="/docs/middle/"]')?.textContent).toBe(availableLabel);
 
             // Act
+            await act(async () => disabled?.click());
             const boundaryEvent = await pressArrow(document, boundaryKey);
 
             // Assert
