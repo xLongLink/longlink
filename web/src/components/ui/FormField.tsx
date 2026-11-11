@@ -86,7 +86,6 @@ export function FormField({
         if (!form || !name) return;
 
         const onValidate = (event: Event) => validate(form, event);
-        const onCollect = (event: FormDataEvent) => collect(event);
 
         const reset = (event: Event) => {
             queueMicrotask(() => {
@@ -98,14 +97,14 @@ export function FormField({
         form.addEventListener('longlink:validate', onValidate);
         form.addEventListener('reset', reset);
 
-        if (hasBinaryValues) form.addEventListener('formdata', onCollect);
+        if (hasBinaryValues) form.addEventListener('formdata', collect);
 
         return () => {
             form.removeEventListener('submit', onValidate, true);
             form.removeEventListener('longlink:validate', onValidate);
             form.removeEventListener('reset', reset);
 
-            if (hasBinaryValues) form.removeEventListener('formdata', onCollect);
+            if (hasBinaryValues) form.removeEventListener('formdata', collect);
         };
     }, [fieldRef, name, hasBinaryValues]);
 

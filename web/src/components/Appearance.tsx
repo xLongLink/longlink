@@ -1,10 +1,12 @@
-import { ApiError } from '@/lib/api';
+import type { z } from 'zod';
 import type { ReactNode } from 'react';
+import { api, ApiError } from '@/lib/api';
 import { Theme } from '@astryxdesign/core/theme';
 import { stoneTheme } from '@/lib/generated/stone.js';
-import { useCurrentUser } from '@/lib/hooks/use-user';
-import { useIsMutating } from '@tanstack/react-query';
+import { CurrentUserContext } from '@/lib/hooks/use-user';
 import { AppearanceContext } from '@/lib/hooks/use-appearance';
+import { useQuery, useIsMutating } from '@tanstack/react-query';
+import { zCurrentUser } from '@/lib/generated/platform-api-v1/zod.gen';
 import { useEffect, useLayoutEffect, useMemo, useSyncExternalStore } from 'react';
 import { appearanceSchema, clearAppearanceCache, defaultAppearance, type Appearance } from '@/lib/appearance';
 
@@ -65,15 +67,24 @@ export function AppearanceProvider({ children, preference }: { children: ReactNo
     );
 }
 
-/** Refreshes account preferences on navigation/focus and clears them on session loss. */
+/** Owns account identity and synchronizes preferences across focus and session changes. */
 export function AccountAppearanceProvider({ children }: { children: ReactNode }) {
-    const { data: user, error, refetch } = useCurrentUser();
+    // Keep one identity observer for both appearance and route access decisions.
+    const currentUser = useQuery<z.output<typeof zCurrentUser> | null>({
+        queryKey: ['api', '/api/v1/me'],
+        queryFn: ({ signal }) => api('/api/v1/me', { signal }).json(zCurrentUser),
+        staleTime: 0,
+        refetchOnWindowFocus: true,
+        retry: false,
+    });
+
+    const { data: user, error, refetch } = currentUser;
     const isSaving = useIsMutating({ mutationKey: ['current-user'] }) > 0;
 
     // Derive previews and saved preferences directly from the authoritative user query.
     const preference = user
         ? { theme: user.theme, accent: user.accent }
-        : error instanceof ApiError && error.status === 401
+        : user === null || (error instanceof ApiError && error.status === 401)
           ? defaultAppearance
           : undefined;
 
@@ -93,7 +104,7 @@ export function AccountAppearanceProvider({ children }: { children: ReactNode })
                     // Saving to the account does not depend on browser storage.
                 }
             }
-        } else if (error instanceof ApiError && error.status === 401) {
+        } else if (user === null || (error instanceof ApiError && error.status === 401)) {
             clearAppearanceCache();
         }
     }, [user, error, isSaving]);
@@ -105,5 +116,9 @@ export function AccountAppearanceProvider({ children }: { children: ReactNode })
         });
     }, [refetch]);
 
-    return <AppearanceProvider preference={preference}>{children}</AppearanceProvider>;
+    return (
+        <CurrentUserContext value={currentUser}>
+            <AppearanceProvider preference={preference}>{children}</AppearanceProvider>
+        </CurrentUserContext>
+    );
 }

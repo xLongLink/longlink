@@ -5,6 +5,7 @@ import { it, expect, vi } from 'vitest';
 import { withMounted } from '../../../render';
 import Page from '@/platform/routes/auth/Mcp';
 import { renderPlatform, user } from '../../render';
+import { AccountAppearanceProvider } from '@/components/Appearance';
 
 it('withholds approval actions until the server has validated the consent request', () => {
     // Act
@@ -64,7 +65,9 @@ it.each([
 
             try {
                 await withMounted(
-                    <Page />,
+                    <AccountAppearanceProvider>
+                        <Page />
+                    </AccountAppearanceProvider>,
                     async (output) => {
                         await act(async () => {
                             await vi.waitFor(() =>

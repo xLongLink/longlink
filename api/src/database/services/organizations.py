@@ -44,18 +44,14 @@ def _membership_query(user_id: UUID) -> Select[UserOrganization]:
     )
 
 
-async def require_membership(
-    session: AsyncSession, user_id: UUID, organization_id: UUID, minimum_role: OrganizationRoles = OrganizationRoles.read
-) -> UserOrganization:
-    """Require active Organization access with the requested minimum role without taking command locks."""
+async def require_membership(session: AsyncSession, user_id: UUID, organization_id: UUID) -> UserOrganization:
+    """Require active Organization membership without taking command locks."""
 
-    # Resolve active access before checking its minimum required role.
+    # Require membership in an active Organization.
     statement = _membership_query(user_id).where(col(UserOrganization.organization_id) == organization_id)
     access = await session.scalar(statement)
     if access is None:
         raise HTTPException(status_code=403, detail="Access required")
-    if not roles.atleast(access.role, minimum_role):
-        raise HTTPException(status_code=403, detail="Permission required")
     return access
 
 

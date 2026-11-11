@@ -1,12 +1,18 @@
 // @vitest-environment happy-dom
 // @vitest-environment-options {"url":"http://localhost"}
 import { act } from 'react';
+import { user } from '../../render';
 import { it, expect, vi } from 'vitest';
+import PlatformRoot from '@/platform/root';
 import Brand from '@/platform/layouts/Brand';
+import { Route, Routes } from 'react-router';
 import { withMounted } from '../../../render';
 import { ApiErrorContext } from '@/lib/errors';
+import userEvent from '@testing-library/user-event';
 import Page from '@/platform/routes/auth/VerifyEmail';
 import { ApiBoundary } from '@/components/ApiBoundary';
+import AuthenticatedLayout from '@/platform/layouts/Authenticated';
+import { AccountAppearanceProvider } from '@/components/Appearance';
 
 it('allows account credential entry only after the email proof exchange succeeds', async () => {
     // Arrange
@@ -23,6 +29,11 @@ it('allows account credential entry only after the email proof exchange succeeds
 
     const transport = vi.spyOn(globalThis, 'fetch').mockImplementation(async (input, options) => {
         const request = input instanceof Request ? input : new Request(input, options);
+
+        if (new URL(request.url).pathname === '/api/v1/me') {
+            return Response.json({ detail: 'Not authenticated' }, { status: 401 });
+        }
+
         requests.push(request);
 
         if (request.method === 'POST' && new URL(request.url).pathname === '/api/v1/auth/verify') {
@@ -36,11 +47,13 @@ it('allows account credential entry only after the email proof exchange succeeds
         // Act
         await withMounted(
             <ApiErrorContext value={(error) => errors.push(error)}>
-                <Brand>
-                    <ApiBoundary>
-                        <Page />
-                    </ApiBoundary>
-                </Brand>
+                <AccountAppearanceProvider>
+                    <Brand>
+                        <ApiBoundary>
+                            <Page />
+                        </ApiBoundary>
+                    </Brand>
+                </AccountAppearanceProvider>
             </ApiErrorContext>,
             async (output) => {
                 // Assert
@@ -85,6 +98,11 @@ it('withholds account credentials and offers a new link when email proof is reje
 
     const transport = vi.spyOn(globalThis, 'fetch').mockImplementation(async (input, options) => {
         const request = input instanceof Request ? input : new Request(input, options);
+
+        if (new URL(request.url).pathname === '/api/v1/me') {
+            return Response.json({ detail: 'Not authenticated' }, { status: 401 });
+        }
+
         requests.push(request);
 
         if (request.method === 'POST' && new URL(request.url).pathname === '/api/v1/auth/verify') {
@@ -98,11 +116,13 @@ it('withholds account credentials and offers a new link when email proof is reje
         // Act
         await withMounted(
             <ApiErrorContext value={(error) => errors.push(error)}>
-                <Brand>
-                    <ApiBoundary>
-                        <Page />
-                    </ApiBoundary>
-                </Brand>
+                <AccountAppearanceProvider>
+                    <Brand>
+                        <ApiBoundary>
+                            <Page />
+                        </ApiBoundary>
+                    </Brand>
+                </AccountAppearanceProvider>
             </ApiErrorContext>,
             async (output) => {
                 // Assert
@@ -126,5 +146,74 @@ it('withholds account credentials and offers a new link when email proof is reje
         transport.mockRestore();
         window.history.replaceState(originalState, '', originalUrl);
         sessionStorage.removeItem(storageKey);
+    }
+});
+
+it('refreshes the persistent identity after registration before entering a protected route', async () => {
+    // Arrange verified setup for an anonymous session.
+    let registered = false;
+    const credentials: unknown[] = [];
+
+    const transport = vi.spyOn(globalThis, 'fetch').mockImplementation(async (input, options) => {
+        const request = input instanceof Request ? input : new Request(input, options);
+        const path = new URL(request.url).pathname;
+
+        if (path === '/api/v1/me') {
+            return registered ? Response.json(user) : Response.json({ detail: 'Not authenticated' }, { status: 401 });
+        }
+
+        if (path === '/api/v1/auth/register/setup') return Response.json({ email: user.email });
+
+        if (path === '/api/v1/auth/register/complete' && request.method === 'POST') {
+            credentials.push(await request.json());
+            registered = true;
+
+            return new Response(null, { status: 204 });
+        }
+
+        throw new Error(`Unexpected request: ${request.method} ${path}`);
+    });
+
+    try {
+        await withMounted(
+            <Routes>
+                <Route element={<PlatformRoot />}>
+                    <Route path="/auth/verify-email" element={<Page />} />
+                    <Route element={<AuthenticatedLayout />}>
+                        <Route path="/user/organizations" element={<p>Registered account organizations</p>} />
+                    </Route>
+                    <Route path="/login" element={<p>Unexpected sign-in prompt</p>} />
+                </Route>
+            </Routes>,
+            async (output) => {
+                await act(async () => {
+                    await vi.waitFor(() => expect(output.querySelector('input[name="name"]')).not.toBeNull());
+                });
+                const name = output.querySelector<HTMLInputElement>('input[name="name"]');
+                const password = output.querySelector<HTMLInputElement>('input[name="password"]');
+                const submit = output.querySelector<HTMLButtonElement>('button[type="submit"]');
+                const events = userEvent.setup();
+
+                if (!name || !password || !submit) throw new Error('Expected verified account credentials');
+
+                // Finish account creation without remounting the identity provider.
+                await act(async () => {
+                    await events.type(name, 'New Owner');
+                    await events.type(password, 'Strong-password-123');
+                    await events.click(submit);
+                });
+
+                await act(async () => {
+                    await vi.waitFor(() => expect(output.textContent).toContain('Registered account organizations'));
+                });
+                expect(output.textContent).not.toContain('Unexpected sign-in prompt');
+                expect(credentials).toEqual([{ name: 'New Owner', password: 'Strong-password-123' }]);
+                expect(output.textContent).not.toContain('Unable to load');
+            },
+            '/auth/verify-email'
+        );
+    } finally {
+        transport.mockRestore();
+        localStorage.removeItem('longlink:appearance');
     }
 });
