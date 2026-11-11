@@ -1,7 +1,6 @@
 import pytest
 import asyncio
 from uuid import UUID
-from typing import ClassVar
 from conftest import kubernetes_client
 from src.utils import templates
 from src.kubernetes import solutions
@@ -465,81 +464,37 @@ async def test_solution_delete_removes_resources_before_waiting_for_pods(monkeyp
 
     # Arrange
     deleted: list[str] = []
-    pod_checks = 0
     sleeps: list[float] = []
+    pod_phases = iter(["Running", "Failed"])
 
-    class NamespaceResource:
+    async def exists(_namespace: solutions.Namespace) -> bool:
         """Keep the Organization Namespace available for Solution cleanup."""
 
-        def __init__(self, *_args: object, **_kwargs: object) -> None:
-            """Accept the Kubernetes resource constructor arguments."""
+        return True
 
-        async def exists(self) -> bool:
-            """Keep the Namespace present until Solution cleanup completes."""
+    async def list_resources(
+        resource_type: type[solutions.APIObject], *, api: solutions.Api, namespace: str, **selectors: object
+    ) -> AsyncIterator[solutions.APIObject]:
+        """Yield real Solution resources until their deletion requests."""
 
-            return True
+        assert namespace == COMPUTE_NAMESPACE
+        if resource_type is solutions.KnativeServiceResource:
+            assert selectors == {"field_selector": {"metadata.name": "solution-00000000-0000-4000-8000-000000000001"}}
 
-    class Resource:
-        """Expose a Solution resource until its deletion request."""
+        resource = resource_type({"metadata": {"name": "retained"}}, api=api)
+        if resource.kind not in deleted:
+            yield resource
 
-        def __init__(self, kind: str) -> None:
-            """Store the resource kind used to record deletion."""
+    async def delete(resource: solutions.APIObject) -> None:
+        """Record the resource cleanup request."""
 
-            self.kind = kind
-            self.metadata: dict[str, object] = {}
+        deleted.append(resource.kind)
 
-        @classmethod
-        async def list(cls, *, api: object, namespace: str, field_selector: dict[str, str]):
-            """Return the named Service only before its deletion request."""
+    async def list_pods(*, api: solutions.Api, **_kwargs: object) -> AsyncIterator[solutions.Pod]:
+        """Yield a running Pod followed by a terminal Pod."""
 
-            assert namespace == COMPUTE_NAMESPACE
-            assert field_selector == {"metadata.name": "solution-00000000-0000-4000-8000-000000000001"}
-            if "Service" not in deleted:
-                yield cls("Service")
-
-        async def delete(self) -> None:
-            """Record the resource cleanup request."""
-
-            deleted.append(self.kind)
-
-    class JobResource:
-        """Expose the retained migration Job until its deletion request."""
-
-        metadata: ClassVar[dict[str, object]] = {}
-
-        async def delete(self) -> None:
-            """Record migration Job cleanup."""
-
-            deleted.append("Job")
-
-        @classmethod
-        async def list(cls, **_kwargs: object):
-            """Yield the migration Job while it has not been deleted."""
-
-            if "Job" not in deleted:
-                yield cls()
-
-    class PodResource:
-        """Expose a running Pod followed by a terminal Pod."""
-
-        @classmethod
-        async def list(cls, **_kwargs: object):
-            """Yield the current Solution Pod state."""
-
-            nonlocal pod_checks
-            pod_checks += 1
-            phase = "Running" if pod_checks == 1 else "Failed"
-            yield type("Pod", (), {"raw": {"status": {"phase": phase}}})()
-
-    class SecretResource:
-        """Expose revision secrets only before their deletion."""
-
-        @classmethod
-        async def list(cls, **_kwargs: object):
-            """Yield a retained revision secret once."""
-
-            if "Secret" not in deleted:
-                yield Resource("Secret")
+        pod = solutions.Pod({"status": {"phase": next(pod_phases)}}, api=api)
+        yield pod
 
     class Clock:
         """Replace only the deletion module's clock without mutating asyncio."""
@@ -551,11 +506,14 @@ async def test_solution_delete_removes_resources_before_waiting_for_pods(monkeyp
             sleeps.append(delay)
             await asyncio.sleep(0)
 
-    monkeypatch.setattr(solutions, "Namespace", NamespaceResource)
-    monkeypatch.setattr(solutions, "KnativeServiceResource", Resource)
-    monkeypatch.setattr(solutions, "Secret", SecretResource)
-    monkeypatch.setattr(solutions, "Job", JobResource)
-    monkeypatch.setattr(solutions, "Pod", PodResource)
+    monkeypatch.setattr(solutions.Namespace, "exists", exists)
+    monkeypatch.setattr(solutions.KnativeServiceResource, "list", classmethod(list_resources))
+    monkeypatch.setattr(solutions.Job, "list", classmethod(list_resources))
+    monkeypatch.setattr(solutions.Secret, "list", classmethod(list_resources))
+    monkeypatch.setattr(solutions.KnativeServiceResource, "delete", delete)
+    monkeypatch.setattr(solutions.Job, "delete", delete)
+    monkeypatch.setattr(solutions.Secret, "delete", delete)
+    monkeypatch.setattr(solutions.Pod, "list", list_pods)
     monkeypatch.setattr(solutions, "asyncio", Clock)
 
     # Act
@@ -571,29 +529,18 @@ async def test_solution_delete_skips_cleanup_when_namespace_is_absent(monkeypatc
     """Stop before looking up Solution resources in a deleted Namespace."""
 
     # Arrange
-    class NamespaceResource:
-        """Report an already deleted Organization Namespace."""
+    async def exists(_namespace: solutions.Namespace) -> bool:
+        """Report the missing Organization Namespace."""
 
-        def __init__(self, *_args: object, **_kwargs: object) -> None:
-            """Accept the Kubernetes resource constructor arguments."""
+        return False
 
-        async def exists(self) -> bool:
-            """Report the missing Namespace."""
+    def list_resources(**_kwargs: object) -> AsyncIterator[solutions.APIObject]:
+        """Reject resource inspection after Namespace deletion."""
 
-            return False
+        raise AssertionError("Solution resources must not be inspected after namespace deletion")
 
-    class Resource:
-        """Fail if cleanup inspects resources for a missing Namespace."""
-
-        @classmethod
-        async def list(cls, **_kwargs: object):
-            """Reject resource inspection after Namespace deletion."""
-
-            raise AssertionError("Solution resources must not be inspected after namespace deletion")
-            yield cls()
-
-    monkeypatch.setattr(solutions, "Namespace", NamespaceResource)
-    monkeypatch.setattr(solutions, "KnativeServiceResource", Resource)
+    monkeypatch.setattr(solutions.Namespace, "exists", exists)
+    monkeypatch.setattr(solutions.KnativeServiceResource, "list", list_resources)
 
     # Act
     await solutions.delete(kubernetes_client(), ORGANIZATION_ID, UUID("00000000-0000-4000-8000-000000000001"))
@@ -604,37 +551,26 @@ async def test_solution_delete_does_not_repeat_deletions_for_terminating_resourc
 
     # Arrange
     deleted: list[str] = []
-    namespace_checks = 0
     sleeps: list[float] = []
+    namespace_states = iter([True, False])
 
-    class NamespaceResource:
+    async def exists(_namespace: solutions.Namespace) -> bool:
         """Keep the Namespace present for one cleanup poll."""
 
-        def __init__(self, *_args: object, **_kwargs: object) -> None:
-            """Accept the Kubernetes resource constructor arguments."""
+        return next(namespace_states)
 
-        async def exists(self) -> bool:
-            """Report the Namespace as present until cleanup has been rechecked."""
+    async def list_resources(
+        resource_type: type[solutions.APIObject], *, api: solutions.Api, **_kwargs: object
+    ) -> AsyncIterator[solutions.APIObject]:
+        """Keep real terminating resources visible during the cleanup poll."""
 
-            nonlocal namespace_checks
-            namespace_checks += 1
-            return namespace_checks == 1
+        resource = resource_type({"metadata": {"name": "terminating", "deletionTimestamp": "2026-08-24T00:00:00Z"}}, api=api)
+        yield resource
 
-    class Resource:
-        """Represent a terminating Kubernetes resource."""
+    async def delete(resource: solutions.APIObject) -> None:
+        """Record an invalid duplicate deletion request."""
 
-        metadata: ClassVar[dict[str, object]] = {"deletionTimestamp": "2026-08-24T00:00:00Z"}
-
-        @classmethod
-        async def list(cls, **_kwargs: object):
-            """Keep the terminating resource visible during the cleanup poll."""
-
-            yield cls()
-
-        async def delete(self) -> None:
-            """Record an invalid duplicate deletion request."""
-
-            deleted.append("resource")
+        deleted.append(resource.kind)
 
     class Clock:
         """Replace only the deletion module's clock without mutating asyncio."""
@@ -645,10 +581,13 @@ async def test_solution_delete_does_not_repeat_deletions_for_terminating_resourc
 
             sleeps.append(delay)
 
-    monkeypatch.setattr(solutions, "Namespace", NamespaceResource)
-    monkeypatch.setattr(solutions, "KnativeServiceResource", Resource)
-    monkeypatch.setattr(solutions, "Secret", Resource)
-    monkeypatch.setattr(solutions, "Job", Resource)
+    monkeypatch.setattr(solutions.Namespace, "exists", exists)
+    monkeypatch.setattr(solutions.KnativeServiceResource, "list", classmethod(list_resources))
+    monkeypatch.setattr(solutions.Job, "list", classmethod(list_resources))
+    monkeypatch.setattr(solutions.Secret, "list", classmethod(list_resources))
+    monkeypatch.setattr(solutions.KnativeServiceResource, "delete", delete)
+    monkeypatch.setattr(solutions.Job, "delete", delete)
+    monkeypatch.setattr(solutions.Secret, "delete", delete)
     monkeypatch.setattr(solutions, "asyncio", Clock)
 
     # Act

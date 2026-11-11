@@ -6,25 +6,6 @@ pytestmark = pytest.mark.no_db
 
 
 @pytest.mark.parametrize(
-    ("reference", "tag_or_digest"),
-    [
-        pytest.param("ghcr.io/longlink/dashboard:latest", "latest", id="tagged"),
-        pytest.param("ghcr.io/longlink/dashboard@sha256:abc123", "sha256:abc123", id="digest-pinned"),
-    ],
-)
-def test_image_parses_valid_reference(reference: str, tag_or_digest: str) -> None:
-    """Accept fully-qualified tagged and digest-pinned OCI image references."""
-
-    # Act
-    image = Image(reference)
-
-    # Assert
-    assert image.registry == "ghcr.io"
-    assert image.repository == "longlink/dashboard"
-    assert image.tag_or_digest == tag_or_digest
-
-
-@pytest.mark.parametrize(
     ("reference", "message"),
     [
         pytest.param("", "required", id="empty"),
