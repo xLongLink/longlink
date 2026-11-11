@@ -5,7 +5,8 @@ from sqlalchemy import event
 from longlink.app import LongLink
 from sqlalchemy.engine import Engine
 from longlink.testclient import TestClient as SolutionTestClient
-from fsspec.implementations.dirfs import DirFileSystem
+from longlink.storage.filesystem import Filesystem
+from fsspec.implementations.local import LocalFileSystem
 
 
 @pytest.mark.usefixtures("solution_source")
@@ -15,10 +16,9 @@ def test_solution_test_client_replaces_development_services_with_testing_service
     # Arrange
     monkeypatch.setenv("LONGLINK_ENV", "development")
     app = LongLink()
-    assert isinstance(app.state.longlink.storage, DirFileSystem)
-    assert "file" in app.state.longlink.storage.fs.protocol
-    assert Path(app.state.longlink.storage.path) == Path.cwd() / ".storage"
-    assert Path(".storage").is_dir()
+    assert isinstance(app.state.longlink.storage, Filesystem)
+    assert isinstance(app.state.longlink.storage.filesystem.fs, LocalFileSystem)
+    assert Path(app.state.longlink.storage.filesystem.path) == Path.cwd() / ".storage"
     disposed: list[Engine] = []
 
     @app.get("/api/me", response_model=str)
@@ -33,6 +33,9 @@ def test_solution_test_client_replaces_development_services_with_testing_service
     client = SolutionTestClient(app)
     with client:
         user_response = client.get("/api/me")
+        assert client.portal is not None
+        client.portal.call(app.state.longlink.storage.write, "report.txt", b"report")
+        assert client.portal.call(app.state.longlink.storage.exists, "report.txt")
 
     # Assert
     assert user_response.status_code == 200
@@ -40,8 +43,6 @@ def test_solution_test_client_replaces_development_services_with_testing_service
     assert len(disposed) == 1
     assert not Path("dev.db").exists()
 
-    # Exercise relative in-memory file operations without creating a local report.
-    storage = app.state.longlink.storage
-    assert storage.ls("", detail=False) == []
-    storage.pipe_file("report.txt", b"report")
+    # Testing writes must not create files on the development filesystem.
     assert not Path("report.txt").exists()
+    assert not Path(".storage/report.txt").exists()

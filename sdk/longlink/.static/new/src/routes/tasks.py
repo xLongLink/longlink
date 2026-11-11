@@ -1,13 +1,13 @@
 import re
+import mimetypes
 from typing import Annotated
-from fastapi import File, Form, UploadFile, HTTPException
-from longlink import Context, APIRouter
+from fastapi import File, Form, Depends, Response, UploadFile, HTTPException
+from longlink import Context, APIRouter, storage
 from sqlmodel import select
-from collections.abc import Sequence
+from collections.abc import Sequence, AsyncIterator
 from src.models.tasks import Task
 from src.schemas.tasks import TaskRead
-from longlink.responses import FileResponse
-from starlette.concurrency import run_in_threadpool
+from fastapi.responses import StreamingResponse
 
 router = APIRouter(prefix="/api/tasks")
 
@@ -43,17 +43,14 @@ async def task_post_endpoint(
     task = Task(title=title.strip(), attachment=filename)
     ctx.database.add(task)
     await ctx.database.flush()
-    directory = f"tasks/{task.id}"
-    path = f"{directory}/attachment"
+    path = f"tasks/{task.id}/attachment"
 
     # Remove partially written attachments if storage or persistence fails.
     try:
-        await run_in_threadpool(ctx.storage.makedirs, directory, exist_ok=True)
-        await run_in_threadpool(ctx.storage.pipe_file, path, content)
+        await ctx.storage.write(path, content)
         await ctx.database.commit()
     except Exception:
-        if await run_in_threadpool(ctx.storage.exists, path):
-            await run_in_threadpool(ctx.storage.rm, path)
+        await ctx.storage.remove(path)
         raise
 
     # Load the saved creator before serializing the response.
@@ -61,17 +58,33 @@ async def task_post_endpoint(
     return task
 
 
-@router.get("/{task_id}/attachment", response_model=None, response_class=FileResponse)
-async def task_attachment_get_endpoint(task_id: int, ctx: Context) -> FileResponse:
-    """Serve the attachment belonging to an existing task for preview or download."""
+async def attachment_file(
+    task_id: int, ctx: Context, response: Response
+) -> AsyncIterator[storage.File]:
+    """Resolve and own the attachment before streaming response headers are sent."""
 
     # Resolve the task before looking up its fixed storage path.
     task = await ctx.database.get(Task, task_id)
     if task is None or task.attachment is None:
         raise HTTPException(status_code=404, detail="Attachment not found")
 
-    # Missing stored objects are normal not-found responses rather than streaming failures.
+    # Open before streaming so the SDK can return 404 for missing stored files.
     path = f"tasks/{task.id}/attachment"
-    if not await run_in_threadpool(ctx.storage.isfile, path):
-        raise HTTPException(status_code=404, detail="Attachment not found")
-    return ctx.file(path, filename=task.attachment)
+    response.headers["content-type"] = (
+        mimetypes.guess_type(task.attachment)[0] or "application/octet-stream"
+    )
+    async with ctx.storage.open(path) as stored_file:
+        yield stored_file
+
+
+@router.get(
+    "/{task_id}/attachment", response_model=None, response_class=StreamingResponse
+)
+async def task_attachment_get_endpoint(
+    stored_file: Annotated[storage.File, Depends(attachment_file)],
+) -> AsyncIterator[bytes]:
+    """Stream attachment bytes while the frontend chooses preview or download."""
+
+    # Read bounded chunks through the backend's asynchronous reader.
+    while chunk := await stored_file.read(1024 * 1024):
+        yield chunk

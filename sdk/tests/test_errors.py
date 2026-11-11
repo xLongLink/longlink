@@ -3,6 +3,7 @@ import logging
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from longlink.errors import install_error_handlers
+from longlink.storage import MissingFileError
 from fastapi.responses import JSONResponse
 from fastapi.testclient import TestClient
 
@@ -116,7 +117,10 @@ def test_installed_handlers_preserve_a_solution_owned_http_handler() -> None:
     assert response.json() == {"solution": "Custom response"}
 
 
-def test_installed_unexpected_error_handler_keeps_exception_values_out_of_logs_and_response(caplog: pytest.LogCaptureFixture) -> None:
+@pytest.mark.parametrize("error_type", [RuntimeError, FileNotFoundError])
+def test_installed_unexpected_error_handler_keeps_exception_values_out_of_logs_and_response(
+    caplog: pytest.LogCaptureFixture, error_type: type[Exception]
+) -> None:
     """Retain diagnostic stack locations without logging or returning sensitive exception values."""
 
     # Arrange
@@ -127,7 +131,7 @@ def test_installed_unexpected_error_handler_keeps_exception_values_out_of_logs_a
     async def fail_request() -> None:
         """Raise an exception carrying a sensitive value at the real HTTP boundary."""
 
-        raise RuntimeError(secret)
+        raise error_type(secret)
 
     install_error_handlers(app)
     client = TestClient(app, raise_server_exceptions=False)
@@ -140,7 +144,36 @@ def test_installed_unexpected_error_handler_keeps_exception_values_out_of_logs_a
     assert response.status_code == 500
     assert response.json() == {"detail": "An unexpected error occurred. Please try again later."}
     assert response.headers["cache-control"] == "no-store"
-    assert "Unhandled error RuntimeError" in caplog.text
+    assert f"Unhandled error {error_type.__name__}" in caplog.text
     assert __file__ in caplog.text
     assert "in fail_request" in caplog.text
     assert secret not in caplog.text
+
+
+def test_installed_handlers_preserve_a_solution_owned_storage_handler() -> None:
+    """Allow Solutions to customize the dedicated storage-not-found response."""
+
+    # Arrange
+    app = FastAPI()
+
+    @app.exception_handler(MissingFileError)
+    async def missing_report(_request: object, _error: MissingFileError) -> JSONResponse:
+        """Return the Solution's own missing-file contract."""
+
+        return JSONResponse(status_code=410, content={"detail": "Report expired"})
+
+    @app.get("/report", response_model=None)
+    async def report() -> None:
+        """Raise the same dedicated error used by missing stored files."""
+
+        raise MissingFileError("private/reports/report.pdf")
+
+    install_error_handlers(app)
+
+    # Act
+    with TestClient(app) as client:
+        response = client.get("/report")
+
+    # Assert
+    assert response.status_code == 410
+    assert response.json() == {"detail": "Report expired"}
