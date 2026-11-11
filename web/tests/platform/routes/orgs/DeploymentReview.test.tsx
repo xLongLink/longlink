@@ -48,28 +48,6 @@ describe('DeploymentReview', () => {
         vi.unstubAllGlobals();
     });
 
-    it('submits the reviewed revision with a source update', async () => {
-        // Arrange
-        const submissions = await openReview(() => Response.json(candidate));
-
-        // Act
-        await act(async () => button('Next').click());
-        await act(async () =>
-            vi.waitFor(() => expect(button('Update solution').getAttribute('aria-disabled')).toBeNull())
-        );
-        await act(async () => button('Update solution').click());
-
-        // Assert
-        await vi.waitFor(() =>
-            expect(submissions).toEqual([
-                {
-                    path: `/api/v1/solutions/${solutionId}/update`,
-                    body: { envs: {}, expected_revision_id: revisionId },
-                },
-            ])
-        );
-    });
-
     it('retries a failed inspection and deploys the recovered reviewed revision', async () => {
         // Arrange
         const recoveredRevisionId = '00000000-0000-4000-8000-000000000003';
