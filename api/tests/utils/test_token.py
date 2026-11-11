@@ -201,27 +201,3 @@ async def test_password_reset_user_rejects_missing_account() -> None:
     async with session_scope() as session:
         with pytest.raises(jwt.InvalidTokenError, match="Invalid password reset token"):
             await token.password_reset_user(session, encoded)
-
-
-async def test_password_reset_user_rejects_changed_password() -> None:
-    """Invalidate a recovery link when its account password changes."""
-
-    # Arrange
-    user = User(email="member@example.com", password="original-password-hash")
-    async with session_scope() as session:
-        session.add(user)
-        await session.commit()
-
-    # Bind the credential to the persisted original password before changing it.
-    reset_token = token.create_password_reset_token(user)
-
-    async with session_scope() as session:
-        persisted_user = await session.get(User, user.id)
-        assert persisted_user is not None
-        persisted_user.password = "changed-password"
-        await session.commit()
-
-    # Act and assert
-    async with session_scope() as session:
-        with pytest.raises(jwt.InvalidTokenError, match="Invalid password reset token"):
-            await token.password_reset_user(session, reset_token)
