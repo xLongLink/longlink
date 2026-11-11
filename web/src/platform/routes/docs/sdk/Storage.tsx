@@ -26,12 +26,16 @@ export default function DocsArticleRoute() {
                     Storage
                 </Heading>
                 <Text as="p">
-                    Use <Code>ctx.storage</Code> as a standardized, universal interface to read and write files without
-                    worrying about the underlying storage system. It is backed by{' '}
+                    Use <Code>ctx.storage</Code> to read and write files asynchronously through a normalized{' '}
                     <Link href="https://github.com/fsspec/filesystem_spec" hasUnderline isExternalLink type="inherit">
                         fsspec
-                    </Link>
-                    .
+                    </Link>{' '}
+                    filesystem. Production uses{' '}
+                    <Link href="https://github.com/fsspec/s3fs" hasUnderline isExternalLink type="inherit">
+                        s3fs
+                    </Link>{' '}
+                    with native async S3 I/O through aiobotocore. Synchronous local and memory filesystems are adapted
+                    internally, using worker threads rather than blocking async routes.
                 </Text>
                 <Stack as="aside" className="border-s border-accent ps-4" gap={0}>
                     <Text weight="semibold">Why?</Text>
@@ -48,39 +52,64 @@ export default function DocsArticleRoute() {
                     code={`from longlink import Context
 
 async def write_report(ctx: Context) -> None:
-    with ctx.storage.open("reports/example.txt", "wb") as f:
-        f.write(b"hello")`}
+    await ctx.storage.write("reports/example.txt", b"hello")`}
                     language="python"
                 />
+                <Text as="p">
+                    <Code>write(path, bytes)</Code> creates parent directories automatically. Use{' '}
+                    <Code>await ctx.storage.exists(path)</Code> to check for a file and{' '}
+                    <Code>await ctx.storage.remove(path)</Code> to delete it. Removing a missing file is safe.{' '}
+                    <Code>open(path)</Code> returns a read-only binary file context.
+                </Text>
                 <Heading id="file-responses" level={2}>
                     Previews and downloads
                 </Heading>
                 <Text as="p">
-                    Use <Code>ctx.file()</Code> to preview a file in the browser, or <Code>ctx.download()</Code> to
-                    download it.
+                    Yield file chunks from a route with <Code>response_class=StreamingResponse</Code>. Set the content
+                    type for previews; the frontend decides whether to preview or download the same URL. A
+                    request-scoped dependency opens the file before streaming starts and closes it when the response
+                    finishes. Missing stored files automatically return HTTP 404 without exposing storage paths.
                 </Text>
                 <CodeBlock
-                    code={`from fastapi import APIRouter, Response
-from longlink import Context
+                    code={`from collections.abc import AsyncIterator
+from typing import Annotated
+from fastapi import Depends
+from fastapi.responses import StreamingResponse
+from longlink import APIRouter, Context, storage
 
 router = APIRouter()
 
 
-@router.get("/reports/preview")
-async def preview_report(ctx: Context) -> Response:
-    """Serve a stored report for browser preview."""
+class PDFStreamingResponse(StreamingResponse):
+    media_type = "application/pdf"
 
-    # Return an inline response with a friendly display name.
-    return ctx.file("reports/latest.pdf", filename="report.pdf")
+async def report_file(ctx: Context) -> AsyncIterator[storage.File]:
+    """Open the report before sending response headers."""
+
+    # Check the caller's access before opening the report.
+    async with ctx.storage.open("reports/latest.pdf") as stored_file:
+        yield stored_file
 
 
-@router.get("/reports/download")
-async def download_report(ctx: Context) -> Response:
-    """Serve a stored report as a download."""
+@router.get("/reports/latest", response_class=PDFStreamingResponse)
+async def report(
+    stored_file: Annotated[storage.File, Depends(report_file)],
+) -> AsyncIterator[bytes]:
+    """Stream bounded chunks without blocking the event loop."""
 
-    # Use the storage path's basename as the download filename.
-    return ctx.download("reports/latest.pdf")`}
+    while chunk := await stored_file.read(1024 * 1024):
+        yield chunk`}
                     language="python"
+                />
+                <Text as="p">
+                    Use <Code>FileViewer</Code> for preview and download actions, or <Code>Link</Code> with a{' '}
+                    <Code>download</Code> filename to download directly. No backend download headers or separate
+                    endpoint are required.
+                </Text>
+                <CodeBlock
+                    code={`<FileViewer src="/reports/latest" title="report.pdf" />
+<Link to="/reports/latest" download="report.pdf">Download report</Link>`}
+                    language="jsx"
                 />
             </Stack>
         </DocumentationArticle>

@@ -1258,6 +1258,7 @@ dev = [
     { name = "pytest-cov" },
     { name = "ruff" },
     { name = "ty" },
+    { name = "types-aiobotocore-s3" },
 ]
 
 [package.metadata]
@@ -1293,6 +1294,7 @@ dev = [
     { name = "pytest-cov", specifier = ">=7.0.0" },
     { name = "ruff", specifier = ">=0.16.2" },
     { name = "ty", specifier = ">=0.0.69" },
+    { name = "types-aiobotocore-s3", specifier = ">=2.25.0" },
 ]
 
 [[package]]
@@ -2505,6 +2507,15 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/73/a0/6d0f33100c775fa276432f04d8ddb01291b6935f8f978839dd95ea37c20b/ty-0.0.99-py3-none-win32.whl", hash = "sha256:0bb773d9dd9093232b0f414da657542a1f36d1753c2bc85acd246e378310cde2", size = 13727206, upload-time = "2026-11-06T10:12:03.225Z" },
     { url = "https://files.pythonhosted.org/packages/c7/58/0a0c01cfde5c1c4ed28f430fc7b689fa280d899b6affd8e6be93fff55bc7/ty-0.0.99-py3-none-win_amd64.whl", hash = "sha256:af3964132653c4612b077da5937e4c49b6977e7619a9d0e5c4df635abd9cd0d4", size = 14384759, upload-time = "2026-11-06T10:12:06.188Z" },
     { url = "https://files.pythonhosted.org/packages/dc/55/a1b0ed127b4ce3ced884f50670bd8a2296e60b378f807e68a507a191789a/ty-0.0.99-py3-none-win_arm64.whl", hash = "sha256:67f9aa5dbdde40b20c3401e93b155f9d5938b7b827c8838862411dff08b39aec", size = 13859730, upload-time = "2026-11-06T10:12:09.273Z" },
+]
+
+[[package]]
+name = "types-aiobotocore-s3"
+version = "3.10.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/91/a9/15633c16c87b9f936f18c5c06386ea924843797639c26cbac3121d52c62f/types_aiobotocore_s3-3.10.0.tar.gz", hash = "sha256:5bde3b1cc11f14bcdf991b75dc15bdd884a7a45f80e57cba724de0a196424caa", size = 80065, upload-time = "2026-10-24T03:51:47.619Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/46/35/04d9e94dc0bde68b204da078cf0a0fac564275c74057cad2fdaef917be60/types_aiobotocore_s3-3.10.0-py3-none-any.whl", hash = "sha256:c25ca89e83c6512250e730693d6f6f243bbaaa76d51720f4949645761698c74c", size = 87990, upload-time = "2026-10-24T03:51:44.374Z" },
 ]
 
 [[package]]

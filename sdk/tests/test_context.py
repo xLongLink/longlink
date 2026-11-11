@@ -4,42 +4,8 @@ from datetime import UTC, datetime, timedelta
 from longlink import User, context, identity
 from longlink.app import LongLink
 from fastapi.testclient import TestClient
-from longlink.responses import FileResponse
-from longlink.testclient import TestClient as SolutionTestClient
 
 IDENTITY_SECRET = "test-identity-secret-01234567890"
-
-
-@pytest.mark.usefixtures("solution_source")
-@pytest.mark.parametrize("download", [False, True], ids=["preview", "download"])
-def test_context_streams_stored_files(download: bool, monkeypatch: pytest.MonkeyPatch) -> None:
-    """Serve real context previews and downloads with encoded display filenames."""
-
-    # Arrange
-    monkeypatch.setenv("LONGLINK_ENV", "testing")
-    app = LongLink()
-    client = SolutionTestClient(app)
-    app.state.longlink.storage.pipe_file("stored.bin", b"stored report")
-
-    @app.get("/api/report", response_class=FileResponse)
-    async def report(value: context.Context) -> FileResponse:
-        """Use the public helper with a path distinct from its display name."""
-
-        # Select the public disposition helper without replacing request services.
-        if download:
-            return value.download("stored.bin", filename="résumé.txt", media_type="text/plain")
-        return value.file("stored.bin", filename="résumé.txt", media_type="text/plain")
-
-    # Act
-    with client:
-        response = client.get("/api/report")
-
-    # Assert
-    disposition = "attachment" if download else "inline"
-    assert response.status_code == 200
-    assert response.content == b"stored report"
-    assert response.headers["content-type"] == "text/plain; charset=utf-8"
-    assert response.headers["content-disposition"] == f"{disposition}; filename*=utf-8''r%C3%A9sum%C3%A9.txt"
 
 
 def identity_headers(user: User) -> dict[str, str]:

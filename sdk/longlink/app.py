@@ -9,19 +9,18 @@ from longlink import views, permissions
 from pydantic import FilePath, BaseModel
 from contextlib import ExitStack, AsyncExitStack, asynccontextmanager
 from dataclasses import dataclass
-from fsspec.spec import AbstractFileSystem
 from collections.abc import Mapping, Callable, Awaitable, AsyncGenerator
 from fastapi.routing import APIRoute, RouteContext, iter_route_contexts
 from longlink.errors import install_error_handlers
 from longlink.logger import ApiAccessFilter
 from longlink.routes import router
 from longlink.routing import RouteDecorators
+from longlink.storage import Storage, create_storage
 from fastapi.responses import Response, RedirectResponse
 from starlette.routing import Match, Mount
 from longlink.constants import ROOT
 from longlink.middleware import FrontendMiddleware
 from fastapi.openapi.utils import get_openapi
-from longlink.storage.base import create_fs
 from starlette.staticfiles import StaticFiles
 from longlink.database.base import LOCAL_USER_ID, Database
 from longlink.utils.settings import Envs
@@ -43,7 +42,7 @@ class FrontendAssets(BaseModel):
 class RuntimeState:
     """Hold mutable SDK state for one FastAPI application."""
 
-    storage: AbstractFileSystem
+    storage: Storage
     database: Database
 
 
@@ -97,7 +96,7 @@ class LongLink(RouteDecorators, FastAPI):
         )
 
         # Initialize Solution storage and database connections.
-        storage = create_fs(settings)
+        storage = create_storage(settings)
         database = Database(settings)
         runtime = RuntimeState(storage=storage, database=database)
 
@@ -160,6 +159,7 @@ class LongLink(RouteDecorators, FastAPI):
             async with AsyncExitStack() as stack:
                 # Dispose the active database last, even when startup replaces its runtime state.
                 stack.push_async_callback(lambda: self.state.longlink.database.dispose())
+                stack.push_async_callback(lambda: self.state.longlink.storage.close())
                 guards = ExitStack()
                 stack.enter_context(guards)
                 state = await stack.enter_async_context(runtime_lifespan(app))

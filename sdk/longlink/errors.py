@@ -5,6 +5,7 @@ from fastapi.utils import is_body_allowed_for_status_code
 from fastapi.responses import Response, JSONResponse
 from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException
+from longlink.storage.base import MissingFileError
 
 logger = logging.getLogger(__name__)
 
@@ -24,6 +25,12 @@ async def validation_error_response(_request: Request, _error: RequestValidation
     """Reject invalid input without exposing submitted values or validator diagnostics."""
 
     return JSONResponse(status_code=422, content={"detail": "Invalid request. Please check your input and try again."})
+
+
+async def missing_file_response(_request: Request, _error: MissingFileError) -> JSONResponse:
+    """Report an absent stored file without exposing its backend path."""
+
+    return JSONResponse(status_code=404, content={"detail": "File not found"})
 
 
 async def unexpected_error_response(_request: Request, error: Exception) -> JSONResponse:
@@ -47,5 +54,7 @@ def install_error_handlers(app: FastAPI) -> None:
         app.exception_handler(HTTPException)(http_error_response)
     if app.exception_handlers.get(RequestValidationError) in (None, exception_handlers.request_validation_exception_handler):
         app.exception_handler(RequestValidationError)(validation_error_response)
+    if MissingFileError not in app.exception_handlers:
+        app.exception_handler(MissingFileError)(missing_file_response)
     if Exception not in app.exception_handlers and 500 not in app.exception_handlers:
         app.add_exception_handler(Exception, unexpected_error_response)
