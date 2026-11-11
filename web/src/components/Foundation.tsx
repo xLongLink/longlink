@@ -102,6 +102,7 @@ export function Foundation() {
         };
 
         const schedule = () => {
+            // oxlint-disable-next-line react/immutability -- Effect-local cleanup; oxc-project/oxc#28401.
             if (visible && !frame) frame = window.requestAnimationFrame(update);
         };
 
