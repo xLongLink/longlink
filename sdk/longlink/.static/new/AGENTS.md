@@ -30,14 +30,6 @@ RULES:
 - DO run formatting, linting, type checking, and relevant existing tests.
 - After verification, DO review the implementation for further simplification.
 
-TESTING:
-- DO use Arrange, Act, and Assert sections.
-- DO mock external boundaries, not business logic.
-- DO use `longlink.testclient.TestClient` for route tests.
-- Unless the user explicitly requests tests, DON'T add them.
-- DO test observable behavior with clear, deterministic assertions.
-- Where practical, PREFER real implementations and explicit dependency boundaries to mocks or global runtime-state changes.
-
 PYTHON:
 - AVOID renaming imports.
 - DO use clear domain names.
@@ -59,6 +51,14 @@ PYTHON:
 - DO construct class instances in separate, multi-line assignments before invoking their methods.
 - DO store asynchronous query results in a named variable before calling `.all()`, `.one_or_none()`, or similar result methods.
 
+TESTING:
+- DO use Arrange, Act, and Assert sections.
+- DO mock external boundaries, not business logic.
+- DO use `longlink.testclient.TestClient` for route tests.
+- Unless the user explicitly requests tests, DON'T add them.
+- DO test observable behavior with clear, deterministic assertions.
+- Where practical, PREFER real implementations and explicit dependency boundaries to mocks or global runtime-state changes.
+
 VIEWS:
 - PREFER explicit async/await.
 - DO add JSDoc to JavaScript functions.
@@ -66,10 +66,13 @@ VIEWS:
 - DON'T wrap individual table rows in `Card`.
 - DO use concurrency only for independent operations.
 - DO extract components only for meaningful UI boundaries.
-- Unless unavoidable, AVOID changing global runtime state.
-- DO clean up timers, listeners, subscriptions, and observers.
+- Each view IDEALLY have one scope and one primary presentation
+  - Table view: one table for one dataset.
+  - Menu view: one menu for related options or sections.
+  - Card view: one card-based presentation for one scope.
 - DON'T use raw HTML elements. Use LongLink components for structure and content.
 - AVOID duplicated derived state and effects that do not synchronize with external systems.
+- DON'T add standalone explanatory, onboarding, or empty-state sentences around the primary content.
 - DON'T use browsers or browser automation to inspect or verify changes. DO inspect source and run code-level checks instead.
 - DON'T add decorative containers, redundant labels, or explanatory text that repeats what the interface already makes clear.
 - DON'T use inline `style`, custom `className` values, imported CSS, or hardcoded colors and pixel values to bypass the View component API.
