@@ -201,3 +201,25 @@ async def test_password_reset_user_rejects_missing_account() -> None:
     async with session_scope() as session:
         with pytest.raises(jwt.InvalidTokenError, match="Invalid password reset token"):
             await token.password_reset_user(session, encoded)
+
+
+async def test_credential_user_rejects_deleted_account_with_matching_fingerprint(users: tuple[User, User, User]) -> None:
+    """Reject deleted accounts even when their credential fingerprint still matches."""
+
+    # Arrange
+    _administrator, active_user, deleted_user = users
+    async with session_scope() as session:
+        deleted_row = await session.get(User, deleted_user.id)
+        assert deleted_row is not None
+        deleted_row.deleted_at = datetime.now(UTC)
+        await session.commit()
+
+    # Act
+    async with session_scope() as session:
+        active = await token.credential_user(session, active_user.id, token.password_fingerprint(active_user.password))
+        deleted = await token.credential_user(session, deleted_user.id, token.password_fingerprint(deleted_user.password))
+
+    # Assert
+    assert active is not None
+    assert active.id == active_user.id
+    assert deleted is None

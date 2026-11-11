@@ -19,7 +19,6 @@ from collections.abc import AsyncIterator
 from src.environments import env
 from src.models.roles import OrganizationRoles
 from src.database.session import get_session, session_scope
-from src.database.services import users
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.users import User
 from src.database.models.association import UserOrganization
@@ -656,13 +655,13 @@ async def test_malformed_browser_session_is_rejected_before_database_lookup(clie
 
         yield object()
 
-    async def unexpected_active(*_args: object) -> object:
+    async def unexpected_credential_user(*_args: object) -> object:
         """Fail if malformed credentials reach the user database query."""
 
         raise AssertionError("malformed credentials must not query users")
 
     monkeypatch.setattr(app, "dependency_overrides", {auth.get_session: get_session})
-    monkeypatch.setattr(users, "active", unexpected_active)
+    monkeypatch.setattr(token, "credential_user", unexpected_credential_user)
     client.cookies.set("longlink_auth", "invalid", domain="testserver.local", path="/")
 
     # Act
@@ -948,13 +947,13 @@ async def test_password_reset_rejects_missing_reset_cookie(client: AsyncClient, 
 
         yield object()
 
-    async def unexpected_active(*_args: object) -> object:
+    async def unexpected_credential_user(*_args: object) -> object:
         """Reject account lookup before a reset credential has been validated."""
 
         raise AssertionError("missing reset proof must not query users")
 
     monkeypatch.setattr(app, "dependency_overrides", {auth.get_session: unused_session})
-    monkeypatch.setattr(token.users, "active", unexpected_active)
+    monkeypatch.setattr(token, "credential_user", unexpected_credential_user)
 
     # Act
     reset_response = await client.post("/api/v1/auth/reset-password", json={"password": "replacement-password"})

@@ -3,10 +3,11 @@ import hmac
 from uuid import UUID
 from datetime import UTC, datetime, timedelta
 from pydantic import TypeAdapter, ValidationError
+from sqlmodel import col
+from sqlalchemy import select
 from longlink.types import Email
 from src.utils.oauth import OAuthProvider
 from src.environments import env
-from src.database.services import users
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.users import User
 
@@ -34,7 +35,7 @@ async def credential_user(session: AsyncSession, user_id: UUID, fingerprint: str
     """Resolve an active user only while the credential matches their current password."""
 
     # Invalidate password-bound credentials when the account is deleted or its password changes.
-    user = await users.active(session, user_id)
+    user = await session.scalar(select(User).where(col(User.id) == user_id, col(User.deleted_at).is_(None)))
     if user is None or not hmac.compare_digest(fingerprint, password_fingerprint(user.password)):
         return None
     return user
