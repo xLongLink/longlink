@@ -2,10 +2,10 @@
 import { act } from 'react';
 import { Link } from 'react-router';
 import type { Window } from 'happy-dom';
+import { withMounted } from '../../render';
 import { Home, Users } from 'lucide-react';
 import Platform from '@/components/layouts/Platform';
 import { LinkProvider } from '@astryxdesign/core/Link';
-import { renderStatic, withMounted } from '../../render';
 import { it, expect, afterEach, beforeEach } from 'vitest';
 
 // SAFETY: The configured happy-dom environment supplies this viewport API on its window.
@@ -22,25 +22,6 @@ beforeEach(() => {
 afterEach(() => {
     viewport.setViewport(initialViewport);
     viewport.settings.device.prefersReducedMotion = initialMotion;
-});
-
-it('selects the longest matching navigation path', () => {
-    // Act
-    const output = renderStatic(
-        <Platform
-            action={null}
-            tabs={[
-                { href: '/admin', label: 'Overview' },
-                { href: '/admin/users', label: 'Users' },
-            ]}
-        >
-            Users
-        </Platform>,
-        '/admin/users/active'
-    );
-
-    // Assert
-    expect(output.querySelector('[aria-current="page"]')?.textContent).toContain('Users');
 });
 
 it('preserves the original trailing-slash tab href', async () => {

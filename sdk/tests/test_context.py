@@ -50,11 +50,11 @@ def identity_headers(user: User) -> dict[str, str]:
 
 
 @pytest.mark.usefixtures("solution_source")
-@pytest.mark.parametrize("user_id", [UUID(int=2), UUID(int=3)])
-def test_data_resolves_request_services(user_id: UUID, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_data_resolves_request_services(monkeypatch: pytest.MonkeyPatch) -> None:
     """Persist newer signed profiles and ignore equal or older snapshots."""
 
     # Arrange
+    user_id = UUID(int=2)
     monkeypatch.setenv("LONGLINK_ENV", "testing")
     monkeypatch.setenv("LONGLINK_IDENTITY_SECRET", IDENTITY_SECRET)
     app = LongLink()

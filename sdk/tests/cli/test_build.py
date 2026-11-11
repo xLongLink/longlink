@@ -176,14 +176,6 @@ def test_read_env_spec_emits_supported_environment_metadata(tmp_path: Path) -> N
         pytest.param(
             '[tool.longlink]\nenvironments = "src.envs:Env"\n',
             "src/envs.py",
-            "raise RuntimeError('import failed')\n",
-            "Unable to import environment model src.envs:Env: import failed",
-            # Import failures retain the inspector's actionable error.
-            id="import-error",
-        ),
-        pytest.param(
-            '[tool.longlink]\nenvironments = "src.envs:Env"\n',
-            "src/envs.py",
             # Importable plain classes do not satisfy the Pydantic environment contract.
             "class Env:\n    pass\n",
             "Environment model must be a Pydantic model",

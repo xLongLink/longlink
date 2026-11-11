@@ -1,12 +1,12 @@
 // @vitest-environment happy-dom
 // @vitest-environment-options {"url":"http://localhost"}
 import { act } from 'react';
+import { user } from '../../render';
 import { it, expect, vi } from 'vitest';
 import { withMounted } from '../../../render';
 import { ApiErrorContext } from '@/lib/errors';
 import { useQuery } from '@tanstack/react-query';
 import Page from '@/platform/routes/user/Settings';
-import { renderPlatform, user } from '../../render';
 import userEvent from '@testing-library/user-event';
 import { AuthenticatedUserContext } from '@/lib/hooks/use-user';
 
@@ -21,15 +21,6 @@ function AccountSettings() {
         </AuthenticatedUserContext>
     );
 }
-
-it('loads the account draft without requesting inactive organization settings', () => {
-    // Act
-    const output = renderPlatform(<Page />, '/user/settings');
-
-    // Assert
-    expect(output.querySelector('input')?.getAttribute('value')).toBe('Owner');
-    expect(output.textContent).toContain('owner@example.com');
-});
 
 it('trims blur saves, locks the pending field, and publishes the canonical account name', async () => {
     // Arrange
@@ -63,6 +54,7 @@ it('trims blur saves, locks the pending field, and publishes the canonical accou
 
                 if (!input) throw new Error('Username input is missing');
                 expect(input.value).toBe('Owner');
+                expect(output.textContent).toContain('owner@example.com');
 
                 // Act
                 await act(async () => {

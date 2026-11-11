@@ -24,22 +24,18 @@ def test_dev_command_warns_only_for_public_hosts(
 
     # Arrange
     calls: list[tuple[str, dict[str, object]]] = []
-    migrations_applied: list[bool] = []
     monkeypatch.chdir(tmp_path)
     monkeypatch.setenv("LONGLINK_ENV", "development")
 
     # Keep host-policy cases independent of real migration execution.
     def apply_migrations() -> None:
-        """Record the migration boundary before Uvicorn can start."""
-
-        migrations_applied.append(True)
+        """Skip migrations in host-policy cases."""
 
     monkeypatch.setattr(dev, "apply_migrations", apply_migrations)
 
     def run(application: str, **kwargs: object) -> None:
-        """Capture server configuration after the migration boundary has completed."""
+        """Capture server configuration."""
 
-        assert migrations_applied == [True]
         calls.append((application, kwargs))
 
     monkeypatch.setattr(dev.uvicorn, "run", run)

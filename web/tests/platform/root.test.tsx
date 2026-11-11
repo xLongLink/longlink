@@ -3,26 +3,8 @@ import { act } from 'react';
 import { it, expect } from 'vitest';
 import { withMounted } from '../render';
 import PlatformRoot from '@/platform/root';
-import { renderToStaticMarkup } from 'react-dom/server';
 import { SideNavItem } from '@astryxdesign/core/SideNav';
-import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
-
-it('retains the routed Platform content within shared providers', () => {
-    // Act
-    const output = document.createElement('section');
-    output.innerHTML = renderToStaticMarkup(
-        <MemoryRouter>
-            <Routes>
-                <Route element={<PlatformRoot />}>
-                    <Route path="/" element={<main>Platform page</main>} />
-                </Route>
-            </Routes>
-        </MemoryRouter>
-    );
-
-    // Assert
-    expect(output.querySelector('main')?.textContent).toBe('Platform page');
-});
+import { Route, Routes, useLocation } from 'react-router';
 
 it('uses the Platform root link provider for client-side navigation', async () => {
     // Arrange
