@@ -1,7 +1,8 @@
 import { useValue } from './value';
 import { FormField } from './FormField';
 import type { FieldProps } from './types';
-import type { SelectorOptionType } from './Selector';
+import { SelectorOption } from '@astryxdesign/core/Selector';
+import { selectorOptions, type SelectorOptionType } from './options';
 import { MultiSelector as AstryxMultiSelector } from '@astryxdesign/core/MultiSelector';
 
 /** Selects multiple values using standard option and selected-value rendering. */
@@ -25,6 +26,14 @@ export function MultiSelector(
         <FormField {...props} fieldRef={field.ref} values={field.value}>
             <AstryxMultiSelector
                 {...control}
+                options={selectorOptions(props.options)}
+                renderOption={(option) => (
+                    <SelectorOption
+                        label={option.label ?? option.value}
+                        icon={option.icon}
+                        description={option.description}
+                    />
+                )}
                 width="100%"
                 value={field.value}
                 onChange={field.onChange}

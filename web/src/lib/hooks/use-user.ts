@@ -2,22 +2,27 @@ import type { z } from 'zod';
 import { api } from '@/lib/api';
 import { useApiError } from '@/lib/errors';
 import { createContext, useContext } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { zUserUpdate, zCurrentUser } from '@/lib/generated/platform-api-v1/zod.gen';
+import { useMutation, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
 
 // Share the user validated by the authenticated route boundary.
 export const AuthenticatedUserContext = createContext<z.output<typeof zCurrentUser> | undefined>(undefined);
 
-/** Reads the current authenticated user without loading organization memberships. */
+// Share the account provider's identity observer across public and protected routes.
+export const CurrentUserContext = createContext<UseQueryResult<z.output<typeof zCurrentUser> | null> | undefined>(
+    undefined
+);
+
+/** Reads the account provider's identity query without creating another observer. */
 export function useCurrentUser() {
-    return useQuery({
-        // Auth state must refresh immediately after login/logout redirects.
-        queryKey: ['api', '/api/v1/me'],
-        queryFn: ({ signal }) => api('/api/v1/me', { signal }).json(zCurrentUser),
-        staleTime: 0,
-        refetchOnWindowFocus: true,
-        retry: false,
-    });
+    const user = useContext(CurrentUserContext);
+
+    // Keep identity ownership at the account provider rather than silently adding a query.
+    if (user === undefined) {
+        throw new Error('useCurrentUser must be used within AccountAppearanceProvider');
+    }
+
+    return user;
 }
 
 /** Serializes profile writes and caches their validated responses across account controls. */

@@ -5,11 +5,13 @@ import routes from '@/platform/routes';
 import { it, expect, vi } from 'vitest';
 import { Route, Routes } from 'react-router';
 import { withMounted } from '../../../render';
-import { renderPlatform } from '../../render';
 import { ApiErrorContext } from '@/lib/errors';
 import Page from '@/platform/routes/auth/Login';
+import { renderPlatform, user } from '../../render';
 import userEvent from '@testing-library/user-event';
 import { ApiBoundary } from '@/components/ApiBoundary';
+import AuthenticatedLayout from '@/platform/layouts/Authenticated';
+import { AccountAppearanceProvider } from '@/components/Appearance';
 
 it('keeps password entry masked and email drafts in their owned field', () => {
     // Act
@@ -37,17 +39,21 @@ it('reports a wrong password without losing the form and allows a successful ret
     // Arrange
     const errors: unknown[] = [];
     const attempts: unknown[] = [];
+    let signedIn = false;
 
     const transport = vi.spyOn(globalThis, 'fetch').mockImplementation(async (input, options) => {
         const request = input instanceof Request ? input : new Request(input, options);
         const path = new URL(request.url).pathname;
 
-        if (path === '/api/v1/me') return Response.json({ detail: 'Not authenticated' }, { status: 401 });
+        if (path === '/api/v1/me') {
+            return signedIn ? Response.json(user) : Response.json({ detail: 'Not authenticated' }, { status: 401 });
+        }
 
         if (path === '/api/v1/auth/oauth') return Response.json({ google: false, github: false });
 
         if (path === '/api/v1/auth/password/login' && request.method === 'POST') {
             attempts.push(await request.json());
+            signedIn = attempts.length > 1;
 
             return attempts.length === 1
                 ? Response.json({ detail: 'Invalid email or password.' }, { status: 400 })
@@ -60,12 +66,16 @@ it('reports a wrong password without losing the form and allows a successful ret
     try {
         await withMounted(
             <ApiErrorContext value={(error) => errors.push(error)}>
-                <ApiBoundary>
-                    <Routes>
-                        <Route path="/login" element={<Page />} />
-                        <Route path="/user/organizations" element={<p>Organizations</p>} />
-                    </Routes>
-                </ApiBoundary>
+                <AccountAppearanceProvider>
+                    <ApiBoundary>
+                        <Routes>
+                            <Route path="/login" element={<Page />} />
+                            <Route element={<AuthenticatedLayout />}>
+                                <Route path="/user/organizations" element={<p>Organizations</p>} />
+                            </Route>
+                        </Routes>
+                    </ApiBoundary>
+                </AccountAppearanceProvider>
             </ApiErrorContext>,
             async (output) => {
                 // Submit valid form values with an incorrect password.

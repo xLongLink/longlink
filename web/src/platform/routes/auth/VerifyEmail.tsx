@@ -12,6 +12,7 @@ import { Welcome } from '@/components/Wordmark';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
 import { Divider } from '@astryxdesign/core/Divider';
+import { useCurrentUser } from '@/lib/hooks/use-user';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQueryClient } from '@tanstack/react-query';
 import { clearSessionQueries } from '@/lib/react-query';
@@ -32,6 +33,7 @@ type RegistrationCompleteValues = z.infer<typeof registrationCompleteSchema>;
 export default function VerifyEmail() {
     const navigate = useNavigate();
     const queryClient = useQueryClient();
+    const { refetch } = useCurrentUser();
     const token = useFragmentToken(REGISTRATION_TOKEN_KEY);
 
     const form = useForm<RegistrationCompleteValues>({
@@ -96,8 +98,9 @@ export default function VerifyEmail() {
             return;
         }
 
-        // Clear cached data after account creation; the identity query loads the complete profile.
+        // Refresh the persistent identity observer after replacing the previous session.
         await clearSessionQueries(queryClient);
+        await refetch();
         sessionStorage.removeItem(REGISTRATION_TOKEN_KEY);
         void navigate('/user/organizations', { replace: true });
     }

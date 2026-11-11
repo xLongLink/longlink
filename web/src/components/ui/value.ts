@@ -29,11 +29,9 @@ export function useValue<T, Element extends HTMLElement = HTMLDivElement>(
 
         if (!form || controlled) return;
 
-        const onReset = (event: Event) => reset(event);
+        form.addEventListener('reset', reset);
 
-        form.addEventListener('reset', onReset);
-
-        return () => form.removeEventListener('reset', onReset);
+        return () => form.removeEventListener('reset', reset);
     }, [controlled]);
 
     // Controlled callers receive changes without acquiring duplicate state.

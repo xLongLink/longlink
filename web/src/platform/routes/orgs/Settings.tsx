@@ -417,7 +417,7 @@ function MembersSection({ base, role }: { base: string; role: OrganizationContex
 
 /** Owns invitation drafts and actions only while their section is active. */
 function InvitationsSection({ base, role }: { base: string; role: OrganizationContext['role'] }) {
-    const [invitationAttempt, setInvitationAttempt] = useState<{ kind: 'invite' } | null>(null);
+    const [invitationAttempt, setInvitationAttempt] = useState<symbol | null>(null);
     const reportError = useApiError();
     const canMaintain = permissions.canMaintain(role);
     const canInviteAdmin = permissions.canAdminister(role);
@@ -464,9 +464,7 @@ function InvitationsSection({ base, role }: { base: string; role: OrganizationCo
                     <Heading level={2} hasCapsize>
                         Invitations
                     </Heading>
-                    {canMaintain && (
-                        <Button label="Invite" size="sm" onClick={() => setInvitationAttempt({ kind: 'invite' })} />
-                    )}
+                    {canMaintain && <Button label="Invite" size="sm" onClick={() => setInvitationAttempt(Symbol())} />}
                 </Stack>
                 <Divider />
                 <Table

@@ -46,7 +46,7 @@ export default function Login() {
 
     // Continue only to the first-party MCP approval route, never a client-supplied external URL.
     const destination = requestedReturn?.startsWith('/mcp/authorize?') ? requestedReturn : '/user/organizations';
-    const { data: user } = useCurrentUser();
+    const { data: user, refetch } = useCurrentUser();
 
     const { data: oauthAvailability } = useQuery({
         queryKey: ['public-api', '/api/v1/auth/oauth'],
@@ -107,8 +107,9 @@ export default function Login() {
                                     return;
                                 }
 
-                                // Clear previous identity data only after sign-in succeeds.
+                                // Refresh the persistent identity observer only after sign-in succeeds.
                                 await clearSessionQueries(queryClient);
+                                await refetch();
                                 void navigate(destination, { replace: true });
                             })()
                         }
