@@ -371,6 +371,7 @@ export function JsxView({
 
             if (!controller.signal.aborted) {
                 // A blocked bootstrap script must surface an error instead of leaving a blank frame.
+                // oxlint-disable-next-line react/immutability -- Effect-local cleanup; oxc-project/oxc#28401.
                 handshakeTimer = setTimeout(() => fail('readiness'), BOOTSTRAP_TIMEOUT_MS);
                 const appearance = currentAppearance.current;
                 const mode = appearance.theme === 'system' ? '' : ` data-theme="${appearance.theme}"`;

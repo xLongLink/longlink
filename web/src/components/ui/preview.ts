@@ -72,6 +72,7 @@ export function usePreview(src: string, inline = false, title?: string, onOpened
                     return;
                 }
 
+                // oxlint-disable-next-line react/immutability -- Effect-local cleanup; oxc-project/oxc#28401.
                 objectUrl = URL.createObjectURL(value);
                 setPreview({ status: 'ready', url: objectUrl });
             } catch (cause) {

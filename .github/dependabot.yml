@@ -59,6 +59,7 @@ updates:
               patterns:
                   - 'vite'
                   - 'vite-plus'
+                  - 'vitest'
                   - '@voidzero-dev/vite-plus-core'
 
     - package-ecosystem: 'docker'
