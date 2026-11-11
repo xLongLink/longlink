@@ -58,11 +58,10 @@ it.each([401, 503])(
                     });
 
                     // Distinguish session loss from a recoverable API failure.
-                    await act(async () => {
-                        await vi.waitFor(() =>
-                            expect(output.textContent).toContain(
-                                status === 401 ? 'Sign in again' : 'Unable to load your account.'
-                            )
+                    await vi.waitFor(async () => {
+                        await act(async () => {});
+                        expect(output.textContent).toContain(
+                            status === 401 ? 'Sign in again' : 'Unable to load your account.'
                         );
                     });
                     expect(output.textContent).not.toContain('Private organizations');
