@@ -96,11 +96,11 @@ async def test_ensure_administrator_replaces_stale_configured_password() -> None
     assert password_hash.verify(env.ADMIN_PASSWORD, persisted_administrator.password)
 
 
-async def test_user_service_returns_active_accounts_and_all_administrator_records(users: tuple[User, User, User]) -> None:
-    """Return active identities while retaining deleted accounts in administrator lists."""
+async def test_user_service_retains_deleted_accounts_in_email_lookups_and_administrator_lists(users: tuple[User, User, User]) -> None:
+    """Retain deleted accounts in email lookups and administrator lists."""
 
     # Arrange
-    _administrator, active_user, deleted_user = users
+    _administrator, _active_user, deleted_user = users
     async with session_scope() as session:
         deleted_row = await session.get(User, deleted_user.id)
         assert deleted_row is not None
@@ -109,15 +109,10 @@ async def test_user_service_returns_active_accounts_and_all_administrator_record
 
     # Act
     async with session_scope() as session:
-        active = await user_service.active(session, active_user.id)
-        deleted = await user_service.active(session, deleted_user.id)
         by_email = await user_service.by_email(session, deleted_user.email)
         page, total = await user_service.fetch(session, Pagination(page_size=3))
 
     # Assert
-    assert active is not None
-    assert active.id == active_user.id
-    assert deleted is None
     assert by_email is not None
     assert by_email.id == deleted_user.id
     assert len(page) == 3

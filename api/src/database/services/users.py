@@ -1,5 +1,4 @@
 import asyncio
-from uuid import UUID
 from pwdlib import PasswordHash
 from datetime import UTC, datetime
 from sqlmodel import col
@@ -16,13 +15,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.users import User
 
 PASSWORD_HASH = PasswordHash.recommended()
-
-
-async def active(session: AsyncSession, user_id: UUID) -> User | None:
-    """Return one active user through an existing request session."""
-
-    # Resolve only the authenticated identity; resource access remains scoped to its target.
-    return await session.scalar(select(User).where(col(User.id) == user_id, col(User.deleted_at).is_(None)))
 
 
 async def fetch(session: AsyncSession, pagination: Pagination, search: str = "") -> tuple[Sequence[User], int]:
