@@ -122,9 +122,9 @@ export function StackExample() {
     // Arrange presentation-only items with consistent spacing.
     return (
         <Stack align="center" gap={2}>
-            <Stack aria-hidden="true" className="h-5 w-16 rounded-full bg-neutral" />
-            <Stack aria-hidden="true" className="h-5 w-16 rounded-full bg-neutral" />
-            <Stack aria-hidden="true" className="h-5 w-16 rounded-full bg-neutral" />
+            <Stack aria-hidden="true" className="h-5 w-16 rounded-full bg-secondary" />
+            <Stack aria-hidden="true" className="h-5 w-16 rounded-full bg-secondary" />
+            <Stack aria-hidden="true" className="h-5 w-16 rounded-full bg-secondary" />
         </Stack>
     );
 }

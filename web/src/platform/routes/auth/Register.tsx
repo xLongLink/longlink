@@ -6,10 +6,10 @@ import { useSearchParams } from 'react-router';
 import { Link } from '@/components/astryx/Link';
 import { Text } from '@/components/astryx/Text';
 import { Stack } from '@/components/astryx/Stack';
+import { Divider } from '@/components/ui/Divider';
 import { Button } from '@/components/astryx/Button';
 import { useForm, useWatch } from 'react-hook-form';
 import { useToast } from '@/components/astryx/Toast';
-import { Divider } from '@/components/astryx/Divider';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { emailPayloadSchema, type EmailPayload } from './validation';
 

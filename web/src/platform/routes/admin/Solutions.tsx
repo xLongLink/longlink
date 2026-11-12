@@ -63,7 +63,7 @@ export default function Solutions() {
                                                 className={
                                                     row.status === 'creating'
                                                         ? 'text-(--color-text-blue)'
-                                                        : 'text-error'
+                                                        : 'text-destructive-foreground'
                                                 }
                                                 type="supporting"
                                             >

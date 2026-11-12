@@ -3,7 +3,7 @@ import { Card } from '@/components/astryx/Card';
 import { Text } from '@/components/astryx/Text';
 import { accentColors } from '@/lib/appearance';
 import { Stack } from '@/components/astryx/Stack';
-import { Button } from '@/components/astryx/Button';
+import { Button } from '@/components/shadcn/button';
 import { useUpdateUser } from '@/lib/hooks/use-user';
 import { Heading } from '@/components/astryx/Heading';
 import { useAppearance } from '@/lib/hooks/use-appearance';
@@ -65,26 +65,27 @@ export default function AppearanceSettings() {
                                 {accentColors.map((accent) => (
                                     <Button
                                         key={accent}
-                                        label={accent.charAt(0).toUpperCase() + accent.slice(1)}
+                                        type="button"
+                                        variant="outline"
                                         aria-pressed={appearance.accent === accent}
-                                        isDisabled={userUpdate.isPending}
-                                        icon={
-                                            appearance.accent === accent ? (
-                                                <Check size={16} data-accent-swatch={accent} aria-hidden="true" />
-                                            ) : (
-                                                <Circle
-                                                    size={16}
-                                                    data-accent-swatch={accent}
-                                                    fill="currentColor"
-                                                    aria-hidden="true"
-                                                />
-                                            )
-                                        }
+                                        disabled={userUpdate.isPending}
                                         onClick={() => {
                                             if (!userUpdate.isPending && appearance.accent !== accent)
                                                 userUpdate.mutate({ accent });
                                         }}
-                                    />
+                                    >
+                                        {appearance.accent === accent ? (
+                                            <Check size={16} data-accent-swatch={accent} aria-hidden="true" />
+                                        ) : (
+                                            <Circle
+                                                size={16}
+                                                data-accent-swatch={accent}
+                                                fill="currentColor"
+                                                aria-hidden="true"
+                                            />
+                                        )}
+                                        {accent.charAt(0).toUpperCase() + accent.slice(1)}
+                                    </Button>
                                 ))}
                             </Stack>
                         </Stack>

@@ -3,7 +3,7 @@ import { Link } from '@/components/astryx/Link';
 import { Text } from '@/components/astryx/Text';
 import { Wordmark } from '@/components/Wordmark';
 import { Stack } from '@/components/astryx/Stack';
-import { Divider } from '@/components/astryx/Divider';
+import { Divider } from '@/components/ui/Divider';
 import { GitHubIcon } from '@/components/svg/GitHubIcon';
 import { LinkedInIcon } from '@/components/svg/LinkedInIcon';
 

@@ -43,7 +43,7 @@ export default function DocsArticleRoute() {
                     <Text className="text-sm sm:text-xl md:text-2xl" hasCapsize type="display-3" weight="semibold">
                         Problem
                     </Text>
-                    <MoveRight aria-hidden className="text-secondary" size={32} />
+                    <MoveRight aria-hidden className="text-muted-foreground" size={32} />
                     <Text className="text-sm sm:text-xl md:text-2xl" hasCapsize type="display-3" weight="semibold">
                         Solution
                     </Text>

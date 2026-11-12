@@ -9,9 +9,9 @@ import { Text } from '@/components/astryx/Text';
 import { Dialog } from '@/components/ui/Dialog';
 import { OpenAI } from '@/components/svg/OpenAI';
 import DeploymentReview from './DeploymentReview';
+import { Divider } from '@/components/ui/Divider';
 import { Button } from '@/components/astryx/Button';
 import { useToast } from '@/components/astryx/Toast';
-import { Divider } from '@/components/astryx/Divider';
 import { Heading } from '@/components/astryx/Heading';
 import * as permissions from '@/platform/permissions';
 import { ApiBoundary } from '@/components/ApiBoundary';
@@ -185,7 +185,7 @@ export default function SolutionManagement({
                                                         className={
                                                             row.status === 'creating'
                                                                 ? 'text-(--color-text-blue)'
-                                                                : 'text-error'
+                                                                : 'text-destructive-foreground'
                                                         }
                                                         type="supporting"
                                                     >
@@ -389,7 +389,7 @@ export default function SolutionManagement({
                             className="mx-auto"
                         >
                             <Stack gap={2} align="center">
-                                <Plug className="size-20 text-secondary" aria-hidden="true" />
+                                <Plug className="size-20 text-muted-foreground" aria-hidden="true" />
                                 <Stack gap={0}>
                                     <Heading level={2} justify="center">
                                         Model Context Protocol

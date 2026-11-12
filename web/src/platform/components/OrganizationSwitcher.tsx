@@ -93,7 +93,7 @@ export function OrganizationSwitcher({ organization }: { organization: Organizat
                         className="w-full rounded-lg px-2 py-1.5 text-left"
                         description="Organization"
                         descriptionLines={1}
-                        endContent={<ChevronsUpDown aria-hidden="true" className="text-secondary" size={16} />}
+                        endContent={<ChevronsUpDown aria-hidden="true" className="text-muted-foreground" size={16} />}
                         label={name}
                         labelLines={1}
                         startContent={<Avatar kind="organization" name={name} />}

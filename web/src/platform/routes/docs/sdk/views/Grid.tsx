@@ -105,10 +105,10 @@ export function GridExample() {
     // Arrange presentation-only items in two columns.
     return (
         <Grid columns={2} gap={2}>
-            <Stack aria-hidden="true" className="h-5 w-16 rounded-full bg-neutral" />
-            <Stack aria-hidden="true" className="h-5 w-16 rounded-full bg-neutral" />
-            <Stack aria-hidden="true" className="h-5 w-16 rounded-full bg-neutral" />
-            <Stack aria-hidden="true" className="h-5 w-16 rounded-full bg-neutral" />
+            <Stack aria-hidden="true" className="h-5 w-16 rounded-full bg-secondary" />
+            <Stack aria-hidden="true" className="h-5 w-16 rounded-full bg-secondary" />
+            <Stack aria-hidden="true" className="h-5 w-16 rounded-full bg-secondary" />
+            <Stack aria-hidden="true" className="h-5 w-16 rounded-full bg-secondary" />
         </Grid>
     );
 }

@@ -5,9 +5,9 @@ import { Item } from '@/components/astryx/Item';
 import { Text } from '@/components/astryx/Text';
 import { Avatar } from '@/components/ui/Avatar';
 import { Stack } from '@/components/astryx/Stack';
+import { Divider } from '@/components/ui/Divider';
 import { adminNavigation } from '@/platform/admin';
 import { Button } from '@/components/astryx/Button';
-import { Divider } from '@/components/astryx/Divider';
 import { Popover } from '@/components/astryx/Popover';
 import { clearAppearanceCache } from '@/lib/appearance';
 import { List, ListItem } from '@/components/astryx/List';
@@ -52,20 +52,20 @@ export function ProfileMenu() {
                             href="/user/organizations"
                             label="Organizations"
                             onClickCapture={closeMenu}
-                            startContent={<Building2 aria-hidden="true" className="text-secondary" size={16} />}
+                            startContent={<Building2 aria-hidden="true" className="text-muted-foreground" size={16} />}
                         />
                         <ListItem
                             href="/user/settings"
                             label="Settings"
                             onClickCapture={closeMenu}
-                            startContent={<Settings2 aria-hidden="true" className="text-secondary" size={16} />}
+                            startContent={<Settings2 aria-hidden="true" className="text-muted-foreground" size={16} />}
                         />
                         <ListItem
-                            endContent={<ExternalLink aria-hidden="true" className="text-secondary" size={12} />}
+                            endContent={<ExternalLink aria-hidden="true" className="text-muted-foreground" size={12} />}
                             href="/docs/"
                             label="Documentation"
                             onClickCapture={closeMenu}
-                            startContent={<BookOpen aria-hidden="true" className="text-secondary" size={16} />}
+                            startContent={<BookOpen aria-hidden="true" className="text-muted-foreground" size={16} />}
                             target="_blank"
                         />
                     </List>
@@ -86,7 +86,9 @@ export function ProfileMenu() {
                                         href={href}
                                         label={label}
                                         onClickCapture={closeMenu}
-                                        startContent={<Icon aria-hidden="true" className="text-secondary" size={16} />}
+                                        startContent={
+                                            <Icon aria-hidden="true" className="text-muted-foreground" size={16} />
+                                        }
                                     />
                                 ))}
                             </List>
@@ -117,7 +119,7 @@ export function ProfileMenu() {
                         className="w-full rounded-lg px-2 py-1.5 text-left"
                         description={user.email}
                         descriptionLines={1}
-                        endContent={<ChevronsUpDown aria-hidden="true" className="text-secondary" size={16} />}
+                        endContent={<ChevronsUpDown aria-hidden="true" className="text-muted-foreground" size={16} />}
                         label={user.name}
                         labelLines={1}
                         startContent={<Avatar src={user.avatar} name={user.name} seed={user.id} />}

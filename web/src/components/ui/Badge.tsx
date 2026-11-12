@@ -1,6 +1,14 @@
 import type { ReactNode } from 'react';
 import { Icon, type StoneIconName } from './Icon';
-import { Badge as AstryxBadge } from '@/components/astryx/Badge';
+import { Badge as ReuiBadge } from '@/components/reui/badge';
+
+const variants = {
+    neutral: 'secondary',
+    info: 'info-light',
+    success: 'success-light',
+    warning: 'warning-light',
+    error: 'destructive-light',
+} as const;
 
 /** Displays a count or enumerated state. */
 export function Badge(props: {
@@ -10,12 +18,9 @@ export function Badge(props: {
 }) {
     // Use a neutral state unless the caller chooses a semantic variant.
     return (
-        <AstryxBadge
-            {...props}
-            className="w-fit"
-            icon={props.icon ? <Icon icon={props.icon} size="sm" /> : undefined}
-            label={props.label}
-            variant={props.variant ?? 'neutral'}
-        />
+        <ReuiBadge variant={variants[props.variant ?? 'neutral']}>
+            {props.icon && <Icon icon={props.icon} size="sm" />}
+            {props.label}
+        </ReuiBadge>
     );
 }

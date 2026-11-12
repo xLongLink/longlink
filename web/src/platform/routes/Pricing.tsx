@@ -4,8 +4,8 @@ import { Card } from '@/components/astryx/Card';
 import { Grid } from '@/components/astryx/Grid';
 import { Text } from '@/components/astryx/Text';
 import { Stack } from '@/components/astryx/Stack';
+import { Divider } from '@/components/ui/Divider';
 import { Button } from '@/components/astryx/Button';
-import { Divider } from '@/components/astryx/Divider';
 import { Heading } from '@/components/astryx/Heading';
 import { Section } from '@/components/astryx/Section';
 import { Database, HardDrive, UsersRound } from 'lucide-react';
@@ -52,7 +52,7 @@ export default function Pricing() {
                                     >
                                         <Stack gap={6} paddingBlock={10} align="center">
                                             <Stack gap={3} align="center">
-                                                <ResourceIcon aria-hidden className="text-accent" size={20} />
+                                                <ResourceIcon aria-hidden className="text-primary" size={20} />
                                                 <Heading level={2} justify="center">
                                                     {resource.resource}
                                                 </Heading>

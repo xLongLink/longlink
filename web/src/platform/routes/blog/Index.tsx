@@ -4,8 +4,8 @@ import { Card } from '@/components/astryx/Card';
 import { Grid } from '@/components/astryx/Grid';
 import { Text } from '@/components/astryx/Text';
 import { Stack } from '@/components/astryx/Stack';
+import { Divider } from '@/components/ui/Divider';
 import { Button } from '@/components/astryx/Button';
-import { Divider } from '@/components/astryx/Divider';
 import { Heading } from '@/components/astryx/Heading';
 import { Section } from '@/components/astryx/Section';
 
@@ -35,7 +35,7 @@ export default function Blog() {
                             <Card className="rounded-none bg-transparent">
                                 <Stack className="min-h-80" gap={0} paddingBlock={8} align="center">
                                     <Stack gap={2} align="center">
-                                        <BookOpen aria-hidden="true" className="text-accent" size={20} />
+                                        <BookOpen aria-hidden="true" className="text-primary" size={20} />
                                         <Heading level={2} justify="center">
                                             Why LongLink
                                         </Heading>

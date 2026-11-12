@@ -1,16 +1,16 @@
 import { api } from '@/lib/api';
 import { useState } from 'react';
 import { useApiError } from '@/lib/errors';
+import { Badge } from '@/components/ui/Badge';
 import { Link } from '@/components/astryx/Link';
 import { Text } from '@/components/astryx/Text';
 import { Avatar } from '@/components/ui/Avatar';
-import { Badge } from '@/components/astryx/Badge';
 import { Stack } from '@/components/astryx/Stack';
+import { Divider } from '@/components/ui/Divider';
 import { ExternalLink, Plus } from 'lucide-react';
 import { Button } from '@/components/astryx/Button';
 import { apiQueryOptions } from '@/lib/react-query';
 import CreateOrganization from './CreateOrganization';
-import { Divider } from '@/components/astryx/Divider';
 import { Heading } from '@/components/astryx/Heading';
 import { Illustration } from '@/components/Illustration';
 import { Table, proportional } from '@/components/astryx/Table';

@@ -1,4 +1,4 @@
-@layer reset, theme, base, astryx-base, astryx-theme, components, utilities;
+@layer reset, theme, base, astryx-base, astryx-theme, application-theme, components, utilities;
 
 @import '@fontsource/figtree/400.css';
 @import '@fontsource/figtree/500.css';
@@ -16,7 +16,8 @@
 @import '@astryxdesign/core/astryx.css';
 @import './lib/generated/stone.css';
 @import './accents.css';
-@import '@astryxdesign/core/tailwind-theme.css';
+@import './shadcn.css';
+@import './astryx.css';
 @import 'tailwindcss/utilities.css' layer(utilities);
 
 @keyframes technology-float {
@@ -79,8 +80,9 @@
 
 @layer base {
     body {
-        background-color: var(--color-background-body);
-        color: var(--color-text-primary);
+        background-color: var(--background);
+        color: var(--foreground);
+        font-family: var(--font-sans);
     }
     html {
         scrollbar-gutter: stable;

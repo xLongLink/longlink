@@ -281,7 +281,7 @@ export default function Item({ params }) {
                                             </Text>
                                             <RouterLink
                                                 aria-label={`Open ${component.label} documentation`}
-                                                className="absolute inset-0 z-10 rounded-lg focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                                                className="absolute inset-0 z-10 rounded-lg focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                                                 to={`/docs/sdk/views/${component.slug}/`}
                                             />
                                         </Stack>

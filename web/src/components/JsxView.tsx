@@ -375,7 +375,7 @@ export function JsxView({
                 handshakeTimer = setTimeout(() => fail('readiness'), BOOTSTRAP_TIMEOUT_MS);
                 const appearance = currentAppearance.current;
                 const mode = appearance.theme === 'system' ? '' : ` data-theme="${appearance.theme}"`;
-                const document = `<!doctype html><html class="overflow-hidden [scrollbar-gutter:auto]" data-astryx-theme="stone" data-accent="${appearance.accent}"${mode}><head><meta http-equiv="Content-Security-Policy" content="${policy}"><meta name="referrer" content="no-referrer"><style>${styles.replace(/<\/style/gi, '<\\/style')}</style></head><body class="overflow-hidden bg-transparent text-primary"><main id="view"></main><script>${code}</script></body></html>`;
+                const document = `<!doctype html><html class="overflow-hidden [scrollbar-gutter:auto]" data-astryx-theme="stone" data-accent="${appearance.accent}"${mode}><head><meta http-equiv="Content-Security-Policy" content="${policy}"><meta name="referrer" content="no-referrer"><style>${styles.replace(/<\/style/gi, '<\\/style')}</style></head><body class="overflow-hidden bg-transparent text-foreground"><main id="view"></main><script>${code}</script></body></html>`;
 
                 // Keep startup failure latched until the route owner mounts a fresh View.
                 setBootstrapState((current) =>

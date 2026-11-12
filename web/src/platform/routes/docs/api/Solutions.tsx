@@ -65,7 +65,7 @@ export default function Solutions() {
                                     <TableCell>
                                         <Stack gap={0}>
                                             <Stack direction="horizontal" gap={2} align="center">
-                                                <RoleIcon aria-hidden="true" className="text-accent" size={16} />
+                                                <RoleIcon aria-hidden="true" className="text-primary" size={16} />
                                                 <Text className="capitalize" weight="semibold">
                                                     {name}
                                                 </Text>

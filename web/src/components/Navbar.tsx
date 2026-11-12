@@ -60,8 +60,8 @@ export function Navbar({
             as="header"
             className={
                 expandOnTop
-                    ? `sticky top-0 z-30 border-b ${scrolled ? 'border-border bg-body/50 backdrop-blur-sm' : 'border-transparent bg-transparent'}`
-                    : 'border-b border-border bg-body'
+                    ? `sticky top-0 z-30 border-b ${scrolled ? 'border-border bg-background/50 backdrop-blur-sm' : 'border-transparent bg-transparent'}`
+                    : 'border-b border-border bg-background'
             }
             paddingInline={6}
         >

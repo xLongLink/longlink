@@ -3,7 +3,7 @@ import { Link } from '@/components/astryx/Link';
 import { Text } from '@/components/astryx/Text';
 import { Stack } from '@/components/astryx/Stack';
 import { Token } from '@/components/astryx/Token';
-import { Divider } from '@/components/astryx/Divider';
+import { Divider } from '@/components/ui/Divider';
 import { Heading } from '@/components/astryx/Heading';
 import { ApiBoundary } from '@/components/ApiBoundary';
 import { Table, proportional } from '@/components/astryx/Table';

@@ -129,7 +129,7 @@ export default function DeploymentReview({ item, onSuccess, onClose }: Deploymen
                         <Step label="Image">
                             <Stack gap={4}>
                                 <Stack gap={3} align="center">
-                                    <RefreshCw className="size-20 text-secondary" aria-hidden="true" />
+                                    <RefreshCw className="size-20 text-muted-foreground" aria-hidden="true" />
                                     <Heading level={2} justify="center">
                                         Update {item.name}
                                     </Heading>
@@ -148,7 +148,7 @@ export default function DeploymentReview({ item, onSuccess, onClose }: Deploymen
                                             </Text>
                                         </Stack>
                                     </StackItem>
-                                    <ArrowRight className="size-5 shrink-0 text-secondary" aria-hidden="true" />
+                                    <ArrowRight className="size-5 shrink-0 text-muted-foreground" aria-hidden="true" />
                                     <StackItem size="fill">
                                         <Stack padding={3} className="rounded-lg bg-muted">
                                             <Text type="code" justify="center" display="block" className="break-all">
@@ -162,7 +162,7 @@ export default function DeploymentReview({ item, onSuccess, onClose }: Deploymen
                         <Step label="Environment">
                             <Stack gap={4}>
                                 <Stack gap={3} align="center">
-                                    <RefreshCw className="size-20 text-secondary" aria-hidden="true" />
+                                    <RefreshCw className="size-20 text-muted-foreground" aria-hidden="true" />
                                     <Heading level={2} justify="center">
                                         Configure your environment
                                     </Heading>
