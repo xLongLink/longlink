@@ -115,7 +115,7 @@ it('retains submitter data and reset behavior through the real form', async () =
 });
 
 it('keeps grouped actions sized and disabled, excluding disabled submitter data', async () => {
-    // A still-Astryx parent must retain authority over migrated descendants.
+    // Group state must retain authority over its action descendants.
     const action = vi.fn();
     const submitted = vi.fn();
     const ancestor = vi.fn();

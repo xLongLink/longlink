@@ -3,12 +3,11 @@ import { IconRequestContext } from './contexts';
 import { useQuery } from '@tanstack/react-query';
 import { stoneIconComponents } from '@/lib/glyphs';
 import type { IconName } from 'lucide-react/dynamic';
-import { Icon as AstryxIcon } from '@/components/astryx/Icon';
 import { AlertTriangle, createLucideIcon } from 'lucide-react';
 
 export type StoneIconName = keyof typeof stoneIconComponents | IconName | `lucide:${IconName}`;
 
-// A blank Lucide glyph retains the requested Astryx dimensions while an icon loads.
+// A blank Lucide glyph retains the requested dimensions while an icon loads.
 const emptyIcon = createLucideIcon({ size: 24, node: [] });
 
 /** Renders any Lucide icon by its kebab-case name. Existing LongLink aliases remain immediate; other icons load on demand and are cached without blocking the View or changing icon dimensions. */
@@ -23,9 +22,9 @@ export function Icon({
     // Resolve existing LongLink names synchronously without mounting a query or loading another chunk.
     if (Object.hasOwn(stoneIconComponents, icon)) {
         // SAFETY: The own-property check restricts the lookup to the bundled icon names.
-        const component = stoneIconComponents[icon as keyof typeof stoneIconComponents];
+        const Component = stoneIconComponents[icon as keyof typeof stoneIconComponents];
 
-        return <AstryxIcon icon={component} size={size} />;
+        return <Component aria-hidden="true" className="view-icon" data-size={size} />;
     }
 
     // Explicit Lucide names bypass legacy aliases but share the same on-demand cache.
@@ -52,5 +51,7 @@ export function DeferredIcon({ icon, size }: { icon: string; size: 'sm' | 'md' |
     });
 
     // Keep labeled controls usable even if an icon cannot be loaded.
-    return <AstryxIcon icon={component ?? (isError ? AlertTriangle : emptyIcon)} size={size} />;
+    const Component = component ?? (isError ? AlertTriangle : emptyIcon);
+
+    return <Component aria-hidden="true" className="view-icon" data-size={size} />;
 }

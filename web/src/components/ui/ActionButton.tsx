@@ -1,9 +1,8 @@
 import { LoaderCircle } from 'lucide-react';
 import { Icon, type StoneIconName } from './Icon';
-import { useSize } from '@astryxdesign/core/SizeContext';
 import { Button as Control } from '@/components/shadcn/button';
-import { useButtonGroup } from '@astryxdesign/core/ButtonGroup';
-import { useRef, useTransition, useSyncExternalStore, type MouseEvent, type ReactNode } from 'react';
+import { ButtonGroupContext, PressGroupContext, useSize } from './group';
+import { useContext, useRef, useTransition, useSyncExternalStore, type MouseEvent, type ReactNode } from 'react';
 
 /** Shares native action semantics while remaining compatible with unmigrated control containers. */
 export function ActionButton({
@@ -38,7 +37,8 @@ export function ActionButton({
     form?: string;
 }) {
     const size = useSize(requestedSize, 'md');
-    const group = useButtonGroup();
+    const group = useContext(ButtonGroupContext);
+    const groupPointers = useContext(PressGroupContext);
     const blocked = disabled || (group?.isDisabled ?? false);
     const inFlight = useRef(false);
     const [pending, startTransition] = useTransition();
@@ -79,7 +79,7 @@ export function ActionButton({
             data-size={size}
             data-icon-only={iconOnly || undefined}
             data-group-orientation={group?.orientation}
-            data-astryx-press-group-item={group ? 'touch pen' : undefined}
+            data-astryx-press-group-item={groupPointers?.join(' ')}
             nativeButton={!isLink}
             render={isLink ? <a href={href} /> : undefined}
             type={isLink ? undefined : renderedType}

@@ -1,0 +1,40 @@
+@layer components {
+    .view-button-group {
+        display: inline-flex;
+        align-items: stretch;
+    }
+
+    .view-button-group[data-orientation='vertical'] {
+        flex-direction: column;
+    }
+
+    .view-button-group[data-tracking] {
+        position: relative;
+    }
+
+    .view-action-button[data-astryx-press-group-item]:active:not([data-astryx-press='on']) {
+        background-image: none;
+    }
+
+    @media (pointer: coarse) {
+        .view-button-group[data-tracking]::before {
+            content: '';
+            position: absolute;
+            inset: calc(var(--astryx-hit-inset-top, 0px) * -1) calc(var(--astryx-hit-inset-right, 0px) * -1)
+                calc(var(--astryx-hit-inset-bottom, 0px) * -1) calc(var(--astryx-hit-inset-left, 0px) * -1);
+            clip-path: polygon(
+                evenodd,
+                0 0,
+                100% 0,
+                100% 100%,
+                0 100%,
+                0 0,
+                var(--astryx-hit-inset-left, 0px) var(--astryx-hit-inset-top, 0px),
+                calc(100% - var(--astryx-hit-inset-right, 0px)) var(--astryx-hit-inset-top, 0px),
+                calc(100% - var(--astryx-hit-inset-right, 0px)) calc(100% - var(--astryx-hit-inset-bottom, 0px)),
+                var(--astryx-hit-inset-left, 0px) calc(100% - var(--astryx-hit-inset-bottom, 0px)),
+                var(--astryx-hit-inset-left, 0px) var(--astryx-hit-inset-top, 0px)
+            );
+        }
+    }
+}
