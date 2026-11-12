@@ -44,8 +44,24 @@ type CardProps = {
     padding?: 0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10;
     /** Clips full-bleed content to the card's rounded edges. */
     isClipped?: boolean;
+    /** Uses the theme's default corners or its larger card radius. */
+    radius?: 'default' | 'large';
     /** Background color variant, independent of the interaction mode. */
-    variant?: 'default' | 'transparent' | 'muted';
+    variant?:
+        | 'default'
+        | 'subtle'
+        | 'transparent'
+        | 'muted'
+        | 'blue'
+        | 'cyan'
+        | 'gray'
+        | 'green'
+        | 'orange'
+        | 'pink'
+        | 'purple'
+        | 'red'
+        | 'teal'
+        | 'yellow';
     /** Card width; numbers are pixels and strings are CSS sizes. */
     width?: number | string;
     /** Card height; numbers are pixels and strings are CSS sizes. */
@@ -79,6 +95,7 @@ export function Card({
     label = 'Card',
     padding = 4,
     isClipped = false,
+    radius = 'default',
     variant = 'default',
     onClick,
     href,
@@ -88,14 +105,26 @@ export function Card({
     onChange,
     ...props
 }: CardProps) {
+    // Apply optional presentation with theme tokens across all interaction modes.
+    const cardVariant = variant === 'subtle' ? 'default' : variant;
+
+    const className =
+        [
+            isClipped && 'overflow-hidden',
+            radius === 'large' && 'rounded-(--radius-card-large)!',
+            variant === 'subtle' && 'card-subtle',
+        ]
+            .filter(Boolean)
+            .join(' ') || undefined;
+
     // Use Astryx's controlled selection behavior whenever a selection callback is supplied.
     if (onChange !== undefined) {
         return (
             <SelectableCard
                 {...props}
-                className={isClipped ? 'overflow-hidden' : undefined}
+                className={className}
                 padding={padding}
-                variant={variant}
+                variant={cardVariant}
                 label={label}
                 isSelected={isSelected}
                 onChange={onChange}
@@ -110,9 +139,9 @@ export function Card({
             <LinkProvider component={NavigationLink}>
                 <ClickableCard
                     {...props}
-                    className={isClipped ? 'overflow-hidden' : undefined}
+                    className={className}
                     padding={padding}
-                    variant={variant}
+                    variant={cardVariant}
                     label={label}
                     onClick={href !== undefined ? activateLink : onClick}
                     onClickCapture={(event) => {
@@ -145,12 +174,5 @@ export function Card({
     }
 
     // Keep content-only cards non-interactive.
-    return (
-        <AstryxCard
-            {...props}
-            className={isClipped ? 'overflow-hidden' : undefined}
-            padding={padding}
-            variant={variant}
-        />
-    );
+    return <AstryxCard {...props} className={className} padding={padding} variant={cardVariant} />;
 }

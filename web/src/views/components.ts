@@ -41,6 +41,9 @@ export { Button } from '@/components/ui/Button';
 export { ButtonGroup } from '@/components/ui/ButtonGroup';
 
 /** @category Action */
+export { SegmentedControl } from '@/components/ui/SegmentedControl';
+
+/** @category Action */
 export { DropdownMenu } from '@/components/ui/DropdownMenu';
 
 /** @category Action */
@@ -97,6 +100,12 @@ export { RadioListItem } from '@/components/ui/RadioList';
 /** @category Display */
 export { MetadataList } from '@/components/ui/MetadataList';
 
+/** @category Display */
+export { List } from '@/components/ui/List';
+
+/** @category Display @group List */
+export { ListItem } from '@/components/ui/List';
+
 /** @category Display @group MetadataList */
 export { MetadataListItem } from '@/components/ui/MetadataList';
 
@@ -117,6 +126,15 @@ export { CodeBlock } from '@/components/ui/CodeBlock';
 
 /** @category Display */
 export { ProgressBar } from '@/components/ui/ProgressBar';
+
+/** @category Display */
+export { Distribution } from '@/components/ui/Distribution';
+
+/** @category Display */
+export { Plot } from '@/components/ui/Plot';
+
+/** @category Display */
+export { Globe } from '@/components/ui/Globe';
 
 /** @category Layouts */
 export { Stepper } from '@/components/ui/Stepper';

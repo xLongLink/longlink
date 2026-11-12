@@ -8,7 +8,7 @@ export default function ImagePage() {
     return (
         <ViewLayout
             name="Image"
-            introduction={''}
+            introduction="Displays scoped Solution images. Photos keep a full-width landscape frame; logos use compact square tiles and contain the full artwork. Both use the host's scoped preview capability and release object URLs when unmounted."
             properties={[
                 {
                     name: 'src',
@@ -19,6 +19,17 @@ export default function ImagePage() {
                     name: 'alt',
                     type: 'string',
                     description: 'Accessible description of the photo.',
+                },
+                {
+                    name: 'variant',
+                    type: '"photo" | "logo" | "flag"',
+                    description:
+                        'Full-width landscape photo, contained square logo, or padded waving flag tile. Flags preserve their proportions and remain still when reduced motion is preferred. Defaults to photo.',
+                },
+                {
+                    name: 'size',
+                    type: '"sm" | "md" | "lg"',
+                    description: 'Logo or flag tile size. Defaults to md; ignored for photos.',
                 },
             ]}
             example={{

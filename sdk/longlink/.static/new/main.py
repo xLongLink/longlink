@@ -13,6 +13,7 @@ assets = StaticFiles(directory=Path(__file__).resolve().parent / "src" / "assets
 app.mount("/assets", assets, name="assets")
 
 # Declare root tabs in display order; nested project Views remain routable.
+app.include_view("models.jsx", label="Models", icon="sparkles")
 app.include_view("projects.jsx", label="Projects", icon="folder-kanban")
 app.include_view("tasks.jsx", label="Tasks", icon="list-todo")
 app.include_view("settings.jsx", label="Settings", icon="settings")

@@ -27,8 +27,14 @@ export default function CardPage() {
                 },
                 {
                     name: 'variant',
-                    type: '"default" | "transparent" | "muted"',
-                    description: 'Background color variant, independent of the interaction mode.',
+                    type: '"default" | "subtle" | "transparent" | "muted" | "blue" | "cyan" | "gray" | "green" | "orange" | "pink" | "purple" | "red" | "teal" | "yellow"',
+                    description:
+                        'Background color variant, independent of the interaction mode. Subtle uses compact typography and a neutral theme palette for its surface, border, text, and accents.',
+                },
+                {
+                    name: 'radius',
+                    type: '"default" | "large"',
+                    description: "Uses the theme's default corners or its larger card radius.",
                 },
                 {
                     name: 'width',
@@ -95,14 +101,14 @@ export default function CardPage() {
             example={{
                 title: 'Plain card',
                 preview: (
-                    <Card padding={3}>
-                        <Text>Order details</Text>
+                    <Card padding={5} radius="large" variant="subtle">
+                        <Text>Portfolio overview</Text>
                     </Card>
                 ),
                 code: `function Example() {
   return (
-    <Card padding={3}>
-      <Text>Order details</Text>
+    <Card padding={5} radius="large" variant="subtle">
+      <Text>Portfolio overview</Text>
     </Card>
   );
 }`,

@@ -52,3 +52,29 @@ def test_docs_command_reports_an_unknown_component_without_a_traceback(capsys: p
     assert capsys.readouterr().err == (
         'Error: Unknown component: unknown-component. Run `longlink docs search "unknown-component"` to find available APIs.\n'
     )
+
+
+def test_docs_exposes_plot_fields_and_dashboard_guidance(capsys: pytest.CaptureFixture[str]) -> None:
+    """Make the installed plotting API discoverable without package imports or custom styling."""
+
+    # Act
+    main(["docs", "component", "plot"])
+
+    # Assert
+    output = capsys.readouterr().out
+    assert "Plot [Display]" in output
+    assert '"line" | "bar" | "area" | "scatter"' in output
+    assert "xKey" in output
+    assert "series" in output
+    assert "Missing values produce gaps, never zero" in output
+    assert "Geographic maps" in output
+
+    # Act
+    main(["docs", "build", "dashboard plots"])
+
+    # Assert
+    outline = capsys.readouterr().out
+    assert "Dashboard plots" in outline
+    assert "longlink docs component Plot" in outline
+    assert "gap={2}" in outline
+    assert "padding={5}" in outline

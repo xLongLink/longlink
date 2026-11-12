@@ -89,6 +89,23 @@ export const stoneTheme = defineTheme({
         '--font-family-handwritten': 'Kalam, "Segoe Print", "Bradley Hand", cursive',
         '--color-background-success-inverted': ['#2e6b33', '#2e7d32'],
 
+        // Keep showcase cards neutral without changing the surrounding Stone shell.
+        '--color-card-subtle-background': ['#ffffff', '#121212'],
+        '--color-card-subtle-border': ['#e2e2e8', '#242424'],
+        '--color-card-subtle-primary': ['#25252a', '#f0f0f0'],
+        '--color-card-subtle-secondary': ['#65656d', '#969696'],
+        '--color-card-subtle-muted': ['#efeff2', '#282828'],
+        '--color-card-subtle-accent': ['#2563eb', '#3b82f6'],
+        '--color-card-subtle-success': ['#15803d', '#10b981'],
+        '--color-card-subtle-plot': ['#f7f7f8', '#171717'],
+        '--text-card-supporting-size': 'calc(var(--font-size-base) * 6 / 7)',
+        '--radius-card-large': '1.25rem',
+        '--color-series-blue': ['#2563eb', '#60a5fa'],
+        '--color-series-purple': ['#7c3aed', '#a78bfa'],
+        '--color-series-green': ['#15803d', '#34d399'],
+        '--color-series-orange': ['#c2410c', '#fb923c'],
+        '--color-series-pink': ['#be185d', '#f472b6'],
+
         // Keep decorative window controls saturated and opaque in both color modes.
         '--color-window-close': '#ff5f57',
         '--color-window-minimize': '#ff9f0a',

@@ -184,7 +184,7 @@ export function SolutionPage({
             tabs={tabs}
         >
             <title>{formatTitle(isNotFound ? 'Page Not Found' : activeViewTitle)}</title>
-            <PageContainer height="100%" minHeight={0} padding={2}>
+            <PageContainer height="100%" minHeight={0} padding={2} paddingInline={3}>
                 {content}
             </PageContainer>
         </Platform>

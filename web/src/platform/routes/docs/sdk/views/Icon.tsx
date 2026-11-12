@@ -12,6 +12,16 @@ export default function IconPage() {
             }
             properties={[
                 {
+                    name: 'presentation',
+                    type: '"plain" | "tile"',
+                    description: 'Optional rounded theme-sized tile; large glyphs use a larger object-header tile.',
+                },
+                {
+                    name: 'color',
+                    type: '"primary" | "secondary" | "accent" | "success" | "warning" | "error" | "inherit"',
+                    description: 'Semantic theme color; inherits the surrounding text by default.',
+                },
+                {
                     name: 'icon',
                     type: 'StoneIconName',
                     description: 'Lucide icon name or LongLink alias; prefix with lucide: to bypass aliases.',

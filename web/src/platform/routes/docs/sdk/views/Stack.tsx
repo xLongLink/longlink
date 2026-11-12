@@ -56,8 +56,9 @@ export default function StackPage() {
                 },
                 {
                     name: 'background',
-                    type: '"muted"',
-                    description: 'Optional muted surface background; omitted stacks remain transparent.',
+                    type: '"muted" | "inset"',
+                    description:
+                        'Optional muted fill or outlined, rounded inset surface. Omitted stacks remain transparent.',
                 },
                 {
                     name: 'direction',

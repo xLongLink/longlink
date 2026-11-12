@@ -77,6 +77,36 @@ VIEWS:
 - DON'T add decorative containers, redundant labels, or explanatory text that repeats what the interface already makes clear.
 - DON'T use inline `style`, custom `className` values, imported CSS, or hardcoded colors and pixel values to bypass the View component API.
 
+CARDS:
+- DO give each card one clear purpose: a person, project, metric, plot, or story.
+- DO use cards for independently meaningful items, not every group of content.
+- DON'T nest cards or wrap individual table rows in cards.
+- DO preserve the LongLink shell, background surface, and page gutters.
+- DON'T widen the application to accommodate one card.
+- DO use responsive Grid columns for card collections and Stack for card interiors.
+- DO use gap={2} between dashboard cards and consistent padding={5} inside sibling cards.
+- DO inherit colors, typography, borders, and corner shapes from the theme.
+- DO let content determine card height; avoid fixed heights that crop content.
+- DO stack internal columns when the card becomes too narrow.
+- DON'T shrink text or controls to preserve a desktop arrangement.
+- DO align sibling card actions at the bottom where practical.
+- DO use a short heading, supporting context, primary content, and only necessary actions.
+- DO keep important values prominent and their units understandable.
+- DON'T repeat headings, labels, or explanations already clear from the content.
+- DO use meaningful, working actions instead of decorative buttons.
+- DON'T add manual navigation icons when a component already supplies them.
+- For people, DO show Avatar, name, role, and relevant activity or statistics.
+- For directories, DO use Table rows rather than nested cards.
+- For pictures, DO use Image with meaningful alt text and consistent image proportions.
+- For full-bleed pictures, DO use padding={0} and isClipped, with padding on the content Stack.
+- For plots, DO use Plot with data, xKey, labeled series, and a meaningful label.
+- DO keep missing plot observations as null or omitted values, not zero.
+- DO provide a Table or summary for large plots; essential information must not depend on hover.
+- DON'T add a duplicate heading inside a card when Plot already displays its label.
+- DON'T copy native Platform HTML, SVG, CSS, or className styling into SDK Views.
+- DO use only documented LongLink components and supported props; use Globe for geographic maps and Image variant="logo" for compact brand artwork.
+- DO preserve keyboard access, visible focus, and accessible action labels.
+
 DOCS:
 - USE `longlink migrate` to generate migrations
 - USE `longlink docs --help` to lists documentation commands:

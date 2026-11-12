@@ -1,0 +1,21 @@
+Brand logos remain the property of their respective owners. These bundled images
+reproduce the public organization artwork used by the Open WebUI reference.
+Source catalog: https://api.openwebui.com/api/v1/organizations/{organization}
+
+Country flag images: https://flagcdn.com/w80/{country-code}.png
+National flag designs are public-domain; the bundled files are local snapshots.
+
+alibaba.png
+https://community.s3.openwebui.com/uploads/users/45166474-c987-4b30-8dfe-5e059652c5c5/2026/02/506be419-1162-4586-8f13-6c5c74ae5514.png
+
+deepseek.png
+https://community.s3.openwebui.com/uploads/users/45166474-c987-4b30-8dfe-5e059652c5c5/2026/02/2950d784-f189-4aa6-b884-9093711afb51.png
+
+google.png
+https://community.s3.openwebui.com/uploads/users/45166474-c987-4b30-8dfe-5e059652c5c5/2026/02/8c4bf6aa-00f1-4c22-8a82-7a123dc6aa41.png
+
+openai.png
+https://community.s3.openwebui.com/uploads/users/45166474-c987-4b30-8dfe-5e059652c5c5/2026/02/88f0fa74-b7a7-472c-a760-3eee649f08dc.png
+
+anthropic.png
+https://community.s3.openwebui.com/uploads/users/45166474-c987-4b30-8dfe-5e059652c5c5/2026/02/15d2865b-fa70-4cf7-9bb9-8202b11b0281.png

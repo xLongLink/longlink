@@ -4486,8 +4486,24 @@ type CardProps = {
     padding?: 0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10;
     /** Clips full-bleed content to the card's rounded edges. */
     isClipped?: boolean;
+    /** Uses the theme's default corners or its larger card radius. */
+    radius?: 'default' | 'large';
     /** Background color variant, independent of the interaction mode. */
-    variant?: 'default' | 'transparent' | 'muted';
+    variant?:
+        | 'default'
+        | 'subtle'
+        | 'transparent'
+        | 'muted'
+        | 'blue'
+        | 'cyan'
+        | 'gray'
+        | 'green'
+        | 'orange'
+        | 'pink'
+        | 'purple'
+        | 'red'
+        | 'teal'
+        | 'yellow';
     /** Card width; numbers are pixels and strings are CSS sizes. */
     width?: number | string;
     /** Card height; numbers are pixels and strings are CSS sizes. */
@@ -4578,8 +4594,8 @@ declare function Stack(props: {
     paddingInline?: Spacing;
     /** Vertical padding, overriding padding on the block axis. */
     paddingBlock?: Spacing;
-    /** Optional muted surface background; omitted stacks remain transparent. */
-    background?: 'muted';
+    /** Optional muted fill or outlined inset surface; omitted stacks remain transparent. */
+    background?: 'muted' | 'inset';
     direction?: 'horizontal' | 'vertical';
     justify?: 'start' | 'center' | 'end' | 'between' | 'around' | 'evenly';
     align?: 'start' | 'center' | 'end' | 'stretch';
@@ -4676,6 +4692,10 @@ declare function Image(props: {
     src: string;
     /** Accessible description of the photo. */
     alt: string;
+    /** Photos are landscape; logos are contained squares; padded flags wave unless reduced motion is preferred. */
+    variant?: 'photo' | 'logo' | 'flag';
+    /** Logo or flag tile size; defaults to md. */
+    size?: 'sm' | 'md' | 'lg';
 }): React.JSX.Element;
 
 /** @category Display */
@@ -4713,6 +4733,14 @@ declare function ButtonGroup(props: {
     orientation?: 'horizontal' | 'vertical';
     size?: 'sm' | 'md' | 'lg';
     isDisabled?: boolean;
+}): React.JSX.Element;
+
+/** @category Action */
+declare function SegmentedControl(props: {
+    label: string;
+    value: string;
+    options: readonly { value: string; label: string }[];
+    onChange: (value: string) => void;
 }): React.JSX.Element;
 
 /** @category Action */
@@ -4942,6 +4970,34 @@ declare function RadioListItem(props: {
 }): React.JSX.Element;
 
 /** @category Display */
+declare function List(props: {
+    /** Accessible name for the complete list. */
+    label: string;
+    children?: ViewNode;
+    density?: 'compact' | 'balanced' | 'spacious';
+    hasDividers?: boolean;
+    /** Outset rows add inner breathing room without shifting content off the heading's alignment. Defaults to flush. */
+    edge?: 'flush' | 'outset';
+}): React.JSX.Element;
+
+/** @category Display @group List */
+declare function ListItem(props: {
+    /** Complete label; wraps instead of truncating. */
+    label: string;
+    description?: string;
+    color?: 'primary' | 'secondary';
+    /** Align slots to the row center or its first line. Defaults to first-line. */
+    align?: 'center' | 'first-line';
+    /** Optional color key matching Plot series and Distribution segments. */
+    markerColor?: 'blue' | 'purple' | 'green' | 'orange' | 'pink';
+    /** Enables a keyboard-accessible row action. */
+    onClick?: () => void;
+    isSelected?: boolean;
+    startContent?: ViewNode;
+    endContent?: ViewNode;
+}): React.JSX.Element;
+
+/** @category Display */
 declare function MetadataList(props: {
     children?: ViewNode;
     columns?: 'multi' | 'single' | number;
@@ -5026,6 +5082,50 @@ declare function CodeBlock(props: {
     size?: 'sm' | 'md';
     isCollapsible?: boolean;
     collapsibleThreshold?: number;
+}): React.JSX.Element;
+
+/** @category Display */
+declare function Plot<T extends Record<string, unknown>>(props: {
+    /** Visible title and accessible name. */
+    label: string;
+    /** Supporting context, such as units and the reporting period. */
+    description?: string;
+    /** Compact controls aligned with the plot heading, including empty states. */
+    controls?: ViewNode;
+    /** Defaults to line. Multiple bar series are grouped. */
+    type?: 'line' | 'bar' | 'area' | 'scatter';
+    /** Rows in display order. Series values are finite numbers, null, or omitted. */
+    data: readonly T[];
+    /** Consistent string or numeric x values. Scatter requires numbers; bar requires unique categories and treats numbers as category labels. */
+    xKey: Extract<keyof T, string>;
+    /** Unique series keys, distinct from xKey, with human-readable labels. */
+    series: readonly {
+        key: Extract<keyof T, string>;
+        label: string;
+        color?: 'blue' | 'purple' | 'green' | 'orange' | 'pink';
+    }[];
+    /** Positive finite plot height in pixels. Defaults to 300. */
+    height?: number;
+    /** Defaults to true. */
+    hasLegend?: boolean;
+    /** Line/area interpolation; defaults to linear. */
+    curve?: 'linear' | 'monotone';
+    /** Point markers on line plots; defaults to true. */
+    hasDots?: boolean;
+    /** Explicit finite vertical domain. Descending endpoints put rank 1 at the top. */
+    yDomain?: readonly [number, number];
+}): React.JSX.Element;
+
+/** @category Display */
+declare function Globe(props: {
+    label: string;
+    /** Three-digit ISO 3166-1 numeric country code; omit for an overview. */
+    country?: string;
+    highlightedCountries?: readonly string[];
+    /** Overview shows the complete globe; focus crops around the selected country. */
+    variant?: 'overview' | 'focus';
+    /** Normal-flow foreground content over the geographic backdrop. */
+    children?: ViewNode;
 }): React.JSX.Element;
 
 /** @category Display */
@@ -5149,6 +5249,20 @@ declare function Icon(props: {
     /** Lucide icon name or LongLink alias; prefix with lucide: to bypass aliases. */
     icon: StoneIconName;
     size: 'sm' | 'md' | 'lg';
+    /** Semantic theme color; inherits the surrounding text by default. */
+    color?: 'primary' | 'secondary' | 'accent' | 'success' | 'warning' | 'error' | 'inherit';
+    /** Optional theme-sized icon tile for summary rows and object headers. */
+    presentation?: 'plain' | 'tile';
+}): React.JSX.Element;
+
+/** @category Display */
+declare function Distribution(props: {
+    label: string;
+    segments: readonly {
+        label: string;
+        value: number;
+        color?: 'accent' | 'success' | 'neutral' | 'blue' | 'purple' | 'green' | 'orange' | 'pink';
+    }[];
 }): React.JSX.Element;
 
 /** @category Action */

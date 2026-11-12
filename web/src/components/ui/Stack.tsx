@@ -19,8 +19,8 @@ type StackProps = {
     paddingInline?: Spacing;
     /** Vertical padding, overriding padding on the block axis. */
     paddingBlock?: Spacing;
-    /** Optional muted surface background; omitted stacks remain transparent. */
-    background?: 'muted';
+    /** Optional muted fill or outlined inset surface; omitted stacks remain transparent. */
+    background?: 'muted' | 'inset';
     direction?: 'horizontal' | 'vertical';
     justify?: 'start' | 'center' | 'end' | 'between' | 'around' | 'evenly';
     align?: 'start' | 'center' | 'end' | 'stretch';
@@ -33,7 +33,13 @@ export function Stack({ background, ...props }: StackProps) {
     return (
         <AstryxStack
             {...props}
-            className={background === 'muted' ? 'bg-muted' : undefined}
+            className={
+                background === 'inset'
+                    ? 'rounded-(--radius-container) border border-(--color-border) bg-(--color-background-card)'
+                    : background === 'muted'
+                      ? 'bg-muted'
+                      : undefined
+            }
             gap={props.gap ?? 3}
             padding={props.padding ?? 0}
             direction={props.direction ?? 'vertical'}

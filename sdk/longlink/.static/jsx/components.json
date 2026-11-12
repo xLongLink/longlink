@@ -48,11 +48,7 @@
             "name": "Badge",
             "category": "Display",
             "introduction": "Displays a count or enumerated state.",
-            "keywords": [
-                "status",
-                "count",
-                "state"
-            ],
+            "keywords": ["status", "count", "state"],
             "guidance": "Use for counts or enumerated states, not decoration.",
             "properties": [
                 {
@@ -77,13 +73,7 @@
             "name": "Button",
             "category": "Action",
             "introduction": "Gives onClick automatic asynchronous loading and duplicate-click prevention.",
-            "keywords": [
-                "action",
-                "approve",
-                "reject",
-                "save",
-                "submit"
-            ],
+            "keywords": ["action", "approve", "reject", "save", "submit"],
             "guidance": "Return the asynchronous operation from onClick so automatic loading and duplicate-click prevention cover the request.",
             "properties": [
                 {
@@ -194,13 +184,9 @@
         {
             "name": "Card",
             "category": "Layouts",
-            "introduction": "Groups dashboard widgets, gallery items, or settings sections.",
-            "keywords": [
-                "widget",
-                "gallery",
-                "settings"
-            ],
-            "guidance": "Do not wrap dense lists or individual table rows in cards.",
+            "introduction": "Contains an independent dashboard item, person, project, or story, with plain, clickable, and selectable presentations.",
+            "keywords": ["widget", "gallery", "people", "project"],
+            "guidance": "Give each card one clear purpose. Use responsive Grid columns, gap={2} between dashboard cards, and consistent padding={5} inside siblings. Let content determine height and inherit the theme. For full-bleed photos use padding={0} and isClipped with a padded content Stack. Plot can be composed inside Card and supplies its own label. Do not nest cards or wrap dense lists and individual table rows in cards; use Table for directories. Preserve the standard application shell and page gutters.",
             "properties": [
                 {
                     "name": "children",
@@ -220,9 +206,15 @@
                     "default": false
                 },
                 {
+                    "name": "radius",
+                    "type": "\"default\" | \"large\"",
+                    "description": "Uses the theme's default corners or its larger card radius.",
+                    "default": "default"
+                },
+                {
                     "name": "variant",
-                    "type": "\"muted\" | \"blue\" | \"cyan\" | \"green\" | \"orange\" | \"pink\" | \"purple\" | \"red\" | \"teal\" | \"yellow\" | \"default\" | \"gray\" | \"transparent\"",
-                    "description": "Background color variant, independent of the interaction mode.",
+                    "type": "\"default\" | \"subtle\" | \"transparent\" | \"muted\" | \"blue\" | \"cyan\" | \"gray\" | \"green\" | \"orange\" | \"pink\" | \"purple\" | \"red\" | \"teal\" | \"yellow\"",
+                    "description": "Background color variant, independent of the interaction mode. Subtle uses compact typography and a neutral theme palette for its surface, border, text, and accents.",
                     "default": "default"
                 },
                 {
@@ -540,11 +532,7 @@
             "name": "Dialog",
             "category": "Layouts",
             "introduction": "Displays an accessible modal that closes with Escape or its close button, not backdrop clicks. Set variant to fullscreen to fill about 95% of the screen, including over Platform navigation, while keeping Solution content sandboxed.",
-            "keywords": [
-                "modal",
-                "confirmation",
-                "confirm"
-            ],
+            "keywords": ["modal", "confirmation", "confirm"],
             "properties": [
                 {
                     "name": "children",
@@ -577,6 +565,25 @@
                     "type": "0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10",
                     "description": "Spacing between the title and content; defaults to 3.",
                     "default": 3
+                }
+            ]
+        },
+        {
+            "name": "Distribution",
+            "category": "Display",
+            "introduction": "Displays non-negative parts of a whole as a compact, theme-colored strip.",
+            "keywords": ["distribution", "segmented bar", "composition", "portfolio"],
+            "guidance": "Use for portfolio or category composition. Supply finite, non-negative values and labeled segments. Zero values occupy no space; empty or all-zero data displays an empty rail. Keep the labels and exact values visible in an adjacent List or summary.",
+            "properties": [
+                {
+                    "name": "label",
+                    "type": "string",
+                    "description": "Required accessible name for the distribution."
+                },
+                {
+                    "name": "segments",
+                    "type": "readonly { label: string; value: number; color?: \"accent\" | \"success\" | \"neutral\" | \"blue\" | \"purple\" | \"green\" | \"orange\" | \"pink\" }[]",
+                    "description": "Uniquely labeled finite non-negative values; colors follow semantic theme tokens."
                 }
             ]
         },
@@ -647,11 +654,7 @@
             "name": "EmptyState",
             "category": "Display",
             "introduction": "Describes an empty View region without custom decorative slots.",
-            "keywords": [
-                "empty list",
-                "no results",
-                "missing data"
-            ],
+            "keywords": ["empty list", "no results", "missing data"],
             "properties": [
                 {
                     "name": "title",
@@ -766,14 +769,7 @@
             "name": "Form",
             "category": "Form",
             "introduction": "Collects and submits named fields through the Solution runtime.",
-            "keywords": [
-                "editing form",
-                "edit",
-                "create",
-                "submit",
-                "validation",
-                "fields"
-            ],
+            "keywords": ["editing form", "edit", "create", "submit", "validation", "fields"],
             "guidance": "Inspect the submission contract and field names before wiring a form. Validate and authorize mutations on the server.",
             "properties": [
                 {
@@ -812,14 +808,7 @@
             "name": "Functions",
             "category": "Runtime",
             "introduction": "Scoped Solution requests and navigation capabilities.",
-            "keywords": [
-                "request",
-                "api",
-                "mutation",
-                "navigation",
-                "navigate",
-                "server"
-            ],
+            "keywords": ["request", "api", "mutation", "navigation", "navigate", "server"],
             "guidance": "Requests and scoped navigation target the current Solution. External HTTP(S) navigation requires user activation. Server routes own authorization and business rules.",
             "members": [
                 {
@@ -836,11 +825,7 @@
             "name": "Grid",
             "category": "Layouts",
             "introduction": "Arranges View content into fixed or width-responsive columns.",
-            "keywords": [
-                "columns",
-                "layout",
-                "dashboard"
-            ],
+            "keywords": ["columns", "layout", "dashboard"],
             "properties": [
                 {
                     "name": "children",
@@ -939,14 +924,7 @@
             "name": "Hooks",
             "category": "Runtime",
             "introduction": "React hooks for local state, synchronization, and loading Solution data.",
-            "keywords": [
-                "state",
-                "loading",
-                "query",
-                "fetch",
-                "data",
-                "effect"
-            ],
+            "keywords": ["state", "loading", "query", "fetch", "data", "effect"],
             "guidance": "Use controlled state for local interaction. Effects should synchronize with external systems, not duplicate derived state.",
             "members": [
                 {
@@ -980,6 +958,17 @@
             "category": "Display",
             "introduction": "Renders any Lucide icon by its kebab-case name. Existing LongLink aliases remain immediate; other icons load on demand and are cached without blocking the View or changing icon dimensions.",
             "properties": [
+                {
+                    "name": "presentation",
+                    "type": "\"plain\" | \"tile\"",
+                    "description": "Optional rounded theme-sized tile; large glyphs use a larger object-header tile.",
+                    "default": "plain"
+                },
+                {
+                    "name": "color",
+                    "type": "\"primary\" | \"secondary\" | \"accent\" | \"success\" | \"warning\" | \"error\" | \"inherit\"",
+                    "description": "Semantic theme color; inherits the surrounding text by default."
+                },
                 {
                     "name": "icon",
                     "type": "StoneIconName",
@@ -1033,9 +1022,40 @@
             ]
         },
         {
+            "name": "Globe",
+            "category": "Display",
+            "introduction": "Displays an offline dotted world map with Natural Earth public-domain boundaries.",
+            "keywords": ["globe", "world map", "geography", "countries"],
+            "guidance": "Use three-digit ISO 3166-1 numeric country codes. Country selection centers and highlights the globe. Keep country names and statistics visible in an adjacent List. Globe does not fetch statistics or infer geographic values. Unknown codes are rejected.",
+            "properties": [
+                {
+                    "name": "variant",
+                    "type": "\"overview\" | \"focus\"",
+                    "description": "Overview shows the complete globe. Focus crops around the selected country with a faded text-safe leading edge.",
+                    "default": "overview"
+                },
+                {
+                    "name": "children",
+                    "type": "ReactNode",
+                    "description": "Optional normal-flow foreground content. Its natural height defines the map backdrop without fixed card heights."
+                },
+                { "name": "label", "type": "string", "description": "Required accessible name describing the map." },
+                {
+                    "name": "country",
+                    "type": "string",
+                    "description": "Optional three-digit ISO numeric code, such as 840 for the United States, 276 for Germany, or 250 for France. Omit for a world overview."
+                },
+                {
+                    "name": "highlightedCountries",
+                    "type": "readonly string[]",
+                    "description": "Additional country codes to tint without changing the camera. Unknown codes are rejected."
+                }
+            ]
+        },
+        {
             "name": "Image",
             "category": "Display",
-            "introduction": "",
+            "introduction": "Displays scoped Solution images. Photos keep a full-width landscape frame; logos use compact square tiles and contain the full artwork.",
             "properties": [
                 {
                     "name": "src",
@@ -1046,6 +1066,18 @@
                     "name": "alt",
                     "type": "string",
                     "description": "Accessible description of the photo."
+                },
+                {
+                    "name": "variant",
+                    "type": "\"photo\" | \"logo\" | \"flag\"",
+                    "description": "Full-width landscape photo, contained square logo, or padded waving flag tile. Flags preserve their proportions and remain still when reduced motion is preferred.",
+                    "default": "photo"
+                },
+                {
+                    "name": "size",
+                    "type": "\"sm\" | \"md\" | \"lg\"",
+                    "description": "Logo or flag tile size; ignored for photos.",
+                    "default": "md"
                 }
             ]
         },
@@ -1082,14 +1114,92 @@
             ]
         },
         {
+            "name": "List",
+            "category": "Display",
+            "introduction": "Displays named rows with wrapping body-sized labels and optional leading and trailing content.",
+            "guidance": "Use for concise summaries, checklists, and selections. Rows align with their containing card and remain in normal document flow. Supply ListItem.onClick for a keyboard-accessible selection or detail action, and isSelected for controlled selection state. Use Table for directories needing column headers.",
+            "properties": [
+                {
+                    "name": "edge",
+                    "type": "\"flush\" | \"outset\"",
+                    "description": "Flush aligns static rows to their containing section. Outset extends interaction backgrounds into surrounding padding while retaining content alignment. Use inside a padded section.",
+                    "default": "flush"
+                },
+                {
+                    "name": "label",
+                    "type": "string",
+                    "description": "Required accessible name for the complete list."
+                },
+                {
+                    "name": "children",
+                    "type": "ReactNode",
+                    "description": "ListItem rows."
+                },
+                {
+                    "name": "density",
+                    "type": "\"compact\" | \"balanced\" | \"spacious\"",
+                    "description": "Row spacing using the theme's density scale.",
+                    "default": "balanced"
+                },
+                {
+                    "name": "hasDividers",
+                    "type": "boolean",
+                    "description": "Shows separators between rows.",
+                    "default": false
+                },
+                {
+                    "name": "ListItem.label",
+                    "type": "string",
+                    "description": "Complete body-sized label; wraps instead of truncating."
+                },
+                {
+                    "name": "ListItem.description",
+                    "type": "string",
+                    "description": "Optional wrapping secondary text below the label."
+                },
+                {
+                    "name": "ListItem.color",
+                    "type": "\"primary\" | \"secondary\"",
+                    "description": "Label emphasis; primary by default."
+                },
+                {
+                    "name": "ListItem.align",
+                    "type": "\"center\" | \"first-line\"",
+                    "description": "Align leading and trailing content to the row center or its first line.",
+                    "default": "first-line"
+                },
+                {
+                    "name": "ListItem.markerColor",
+                    "type": "\"blue\" | \"purple\" | \"green\" | \"orange\" | \"pink\"",
+                    "description": "Optional color key matching Plot series and Distribution segments, placed before leading content."
+                },
+                {
+                    "name": "ListItem.onClick",
+                    "type": "() => void",
+                    "description": "Enables a keyboard-accessible row action. Omit for read-only rows."
+                },
+                {
+                    "name": "ListItem.isSelected",
+                    "type": "boolean",
+                    "description": "Controlled selection state for an interactive row."
+                },
+                {
+                    "name": "ListItem.startContent",
+                    "type": "ReactNode",
+                    "description": "Leading icon, rank, or other supporting content."
+                },
+                {
+                    "name": "ListItem.endContent",
+                    "type": "ReactNode",
+                    "description": "Trailing value or other supporting content."
+                }
+            ]
+        },
+        {
             "name": "Menu",
             "category": "Layouts",
             "introduction": "Groups side navigation and the selected section's content.",
-            "keywords": [
-                "navigation",
-                "sidebar",
-                "sections"
-            ],
+            "keywords": ["navigation", "sidebar", "sections"],
             "properties": [
                 {
                     "name": "children",
@@ -1152,11 +1262,7 @@
             "name": "MetadataList",
             "category": "Display",
             "introduction": "Lists labeled values with optional truncation and label placement.",
-            "keywords": [
-                "details",
-                "record",
-                "labeled values"
-            ],
+            "keywords": ["details", "record", "labeled values"],
             "properties": [
                 {
                     "name": "children",
@@ -1246,11 +1352,7 @@
             "name": "MultiSelector",
             "category": "Form",
             "introduction": "Selects multiple values using standard option and selected-value rendering.",
-            "keywords": [
-                "multiple selection",
-                "choices",
-                "filter"
-            ],
+            "keywords": ["multiple selection", "choices", "filter"],
             "properties": [
                 {
                     "name": "label",
@@ -1435,6 +1537,90 @@
             ]
         },
         {
+            "name": "Plot",
+            "category": "Display",
+            "introduction": "Displays responsive line, grouped bar, area, and scatter plots using the current theme. Supply data, an x field, and labeled series; Plot provides axes, a legend, and pointer tooltips without adding a card.",
+            "keywords": [
+                "plot",
+                "chart",
+                "line chart",
+                "bar chart",
+                "area chart",
+                "scatter plot",
+                "statistics",
+                "trends",
+                "dashboard"
+            ],
+            "guidance": "Use useApi for scoped Solution data. Plot displays its label, so avoid a duplicate card heading. Rows retain input order; dates are category labels or numeric timestamps, not automatically parsed. Missing observations remain gaps. Invalid configuration or values are reported through the View error boundary. Small datasets include a screen-reader data table; provide a Table or summary alongside larger plots. Geographic maps use Globe rather than Plot.",
+            "properties": [
+                {
+                    "name": "controls",
+                    "type": "ReactNode",
+                    "description": "Optional compact controls aligned with the plot heading, including empty states."
+                },
+                {
+                    "name": "label",
+                    "type": "string",
+                    "description": "Required visible title and accessible plot name."
+                },
+                {
+                    "name": "description",
+                    "type": "string",
+                    "description": "Supporting context and accessible description, such as units and reporting period."
+                },
+                {
+                    "name": "type",
+                    "type": "\"line\" | \"bar\" | \"area\" | \"scatter\"",
+                    "description": "Mark type. Multiple bar series are grouped, not stacked.",
+                    "default": "line"
+                },
+                {
+                    "name": "data",
+                    "type": "readonly Record<string, unknown>[]",
+                    "description": "Rows in display order. Series values must be finite numbers, null, or omitted. Missing values produce gaps, never zero. Empty or entirely missing observations show No data to plot."
+                },
+                {
+                    "name": "xKey",
+                    "type": "string",
+                    "description": "Field containing non-empty strings or finite numbers, consistently typed across rows. Scatter requires numeric x values. Bar treats numeric x values as category labels and requires unique categories; aggregate repeated categories before plotting."
+                },
+                {
+                    "name": "series",
+                    "type": "readonly { key: string; label: string; color?: \"blue\" | \"purple\" | \"green\" | \"orange\" | \"pink\" }[]",
+                    "description": "At least one series. Keys must be unique, distinct from xKey, and present in non-empty data. Labels identify series in the legend and tooltip. Colors follow the theme."
+                },
+                {
+                    "name": "height",
+                    "type": "number",
+                    "description": "Positive finite plot height in pixels. Width follows the container; axis labels adapt to the available space.",
+                    "default": 300
+                },
+                {
+                    "name": "hasLegend",
+                    "type": "boolean",
+                    "description": "Shows the series legend.",
+                    "default": true
+                },
+                {
+                    "name": "curve",
+                    "type": "\"linear\" | \"monotone\"",
+                    "description": "Line/area interpolation; monotone curves do not overshoot observations.",
+                    "default": "linear"
+                },
+                {
+                    "name": "hasDots",
+                    "type": "boolean",
+                    "description": "Point markers on line plots.",
+                    "default": true
+                },
+                {
+                    "name": "yDomain",
+                    "type": "readonly [number, number]",
+                    "description": "Explicit finite vertical endpoints; they must differ. Descending endpoints put rank 1 at the top. Omit for automatic scaling."
+                }
+            ]
+        },
+        {
             "name": "ProgressBar",
             "category": "Display",
             "introduction": "Displays determinate or indeterminate progress with a semantic state.",
@@ -1577,15 +1763,30 @@
             ]
         },
         {
+            "name": "SegmentedControl",
+            "category": "Action",
+            "introduction": "Selects one display mode with a compact, keyboard-accessible pill-shaped radio group.",
+            "guidance": "Use for chart and display options; use Tabs for page panels. Keep labels concise and option values unique.",
+            "properties": [
+                { "name": "label", "type": "string", "description": "Required accessible group label." },
+                { "name": "value", "type": "string", "description": "Controlled selected option value." },
+                {
+                    "name": "options",
+                    "type": "readonly { value: string; label: string }[]",
+                    "description": "Uniquely identified options with concise visible labels."
+                },
+                {
+                    "name": "onChange",
+                    "type": "(value: string) => void",
+                    "description": "Receives pointer and keyboard selection changes."
+                }
+            ]
+        },
+        {
             "name": "Selector",
             "category": "Form",
             "introduction": "Selects one value without custom option rendering or popup geometry.",
-            "keywords": [
-                "select",
-                "dropdown",
-                "choice",
-                "filter"
-            ],
+            "keywords": ["select", "dropdown", "choice", "filter"],
             "properties": [
                 {
                     "name": "label",
@@ -1726,12 +1927,7 @@
             "name": "Stack",
             "category": "Layouts",
             "introduction": "Arranges View content using the LongLink spacing scale.",
-            "keywords": [
-                "spacing",
-                "horizontal",
-                "vertical",
-                "layout"
-            ],
+            "keywords": ["spacing", "horizontal", "vertical", "layout"],
             "properties": [
                 {
                     "name": "children",
@@ -1782,8 +1978,8 @@
                 },
                 {
                     "name": "background",
-                    "type": "\"muted\"",
-                    "description": "Optional muted surface background; omitted stacks remain transparent."
+                    "type": "\"muted\" | \"inset\"",
+                    "description": "Optional muted fill or outlined, rounded inset surface. Omitted stacks remain transparent."
                 },
                 {
                     "name": "direction",
@@ -1958,15 +2154,7 @@
             "name": "Table",
             "category": "Display",
             "introduction": "Displays data-driven rows without plugins or a second children-based table contract.",
-            "keywords": [
-                "records",
-                "rows",
-                "columns",
-                "data table",
-                "list",
-                "queue",
-                "sorting"
-            ],
+            "keywords": ["records", "rows", "columns", "data table", "list", "queue", "sorting"],
             "guidance": "Present dense records as rows. Keep selection and query state explicit; do not wrap each row in a Card.",
             "properties": [
                 {
@@ -1997,11 +2185,7 @@
             "name": "Tabs",
             "category": "Layouts",
             "introduction": "Switches between related content panels.",
-            "keywords": [
-                "tabs",
-                "panels",
-                "sections"
-            ],
+            "keywords": ["tabs", "panels", "sections"],
             "properties": [
                 {
                     "name": "children",
@@ -2213,13 +2397,7 @@
             "name": "TextInput",
             "category": "Form",
             "introduction": "Edits themed text with optional local state and native form serialization. Required fields cannot be blank.",
-            "keywords": [
-                "search",
-                "filter",
-                "text field",
-                "string",
-                "input"
-            ],
+            "keywords": ["search", "filter", "text field", "string", "input"],
             "guidance": "Use a controlled value and callback when input changes affect local query state.",
             "properties": [
                 {
@@ -2398,12 +2576,7 @@
             "name": "Token",
             "category": "Display",
             "introduction": "Displays a tag, category, or selection with optional click and removal actions.",
-            "keywords": [
-                "tag",
-                "category",
-                "status",
-                "state"
-            ],
+            "keywords": ["tag", "category", "status", "state"],
             "properties": [
                 {
                     "name": "label",
@@ -2453,11 +2626,32 @@
     "groups": {
         "Runtime": "Local state, Solution data, requests, and scoped navigation.",
         "Action": "Operations and navigation through buttons, links, and action menus.",
-        "Display": "Records, text, metadata, status, progress, and file previews.",
+        "Display": "Records, text, metadata, status, progress, plots, and file previews.",
         "Form": "Collecting and submitting input through forms and field components.",
         "Layouts": "Arranging content, panels, navigation, dialogs, tabs, and steps."
     },
     "patterns": [
+        {
+            "name": "Dashboard plots",
+            "description": "Compare metrics and trends using responsive plots composed inside existing cards.",
+            "keywords": [
+                "dashboard",
+                "plot",
+                "chart",
+                "statistics",
+                "line chart",
+                "bar chart",
+                "area chart",
+                "scatter plot"
+            ],
+            "components": ["Plot", "Card", "Grid", "Hooks", "Table"],
+            "steps": [
+                "Load scoped statistics with useApi; return finite numeric series values and consistent string or numeric x values.",
+                "Compose Plot inside Card when the plot is an independent dashboard item. Use responsive Grid columns, gap={2}, and consistent card padding={5}.",
+                "Choose line, bar, area, or scatter and pass xKey plus labeled series. Preserve null or omitted observations rather than converting them to zero.",
+                "Supply a meaningful label and description for units and reporting period. Provide an equivalent Table or summary for large datasets; essential values must not depend on hover."
+            ]
+        },
         {
             "name": "Confirmation",
             "description": "Ask for Continue or Cancel before a scoped Solution operation, without managing dialog-open state.",
@@ -2480,12 +2674,7 @@
                 "data table",
                 "records"
             ],
-            "components": [
-                "Table",
-                "TextInput",
-                "Hooks",
-                "EmptyState"
-            ],
+            "components": ["Table", "TextInput", "Hooks", "EmptyState"],
             "steps": [
                 "Load records with the documented Hooks API and keep search/filter state local.",
                 "Define Table columns and row actions using supported props; apply filtering or pagination on the server when needed.",
@@ -2495,19 +2684,8 @@
         {
             "name": "Editing form",
             "description": "Collect intent through named fields and persist changes through a validated Solution route.",
-            "keywords": [
-                "edit form",
-                "editing form",
-                "create form",
-                "form",
-                "record editor"
-            ],
-            "components": [
-                "Form",
-                "TextInput",
-                "Selector",
-                "Functions"
-            ],
+            "keywords": ["edit form", "editing form", "create form", "form", "record editor"],
+            "components": ["Form", "TextInput", "Selector", "Functions"],
             "steps": [
                 "Inspect Form's submission contract and initialize fields from the record being edited.",
                 "Choose field components that match the server schema and use documented names and value contracts.",
@@ -2517,20 +2695,8 @@
         {
             "name": "Approval queue",
             "description": "Show pending work and make the next authorized action clear.",
-            "keywords": [
-                "approval",
-                "approval queue",
-                "approve",
-                "review queue",
-                "pending approvals"
-            ],
-            "components": [
-                "Table",
-                "Badge",
-                "Button",
-                "Hooks",
-                "Functions"
-            ],
+            "keywords": ["approval", "approval queue", "approve", "review queue", "pending approvals"],
+            "components": ["Table", "Badge", "Button", "Hooks", "Functions"],
             "steps": [
                 "Load pending records with the documented Hooks API and display their states as Table rows with Badge values.",
                 "Add explicit approve/reject actions through Button callbacks and scoped requests.",

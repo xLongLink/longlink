@@ -14,10 +14,56 @@
 @import 'tailwindcss/preflight.css' layer(base);
 @import '@astryxdesign/core/reset.css';
 @import '@astryxdesign/core/astryx.css';
+@import '@astryxdesign/charts/charts.css';
 @import './lib/generated/stone.css';
 @import './accents.css';
 @import '@astryxdesign/core/tailwind-theme.css';
 @import 'tailwindcss/utilities.css' layer(utilities);
+
+@utility card-subtle {
+    background-color: var(--color-card-subtle-background) !important;
+    border-color: var(--color-card-subtle-border) !important;
+    border-style: solid !important;
+    border-width: var(--border-width) !important;
+    color: var(--color-card-subtle-primary);
+    --color-text-primary: var(--color-card-subtle-primary);
+    --color-text-secondary: var(--color-card-subtle-secondary);
+    --color-background-card: var(--color-card-subtle-background);
+    --color-border: var(--color-card-subtle-border);
+    --color-background-muted: var(--color-card-subtle-muted);
+    --color-accent: var(--color-card-subtle-accent);
+    --color-text-accent: var(--color-card-subtle-accent);
+    --color-on-accent: var(--color-card-subtle-background);
+    --color-success: var(--color-card-subtle-success);
+    --color-background-plot: var(--color-card-subtle-plot);
+    --color-icon-primary: var(--color-card-subtle-primary);
+    --color-icon-secondary: var(--color-card-subtle-secondary);
+    --color-icon-accent: var(--color-card-subtle-accent);
+    --color-icon-success: var(--color-card-subtle-success);
+    --text-body-size: var(--font-size-base);
+    --text-supporting-size: var(--text-card-supporting-size);
+    --text-body-leading: var(--text-label-leading);
+    --text-large-leading: var(--text-label-leading);
+}
+
+@keyframes flag-wave {
+    from {
+        transform: perspective(var(--spacing-10)) rotateY(-12deg) skewY(-2deg);
+    }
+    to {
+        transform: perspective(var(--spacing-10)) rotateY(12deg) skewY(2deg);
+    }
+}
+
+@utility flag-wave {
+    transform-origin: left center;
+    animation: flag-wave calc(var(--duration-slow) * 4) ease-in-out infinite alternate;
+
+    @media (prefers-reduced-motion: reduce) {
+        animation: none;
+        transform: none;
+    }
+}
 
 @keyframes technology-float {
     to {
