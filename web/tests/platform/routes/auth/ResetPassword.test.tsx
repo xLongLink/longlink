@@ -5,6 +5,7 @@ import { it, expect, vi } from 'vitest';
 import { withMounted } from '../../../render';
 import { renderPlatform } from '../../render';
 import { ApiErrorContext } from '@/lib/errors';
+import userEvent from '@testing-library/user-event';
 import { ApiBoundary } from '@/components/ApiBoundary';
 import Page from '@/platform/routes/auth/ResetPassword';
 
@@ -20,6 +21,76 @@ it('does not expose password editing before reset proof has been verified', () =
     // Assert
     expect(output.querySelector('h1')?.textContent).toBe('Set a new password');
     expect(output.querySelector('input[type="password"]')).toBeNull();
+});
+
+it.each([204, 400])('handles password reset submission status %s after valid admission', async (status) => {
+    // Arrange an accepted setup whose credential may expire before submission.
+    const passwords: unknown[] = [];
+    const errors: unknown[] = [];
+
+    const transport = vi.spyOn(globalThis, 'fetch').mockImplementation(async (input, options) => {
+        const request = input instanceof Request ? input : new Request(input, options);
+        const path = new URL(request.url).pathname;
+
+        if (request.method === 'GET' && path === '/api/v1/auth/reset-password/setup') {
+            return new Response(null, { status: 204 });
+        }
+
+        if (request.method === 'POST' && path === '/api/v1/auth/reset-password') {
+            passwords.push(await request.json());
+
+            return status === 204
+                ? new Response(null, { status })
+                : Response.json({ detail: 'Expired setup' }, { status });
+        }
+
+        throw new Error(`Unexpected request: ${request.method} ${path}`);
+    });
+
+    try {
+        await withMounted(
+            <ApiErrorContext value={(error) => errors.push(error)}>
+                <ApiBoundary>
+                    <Page />
+                </ApiBoundary>
+            </ApiErrorContext>,
+            async (output) => {
+                await act(async () => {
+                    await vi.waitFor(() => expect(output.querySelector('input[type="password"]')).not.toBeNull());
+                });
+                const password = output.querySelector<HTMLInputElement>('input[type="password"]');
+                const submit = output.querySelector<HTMLButtonElement>('button[type="submit"]');
+                const events = userEvent.setup();
+
+                if (!password || !submit) throw new Error('Expected admitted password form');
+
+                // Submit real valid credentials through React Hook Form.
+                await act(async () => {
+                    await events.type(password, 'Strong-password-123');
+                    await events.click(submit);
+                });
+
+                // Rejected credentials must never expose the success state.
+                await act(async () => {
+                    await vi.waitFor(() =>
+                        expect(
+                            output.querySelector(
+                                status === 204 ? 'a[href="/login"]' : 'a[href="/auth/forgot-password"]'
+                            )
+                        ).not.toBeNull()
+                    );
+                });
+                expect(passwords).toEqual([{ password: 'Strong-password-123' }]);
+                expect(output.querySelector('input[type="password"]')).toBeNull();
+                expect(output.textContent?.includes('Your password has been reset.')).toBe(status === 204);
+                expect(output.querySelector('a[href="/login"]') !== null).toBe(status === 204);
+                expect(errors).toEqual([]);
+            },
+            '/auth/reset-password'
+        );
+    } finally {
+        transport.mockRestore();
+    }
 });
 
 it('allows password editing only after the reset token exchange succeeds', async () => {

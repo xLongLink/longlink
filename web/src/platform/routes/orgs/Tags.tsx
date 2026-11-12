@@ -1,20 +1,20 @@
 import { z } from 'zod';
 import { api } from '@/lib/api';
+import { useState } from 'react';
 import * as tabs from '@/platform/tabs';
 import { FormDialog } from './FormDialog';
 import { useApiError } from '@/lib/errors';
 import { Form } from '@/components/ui/Form';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
-import { useState, isValidElement } from 'react';
 import { Button } from '@astryxdesign/core/Button';
 import { Selector } from '@/components/ui/Selector';
 import { Heading } from '@astryxdesign/core/Heading';
 import { TextInput } from '@/components/ui/TextInput';
 import { DeletionDialog } from '@/components/Deletion';
 import { MoreMenu } from '@astryxdesign/core/MoreMenu';
+import { MultiSelector } from '@/components/ui/MultiSelector';
 import { Table, proportional } from '@astryxdesign/core/Table';
-import { MultiSelector } from '@astryxdesign/core/MultiSelector';
 import { ArrowDown, ArrowUp, Pencil, Trash } from 'lucide-react';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -232,11 +232,9 @@ export function SolutionTags({
     onSuccess: () => Promise<void>;
     onClose: () => void;
 }) {
-    const [tagIds, setTagIds] = useState(solution.tag_ids ?? []);
-
     /** Submits the complete selection so clearing all tags is supported. */
-    async function save() {
-        const json = schemas.zSolutionTagsWrite.parse({ tag_ids: tagIds });
+    async function save(data: FormData) {
+        const json = schemas.zSolutionTagsWrite.parse({ tag_ids: data.getAll('tag_ids') });
         await api.patch(`${base}/solutions/${solution.id}/tags`, { json });
         await onSuccess();
     }
@@ -250,29 +248,14 @@ export function SolutionTags({
                 <Stack gap={4}>
                     <MultiSelector
                         label="Tags"
-                        value={tagIds}
-                        onChange={setTagIds}
+                        name="tag_ids"
+                        defaultValue={solution.tag_ids ?? []}
                         options={tags
                             .filter((tag) => tag.kind === 'tag')
-                            .map((tag) => {
-                                const Icon = tabs.icons[tag.icon].component;
-
-                                return {
-                                    value: tag.id,
-                                    label: tag.name,
-                                    icon: <Icon className="size-4" aria-hidden="true" />,
-                                };
-                            })}
-                        renderOption={(option) => (
-                            <Stack direction="horizontal" gap={2} align="center">
-                                {isValidElement(option.icon) && option.icon}
-                                <Text>{option.label}</Text>
-                            </Stack>
-                        )}
+                            .map((tag) => ({ value: tag.id, label: tag.name, icon: tag.icon }))}
                         triggerDisplay="labels"
                         placeholder="Select tags"
                         hasSearch
-                        hasClear
                         emptyText="Create tabs in organization settings under General first."
                     />
                     <Stack direction="horizontal" gap={2} justify="end">

@@ -28,8 +28,7 @@ class Filesystem:
         self._async: AsyncFileSystem = filesystem if filesystem.fs.async_impl else AsyncFileSystemWrapper(fs=filesystem, asynchronous=True)
         self._certificate = certificate
         self._lock = Lock()
-        self._stack = AsyncExitStack()
-        self._session: S3Client | None = None
+        self._stack: AsyncExitStack | None = None
 
     async def _connect(self) -> None:
         """Initialize the S3 session once and own its certificate until shutdown."""
@@ -41,13 +40,12 @@ class Filesystem:
 
         # Keep concurrent first requests on one native async connection pool.
         async with self._lock:
-            if self._session is None:
+            if self._stack is None:
                 async with AsyncExitStack() as stack:
                     if self._certificate is not None:
                         backend.client_kwargs["verify"] = stack.enter_context(tls.certificate_file(self._certificate))
                     session = cast("S3Client", await backend.set_session(refresh=True))
                     stack.push_async_callback(session.close)
-                    self._session = session
                     self._stack = stack.pop_all()
 
     async def _path(self, path: str) -> str:
@@ -135,5 +133,6 @@ class Filesystem:
 
         with CancelScope(shield=True):
             async with self._lock:
-                await self._stack.aclose()
-                self._session = None
+                if self._stack is not None:
+                    await self._stack.aclose()
+                    self._stack = None
