@@ -49,7 +49,7 @@ export function DocumentationArticle({ article, children }: { article: ArticleMe
     return (
         <ArticleRenderer
             article={article}
-            className="[--text-body-size:var(--font-size-lg)] [--article-heading-spacing:calc(var(--spacing-9)*2)] [--font-family-heading:var(--font-family-handwritten)] [&_.astryx-heading:not(dialog_*)]:uppercase [&_.astryx-heading:not(dialog_*)]:tracking-wide"
+            className="[--text-body-size:var(--font-size-lg)] [--article-heading-spacing:calc(var(--spacing-9)*2)] [--font-family-heading:var(--font-family-handwritten)] [&_:is(.astryx-heading,.view-heading):not(dialog_*)]:uppercase [&_:is(.astryx-heading,.view-heading):not(dialog_*)]:tracking-wide"
             paths={documentationPaths}
         >
             {children}

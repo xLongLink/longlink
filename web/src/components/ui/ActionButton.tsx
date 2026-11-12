@@ -1,0 +1,123 @@
+import { LoaderCircle } from 'lucide-react';
+import { Icon, type StoneIconName } from './Icon';
+import { useSize } from '@astryxdesign/core/SizeContext';
+import { Button as Control } from '@/components/shadcn/button';
+import { useButtonGroup } from '@astryxdesign/core/ButtonGroup';
+import { useRef, useTransition, useSyncExternalStore, type MouseEvent, type ReactNode } from 'react';
+
+/** Shares native action semantics while remaining compatible with unmigrated control containers. */
+export function ActionButton({
+    label,
+    icon,
+    iconOnly = false,
+    variant = 'secondary',
+    size: requestedSize,
+    type = 'button',
+    disabled = false,
+    onClick,
+    href,
+    width,
+    endContent,
+    name,
+    value,
+    form,
+}: {
+    label: string;
+    icon?: StoneIconName;
+    iconOnly?: boolean;
+    variant?: 'primary' | 'secondary' | 'ghost' | 'destructive';
+    size?: 'sm' | 'md' | 'lg';
+    type?: 'button' | 'submit' | 'reset';
+    disabled?: boolean;
+    onClick?: (event: MouseEvent<HTMLButtonElement>) => void | Promise<void>;
+    href?: string;
+    width?: number | string;
+    endContent?: ReactNode;
+    name?: string;
+    value?: string | number | readonly string[];
+    form?: string;
+}) {
+    const size = useSize(requestedSize, 'md');
+    const group = useButtonGroup();
+    const blocked = disabled || (group?.isDisabled ?? false);
+    const inFlight = useRef(false);
+    const [pending, startTransition] = useTransition();
+    const isLink = href !== undefined && !blocked;
+
+    const client = useSyncExternalStore(
+        () => () => {},
+        () => true,
+        () => false
+    );
+
+    const renderedType = blocked && !client && type !== 'button' ? 'button' : type;
+
+    // The synchronous guard covers repeated events before React commits the pending state.
+    function activate(event: MouseEvent<HTMLButtonElement>) {
+        if (blocked || pending || inFlight.current) {
+            event.preventDefault();
+            event.stopPropagation();
+
+            return;
+        }
+
+        if (!onClick) return;
+        inFlight.current = true;
+        startTransition(async () => {
+            try {
+                await onClick(event);
+            } finally {
+                inFlight.current = false;
+            }
+        });
+    }
+
+    return (
+        <Control
+            variant="view"
+            data-variant={variant}
+            data-size={size}
+            data-icon-only={iconOnly || undefined}
+            data-group-orientation={group?.orientation}
+            data-astryx-press-group-item={group ? 'touch pen' : undefined}
+            nativeButton={!isLink}
+            render={isLink ? <a href={href} /> : undefined}
+            type={isLink ? undefined : renderedType}
+            name={blocked || isLink ? undefined : name}
+            value={value}
+            form={isLink ? undefined : form}
+            disabled={blocked}
+            focusableWhenDisabled
+            aria-label={iconOnly || pending ? label : undefined}
+            aria-busy={pending || undefined}
+            aria-disabled={blocked || pending || undefined}
+            style={{ width }}
+            onClickCapture={(event) => {
+                if (blocked) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+            }}
+            onClick={activate}
+            onKeyDown={(event) => {
+                if ((blocked || pending || inFlight.current) && (event.key === 'Enter' || event.key === ' ')) {
+                    event.preventDefault();
+                }
+            }}
+        >
+            <span className="view-action-content" aria-hidden={pending || undefined}>
+                {icon && (
+                    <span className="view-action-icon" data-size={size}>
+                        <Icon icon={icon} size={size} />
+                    </span>
+                )}
+                {!iconOnly && <span className="view-action-label">{label}</span>}
+                {!iconOnly && endContent}
+            </span>
+            {pending && <LoaderCircle aria-hidden="true" className="view-action-spinner" />}
+            <span role="status" aria-live="polite" className="sr-only">
+                {pending ? 'Loading' : ''}
+            </span>
+        </Control>
+    );
+}

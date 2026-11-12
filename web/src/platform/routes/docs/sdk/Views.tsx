@@ -96,7 +96,7 @@ const previews = new Map(
         Grid: <GridExample />,
         // Keep article section spacing out of the centered heading thumbnail.
         Heading: (
-            <Stack className="[&_.astryx-heading]:mt-0">
+            <Stack className="[&_:is(.astryx-heading,.view-heading)]:mt-0">
                 <HeadingExample />
             </Stack>
         ),

@@ -7,7 +7,7 @@ import { Divider } from '@/components/ui/Divider';
 import { Button } from '@/components/astryx/Button';
 import { Heading } from '@/components/astryx/Heading';
 import { ApiBoundary } from '@/components/ApiBoundary';
-import { ProgressBar } from '@/components/astryx/ProgressBar';
+import { ProgressBar } from '@/components/ui/ProgressBar';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 
 /** Shows the Organization's usage against free allowances or card-enabled capacity. */

@@ -1,8 +1,9 @@
-import { useMemo } from 'react';
+import { UserRound } from 'lucide-react';
+import { useMemo, useState } from 'react';
 import * as dicebear from '@dicebear/core';
-import { Avatar as AstryxAvatar } from '@/components/astryx/Avatar';
 import waves from '@dicebear/styles/waves.json' with { type: 'json' };
 import glyphs from '@dicebear/styles/glyphs.json' with { type: 'json' };
+import { Avatar as AvatarRoot, AvatarImage, AvatarFallback } from '@/components/shadcn/avatar';
 
 // Use a subdued palette for generated user avatars without altering their shapes.
 const glyphsStyle = new dicebear.Style({
@@ -49,14 +50,71 @@ export function Avatar({ kind, src, name, seed, ...props }: AvatarProps) {
         return avatar.toDataUri();
     }, [style, identity]);
 
+    // Failed sources do not prevent a new URL or identity from loading.
+    const [erroredSrc, setErroredSrc] = useState<string>();
+    const [erroredFallbackSrc, setErroredFallbackSrc] = useState<string>();
+    const primarySrc = src?.trim() || undefined;
+
+    const imageSrc =
+        primarySrc && primarySrc !== erroredSrc
+            ? primarySrc
+            : fallbackSrc !== erroredFallbackSrc
+              ? fallbackSrc
+              : undefined;
+
+    const accessibleName = props.alt?.trim() ? props.alt : name?.trim() ? name : undefined;
+
+    const initials =
+        name
+            ?.trim()
+            .split(/\s+/)
+            .flatMap((word) => {
+                const index = word.search(/[\p{L}\p{N}\p{Extended_Pictographic}\p{Regional_Indicator}]/u);
+
+                if (index === -1) return [];
+
+                const first = new Intl.Segmenter(undefined, { granularity: 'grapheme' })
+                    .segment(word.slice(index))
+                    [Symbol.iterator]()
+                    .next();
+
+                return first.done ? [] : [first.value.segment];
+            }) ?? [];
+
+    const initialsText = (initials.length > 1 ? `${initials[0]}${initials.at(-1)}` : initials[0])?.toUpperCase();
+
     return (
-        <AstryxAvatar
-            {...props}
-            size={props.size ?? 'md'}
-            name={name}
-            tooltip={false}
-            src={src?.trim() || undefined}
-            fallbackSrc={fallbackSrc}
-        />
+        <AvatarRoot
+            role={accessibleName ? 'img' : 'presentation'}
+            aria-label={accessibleName}
+            aria-hidden={accessibleName ? undefined : true}
+            className={[
+                props.size === 'sm'
+                    ? 'size-6 text-[9.6px]'
+                    : props.size === 'lg'
+                      ? 'size-12 text-[19.2px]'
+                      : 'size-9 text-[14.4px]',
+                props.shape === 'circle'
+                    ? 'rounded-full'
+                    : props.shape === 'rounded'
+                      ? 'rounded-(--radius-element)'
+                      : 'rounded-(--radius-none)',
+            ].join(' ')}
+        >
+            {imageSrc ? (
+                <AvatarImage
+                    key={imageSrc}
+                    src={imageSrc}
+                    alt=""
+                    keepMounted
+                    onError={() => {
+                        if (imageSrc === primarySrc) setErroredSrc(imageSrc);
+                        else setErroredFallbackSrc(imageSrc);
+                    }}
+                />
+            ) : (
+                <AvatarFallback aria-hidden="true">{initialsText || <UserRound className="size-3/5" />}</AvatarFallback>
+            )}
+        </AvatarRoot>
     );
 }

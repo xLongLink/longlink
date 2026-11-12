@@ -1,7 +1,7 @@
+import { cn } from 'cn';
 import type { Spacing } from './types';
-import { Stack } from '@/components/astryx/Stack';
-import { Tab as AstryxTab, TabList } from '@/components/astryx/TabList';
-import { Children, isValidElement, useId, useState, type ReactElement, type ReactNode } from 'react';
+import { Children, isValidElement, useState, type ReactElement, type ReactNode } from 'react';
+import { Tabs as TabRoot, TabsList, TabsTrigger, TabsContent } from '@/components/shadcn/tabs';
 
 type TabProps = {
     /** Panel content mounted only while this tab is selected. */
@@ -26,8 +26,7 @@ type TabsProps = {
 };
 
 /** Renders a tab strip and mounts only the selected Tab's content. */
-export function Tabs({ children, gap = 3, onChange, value: controlledValue, ...props }: TabsProps) {
-    const instance = useId();
+export function Tabs({ children, gap = 3, hasDivider = false, onChange, value: controlledValue }: TabsProps) {
     const [selection, setSelection] = useState('');
 
     // Resolve JSX tabs once, falling back to the first tab for missing selections.
@@ -38,32 +37,48 @@ export function Tabs({ children, gap = 3, onChange, value: controlledValue, ...p
     const activeTab = tabs.find((tab) => tab.props.value === (controlledValue ?? selection)) ?? tabs[0];
 
     if (!activeTab) return null;
-    const panelId = `${instance}-${activeTab.props.value}`;
 
     // Link each tab to the one content panel owned by this Tabs instance.
     return (
-        <Stack gap={gap}>
-            <TabList
-                {...props}
-                hasDivider={props.hasDivider ?? false}
-                role="tablist"
-                value={activeTab.props.value}
-                onChange={(value) => {
-                    if (controlledValue === undefined) setSelection(value);
-                    onChange?.(value);
-                }}
-            >
-                {tabs.map((tab) => {
-                    const { children: _content, ...tabProps } = tab.props;
+        <TabRoot
+            className="view-tabs"
+            style={{ gap: `calc(var(--spacing) * ${gap})` }}
+            value={activeTab.props.value}
+            onValueChange={(value) => {
+                const tab = tabs.find((tab) => tab.props.value === value);
 
-                    // Keep panel content out of the underlying tab button props.
-                    return <AstryxTab {...tabProps} key={tab.props.value} panelId={`${instance}-${tab.props.value}`} />;
-                })}
-            </TabList>
-            <Stack id={panelId} role="tabpanel" tabIndex={0} aria-label={activeTab.props.label} gap={gap}>
+                if (!tab) return;
+
+                if (controlledValue === undefined) setSelection(tab.props.value);
+                onChange?.(tab.props.value);
+            }}
+        >
+            <TabsList
+                variant="line"
+                aria-label="Tabs"
+                className={cn('w-full justify-start overflow-x-auto p-0', hasDivider && 'border-b border-border')}
+            >
+                {tabs.map((tab) => (
+                    <TabsTrigger
+                        key={tab.props.value}
+                        value={tab.props.value}
+                        disabled={tab.props.isDisabled}
+                        className="min-h-(--size-element-md) flex-none px-3 text-(length:--font-size-base) text-muted-foreground data-active:font-semibold after:bg-primary group-data-[variant=line]/tabs-list:hover:bg-secondary"
+                    >
+                        {tab.props.label}
+                    </TabsTrigger>
+                ))}
+            </TabsList>
+            <TabsContent
+                key={activeTab.props.value}
+                value={activeTab.props.value}
+                aria-label={activeTab.props.label}
+                className="flex flex-col"
+                style={{ gap: `calc(var(--spacing) * ${gap})` }}
+            >
                 {activeTab.props.children}
-            </Stack>
-        </Stack>
+            </TabsContent>
+        </TabRoot>
     );
 }
 
