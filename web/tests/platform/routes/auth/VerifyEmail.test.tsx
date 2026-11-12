@@ -88,6 +88,92 @@ it('allows account credential entry only after the email proof exchange succeeds
     }
 });
 
+it.each([400, 409])('recovers from completion status %s without publishing an account', async (status) => {
+    // Arrange valid admission followed by an expired setup or an account-creation race.
+    const credentials: unknown[] = [];
+    let setupRequests = 0;
+    let identityRequests = 0;
+
+    const transport = vi.spyOn(globalThis, 'fetch').mockImplementation(async (input, options) => {
+        const request = input instanceof Request ? input : new Request(input, options);
+        const path = new URL(request.url).pathname;
+
+        if (path === '/api/v1/me') {
+            identityRequests += 1;
+
+            return Response.json({ detail: 'Not authenticated' }, { status: 401 });
+        }
+
+        if (path === '/api/v1/auth/register/setup') {
+            setupRequests += 1;
+
+            return setupRequests === 1
+                ? Response.json({ email: 'new@example.com' })
+                : Response.json({ detail: 'Expired setup' }, { status: 400 });
+        }
+
+        if (path === '/api/v1/auth/register/complete' && request.method === 'POST') {
+            credentials.push(await request.json());
+
+            return Response.json({ detail: 'Cannot complete registration' }, { status });
+        }
+
+        throw new Error(`Unexpected request: ${request.method} ${path}`);
+    });
+
+    try {
+        await withMounted(
+            <Routes>
+                <Route element={<PlatformRoot />}>
+                    <Route path="/auth/verify-email" element={<Page />} />
+                    <Route path="/user/organizations" element={<p>Unexpected account navigation</p>} />
+                </Route>
+            </Routes>,
+            async (output) => {
+                await act(async () => {
+                    await vi.waitFor(() => expect(output.querySelector('input[name="name"]')).not.toBeNull());
+                });
+                const name = output.querySelector<HTMLInputElement>('input[name="name"]');
+                const password = output.querySelector<HTMLInputElement>('input[name="password"]');
+                const submit = output.querySelector<HTMLButtonElement>('button[type="submit"]');
+                const events = userEvent.setup();
+                const initialIdentityRequests = identityRequests;
+
+                if (!name || !password || !submit) throw new Error('Expected verified account form');
+
+                // Submit valid account details so only the completion boundary rejects them.
+                await act(async () => {
+                    await events.type(name, 'New Owner');
+                    await events.type(password, 'Strong-password-123');
+                    await events.click(submit);
+                });
+
+                // Recovery must not refresh identity or navigate as if registration succeeded.
+                await act(async () => {
+                    await vi.waitFor(() =>
+                        expect(output.querySelector('a[href^="/auth/register"]')?.textContent).toBe(
+                            'Request a new registration link'
+                        )
+                    );
+                });
+                const recovery = output.querySelector<HTMLAnchorElement>('a[href^="/auth/register"]');
+
+                expect(recovery?.getAttribute('href')).toBe(
+                    status === 409 ? '/auth/register?email=new%40example.com' : '/auth/register'
+                );
+                expect(credentials).toEqual([{ name: 'New Owner', password: 'Strong-password-123' }]);
+                expect(identityRequests).toBe(initialIdentityRequests);
+                expect(output.querySelector('input[name="password"]')).toBeNull();
+                expect(output.textContent).not.toContain('Unexpected account navigation');
+            },
+            '/auth/verify-email'
+        );
+    } finally {
+        transport.mockRestore();
+        localStorage.removeItem('longlink:appearance');
+    }
+});
+
 it('withholds account credentials and offers a new link when email proof is rejected', async () => {
     // Arrange
     const storageKey = 'longlink.registration.token';

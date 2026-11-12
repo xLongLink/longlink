@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import { useState } from 'react';
 import { TextField } from './Field';
 import { AuthLayout } from './AuthLayout';
 import { api, ApiError } from '@/lib/api';
@@ -36,8 +35,6 @@ export default function ResetPassword() {
         defaultValues: { password: '' },
         resolver: zodResolver(resetPasswordSchema),
     });
-
-    const [invalidCredential, setInvalidCredential] = useState(false);
 
     /** Returns the credential outcome while preserving cancellation of token-storage cleanup. */
     async function verify({
@@ -77,7 +74,7 @@ export default function ResetPassword() {
     const pageMetadata = <title>Set a New Password | LongLink</title>;
 
     // Invalid and expired credentials require a replacement email.
-    if (verification?.status === 'error' || invalidCredential) {
+    if (verification?.status === 'error' || form.formState.errors.root?.credential) {
         return (
             <AuthLayout
                 title="Set a new password"
@@ -110,7 +107,7 @@ export default function ResetPassword() {
                                 await api('/api/v1/auth/reset-password', { json: payload, method: 'POST' });
                             } catch (cause: unknown) {
                                 if (!isBadTokenError(cause)) throw cause;
-                                setInvalidCredential(true);
+                                form.setError('root.credential', { type: 'expired' });
 
                                 return;
                             }

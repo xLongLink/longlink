@@ -2,7 +2,8 @@ import type { ReactNode } from 'react';
 import { Text as AstryxText } from '@astryxdesign/core/Text';
 
 /** Displays View text with Astryx's semantic typography, alignment, wrapping, and truncation controls. */
-export function Text(props: {
+// SAFETY: Astryx renders absent children as undefined, preserving the View's optional-children contract.
+export const Text = AstryxText as (props: {
     children?: ReactNode;
     color?: 'primary' | 'secondary' | 'disabled' | 'placeholder' | 'accent' | 'inherit';
     type?: 'body' | 'large' | 'label' | 'supporting' | 'code' | 'display-1' | 'display-2' | 'display-3' | 'inherit';
@@ -18,7 +19,4 @@ export function Text(props: {
     hasCapsize?: boolean;
     hasStrikethrough?: boolean;
     hasTabularNumbers?: boolean;
-}) {
-    // Keep typography behavior and defaults owned by Astryx without adding a wrapper.
-    return <AstryxText {...props}>{props.children}</AstryxText>;
-}
+}) => ReactNode;

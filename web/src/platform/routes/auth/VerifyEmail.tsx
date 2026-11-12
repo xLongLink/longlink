@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import { useState } from 'react';
 import { TextField } from './Field';
 import { AuthLayout } from './AuthLayout';
 import { api, ApiError } from '@/lib/api';
@@ -40,8 +39,6 @@ export default function VerifyEmail() {
         defaultValues: { name: '', password: '' },
         resolver: zodResolver(registrationCompleteSchema),
     });
-
-    const [accountConflict, setAccountConflict] = useState(false);
 
     /** Returns the signed email claim while preserving cancellation of credential side effects. */
     async function verify({
@@ -90,7 +87,7 @@ export default function VerifyEmail() {
         } catch (cause: unknown) {
             if (!(cause instanceof ApiError) || ![400, 409].includes(cause.status)) throw cause;
 
-            if (cause.status === 409) setAccountConflict(true);
+            if (cause.status === 409) form.setError('root.accountConflict', { type: 'conflict' });
 
             // Expired setup cookies require recovering or replacing the registration link.
             if (cause.status === 400) void startVerification('');
@@ -134,7 +131,7 @@ export default function VerifyEmail() {
     }
 
     // Account races cannot succeed by resubmitting the same form.
-    if (accountConflict) {
+    if (form.formState.errors.root?.accountConflict) {
         return (
             <AuthLayout title="Complete your account" description="Request a new registration link to continue.">
                 {pageMetadata}

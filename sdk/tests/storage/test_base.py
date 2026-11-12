@@ -2,7 +2,7 @@ import gc
 import pytest
 import weakref
 import anyio.lowlevel
-from anyio import CancelScope
+from anyio import CancelScope, create_task_group
 from typing import cast
 from aiohttp import web
 from pathlib import Path
@@ -350,12 +350,15 @@ async def test_production_storage_owns_ca_until_client_shutdown(
     monkeypatch.setattr(tls, "certificate_file", observe_certificate)
     settings = Envs.model_validate(production_settings | {"STORAGE_CERTIFICATE": ca_certificate})
     objects = cast(Filesystem, storage.create_storage(settings))
+    backend = objects.filesystem.fs
 
-    # Act
+    # Concurrent initialization must retain one client and one certificate.
+    async with create_task_group() as tasks:
+        tasks.start_soon(objects._connect)
+        tasks.start_soon(objects._connect)
+    first_client = backend.s3
     await objects._connect()
-    first_client = objects._session
-    await objects._connect()
-    second_client = objects._session
+    second_client = backend.s3
 
     # Assert
     assert first_client is second_client
@@ -363,6 +366,17 @@ async def test_production_storage_owns_ca_until_client_shutdown(
     assert certificates[0].read_text(encoding="utf-8") == ca_certificate
     await objects.close()
     assert not certificates[0].exists()
+
+    # Closing twice must remain safe and reconnecting must acquire fresh resources.
+    await objects.close()
+    try:
+        await objects._connect()
+        assert backend.s3 is not first_client
+        assert len(certificates) == 2
+        assert certificates[1].read_text(encoding="utf-8") == ca_certificate
+    finally:
+        await objects.close()
+    assert not certificates[1].exists()
 
 
 @pytest.mark.parametrize("name", ["DATABASE_HOST", "DATABASE_PASSWORD", "STORAGE_BUCKET", "STORAGE_PREFIX"])

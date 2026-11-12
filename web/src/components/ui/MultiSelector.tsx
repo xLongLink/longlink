@@ -1,4 +1,5 @@
 import { useValue } from './value';
+import type { ReactNode } from 'react';
 import { FormField } from './FormField';
 import type { FieldProps } from './types';
 import { SelectorOption } from '@astryxdesign/core/Selector';
@@ -13,6 +14,8 @@ export function MultiSelector(
         defaultValue?: string[];
         onChange?: (value: string[]) => void;
         placeholder?: string;
+        emptyText?: ReactNode;
+        triggerDisplay?: 'count' | 'labels' | 'badges';
         hasSelectAll?: boolean;
         hasSearch?: boolean;
     }
