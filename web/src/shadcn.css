@@ -1,6 +1,9 @@
 @import './components/ui/input.css';
 @import './components/ui/group.css';
 @import './components/ui/typography.css';
+@import './components/ui/layout.css';
+@import './components/ui/dialog.css';
+@import './components/ui/menu.css';
 
 @custom-variant dark {
     &:where([data-theme='dark'], [data-theme='dark'] *) {
@@ -15,6 +18,12 @@
 }
 
 @layer components {
+    .view-dialog-layer,
+    .view-menu-positioner,
+    .view-typography-positioner {
+        z-index: 100;
+    }
+
     .view-icon {
         flex-shrink: 0;
         width: var(--spacing-5);
@@ -101,7 +110,7 @@
         background-image: none;
     }
 
-    .view-action-button:not([aria-disabled='true']):is(:active, [data-astryx-press='on']) {
+    .view-action-button:not([aria-disabled='true']):is(:active, [data-group-pressed]) {
         background-image: linear-gradient(var(--color-overlay-pressed), var(--color-overlay-pressed));
     }
 

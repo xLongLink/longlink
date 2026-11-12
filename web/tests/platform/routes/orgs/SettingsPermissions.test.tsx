@@ -143,14 +143,14 @@ it.each([
             async (output) => {
                 // Act
                 const invite = Array.from(output.querySelectorAll('button')).find(
-                    (button) => button.textContent === 'Invite' && !button.closest('dialog')
+                    (button) => button.textContent === 'Invite' && !button.closest('[role="dialog"]')
                 );
 
                 if (!invite) throw new Error('Expected the invitation button');
 
                 await act(async () => invite.click());
 
-                const selector = document.querySelector<HTMLButtonElement>('dialog[open] [role="combobox"]');
+                const selector = document.querySelector<HTMLButtonElement>('[role="dialog"] [role="combobox"]');
 
                 if (!selector) throw new Error('Expected the invitation role selector');
 
@@ -181,7 +181,7 @@ it.each(['read', 'write'] as const)('does not offer invitations to %s callers', 
     expect(output.querySelector('h2')?.textContent).toBe('Invitations');
     expect(
         Array.from(output.querySelectorAll('button')).find(
-            (button) => button.textContent === 'Invite' && !button.closest('dialog')
+            (button) => button.textContent === 'Invite' && !button.closest('[role="dialog"]')
         )
     ).toBeUndefined();
 });

@@ -1,10 +1,11 @@
 import { LoaderCircle } from 'lucide-react';
+import { Toolbar } from '@base-ui/react/toolbar';
 import { Icon, type StoneIconName } from './Icon';
 import { Button as Control } from '@/components/shadcn/button';
-import { ButtonGroupContext, PressGroupContext, useSize } from './group';
+import { ButtonGroupContext, ControlSizeContext } from './contexts';
 import { useContext, useRef, useTransition, useSyncExternalStore, type MouseEvent, type ReactNode } from 'react';
 
-/** Shares native action semantics while remaining compatible with unmigrated control containers. */
+/** Shares native action semantics and grouped control sizing. */
 export function ActionButton({
     label,
     icon,
@@ -36,9 +37,9 @@ export function ActionButton({
     value?: string | number | readonly string[];
     form?: string;
 }) {
-    const size = useSize(requestedSize, 'md');
+    const inheritedSize = useContext(ControlSizeContext);
+    const size = requestedSize ?? inheritedSize ?? 'md';
     const group = useContext(ButtonGroupContext);
-    const groupPointers = useContext(PressGroupContext);
     const blocked = disabled || (group?.isDisabled ?? false);
     const inFlight = useRef(false);
     const [pending, startTransition] = useTransition();
@@ -72,16 +73,17 @@ export function ActionButton({
         });
     }
 
-    return (
+    const control = (
         <Control
             variant="view"
             data-variant={variant}
             data-size={size}
             data-icon-only={iconOnly || undefined}
             data-group-orientation={group?.orientation}
-            data-astryx-press-group-item={groupPointers?.join(' ')}
+            data-group-action={group ? '' : undefined}
             nativeButton={!isLink}
             render={isLink ? <a href={href} /> : undefined}
+            role={isLink ? 'link' : undefined}
             type={isLink ? undefined : renderedType}
             name={blocked || isLink ? undefined : name}
             value={value}
@@ -103,6 +105,11 @@ export function ActionButton({
                 if ((blocked || pending || inFlight.current) && (event.key === 'Enter' || event.key === ' ')) {
                     event.preventDefault();
                 }
+
+                if (isLink && event.key === ' ') event.preventBaseUIHandler();
+            }}
+            onKeyUp={(event) => {
+                if (isLink && event.key === ' ') event.preventBaseUIHandler();
             }}
         >
             <span className="view-action-content" aria-hidden={pending || undefined}>
@@ -119,5 +126,18 @@ export function ActionButton({
                 {pending ? 'Loading' : ''}
             </span>
         </Control>
+    );
+
+    if (!group) return control;
+
+    return isLink ? (
+        <Toolbar.Link render={control} />
+    ) : (
+        <Toolbar.Button
+            render={control}
+            disabled={blocked}
+            focusableWhenDisabled={group.isDisabled}
+            nativeButton={!isLink}
+        />
     );
 }

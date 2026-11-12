@@ -1,22 +1,7 @@
-import { useRef, type ReactNode } from 'react';
-import {
-    ButtonGroupContext,
-    GROUP_PRESS_POINTERS,
-    oneTabStopAmong,
-    PressGroupContext,
-    SizeProvider,
-    useGroupPressTracking,
-    useInternalListFocus,
-    useMergedRefs,
-    useSize,
-    useTouchPresentation,
-} from './group';
-
-const memberSelector = 'button, a[href], [tabindex]';
-
-const boundarySelector = '[role="group"], [popover], [role="menu"], [role="dialog"], dialog';
-
-const tabStopOrder = oneTabStopAmong(memberSelector, boundarySelector);
+import { useGroupPress } from './press';
+import { Toolbar } from '@base-ui/react/toolbar';
+import { useContext, useRef, type ReactNode } from 'react';
+import { ButtonGroupContext, ControlSizeContext } from './contexts';
 
 /** Groups related actions with connected styling and a single keyboard tab stop. */
 export function ButtonGroup({
@@ -32,39 +17,61 @@ export function ButtonGroup({
     size?: 'sm' | 'md' | 'lg';
     isDisabled?: boolean;
 }) {
-    const size = useSize(requestedSize, 'md');
+    const inheritedSize = useContext(ControlSizeContext);
+    const size = requestedSize ?? inheritedSize ?? 'md';
     const root = useRef<HTMLDivElement>(null);
 
-    const { listRef, handleKeyDown, handleFocus } = useInternalListFocus<HTMLDivElement>({
-        itemSelector: memberSelector,
-        boundarySelector,
-        orientation,
-        hasRovingTabIndex: true,
-        tabStopOrder,
-    });
-
-    const { isTouch } = useTouchPresentation();
-    const tracksPress = isTouch && !isDisabled;
-    const { hitAreaRef } = useGroupPressTracking(root, tracksPress);
+    useGroupPress(root, !isDisabled);
 
     return (
         <ButtonGroupContext value={{ orientation, isDisabled }}>
-            <SizeProvider value={size}>
-                <div
-                    ref={useMergedRefs(root, listRef, hitAreaRef)}
+            <ControlSizeContext value={size}>
+                <Toolbar.Root
+                    ref={root}
                     className="view-button-group"
                     data-orientation={orientation}
                     data-size={size}
-                    data-tracking={tracksPress || undefined}
                     role="group"
                     aria-label={label}
                     aria-disabled={isDisabled || undefined}
-                    onFocus={handleFocus}
-                    onKeyDown={handleKeyDown}
+                    disabled={isDisabled}
+                    orientation={orientation}
+                    loopFocus
+                    onKeyDown={(event) => {
+                        if (
+                            event.defaultPrevented ||
+                            event.altKey ||
+                            event.ctrlKey ||
+                            event.metaKey ||
+                            !['Home', 'End'].includes(event.key)
+                        )
+                            return;
+                        const group = event.currentTarget;
+
+                        if (
+                            !(event.target instanceof Element) ||
+                            event.target.closest('[role="group"], [role="menu"], [role="dialog"]') !== group
+                        )
+                            return;
+
+                        const actions = Array.from(group.querySelectorAll<HTMLElement>('button, a[href]')).filter(
+                            (action) =>
+                                action.closest('[role="group"], [role="menu"], [role="dialog"]') === group &&
+                                !action.matches(':disabled, [aria-disabled="true"]') &&
+                                !action.closest('[hidden], [inert]')
+                        );
+
+                        const target = event.key === 'Home' ? actions[0] : actions.at(-1);
+
+                        if (target) {
+                            event.preventDefault();
+                            target.focus();
+                        }
+                    }}
                 >
-                    <PressGroupContext value={tracksPress ? GROUP_PRESS_POINTERS : null}>{children}</PressGroupContext>
-                </div>
-            </SizeProvider>
+                    {children}
+                </Toolbar.Root>
+            </ControlSizeContext>
         </ButtonGroupContext>
     );
 }

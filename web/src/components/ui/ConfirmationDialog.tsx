@@ -1,14 +1,11 @@
-import { use, useEffect, useId } from 'react';
-import { Text } from '@/components/astryx/Text';
-import { Stack } from '@/components/astryx/Stack';
-import { DialogActivityContext } from './contexts';
-import { Banner } from '@/components/astryx/Banner';
-import { Button } from '@/components/astryx/Button';
-import { Dialog } from '@/components/astryx/Dialog';
+import { Text } from './Text';
+import { Heading } from './Heading';
+import { use, useEffect, useRef } from 'react';
+import { Button } from '@/components/shadcn/button';
 import type { ConfirmOptions } from './confirmation';
-import { Heading } from '@/components/astryx/Heading';
-import { useMediaQuery } from '@astryxdesign/core/hooks';
-import { Layout, LayoutContent, LayoutFooter } from '@/components/astryx/Layout';
+import { CircleX, LoaderCircle } from 'lucide-react';
+import { AlertDialog } from '@base-ui/react/alert-dialog';
+import { ButtonGroupContext, ControlSizeContext, DialogActivityContext } from './contexts';
 
 /** Presents scoped confirmations without the fixed frame used by general View dialogs. */
 export function ConfirmationDialog({
@@ -25,9 +22,7 @@ export function ConfirmationDialog({
     onAction: () => void;
 }) {
     const activity = use(DialogActivityContext);
-    const titleId = useId();
-    const descriptionId = useId();
-    const isSmallScreen = useMediaQuery('(max-width: 640px)');
+    const cancel = useRef<HTMLButtonElement>(null);
 
     // Extend the sandbox backdrop for exactly the rendered modal's lifetime.
     useEffect(() => {
@@ -36,72 +31,77 @@ export function ConfirmationDialog({
         return () => activity?.(false, false);
     }, [activity]);
 
-    // Preserve least-destructive initial focus and narrow-screen action order.
-    const cancel = (
-        <Button
-            key="cancel"
-            label={options.cancelLabel ?? 'Cancel'}
-            variant="ghost"
-            data-autofocus
-            isDisabled={isPending}
-            onClick={onCancel}
-        />
-    );
-
-    const action = (
-        <Button
-            key="action"
-            label={options.actionLabel}
-            variant={options.actionVariant ?? 'primary'}
-            isLoading={isPending}
-            isDisabled={isPending}
-            onClick={onAction}
-        />
-    );
-
+    // Keep focus on the least destructive action and block dismissal during the request.
     return (
-        <Dialog
-            isOpen
-            role="alertdialog"
-            purpose="form"
-            width={400}
-            maxHeight="calc(var(--view-viewport-height, 100dvh) - var(--spacing-10) * 2)"
-            className="top-(--view-viewport-top) bottom-(--view-viewport-bottom)"
-            aria-labelledby={titleId}
-            aria-describedby={options.description ? descriptionId : undefined}
-            aria-busy={isPending || undefined}
+        <AlertDialog.Root
+            open
             onOpenChange={(open) => {
-                if (!open) onCancel();
+                if (!open && !isPending) onCancel();
             }}
         >
-            <Layout
-                content={
-                    <LayoutContent>
-                        <Heading level={2} id={titleId}>
-                            {options.title}
-                        </Heading>
-                        {options.description && (
-                            <Text color="secondary" id={descriptionId}>
-                                {options.description}
-                            </Text>
-                        )}
-                        {error && <Banner role="alert" status="error" title={error} />}
-                    </LayoutContent>
-                }
-                footer={
-                    <LayoutFooter>
-                        <Stack
-                            direction={isSmallScreen ? 'vertical' : 'horizontal'}
-                            gap={2}
-                            align={isSmallScreen ? 'stretch' : undefined}
-                            justify="end"
-                            wrap={isSmallScreen ? 'nowrap' : 'wrap'}
-                        >
-                            {isSmallScreen ? [action, cancel] : [cancel, action]}
-                        </Stack>
-                    </LayoutFooter>
-                }
-            />
-        </Dialog>
+            <AlertDialog.Portal className="view-dialog-layer">
+                <AlertDialog.Backdrop className="view-dialog-backdrop" />
+                <AlertDialog.Popup
+                    className="view-dialog view-confirmation"
+                    initialFocus={cancel}
+                    aria-busy={isPending || undefined}
+                    onClick={(event) => event.stopPropagation()}
+                >
+                    <ButtonGroupContext value={null}>
+                        <ControlSizeContext value={null}>
+                            <div className="view-confirmation-content">
+                                <AlertDialog.Title render={<div />}>
+                                    <Heading level={2}>{options.title}</Heading>
+                                </AlertDialog.Title>
+                                {options.description && (
+                                    <AlertDialog.Description render={<div />}>
+                                        <Text color="secondary">{options.description}</Text>
+                                    </AlertDialog.Description>
+                                )}
+                                {error && (
+                                    <div role="alert" className="view-confirmation-error">
+                                        <CircleX aria-hidden="true" />
+                                        <p>{error}</p>
+                                    </div>
+                                )}
+                            </div>
+                            <div className="view-confirmation-actions">
+                                <Button
+                                    ref={cancel}
+                                    variant="view"
+                                    data-variant="ghost"
+                                    data-size="md"
+                                    disabled={isPending}
+                                    focusableWhenDisabled
+                                    onClick={() => {
+                                        if (!isPending) onCancel();
+                                    }}
+                                >
+                                    {options.cancelLabel ?? 'Cancel'}
+                                </Button>
+                                <Button
+                                    variant="view"
+                                    data-variant={options.actionVariant ?? 'primary'}
+                                    data-size="md"
+                                    disabled={isPending}
+                                    focusableWhenDisabled
+                                    aria-busy={isPending || undefined}
+                                    aria-label={isPending ? options.actionLabel : undefined}
+                                    onClick={onAction}
+                                >
+                                    <span className="view-action-content" aria-hidden={isPending || undefined}>
+                                        <span className="view-action-label">{options.actionLabel}</span>
+                                    </span>
+                                    {isPending && <LoaderCircle aria-hidden="true" className="view-action-spinner" />}
+                                </Button>
+                                <span role="status" className="sr-only">
+                                    {isPending ? 'Loading' : ''}
+                                </span>
+                            </div>
+                        </ControlSizeContext>
+                    </ButtonGroupContext>
+                </AlertDialog.Popup>
+            </AlertDialog.Portal>
+        </AlertDialog.Root>
     );
 }

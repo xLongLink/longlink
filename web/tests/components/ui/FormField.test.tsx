@@ -1,4 +1,5 @@
 import { it, expect } from 'vitest';
+import { Form } from '@/components/ui/Form';
 // @vitest-environment happy-dom
 import { act, useRef, useState } from 'react';
 import { FormField } from '@/components/ui/FormField';
@@ -25,6 +26,59 @@ it('serializes each authored string once and excludes disabled carriers', () => 
         'blue',
     ]);
     expect([...output.querySelectorAll('input')].every((input) => input.disabled)).toBe(true);
+});
+
+it('retains custom-field validation and canceled reset feedback through the native root', async () => {
+    const submitted: FormData[] = [];
+
+    function Probe() {
+        const field = useRef<HTMLElement>(null);
+        const [values, setValues] = useState<string[]>([]);
+
+        return (
+            <Form
+                action={(data) => {
+                    submitted.push(data);
+                }}
+            >
+                <FormField label="Tags" name="tags" required fieldRef={field} values={values} serialize>
+                    <button type="button" onClick={() => setValues(['red', 'blue'])}>
+                        Choose tags
+                    </button>
+                </FormField>
+            </Form>
+        );
+    }
+
+    await withMounted(<Probe />, async (output) => {
+        const form = output.querySelector('form');
+        const choose = output.querySelector('button');
+
+        if (!form || !choose) throw new Error('Expected the tags form');
+
+        await act(async () => {
+            form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+        });
+        expect(submitted).toHaveLength(0);
+        expect(output.querySelector('[role="alert"]')?.textContent).toBe('Please complete this field.');
+        expect(document.activeElement).toBe(choose);
+
+        const cancelReset = (event: Event) => event.preventDefault();
+        form.addEventListener('reset', cancelReset);
+        await act(async () => form.reset());
+        expect(output.querySelector('[role="alert"]')).not.toBeNull();
+
+        form.removeEventListener('reset', cancelReset);
+        await act(async () => form.reset());
+        expect(output.querySelector('[role="alert"]')).toBeNull();
+
+        await act(async () => choose.click());
+        await act(async () => {
+            form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+        });
+        expect(submitted).toHaveLength(1);
+        expect(submitted[0]?.getAll('tags')).toEqual(['red', 'blue']);
+    });
 });
 
 it('collects the latest attachment once and excludes fields disabled by their ancestor', async () => {

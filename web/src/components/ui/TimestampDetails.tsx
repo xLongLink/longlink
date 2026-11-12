@@ -86,7 +86,7 @@ export function TimestampDetails({
                 )}
             />
             <Popover.Portal>
-                <Popover.Positioner side="top" sideOffset={4}>
+                <Popover.Positioner className="view-typography-positioner" side="top" sideOffset={4}>
                     <Popover.Popup
                         className="view-timestamp-details"
                         aria-label="Timestamp details"

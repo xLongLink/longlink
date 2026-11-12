@@ -7,7 +7,7 @@ import CreateOrganization from '@/platform/routes/user/CreateOrganization';
 it('validates a required Organization name before creation', async () => {
     // Act
     await withMounted(<CreateOrganization onClose={() => undefined} onSuccess={async () => undefined} />, async () => {
-        const dialog = document.querySelector('dialog');
+        const dialog = document.querySelector('[role="dialog"]');
 
         // Assert
         expect(dialog?.textContent).toContain('New organization');

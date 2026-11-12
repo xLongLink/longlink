@@ -1,6 +1,6 @@
+import { spacing } from './layout';
 import type { Spacing } from './types';
-import type { ReactNode } from 'react';
-import { Stack as AstryxStack, StackItem as AstryxStackItem } from '@/components/astryx/Stack';
+import { useCallback, useState, type ReactNode } from 'react';
 
 type StackProps = {
     children?: ReactNode;
@@ -29,18 +29,39 @@ type StackProps = {
 
 /** Arranges View content using the LongLink spacing scale. */
 export function Stack({ background, ...props }: StackProps) {
-    // Apply the optional muted surface without changing layout behavior.
+    // Resolve logical padding independently so axis overrides retain precedence.
     return (
-        <AstryxStack
-            {...props}
-            className={background === 'muted' ? 'bg-muted' : undefined}
-            gap={props.gap ?? 3}
-            padding={props.padding ?? 0}
-            direction={props.direction ?? 'vertical'}
-            justify={props.justify ?? 'start'}
-            align={props.align ?? 'stretch'}
-            wrap={props.wrap ?? 'nowrap'}
-        />
+        <div
+            className="view-stack"
+            style={{
+                width: props.width,
+                height: props.height,
+                maxWidth: props.maxWidth,
+                minHeight: props.minHeight,
+                gap: spacing(props.gap ?? 3),
+                paddingInline: spacing(props.paddingInline ?? props.padding ?? 0),
+                paddingBlock: spacing(props.paddingBlock ?? props.padding ?? 0),
+                backgroundColor: background === 'muted' ? 'var(--muted)' : undefined,
+                flexDirection: props.direction === 'horizontal' ? 'row' : 'column',
+                justifyContent: {
+                    start: 'flex-start',
+                    center: 'center',
+                    end: 'flex-end',
+                    between: 'space-between',
+                    around: 'space-around',
+                    evenly: 'space-evenly',
+                }[props.justify ?? 'start'],
+                alignItems:
+                    props.align === 'start'
+                        ? 'flex-start'
+                        : props.align === 'end'
+                          ? 'flex-end'
+                          : (props.align ?? 'stretch'),
+                flexWrap: props.wrap ?? 'nowrap',
+            }}
+        >
+            {props.children}
+        </div>
     );
 }
 
@@ -53,6 +74,86 @@ export function StackItem(props: {
     /** Overrides this item's cross-axis alignment; omitted values inherit the parent alignment. */
     crossAlignSelf?: 'start' | 'center' | 'end' | 'stretch';
 }) {
-    // Preserve natural sizing and visible overflow unless explicitly overridden.
-    return <AstryxStackItem {...props} size={props.size ?? 'static'} isScrollable={props.isScrollable ?? false} />;
+    const [overflows, setOverflows] = useState(false);
+
+    // Name scroll regions only while overflowing, including changes within retained children.
+    const ref = useCallback(
+        (element: HTMLDivElement | null) => {
+            if (!element || !props.isScrollable) return;
+
+            const lifetime = new AbortController();
+
+            const measure = () => {
+                if (lifetime.signal.aborted || !element.clientWidth || !element.clientHeight) return;
+
+                setOverflows(
+                    element.scrollHeight - element.clientHeight > 1 || element.scrollWidth - element.clientWidth > 1
+                );
+            };
+
+            const resize = typeof ResizeObserver === 'undefined' ? undefined : new ResizeObserver(measure);
+
+            const observeChildren = () => {
+                resize?.disconnect();
+                resize?.observe(element);
+
+                for (const child of element.children) resize?.observe(child);
+
+                measure();
+            };
+
+            const mutations = new MutationObserver(observeChildren);
+            mutations.observe(element, {
+                childList: true,
+                subtree: true,
+                characterData: true,
+                attributes: true,
+                attributeFilter: ['class', 'dir', 'hidden', 'style'],
+            });
+            observeChildren();
+            window.addEventListener('resize', measure);
+            window.visualViewport?.addEventListener('resize', measure);
+            element.addEventListener('load', measure, true);
+            element.addEventListener('transitionend', measure);
+            element.addEventListener('animationend', measure);
+            document.fonts?.addEventListener?.('loadingdone', measure);
+            void document.fonts?.ready.then(measure);
+
+            return () => {
+                lifetime.abort();
+                resize?.disconnect();
+                mutations.disconnect();
+                window.removeEventListener('resize', measure);
+                window.visualViewport?.removeEventListener('resize', measure);
+                element.removeEventListener('load', measure, true);
+                element.removeEventListener('transitionend', measure);
+                element.removeEventListener('animationend', measure);
+                document.fonts?.removeEventListener?.('loadingdone', measure);
+            };
+        },
+        [props.isScrollable]
+    );
+
+    // Preserve intrinsic flex bases: fill grows without forcing an equal zero basis.
+    return (
+        <div
+            ref={ref}
+            className="view-stack-item"
+            role={props.isScrollable && overflows ? 'group' : undefined}
+            aria-label={props.isScrollable && overflows ? 'Content' : undefined}
+            style={{
+                flexGrow: props.size === 'fill' ? 1 : 0,
+                flexShrink: props.size === 'fill' ? undefined : 0,
+                overflow: props.isScrollable ? 'auto' : undefined,
+                alignSelf:
+                    props.crossAlignSelf === 'start'
+                        ? 'flex-start'
+                        : props.crossAlignSelf === 'end'
+                          ? 'flex-end'
+                          : props.crossAlignSelf,
+            }}
+        >
+            {props.children}
+        </div>
+    );
 }

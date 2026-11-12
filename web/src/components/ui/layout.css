@@ -1,0 +1,28 @@
+@layer components {
+    .view-stack,
+    .view-form-field {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .view-form-field {
+        gap: var(--spacing-2);
+        width: 100%;
+    }
+
+    .view-stack-item {
+        min-width: 0;
+        min-height: 0;
+    }
+
+    .view-grid {
+        display: grid;
+    }
+
+    .view-grid-span {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        min-width: 0;
+        height: 100%;
+    }
+}

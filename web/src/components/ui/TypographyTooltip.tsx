@@ -33,6 +33,7 @@ export function TypographyTooltip({
             />
             <Tooltip.Portal>
                 <Tooltip.Positioner
+                    className="view-typography-positioner"
                     side={
                         placement === 'above'
                             ? 'top'

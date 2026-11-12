@@ -102,10 +102,10 @@ it('preserves a replacement credential draft when an earlier registry save compl
                     await act(async () => open.click());
 
                     const credential = document.querySelector<HTMLInputElement>(
-                        'dialog[open] input[name="credential"]'
+                        '[role="dialog"] input[name="credential"]'
                     );
 
-                    const submit = document.querySelector<HTMLButtonElement>('dialog[open] button[type="submit"]');
+                    const submit = document.querySelector<HTMLButtonElement>('[role="dialog"] button[type="submit"]');
 
                     if (!credential || !submit) throw new Error('Expected the registry form');
 
@@ -116,20 +116,20 @@ it('preserves a replacement credential draft when an earlier registry save compl
                     await vi.waitFor(() =>
                         expect(credentials).toEqual([{ provider: 'ghcr', credential: 'ghp_credential_A' }])
                     );
-                    expect(document.querySelector('dialog[open] form')?.getAttribute('aria-busy')).toBe('true');
+                    expect(document.querySelector('[role="dialog"] form')?.getAttribute('aria-busy')).toBe('true');
 
                     const close = document.querySelector<HTMLButtonElement>(
-                        'dialog[open] button[aria-label="Close dialog"]'
+                        '[role="dialog"] button[aria-label="Close dialog"]'
                     );
 
                     if (!close) throw new Error('Expected the pending form to remain dismissible');
 
                     await act(async () => close.click());
-                    await vi.waitFor(() => expect(document.querySelector('dialog[open]')).toBeNull());
+                    await vi.waitFor(() => expect(document.querySelector('[role="dialog"]')).toBeNull());
                     await act(async () => open.click());
 
                     const replacementCredential = document.querySelector<HTMLInputElement>(
-                        'dialog[open] input[name="credential"]'
+                        '[role="dialog"] input[name="credential"]'
                     );
 
                     if (!replacementCredential) throw new Error('Expected the replacement credential form');
@@ -142,7 +142,7 @@ it('preserves a replacement credential draft when an earlier registry save compl
                     await vi.waitFor(() => expect(output.querySelector('tbody')?.textContent).toContain('ghcr.io'));
                     expect(output.querySelector('tbody')?.textContent).toContain('acme');
 
-                    const replacement = document.querySelector('dialog[open]');
+                    const replacement = document.querySelector('[role="dialog"]');
                     expect(replacement).not.toBeNull();
                     expect(replacement?.textContent).toContain('Connect a registry');
                     expect(replacement?.querySelector<HTMLInputElement>('input[name="credential"]')?.value).toBe(

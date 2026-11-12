@@ -1,9 +1,10 @@
-// @vitest-environment happy-dom
-import { act } from 'react';
 import { it, expect, vi } from 'vitest';
 import { Form } from '@/components/ui/Form';
+// @vitest-environment happy-dom
+import { act, type MouseEvent } from 'react';
 import { ReportedError } from '@/lib/reported';
 import { Button } from '@/components/ui/Button';
+import userEvent from '@testing-library/user-event';
 import { ErrorBoundary } from 'react-error-boundary';
 import { IconButton } from '@/components/ui/IconButton';
 import { renderStatic, withMounted } from '../../render';
@@ -17,6 +18,28 @@ it('does not accidentally submit the surrounding form', () => {
     // Assert
     expect(output.querySelector('button')?.getAttribute('type')).toBe('button');
     expect(output.textContent).toContain('Run action');
+});
+
+it('preserves native link keyboard semantics inside a group', async () => {
+    const action = vi.fn((event: MouseEvent<HTMLButtonElement>) => event.preventDefault());
+    const user = userEvent.setup();
+
+    await withMounted(
+        <ButtonGroup label="Navigation">
+            <Button label="Docs" href="https://example.com/docs" onClick={action} />
+        </ButtonGroup>,
+        async (output) => {
+            const anchor = output.querySelector('a');
+
+            if (!anchor) throw new Error('Expected the grouped link');
+            await act(async () => anchor.focus());
+            await act(async () => user.keyboard(' '));
+            expect(anchor.getAttribute('role')).toBe('link');
+            expect(action).not.toHaveBeenCalled();
+            await act(async () => user.keyboard('{Enter}'));
+            expect(action).toHaveBeenCalledTimes(1);
+        }
+    );
 });
 
 it.each(['submit', 'reset'] as const)('does not expose a disabled native %s action before hydration', (type) => {

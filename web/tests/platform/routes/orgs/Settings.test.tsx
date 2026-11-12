@@ -409,7 +409,7 @@ it('does not dismiss a reopened invitation dialog when an earlier submission com
                 // Act
                 await act(async () => open.click());
 
-                const form = document.querySelector<HTMLFormElement>('dialog[open] form');
+                const form = document.querySelector<HTMLFormElement>('[role="dialog"] form');
                 const email = form?.querySelector<HTMLInputElement>('input[name="email"]');
                 const submit = form?.querySelector<HTMLButtonElement>('button[type="submit"]');
 
@@ -423,15 +423,15 @@ it('does not dismiss a reopened invitation dialog when an earlier submission com
                 await vi.waitFor(() => expect(requests).toContain(`POST ${base}/invitations`));
 
                 const close = document.querySelector<HTMLButtonElement>(
-                    'dialog[open] button[aria-label="Close dialog"]'
+                    '[role="dialog"] button[aria-label="Close dialog"]'
                 );
 
                 if (!close) throw new Error('Expected the pending form to remain dismissible');
 
                 await act(async () => close.click());
-                await vi.waitFor(() => expect(document.querySelector('dialog[open]')).toBeNull());
+                await vi.waitFor(() => expect(document.querySelector('[role="dialog"]')).toBeNull());
                 await act(async () => open.click());
-                expect(document.querySelector('dialog[open]')?.textContent).toContain('Invite user');
+                expect(document.querySelector('[role="dialog"]')?.textContent).toContain('Invite user');
 
                 await act(async () => finishInvitation(new Response(null, { status: 204 })));
 
@@ -440,11 +440,13 @@ it('does not dismiss a reopened invitation dialog when an earlier submission com
                     expect(output.querySelector('table')?.textContent).toContain('first@example.com')
                 );
 
-                const replacement = document.querySelector('dialog[open]');
+                const replacement = document.querySelector('[role="dialog"]');
                 expect(replacement).not.toBeNull();
                 expect(replacement?.textContent).toContain('Invite user');
                 await vi.waitFor(() =>
-                    expect(document.querySelector<HTMLFieldSetElement>('dialog[open] fieldset')?.disabled).toBe(false)
+                    expect(document.querySelector<HTMLFieldSetElement>('[role="dialog"] fieldset')?.disabled).toBe(
+                        false
+                    )
                 );
                 expect(requests).toEqual([`POST ${base}/invitations`, `GET ${base}/invitations`]);
             },

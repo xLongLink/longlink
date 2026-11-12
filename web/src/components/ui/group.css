@@ -2,39 +2,31 @@
     .view-button-group {
         display: inline-flex;
         align-items: stretch;
+        position: relative;
+        --group-control-size: var(--size-element-md);
+    }
+
+    .view-button-group[data-size='sm'] {
+        --group-control-size: var(--size-element-sm);
+    }
+
+    .view-button-group[data-size='lg'] {
+        --group-control-size: var(--size-element-lg);
     }
 
     .view-button-group[data-orientation='vertical'] {
         flex-direction: column;
     }
 
-    .view-button-group[data-tracking] {
-        position: relative;
-    }
-
-    .view-action-button[data-astryx-press-group-item]:active:not([data-astryx-press='on']) {
+    .view-button-group[data-group-tracking] .view-action-button:active:not([data-group-pressed]) {
         background-image: none;
     }
 
     @media (pointer: coarse) {
-        .view-button-group[data-tracking]::before {
+        .view-button-group::before {
             content: '';
             position: absolute;
-            inset: calc(var(--astryx-hit-inset-top, 0px) * -1) calc(var(--astryx-hit-inset-right, 0px) * -1)
-                calc(var(--astryx-hit-inset-bottom, 0px) * -1) calc(var(--astryx-hit-inset-left, 0px) * -1);
-            clip-path: polygon(
-                evenodd,
-                0 0,
-                100% 0,
-                100% 100%,
-                0 100%,
-                0 0,
-                var(--astryx-hit-inset-left, 0px) var(--astryx-hit-inset-top, 0px),
-                calc(100% - var(--astryx-hit-inset-right, 0px)) var(--astryx-hit-inset-top, 0px),
-                calc(100% - var(--astryx-hit-inset-right, 0px)) calc(100% - var(--astryx-hit-inset-bottom, 0px)),
-                var(--astryx-hit-inset-left, 0px) calc(100% - var(--astryx-hit-inset-bottom, 0px)),
-                var(--astryx-hit-inset-left, 0px) var(--astryx-hit-inset-top, 0px)
-            );
+            inset: min(0px, calc((var(--group-control-size) - 44px) / 2));
         }
     }
 }

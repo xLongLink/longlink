@@ -1,6 +1,5 @@
+import { Text } from './Text';
 import type { FieldProps } from './types';
-import { Text } from '@/components/astryx/Text';
-import { Stack } from '@/components/astryx/Stack';
 import { useEffect, useEffectEvent, useState, type ReactNode, type RefObject } from 'react';
 
 /** Shares a scoped validation pass between Form and its non-native controls. */
@@ -108,9 +107,14 @@ export function FormField({
         };
     }, [fieldRef, name, hasBinaryValues]);
 
-    // Leave control presentation to Astryx and expose submission errors accessibly.
+    // Keep the actual field root available to validation, serialization, and reset listeners.
     return (
-        <Stack ref={fieldRef} gap={2} width="100%">
+        <div
+            ref={(element) => {
+                fieldRef.current = element;
+            }}
+            className="view-form-field"
+        >
             {children}
             {serialize &&
                 name &&
@@ -125,8 +129,10 @@ export function FormField({
                 !disabled &&
                 failure.values.length === values.length &&
                 failure.values.every((value, index) => value === values[index]) && (
-                    <Text role="alert">{failure.message}</Text>
+                    <div role="alert">
+                        <Text>{failure.message}</Text>
+                    </div>
                 )}
-        </Stack>
+        </div>
     );
 }

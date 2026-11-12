@@ -1,10 +1,9 @@
-import * as menus from './menus';
+import { ActionMenu } from './menus';
 import type { DropdownMenuOption } from './menus';
-import { DropdownMenu as AstryxDropdownMenu } from '@/components/astryx/DropdownMenu';
 
 export type { DropdownMenuItemData, DropdownMenuOption } from './menus';
 
-/** Opens an action menu using standard adaptive presentation and placement. */
+/** Opens an action menu using standard anchored presentation and placement. */
 export function DropdownMenu(props: {
     button?: {
         label: string;
@@ -18,10 +17,14 @@ export function DropdownMenu(props: {
 }) {
     // Supply an accessible trigger while preserving uncontrolled menu state.
     return (
-        <AstryxDropdownMenu
-            {...props}
-            items={menus.icons(props.items)}
-            button={props.button ?? { label: 'Menu', variant: 'secondary', size: 'md', isDisabled: false }}
+        <ActionMenu
+            items={props.items}
+            isMenuOpen={props.isMenuOpen}
+            onOpenChange={props.onOpenChange}
+            label={props.button?.label ?? 'Menu'}
+            variant={props.button?.variant}
+            size={props.button ? props.button.size : 'md'}
+            isDisabled={props.button?.isDisabled}
         />
     );
 }

@@ -55,7 +55,7 @@ it.each(['unchanged', 'changed', 'cleared', 'cancel'] as const)('submits only ex
                 />
             </IconRequestContext>,
             async () => {
-                const dialog = document.querySelector('dialog');
+                const dialog = document.querySelector('[role="dialog"]');
                 const picker = dialog?.querySelector<HTMLButtonElement>('button[aria-haspopup="listbox"]');
 
                 if (!dialog || !picker) throw new Error('Expected the tag editor');

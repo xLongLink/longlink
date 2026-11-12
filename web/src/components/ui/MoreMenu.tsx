@@ -1,7 +1,6 @@
-import * as menus from './menus';
-import { Icon, type StoneIconName } from './Icon';
+import { ActionMenu } from './menus';
+import type { StoneIconName } from './Icon';
 import type { DropdownMenuOption } from './menus';
-import { MoreMenu as AstryxMoreMenu } from '@/components/astryx/MoreMenu';
 
 /** Opens additional actions without exposing popup geometry or presentation modes. */
 export function MoreMenu(props: {
@@ -13,12 +12,14 @@ export function MoreMenu(props: {
 }) {
     // Keep the overflow trigger accessible and enabled without caller configuration.
     return (
-        <AstryxMoreMenu
-            {...props}
-            items={menus.icons(props.items)}
-            icon={props.icon ? <Icon icon={props.icon} size="md" /> : undefined}
+        <ActionMenu
+            items={props.items}
+            icon={props.icon}
             label={props.label ?? 'More options'}
             isDisabled={props.isDisabled ?? false}
+            onOpenChange={props.onOpenChange}
+            variant="ghost"
+            iconOnly
         />
     );
 }

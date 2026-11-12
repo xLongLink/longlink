@@ -1,12 +1,11 @@
-import { X } from 'lucide-react';
+import { Icon } from './Icon';
+import { Heading } from './Heading';
 import type { Spacing } from './types';
 import type { ReactNode } from 'react';
-import { use, useEffect } from 'react';
-import { Stack } from '@/components/astryx/Stack';
-import { DialogActivityContext } from './contexts';
-import { DialogHeader } from '@/components/astryx/Dialog';
-import { IconButton } from '@/components/astryx/IconButton';
-import { Dialog as AstryxDialog } from '@/components/astryx/Dialog';
+import { use, useEffect, useRef } from 'react';
+import { Button } from '@/components/shadcn/button';
+import { Dialog as BaseDialog } from '@base-ui/react/dialog';
+import { ButtonGroupContext, ControlSizeContext, DialogActivityContext } from './contexts';
 
 /** Displays an accessible modal that closes with Escape or its close button, not backdrop clicks. */
 export function Dialog(props: {
@@ -23,7 +22,8 @@ export function Dialog(props: {
 }) {
     const activity = use(DialogActivityContext);
     const fullscreen = props.variant === 'fullscreen';
-    const maxHeight = fullscreen ? '95dvh' : 'calc(var(--view-viewport-height, 100dvh) - var(--spacing-10) * 4)';
+    const title = useRef<HTMLDivElement>(null);
+    const popup = useRef<HTMLDivElement>(null);
 
     // Let an isolated runtime extend the backdrop without moving the native dialog out of its document.
     useEffect(() => {
@@ -35,40 +35,60 @@ export function Dialog(props: {
 
     // Keep the header fixed while bounding the content to the available viewport height.
     return (
-        <AstryxDialog
-            isOpen={props.isOpen}
-            onOpenChange={props.onOpenChange}
-            purpose="form"
-            width={fullscreen ? '95dvw' : 960}
-            className={fullscreen ? undefined : 'top-(--view-viewport-top) bottom-(--view-viewport-bottom)'}
-            maxHeight={maxHeight}
-            padding={0}
-        >
-            <IconButton
-                label="Close dialog"
-                tooltip="Close"
-                icon={<X className="size-5" aria-hidden="true" />}
-                variant="ghost"
-                className="absolute top-3 end-3 z-10"
-                onClick={() => props.onOpenChange(false)}
-            />
-            <Stack
-                gap={0}
-                height={fullscreen ? maxHeight : `min(560px, ${maxHeight})`}
-                minHeight={0}
-                className="overflow-hidden"
-            >
-                {props.title && <DialogHeader title={props.title} className="p-4 pe-12" />}
-                <Stack
-                    minHeight={0}
-                    paddingInline={props.paddingInline ?? 4}
-                    paddingBlockStart={props.title ? (props.gap ?? 3) : 0}
-                    isScrollable
-                    className="flex-1"
+        <BaseDialog.Root open={props.isOpen} onOpenChange={(open) => props.onOpenChange(open)} disablePointerDismissal>
+            <BaseDialog.Portal className="view-dialog-layer">
+                <BaseDialog.Backdrop className="view-dialog-backdrop" />
+                <BaseDialog.Popup
+                    ref={popup}
+                    className="view-dialog"
+                    data-fullscreen={fullscreen || undefined}
+                    aria-label={props.title ? undefined : 'Dialog'}
+                    onClick={(event) => event.stopPropagation()}
+                    initialFocus={() =>
+                        popup.current?.querySelector<HTMLElement>('[data-autofocus]') ?? title.current ?? true
+                    }
                 >
-                    {props.children}
-                </Stack>
-            </Stack>
-        </AstryxDialog>
+                    <ButtonGroupContext value={null}>
+                        <ControlSizeContext value={null}>
+                            <div className="view-dialog-close">
+                                <BaseDialog.Close
+                                    aria-label="Close dialog"
+                                    render={
+                                        <Button
+                                            variant="view"
+                                            data-variant="ghost"
+                                            data-size="md"
+                                            data-icon-only
+                                            type="button"
+                                        />
+                                    }
+                                >
+                                    <Icon icon="close" size="md" />
+                                </BaseDialog.Close>
+                            </div>
+                            {props.title && (
+                                <BaseDialog.Title
+                                    ref={title}
+                                    render={<div />}
+                                    tabIndex={-1}
+                                    className="view-dialog-title"
+                                >
+                                    <Heading level={2}>{props.title}</Heading>
+                                </BaseDialog.Title>
+                            )}
+                            <div
+                                className="view-dialog-content"
+                                style={{
+                                    paddingInline: `calc(var(--spacing-1) * ${props.paddingInline ?? 4})`,
+                                    paddingBlockStart: props.title ? `calc(var(--spacing-1) * ${props.gap ?? 3})` : 0,
+                                }}
+                            >
+                                {props.children}
+                            </div>
+                        </ControlSizeContext>
+                    </ButtonGroupContext>
+                </BaseDialog.Popup>
+            </BaseDialog.Portal>
+        </BaseDialog.Root>
     );
 }

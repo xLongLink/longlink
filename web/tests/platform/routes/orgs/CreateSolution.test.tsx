@@ -40,7 +40,7 @@ it('waits for image inspection before advancing to metadata without creating a S
             />,
             async () => {
                 const events = userEvent.setup();
-                const dialog = document.querySelector('dialog');
+                const dialog = document.querySelector('[role="dialog"]');
 
                 const input = dialog?.querySelector<HTMLInputElement>(
                     'input[placeholder="ghcr.io/longlink/dashboard:latest"]'
