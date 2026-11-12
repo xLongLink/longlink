@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import * as host from '@/views/host';
 import type { ReactNode } from 'react';
 import { startCase } from 'es-toolkit/compat';
@@ -78,13 +79,23 @@ export function SolutionPage({
 
     const views = manifest?.views ?? EMPTY_VIEWS;
 
-    const match = matchRoutes(
-        views.map((view) => ({
-            path: view.route,
-            view,
-        })),
-        `/${routePath}`
-    )?.[0];
+    // Keep route parameters stable while unrelated page state changes.
+    const { match, params } = useMemo(() => {
+        const match = matchRoutes(
+            views.map((view) => ({
+                path: view.route,
+                view,
+            })),
+            `/${routePath}`
+        )?.[0];
+
+        return {
+            match,
+            params: Object.fromEntries(
+                Object.entries(match?.params ?? {}).filter((entry): entry is [string, string] => entry[1] != null)
+            ),
+        };
+    }, [views, routePath]);
 
     // Let nested and dynamic detail Views share their parent tab.
     const navigationTabs = manifest?.tabs ?? EMPTY_VIEWS;
@@ -151,9 +162,7 @@ export function SolutionPage({
                     routePath,
                 ])}
                 navigationBaseUrl={navigationBaseUrl}
-                params={Object.fromEntries(
-                    Object.entries(match.params).filter((entry): entry is [string, string] => entry[1] != null)
-                )}
+                params={params}
                 requestBaseUrl={requestBaseUrl}
                 runtime={manifest.runtime}
             />

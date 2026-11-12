@@ -142,13 +142,13 @@ def test_storage_proxy_denies_admin_routes_but_keeps_s3(rendered_chart: list[dic
     # Check the chart's fixed storage proxy configuration.
     resources = rendered_chart
     config = next(
-        item["data"]["default.conf"]
+        item["data"]["nginx.conf"]
         for item in resources
         if item and item.get("kind") == "ConfigMap" and item["metadata"]["name"] == "longlink-storage-proxy"
     )
 
-    assert "location ^~ /rustfs/admin {\n        return 404;" in config
-    assert "location / {\n        proxy_pass http://rustfs-svc.rustfs.svc.cluster.local:9000;" in config
+    assert "location ^~ /rustfs/admin {\n            return 404;" in config
+    assert "location / {\n            proxy_pass http://rustfs-svc.rustfs.svc.cluster.local:9000;" in config
 
     # Keep the pinned TLS endpoint unprivileged without changing the public Service port.
     deployment = next(

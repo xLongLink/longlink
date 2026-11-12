@@ -13,7 +13,7 @@ RUN apt-get update \
 ENV UV_PYTHON=3.12.13
 ENV UV_PYTHON_INSTALL_DIR=/opt/python
 ENV UV_PYTHON_CPYTHON_BUILD=20260807
-RUN uv python install 3.12.13
+RUN uv python install "$UV_PYTHON"
 ENV UV_PYTHON_DOWNLOADS=never
 
 COPY ["pyproject.toml", "uv.lock", "/workspace/"]

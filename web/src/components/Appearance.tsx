@@ -34,10 +34,16 @@ function readCache() {
 
 /** Shares personal appearance across native pages and isolated Solution hosts. */
 export function AppearanceProvider({ children, preference }: { children: ReactNode; preference?: Appearance }) {
-    const cache = useSyncExternalStore(subscribeToCache, readCache, () => null);
+    const cache = useSyncExternalStore(
+        preference === undefined ? subscribeToCache : () => () => {},
+        preference === undefined ? readCache : () => null,
+        () => null
+    );
 
     // Read the browser snapshot before paint; validated account data takes precedence.
-    const cached = useMemo(() => {
+    const appearance = useMemo(() => {
+        if (preference !== undefined) return preference;
+
         try {
             const parsed = appearanceSchema.safeParse(JSON.parse(cache ?? 'null'));
 
@@ -45,9 +51,7 @@ export function AppearanceProvider({ children, preference }: { children: ReactNo
         } catch {
             return defaultAppearance;
         }
-    }, [cache]);
-
-    const appearance = preference ?? cached;
+    }, [cache, preference]);
 
     // Switching the personal accent requires only an attribute change, before paint.
     useLayoutEffect(() => {
