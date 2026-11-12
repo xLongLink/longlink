@@ -1,6 +1,6 @@
 import type { Spacing } from './types';
 import type { ReactNode } from 'react';
-import { Stack as AstryxStack, StackItem as AstryxStackItem } from '@astryxdesign/core/Stack';
+import { Stack as AstryxStack, StackItem as AstryxStackItem } from '@/components/astryx/Stack';
 
 type StackProps = {
     children?: ReactNode;

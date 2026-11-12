@@ -1,10 +1,10 @@
 import { api } from '@/lib/api';
 import { AuthLayout } from './AuthLayout';
 import { Form } from '@/components/ui/Form';
-import { Text } from '@astryxdesign/core/Text';
-import { Stack } from '@astryxdesign/core/Stack';
+import { Text } from '@/components/astryx/Text';
 import { useQuery } from '@tanstack/react-query';
-import { Button } from '@astryxdesign/core/Button';
+import { Stack } from '@/components/astryx/Stack';
+import { Button } from '@/components/astryx/Button';
 import { useCurrentUser } from '@/lib/hooks/use-user';
 import { Navigate, useSearchParams } from 'react-router';
 import { zConsent, zAuthorizationRedirect } from '@/lib/generated/platform-api-v1/zod.gen';

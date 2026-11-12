@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 import { it, expect, vi } from 'vitest';
 import { act, type ReactNode } from 'react';
-import { LinkProvider } from '@astryxdesign/core/Link';
+import { LinkProvider } from '@/components/astryx/Link';
 import { renderStatic, withMounted } from '../../render';
 import { ArticleFooter } from '@/components/layouts/Article';
 import { Link as RouterLink, useLocation } from 'react-router';

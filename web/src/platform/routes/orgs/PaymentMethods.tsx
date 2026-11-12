@@ -1,13 +1,13 @@
 import { api } from '@/lib/api';
 import { useApi } from '@/lib/hooks/use-api';
-import { Text } from '@astryxdesign/core/Text';
-import { Stack } from '@astryxdesign/core/Stack';
-import { Token } from '@astryxdesign/core/Token';
-import { Button } from '@astryxdesign/core/Button';
-import { Divider } from '@astryxdesign/core/Divider';
-import { Heading } from '@astryxdesign/core/Heading';
+import { Text } from '@/components/astryx/Text';
+import { Stack } from '@/components/astryx/Stack';
+import { Token } from '@/components/astryx/Token';
+import { Button } from '@/components/astryx/Button';
+import { Divider } from '@/components/astryx/Divider';
+import { Heading } from '@/components/astryx/Heading';
 import { ApiBoundary } from '@/components/ApiBoundary';
-import { Table, proportional } from '@astryxdesign/core/Table';
+import { Table, proportional } from '@/components/astryx/Table';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 
 /** Owns card registration and saved-card reads only while Payment Methods is active. */

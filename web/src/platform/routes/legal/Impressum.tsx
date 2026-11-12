@@ -1,8 +1,8 @@
-import { Link } from '@astryxdesign/core/Link';
-import { Text } from '@astryxdesign/core/Text';
-import { Stack } from '@astryxdesign/core/Stack';
+import { Link } from '@/components/astryx/Link';
+import { Text } from '@/components/astryx/Text';
+import { Stack } from '@/components/astryx/Stack';
 import { legalPaths } from '@/platform/publications';
-import { Heading } from '@astryxdesign/core/Heading';
+import { Heading } from '@/components/astryx/Heading';
 import { PublicArticle } from '@/components/layouts/Article';
 
 const article = {

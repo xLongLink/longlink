@@ -1,4 +1,4 @@
-import { CodeBlock as AstryxCodeBlock } from '@astryxdesign/core/CodeBlock';
+import { CodeBlock as AstryxCodeBlock } from '@/components/astryx/CodeBlock';
 
 /** Displays source code using standard copy and highlighting behavior. */
 export function CodeBlock(props: {

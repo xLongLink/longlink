@@ -1,10 +1,10 @@
-import { Code } from '@astryxdesign/core/Code';
-import { Link } from '@astryxdesign/core/Link';
-import { Text } from '@astryxdesign/core/Text';
-import { Stack } from '@astryxdesign/core/Stack';
-import { Heading } from '@astryxdesign/core/Heading';
-import { CodeBlock } from '@astryxdesign/core/CodeBlock';
-import { Table, proportional } from '@astryxdesign/core/Table';
+import { Code } from '@/components/astryx/Code';
+import { Link } from '@/components/astryx/Link';
+import { Text } from '@/components/astryx/Text';
+import { Stack } from '@/components/astryx/Stack';
+import { Heading } from '@/components/astryx/Heading';
+import { CodeBlock } from '@/components/astryx/CodeBlock';
+import { Table, proportional } from '@/components/astryx/Table';
 import { DocumentationArticle } from '@/components/layouts/Article';
 
 const article = {

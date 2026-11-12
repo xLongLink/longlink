@@ -3,7 +3,7 @@ import { act } from 'react';
 import { it, expect } from 'vitest';
 import { withMounted } from '../render';
 import PlatformRoot from '@/platform/root';
-import { SideNavItem } from '@astryxdesign/core/SideNav';
+import { SideNavItem } from '@/components/astryx/SideNav';
 import { Route, Routes, useLocation } from 'react-router';
 
 it('uses the Platform root link provider for client-side navigation', async () => {

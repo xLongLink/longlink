@@ -1,5 +1,5 @@
 import ViewLayout from './ViewLayout';
-import { Text } from '@astryxdesign/core/Text';
+import { Text } from '@/components/astryx/Text';
 import { Currency } from '@/components/ui/Currency';
 
 /** Documents locale-aware currency formatting. */

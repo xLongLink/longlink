@@ -2,9 +2,9 @@ import { useValue } from './value';
 import type { ReactNode } from 'react';
 import { FormField } from './FormField';
 import type { FieldProps } from './types';
-import { SelectorOption } from '@astryxdesign/core/Selector';
+import { SelectorOption } from '@/components/astryx/Selector';
 import { selectorOptions, type SelectorOptionType } from './options';
-import { MultiSelector as AstryxMultiSelector } from '@astryxdesign/core/MultiSelector';
+import { MultiSelector as AstryxMultiSelector } from '@/components/astryx/MultiSelector';
 
 /** Selects multiple values using standard option and selected-value rendering. */
 export function MultiSelector(

@@ -1,9 +1,9 @@
 import { NavigationLink } from './Link';
 import type { MouseEvent, ReactNode } from 'react';
-import { LinkProvider } from '@astryxdesign/core/Link';
-import { Card as AstryxCard } from '@astryxdesign/core/Card';
-import { ClickableCard } from '@astryxdesign/core/ClickableCard';
-import { SelectableCard } from '@astryxdesign/core/SelectableCard';
+import { LinkProvider } from '@/components/astryx/Link';
+import { Card as AstryxCard } from '@/components/astryx/Card';
+import { ClickableCard } from '@/components/astryx/ClickableCard';
+import { SelectableCard } from '@/components/astryx/SelectableCard';
 import { hasInteractiveAncestor, hasTextSelection } from '@astryxdesign/core/hooks';
 
 /** Activates the card's native anchor synchronously, preserving the user's navigation gesture. */

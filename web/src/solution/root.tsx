@@ -5,10 +5,10 @@ import { Link as RouterLink } from 'react-router';
 import { ApiBoundary } from '@/components/ApiBoundary';
 import { ApiProvider } from '@/components/ApiProvider';
 import { appearanceBootstrap } from '@/lib/appearance';
-import { LinkProvider } from '@astryxdesign/core/Link';
-import { LayerProvider } from '@astryxdesign/core/Layer';
+import { LinkProvider } from '@/components/astryx/Link';
 import { AppearanceProvider } from '@/components/Appearance';
 import { IconRequestContext } from '@/components/ui/contexts';
+import { LayerProvider } from '@/components/astryx/LayerProvider';
 import { Links, Meta, Outlet, Scripts, ScrollRestoration } from 'react-router';
 import '@/index.css';
 

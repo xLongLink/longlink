@@ -1,10 +1,10 @@
 import { useApiError } from '@/lib/errors';
 import { useLocation } from 'react-router';
 import { PageLoading } from '@/components/Utils';
-import { Stack } from '@astryxdesign/core/Stack';
 import { Suspense, type ReactNode } from 'react';
-import { Banner } from '@astryxdesign/core/Banner';
-import { Button } from '@astryxdesign/core/Button';
+import { Stack } from '@/components/astryx/Stack';
+import { Banner } from '@/components/astryx/Banner';
+import { Button } from '@/components/astryx/Button';
 import { QueryErrorResetBoundary } from '@tanstack/react-query';
 import { ErrorBoundary, type FallbackProps } from 'react-error-boundary';
 

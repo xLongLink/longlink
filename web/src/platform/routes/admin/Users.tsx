@@ -1,14 +1,14 @@
 import { Search } from 'lucide-react';
 import { useAdminList } from './use-list';
 import { useApi } from '@/lib/hooks/use-api';
-import { Text } from '@astryxdesign/core/Text';
+import { Text } from '@/components/astryx/Text';
 import { Avatar } from '@/components/ui/Avatar';
-import { Stack } from '@astryxdesign/core/Stack';
-import { Heading } from '@astryxdesign/core/Heading';
+import { Stack } from '@/components/astryx/Stack';
+import { Heading } from '@/components/astryx/Heading';
 import { TextInput } from '@/components/ui/TextInput';
-import { Timestamp } from '@astryxdesign/core/Timestamp';
-import { Pagination } from '@astryxdesign/core/Pagination';
-import { Table, proportional } from '@astryxdesign/core/Table';
+import { Timestamp } from '@/components/astryx/Timestamp';
+import { Pagination } from '@/components/astryx/Pagination';
+import { Table, proportional } from '@/components/astryx/Table';
 import { zPageAdminUserSummary } from '@/lib/generated/platform-api-v1/zod.gen';
 
 /** Lists Platform users with server-side pagination. */

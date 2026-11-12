@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { Footer } from '@/components/Footer';
 import { Navbar } from '@/components/Navbar';
 import { Outlet, useLocation } from 'react-router';
-import { Stack, StackItem } from '@astryxdesign/core/Stack';
+import { Stack, StackItem } from '@/components/astryx/Stack';
 
 /** Renders public page chrome around page-specific content. */
 export default function Page() {

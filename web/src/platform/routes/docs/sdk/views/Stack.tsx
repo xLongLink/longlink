@@ -1,5 +1,5 @@
 import ViewLayout from './ViewLayout';
-import { Stack } from '@astryxdesign/core/Stack';
+import { Stack } from '@/components/astryx/Stack';
 
 /** Documents Stack in LongLink Views. */
 export default function StackPage() {

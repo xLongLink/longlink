@@ -1,6 +1,6 @@
 import ViewLayout from './ViewLayout';
 import { Grid } from '@/components/ui/Grid';
-import { Stack } from '@astryxdesign/core/Stack';
+import { Stack } from '@/components/astryx/Stack';
 
 /** Documents Grid in LongLink Views. */
 export default function GridPage() {

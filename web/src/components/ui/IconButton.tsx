@@ -1,7 +1,7 @@
 import type { MouseEvent } from 'react';
 import { Icon, type StoneIconName } from './Icon';
 import { useSize } from '@astryxdesign/core/SizeContext';
-import { IconButton as AstryxIconButton } from '@astryxdesign/core/IconButton';
+import { IconButton as AstryxIconButton } from '@/components/astryx/IconButton';
 
 /** Runs a labeled icon action with automatic async feedback. */
 export function IconButton({

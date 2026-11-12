@@ -6,7 +6,7 @@ import { it, expect, vi } from 'vitest';
 import { withMounted } from '../../render';
 import { ApiErrorContext } from '@/lib/errors';
 import { Link, Route, Routes } from 'react-router';
-import { LinkProvider } from '@astryxdesign/core/Link';
+import { LinkProvider } from '@/components/astryx/Link';
 import Organization from '@/platform/layouts/Organization';
 import Layout from '@/platform/layouts/OrganizationAccess';
 import { renderPlatform, membership, user } from '../render';

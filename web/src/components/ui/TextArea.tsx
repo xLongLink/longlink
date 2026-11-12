@@ -1,7 +1,7 @@
 import { useValue } from './value';
 import { FormField } from './FormField';
 import type { FieldProps } from './types';
-import { TextArea as AstryxTextArea } from '@astryxdesign/core/TextArea';
+import { TextArea as AstryxTextArea } from '@/components/astryx/TextArea';
 
 type TextAreaProps = FieldProps & {
     value?: string;

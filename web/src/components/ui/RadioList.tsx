@@ -1,7 +1,7 @@
 import { useValue } from './value';
 import type { ReactNode } from 'react';
 import type { FieldProps } from './types';
-import { RadioList as AstryxRadioList, RadioListItem as AstryxRadioListItem } from '@astryxdesign/core/RadioList';
+import { RadioList as AstryxRadioList, RadioListItem as AstryxRadioListItem } from '@/components/astryx/RadioList';
 
 /** Selects one of a small number of labeled values. */
 export function RadioList(

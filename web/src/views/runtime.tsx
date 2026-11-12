@@ -5,15 +5,15 @@ import * as components from './components';
 import { createRoot } from 'react-dom/client';
 import { ReportedError } from '@/lib/reported';
 import { Theme } from '@astryxdesign/core/theme';
-import { Banner } from '@astryxdesign/core/Banner';
-import { Center } from '@astryxdesign/core/Center';
-import { Spinner } from '@astryxdesign/core/Spinner';
+import { Banner } from '@/components/astryx/Banner';
+import { Center } from '@/components/astryx/Center';
 import { ErrorBoundary } from 'react-error-boundary';
+import { Spinner } from '@/components/astryx/Spinner';
 import { stoneTheme } from '@/lib/generated/stone.js';
-import { LayerProvider } from '@astryxdesign/core/Layer';
 import { useConfirm } from '@/components/ui/confirmation';
 import { FileRequestContext } from '@/components/ui/preview';
-import { Layout, LayoutContent } from '@astryxdesign/core/Layout';
+import { LayerProvider } from '@/components/astryx/LayerProvider';
+import { Layout, LayoutContent } from '@/components/astryx/Layout';
 import { QueryClient, QueryClientProvider, QueryErrorResetBoundary, useSuspenseQuery } from '@tanstack/react-query';
 import {
     FormRequestContext,

@@ -1,6 +1,6 @@
 import ViewLayout from './ViewLayout';
 import { Stack } from '@/components/ui/Stack';
-import { Text } from '@astryxdesign/core/Text';
+import { Text } from '@/components/astryx/Text';
 import { Step, Stepper } from '@/components/ui/Stepper';
 
 /** Documents Stepper in LongLink Views. */

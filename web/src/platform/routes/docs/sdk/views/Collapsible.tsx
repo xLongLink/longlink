@@ -1,5 +1,5 @@
 import ViewLayout from './ViewLayout';
-import { Text } from '@astryxdesign/core/Text';
+import { Text } from '@/components/astryx/Text';
 import { Collapsible } from '@/components/ui/Collapsible';
 
 /** Documents Collapsible in LongLink Views. */

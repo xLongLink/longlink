@@ -1,9 +1,9 @@
 import { Stack } from './Stack';
 import { useState } from 'react';
 import { Button } from './Button';
-import { Text } from '@astryxdesign/core/Text';
+import { Text } from '@/components/astryx/Text';
 import { useDownload, usePreview } from './preview';
-import { Spinner } from '@astryxdesign/core/Spinner';
+import { Spinner } from '@/components/astryx/Spinner';
 
 /** Previews images, PDFs, and plain text on demand and downloads attachments through the scoped host capability. */
 export function FileViewer({

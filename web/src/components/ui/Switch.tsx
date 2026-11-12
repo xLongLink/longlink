@@ -1,6 +1,6 @@
 import { useValue } from './value';
 import type { FieldProps } from './types';
-import { Switch as AstryxSwitch } from '@astryxdesign/core/Switch';
+import { Switch as AstryxSwitch } from '@/components/astryx/Switch';
 
 /** Edits an on/off setting using one controlled change handler. */
 export function Switch(

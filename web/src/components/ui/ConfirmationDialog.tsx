@@ -1,14 +1,14 @@
 import { use, useEffect, useId } from 'react';
-import { Text } from '@astryxdesign/core/Text';
-import { Stack } from '@astryxdesign/core/Stack';
+import { Text } from '@/components/astryx/Text';
+import { Stack } from '@/components/astryx/Stack';
 import { DialogActivityContext } from './contexts';
-import { Banner } from '@astryxdesign/core/Banner';
-import { Button } from '@astryxdesign/core/Button';
-import { Dialog } from '@astryxdesign/core/Dialog';
+import { Banner } from '@/components/astryx/Banner';
+import { Button } from '@/components/astryx/Button';
+import { Dialog } from '@/components/astryx/Dialog';
 import type { ConfirmOptions } from './confirmation';
-import { Heading } from '@astryxdesign/core/Heading';
+import { Heading } from '@/components/astryx/Heading';
 import { useMediaQuery } from '@astryxdesign/core/hooks';
-import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
+import { Layout, LayoutContent, LayoutFooter } from '@/components/astryx/Layout';
 
 /** Presents scoped confirmations without the fixed frame used by general View dialogs. */
 export function ConfirmationDialog({

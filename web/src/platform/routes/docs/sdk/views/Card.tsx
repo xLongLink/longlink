@@ -1,6 +1,6 @@
 import ViewLayout from './ViewLayout';
 import { Card } from '@/components/ui/Card';
-import { Text } from '@astryxdesign/core/Text';
+import { Text } from '@/components/astryx/Text';
 
 /** Documents plain, clickable, and selectable cards. */
 export default function CardPage() {

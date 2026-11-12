@@ -2,11 +2,11 @@ import { X } from 'lucide-react';
 import type { Spacing } from './types';
 import type { ReactNode } from 'react';
 import { use, useEffect } from 'react';
-import { Stack } from '@astryxdesign/core/Stack';
+import { Stack } from '@/components/astryx/Stack';
 import { DialogActivityContext } from './contexts';
-import { DialogHeader } from '@astryxdesign/core/Dialog';
-import { IconButton } from '@astryxdesign/core/IconButton';
-import { Dialog as AstryxDialog } from '@astryxdesign/core/Dialog';
+import { DialogHeader } from '@/components/astryx/Dialog';
+import { IconButton } from '@/components/astryx/IconButton';
+import { Dialog as AstryxDialog } from '@/components/astryx/Dialog';
 
 /** Displays an accessible modal that closes with Escape or its close button, not backdrop clicks. */
 export function Dialog(props: {

@@ -1,5 +1,5 @@
 import { Icon, type StoneIconName } from './Icon';
-import { Token as AstryxToken } from '@astryxdesign/core/Token';
+import { Token as AstryxToken } from '@/components/astryx/Token';
 
 /** Displays a tag, category, or selection with optional click and removal actions. */
 export function Token(props: {

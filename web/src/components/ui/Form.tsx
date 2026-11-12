@@ -1,7 +1,7 @@
 import { ReportedError } from '@/lib/reported';
 import type { ViewData } from '@/views/protocol';
-import { Stack } from '@astryxdesign/core/Stack';
 import type { FormValidation } from './FormField';
+import { Stack } from '@/components/astryx/Stack';
 import { FormValidationContext, FormRequestContext } from './contexts';
 import { use, useEffect, useRef, useState, useTransition, type ReactNode } from 'react';
 

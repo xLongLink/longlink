@@ -1,7 +1,7 @@
 import type { Spacing } from './types';
 import { useMediaQuery } from '@astryxdesign/core/hooks';
 import { createContext, useContext, type ReactNode } from 'react';
-import { Grid as AstryxGrid, GridSpan as AstryxGridSpan } from '@astryxdesign/core/Grid';
+import { Grid as AstryxGrid, GridSpan as AstryxGridSpan } from '@/components/astryx/Grid';
 
 // Collapsed grids keep spanning children within their single explicit column.
 const GridCollapseContext = createContext(false);

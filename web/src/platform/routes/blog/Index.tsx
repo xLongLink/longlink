@@ -1,13 +1,13 @@
 import { BookOpen } from 'lucide-react';
 import { Page } from '@/components/Page';
-import { Card } from '@astryxdesign/core/Card';
-import { Grid } from '@astryxdesign/core/Grid';
-import { Text } from '@astryxdesign/core/Text';
-import { Stack } from '@astryxdesign/core/Stack';
-import { Button } from '@astryxdesign/core/Button';
-import { Divider } from '@astryxdesign/core/Divider';
-import { Heading } from '@astryxdesign/core/Heading';
-import { Section } from '@astryxdesign/core/Section';
+import { Card } from '@/components/astryx/Card';
+import { Grid } from '@/components/astryx/Grid';
+import { Text } from '@/components/astryx/Text';
+import { Stack } from '@/components/astryx/Stack';
+import { Button } from '@/components/astryx/Button';
+import { Divider } from '@/components/astryx/Divider';
+import { Heading } from '@/components/astryx/Heading';
+import { Section } from '@/components/astryx/Section';
 
 /** Lists articles about LongLink and building process-specific applications. */
 export default function Blog() {

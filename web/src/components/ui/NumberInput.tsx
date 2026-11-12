@@ -1,7 +1,7 @@
 import { useValue } from './value';
 import { FormField } from './FormField';
 import type { FieldProps } from './types';
-import { NumberInput as AstryxNumberInput } from '@astryxdesign/core/NumberInput';
+import { NumberInput as AstryxNumberInput } from '@/components/astryx/NumberInput';
 
 type NumberInputProps = FieldProps & {
     value?: number | null;

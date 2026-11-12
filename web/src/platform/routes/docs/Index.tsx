@@ -1,10 +1,10 @@
-import { Grid } from '@astryxdesign/core/Grid';
-import { Icon } from '@astryxdesign/core/Icon';
-import { Text } from '@astryxdesign/core/Text';
-import { Stack } from '@astryxdesign/core/Stack';
-import { Heading } from '@astryxdesign/core/Heading';
+import { Grid } from '@/components/astryx/Grid';
+import { Icon } from '@/components/astryx/Icon';
+import { Text } from '@/components/astryx/Text';
+import { Stack } from '@/components/astryx/Stack';
+import { Heading } from '@/components/astryx/Heading';
 import { Code2, Lightbulb, ServerCog } from 'lucide-react';
-import { ClickableCard } from '@astryxdesign/core/ClickableCard';
+import { ClickableCard } from '@/components/astryx/ClickableCard';
 import { DocumentationArticle } from '@/components/layouts/Article';
 
 const article = {

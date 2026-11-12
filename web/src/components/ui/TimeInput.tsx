@@ -2,7 +2,7 @@ import { useValue } from './value';
 import { FormField } from './FormField';
 import type { FieldProps } from './types';
 import { compareTime } from '@astryxdesign/core/utils';
-import { TimeInput as AstryxTimeInput, type ISOTimeString } from '@astryxdesign/core/TimeInput';
+import { TimeInput as AstryxTimeInput, type ISOTimeString } from '@/components/astryx/TimeInput';
 
 /** Selects a constrained time using the standard picker. */
 export function TimeInput(

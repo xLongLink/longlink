@@ -1,12 +1,12 @@
 import { useApi } from '@/lib/hooks/use-api';
-import { Link } from '@astryxdesign/core/Link';
-import { Text } from '@astryxdesign/core/Text';
-import { Stack } from '@astryxdesign/core/Stack';
-import { Token } from '@astryxdesign/core/Token';
-import { Divider } from '@astryxdesign/core/Divider';
-import { Heading } from '@astryxdesign/core/Heading';
+import { Link } from '@/components/astryx/Link';
+import { Text } from '@/components/astryx/Text';
+import { Stack } from '@/components/astryx/Stack';
+import { Token } from '@/components/astryx/Token';
+import { Divider } from '@/components/astryx/Divider';
+import { Heading } from '@/components/astryx/Heading';
 import { ApiBoundary } from '@/components/ApiBoundary';
-import { Table, proportional } from '@astryxdesign/core/Table';
+import { Table, proportional } from '@/components/astryx/Table';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 
 /** Keeps private invoice reads scoped to the active owner-only settings section. */

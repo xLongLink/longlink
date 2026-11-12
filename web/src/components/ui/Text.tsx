@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Text as AstryxText } from '@astryxdesign/core/Text';
+import { Text as AstryxText } from '@/components/astryx/Text';
 
 /** Displays View text with Astryx's semantic typography, alignment, wrapping, and truncation controls. */
 // SAFETY: Astryx renders absent children as undefined, preserving the View's optional-children contract.

@@ -1,13 +1,13 @@
 import { ExternalLink } from 'lucide-react';
 import { useApi } from '@/lib/hooks/use-api';
-import { Card } from '@astryxdesign/core/Card';
-import { Text } from '@astryxdesign/core/Text';
-import { Stack } from '@astryxdesign/core/Stack';
-import { Button } from '@astryxdesign/core/Button';
-import { Divider } from '@astryxdesign/core/Divider';
-import { Heading } from '@astryxdesign/core/Heading';
+import { Card } from '@/components/astryx/Card';
+import { Text } from '@/components/astryx/Text';
+import { Stack } from '@/components/astryx/Stack';
+import { Button } from '@/components/astryx/Button';
+import { Divider } from '@/components/astryx/Divider';
+import { Heading } from '@/components/astryx/Heading';
 import { ApiBoundary } from '@/components/ApiBoundary';
-import { ProgressBar } from '@astryxdesign/core/ProgressBar';
+import { ProgressBar } from '@/components/astryx/ProgressBar';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 
 /** Shows the Organization's usage against free allowances or card-enabled capacity. */

@@ -2,7 +2,7 @@
 import { act } from 'react';
 import { withMounted } from '../render';
 import { Navbar } from '@/components/Navbar';
-import { LinkProvider } from '@astryxdesign/core/Link';
+import { LinkProvider } from '@/components/astryx/Link';
 import { it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { Link as RouterLink, Route, Routes } from 'react-router';
 

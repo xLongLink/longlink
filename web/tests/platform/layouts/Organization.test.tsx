@@ -5,7 +5,7 @@ import { withMounted } from '../../render';
 import { membership, user } from '../render';
 import { ApiErrorContext } from '@/lib/errors';
 import Layout from '@/platform/layouts/Organization';
-import { LinkProvider } from '@astryxdesign/core/Link';
+import { LinkProvider } from '@/components/astryx/Link';
 import { Link, Outlet, Route, Routes } from 'react-router';
 import { AuthenticatedUserContext } from '@/lib/hooks/use-user';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';

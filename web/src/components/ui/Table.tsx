@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
-import { Table as AstryxTable, type ColumnWidth } from '@astryxdesign/core/Table';
+import { Table as AstryxTable, type ColumnWidth } from '@/components/astryx/Table';
 
-export { proportional, pixel } from '@astryxdesign/core/Table';
+export { proportional, pixel } from '@/components/astryx/Table';
 
 type TableProps<T extends Record<string, unknown>> = {
     data: T[];

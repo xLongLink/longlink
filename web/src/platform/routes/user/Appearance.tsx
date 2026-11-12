@@ -1,13 +1,13 @@
 import { Circle, Check } from 'lucide-react';
-import { Card } from '@astryxdesign/core/Card';
-import { Text } from '@astryxdesign/core/Text';
+import { Card } from '@/components/astryx/Card';
+import { Text } from '@/components/astryx/Text';
 import { accentColors } from '@/lib/appearance';
-import { Stack } from '@astryxdesign/core/Stack';
-import { Button } from '@astryxdesign/core/Button';
+import { Stack } from '@/components/astryx/Stack';
+import { Button } from '@/components/astryx/Button';
 import { useUpdateUser } from '@/lib/hooks/use-user';
-import { Heading } from '@astryxdesign/core/Heading';
+import { Heading } from '@/components/astryx/Heading';
 import { useAppearance } from '@/lib/hooks/use-appearance';
-import { SelectableCard } from '@astryxdesign/core/SelectableCard';
+import { SelectableCard } from '@/components/astryx/SelectableCard';
 
 /** Previews and saves personal appearance without changing any Solution configuration. */
 export default function AppearanceSettings() {

@@ -1,6 +1,6 @@
 import { textLanguage } from '@/lib/files';
 import { Dialog } from '@/components/ui/Dialog';
-import { CodeBlock } from '@astryxdesign/core/CodeBlock';
+import { CodeBlock } from '@/components/astryx/CodeBlock';
 
 /** Displays text attachments with filename-based syntax highlighting, never executing their contents. */
 export function TextPreview({ text, title, onClose }: { text: string; title: string; onClose: () => void }) {

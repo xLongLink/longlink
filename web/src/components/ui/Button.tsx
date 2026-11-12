@@ -4,7 +4,7 @@ import { Icon, type StoneIconName } from './Icon';
 import { LinkNavigationContext } from './contexts';
 import type { MouseEvent, ReactNode } from 'react';
 import { useSize } from '@astryxdesign/core/SizeContext';
-import { Button as AstryxButton } from '@astryxdesign/core/Button';
+import { Button as AstryxButton } from '@/components/astryx/Button';
 
 type ButtonProps = {
     /** Visible button text and accessible label. */

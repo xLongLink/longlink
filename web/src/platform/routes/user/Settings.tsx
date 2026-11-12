@@ -2,20 +2,20 @@ import type { z } from 'zod';
 import { useState } from 'react';
 import { useLocation } from 'react-router';
 import AppearanceSettings from './Appearance';
-import { Text } from '@astryxdesign/core/Text';
+import { Text } from '@/components/astryx/Text';
 import { Avatar } from '@/components/ui/Avatar';
-import { Stack } from '@astryxdesign/core/Stack';
+import { Stack } from '@/components/astryx/Stack';
 import { UserRound, Building2 } from 'lucide-react';
-import { Divider } from '@astryxdesign/core/Divider';
-import { Heading } from '@astryxdesign/core/Heading';
+import { Divider } from '@/components/astryx/Divider';
+import { Heading } from '@/components/astryx/Heading';
 import { ApiBoundary } from '@/components/ApiBoundary';
-import { TextInput } from '@astryxdesign/core/TextInput';
+import { TextInput } from '@/components/astryx/TextInput';
 import { PageContainer } from '@/components/PageContainer';
 import OrganizationManagement from './OrganizationManagement';
-import { Layout, LayoutPanel } from '@astryxdesign/core/Layout';
+import { Layout, LayoutPanel } from '@/components/astryx/Layout';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { useUpdateUser, useAuthenticatedUser } from '@/lib/hooks/use-user';
-import { SideNav, SideNavItem, SideNavSection } from '@astryxdesign/core/SideNav';
+import { SideNav, SideNavItem, SideNavSection } from '@/components/astryx/SideNav';
 
 /** Renders account metadata and resets drafts when the authenticated identity changes. */
 export default function Settings() {

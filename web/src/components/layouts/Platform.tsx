@@ -2,17 +2,17 @@ import { useState } from 'react';
 import { PanelLeft } from 'lucide-react';
 import { useLocation } from 'react-router';
 import { SidebarContext } from '@/lib/sidebar';
-import { Link } from '@astryxdesign/core/Link';
+import { Link } from '@/components/astryx/Link';
 import { Wordmark } from '@/components/Wordmark';
-import { Stack } from '@astryxdesign/core/Stack';
+import { Stack } from '@/components/astryx/Stack';
 import Content from '@/components/layouts/Content';
 import { useTheme } from '@astryxdesign/core/theme';
-import { Divider } from '@astryxdesign/core/Divider';
-import { AppShell } from '@astryxdesign/core/AppShell';
+import { Divider } from '@/components/astryx/Divider';
+import { AppShell } from '@/components/astryx/AppShell';
 import { useMediaQuery } from '@astryxdesign/core/hooks';
-import { BreadcrumbItem, Breadcrumbs } from '@astryxdesign/core/Breadcrumbs';
+import { BreadcrumbItem, Breadcrumbs } from '@/components/astryx/Breadcrumbs';
 import type { NavigationTab, PlatformProps } from '@/components/layouts/types';
-import { SideNav, SideNavItem, SideNavCollapseButton } from '@astryxdesign/core/SideNav';
+import { SideNav, SideNavItem, SideNavCollapseButton } from '@/components/astryx/SideNav';
 
 /** Finds the longest platform tab path that matches a pathname. */
 function findActiveTab(tabs: readonly NavigationTab[], pathname: string): string | undefined {

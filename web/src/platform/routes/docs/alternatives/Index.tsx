@@ -1,4 +1,4 @@
-import { Heading } from '@astryxdesign/core/Heading';
+import { Heading } from '@/components/astryx/Heading';
 import { DocumentationArticle } from '@/components/layouts/Article';
 
 const article = {

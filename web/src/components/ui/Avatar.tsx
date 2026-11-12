@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import * as dicebear from '@dicebear/core';
-import { Avatar as AstryxAvatar } from '@astryxdesign/core/Avatar';
+import { Avatar as AstryxAvatar } from '@/components/astryx/Avatar';
 import waves from '@dicebear/styles/waves.json' with { type: 'json' };
 import glyphs from '@dicebear/styles/glyphs.json' with { type: 'json' };
 

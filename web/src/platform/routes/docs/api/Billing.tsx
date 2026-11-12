@@ -1,10 +1,10 @@
 import * as pricing from '@/platform/pricing';
-import { Link } from '@astryxdesign/core/Link';
-import { Text } from '@astryxdesign/core/Text';
-import { Stack } from '@astryxdesign/core/Stack';
-import { Heading } from '@astryxdesign/core/Heading';
-import { Blockquote } from '@astryxdesign/core/Blockquote';
-import { Table, proportional } from '@astryxdesign/core/Table';
+import { Link } from '@/components/astryx/Link';
+import { Text } from '@/components/astryx/Text';
+import { Stack } from '@/components/astryx/Stack';
+import { Heading } from '@/components/astryx/Heading';
+import { Blockquote } from '@/components/astryx/Blockquote';
+import { Table, proportional } from '@/components/astryx/Table';
 import { DocumentationArticle } from '@/components/layouts/Article';
 
 const article = {

@@ -1,5 +1,5 @@
-import type { CodeLanguage } from '@astryxdesign/core/CodeBlock';
 import { lua } from '@astryxdesign/core/CodeBlock/languages/lua';
+import type { CodeLanguage } from '@/components/astryx/CodeBlock';
 import { java } from '@astryxdesign/core/CodeBlock/languages/java';
 import { ruby } from '@astryxdesign/core/CodeBlock/languages/ruby';
 import { toml } from '@astryxdesign/core/CodeBlock/languages/toml';

@@ -1,10 +1,10 @@
-import { Code } from '@astryxdesign/core/Code';
-import { Text } from '@astryxdesign/core/Text';
-import { Stack } from '@astryxdesign/core/Stack';
-import { Heading } from '@astryxdesign/core/Heading';
-import { CodeBlock } from '@astryxdesign/core/CodeBlock';
+import { Code } from '@/components/astryx/Code';
+import { Text } from '@/components/astryx/Text';
+import { Stack } from '@/components/astryx/Stack';
+import { Heading } from '@/components/astryx/Heading';
+import { CodeBlock } from '@/components/astryx/CodeBlock';
 import { DocumentationArticle } from '@/components/layouts/Article';
-import { Table, TableBody, TableCell, TableHeader, TableHeaderCell, TableRow } from '@astryxdesign/core/Table';
+import { Table, TableBody, TableCell, TableHeader, TableHeaderCell, TableRow } from '@/components/astryx/Table';
 
 const article = {
     description: 'Build and package a LongLink project for deployment.',

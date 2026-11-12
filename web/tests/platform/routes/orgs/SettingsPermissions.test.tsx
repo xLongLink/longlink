@@ -6,7 +6,7 @@ import * as icons from '@/lib/icons';
 import { ApiErrorContext } from '@/lib/errors';
 import { membership, user } from '../../render';
 import Settings from '@/platform/routes/orgs/Settings';
-import { LinkProvider } from '@astryxdesign/core/Link';
+import { LinkProvider } from '@/components/astryx/Link';
 import { renderStatic, withMounted } from '../../../render';
 import { IconRequestContext } from '@/components/ui/contexts';
 import { AuthenticatedUserContext } from '@/lib/hooks/use-user';

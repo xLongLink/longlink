@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Divider as AstryxDivider } from '@astryxdesign/core/Divider';
+import { Divider as AstryxDivider } from '@/components/astryx/Divider';
 
 /** Separates View content with an optional label and configurable line presentation. */
 export function Divider(props: {

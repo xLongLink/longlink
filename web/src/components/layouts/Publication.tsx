@@ -2,8 +2,8 @@ import { Outlet } from 'react-router';
 import type { ReactNode } from 'react';
 import { Footer } from '@/components/Footer';
 import { Navbar } from '@/components/Navbar';
-import { Stack } from '@astryxdesign/core/Stack';
-import { AppShell } from '@astryxdesign/core/AppShell';
+import { Stack } from '@/components/astryx/Stack';
+import { AppShell } from '@/components/astryx/AppShell';
 
 /** Shares public publication chrome without owning its navigation or sidebar policy. */
 export default function Publication({

@@ -8,7 +8,7 @@ import { ApiErrorContext } from '@/lib/errors';
 import { Theme } from '@astryxdesign/core/theme';
 import { stoneTheme } from '@/lib/generated/stone.js';
 import Invoices from '@/platform/routes/orgs/Invoices';
-import { LayerProvider } from '@astryxdesign/core/Layer';
+import { LayerProvider } from '@/components/astryx/LayerProvider';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 const invoice = {

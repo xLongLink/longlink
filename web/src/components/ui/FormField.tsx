@@ -1,6 +1,6 @@
 import type { FieldProps } from './types';
-import { Text } from '@astryxdesign/core/Text';
-import { Stack } from '@astryxdesign/core/Stack';
+import { Text } from '@/components/astryx/Text';
+import { Stack } from '@/components/astryx/Stack';
 import { useEffect, useEffectEvent, useState, type ReactNode, type RefObject } from 'react';
 
 /** Shares a scoped validation pass between Form and its non-native controls. */

@@ -1,8 +1,8 @@
 import { useLocation } from 'react-router';
-import { Stack } from '@astryxdesign/core/Stack';
-import { Tab, TabList } from '@astryxdesign/core/TabList';
+import { Stack } from '@/components/astryx/Stack';
+import { Tab, TabList } from '@/components/astryx/TabList';
 import Publication from '@/components/layouts/Publication';
-import { SideNav, SideNavItem, SideNavSection } from '@astryxdesign/core/SideNav';
+import { SideNav, SideNavItem, SideNavSection } from '@/components/astryx/SideNav';
 import { documentationIntroduction, documentationNavigation } from '@/platform/publications';
 
 /** Renders documentation with section navigation, article, and outline columns. */

@@ -5,7 +5,7 @@ import type { Window } from 'happy-dom';
 import { withMounted } from '../../render';
 import { Home, Users } from 'lucide-react';
 import Platform from '@/components/layouts/Platform';
-import { LinkProvider } from '@astryxdesign/core/Link';
+import { LinkProvider } from '@/components/astryx/Link';
 import { it, expect, afterEach, beforeEach } from 'vitest';
 
 // SAFETY: The configured happy-dom environment supplies this viewport API on its window.

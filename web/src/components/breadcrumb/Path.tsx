@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { useLocation } from 'react-router';
 import { buildBreadcrumbs } from '@/components/breadcrumb/text';
-import { BreadcrumbItem, Breadcrumbs } from '@astryxdesign/core/Breadcrumbs';
+import { BreadcrumbItem, Breadcrumbs } from '@/components/astryx/Breadcrumbs';
 
 /** Renders breadcrumb items derived from the current URL path. */
 export function PathBreadcrumb({

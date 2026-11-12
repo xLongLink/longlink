@@ -1,17 +1,17 @@
 import { api } from '@/lib/api';
 import { useState } from 'react';
 import { Form } from '@/components/ui/Form';
-import { Text } from '@astryxdesign/core/Text';
+import { Text } from '@/components/astryx/Text';
 import { Dialog } from '@/components/ui/Dialog';
 import { useQuery } from '@tanstack/react-query';
-import { Button } from '@astryxdesign/core/Button';
-import { Heading } from '@astryxdesign/core/Heading';
+import { Button } from '@/components/astryx/Button';
 import { ArrowRight, RefreshCw } from 'lucide-react';
+import { Heading } from '@/components/astryx/Heading';
 import { Step, Stepper } from '@/components/ui/Stepper';
-import { TextInput } from '@astryxdesign/core/TextInput';
-import { Stack, StackItem } from '@astryxdesign/core/Stack';
-import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
-import { Layout, LayoutContent } from '@astryxdesign/core/Layout';
+import { TextInput } from '@/components/astryx/TextInput';
+import { Stack, StackItem } from '@/components/astryx/Stack';
+import { CheckboxInput } from '@/components/astryx/CheckboxInput';
+import { Layout, LayoutContent } from '@/components/astryx/Layout';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 
 type DeploymentReviewProps = {

@@ -1,5 +1,5 @@
-import { Text } from '@astryxdesign/core/Text';
-import { Stack } from '@astryxdesign/core/Stack';
+import { Text } from '@/components/astryx/Text';
+import { Stack } from '@/components/astryx/Stack';
 import { useTheme } from '@astryxdesign/core/theme';
 
 const wordmarkSizeClasses = {

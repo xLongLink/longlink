@@ -1,8 +1,8 @@
 import { useValue } from './value';
 import { FormField } from './FormField';
 import type { FieldProps } from './types';
-import type { ISODateString } from '@astryxdesign/core/Calendar';
-import { DateInput as AstryxDateInput } from '@astryxdesign/core/DateInput';
+import type { ISODateString } from '@/components/astryx/Calendar';
+import { DateInput as AstryxDateInput } from '@/components/astryx/DateInput';
 
 /** Selects a constrained date with standard month and week presentation. */
 export function DateInput(

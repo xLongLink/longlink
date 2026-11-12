@@ -1,10 +1,10 @@
 import { MoveRight } from 'lucide-react';
-import { Link } from '@astryxdesign/core/Link';
-import { Text } from '@astryxdesign/core/Text';
+import { Link } from '@/components/astryx/Link';
+import { Text } from '@/components/astryx/Text';
 import { Tabs, Tab } from '@/components/ui/Tabs';
-import { Stack } from '@astryxdesign/core/Stack';
-import { Heading } from '@astryxdesign/core/Heading';
-import { CodeBlock } from '@astryxdesign/core/CodeBlock';
+import { Stack } from '@/components/astryx/Stack';
+import { Heading } from '@/components/astryx/Heading';
+import { CodeBlock } from '@/components/astryx/CodeBlock';
 import { DocumentationArticle } from '@/components/layouts/Article';
 
 const article = {

@@ -1,5 +1,5 @@
 import { Icon, type StoneIconName } from './Icon';
-import type * as DropdownMenus from '@astryxdesign/core/DropdownMenu';
+import type * as DropdownMenus from '@/components/astryx/DropdownMenu';
 
 export type DropdownMenuItemData = Omit<DropdownMenus.DropdownMenuItemData, 'icon' | 'items'> & {
     icon?: StoneIconName;

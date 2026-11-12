@@ -5,7 +5,7 @@ import { createRoot } from 'react-dom/client';
 import { Theme } from '@astryxdesign/core/theme';
 import { stoneTheme } from '@/lib/generated/stone.js';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { LayerProvider } from '@astryxdesign/core/Layer';
+import { LayerProvider } from '@/components/astryx/LayerProvider';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 /** Renders a component through real theme, routing, and query providers without browser automation. */

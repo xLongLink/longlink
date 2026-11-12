@@ -1,7 +1,7 @@
 import { Text } from './Text';
 import { usePreview } from './preview';
-import { Stack } from '@astryxdesign/core/Stack';
-import { Thumbnail } from '@astryxdesign/core/Thumbnail';
+import { Stack } from '@/components/astryx/Stack';
+import { Thumbnail } from '@/components/astryx/Thumbnail';
 
 type ImageProps = {
     /** Scoped Solution image path, or an image data/blob URL. */

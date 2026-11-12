@@ -1,5 +1,5 @@
 import type { ComponentPropsWithoutRef } from 'react';
-import { TextInput } from '@astryxdesign/core/TextInput';
+import { TextInput } from '@/components/astryx/TextInput';
 import { Controller, type Control, type FieldPathByValue, type FieldValues } from 'react-hook-form';
 
 type TextFieldProps<Values extends FieldValues> = Omit<

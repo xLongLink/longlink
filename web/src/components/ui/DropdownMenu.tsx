@@ -1,6 +1,6 @@
 import * as menus from './menus';
 import type { DropdownMenuOption } from './menus';
-import { DropdownMenu as AstryxDropdownMenu } from '@astryxdesign/core/DropdownMenu';
+import { DropdownMenu as AstryxDropdownMenu } from '@/components/astryx/DropdownMenu';
 
 export type { DropdownMenuItemData, DropdownMenuOption } from './menus';
 

@@ -3,7 +3,7 @@ import { IconRequestContext } from './contexts';
 import { useQuery } from '@tanstack/react-query';
 import { stoneIconComponents } from '@/lib/glyphs';
 import type { IconName } from 'lucide-react/dynamic';
-import { Icon as AstryxIcon } from '@astryxdesign/core/Icon';
+import { Icon as AstryxIcon } from '@/components/astryx/Icon';
 import { AlertTriangle, createLucideIcon } from 'lucide-react';
 
 export type StoneIconName = keyof typeof stoneIconComponents | IconName | `lucide:${IconName}`;

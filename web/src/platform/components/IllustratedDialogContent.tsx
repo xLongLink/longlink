@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
-import { Stack } from '@astryxdesign/core/Stack';
-import { Layout, LayoutPanel, LayoutContent } from '@astryxdesign/core/Layout';
+import { Stack } from '@/components/astryx/Stack';
+import { Layout, LayoutPanel, LayoutContent } from '@/components/astryx/Layout';
 
 export function IllustratedDialogContent({ illustration, children }: { illustration: ReactNode; children: ReactNode }) {
     // Bound the split frame to the viewport while keeping content scrolling inside the layout.

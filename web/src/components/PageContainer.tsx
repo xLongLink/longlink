@@ -1,4 +1,4 @@
-import { Stack, type StackProps } from '@astryxdesign/core/Stack';
+import { Stack, type StackProps } from '@/components/astryx/Stack';
 
 /** Renders a centered full-width Stack while clearing inherited container padding. */
 export function PageContainer({ className, maxWidth = 1000, ...props }: Omit<StackProps, 'width'>) {

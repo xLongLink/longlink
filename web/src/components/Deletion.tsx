@@ -1,10 +1,10 @@
-import { Text } from '@astryxdesign/core/Text';
-import { Stack } from '@astryxdesign/core/Stack';
-import { Button } from '@astryxdesign/core/Button';
+import { Text } from '@/components/astryx/Text';
+import { Stack } from '@/components/astryx/Stack';
+import { Button } from '@/components/astryx/Button';
 import { useId, useRef, useTransition } from 'react';
 import { useMediaQuery } from '@astryxdesign/core/hooks';
-import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
-import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
+import { Dialog, DialogHeader } from '@/components/astryx/Dialog';
+import { Layout, LayoutContent, LayoutFooter } from '@/components/astryx/Layout';
 
 /** Tracks deletion for its mounted lifetime; callers own the resource, mounting, and success-only closure. */
 export function DeletionDialog({

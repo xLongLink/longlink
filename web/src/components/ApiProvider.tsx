@@ -1,6 +1,6 @@
 import { ApiErrorContext } from '@/lib/errors';
 import { useState, type ReactNode } from 'react';
-import { useToast } from '@astryxdesign/core/Toast';
+import { useToast } from '@/components/astryx/Toast';
 import { createQueryRuntime } from '@/lib/react-query';
 import { QueryClientProvider } from '@tanstack/react-query';
 

@@ -1,5 +1,5 @@
 import ViewLayout from './ViewLayout';
-import { Text } from '@astryxdesign/core/Text';
+import { Text } from '@/components/astryx/Text';
 import { Tabs, Tab } from '@/components/ui/Tabs';
 
 /** Documents tab selection and panel content. */

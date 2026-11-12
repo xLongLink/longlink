@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
-import { Card } from '@astryxdesign/core/Card';
-import { Stack } from '@astryxdesign/core/Stack';
+import { Card } from '@/components/astryx/Card';
+import { Stack } from '@/components/astryx/Stack';
 
 /** Owns the application content surface and the View viewport-height contract. */
 export default function Content({ children, toolbar }: { children: ReactNode; toolbar?: ReactNode }) {

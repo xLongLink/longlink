@@ -1,12 +1,12 @@
 import { Icon } from './Icon';
 import { Button } from './Button';
 import { ReportedError } from '@/lib/reported';
-import { Stack } from '@astryxdesign/core/Stack';
+import { Stack } from '@/components/astryx/Stack';
 import { FormValidationContext } from './contexts';
-import { Banner } from '@astryxdesign/core/Banner';
+import { Banner } from '@/components/astryx/Banner';
 import { useAnnounce } from '@astryxdesign/core/hooks';
-import { Layout, LayoutHeader, LayoutContent } from '@astryxdesign/core/Layout';
-import { Stepper as AstryxStepper, Step as AstryxStep } from '@astryxdesign/core/Stepper';
+import { Layout, LayoutHeader, LayoutContent } from '@/components/astryx/Layout';
+import { Stepper as AstryxStepper, Step as AstryxStep } from '@/components/astryx/Stepper';
 import {
     Children,
     cloneElement,

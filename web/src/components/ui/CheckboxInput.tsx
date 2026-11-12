@@ -1,6 +1,6 @@
 import { useValue } from './value';
 import type { FieldProps } from './types';
-import { CheckboxInput as AstryxCheckboxInput } from '@astryxdesign/core/CheckboxInput';
+import { CheckboxInput as AstryxCheckboxInput } from '@/components/astryx/CheckboxInput';
 
 /** Edits a boolean or indeterminate field. */
 export function CheckboxInput(

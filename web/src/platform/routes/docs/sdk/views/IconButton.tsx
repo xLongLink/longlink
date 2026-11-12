@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import ViewLayout from './ViewLayout';
-import { Text } from '@astryxdesign/core/Text';
-import { Stack } from '@astryxdesign/core/Stack';
+import { Text } from '@/components/astryx/Text';
+import { Stack } from '@/components/astryx/Stack';
 import { IconButton } from '@/components/ui/IconButton';
 
 /** Documents IconButton in LongLink Views. */

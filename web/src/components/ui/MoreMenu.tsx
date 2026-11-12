@@ -1,7 +1,7 @@
 import * as menus from './menus';
 import { Icon, type StoneIconName } from './Icon';
 import type { DropdownMenuOption } from './menus';
-import { MoreMenu as AstryxMoreMenu } from '@astryxdesign/core/MoreMenu';
+import { MoreMenu as AstryxMoreMenu } from '@/components/astryx/MoreMenu';
 
 /** Opens additional actions without exposing popup geometry or presentation modes. */
 export function MoreMenu(props: {

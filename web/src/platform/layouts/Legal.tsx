@@ -1,8 +1,8 @@
 import { useLocation } from 'react-router';
-import { Stack } from '@astryxdesign/core/Stack';
+import { Stack } from '@/components/astryx/Stack';
 import Publication from '@/components/layouts/Publication';
 import { legalPages, brandingPages } from '@/platform/publications';
-import { SideNav, SideNavItem, SideNavSection } from '@astryxdesign/core/SideNav';
+import { SideNav, SideNavItem, SideNavSection } from '@/components/astryx/SideNav';
 
 /** Renders legal and branding pages with the public article layout. */
 export default function Legal() {

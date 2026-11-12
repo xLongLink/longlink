@@ -1,15 +1,15 @@
 import type { Spacing } from './types';
-import { Stack } from '@astryxdesign/core/Stack';
+import { Stack } from '@/components/astryx/Stack';
 import { MenuNavigationContext } from './contexts';
 import { useMediaQuery } from '@astryxdesign/core/hooks';
 import { Icon, type StoneIconName } from '@/components/ui/Icon';
-import { Layout, LayoutPanel } from '@astryxdesign/core/Layout';
+import { Layout, LayoutPanel } from '@/components/astryx/Layout';
 import { Children, isValidElement, useContext, type ReactElement, type ReactNode } from 'react';
 import {
     SideNav as AstryxSideNav,
     SideNavItem as AstryxSideNavItem,
     SideNavSection as AstryxSideNavSection,
-} from '@astryxdesign/core/SideNav';
+} from '@/components/astryx/SideNav';
 
 type MenuSectionProps = {
     /** MenuItem elements or nested MenuSubSection groups. */

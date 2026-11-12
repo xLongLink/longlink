@@ -1,6 +1,6 @@
 import type { Spacing } from './types';
-import { Stack } from '@astryxdesign/core/Stack';
-import { Tab as AstryxTab, TabList } from '@astryxdesign/core/TabList';
+import { Stack } from '@/components/astryx/Stack';
+import { Tab as AstryxTab, TabList } from '@/components/astryx/TabList';
 import { Children, isValidElement, useId, useState, type ReactElement, type ReactNode } from 'react';
 
 type TabProps = {

@@ -1,11 +1,11 @@
-import { Link } from '@astryxdesign/core/Link';
-import { Text } from '@astryxdesign/core/Text';
-import { Stack } from '@astryxdesign/core/Stack';
-import { Heading } from '@astryxdesign/core/Heading';
-import { Blockquote } from '@astryxdesign/core/Blockquote';
+import { Link } from '@/components/astryx/Link';
+import { Text } from '@/components/astryx/Text';
+import { Stack } from '@/components/astryx/Stack';
+import { Heading } from '@/components/astryx/Heading';
+import { Blockquote } from '@/components/astryx/Blockquote';
 import { ArrowUp, CheckCheck, EyeOff, Wrench } from 'lucide-react';
 import { DocumentationArticle } from '@/components/layouts/Article';
-import { Table, TableBody, TableCell, TableHeader, TableHeaderCell, TableRow } from '@astryxdesign/core/Table';
+import { Table, TableBody, TableCell, TableHeader, TableHeaderCell, TableRow } from '@/components/astryx/Table';
 
 const solutionRoles = [
     { name: 'read', access: 'View Solution data and send GET requests', icon: EyeOff },

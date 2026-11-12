@@ -2,7 +2,7 @@ import { useValue } from './value';
 import { FormField } from './FormField';
 import type { FieldProps } from './types';
 import { selectorOptions, type SelectorOptionType } from './options';
-import { Selector as AstryxSelector } from '@astryxdesign/core/Selector';
+import { Selector as AstryxSelector } from '@/components/astryx/Selector';
 
 export type { SelectorOptionData, SelectorOptionType } from './options';
 

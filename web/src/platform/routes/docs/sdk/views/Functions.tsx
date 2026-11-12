@@ -1,8 +1,8 @@
 import ViewLayout from './ViewLayout';
-import { Text } from '@astryxdesign/core/Text';
-import { Stack } from '@astryxdesign/core/Stack';
-import { Heading } from '@astryxdesign/core/Heading';
-import { Table, proportional } from '@astryxdesign/core/Table';
+import { Text } from '@/components/astryx/Text';
+import { Stack } from '@/components/astryx/Stack';
+import { Heading } from '@/components/astryx/Heading';
+import { Table, proportional } from '@/components/astryx/Table';
 
 // Describe the runtime bindings exposed to Views.
 const functions = [

@@ -1,4 +1,4 @@
-import { Timestamp as AstryxTimestamp } from '@astryxdesign/core/Timestamp';
+import { Timestamp as AstryxTimestamp } from '@/components/astryx/Timestamp';
 
 /** Formats a date or timestamp using the standard date formats. */
 export function Timestamp(props: {

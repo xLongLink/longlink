@@ -1,8 +1,8 @@
 import { Outlet } from 'react-router';
 import type { ReactNode } from 'react';
 import { ExternalLink } from 'lucide-react';
-import { Link } from '@astryxdesign/core/Link';
-import { Stack } from '@astryxdesign/core/Stack';
+import { Link } from '@/components/astryx/Link';
+import { Stack } from '@/components/astryx/Stack';
 import Platform from '@/components/layouts/Platform';
 
 /** Renders the brand-only shell around routed or supplied Platform content. */

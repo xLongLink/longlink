@@ -1,4 +1,4 @@
-import { Link } from '@astryxdesign/core/Link';
+import { Link } from '@/components/astryx/Link';
 import { DevelopmentProfile } from '@/solution/Profile';
 import { SolutionPage } from '@/components/SolutionPage';
 import { PathBreadcrumb } from '@/components/breadcrumb/Path';

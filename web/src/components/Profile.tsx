@@ -1,17 +1,17 @@
 import { api } from '@/lib/api';
 import { useContext, useState } from 'react';
 import { SidebarContext } from '@/lib/sidebar';
-import { Item } from '@astryxdesign/core/Item';
-import { Text } from '@astryxdesign/core/Text';
+import { Item } from '@/components/astryx/Item';
+import { Text } from '@/components/astryx/Text';
 import { Avatar } from '@/components/ui/Avatar';
-import { Stack } from '@astryxdesign/core/Stack';
+import { Stack } from '@/components/astryx/Stack';
 import { adminNavigation } from '@/platform/admin';
-import { Button } from '@astryxdesign/core/Button';
-import { Divider } from '@astryxdesign/core/Divider';
-import { Popover } from '@astryxdesign/core/Popover';
+import { Button } from '@/components/astryx/Button';
+import { Divider } from '@/components/astryx/Divider';
+import { Popover } from '@/components/astryx/Popover';
 import { clearAppearanceCache } from '@/lib/appearance';
-import { List, ListItem } from '@astryxdesign/core/List';
-import { IconButton } from '@astryxdesign/core/IconButton';
+import { List, ListItem } from '@/components/astryx/List';
+import { IconButton } from '@/components/astryx/IconButton';
 import { useAuthenticatedUser } from '@/lib/hooks/use-user';
 import { BookOpen, Building2, ChevronsUpDown, ExternalLink, Settings2 } from 'lucide-react';
 

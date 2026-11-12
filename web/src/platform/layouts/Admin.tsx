@@ -5,7 +5,7 @@ import Platform from '@/components/layouts/Platform';
 import NotFoundLayout from '@/components/layouts/NotFound';
 import { PageContainer } from '@/components/PageContainer';
 import { useAuthenticatedUser } from '@/lib/hooks/use-user';
-import { BreadcrumbItem, Breadcrumbs } from '@astryxdesign/core/Breadcrumbs';
+import { BreadcrumbItem, Breadcrumbs } from '@/components/astryx/Breadcrumbs';
 
 /** Renders authorized administration within the shared application layouts. */
 export default function Admin() {

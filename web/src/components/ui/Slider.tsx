@@ -1,6 +1,6 @@
 import { useValue } from './value';
 import type { FieldProps } from './types';
-import { Slider as AstryxSlider } from '@astryxdesign/core/Slider';
+import { Slider as AstryxSlider } from '@/components/astryx/Slider';
 
 type SliderProps = FieldProps & {
     min?: number;

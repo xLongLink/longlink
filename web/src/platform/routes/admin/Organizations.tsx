@@ -3,18 +3,18 @@ import { useState } from 'react';
 import { useAdminList } from './use-list';
 import { Info, Search } from 'lucide-react';
 import { useApi } from '@/lib/hooks/use-api';
-import { Link } from '@astryxdesign/core/Link';
-import { Text } from '@astryxdesign/core/Text';
+import { Link } from '@/components/astryx/Link';
+import { Text } from '@/components/astryx/Text';
 import { Avatar } from '@/components/ui/Avatar';
 import { Dialog } from '@/components/ui/Dialog';
-import { Badge } from '@astryxdesign/core/Badge';
-import { Stack } from '@astryxdesign/core/Stack';
-import { Button } from '@astryxdesign/core/Button';
-import { Heading } from '@astryxdesign/core/Heading';
+import { Badge } from '@/components/astryx/Badge';
+import { Stack } from '@/components/astryx/Stack';
+import { Button } from '@/components/astryx/Button';
+import { Heading } from '@/components/astryx/Heading';
 import { TextInput } from '@/components/ui/TextInput';
 import { DeletionDialog } from '@/components/Deletion';
-import { Pagination } from '@astryxdesign/core/Pagination';
-import { Table, proportional } from '@astryxdesign/core/Table';
+import { Pagination } from '@/components/astryx/Pagination';
+import { Table, proportional } from '@/components/astryx/Table';
 import { zPageOrganizationIdentity } from '@/lib/generated/platform-api-v1/zod.gen';
 
 /** Lists organizations and confirms administrator deletion. */

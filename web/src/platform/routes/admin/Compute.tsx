@@ -5,18 +5,18 @@ import { Form } from '@/components/ui/Form';
 import { Info, Search } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useApi } from '@/lib/hooks/use-api';
-import { Text } from '@astryxdesign/core/Text';
+import { Text } from '@/components/astryx/Text';
 import { Dialog } from '@/components/ui/Dialog';
-import { Stack } from '@astryxdesign/core/Stack';
-import { Button } from '@astryxdesign/core/Button';
-import { Heading } from '@astryxdesign/core/Heading';
+import { Stack } from '@/components/astryx/Stack';
+import { Button } from '@/components/astryx/Button';
+import { Heading } from '@/components/astryx/Heading';
 import { TextInput } from '@/components/ui/TextInput';
 import { DeletionDialog } from '@/components/Deletion';
-import { TextArea } from '@astryxdesign/core/TextArea';
+import { TextArea } from '@/components/astryx/TextArea';
 import { Step, Stepper } from '@/components/ui/Stepper';
-import { FileInput } from '@astryxdesign/core/FileInput';
-import { Pagination } from '@astryxdesign/core/Pagination';
-import { Table, proportional } from '@astryxdesign/core/Table';
+import { FileInput } from '@/components/astryx/FileInput';
+import { Pagination } from '@/components/astryx/Pagination';
+import { Table, proportional } from '@/components/astryx/Table';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 
 // The API also accepts raw YAML and validates its structure on the server.

@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { ButtonGroup as AstryxButtonGroup } from '@astryxdesign/core/ButtonGroup';
+import { ButtonGroup as AstryxButtonGroup } from '@/components/astryx/ButtonGroup';
 
 /** Groups related flat action buttons. */
 export function ButtonGroup(props: {

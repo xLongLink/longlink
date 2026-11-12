@@ -1,19 +1,19 @@
 import { Circle } from 'lucide-react';
-import { Card } from '@astryxdesign/core/Card';
-import { Code } from '@astryxdesign/core/Code';
-import { Link } from '@astryxdesign/core/Link';
-import { Text } from '@astryxdesign/core/Text';
-import { Stack } from '@astryxdesign/core/Stack';
+import { Card } from '@/components/astryx/Card';
+import { Code } from '@/components/astryx/Code';
+import { Link } from '@/components/astryx/Link';
+import { Text } from '@/components/astryx/Text';
 import { useState, type ReactNode } from 'react';
-import { Switch } from '@astryxdesign/core/Switch';
-import { Heading } from '@astryxdesign/core/Heading';
-import { CodeBlock } from '@astryxdesign/core/CodeBlock';
-import { Blockquote } from '@astryxdesign/core/Blockquote';
+import { Stack } from '@/components/astryx/Stack';
+import { Switch } from '@/components/astryx/Switch';
+import { Heading } from '@/components/astryx/Heading';
+import { CodeBlock } from '@/components/astryx/CodeBlock';
+import { Blockquote } from '@/components/astryx/Blockquote';
 import { documentationLastUpdated } from '@/lib/documentation';
-import { Table, proportional } from '@astryxdesign/core/Table';
+import { Table, proportional } from '@/components/astryx/Table';
 import { componentDocumentation } from '@/platform/publications';
 import { DocumentationArticle } from '@/components/layouts/Article';
-import { Layout, LayoutContent, LayoutHeader } from '@astryxdesign/core/Layout';
+import { Layout, LayoutContent, LayoutHeader } from '@/components/astryx/Layout';
 
 type ViewProperty = { name: string; type: string; description?: string };
 

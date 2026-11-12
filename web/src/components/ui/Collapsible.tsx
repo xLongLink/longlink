@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Collapsible as AstryxCollapsible } from '@astryxdesign/core/Collapsible';
+import { Collapsible as AstryxCollapsible } from '@/components/astryx/Collapsible';
 
 /** Shows or hides content using controlled or initially open state. */
 export function Collapsible(props: {

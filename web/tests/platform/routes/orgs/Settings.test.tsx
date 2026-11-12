@@ -11,7 +11,7 @@ import { Link, Route, Routes } from 'react-router';
 import userEvent from '@testing-library/user-event';
 import { ApiBoundary } from '@/components/ApiBoundary';
 import Settings from '@/platform/routes/orgs/Settings';
-import { LinkProvider } from '@astryxdesign/core/Link';
+import { LinkProvider } from '@/components/astryx/Link';
 import Organization from '@/platform/layouts/Organization';
 import { IconRequestContext } from '@/components/ui/contexts';
 import { renderPlatform, membership, user } from '../../render';

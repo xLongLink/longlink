@@ -10,8 +10,8 @@ import { ApiErrorContext } from '@/lib/errors';
 import { Theme } from '@astryxdesign/core/theme';
 import { stoneTheme } from '@/lib/generated/stone.js';
 import { ApiBoundary } from '@/components/ApiBoundary';
-import { LayerProvider } from '@astryxdesign/core/Layer';
 import { Link, Route, Routes, MemoryRouter } from 'react-router';
+import { LayerProvider } from '@/components/astryx/LayerProvider';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 it('uses the caller-selected loading fallback for suspended reads', () => {

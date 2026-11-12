@@ -1,10 +1,10 @@
 import { useDownload } from './preview';
 import { ReportedError } from '@/lib/reported';
-import { Text } from '@astryxdesign/core/Text';
+import { Text } from '@/components/astryx/Text';
 import { resolveNavigationUrl } from '@/lib/url';
 import { LinkNavigationContext } from './contexts';
-import { Spinner } from '@astryxdesign/core/Spinner';
-import { Link as AstryxLink } from '@astryxdesign/core/Link';
+import { Spinner } from '@/components/astryx/Spinner';
+import { Link as AstryxLink } from '@/components/astryx/Link';
 import { useContext, useRef, useTransition, type ComponentPropsWithRef, type MouseEvent, type ReactNode } from 'react';
 
 /** Preserves native link gestures while routing ordinary internal clicks through the host. */

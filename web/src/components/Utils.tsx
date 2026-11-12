@@ -1,6 +1,6 @@
-import { Center } from '@astryxdesign/core/Center';
-import { Spinner } from '@astryxdesign/core/Spinner';
-import { EmptyState } from '@astryxdesign/core/EmptyState';
+import { Center } from '@/components/astryx/Center';
+import { Spinner } from '@/components/astryx/Spinner';
+import { EmptyState } from '@/components/astryx/EmptyState';
 
 /** Renders a full-page loading indicator. */
 export function PageLoading({ label }: { label: string }) {

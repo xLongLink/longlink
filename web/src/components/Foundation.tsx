@@ -1,8 +1,8 @@
 import { useEffect, useRef } from 'react';
-import { Text } from '@astryxdesign/core/Text';
-import { Stack } from '@astryxdesign/core/Stack';
-import { Heading } from '@astryxdesign/core/Heading';
-import { Section } from '@astryxdesign/core/Section';
+import { Text } from '@/components/astryx/Text';
+import { Stack } from '@/components/astryx/Stack';
+import { Heading } from '@/components/astryx/Heading';
+import { Section } from '@/components/astryx/Section';
 import { industryGroups, sharedUseCaseGroups } from '@/lib/industries';
 
 const industries = industryGroups.flatMap((group) => group.industries);

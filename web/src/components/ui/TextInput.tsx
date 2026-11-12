@@ -2,7 +2,7 @@ import { useValue } from './value';
 import type { ReactNode } from 'react';
 import { FormField } from './FormField';
 import type { FieldProps } from './types';
-import { TextInput as AstryxTextInput } from '@astryxdesign/core/TextInput';
+import { TextInput as AstryxTextInput } from '@/components/astryx/TextInput';
 
 type TextInputProps = FieldProps & {
     value?: string;

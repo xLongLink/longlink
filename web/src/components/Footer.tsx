@@ -1,9 +1,9 @@
 import { Package } from 'lucide-react';
-import { Link } from '@astryxdesign/core/Link';
-import { Text } from '@astryxdesign/core/Text';
+import { Link } from '@/components/astryx/Link';
+import { Text } from '@/components/astryx/Text';
 import { Wordmark } from '@/components/Wordmark';
-import { Stack } from '@astryxdesign/core/Stack';
-import { Divider } from '@astryxdesign/core/Divider';
+import { Stack } from '@/components/astryx/Stack';
+import { Divider } from '@/components/astryx/Divider';
 import { GitHubIcon } from '@/components/svg/GitHubIcon';
 import { LinkedInIcon } from '@/components/svg/LinkedInIcon';
 

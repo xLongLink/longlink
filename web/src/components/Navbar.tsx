@@ -1,12 +1,12 @@
 import { Menu } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useEffect, useState } from 'react';
-import { Link } from '@astryxdesign/core/Link';
+import { Link } from '@/components/astryx/Link';
 import { Wordmark } from '@/components/Wordmark';
-import { Stack } from '@astryxdesign/core/Stack';
-import { Button } from '@astryxdesign/core/Button';
-import { TopNav } from '@astryxdesign/core/TopNav';
-import { MobileNav } from '@astryxdesign/core/MobileNav';
+import { Stack } from '@/components/astryx/Stack';
+import { Button } from '@/components/astryx/Button';
+import { TopNav } from '@/components/astryx/TopNav';
+import { MobileNav } from '@/components/astryx/MobileNav';
 
 const publicNavigation = {
     links: [

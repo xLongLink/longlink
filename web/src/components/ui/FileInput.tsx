@@ -1,7 +1,7 @@
 import { useValue } from './value';
 import { FormField } from './FormField';
 import type { FieldProps } from './types';
-import { FileInput as AstryxFileInput } from '@astryxdesign/core/FileInput';
+import { FileInput as AstryxFileInput } from '@/components/astryx/FileInput';
 
 /** Selects files with explicit upload constraints; uploading remains a Solution operation. */
 export function FileInput(

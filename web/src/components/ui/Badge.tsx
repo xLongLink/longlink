@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { Icon, type StoneIconName } from './Icon';
-import { Badge as AstryxBadge } from '@astryxdesign/core/Badge';
+import { Badge as AstryxBadge } from '@/components/astryx/Badge';
 
 /** Displays a count or enumerated state. */
 export function Badge(props: {

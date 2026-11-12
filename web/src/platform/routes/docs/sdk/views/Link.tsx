@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import ViewLayout from './ViewLayout';
 import { Link } from '@/components/ui/Link';
-import { Text } from '@astryxdesign/core/Text';
+import { Text } from '@/components/astryx/Text';
 import { Dialog } from '@/components/ui/Dialog';
-import { Stack } from '@astryxdesign/core/Stack';
+import { Stack } from '@/components/astryx/Stack';
 
 /** Documents Link in LongLink Views. */
 export default function LinkPage() {

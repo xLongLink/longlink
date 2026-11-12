@@ -1,16 +1,16 @@
 import { api } from '@/lib/api';
 import { useContext, useState } from 'react';
 import { SidebarContext } from '@/lib/sidebar';
-import { Item } from '@astryxdesign/core/Item';
-import { Text } from '@astryxdesign/core/Text';
+import { Item } from '@/components/astryx/Item';
+import { Text } from '@/components/astryx/Text';
 import { Avatar } from '@/components/ui/Avatar';
-import { Stack } from '@astryxdesign/core/Stack';
 import { useQuery } from '@tanstack/react-query';
-import { Button } from '@astryxdesign/core/Button';
-import { Popover } from '@astryxdesign/core/Popover';
+import { Stack } from '@/components/astryx/Stack';
+import { Button } from '@/components/astryx/Button';
 import { Check, ChevronsUpDown } from 'lucide-react';
-import { List, ListItem } from '@astryxdesign/core/List';
-import { IconButton } from '@astryxdesign/core/IconButton';
+import { Popover } from '@/components/astryx/Popover';
+import { List, ListItem } from '@/components/astryx/List';
+import { IconButton } from '@/components/astryx/IconButton';
 import { zUserOrganizationMembership } from '@/lib/generated/platform-api-v1/zod.gen';
 
 export type OrganizationIdentity = {

@@ -1,9 +1,9 @@
 import { Form } from '@/components/ui/Form';
-import { Text } from '@astryxdesign/core/Text';
+import { Text } from '@/components/astryx/Text';
 import { Button } from '@/components/ui/Button';
-import { Stack } from '@astryxdesign/core/Stack';
 import { useState, type ReactNode } from 'react';
-import { CodeBlock } from '@astryxdesign/core/CodeBlock';
+import { Stack } from '@/components/astryx/Stack';
+import { CodeBlock } from '@/components/astryx/CodeBlock';
 
 /** Exercises the real Form locally and displays submitted fields without sending API requests. */
 export default function FormPreview({ children, stepped = false }: { children: ReactNode; stepped?: boolean }) {

@@ -1,4 +1,4 @@
-import { Pagination as AstryxPagination } from '@astryxdesign/core/Pagination';
+import { Pagination as AstryxPagination } from '@/components/astryx/Pagination';
 
 /** Navigates pages of table or gallery items without owning their data or selection. */
 export function Pagination(props: {

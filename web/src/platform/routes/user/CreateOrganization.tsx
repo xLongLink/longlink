@@ -1,11 +1,11 @@
 import { z } from 'zod';
 import { api } from '@/lib/api';
 import { Form } from '@/components/ui/Form';
-import { Text } from '@astryxdesign/core/Text';
+import { Text } from '@/components/astryx/Text';
 import { Dialog } from '@/components/ui/Dialog';
-import { Stack } from '@astryxdesign/core/Stack';
-import { Button } from '@astryxdesign/core/Button';
-import { Heading } from '@astryxdesign/core/Heading';
+import { Stack } from '@/components/astryx/Stack';
+import { Button } from '@/components/astryx/Button';
+import { Heading } from '@/components/astryx/Heading';
 import { TextInput } from '@/components/ui/TextInput';
 import { Illustration } from '@/components/Illustration';
 import { zOrganizationCreate } from '@/lib/generated/platform-api-v1/zod.gen';

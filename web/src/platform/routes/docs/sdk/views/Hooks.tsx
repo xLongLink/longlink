@@ -1,9 +1,9 @@
 import ViewLayout from './ViewLayout';
-import { Text } from '@astryxdesign/core/Text';
+import { Text } from '@/components/astryx/Text';
 import { viewHooks } from '@/lib/documentation';
-import { Stack } from '@astryxdesign/core/Stack';
-import { Heading } from '@astryxdesign/core/Heading';
-import { Table, proportional } from '@astryxdesign/core/Table';
+import { Stack } from '@/components/astryx/Stack';
+import { Heading } from '@/components/astryx/Heading';
+import { Table, proportional } from '@/components/astryx/Table';
 
 /** Documents the hooks exposed by the View runtime. */
 export default function HooksPage() {

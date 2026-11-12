@@ -1,4 +1,4 @@
-import { ProgressBar as AstryxProgressBar } from '@astryxdesign/core/ProgressBar';
+import { ProgressBar as AstryxProgressBar } from '@/components/astryx/ProgressBar';
 
 /** Displays determinate or indeterminate progress with a semantic state. */
 export function ProgressBar(props: {

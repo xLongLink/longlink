@@ -1,17 +1,17 @@
 import { Page } from '@/components/Page';
-import { Link } from '@astryxdesign/core/Link';
-import { Text } from '@astryxdesign/core/Text';
-import { Stack } from '@astryxdesign/core/Stack';
-import { Button } from '@astryxdesign/core/Button';
-import { Divider } from '@astryxdesign/core/Divider';
-import { Outline } from '@astryxdesign/core/Outline';
+import { Link } from '@/components/astryx/Link';
+import { Text } from '@/components/astryx/Text';
+import { Stack } from '@/components/astryx/Stack';
+import { Button } from '@/components/astryx/Button';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
+import { Divider } from '@/components/astryx/Divider';
+import { Outline } from '@/components/astryx/Outline';
 import { useLocation, useNavigate } from 'react-router';
 import { PageContainer } from '@/components/PageContainer';
 import { documentationPaths } from '@/platform/publications';
 import { PathBreadcrumb } from '@/components/breadcrumb/Path';
-import { BreadcrumbItem } from '@astryxdesign/core/Breadcrumbs';
-import { Layout, LayoutContent, LayoutHeader } from '@astryxdesign/core/Layout';
+import { BreadcrumbItem } from '@/components/astryx/Breadcrumbs';
+import { Layout, LayoutContent, LayoutHeader } from '@/components/astryx/Layout';
 import { useEffect, useEffectEvent, type ComponentProps, type ReactNode } from 'react';
 
 /** Labels for public article route segments shared with visible breadcrumbs. */

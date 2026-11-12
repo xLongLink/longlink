@@ -3,7 +3,7 @@ import { Icon, type StoneIconName } from './Icon';
 import {
     MetadataList as AstryxMetadataList,
     MetadataListItem as AstryxMetadataListItem,
-} from '@astryxdesign/core/MetadataList';
+} from '@/components/astryx/MetadataList';
 
 /** Lists labeled values with optional truncation and label placement. */
 export function MetadataList({

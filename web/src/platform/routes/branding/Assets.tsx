@@ -1,14 +1,14 @@
 import { Fragment } from 'react';
-import { Link } from '@astryxdesign/core/Link';
-import { Text } from '@astryxdesign/core/Text';
+import { Link } from '@/components/astryx/Link';
+import { Text } from '@/components/astryx/Text';
 import { Wordmark } from '@/components/Wordmark';
-import { Stack } from '@astryxdesign/core/Stack';
 import { Theme } from '@astryxdesign/core/theme';
-import { Heading } from '@astryxdesign/core/Heading';
+import { Stack } from '@/components/astryx/Stack';
+import { Heading } from '@/components/astryx/Heading';
 import { stoneTheme } from '@/lib/generated/stone.js';
-import { CodeBlock } from '@astryxdesign/core/CodeBlock';
+import { CodeBlock } from '@/components/astryx/CodeBlock';
 import { PublicArticle } from '@/components/layouts/Article';
-import { AspectRatio } from '@astryxdesign/core/AspectRatio';
+import { AspectRatio } from '@/components/astryx/AspectRatio';
 
 const article = {
     description: 'LongLink logos, wordmarks, and illustrated brand assets.',

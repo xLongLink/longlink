@@ -3,10 +3,10 @@ import type { ReactNode } from 'react';
 import Brand from '@/platform/layouts/Brand';
 import { Navigate, Outlet } from 'react-router';
 import { PageLoading } from '@/components/Utils';
-import { Stack } from '@astryxdesign/core/Stack';
-import { Banner } from '@astryxdesign/core/Banner';
-import { Button } from '@astryxdesign/core/Button';
-import { Center } from '@astryxdesign/core/Center';
+import { Stack } from '@/components/astryx/Stack';
+import { Banner } from '@/components/astryx/Banner';
+import { Button } from '@/components/astryx/Button';
+import { Center } from '@/components/astryx/Center';
 import { AuthenticatedUserContext, useCurrentUser } from '@/lib/hooks/use-user';
 
 /** Guards all nested Platform routes behind the shared authentication UI. */

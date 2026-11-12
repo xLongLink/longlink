@@ -1,6 +1,6 @@
 import { useParams } from 'react-router';
 import { buildBreadcrumbs } from '@/components/breadcrumb/text';
-import { BreadcrumbItem, Breadcrumbs } from '@astryxdesign/core/Breadcrumbs';
+import { BreadcrumbItem, Breadcrumbs } from '@/components/astryx/Breadcrumbs';
 import type { OrganizationIdentity } from '@/platform/components/OrganizationSwitcher';
 
 /** Renders resolved organization identity for the actual navigation layout. */
