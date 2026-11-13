@@ -151,7 +151,7 @@ const previews = new Map(
         Combobox: <ComboboxExample />,
         Slider: <SliderExample />,
         Stack: <StackExample />,
-        Stepper: <StepperExample orientation="vertical" />,
+        Stepper: <StepperExample />,
         Switch: <SwitchExample />,
         Table: <TableExample />,
         DataTable: <DataTableExample />,

@@ -1,15 +1,7 @@
 import ViewLayout from './ViewLayout';
-import {
-    Stepper,
-    StepperContent,
-    StepperIndicator,
-    StepperItem,
-    StepperNav,
-    StepperPanel,
-    StepperSeparator,
-    StepperTitle,
-    StepperTrigger
-} from '@/components/ui/Stepper';
+import { Pattern as StepperExample } from '@/components/examples/c-stepper-1';
+
+export { StepperExample };
 
 /** Documents the installed ReUI Stepper composition. */
 export default function StepperPage() {
@@ -56,51 +48,30 @@ export default function StepperPage() {
             example={{
                 title: 'Stepper',
                 preview: <StepperExample />,
-                code: `<Stepper defaultValue={1} className="flex max-w-md flex-col gap-8">
-  <StepperNav aria-label="Process">
-    <StepperItem step={1}>
-      <StepperTrigger><StepperIndicator>1</StepperIndicator><StepperTitle>Details</StepperTitle></StepperTrigger>
-      <StepperSeparator />
-    </StepperItem>
-    <StepperItem step={2}>
-      <StepperTrigger><StepperIndicator>2</StepperIndicator><StepperTitle>Review</StepperTitle></StepperTrigger>
-      <StepperSeparator />
-    </StepperItem>
-    <StepperItem step={3}>
-      <StepperTrigger><StepperIndicator>3</StepperIndicator><StepperTitle>Complete</StepperTitle></StepperTrigger>
-    </StepperItem>
+                code: `const steps = [1, 2, 3, 4];
+
+<Stepper defaultValue={2} className="w-full max-w-md space-y-8">
+  <StepperNav>
+    {steps.map((step) => (
+      <StepperItem key={step} step={step}>
+        <StepperTrigger aria-label={\`Step \${step}\`}>
+          <StepperIndicator>{step}</StepperIndicator>
+        </StepperTrigger>
+        {steps.length > step && (
+          <StepperSeparator className="group-data-[state=completed]/step:bg-primary" />
+        )}
+      </StepperItem>
+    ))}
   </StepperNav>
   <StepperPanel className="text-sm">
-    <StepperContent value={1}>Enter details.</StepperContent>
-    <StepperContent value={2}>Review details.</StepperContent>
-    <StepperContent value={3}>Complete the process.</StepperContent>
+    {steps.map((step) => (
+      <StepperContent key={step} value={step} className="flex items-center justify-center">
+        Step {step} content
+      </StepperContent>
+    ))}
   </StepperPanel>
 </Stepper>`
             }}
         />
-    );
-}
-
-/** Renders the installed compound API for documentation and the catalog. */
-export function StepperExample({ orientation = 'horizontal' }: { orientation?: 'horizontal' | 'vertical' }) {
-    return (
-        <Stepper defaultValue={1} orientation={orientation} className="flex max-w-md flex-col gap-8">
-            <StepperNav aria-label="Process">
-                {['Details', 'Review', 'Complete'].map((label, index) => (
-                    <StepperItem key={label} step={index + 1}>
-                        <StepperTrigger>
-                            <StepperIndicator>{index + 1}</StepperIndicator>
-                            <StepperTitle>{label}</StepperTitle>
-                        </StepperTrigger>
-                        {index < 2 && <StepperSeparator />}
-                    </StepperItem>
-                ))}
-            </StepperNav>
-            <StepperPanel className="text-sm">
-                <StepperContent value={1}>Enter details.</StepperContent>
-                <StepperContent value={2}>Review details.</StepperContent>
-                <StepperContent value={3}>Complete the process.</StepperContent>
-            </StepperPanel>
-        </Stepper>
     );
 }
