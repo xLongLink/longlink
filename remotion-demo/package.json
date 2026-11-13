@@ -1,0 +1,22 @@
+{
+    "name": "longlink-remotion-demo",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "studio": "remotion studio src/index.tsx --port 3001",
+        "render": "remotion render src/index.tsx RegisterCompute out/register-compute.mp4 --concurrency=2",
+        "typecheck": "tsc --noEmit",
+        "record": "node record.mjs",
+        "render:real": "remotion render src/index.tsx RealCompute out/register-compute-real-ui.mp4 --concurrency=2 --log=error"
+    },
+    "dependencies": {
+        "@remotion/cli": "4.0.539",
+        "@types/react": "19.3.0",
+        "@types/react-dom": "19.3.0",
+        "playwright": "1.64.1",
+        "react": "19.3.1",
+        "react-dom": "19.3.1",
+        "remotion": "4.0.539",
+        "typescript": "7.0.2"
+    }
+}
