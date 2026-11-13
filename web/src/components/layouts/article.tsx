@@ -87,14 +87,20 @@ function ArticleRenderer({
     // Keep public articles and documentation in the same flat reading columns.
     return (
         <Page description={article.description} title={article.title}>
-            <header className="article-header">
-                <div className="article-columns">
-                    <div className="article-reading-column">
-                        <PathBreadcrumb className="min-w-0 overflow-hidden" labels={articleRouteLabels} root={root} />
+            {root ? (
+                <header className="article-header">
+                    <div className="article-columns">
+                        <div className="article-reading-column">
+                            <PathBreadcrumb
+                                className="min-w-0 overflow-hidden"
+                                labels={articleRouteLabels}
+                                root={root}
+                            />
+                        </div>
+                        {article.toc.length ? <div aria-hidden="true" className="article-outline-spacer" /> : null}
                     </div>
-                    {article.toc.length ? <div aria-hidden="true" className="article-outline-spacer" /> : null}
-                </div>
-            </header>
+                </header>
+            ) : null}
             <div className="article-content">
                 <div className="article-columns">
                     <div className="article-reading-column">

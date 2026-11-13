@@ -1,6 +1,6 @@
 import { useLocation } from 'react-router';
 import Publication from '@/components/layouts/publication';
-import { documentationIntroduction, documentationNavigation } from '@/platform/publications';
+import { documentationNavigation } from '@/platform/publications';
 import {
     PublicationNavigation,
     PublicationNavigationItem,
@@ -19,14 +19,12 @@ export default function Documentation() {
             .filter(({ path }) => pagePath === path || pagePath.startsWith(`${path}/`))
             .sort((left, right) => right.path.length - left.path.length)[0] ?? documentationNavigation[0];
 
-    const sections = [documentationIntroduction, ...activeGroup.sections];
-
     return (
         <Publication
             navigation={<PublicationSectionLinks groups={documentationNavigation} activePath={activeGroup.path} />}
             sideNav={
                 <PublicationNavigation label="Documentation navigation">
-                    {sections.map((section) => (
+                    {activeGroup.sections.map((section) => (
                         <PublicationNavigationSection key={section.title} title={section.title}>
                             {section.pages.map((page) =>
                                 page.children?.length ? (
