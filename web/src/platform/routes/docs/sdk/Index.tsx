@@ -31,15 +31,7 @@ export default function DocsArticleRoute() {
                     may change. As information becomes fragmented, more time is spent finding data, reconstructing
                     decisions, coordinating people, and correcting mistakes.
                 </Text>
-                <Stack
-                    className="[--font-family-body:var(--font-family-handwritten)] [--font-family-heading:var(--font-family-handwritten)]"
-                    direction="horizontal"
-                    gap={6}
-                    justify="center"
-                    paddingBlock={6}
-                    align="center"
-                    width="100%"
-                >
+                <Stack direction="horizontal" gap={6} justify="center" paddingBlock={6} align="center" width="100%">
                     <Text className="text-sm sm:text-xl md:text-2xl" hasCapsize type="display-3" weight="semibold">
                         Problem
                     </Text>

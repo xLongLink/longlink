@@ -10,9 +10,6 @@ import { useDocumentTheme } from '@/lib/hooks/use-document-theme';
 import { AccountAppearanceProvider } from '@/components/Appearance';
 import { Links, Meta, Outlet, Scripts, ScrollRestoration, useLocation } from 'react-router';
 import '@/index.css';
-// Handwritten fonts belong only to native Platform pages, not the embedded SDK application.
-import '@fontsource/kalam';
-import '@fontsource/kalam/700.css';
 
 /** Shows the themed loading state while the initial route modules load. */
 export function HydrateFallback() {

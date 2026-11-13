@@ -22,10 +22,7 @@ export default function Impressum() {
     // Keep the legal notice within the shared public shell and legal reading order.
     return (
         <PublicArticle article={article} paths={legalPaths}>
-            <Stack
-                className="[--font-family-heading:var(--font-family-handwritten)] [&_.native-heading]:tracking-wide [&_.native-heading]:uppercase"
-                gap={5}
-            >
+            <Stack className="[&_.native-heading]:tracking-wide" gap={5}>
                 <Heading id="impressum" level={1}>
                     Impressum
                 </Heading>

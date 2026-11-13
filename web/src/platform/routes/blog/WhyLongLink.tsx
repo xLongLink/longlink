@@ -17,7 +17,7 @@ export default function WhyLongLink() {
     return (
         <PublicArticle article={article}>
             <Stack
-                className="[--text-body-leading:var(--leading-relaxed)] [--text-body-size:var(--font-size-lg)] [--font-family-heading:var(--font-family-handwritten)] [&_.native-heading]:uppercase"
+                className="[--text-body-leading:var(--leading-relaxed)] [--text-body-size:var(--font-size-lg)]"
                 gap={5}
             >
                 <Heading id="why-longlink" level={1} textWrap="balance">
@@ -48,7 +48,7 @@ export default function WhyLongLink() {
                         <Text as="p" textWrap="pretty">
                             LongLink provides everything else needed to build, run, and manage those Solutions.
                         </Text>
-                        <div className="relative min-w-0 overflow-hidden rounded-(--radius-container) bg-transparent [--font-family-body:var(--font-family-handwritten)] [--font-family-heading:var(--font-family-handwritten)]">
+                        <div className="relative min-w-0 overflow-hidden rounded-(--radius-container) bg-transparent">
                             <img
                                 alt="Core application logic surrounded by services and deployment infrastructure"
                                 className="aspect-video w-full object-contain"

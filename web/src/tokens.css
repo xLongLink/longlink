@@ -32,12 +32,9 @@
         --size-element-sm: 28px;
         --size-element-md: 32px;
         --size-element-lg: 36px;
-        --font-family-body:
-            Figtree, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-        --font-family-heading:
-            Montserrat, Figtree, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-        --font-family-code: 'JetBrains Mono', 'SF Mono', Monaco, Consolas, monospace;
-        --font-family-handwritten: Kalam, 'Segoe Print', 'Bradley Hand', cursive;
+        --font-family-body: 'Geist Variable', sans-serif;
+        --font-family-heading: var(--font-family-body);
+        --font-family-code: var(--font-family-body);
         --font-weight-normal: 400;
         --font-weight-medium: 500;
         --font-weight-semibold: 600;

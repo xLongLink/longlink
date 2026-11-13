@@ -84,10 +84,7 @@ export default function Terms() {
     // Keep the terms of service within the shared public shell and legal reading order.
     return (
         <PublicArticle article={article} paths={legalPaths}>
-            <Stack
-                className="[--font-family-heading:var(--font-family-handwritten)] [&_.native-heading]:tracking-wide [&_.native-heading]:uppercase"
-                gap={5}
-            >
+            <Stack className="[&_.native-heading]:tracking-wide" gap={5}>
                 <Heading id="terms-of-service" level={1}>
                     Terms of Service
                 </Heading>

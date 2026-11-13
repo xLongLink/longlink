@@ -129,12 +129,7 @@ export default function Home() {
                                 🇨🇭
                             </Text>
                             <Stack gap={0} align="center">
-                                <Heading
-                                    className="font-(family-name:--font-family-handwritten) tracking-wide uppercase"
-                                    level={2}
-                                    textWrap="balance"
-                                    justify="center"
-                                >
+                                <Heading className="tracking-wide" level={2} textWrap="balance" justify="center">
                                     Made in Switzerland
                                 </Heading>
                                 <Text as="p" color="secondary" textWrap="balance">

@@ -18,7 +18,7 @@ export default function Blog() {
                     <Stack className="mx-auto" maxWidth={1000} width="100%" gap={10} align="center">
                         <Stack className="text-center" gap={3} align="center" width="100%">
                             <Heading
-                                className="font-(family-name:--font-family-handwritten) tracking-wide uppercase"
+                                className="tracking-wide"
                                 justify="center"
                                 level={1}
                                 textWrap="balance"

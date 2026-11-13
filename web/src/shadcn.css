@@ -505,8 +505,9 @@
     --radius-md: calc(var(--radius) - 2px);
     --radius-lg: var(--radius);
     --radius-xl: calc(var(--radius) + 4px);
-    --font-sans: 'Figtree', sans-serif;
-    --font-mono: 'JetBrains Mono', monospace;
+    --font-sans: var(--font-family-body);
+    --font-serif: var(--font-family-body);
+    --font-mono: var(--font-family-code);
 }
 
 @layer application-theme {
