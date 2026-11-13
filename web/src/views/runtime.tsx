@@ -95,7 +95,9 @@ function ViewFailure({ title, message, retry }: { title: string; message: string
             </div>
             {retry && (
                 <div className="view-runtime-error-actions">
-                    <components.Button label="Retry" onClick={retry} />
+                    <components.Button variant="outline" onClick={retry}>
+                        Retry
+                    </components.Button>
                 </div>
             )}
         </div>

@@ -88,7 +88,7 @@ export default function ResetPassword() {
             >
                 {pageMetadata}
                 <Divider />
-                <Button href="/auth/forgot-password" label="Request another reset link" variant="primary" />
+                <Button href="/auth/forgot-password" label="Request another reset link" variant="default" />
             </AuthLayout>
         );
     }
@@ -98,7 +98,7 @@ export default function ResetPassword() {
             {pageMetadata}
             <Divider />
             {verification?.status !== 'verified' ? (
-                <Button isLoading label="Reset password" variant="primary" />
+                <Button isLoading label="Reset password" variant="default" />
             ) : form.formState.isSubmitSuccessful ? (
                 <Stack gap={4}>
                     <div ref={root} className="native-auth-banner" data-status="success">
@@ -106,7 +106,7 @@ export default function ResetPassword() {
                         <p>{confirmation}</p>
                         <span ref={channel} className="sr-only" role="status" aria-atomic="true" />
                     </div>
-                    <Button href="/login" label="Back to sign in" variant="primary" />
+                    <Button href="/login" label="Back to sign in" variant="default" />
                 </Stack>
             ) : (
                 <form
@@ -133,7 +133,7 @@ export default function ResetPassword() {
                             label="New password"
                             type="password"
                         />
-                        <Button label="Reset password" type="submit" variant="primary" />
+                        <Button label="Reset password" type="submit" variant="default" />
                     </Stack>
                 </form>
             )}

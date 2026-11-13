@@ -16,7 +16,7 @@ type SelectorProps = FieldProps & {
     placeholder?: string;
 };
 
-/** Selects one value with optional filtering and caller-owned nullable state. */
+/** Custom form adapter preserving nullable clear, native reset, and caller-owned rejection of changes. */
 export function Selector(props: SelectorProps) {
     // Keep controlled rejection and native reset behavior at the View boundary.
     const field = useValue<string | null>(props.value, props.defaultValue ?? null, props.onChange);

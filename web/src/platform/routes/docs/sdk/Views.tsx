@@ -1,26 +1,26 @@
 import { GridExample } from './views/Grid';
 import { IconExample } from './views/Icon';
-import { LinkExample } from './views/Link';
 import { MapsExample } from './views/Maps';
 import { TextExample } from './views/Text';
-import { Card } from '@/components/ui/Card';
 import { Form } from '@/components/ui/Form';
 import { Grid } from '@/components/ui/Grid';
 import { BadgeExample } from './views/Badge';
+import { InputExample } from './views/Input';
 import { StackExample } from './views/Stack';
 import { TableExample } from './views/Table';
 import { TokenExample } from './views/Token';
 import { AvatarExample } from './views/Avatar';
-import { DialogExample } from './views/Dialog';
+import { SelectExample } from './views/Select';
 import { SliderExample } from './views/Slider';
 import { SwitchExample } from './views/Switch';
-import { ButtonExample } from './views/Buttons';
-import { DividerExample } from './views/Divider';
+import { Button } from '@/components/ui/Button';
 import { HeadingExample } from './views/Heading';
 import { StepperExample } from './views/Stepper';
-import { Tab, Tabs } from '@/components/ui/Tabs';
+import { Divider } from '@/components/ui/Divider';
 import { Link as RouterLink } from 'react-router';
+import { ComboboxExample } from './views/Combobox';
 import { MoreMenuExample } from './views/MoreMenu';
+import { ProgressExample } from './views/Progress';
 import { SelectorExample } from './views/Selector';
 import { TextAreaExample } from './views/TextArea';
 import { ChartExample } from './views/ChartExample';
@@ -33,23 +33,30 @@ import { TimeInputExample } from './views/TimeInput';
 import { TimestampExample } from './views/Timestamp';
 import { EmptyStateExample } from './views/EmptyState';
 import { FileViewerExample } from './views/FileViewer';
-import { IconButtonExample } from './views/IconButton';
+import { Disclosure } from '@/components/ui/Disclosure';
 import { CollapsibleExample } from './views/Collapsible';
 import { NumberInputExample } from './views/NumberInput';
-import { ProgressBarExample } from './views/ProgressBar';
-import { Collapsible } from '@/components/ui/Collapsible';
 import { DropdownMenuExample } from './views/DropdownMenu';
 import { CheckboxInputExample } from './views/CheckboxInput';
-import { InlineCode } from '@/components/shadcn/inline-code';
 import { MultiSelectorExample } from './views/MultiSelector';
 import { NativeText as Text } from '@/components/ui/NativeText';
 import { componentDocumentation } from '@/platform/publications';
 import { NativeStack as Stack } from '@/components/ui/NativeStack';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/Tabs';
 import { DocumentationArticle } from '@/components/layouts/Article';
 import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
 import { viewHooks, documentationCategories } from '@/lib/documentation';
 import { NativeCodeBlock as CodeBlock } from '@/components/ui/NativeCodeBlock';
 import { NativeTable as Table, proportional } from '@/components/ui/NativeTable';
+import {
+    Card,
+    CardTitle,
+    CardHeader,
+    CardFooter,
+    CardContent,
+    CardDescription,
+    InteractiveCard,
+} from '@/components/ui/Card';
 import '@/platform/components/settings-navigation.css';
 
 const article = {
@@ -82,14 +89,31 @@ const previews = new Map(
         Maps: <MapsExample height={150} />,
         Avatar: <AvatarExample />,
         Badge: <BadgeExample />,
-        Button: <ButtonExample />,
-        Card: <Card>Lorem ipsum dolor sit amet.</Card>,
+        Button: <Button>Button</Button>,
+        Card: (
+            <Card>
+                <CardContent>Lorem ipsum dolor sit amet.</CardContent>
+            </Card>
+        ),
         CheckboxInput: <CheckboxInputExample />,
         Collapsible: <CollapsibleExample />,
         Currency: <Currency value={1275.5} currency="CHF" />,
         DateInput: <DateInputExample />,
-        Dialog: <DialogExample />,
-        Divider: <DividerExample />,
+        Dialog: (
+            <Card size="sm" className="w-full">
+                <CardHeader>
+                    <CardTitle>Order details</CardTitle>
+                    <CardDescription>Review this order.</CardDescription>
+                </CardHeader>
+                <CardFooter className="justify-end gap-2">
+                    <Button size="xs" variant="outline">
+                        Cancel
+                    </Button>
+                    <Button size="xs">Continue</Button>
+                </CardFooter>
+            </Card>
+        ),
+        Divider: <Divider label="or" />,
         DropdownMenu: <DropdownMenuExample />,
         EmptyState: <EmptyStateExample />,
         FileInput: <FileInputExample />,
@@ -107,8 +131,8 @@ const previews = new Map(
             </Stack>
         ),
         Icon: <IconExample />,
-        IconButton: <IconButtonExample />,
-        Link: <LinkExample />,
+        Input: <InputExample />,
+        Link: <span className="underline">Link</span>,
         // Show only the navigation in the thumbnail; the full Menu has a fixed-width sidebar and content panel.
         Menu: (
             <nav aria-label="Settings" className="settings-navigation w-full">
@@ -121,9 +145,11 @@ const previews = new Map(
         MoreMenu: <MoreMenuExample />,
         MultiSelector: <MultiSelectorExample />,
         NumberInput: <NumberInputExample />,
-        ProgressBar: <ProgressBarExample />,
+        Progress: <ProgressExample />,
         RadioList: <RadioListExample />,
         Selector: <SelectorExample />,
+        Select: <SelectExample />,
+        Combobox: <ComboboxExample />,
         Slider: <SliderExample />,
         Stack: <StackExample />,
         Stepper: <StepperExample orientation="vertical" />,
@@ -132,9 +158,11 @@ const previews = new Map(
         Token: <TokenExample />,
         // Keep the thumbnail focused on the tab strip rather than its panel content.
         Tabs: (
-            <Tabs value="overview" gap={0}>
-                <Tab label="Overview" value="overview" />
-                <Tab label="Activity" value="activity" />
+            <Tabs defaultValue="overview">
+                <TabsList>
+                    <TabsTrigger value="overview">Overview</TabsTrigger>
+                    <TabsTrigger value="activity">Activity</TabsTrigger>
+                </TabsList>
             </Tabs>
         ),
         Text: <TextExample />,
@@ -169,7 +197,7 @@ export default function Item({ params }) {
                     title="items/[item].jsx"
                     hasLanguageLabel={false}
                 />
-                <Collapsible trigger="API reference" defaultIsOpen={false}>
+                <Disclosure trigger="API reference" defaultIsOpen={false}>
                     <Table
                         idKey="name"
                         density="compact"
@@ -201,7 +229,7 @@ export default function Item({ params }) {
                             },
                         ]}
                     />
-                </Collapsible>
+                </Disclosure>
                 {documentationCategories
                     .filter((category) => category !== 'Runtime')
                     .map((category) => (
@@ -211,10 +239,13 @@ export default function Item({ params }) {
                             </Heading>
                             <Grid columns={{ minWidth: 190, max: 3, repeat: 'fit' }} gap={4}>
                                 {componentDocumentation
-                                    .filter((component) => component.category === category)
+                                    .filter(
+                                        (component) =>
+                                            component.category === category && component.name !== 'ViewDialog'
+                                    )
                                     .map((component) => (
                                         <Stack key={component.slug} className="relative min-w-0" gap={2}>
-                                            <Card
+                                            <InteractiveCard
                                                 aria-hidden="true"
                                                 inert
                                                 padding={component.name.endsWith('Chart') ? 0 : 3}
@@ -237,11 +268,23 @@ export default function Item({ params }) {
                                                         )}
                                                     </Stack>
                                                 </div>
-                                            </Card>
+                                            </InteractiveCard>
                                             <Text type="supporting">
-                                                {component.category === 'Action' || component.category === 'Form'
-                                                    ? component.label.replace(/([a-z])([A-Z])/g, '$1 $2')
-                                                    : component.label}
+                                                {component.name === 'Dialog' ? (
+                                                    <>
+                                                        Dialog /{' '}
+                                                        <RouterLink
+                                                            className="relative z-20 hover:underline"
+                                                            to="/docs/sdk/views/view-dialog/"
+                                                        >
+                                                            View Dialog
+                                                        </RouterLink>
+                                                    </>
+                                                ) : component.category === 'Action' || component.category === 'Form' ? (
+                                                    component.label.replace(/([a-z])([A-Z])/g, '$1 $2')
+                                                ) : (
+                                                    component.label
+                                                )}
                                             </Text>
                                             <RouterLink
                                                 aria-label={`Open ${component.label} documentation`}
@@ -257,3 +300,5 @@ export default function Item({ params }) {
         </DocumentationArticle>
     );
 }
+
+import { InlineCode } from '@/components/shadcn/inline-code';

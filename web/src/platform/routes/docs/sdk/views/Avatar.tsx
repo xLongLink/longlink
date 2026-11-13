@@ -7,7 +7,6 @@ export default function AvatarPage() {
     return (
         <ViewLayout
             name="Avatar"
-            introduction={'Uses local Waves fallbacks for rounded organization avatars and Glyphs for users.'}
             properties={[
                 {
                     name: 'shape',

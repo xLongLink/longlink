@@ -1,29 +1,29 @@
-import { useState } from 'react';
 import ViewLayout from './ViewLayout';
 import { Button } from '@/components/ui/Button';
-import { NativeText as Text } from '@/components/ui/NativeText';
+import { IconButton } from '@/components/ui/IconButton';
+import { ButtonGroup } from '@/components/ui/ButtonGroup';
 import { NativeStack as Stack } from '@/components/ui/NativeStack';
 
 /** Documents buttons and grouped button actions in LongLink Views. */
 export default function ButtonsPage() {
-    // Render both button contracts and the authored action example.
+    // Keep regular, icon-only, and grouped buttons in one reference.
     return (
         <ViewLayout
             name="Button"
             properties={[
                 {
-                    name: 'label',
-                    type: 'string',
-                    description: 'Visible button text and accessible label.',
+                    name: 'children',
+                    type: 'ReactNode',
+                    description: 'Button text and optional icons.',
                 },
                 {
                     name: 'variant',
-                    type: '"ghost" | "primary" | "secondary" | "destructive"',
+                    type: '"default" | "outline" | "secondary" | "ghost" | "destructive" | "link"',
                     description: 'Visual style variant.',
                 },
                 {
                     name: 'size',
-                    type: '"sm" | "lg" | "md"',
+                    type: '"xs" | "sm" | "default" | "lg" | "icon" | "icon-xs" | "icon-sm" | "icon-lg"',
                     description: 'Size variant.',
                 },
                 {
@@ -47,24 +47,14 @@ export default function ButtonsPage() {
                     description: 'Associates the button with a form element by ID.',
                 },
                 {
-                    name: 'icon',
-                    type: 'StoneIconName',
-                    description: 'Icon displayed before the label.',
-                },
-                {
-                    name: 'endContent',
-                    type: 'ReactNode',
-                    description: 'Content displayed after the label.',
-                },
-                {
-                    name: 'width',
-                    type: 'string | number',
-                    description: 'Button width in pixels or CSS units.',
-                },
-                {
                     name: 'disabled',
                     type: 'boolean',
                     description: 'Disables the button.',
+                },
+                {
+                    name: 'focusableWhenDisabled',
+                    type: 'boolean',
+                    description: 'Defaults to true in LongLink; false removes disabled buttons from keyboard focus.',
                 },
                 {
                     name: 'href',
@@ -73,6 +63,37 @@ export default function ButtonsPage() {
                 },
                 {
                     name: 'onClick',
+                    type: '(event: ViewMouseEvent) => void | Promise<void>',
+                    description:
+                        'Unlike shadcn Button, awaits async handlers with loading feedback and duplicate-activation protection.',
+                },
+                {
+                    name: 'IconButton.label',
+                    type: 'string',
+                    description: 'Accessible label for the icon-only button.',
+                },
+                {
+                    name: 'IconButton.icon',
+                    type: 'StoneIconName',
+                    description: 'Icon displayed inside the button.',
+                },
+                {
+                    name: 'IconButton.variant',
+                    type: '"default" | "outline" | "secondary" | "ghost" | "destructive" | "link"',
+                    description: 'Visual style variant.',
+                },
+                {
+                    name: 'IconButton.size',
+                    type: '"xs" | "sm" | "default" | "lg"',
+                    description: 'Icon button size.',
+                },
+                {
+                    name: 'IconButton.isDisabled',
+                    type: 'boolean',
+                    description: 'Disables the icon button.',
+                },
+                {
+                    name: 'IconButton.onClick',
                     type: '(event: ViewMouseEvent) => void | Promise<void>',
                     description: 'Runs an action with automatic loading and duplicate-click prevention.',
                 },
@@ -92,7 +113,7 @@ export default function ButtonsPage() {
                     name: 'ButtonGroup.orientation',
                 },
                 {
-                    type: '"sm" | "lg" | "md"',
+                    type: '"sm" | "lg" | "default"',
                     description: 'Default size for buttons in the group. Individual buttons can override.',
                     name: 'ButtonGroup.size',
                 },
@@ -102,21 +123,54 @@ export default function ButtonsPage() {
                     name: 'ButtonGroup.isDisabled',
                 },
             ]}
-            introduction="Button triggers an action, submits a form, or opens a link. Buttons are flat. Use onClick for actions: loading feedback and duplicate-click prevention are automatic while an asynchronous handler is pending."
             example={{
                 title: 'Button',
                 preview: <ButtonExample />,
                 code: `function Example() {
   return (
-    <Button
-      label="Save"
-      onClick={async () => {
-        await request('/api/settings', {
-          method: 'PATCH',
-          json: { enabled: true },
-        });
-      }}
-    />
+    <Stack gap={4}>
+      <Stack direction="horizontal" gap={2} align="center" wrap="wrap">
+        <Button>Default</Button>
+        <Button variant="outline">Outline</Button>
+        <Button variant="secondary">Secondary</Button>
+        <Button variant="ghost">Ghost</Button>
+        <Button variant="destructive">Destructive</Button>
+        <Button variant="link">Link</Button>
+        <Button disabled>Disabled</Button>
+      </Stack>
+      <Stack direction="horizontal" gap={2} align="center" wrap="wrap">
+        <Button size="xs">Extra small</Button>
+        <Button size="sm">Small</Button>
+        <Button>Default</Button>
+        <Button size="lg">Large</Button>
+      </Stack>
+      <Stack direction="horizontal" gap={2} align="center" wrap="wrap">
+        <IconButton icon="plus" label="Add" />
+        <IconButton icon="edit" label="Edit" variant="outline" />
+        <IconButton icon="copy" label="Copy" variant="secondary" />
+        <IconButton icon="close" label="Close" variant="ghost" />
+        <IconButton icon="delete" label="Delete" variant="destructive" />
+        <IconButton icon="link" label="Link" variant="link" />
+        <IconButton icon="plus" label="Add (disabled)" isDisabled />
+      </Stack>
+      <Stack direction="horizontal" gap={2} align="center" wrap="wrap">
+        <IconButton icon="plus" label="Add (extra small)" size="xs" />
+        <IconButton icon="plus" label="Add (small)" size="sm" />
+        <IconButton icon="plus" label="Add (default)" />
+        <IconButton icon="plus" label="Add (large)" size="lg" />
+      </Stack>
+      <Stack direction="horizontal" gap={4} align="center" wrap="wrap">
+        <ButtonGroup label="Actions">
+          <Button variant="outline">Save</Button>
+          <Button variant="outline">Cancel</Button>
+          <IconButton icon="plus" label="Add" variant="outline" />
+        </ButtonGroup>
+        <ButtonGroup label="Vertical actions" orientation="vertical">
+          <Button variant="outline">Edit</Button>
+          <Button variant="outline">Duplicate</Button>
+        </ButtonGroup>
+      </Stack>
+    </Stack>
   );
 }`,
             }}
@@ -124,19 +178,52 @@ export default function ButtonsPage() {
     );
 }
 
-/** Demonstrates button actions without calling a real API. */
+/** Showcases button variants, sizes, disabled states, and grouping. */
 export function ButtonExample() {
-    const [action, setAction] = useState('');
-
-    // Report sample actions locally instead of changing an order.
+    // Wrap each row so all variants remain reachable on narrow screens.
     return (
-        <Stack gap={2}>
+        <Stack gap={4}>
             <Stack direction="horizontal" gap={2} align="center" wrap="wrap">
-                <Button label="Save" size="sm" variant="primary" onClick={() => setAction('Saved')} />
-                <Button label="Edit" size="sm" onClick={() => setAction('Editing order')} />
-                <Button label="View" size="sm" variant="ghost" onClick={() => setAction('Viewing order')} />
+                <Button>Default</Button>
+                <Button variant="outline">Outline</Button>
+                <Button variant="secondary">Secondary</Button>
+                <Button variant="ghost">Ghost</Button>
+                <Button variant="destructive">Destructive</Button>
+                <Button variant="link">Link</Button>
+                <Button disabled>Disabled</Button>
             </Stack>
-            {action && <Text role="status">{action}</Text>}
+            <Stack direction="horizontal" gap={2} align="center" wrap="wrap">
+                <Button size="xs">Extra small</Button>
+                <Button size="sm">Small</Button>
+                <Button>Default</Button>
+                <Button size="lg">Large</Button>
+            </Stack>
+            <Stack direction="horizontal" gap={2} align="center" wrap="wrap">
+                <IconButton icon="plus" label="Add" />
+                <IconButton icon="edit" label="Edit" variant="outline" />
+                <IconButton icon="copy" label="Copy" variant="secondary" />
+                <IconButton icon="close" label="Close" variant="ghost" />
+                <IconButton icon="delete" label="Delete" variant="destructive" />
+                <IconButton icon="link" label="Link" variant="link" />
+                <IconButton icon="plus" label="Add (disabled)" isDisabled />
+            </Stack>
+            <Stack direction="horizontal" gap={2} align="center" wrap="wrap">
+                <IconButton icon="plus" label="Add (extra small)" size="xs" />
+                <IconButton icon="plus" label="Add (small)" size="sm" />
+                <IconButton icon="plus" label="Add (default)" />
+                <IconButton icon="plus" label="Add (large)" size="lg" />
+            </Stack>
+            <Stack direction="horizontal" gap={4} align="center" wrap="wrap">
+                <ButtonGroup label="Actions">
+                    <Button variant="outline">Save</Button>
+                    <Button variant="outline">Cancel</Button>
+                    <IconButton icon="plus" label="Add" variant="outline" />
+                </ButtonGroup>
+                <ButtonGroup label="Vertical actions" orientation="vertical">
+                    <Button variant="outline">Edit</Button>
+                    <Button variant="outline">Duplicate</Button>
+                </ButtonGroup>
+            </Stack>
         </Stack>
     );
 }

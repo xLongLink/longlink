@@ -1,6 +1,7 @@
 import ViewLayout from './ViewLayout';
-import { Collapsible } from '@/components/ui/Collapsible';
+import { Button } from '@/components/ui/Button';
 import { NativeText as Text } from '@/components/ui/NativeText';
+import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/Collapsible';
 
 /** Documents Collapsible in LongLink Views. */
 export default function CollapsiblePage() {
@@ -8,37 +9,41 @@ export default function CollapsiblePage() {
     return (
         <ViewLayout
             name="Collapsible"
-            introduction={'Shows or hides content using controlled or initially open state.'}
             properties={[
                 {
                     name: 'children',
                     type: 'ReactNode',
-                    description: 'Content that collapses and expands.',
+                    description: 'CollapsibleTrigger and CollapsibleContent elements.',
                 },
                 {
-                    name: 'trigger',
-                    type: 'ReactNode',
-                    description: 'Content shown in the trigger area (always visible).',
-                },
-                {
-                    name: 'defaultIsOpen',
+                    name: 'defaultOpen',
                     type: 'boolean',
                     description: 'Initial open state.',
                 },
                 {
-                    name: 'isOpen',
+                    name: 'open',
                     type: 'boolean',
                     description: 'Controlled open state.',
                 },
                 {
-                    name: 'isDisabled',
+                    name: 'disabled',
                     type: 'boolean',
                     description: 'Prevents toggling without changing the open state.',
                 },
                 {
                     name: 'onOpenChange',
-                    type: '(isOpen: boolean) => void',
-                    description: 'Runs when the open state changes.',
+                    type: '(open: boolean, eventDetails) => void',
+                    description: 'Requests an open-state change.',
+                },
+                {
+                    name: 'CollapsibleTrigger.render',
+                    type: 'ReactElement',
+                    description: 'Custom trigger element, such as a Button.',
+                },
+                {
+                    name: 'CollapsibleContent.keepMounted',
+                    type: 'boolean',
+                    description: 'Keeps hidden content mounted to preserve local state. Defaults to false.',
                 },
             ]}
             example={{
@@ -46,8 +51,13 @@ export default function CollapsiblePage() {
                 preview: <CollapsibleExample />,
                 code: `function Example() {
   return (
-    <Collapsible trigger="Details">
-      <Text>Additional information</Text>
+    <Collapsible defaultOpen>
+      <CollapsibleTrigger render={<Button variant="outline" />}>
+        Details
+      </CollapsibleTrigger>
+      <CollapsibleContent keepMounted>
+        <Text>Additional information</Text>
+      </CollapsibleContent>
     </Collapsible>
   );
 }`,
@@ -60,8 +70,11 @@ export default function CollapsiblePage() {
 export function CollapsibleExample() {
     // Expand or collapse the additional information on demand.
     return (
-        <Collapsible trigger="Details">
-            <Text color="secondary">Additional information.</Text>
+        <Collapsible defaultOpen>
+            <CollapsibleTrigger render={<Button variant="outline" />}>Details</CollapsibleTrigger>
+            <CollapsibleContent keepMounted>
+                <Text color="secondary">Additional information.</Text>
+            </CollapsibleContent>
         </Collapsible>
     );
 }

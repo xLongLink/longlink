@@ -14,6 +14,27 @@ import {
     StepperTitle,
     StepperTrigger,
 } from '@/components/reui/stepper';
+
+export {
+    Stepper,
+    StepperContent,
+    StepperDescription,
+    StepperIndicator,
+    StepperItem,
+    StepperNav,
+    StepperPanel,
+    StepperSeparator,
+    StepperTitle,
+    StepperTrigger,
+} from '@/components/reui/stepper';
+
+export type {
+    StepperProps,
+    StepperContentProps,
+    StepperItemProps,
+    StepperTriggerProps,
+} from '@/components/reui/stepper';
+
 import {
     Children,
     cloneElement,
@@ -32,11 +53,11 @@ import {
 const ProgressContext = createContext<{
     activeStep: number;
     compact: boolean;
-    onStepClick?: StepperProps['onStepClick'];
+    onStepClick?: ProgressStepperProps['onStepClick'];
 }>({ activeStep: 0, compact: false });
 
 type StepProps = {
-    /** Zero-based progress index; defaults to child order inside Stepper. */
+    /** Zero-based progress index; defaults to child order inside ProgressStepper. */
     step?: number;
     label: string;
     description?: string;
@@ -44,28 +65,28 @@ type StepProps = {
     children?: ReactNode;
 };
 
-type StepperProps = {
+type ProgressStepperProps = {
     children?: ReactNode;
     activeStep?: number;
     orientation?: 'horizontal' | 'vertical';
-    /** Enables step activation in progress mode; receives selection changes in wizard mode. */
+    /** Enables progress step activation. */
     onStepClick?: (index: number) => void;
-    /** Wizard mode adds persistent panels and Next/Back controls without submitting data. */
-    variant?: 'progress' | 'wizard';
+};
+
+type WizardProps = Omit<ProgressStepperProps, 'onStepClick'> & {
+    /** Receives wizard selection changes. */
+    onStepClick?: (index: number) => void;
     /** Bounds a wizard, keeping progress above its independently scrollable panels. */
     height?: number | string;
     /** Runs a step-specific action after validation; false prevents advancement. */
     next?: (step: number) => { label: string; action: () => void | boolean | Promise<void | boolean> } | undefined;
     onCancel?: () => void;
     finalAction?: ReactNode;
-    backVariant?: 'secondary' | 'ghost';
+    backVariant?: 'outline' | 'ghost';
 };
 
-/** Displays progress or owns a wizard's panels and navigation independently of Form. */
-export function Stepper({ variant = 'progress', ...props }: StepperProps) {
-    // Opt into wizard behavior without changing existing progress and timeline usage.
-    if (variant === 'wizard') return <Wizard {...props} />;
-
+/** Displays responsive zero-based progress with optional step activation. */
+export function ProgressStepper(props: ProgressStepperProps) {
     return (
         <Progress
             activeStep={props.activeStep ?? 0}
@@ -82,7 +103,7 @@ export function Stepper({ variant = 'progress', ...props }: StepperProps) {
 }
 
 /** Collapses horizontal labels only when each step has less than its original 112px allocation. */
-function Progress({ children, activeStep = 0, orientation = 'horizontal', onStepClick }: StepperProps) {
+function Progress({ children, activeStep = 0, orientation = 'horizontal', onStepClick }: ProgressStepperProps) {
     const listRef = useRef<HTMLOListElement>(null);
     const [compact, setCompact] = useState(false);
 
@@ -168,7 +189,7 @@ function Progress({ children, activeStep = 0, orientation = 'horizontal', onStep
 }
 
 /** Keeps wizard drafts mounted and delegates field validation to an enclosing Form. */
-function Wizard(props: StepperProps) {
+export function Wizard(props: WizardProps) {
     const rootRef = useRef<HTMLDivElement>(null);
     const pending = useRef(false);
     const validate = useContext(FormValidationContext);
@@ -274,11 +295,11 @@ function Wizard(props: StepperProps) {
 
     // Progress never renders panel children a second time.
     const progress = (
-        <Stepper activeStep={activeStep} orientation={props.orientation ?? 'horizontal'}>
+        <ProgressStepper activeStep={activeStep} orientation={props.orientation ?? 'horizontal'}>
             {steps.map((child, index) => (
                 <Step key={child.key} step={index} label={child.props.label} description={child.props.description} />
             ))}
-        </Stepper>
+        </ProgressStepper>
     );
 
     const content = (
@@ -299,19 +320,24 @@ function Wizard(props: StepperProps) {
             <div className="view-wizard-controls">
                 <div className="view-wizard-back">
                     {props.onCancel && (
-                        <Button label="Cancel" variant="ghost" disabled={advancing} onClick={props.onCancel} />
+                        <Button variant="ghost" disabled={advancing} onClick={props.onCancel}>
+                            Cancel
+                        </Button>
                     )}
                     {(!props.onCancel || activeStep > 0) && (
                         <Button
-                            label="Back"
-                            variant={props.backVariant ?? 'secondary'}
+                            variant={props.backVariant ?? 'outline'}
                             disabled={advancing || activeStep === 0}
                             onClick={() => select(activeStep - 1)}
-                        />
+                        >
+                            Back
+                        </Button>
                     )}
                 </div>
                 {activeStep < steps.length - 1 ? (
-                    <Button label={next?.label ?? 'Next'} variant="primary" onClick={advance} disabled={advancing} />
+                    <Button variant="default" onClick={advance} disabled={advancing}>
+                        {next?.label ?? 'Next'}
+                    </Button>
                 ) : (
                     props.finalAction
                 )}

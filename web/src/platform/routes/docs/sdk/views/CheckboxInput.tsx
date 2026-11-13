@@ -8,7 +8,6 @@ export default function CheckboxInputPage() {
     return (
         <ViewLayout
             name="CheckboxInput"
-            introduction={'Edits a boolean or indeterminate field.'}
             properties={[
                 {
                     name: 'label',
@@ -50,6 +49,26 @@ export default function CheckboxInputPage() {
                     type: '(value: boolean) => void',
                     description: 'Callback fired when the checkbox state changes.',
                 },
+                {
+                    name: 'Checkbox.checked',
+                    type: 'boolean',
+                    description: 'Controlled checked state of the unwrapped shadcn checkbox.',
+                },
+                {
+                    name: 'Checkbox.onCheckedChange',
+                    type: '(checked: boolean, eventDetails) => void',
+                    description: 'Receives the next checked state and Base UI event details.',
+                },
+                {
+                    name: 'Checkbox.indeterminate',
+                    type: 'boolean',
+                    description: 'Displays a mixed state independently of the checked value.',
+                },
+                {
+                    name: 'Checkbox.disabled',
+                    type: 'boolean',
+                    description: 'Disables the native control, including keyboard focus and form submission.',
+                },
             ]}
             example={{
                 title: 'Approval form',
@@ -64,8 +83,8 @@ export default function ApprovalForm() {
     <Form action="/api/example" method="post">
       <CheckboxInput name="approved" label="Approved" defaultChecked />
       <Stack direction="horizontal" gap={2}>
-        <Button type="submit" label="Submit" variant="primary" />
-        <Button type="reset" label="Reset" />
+        <Button type="submit" variant="default">Submit</Button>
+        <Button type="reset" variant="outline">Reset</Button>
       </Stack>
     </Form>
   );

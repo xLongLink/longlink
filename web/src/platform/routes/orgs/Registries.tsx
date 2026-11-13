@@ -157,7 +157,7 @@ function RegistryForm({
                     </Stack>
                     <Stack direction="horizontal" gap={2} justify="between" wrap="wrap">
                         <Button label="Cancel" variant="ghost" type="button" onClick={onClose} />
-                        <Button label="Save" variant="primary" type="submit" />
+                        <Button label="Save" variant="default" type="submit" />
                     </Stack>
                 </Stack>
             </Form>

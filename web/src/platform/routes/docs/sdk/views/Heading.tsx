@@ -7,7 +7,6 @@ export default function HeadingPage() {
     return (
         <ViewLayout
             name="Heading"
-            introduction={'Displays a semantic View heading without a separate visual-level override.'}
             properties={[
                 {
                     name: 'children',

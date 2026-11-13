@@ -289,8 +289,15 @@ it('retains inherited and explicit control sizes without forcing compact cells t
     const user = userEvent.setup();
 
     const columns: TableColumn<{ name: string }>[] = [
-        { key: 'inherited', renderCell: (row) => <Button label={row.name} /> },
-        { key: 'explicit', renderCell: () => <Button label="Explicit size" size="sm" /> },
+        { key: 'inherited', renderCell: (row) => <Button variant="outline">{row.name}</Button> },
+        {
+            key: 'explicit',
+            renderCell: () => (
+                <Button variant="outline" size="sm">
+                    Explicit size
+                </Button>
+            ),
+        },
     ];
 
     function Results() {
@@ -315,12 +322,12 @@ it('retains inherited and explicit control sizes without forcing compact cells t
 
         if (!enlarge || !tables[0] || !tables[1]) throw new Error('Expected both table size boundaries');
 
-        expect(tables[0].querySelector('td button')?.getAttribute('data-size')).toBe('md');
+        expect(tables[0].querySelector('td button')?.getAttribute('data-size')).toBe('default');
         expect(tables[1].querySelector('td button')?.getAttribute('data-size')).toBe('sm');
         await act(async () => user.click(enlarge));
         expect(tables[1].querySelector('td button')?.getAttribute('data-size')).toBe('lg');
         expect(tables[1].querySelector('td:last-child button')?.getAttribute('data-size')).toBe('sm');
-        expect(tables[0].querySelector('td button')?.getAttribute('data-size')).toBe('md');
+        expect(tables[0].querySelector('td button')?.getAttribute('data-size')).toBe('default');
     });
 });
 

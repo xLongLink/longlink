@@ -1,10 +1,10 @@
 import { useValue } from './value';
+import { Checkbox } from './Checkbox';
 import { useId, useRef } from 'react';
 import type { FieldProps } from './types';
-import { Checkbox } from '@/components/shadcn/checkbox';
 import { Field, FieldLabel } from '@/components/shadcn/field';
 
-/** Edits a boolean or indeterminate field. */
+/** Custom labeled adapter with mixed values, reset support, and focusable disabled controls. */
 export function CheckboxInput(
     props: FieldProps & {
         value?: boolean | 'indeterminate';

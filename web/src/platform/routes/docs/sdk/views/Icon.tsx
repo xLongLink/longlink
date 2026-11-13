@@ -7,9 +7,6 @@ export default function IconPage() {
     return (
         <ViewLayout
             name="Icon"
-            introduction={
-                'Renders any Lucide icon by its kebab-case name. Existing LongLink aliases remain immediate; other icons load on demand and are cached without blocking the View or changing icon dimensions.'
-            }
             properties={[
                 {
                     name: 'icon',

@@ -1,19 +1,53 @@
 import { it, expect, vi } from 'vitest';
 import { Form } from '@/components/ui/Form';
-// @vitest-environment happy-dom
-import { act, type MouseEvent } from 'react';
 import { ReportedError } from '@/lib/reported';
 import { Button } from '@/components/ui/Button';
 import userEvent from '@testing-library/user-event';
 import { ErrorBoundary } from 'react-error-boundary';
 import { IconButton } from '@/components/ui/IconButton';
+// @vitest-environment happy-dom
+import { act, createRef, type MouseEvent } from 'react';
 import { renderStatic, withMounted } from '../../render';
 import { ButtonGroup } from '@/components/ui/ButtonGroup';
+import { Dialog, DialogTrigger } from '@/components/ui/Dialog';
 import { LinkNavigationContext } from '@/components/ui/contexts';
+
+it('composes a dialog trigger with native props, merged click handlers, and both refs', async () => {
+    const buttonRef = createRef<HTMLButtonElement>();
+    const triggerRef = createRef<HTMLButtonElement>();
+    const action = vi.fn();
+    const trigger = vi.fn();
+    const opened = vi.fn();
+
+    await withMounted(
+        <Dialog onOpenChange={opened}>
+            <DialogTrigger
+                ref={triggerRef}
+                onClick={trigger}
+                render={<Button ref={buttonRef} variant="outline" size="xs" onClick={action} title="Open settings" />}
+            >
+                <strong>Settings</strong>
+            </DialogTrigger>
+        </Dialog>,
+        async (output) => {
+            const control = output.querySelector('button');
+
+            if (!control) throw new Error('Expected the dialog trigger');
+            expect(buttonRef.current).toBe(control);
+            expect(triggerRef.current).toBe(control);
+            expect(control.title).toBe('Open settings');
+            expect(control.querySelector('strong')?.textContent).toBe('Settings');
+            await act(async () => control.click());
+            expect(action).toHaveBeenCalledTimes(1);
+            expect(trigger).toHaveBeenCalledTimes(1);
+            expect(opened.mock.calls[0]?.[0]).toBe(true);
+        }
+    );
+});
 
 it('does not accidentally submit the surrounding form', () => {
     // Act
-    const output = renderStatic(<Button label="Run action" />);
+    const output = renderStatic(<Button>Run action</Button>);
 
     // Assert
     expect(output.querySelector('button')?.getAttribute('type')).toBe('button');
@@ -26,7 +60,9 @@ it('preserves native link keyboard semantics inside a group', async () => {
 
     await withMounted(
         <ButtonGroup label="Navigation">
-            <Button label="Docs" href="https://example.com/docs" onClick={action} />
+            <Button href="https://example.com/docs" onClick={action}>
+                Docs
+            </Button>
         </ButtonGroup>,
         async (output) => {
             const anchor = output.querySelector('a');
@@ -44,7 +80,12 @@ it('preserves native link keyboard semantics inside a group', async () => {
 
 it.each(['submit', 'reset'] as const)('does not expose a disabled native %s action before hydration', (type) => {
     // Aria-disabled controls have no event guard in server HTML, so their native form action must be withheld.
-    const output = renderStatic(<Button label="Unavailable" type={type} name="intent" value="publish" disabled />);
+    const output = renderStatic(
+        <Button type={type} name="intent" value="publish" disabled>
+            Unavailable
+        </Button>
+    );
+
     const control = output.querySelector('button');
 
     expect(control?.getAttribute('type')).toBe('button');
@@ -67,7 +108,7 @@ it.each(['button', 'icon'] as const)(
         try {
             await withMounted(
                 kind === 'button' ? (
-                    <Button label="Save" onClick={action} />
+                    <Button onClick={action}>Save</Button>
                 ) : (
                     <IconButton label="Save" icon="check" onClick={action} />
                 ),
@@ -114,8 +155,10 @@ it('retains submitter data and reset behavior through the real form', async () =
             }}
         >
             <input name="title" defaultValue="Original" />
-            <Button label="Publish" type="submit" name="intent" value="publish" />
-            <Button label="Reset" type="reset" />
+            <Button type="submit" name="intent" value="publish">
+                Publish
+            </Button>
+            <Button type="reset">Reset</Button>
         </Form>,
         async (output) => {
             const buttons = output.querySelectorAll<HTMLButtonElement>('button');
@@ -151,7 +194,9 @@ it('keeps grouped actions sized and disabled, excluding disabled submitter data'
                 }}
             >
                 <ButtonGroup label="Actions" size="lg" isDisabled>
-                    <Button label="Publish" type="submit" name="intent" value="publish" onClick={action} />
+                    <Button type="submit" name="intent" value="publish" onClick={action}>
+                        Publish
+                    </Button>
                     <IconButton label="Delete" icon="trash" onClick={action} />
                 </ButtonGroup>
             </form>
@@ -168,7 +213,7 @@ it('keeps grouped actions sized and disabled, excluding disabled submitter data'
             expect(submitted).not.toHaveBeenCalled();
             expect(ancestor).not.toHaveBeenCalled();
             expect(new FormData(form).has('intent')).toBe(false);
-            expect(Array.from(controls, (control) => control.dataset.size)).toEqual(['lg', 'lg']);
+            expect(Array.from(controls, (control) => control.dataset.size)).toEqual(['lg', 'icon-lg']);
             expect(Array.from(controls, (control) => control.getAttribute('aria-disabled'))).toEqual(['true', 'true']);
         }
     );
@@ -179,8 +224,10 @@ it('lets actions cancel scoped navigation before it reaches the host', async () 
     const navigate = vi.fn();
     await withMounted(
         <LinkNavigationContext value={{ baseUrl: 'https://example.com/', navigate }}>
-            <Button label="Blocked" href="/orders" onClick={(event) => event.preventDefault()} />
-            <Button label="Open" href="/orders" />
+            <Button href="/orders" onClick={(event) => event.preventDefault()}>
+                Blocked
+            </Button>
+            <Button href="/orders">Open</Button>
         </LinkNavigationContext>,
         async (output) => {
             const controls = output.querySelectorAll<HTMLButtonElement>('button');
@@ -199,8 +246,12 @@ it('keeps a native link outside the scoped host and honors click cancellation', 
     const prevented: boolean[] = [];
     await withMounted(
         <>
-            <Button label="Docs" href="https://example.com/docs" onClick={(event) => event.preventDefault()} />
-            <Button label="Disabled" href="https://example.com/disabled" disabled />
+            <Button href="https://example.com/docs" onClick={(event) => event.preventDefault()}>
+                Docs
+            </Button>
+            <Button href="https://example.com/disabled" disabled>
+                Disabled
+            </Button>
         </>,
         async (output) => {
             const anchor = output.querySelector('a');
@@ -227,7 +278,7 @@ it('recovers from an already reported request failure without replacing the View
 
     await withMounted(
         <ErrorBoundary fallback={<p role="alert">View failed</p>}>
-            <Button label="Retry" onClick={action} />
+            <Button onClick={action}>Retry</Button>
         </ErrorBoundary>,
         async (output) => {
             const control = output.querySelector('button');
@@ -250,11 +301,12 @@ it('still exposes unexpected action failures to the View error boundary', async 
         await withMounted(
             <ErrorBoundary fallback={<p role="alert">View failed</p>}>
                 <Button
-                    label="Run"
                     onClick={async () => {
                         throw new Error('Unexpected');
                     }}
-                />
+                >
+                    Run
+                </Button>
             </ErrorBoundary>,
             async (output) => {
                 await act(async () => output.querySelector('button')?.click());

@@ -1,4 +1,3 @@
-import { InlineCode } from '@/components/shadcn/inline-code';
 import { NativeLink as Link } from '@/components/ui/NativeLink';
 import { NativeText as Text } from '@/components/ui/NativeText';
 import { NativeStack as Stack } from '@/components/ui/NativeStack';
@@ -135,3 +134,5 @@ raise HTTPException(status_code=404, detail="Project not found")`}
         </DocumentationArticle>
     );
 }
+
+import { InlineCode } from '@/components/shadcn/inline-code';

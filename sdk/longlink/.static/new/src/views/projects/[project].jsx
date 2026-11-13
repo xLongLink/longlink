@@ -22,7 +22,7 @@ export default function Project({ params }) {
             <Divider />
             <Grid columns={3} collapseBelow={768} gap={8}>
                 <GridSpan columns={2}>
-                    <Stepper
+                    <ProgressStepper
                         activeStep={project.active_step}
                         onStepClick={(index) => navigate(`/projects/${project.id}/${phases[index].slug}`)}
                         orientation="vertical"
@@ -30,19 +30,20 @@ export default function Project({ params }) {
                         {phases.map((step, index) => (
                             <Step key={step.label} step={index} label={step.label} description={step.description} />
                         ))}
-                    </Stepper>
+                    </ProgressStepper>
                 </GridSpan>
                 <Stack align="start">
                     <Badge
-                        label={project.status}
                         variant={
                             project.status === 'Completed'
-                                ? 'success'
+                                ? 'success-light'
                                 : project.status === 'In progress'
-                                  ? 'warning'
-                                  : 'neutral'
+                                  ? 'warning-light'
+                                  : 'secondary'
                         }
-                    />
+                    >
+                        {project.status}
+                    </Badge>
                 </Stack>
             </Grid>
         </Stack>

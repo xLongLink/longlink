@@ -11,7 +11,10 @@ export { Grid } from '@/components/ui/Grid';
 export { GridSpan } from '@/components/ui/Grid';
 
 /** @category Layouts */
-export { Collapsible } from '@/components/ui/Collapsible';
+export { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/Collapsible';
+
+/** Custom initially-open disclosure with persistent content and controlled-close focus recovery. @category Layouts */
+export { Disclosure } from '@/components/ui/Disclosure';
 
 /** @category Display */
 export { Heading } from '@/components/ui/Heading';
@@ -34,6 +37,12 @@ export { Token } from '@/components/ui/Token';
 /** @category Layouts */
 export { Card } from '@/components/ui/Card';
 
+/** @category Layouts @group Card */
+export { CardHeader, CardTitle, CardDescription, CardAction, CardContent, CardFooter } from '@/components/ui/Card';
+
+/** Custom surface actions, selection, navigation, and layout. @category Layouts @group Card */
+export { InteractiveCard } from '@/components/ui/Card';
+
 /** @category Action */
 export { Button } from '@/components/ui/Button';
 
@@ -43,7 +52,7 @@ export { ButtonGroup } from '@/components/ui/ButtonGroup';
 /** @category Action */
 export { DropdownMenu } from '@/components/ui/DropdownMenu';
 
-/** @category Action */
+/** @category Action @group Button */
 export { IconButton } from '@/components/ui/IconButton';
 
 /** @category Display */
@@ -51,6 +60,22 @@ export { Divider } from '@/components/ui/Divider';
 
 /** @category Layouts */
 export { Dialog } from '@/components/ui/Dialog';
+
+/** @category Layouts @group Dialog */
+export {
+    DialogClose,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogOverlay,
+    DialogPortal,
+    DialogTitle,
+    DialogTrigger,
+} from '@/components/ui/Dialog';
+
+/** Custom modal frame with isolated View host coordination. @category Layouts */
+export { ViewDialog } from '@/components/ui/ViewDialog';
 
 /** Submits named themed fields and ordinary HTML inputs to a Solution API endpoint. @category Form */
 export { Form } from '@/components/ui/Form';
@@ -64,29 +89,103 @@ export { MultiSelector } from '@/components/ui/MultiSelector';
 /** @category Form */
 export { TimeInput } from '@/components/ui/TimeInput';
 
-/** @category Form */
+/** Custom form adapter with string callbacks, clear/reset, and Unicode code-point validation. @category Form */
 export { TextInput } from '@/components/ui/TextInput';
 
-/** @category Form */
+/** Custom form adapter with string callbacks, reset, and Unicode code-point validation. @category Form */
 export { TextArea } from '@/components/ui/TextArea';
+
+/** @category Form */
+export { Input } from '@/components/shadcn/input';
+
+/** @category Form */
+export { Textarea } from '@/components/shadcn/textarea';
+
+/** @category Form */
+export {
+    Field,
+    FieldLabel,
+    FieldDescription,
+    FieldError,
+    FieldGroup,
+    FieldLegend,
+    FieldSeparator,
+    FieldSet,
+    FieldContent,
+    FieldTitle,
+} from '@/components/shadcn/field';
+
+/** @category Form */
+export {
+    InputGroup,
+    InputGroupAddon,
+    InputGroupButton,
+    InputGroupInput,
+    InputGroupTextarea,
+    InputGroupText,
+} from '@/components/shadcn/input-group';
 
 /** @category Form */
 export { NumberInput } from '@/components/ui/NumberInput';
 
-/** @category Form */
+/** Custom labeled form adapter with reset and focusable disabled controls. @category Form */
 export { CheckboxInput } from '@/components/ui/CheckboxInput';
+
+/** @category Form */
+export { Checkbox } from '@/components/ui/Checkbox';
 
 /** @category Form */
 export { Switch } from '@/components/ui/Switch';
 
+/** Custom labeled form adapter with reset and focusable disabled controls. @category Form */
+export { SwitchField } from '@/components/ui/SwitchField';
+
 /** @category Form */
-export { Slider } from '@/components/ui/Slider';
+export { Slider, SliderControl, SliderTrack, SliderRange, SliderThumb, SliderField } from '@/components/ui/Slider';
 
 /** @category Form */
 export { FileInput } from '@/components/ui/FileInput';
 
-/** @category Form */
+/** Custom form adapter with nullable values, clear, reset, and controlled rejection. @category Form */
 export { Selector } from '@/components/ui/Selector';
+
+/** @category Form */
+export { Select } from '@/components/ui/Select';
+
+/** @category Form @group Select */
+export {
+    SelectContent,
+    SelectGroup,
+    SelectItem,
+    SelectLabel,
+    SelectScrollDownButton,
+    SelectScrollUpButton,
+    SelectSeparator,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/Select';
+
+/** @category Form */
+export { Combobox } from '@/components/ui/Combobox';
+
+/** @category Form @group Combobox */
+export {
+    ComboboxInput,
+    ComboboxContent,
+    ComboboxList,
+    ComboboxItem,
+    ComboboxGroup,
+    ComboboxLabel,
+    ComboboxCollection,
+    ComboboxEmpty,
+    ComboboxSeparator,
+    ComboboxChips,
+    ComboboxChip,
+    ComboboxChipsInput,
+    ComboboxTrigger,
+    ComboboxValue,
+    useComboboxAnchor,
+} from '@/components/ui/Combobox';
 
 /** @category Form */
 export { RadioList } from '@/components/ui/RadioList';
@@ -110,19 +209,41 @@ export { Timestamp } from '@/components/ui/Timestamp';
 export { CodeBlock } from '@/components/ui/CodeBlock';
 
 /** @category Display */
-export { ProgressBar } from '@/components/ui/ProgressBar';
+export { Progress } from '@/components/ui/Progress';
+
+/** @category Display @group Progress */
+export { ProgressLabel, ProgressValue, ProgressTrack, ProgressIndicator } from '@/components/ui/Progress';
 
 /** @category Layouts */
 export { Stepper } from '@/components/ui/Stepper';
 
 /** @category Layouts @group Stepper */
+export {
+    StepperNav,
+    StepperItem,
+    StepperTrigger,
+    StepperIndicator,
+    StepperSeparator,
+    StepperTitle,
+    StepperDescription,
+    StepperPanel,
+    StepperContent,
+} from '@/components/ui/Stepper';
+
+/** Custom responsive progress adapter using zero-based indices. @category Layouts */
+export { ProgressStepper } from '@/components/ui/Stepper';
+
+/** Custom validated wizard with persistent drafts and asynchronous navigation. @category Layouts */
+export { Wizard } from '@/components/ui/Stepper';
+
+/** Custom panel definition for ProgressStepper and Wizard. @category Layouts @group Wizard */
 export { Step } from '@/components/ui/Stepper';
 
 /** @category Layouts */
 export { Tabs } from '@/components/ui/Tabs';
 
 /** @category Layouts @group Tabs */
-export { Tab } from '@/components/ui/Tabs';
+export { TabsList, TabsTrigger, TabsContent } from '@/components/ui/Tabs';
 
 /** @category Display */
 export { EmptyState } from '@/components/ui/EmptyState';

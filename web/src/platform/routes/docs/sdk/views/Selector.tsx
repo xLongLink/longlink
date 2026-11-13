@@ -8,7 +8,6 @@ export default function SelectorPage() {
     return (
         <ViewLayout
             name="Selector"
-            introduction={'Selects one value without custom option rendering or popup geometry.'}
             properties={[
                 {
                     name: 'label',
@@ -43,12 +42,18 @@ export default function SelectorPage() {
                 {
                     name: 'defaultValue',
                     type: 'string',
-                    description: 'Initial value.',
+                    description: 'Initial uncontrolled value restored by an uncanceled native form reset.',
                 },
                 {
                     name: 'hasSearch',
                     type: 'boolean',
                     description: 'Shows a search field for filtering options.',
+                },
+                {
+                    name: 'hasClear',
+                    type: 'boolean',
+                    description:
+                        'Shows the clear action by default; clearing reports null and submits an empty string.',
                 },
                 {
                     name: 'placeholder',
@@ -58,12 +63,12 @@ export default function SelectorPage() {
                 {
                     name: 'value',
                     type: 'string | null',
-                    description: 'Currently selected value.',
+                    description: 'Caller-owned selection, including null. Retaining it rejects a proposed change.',
                 },
                 {
                     name: 'onChange',
                     type: '(value: string | null) => void',
-                    description: 'Callback fired when the selection changes.',
+                    description: 'Proposes a selection or null when cleared; does not override a controlled value.',
                 },
             ]}
             example={{
@@ -79,8 +84,8 @@ export default function StatusForm() {
     <Form action="/api/example" method="post">
       <Selector name="status" label="Status" options={['open', 'closed']} defaultValue="open" required />
       <Stack direction="horizontal" gap={2}>
-        <Button type="submit" label="Submit" variant="primary" />
-        <Button type="reset" label="Reset" />
+        <Button type="submit" variant="default">Submit</Button>
+        <Button type="reset" variant="outline">Reset</Button>
       </Stack>
     </Form>
   );

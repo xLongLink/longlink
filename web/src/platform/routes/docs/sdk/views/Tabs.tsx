@@ -1,71 +1,55 @@
 import ViewLayout from './ViewLayout';
-import { Tabs, Tab } from '@/components/ui/Tabs';
 import { NativeText as Text } from '@/components/ui/NativeText';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/Tabs';
 
-/** Documents tab selection and panel content. */
+/** Documents native tab composition and selection. */
 export default function TabsPage() {
-    // Render tab selection guidance with separate Tabs and Tab property tables.
+    // Describe the installed components without imposing selection policies.
     return (
         <ViewLayout
             name="Tabs"
             properties={[
                 {
-                    name: 'children',
-                    type: 'ReactNode',
-                    description: 'Tab elements defining labels and panel content.',
+                    name: 'defaultValue',
+                    type: 'unknown',
+                    description: 'Initially selected value in uncontrolled mode.',
                 },
+                { name: 'value', type: 'unknown', description: 'Selected value in controlled mode.' },
                 {
-                    name: 'gap',
-                    type: '0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10',
+                    name: 'onValueChange',
+                    type: '(value: unknown, eventDetails: Tabs.Root.ChangeEventDetails) => void',
+                    description: 'Called when the selected tab changes.',
                 },
+                { name: 'orientation', type: '"horizontal" | "vertical"' },
+                { name: 'TabsList.variant', type: '"default" | "line"' },
                 {
-                    name: 'hasDivider',
+                    name: 'TabsList.activateOnFocus',
                     type: 'boolean',
+                    description: 'Select tabs when keyboard focus moves.',
                 },
-                {
-                    name: 'onChange',
-                    type: '(value: string) => void',
-                    description: 'Receives the selected Tab value; use with value to control selection.',
-                },
-                {
-                    name: 'value',
-                    type: 'string',
-                    description: 'Selected Tab value; omit for internal selection, initially choosing the first tab.',
-                },
-                {
-                    name: 'Tab.children',
-                    type: 'ReactNode',
-                    description: 'Panel content mounted only while this tab is selected.',
-                },
-                {
-                    name: 'Tab.value',
-                    type: 'string',
-                    description: 'Unique value identifying this tab.',
-                },
-                {
-                    name: 'Tab.label',
-                    type: 'string',
-                    description: 'Visible tab label and accessible panel name.',
-                },
-                {
-                    name: 'Tab.isDisabled',
-                    type: 'boolean',
-                    description: 'Whether the tab is disabled.',
-                },
+                { name: 'TabsTrigger.value', type: 'unknown', description: 'Value associated with this tab.' },
+                { name: 'TabsTrigger.disabled', type: 'boolean' },
+                { name: 'TabsTrigger.children', type: 'ReactNode', description: 'Visible tab label.' },
+                { name: 'TabsContent.value', type: 'unknown', description: 'Value associated with this panel.' },
+                { name: 'TabsContent.keepMounted', type: 'boolean', description: 'Keep an inactive panel in the DOM.' },
+                { name: 'TabsContent.children', type: 'ReactNode', description: 'Panel content.' },
             ]}
-            introduction="Tabs is a LongLink component that displays a tab strip and the selected Tab’s content."
             example={{
                 title: 'Tabs',
                 preview: <TabsExample />,
                 code: `function Example() {
   return (
-    <Tabs hasDivider>
-      <Tab value="overview" label="Overview">
+    <Tabs defaultValue="overview">
+      <TabsList>
+        <TabsTrigger value="overview">Overview</TabsTrigger>
+        <TabsTrigger value="activity">Activity</TabsTrigger>
+      </TabsList>
+      <TabsContent value="overview">
         <Text>Overview content</Text>
-      </Tab>
-      <Tab value="activity" label="Activity">
+      </TabsContent>
+      <TabsContent value="activity">
         <Text>Activity content</Text>
-      </Tab>
+      </TabsContent>
     </Tabs>
   );
 }`,
@@ -74,17 +58,21 @@ export default function TabsPage() {
     );
 }
 
-/** Demonstrates the page's tabs with independently selectable panels. */
+/** Demonstrates independently selectable panels. */
 function TabsExample() {
-    // Let the tabs manage selection and render the active panel.
+    // Let the native tabs manage selection.
     return (
-        <Tabs>
-            <Tab label="Overview" value="overview">
+        <Tabs defaultValue="overview">
+            <TabsList>
+                <TabsTrigger value="overview">Overview</TabsTrigger>
+                <TabsTrigger value="activity">Activity</TabsTrigger>
+            </TabsList>
+            <TabsContent value="overview">
                 <Text>Overview content</Text>
-            </Tab>
-            <Tab label="Activity" value="activity">
+            </TabsContent>
+            <TabsContent value="activity">
                 <Text>Activity content</Text>
-            </Tab>
+            </TabsContent>
         </Tabs>
     );
 }

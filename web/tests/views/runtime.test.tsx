@@ -353,28 +353,182 @@ it('bounds request failures and retries the failed query instead of leaving its 
     }
 });
 
-it('keeps runtime tooltip portals under the document mode scope through live changes', async () => {
+it('exposes native Progress composition inside the isolated View runtime', async () => {
     const runtime = await initializeRuntime(`export default function View() {
-        return <ProgressBar label="Storage" value={25} marks={[{ value: 25, label: 'Target' }]} />;
+        const [value, setValue] = useState(25);
+        return <>
+            <Progress value={value} max={50}>
+                <ProgressLabel>Storage</ProgressLabel>
+                <ProgressValue />
+            </Progress>
+            <button type="button" onClick={() => setValue(40)}>Update</button>
+        </>;
     }`);
 
     try {
-        await vi.waitFor(() => expect(runtime.mount.querySelector('[aria-label="Target"]')).not.toBeNull());
-        const mark = runtime.mount.querySelector<HTMLElement>('[aria-label="Target"]');
+        await vi.waitFor(() => expect(runtime.mount.querySelector('[role="progressbar"]')).not.toBeNull());
+        const progress = runtime.mount.querySelector('[role="progressbar"]');
+        expect(progress?.getAttribute('aria-valuenow')).toBe('25');
+        expect(runtime.mount.querySelector('[data-slot="progress-value"]')?.textContent).toBe('50%');
+        const button = runtime.mount.querySelector('button');
 
-        if (!mark) throw new Error('Expected runtime target');
-        await userEvent.setup().tab();
-        await vi.waitFor(() => expect(document.querySelector('[role="tooltip"]')?.textContent).toBe('Target'));
-        const tooltip = document.querySelector('[role="tooltip"]');
-
-        expect(tooltip?.closest('[data-theme-scope="stone"]')).toBe(document.documentElement);
-        expect(runtime.mount.contains(tooltip)).toBe(false);
+        if (!button) throw new Error('Expected progress update button');
+        await userEvent.setup().click(button);
+        await vi.waitFor(() => expect(progress?.getAttribute('aria-valuenow')).toBe('40'));
+        expect(runtime.mount.querySelector('[data-slot="progress-value"]')?.textContent).toBe('80%');
         runtime.send({ type: 'appearance', appearance: { theme: 'dark', accent: 'blue' } });
         expect(document.documentElement.dataset.theme).toBe('dark');
-        expect(document.querySelector('[role="tooltip"]')).toBe(tooltip);
-        expect(tooltip?.closest('[data-theme-scope="stone"]')).toBe(document.documentElement);
-        await userEvent.setup().keyboard('{Escape}');
-        await vi.waitFor(() => expect(document.querySelector('[role="tooltip"]')).toBeNull());
+        expect(runtime.mount.querySelector('[role="progressbar"]')).toBe(progress);
+    } finally {
+        runtime.close();
+    }
+});
+
+it('submits native Select and Combobox compositions exported to authored JSX as selected form values', async () => {
+    // Missing public exports or accidental adapter semantics must not break authored native form controls.
+    const runtime = await initializeRuntime(`export default function View() {
+        return <form>
+            <Select name="status" defaultValue="open">
+                <SelectTrigger aria-label="Status"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="open">Open</SelectItem>
+                    <SelectItem value="closed">Closed</SelectItem>
+                </SelectContent>
+            </Select>
+            <Combobox name="assignee" items={['Ada', 'Grace']} defaultValue="Ada">
+                <ComboboxInput aria-label="Assignee" />
+                <ComboboxContent>
+                    <ComboboxEmpty>No people</ComboboxEmpty>
+                    <ComboboxList>{person => <ComboboxItem key={person} value={person}>{person}</ComboboxItem>}</ComboboxList>
+                </ComboboxContent>
+            </Combobox>
+        </form>;
+    }`);
+
+    try {
+        await vi.waitFor(() => expect(runtime.mount.querySelector('form')).not.toBeNull());
+        const form = runtime.mount.querySelector('form');
+
+        if (!form) throw new Error('Expected authored native form');
+        const user = userEvent.setup();
+        const select = form.querySelector('[aria-label="Status"]');
+
+        if (!select) throw new Error('Expected exported Select trigger');
+        await user.click(select);
+        await vi.waitFor(() =>
+            expect(document.querySelector('[role="option"][data-slot="select-item"]')).not.toBeNull()
+        );
+
+        const closed = Array.from(document.querySelectorAll('[role="option"]')).find(
+            (item) => item.textContent === 'Closed'
+        );
+
+        if (!closed) throw new Error('Expected composed Select option');
+        await user.click(closed);
+        const input = form.querySelector<HTMLInputElement>('input[aria-label="Assignee"]');
+
+        if (!input) throw new Error('Expected exported Combobox input');
+        await user.clear(input);
+        await user.type(input, 'Gra');
+        await vi.waitFor(() =>
+            expect(document.querySelector('[data-slot="combobox-item"]')?.textContent).toBe('Grace')
+        );
+        const grace = document.querySelector('[data-slot="combobox-item"]');
+
+        if (!grace) throw new Error('Expected filtered Combobox option');
+        await user.click(grace);
+        await vi.waitFor(() => {
+            const data = new FormData(form);
+            expect(data.get('status')).toBe('closed');
+            expect(data.get('assignee')).toBe('Grace');
+        });
+    } finally {
+        runtime.close();
+    }
+});
+
+it('edits and resets composed native text fields through the authored View boundary', async () => {
+    // Native exports must preserve DOM events rather than substituting adapter string callbacks.
+    const runtime = await initializeRuntime(`export default function View() {
+        const [draft, setDraft] = useState('Initial');
+        return <form onReset={() => setDraft('Initial')}>
+            <Field>
+                <FieldLabel htmlFor="draft">Draft</FieldLabel>
+                <InputGroup>
+                    <InputGroupInput id="draft" name="draft" value={draft}
+                        onChange={event => setDraft(event.currentTarget.value)} />
+                    <InputGroupAddon><InputGroupText>Text</InputGroupText></InputGroupAddon>
+                </InputGroup>
+            </Field>
+            <Textarea name="notes" aria-label="Notes" defaultValue="Original notes" />
+            <Input name="excluded" defaultValue="Private" disabled />
+            <output>{draft}</output>
+            <button type="reset">Reset</button>
+        </form>;
+    }`);
+
+    try {
+        await vi.waitFor(() => expect(runtime.mount.querySelector('form')).not.toBeNull());
+        const form = runtime.mount.querySelector('form');
+        const input = runtime.mount.querySelector<HTMLInputElement>('#draft');
+        const notes = runtime.mount.querySelector('textarea');
+        const reset = runtime.mount.querySelector('button');
+
+        if (!form || !input || !notes || !reset) throw new Error('Expected composed native text fields');
+        const user = userEvent.setup();
+        await user.clear(input);
+        await user.type(input, 'Edited');
+        await user.clear(notes);
+        await user.type(notes, 'New notes');
+        expect(runtime.mount.querySelector('output')?.textContent).toBe('Edited');
+        expect(new FormData(form).get('draft')).toBe('Edited');
+        expect(new FormData(form).get('notes')).toBe('New notes');
+        expect(new FormData(form).has('excluded')).toBe(false);
+        await user.click(reset);
+        await vi.waitFor(() => expect(input.value).toBe('Initial'));
+        expect(notes.value).toBe('Original notes');
+        expect(runtime.mount.querySelector('output')?.textContent).toBe('Initial');
+    } finally {
+        runtime.close();
+    }
+});
+
+it('composes native Dialog triggers with public Buttons inside an authored View', async () => {
+    const runtime = await initializeRuntime(`export default function View() {
+        return <Dialog>
+            <DialogTrigger render={<Button variant="outline" />}>Open order</DialogTrigger>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Order details</DialogTitle>
+                    <DialogDescription>Review the order</DialogDescription>
+                </DialogHeader>
+                <DialogClose render={<Button variant="outline" />}>Finish review</DialogClose>
+            </DialogContent>
+        </Dialog>;
+    }`);
+
+    try {
+        await vi.waitFor(() => expect(runtime.mount.querySelector('button')?.textContent).toContain('Open order'));
+        const user = userEvent.setup();
+        const trigger = runtime.mount.querySelector('button');
+
+        if (!trigger) throw new Error('Expected native dialog trigger');
+        await user.click(trigger);
+        await vi.waitFor(() => expect(document.querySelector('[role="dialog"]')).not.toBeNull());
+        const dialog = document.querySelector('[role="dialog"]');
+        const titleId = dialog?.getAttribute('aria-labelledby');
+
+        expect(document.getElementById(titleId ?? '')?.textContent).toBe('Order details');
+        expect(dialog?.closest('[data-theme-scope="stone"]')).toBe(document.documentElement);
+
+        const close = Array.from(dialog?.querySelectorAll('button') ?? []).find((button) =>
+            button.textContent?.includes('Finish review')
+        );
+
+        if (!close) throw new Error('Expected composed dialog close button');
+        await user.click(close);
+        await vi.waitFor(() => expect(document.querySelector('[role="dialog"]')).toBeNull());
+        await vi.waitFor(() => expect(document.activeElement).toBe(trigger));
     } finally {
         runtime.close();
     }

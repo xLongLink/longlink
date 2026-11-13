@@ -10,7 +10,6 @@ export default function MoreMenuPage() {
     return (
         <ViewLayout
             name="MoreMenu"
-            introduction={'Opens additional actions without exposing popup geometry or presentation modes.'}
             properties={[
                 {
                     name: 'items',

@@ -20,8 +20,12 @@ export default function FormPreview({ children, stepped = false }: { children: R
                     <>
                         {children}
                         <Stack direction="horizontal" gap={2}>
-                            <Button type="submit" label="Submit" variant="primary" />
-                            <Button type="reset" label="Reset" />
+                            <Button type="submit" variant="default">
+                                Submit
+                            </Button>
+                            <Button type="reset" variant="outline">
+                                Reset
+                            </Button>
                         </Stack>
                     </>
                 )}

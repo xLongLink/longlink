@@ -8,7 +8,6 @@ export default function DateInputPage() {
     return (
         <ViewLayout
             name="DateInput"
-            introduction={'Selects a constrained date with standard month and week presentation.'}
             properties={[
                 {
                     name: 'label',
@@ -84,8 +83,8 @@ export default function DueDateForm() {
     <Form action="/api/example" method="post">
       <DateInput name="due_date" label="Due date" defaultValue="2026-10-02" required />
       <Stack direction="horizontal" gap={2}>
-        <Button type="submit" label="Submit" variant="primary" />
-        <Button type="reset" label="Reset" />
+        <Button type="submit" variant="default">Submit</Button>
+        <Button type="reset" variant="outline">Reset</Button>
       </Stack>
     </Form>
   );

@@ -15,18 +15,18 @@ export function ButtonGroup({
     children?: ReactNode;
     label: string;
     orientation?: 'horizontal' | 'vertical';
-    size?: 'sm' | 'md' | 'lg';
+    size?: 'sm' | 'default' | 'lg';
     isDisabled?: boolean;
 }) {
     const inheritedSize = useContext(ControlSizeContext);
-    const size = requestedSize ?? inheritedSize ?? 'md';
+    const size = requestedSize ?? (inheritedSize === 'md' ? 'default' : inheritedSize) ?? 'default';
     const root = useRef<HTMLDivElement>(null);
 
     useGroupPress(root, !isDisabled);
 
     return (
         <ButtonGroupContext value={{ orientation, isDisabled }}>
-            <ControlSizeContext value={size}>
+            <ControlSizeContext value={size === 'default' ? 'md' : size}>
                 <Toolbar.Root
                     render={<ControlGroup orientation={orientation} />}
                     ref={root}

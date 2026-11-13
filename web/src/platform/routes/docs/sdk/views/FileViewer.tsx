@@ -26,9 +26,6 @@ export default function FileViewerPage() {
                     description: 'Preview and download action size; inherits sizing when omitted.',
                 },
             ]}
-            introduction={
-                'FileViewer previews images inline, opens PDFs in a fullscreen dialog using the browser’s native PDF viewer, and shows text and code files in a read-only viewer with line numbers, wrapping, and a copy button. Syntax highlighting follows the title’s filename extension, including Python, JavaScript, TypeScript, JSON, YAML, HTML, CSS, SQL, Markdown, and other supported languages. Text files must use UTF-8 encoding; unknown filenames with a text media type appear as plain text. PDF responses must use Content-Type: application/pdf. Other documents, including PowerPoint and Word files, are download-only. Native PDF controls and availability depend on the browser; Download remains available for every file. Set size="sm" for compact table actions; omit size to retain inherited sizing.'
-            }
             example={{
                 title: 'FileViewer',
                 preview: <FileViewerExample />,

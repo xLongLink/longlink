@@ -41,15 +41,16 @@ export default function Phase({ params }) {
                 </GridSpan>
                 <Stack align="start">
                     <Badge
-                        label={project.status}
                         variant={
                             project.status === 'Completed'
-                                ? 'success'
+                                ? 'success-light'
                                 : project.status === 'In progress'
-                                  ? 'warning'
-                                  : 'neutral'
+                                  ? 'warning-light'
+                                  : 'secondary'
                         }
-                    />
+                    >
+                        {project.status}
+                    </Badge>
                 </Stack>
             </Grid>
         </Stack>

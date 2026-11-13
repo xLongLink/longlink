@@ -1,4 +1,3 @@
-import { InlineCode } from '@/components/shadcn/inline-code';
 import { NativeLink as Link } from '@/components/ui/NativeLink';
 import { NativeText as Text } from '@/components/ui/NativeText';
 import { NativeStack as Stack } from '@/components/ui/NativeStack';
@@ -63,3 +62,5 @@ def test_healthcheck() -> None:
         </DocumentationArticle>
     );
 }
+
+import { InlineCode } from '@/components/shadcn/inline-code';

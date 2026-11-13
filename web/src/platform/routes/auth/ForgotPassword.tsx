@@ -46,7 +46,7 @@ export default function ForgotPassword() {
                         <p>{confirmation}</p>
                         <span ref={channel} className="sr-only" role="status" aria-atomic="true" />
                     </div>
-                    <Button href="/login" label="Back to sign in" variant="primary" />
+                    <Button href="/login" label="Back to sign in" variant="default" />
                 </Stack>
             ) : (
                 <form
@@ -71,7 +71,7 @@ export default function ForgotPassword() {
                             icon={<Mail aria-hidden="true" size={16} />}
                             label="Send reset email"
                             type="submit"
-                            variant="primary"
+                            variant="default"
                             width="100%"
                         />
                     </Stack>

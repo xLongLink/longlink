@@ -245,6 +245,10 @@ jobs:
               working-directory: web
               run: vp run check
 
+            - name: Check View editor declarations
+              working-directory: web
+              run: vp run check:frontend
+
             - name: Run tests
               working-directory: web
               run: vp test tests

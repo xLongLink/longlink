@@ -1,14 +1,14 @@
 // @vitest-environment happy-dom
 import { act, useState } from 'react';
 import { it, expect, vi } from 'vitest';
-import { Card } from '@/components/ui/Card';
 import userEvent from '@testing-library/user-event';
+import { InteractiveCard } from '@/components/ui/Card';
 import { renderStatic, withMounted } from '../../render';
 import { LinkNavigationContext } from '@/components/ui/contexts';
 
 it('retains content without making a plain card an action', () => {
     // Act
-    const output = renderStatic(<Card>Order summary</Card>);
+    const output = renderStatic(<InteractiveCard>Order summary</InteractiveCard>);
 
     // Assert
     expect(output.textContent).toContain('Order summary');
@@ -25,7 +25,7 @@ it('gives selection priority over actions and navigation and leaves nested contr
         const [selected, setSelected] = useState(false);
 
         return (
-            <Card
+            <InteractiveCard
                 label="Order"
                 isSelected={selected}
                 href="/orders"
@@ -37,7 +37,7 @@ it('gives selection priority over actions and navigation and leaves nested contr
             >
                 <p>Order contents</p>
                 <button onClick={nested}>Remove</button>
-            </Card>
+            </InteractiveCard>
         );
     }
 
@@ -76,9 +76,9 @@ it('gives selection priority over actions and navigation and leaves nested contr
 it('gives an action priority over href with native button keyboard activation', async () => {
     const action = vi.fn();
     await withMounted(
-        <Card label="Open order" href="/orders" onClick={action}>
+        <InteractiveCard label="Open order" href="/orders" onClick={action}>
             <p>Order</p>
-        </Card>,
+        </InteractiveCard>,
         async (output) => {
             const user = userEvent.setup();
             const button = output.querySelector('button');
@@ -106,16 +106,16 @@ it('keeps disabled primary controls focusable without live destinations or activ
     const navigate = vi.fn();
     await withMounted(
         <LinkNavigationContext value={{ baseUrl: 'https://example.com/app/', navigate }}>
-            <Card label="Action" isDisabled onClick={action}>
+            <InteractiveCard label="Action" isDisabled onClick={action}>
                 <p>Action</p>
                 <button onClick={nested}>Nested</button>
-            </Card>
-            <Card label="Selection" isDisabled onChange={changed}>
+            </InteractiveCard>
+            <InteractiveCard label="Selection" isDisabled onChange={changed}>
                 <p>Selection</p>
-            </Card>
-            <Card label="Link" isDisabled href="/orders">
+            </InteractiveCard>
+            <InteractiveCard label="Link" isDisabled href="/orders">
                 <p>Link</p>
-            </Card>
+            </InteractiveCard>
         </LinkNavigationContext>,
         async (output) => {
             const user = userEvent.setup();
@@ -148,12 +148,12 @@ it('routes plain surface clicks through the validated primary link without steal
     const nested = vi.fn((event: React.MouseEvent) => event.preventDefault());
     await withMounted(
         <LinkNavigationContext value={{ baseUrl: 'https://example.com/app/', navigate }}>
-            <Card href="/orders">
+            <InteractiveCard href="/orders">
                 <p>Order</p>
                 <a href="/other" onClick={nested}>
                     Other
                 </a>
-            </Card>
+            </InteractiveCard>
         </LinkNavigationContext>,
         async (output) => {
             await act(async () => {
@@ -177,12 +177,12 @@ it('forwards modifier and middle gestures using the resolved destination and rej
     try {
         await withMounted(
             <LinkNavigationContext value={{ baseUrl: 'https://example.com/app/', navigate }}>
-                <Card href="/orders">
+                <InteractiveCard href="/orders">
                     <p>Order</p>
-                </Card>
-                <Card href="javascript:alert(1)">
+                </InteractiveCard>
+                <InteractiveCard href="javascript:alert(1)">
                     <p>Unsafe</p>
-                </Card>
+                </InteractiveCard>
             </LinkNavigationContext>,
             async (output) => {
                 const cards = output.querySelectorAll<HTMLElement>('.view-card');
@@ -221,12 +221,12 @@ it('does not activate on text selection or inert surfaces and keeps decorative a
     const action = vi.fn();
     await withMounted(
         <>
-            <Card onClick={action}>
+            <InteractiveCard onClick={action}>
                 <p>Select this text</p>
-            </Card>
-            <Card inert aria-hidden="true" onClick={action}>
+            </InteractiveCard>
+            <InteractiveCard inert aria-hidden="true" onClick={action}>
                 <p>Inert</p>
-            </Card>
+            </InteractiveCard>
         </>,
         async (output) => {
             const text = output.querySelector('p');

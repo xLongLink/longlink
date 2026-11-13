@@ -1,6 +1,7 @@
-import type { MouseEvent } from 'react';
-import type { StoneIconName } from './Icon';
 import { ActionButton } from './ActionButton';
+import { ControlSizeContext } from './contexts';
+import { Icon, type StoneIconName } from './Icon';
+import { useContext, type ComponentProps } from 'react';
 
 /** Runs a labeled icon action with automatic async feedback. */
 export function IconButton({
@@ -9,21 +10,24 @@ export function IconButton({
 }: {
     label: string;
     icon: StoneIconName;
-    variant?: 'primary' | 'secondary' | 'ghost' | 'destructive';
-    size?: 'sm' | 'md' | 'lg';
+    variant?: ComponentProps<typeof ActionButton>['variant'];
+    size?: 'xs' | 'sm' | 'default' | 'lg';
     isDisabled?: boolean;
-    onClick?: (event: MouseEvent<HTMLButtonElement>) => void | Promise<void>;
+    onClick?: ComponentProps<typeof ActionButton>['onClick'];
 }) {
+    const inheritedSize = useContext(ControlSizeContext);
+    const size = props.size ?? (inheritedSize === 'md' ? 'default' : inheritedSize) ?? 'default';
+
     // Match ordinary action button defaults without changing asynchronous behavior.
     return (
         <ActionButton
-            label={props.label}
-            icon={props.icon}
+            aria-label={props.label}
             variant={props.variant}
-            size={props.size}
+            size={size === 'default' ? 'icon' : `icon-${size}`}
             disabled={props.isDisabled}
             onClick={onClick}
-            iconOnly
-        />
+        >
+            <Icon icon={props.icon} size={size === 'sm' ? 'sm' : size === 'lg' ? 'lg' : 'md'} />
+        </ActionButton>
     );
 }

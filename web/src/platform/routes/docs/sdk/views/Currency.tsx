@@ -25,7 +25,6 @@ export default function CurrencyPage() {
                     description: "Locale for formatting; omitted values use the viewer's locale.",
                 },
             ]}
-            introduction="Currency formats a numeric value with the browser’s locale-aware currency formatter."
             example={{
                 title: 'Currency',
                 preview: <CurrencyExample />,

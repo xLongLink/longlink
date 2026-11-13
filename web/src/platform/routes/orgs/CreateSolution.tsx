@@ -4,9 +4,9 @@ import { api } from '@/lib/api';
 import { useState } from 'react';
 import { Form } from '@/components/ui/Form';
 import { Button } from '@/components/ui/Button';
-import { Dialog } from '@/components/ui/Dialog';
 import { TextInput } from '@/components/ui/TextInput';
-import { Step, Stepper } from '@/components/ui/Stepper';
+import { Step, Wizard } from '@/components/ui/Stepper';
+import { ViewDialog } from '@/components/ui/ViewDialog';
 import { Illustration } from '@/components/Illustration';
 import { buttonVariants } from '@/components/shadcn/button';
 import { NativeText as Text } from '@/components/ui/NativeText';
@@ -24,7 +24,7 @@ export default function CreateSolution({
     onSuccess: () => void | Promise<void>;
     onClose: () => void;
 }) {
-    // Retain image metadata while named controls own drafts and Stepper owns navigation.
+    // Retain image metadata while named controls own drafts and Wizard owns navigation.
     const [image, setImage] = useState('');
 
     const [inspection, setInspection] = useState<{
@@ -70,15 +70,14 @@ export default function CreateSolution({
 
     // Keep the existing dialog frame and content width while sharing all wizard mechanics.
     return (
-        <Dialog
+        <ViewDialog
             isOpen
             onOpenChange={(open) => {
                 if (!open) onClose();
             }}
         >
             <Form action={createSolution}>
-                <Stepper
-                    variant="wizard"
+                <Wizard
                     height="min(560px, calc(100dvh - var(--spacing-10) * 4))"
                     onCancel={onClose}
                     next={(step) => (step === 0 ? { label: 'Inspect', action: inspectImage } : undefined)}
@@ -190,10 +189,12 @@ export default function CreateSolution({
                                 ))}
                             </Stack>
                         </Stack>
-                        <Button type="submit" label="Create" variant="primary" />
+                        <Button type="submit" variant="default">
+                            Create
+                        </Button>
                     </Step>
-                </Stepper>
+                </Wizard>
             </Form>
-        </Dialog>
+        </ViewDialog>
     );
 }

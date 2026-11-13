@@ -1,10 +1,10 @@
 import { api } from '@/lib/api';
 import { useState } from 'react';
 import { Form } from '@/components/ui/Form';
-import { Dialog } from '@/components/ui/Dialog';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowRight, RefreshCw } from 'lucide-react';
-import { Step, Stepper } from '@/components/ui/Stepper';
+import { Step, Wizard } from '@/components/ui/Stepper';
+import { ViewDialog } from '@/components/ui/ViewDialog';
 import { CheckboxInput } from '@/components/ui/CheckboxInput';
 import { NativeText as Text } from '@/components/ui/NativeText';
 import { NativeTextInput } from '@/components/ui/NativeTextInput';
@@ -85,7 +85,7 @@ export default function DeploymentReview({ item, onSuccess, onClose }: Deploymen
 
     // Share wizard navigation while retaining revision fencing and configured-secret semantics.
     return (
-        <Dialog
+        <ViewDialog
             isOpen
             onOpenChange={(open) => {
                 if (!open) onClose();
@@ -108,15 +108,14 @@ export default function DeploymentReview({ item, onSuccess, onClose }: Deploymen
                 </div>
             ) : (
                 <Form action={updateSolution} submitDisabled={missingRequired || !hasChanges}>
-                    <Stepper
-                        variant="wizard"
+                    <Wizard
                         height="min(560px, calc(100dvh - var(--spacing-10) * 4))"
                         backVariant="ghost"
                         finalAction={
                             <Button
                                 type="submit"
                                 label="Update solution"
-                                variant="primary"
+                                variant="default"
                                 isDisabled={missingRequired || !hasChanges}
                             />
                         }
@@ -221,9 +220,9 @@ export default function DeploymentReview({ item, onSuccess, onClose }: Deploymen
                                 })}
                             </Stack>
                         </Step>
-                    </Stepper>
+                    </Wizard>
                 </Form>
             )}
-        </Dialog>
+        </ViewDialog>
     );
 }

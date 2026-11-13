@@ -76,7 +76,7 @@ export default function Pricing() {
                                 );
                             })}
                         </Grid>
-                        <Button href="/user/organizations/" label="Get started" variant="primary" />
+                        <Button href="/user/organizations/" label="Get started" variant="default" />
                         <Text as="p" type="supporting" justify="center">
                             LongLink is currently in beta. Pricing, limits, and included usage may change.
                         </Text>

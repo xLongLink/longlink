@@ -61,7 +61,7 @@ export default function Register() {
                             icon={<Mail aria-hidden="true" size={16} />}
                             label="Send registration link"
                             type="submit"
-                            variant="primary"
+                            variant="default"
                             width="100%"
                         />
                     </Stack>

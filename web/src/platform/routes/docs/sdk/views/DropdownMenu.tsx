@@ -10,7 +10,6 @@ export default function DropdownMenuPage() {
     return (
         <ViewLayout
             name="DropdownMenu"
-            introduction={'Opens an action menu using standard adaptive presentation and placement.'}
             properties={[
                 {
                     name: 'button',

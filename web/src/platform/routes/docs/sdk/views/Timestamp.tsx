@@ -7,7 +7,6 @@ export default function TimestampPage() {
     return (
         <ViewLayout
             name="Timestamp"
-            introduction={'Formats a date or timestamp using the standard date formats.'}
             properties={[
                 {
                     name: 'value',

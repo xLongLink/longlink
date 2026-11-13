@@ -1,71 +1,51 @@
-import { useState } from 'react';
 import ViewLayout from './ViewLayout';
-import { Button } from '@/components/ui/Button';
-import { Dialog } from '@/components/ui/Dialog';
-import { NativeText as Text } from '@/components/ui/NativeText';
-import { NativeStack as Stack } from '@/components/ui/NativeStack';
+import { Button } from '@/components/shadcn/button';
+import {
+    Dialog,
+    DialogClose,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from '@/components/ui/Dialog';
 
-/** Documents Dialog in LongLink Views. */
+/** Documents the native shadcn Dialog composition. */
 export default function DialogPage() {
-    // Render this component's authored examples in the shared documentation layout.
     return (
         <ViewLayout
             name="Dialog"
             properties={[
-                {
-                    name: 'children',
-                    type: 'ReactNode',
-                    description: 'Dialog content.',
-                },
-                {
-                    name: 'title',
-                    type: 'string',
-                    description: 'Shows a dialog header when a title is provided.',
-                },
-                {
-                    name: 'variant',
-                    type: '"standard" | "fullscreen"',
-                    description:
-                        'Standard uses the fixed frame. Fullscreen fills about 95% of the screen, including over Platform navigation.',
-                },
-                {
-                    name: 'isOpen',
-                    type: 'boolean',
-                    description: 'Whether the dialog is open.',
-                },
+                { name: 'open', type: 'boolean', description: 'Controlled open state.' },
+                { name: 'defaultOpen', type: 'boolean', description: 'Initial uncontrolled open state.' },
                 {
                     name: 'onOpenChange',
-                    type: '(open: boolean) => void',
-                    description: 'Callback when dialog visibility changes.',
+                    type: '(open, eventDetails) => void',
+                    description: 'Native open-state callback.',
                 },
-                {
-                    name: 'gap',
-                    type: '0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10',
-                    description: 'Spacing between the title and content; defaults to 3.',
-                },
+                { name: 'modal', type: 'boolean | "trap-focus"', description: 'Modal interaction and focus behavior.' },
+                { name: 'DialogTrigger.render', type: 'ReactElement', description: 'Compose a trigger with a Button.' },
+                { name: 'DialogContent.children', type: 'ReactNode', description: 'Dialog header, body, and footer.' },
+                { name: 'DialogContent.showCloseButton', type: 'boolean', description: 'Defaults to true.' },
             ]}
-            introduction="Dialog defaults to the Platform's 960px-wide, 560px-high frame, reduced to fit shorter viewports. Set variant to fullscreen to fill about 95% of the screen, including over Platform navigation. Fullscreen keeps Solution content sandboxed and temporarily blocks the surrounding Platform controls. Closing it restores the View layout without losing state. A title adds a visible header; otherwise only the close control is shown. The gap between title and content defaults to spacing step 3, matching Stack and Grid. Escape and the close button dismiss it; clicking the backdrop does not. The body scrolls while the header stays visible."
             example={{
                 title: 'Dialog',
                 preview: <DialogExample />,
                 code: `function Example() {
-  const [isOpen, setIsOpen] = useState(false);
-
   return (
-    <Stack gap={3}>
-      <Button label="Open fullscreen dialog" onClick={() => setIsOpen(true)} />
-      <Dialog
-        variant="fullscreen"
-        title="Order details"
-        isOpen={isOpen}
-        onOpenChange={setIsOpen}
-      >
-        <Stack gap={3} padding={4}>
-          <Text>Order details</Text>
-          <Button label="Close" onClick={() => setIsOpen(false)} />
-        </Stack>
-      </Dialog>
-    </Stack>
+    <Dialog>
+      <DialogTrigger render={<Button variant="outline" />}>Open details</DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Order details</DialogTitle>
+          <DialogDescription>Review this order before continuing.</DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <DialogClose render={<Button variant="outline" />}>Close</DialogClose>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }`,
             }}
@@ -73,20 +53,20 @@ export default function DialogPage() {
     );
 }
 
-/** Opens a real modal only when the user requests this example. */
+/** Opens a native modal through its composed trigger. */
 export function DialogExample() {
-    const [isOpen, setIsOpen] = useState(false);
-
-    // Let the actual dialog wrapper own modal behavior and focus management.
     return (
-        <>
-            <Button label="Open fullscreen dialog" onClick={() => setIsOpen(true)} />
-            <Dialog variant="fullscreen" title="Order details" isOpen={isOpen} onOpenChange={setIsOpen}>
-                <Stack gap={3} padding={4}>
-                    <Text>Order details</Text>
-                    <Button label="Close" onClick={() => setIsOpen(false)} />
-                </Stack>
-            </Dialog>
-        </>
+        <Dialog>
+            <DialogTrigger render={<Button variant="outline" />}>Open details</DialogTrigger>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Order details</DialogTitle>
+                    <DialogDescription>Review this order before continuing.</DialogDescription>
+                </DialogHeader>
+                <DialogFooter>
+                    <DialogClose render={<Button variant="outline" />}>Close</DialogClose>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
     );
 }

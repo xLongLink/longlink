@@ -7,7 +7,6 @@ export default function DividerPage() {
     return (
         <ViewLayout
             name="Divider"
-            introduction={'Separates View content with an optional label and configurable line presentation.'}
             properties={[
                 {
                     name: 'label',

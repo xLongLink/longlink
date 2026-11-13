@@ -22,11 +22,7 @@ const functions = [
 export default function FunctionsPage() {
     // Render the runtime-specific functions table.
     return (
-        <ViewLayout
-            name="Functions"
-            introduction="LongLink supplies these functions directly in Views, without imports. Requests and navigation are scoped to the current Solution."
-            toc={[{ id: 'functions', label: 'Functions', level: 2 }]}
-        >
+        <ViewLayout name="Functions" toc={[{ id: 'functions', label: 'Functions', level: 2 }]}>
             <Heading id="functions" level={2}>
                 Functions
             </Heading>

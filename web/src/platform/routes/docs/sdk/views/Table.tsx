@@ -7,7 +7,6 @@ export default function TablePage() {
     return (
         <ViewLayout
             name="Table"
-            introduction={'Displays data-driven rows without plugins or a second children-based table contract.'}
             properties={[
                 {
                     name: 'data',

@@ -1,9 +1,7 @@
 import { Circle } from 'lucide-react';
-import { Card } from '@/components/ui/Card';
-import { Tabs, Tab } from '@/components/ui/Tabs';
 import { useState, type ReactNode } from 'react';
 import { Switch } from '@/components/shadcn/switch';
-import { InlineCode } from '@/components/shadcn/inline-code';
+import { InteractiveCard } from '@/components/ui/Card';
 import { documentationLastUpdated } from '@/lib/documentation';
 import { NativeText as Text } from '@/components/ui/NativeText';
 import { componentDocumentation } from '@/platform/publications';
@@ -11,6 +9,7 @@ import { NativeStack as Stack } from '@/components/ui/NativeStack';
 import { DocumentationArticle } from '@/components/layouts/Article';
 import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
 import { NativeCodeBlock as CodeBlock } from '@/components/ui/NativeCodeBlock';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/Tabs';
 import './viewlayout.css';
 import { NativeTable as Table, proportional } from '@/components/ui/NativeTable';
 
@@ -24,7 +23,7 @@ function ExampleWindow({ example }: { example: ViewExample }) {
 
     // Bound both modes to the same window with a persistent header and scrollable body.
     return (
-        <Card height={480} padding={0} isClipped>
+        <InteractiveCard height={480} padding={0} isClipped>
             <div className="documentation-example-window">
                 <div className="documentation-example-toolbar bg-surface">
                     <Stack direction="horizontal" justify="between" align="center" gap={3} paddingInline={2}>
@@ -58,21 +57,19 @@ function ExampleWindow({ example }: { example: ViewExample }) {
                     )}
                 </div>
             </div>
-        </Card>
+        </InteractiveCard>
     );
 }
 
 /** Provides an example and property references for an independently authored View page. */
 export default function ViewLayout({
     name,
-    introduction,
     properties = [],
     example,
     children,
     toc,
 }: {
     name: string;
-    introduction: string;
     properties?: ViewProperty[];
     example?: ViewExample;
     children?: ReactNode;
@@ -107,7 +104,7 @@ export default function ViewLayout({
 
     // Preserve the existing documentation shell, region sizes, and table of contents.
     const article = {
-        description: introduction,
+        description: `${component.label} examples and properties.`,
         lastUpdated: documentationLastUpdated,
         editUrl: `https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/docs/sdk/views/${component.label.replaceAll(' ', '')}.tsx`,
         title: `${component.label} | LongLink Documentation`,
@@ -124,7 +121,6 @@ export default function ViewLayout({
                 <Heading id="introduction" level={1}>
                     {component.label}
                 </Heading>
-                <Text as="p">{introduction}</Text>
                 <CodeBlock
                     code={`longlink docs component ${name}`}
                     language="bash"
@@ -134,15 +130,19 @@ export default function ViewLayout({
                 {runtime ? (
                     children
                 ) : (
-                    <Tabs key={name} gap={5} hasDivider>
-                        <Tab value="example" label="Example">
+                    <Tabs key={name} defaultValue="example" className="gap-5">
+                        <TabsList variant="line">
+                            <TabsTrigger value="example">Example</TabsTrigger>
+                            <TabsTrigger value="properties">Properties</TabsTrigger>
+                        </TabsList>
+                        <TabsContent value="example">
                             {example ? (
                                 <ExampleWindow key={name} example={example} />
                             ) : (
                                 <Text as="p">No standalone example is available for this component.</Text>
                             )}
-                        </Tab>
-                        <Tab value="properties" label="Properties">
+                        </TabsContent>
+                        <TabsContent value="properties" className="flex flex-col gap-5">
                             {[...groups].map(([name, properties]) => (
                                 <Table
                                     key={name}
@@ -168,10 +168,12 @@ export default function ViewLayout({
                                     ]}
                                 />
                             ))}
-                        </Tab>
+                        </TabsContent>
                     </Tabs>
                 )}
             </Stack>
         </DocumentationArticle>
     );
 }
+
+import { InlineCode } from '@/components/shadcn/inline-code';

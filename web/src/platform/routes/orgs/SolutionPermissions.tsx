@@ -158,7 +158,7 @@ function MemberPermissions({
                 <Button
                     label="Save"
                     size="sm"
-                    variant="primary"
+                    variant="default"
                     isLoading={save.isPending}
                     isDisabled={save.isPending || Object.keys(roles).length === 0}
                     onClick={() => save.mutate()}

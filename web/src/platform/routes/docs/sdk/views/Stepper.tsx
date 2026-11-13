@@ -1,80 +1,88 @@
 import ViewLayout from './ViewLayout';
 import { Stack } from '@/components/ui/Stack';
-import { Step, Stepper } from '@/components/ui/Stepper';
 import { NativeText as Text } from '@/components/ui/NativeText';
+import {
+    Step,
+    Stepper,
+    StepperContent,
+    StepperDescription,
+    StepperIndicator,
+    StepperItem,
+    StepperNav,
+    StepperPanel,
+    StepperSeparator,
+    StepperTitle,
+    StepperTrigger,
+    Wizard,
+} from '@/components/ui/Stepper';
 
-/** Documents Stepper in LongLink Views. */
+/** Documents the installed ReUI Stepper and explicitly custom flow components. */
 export default function StepperPage() {
-    // Render this component's authored examples in the shared documentation layout.
     return (
         <ViewLayout
             name="Stepper"
-            introduction="Displays progress by default. Set variant to wizard to show one persistent Step panel at a time with Next/Back navigation. Inside Form, Next validates the current panel and shared fields; only an explicit submit Button in the last Step submits all fields. Outside Form, wizard navigation works independently without submitting data. Set height to pin progress above centered, scrollable panels."
             properties={[
                 {
-                    name: 'variant',
-                    type: '"progress" | "wizard"',
-                    description: 'Defaults to progress. Wizard mode owns persistent panels and Next/Back navigation.',
-                },
-                {
-                    name: 'height',
-                    type: 'number | string',
-                    description: 'Bounds a wizard, pinning progress above its scrollable panels.',
-                },
-                {
-                    name: 'next',
-                    type: '(step: number) => { label: string; action: () => void | boolean | Promise<void | boolean> } | undefined',
-                    description: 'Runs intermediate work after validation. Returning false prevents advancement.',
-                },
-                {
-                    name: 'onCancel',
-                    type: '() => void',
-                    description: 'Adds a Cancel action to wizard navigation.',
-                },
-                {
-                    name: 'backVariant',
-                    type: '"secondary" | "ghost"',
-                    description: 'Wizard Back button appearance; defaults to secondary.',
-                },
-                {
-                    name: 'children',
-                    type: 'ReactNode',
-                    description: 'Step elements to render in the stepper.',
-                },
-                {
-                    name: 'activeStep',
+                    name: 'value / defaultValue',
                     type: 'number',
-                    description: 'Zero-based active index. Wizard mode manages selection internally when omitted.',
+                    description: 'Controlled or initial step value. defaultValue defaults to 1.',
+                },
+                {
+                    name: 'onValueChange',
+                    type: '(value: number) => void',
+                    description: 'Receives trigger activation. Keyboard arrows move focus without activating.',
                 },
                 {
                     name: 'orientation',
                     type: '"horizontal" | "vertical"',
-                    description: 'Layout direction of the stepper.',
+                    description: 'Navigation direction; defaults to horizontal.',
                 },
                 {
-                    name: 'onStepClick',
-                    type: '(index: number) => void',
-                    description: 'Enables progress step activation, or receives wizard selection changes.',
+                    name: 'indicators',
+                    type: '{ active?: ReactNode; completed?: ReactNode; inactive?: ReactNode; loading?: ReactNode }',
+                    description: 'Overrides indicator content for each step state.',
                 },
                 {
-                    name: 'Step.step',
-                    type: 'number',
-                    description: 'Optional progress index; defaults to child order. Wizards always use child order.',
+                    name: 'StepperItem',
+                    type: 'step: number; completed?: boolean; disabled?: boolean; loading?: boolean',
+                    description: 'Supplies step state to its compound children.',
                 },
                 {
-                    name: 'Step.label',
-                    type: 'string',
-                    description: 'Visible label identifying the step.',
+                    name: 'StepperTrigger.render',
+                    type: 'ReactElement | render function',
+                    description: 'Base UI render composition for the activation control.',
                 },
                 {
-                    name: 'Step.description',
-                    type: 'string',
-                    description: 'Supporting text displayed below the step label.',
+                    name: 'StepperContent',
+                    type: 'value: number; forceMount?: boolean',
+                    description: 'Shows the matching value. forceMount keeps inactive content mounted and hidden.',
                 },
                 {
-                    name: 'Step.children',
-                    type: 'ReactNode',
-                    description: 'Persistent panel content in wizard mode; inline content in progress mode.',
+                    name: 'ProgressStepper',
+                    type: 'activeStep?: number; orientation?: "horizontal" | "vertical"; onStepClick?: (index: number) => void',
+                    description: 'Custom responsive progress using Step children and zero-based indices.',
+                },
+                {
+                    name: 'Wizard',
+                    type: 'activeStep?: number; onStepClick?: (index: number) => void; orientation?: "horizontal" | "vertical"; height?: number | string',
+                    description:
+                        'Custom persistent Step panels. Selection is internal unless activeStep is supplied; height bounds the scrollable panels.',
+                },
+                {
+                    name: 'Wizard.next',
+                    type: '(step: number) => { label: string; action: () => void | boolean | Promise<void | boolean> } | undefined',
+                    description: 'Runs after validation. false or a failure prevents advancement and retains drafts.',
+                },
+                {
+                    name: 'Wizard navigation',
+                    type: 'onCancel?: () => void; finalAction?: ReactNode; backVariant?: "outline" | "ghost"',
+                    description: 'Optional cancel and final controls. Back defaults to outline.',
+                },
+                {
+                    name: 'Step',
+                    type: 'label: string; description?: string; step?: number; children?: ReactNode',
+                    description:
+                        'Custom progress metadata or a persistent Wizard panel. Progress indices default to child order; Wizard always uses child order.',
                 },
             ]}
             example={{
@@ -82,41 +90,59 @@ export default function StepperPage() {
                 preview: (
                     <Stack gap={8}>
                         <StepperExample />
-                        <Stepper variant="wizard">
+                        <Wizard>
                             <Step label="Details">
                                 <Text>Enter your workflow details.</Text>
                             </Step>
                             <Step label="Review">
                                 <Text>Review before continuing.</Text>
                             </Step>
-                            <Step label="Complete">
-                                <Text>Your workflow is complete.</Text>
-                            </Step>
-                        </Stepper>
+                        </Wizard>
                     </Stack>
                 ),
-                code: `function Example() {
-  return (
-    <Stepper variant="wizard">
-      <Step label="Details"><Text>Enter your workflow details.</Text></Step>
-      <Step label="Review"><Text>Review before continuing.</Text></Step>
-      <Step label="Complete"><Text>Your workflow is complete.</Text></Step>
-    </Stepper>
-  );
-}`,
+                code: `<Stepper defaultValue={1}>
+  <StepperNav>
+    <StepperItem step={1}>
+      <StepperTrigger><StepperIndicator>1</StepperIndicator><StepperTitle>Details</StepperTitle></StepperTrigger>
+      <StepperSeparator />
+    </StepperItem>
+    <StepperItem step={2}>
+      <StepperTrigger><StepperIndicator>2</StepperIndicator><StepperTitle>Review</StepperTitle></StepperTrigger>
+    </StepperItem>
+  </StepperNav>
+  <StepperPanel>
+    <StepperContent value={1}>Enter details.</StepperContent>
+    <StepperContent value={2}>Review details.</StepperContent>
+  </StepperPanel>
+</Stepper>`,
             }}
         />
     );
 }
 
-/** Renders the page's stepper example for documentation and the catalog. */
+/** Renders the installed compound API for documentation and the catalog. */
 export function StepperExample({ orientation = 'horizontal' }: { orientation?: 'horizontal' | 'vertical' }) {
-    // Show the review stage in a three-step process.
     return (
-        <Stepper activeStep={1} orientation={orientation}>
-            <Step step={0} label="Details" />
-            <Step step={1} label="Review" />
-            <Step step={2} label="Complete" />
+        <Stepper defaultValue={2} orientation={orientation}>
+            <StepperNav aria-label="Process">
+                {['Details', 'Review', 'Complete'].map((label, index) => (
+                    <StepperItem key={label} step={index + 1}>
+                        <StepperTrigger>
+                            <StepperIndicator>{index + 1}</StepperIndicator>
+                            <span className="flex flex-col gap-1">
+                                <StepperTitle>{label}</StepperTitle>
+                                <StepperDescription>Step {index + 1}</StepperDescription>
+                            </span>
+                        </StepperTrigger>
+                        {index < 2 && <StepperSeparator />}
+                    </StepperItem>
+                ))}
+            </StepperNav>
+            <StepperPanel>
+                <StepperContent value={1}>Enter details.</StepperContent>
+                <StepperContent value={2}>Review details.</StepperContent>
+                <StepperContent value={3}>Complete the process.</StepperContent>
+            </StepperPanel>
         </Stepper>
     );
 }

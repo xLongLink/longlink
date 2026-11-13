@@ -125,7 +125,7 @@ export default function VerifyEmail() {
         return (
             <AuthLayout title="Verify your email" description="Verifying your email...">
                 {pageMetadata}
-                <Button isLoading label="Verifying your email..." variant="primary" />
+                <Button isLoading label="Verifying your email..." variant="default" />
             </AuthLayout>
         );
     }
@@ -155,7 +155,7 @@ export default function VerifyEmail() {
                             label="Name"
                         />
                         <TextField control={form.control} name="password" required label="Password" type="password" />
-                        <Button label="Create account" type="submit" variant="primary" />
+                        <Button label="Create account" type="submit" variant="default" />
                     </Stack>
                 </form>
                 <Divider />

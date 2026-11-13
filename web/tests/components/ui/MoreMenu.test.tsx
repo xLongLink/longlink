@@ -67,7 +67,7 @@ it('joins group keyboard navigation without disabling or sizing its popup action
 
     await withMounted(
         <ButtonGroup label="Actions" size="lg">
-            <Button label="Save" />
+            <Button variant="outline">Save</Button>
             <MoreMenu label="Unavailable" isDisabled items={[]} />
             <MoreMenu label="Order actions" items={[{ label: 'Copy order' }]} />
         </ButtonGroup>,

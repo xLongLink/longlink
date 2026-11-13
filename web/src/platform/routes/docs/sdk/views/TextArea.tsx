@@ -8,9 +8,6 @@ export default function TextAreaPage() {
     return (
         <ViewLayout
             name="TextArea"
-            introduction={
-                'Edits themed multi-line text with native form serialization. Required fields cannot be blank.'
-            }
             properties={[
                 {
                     name: 'label',
@@ -87,8 +84,8 @@ export default function NotesForm() {
     <Form action="/api/example" method="post">
       <TextArea name="notes" label="Notes" defaultValue="Review complete" rows={2} maxLength={500} required />
       <Stack direction="horizontal" gap={2}>
-        <Button type="submit" label="Submit" variant="primary" />
-        <Button type="reset" label="Reset" />
+        <Button type="submit" variant="default">Submit</Button>
+        <Button type="reset" variant="outline">Reset</Button>
       </Stack>
     </Form>
   );

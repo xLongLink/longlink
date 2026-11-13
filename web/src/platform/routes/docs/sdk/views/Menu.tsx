@@ -67,7 +67,6 @@ export default function MenuPage() {
                     description: 'Label displayed on the collapsible navigation group.',
                 },
             ]}
-            introduction="Menu combines section navigation with the selected section’s content. At View viewport widths of 768px and below, navigation moves above content rather than competing for its width. Resizing keeps the active content mounted; changing sections mounts only the selected section."
             example={{
                 title: 'Menu',
                 preview: <MenuExample />,

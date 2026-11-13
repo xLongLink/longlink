@@ -10,7 +10,6 @@ import { Form } from '@/components/ui/Form';
 import { useApi } from '@/lib/hooks/use-api';
 import PaymentMethods from './PaymentMethods';
 import { Avatar } from '@/components/ui/Avatar';
-import { Dialog } from '@/components/ui/Dialog';
 import { Divider } from '@/components/ui/Divider';
 import { Selector } from '@/components/ui/Selector';
 import SolutionManagement from './SolutionManagement';
@@ -19,6 +18,7 @@ import * as permissions from '@/platform/permissions';
 import { ApiBoundary } from '@/components/ApiBoundary';
 import { DeletionDialog } from '@/components/Deletion';
 import { useQueryClient } from '@tanstack/react-query';
+import { ViewDialog } from '@/components/ui/ViewDialog';
 import { Illustration } from '@/components/Illustration';
 import { useAuthenticatedUser } from '@/lib/hooks/use-user';
 import { NativeMoreMenu } from '@/components/ui/NativeMoreMenu';
@@ -335,7 +335,7 @@ function MembersSection({ base, role }: { base: string; role: OrganizationContex
                 />
             </Stack>
             {canManageSelectedMember && member && (
-                <Dialog
+                <ViewDialog
                     isOpen
                     title={member.action.kind === 'remove' ? 'Remove member' : 'Change role'}
                     onOpenChange={(open) => {
@@ -352,7 +352,7 @@ function MembersSection({ base, role }: { base: string; role: OrganizationContex
                             <Button label="Cancel" variant="ghost" onClick={() => setMember(null)} />
                             <Button
                                 label={member.action.kind === 'remove' ? 'Remove member' : 'Confirm'}
-                                variant={member.action.kind === 'remove' ? 'destructive' : 'primary'}
+                                variant={member.action.kind === 'remove' ? 'destructive' : 'default'}
                                 clickAction={async () => {
                                     // Update access on the server before refreshing the member list.
                                     if (member.action.kind === 'remove') {
@@ -394,7 +394,7 @@ function MembersSection({ base, role }: { base: string; role: OrganizationContex
                             />
                         </Stack>
                     </Stack>
-                </Dialog>
+                </ViewDialog>
             )}
         </>
     );
@@ -490,7 +490,7 @@ function InvitationsSection({ base, role }: { base: string; role: OrganizationCo
                 />
             </Stack>
             {/* Match organization creation with a centered form and a desktop-only illustration. */}
-            <Dialog
+            <ViewDialog
                 isOpen={invitationAttempt !== null}
                 paddingInline={0}
                 onOpenChange={(open) => {
@@ -563,13 +563,13 @@ function InvitationsSection({ base, role }: { base: string; role: OrganizationCo
                                                 : []),
                                         ]}
                                     />
-                                    <Button label="Invite" variant="primary" type="submit" width="100%" />
+                                    <Button label="Invite" variant="default" type="submit" width="100%" />
                                 </Stack>
                             </Stack>
                         </Form>
                     </Stack>
                 </IllustratedDialogContent>
-            </Dialog>
+            </ViewDialog>
         </>
     );
 }

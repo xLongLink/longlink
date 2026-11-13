@@ -81,7 +81,7 @@ export default function McpAuthorization() {
                         </Stack>
                         <Button
                             label="Allow access"
-                            variant="primary"
+                            variant="default"
                             width="100%"
                             type="submit"
                             name="decision"

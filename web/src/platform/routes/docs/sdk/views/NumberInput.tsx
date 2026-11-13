@@ -8,7 +8,6 @@ export default function NumberInputPage() {
     return (
         <ViewLayout
             name="NumberInput"
-            introduction={'Edits a constrained number without wheel editing or custom value formatting.'}
             properties={[
                 {
                     name: 'label',
@@ -99,8 +98,8 @@ export default function QuantityForm() {
     <Form action="/api/example" method="post">
       <NumberInput name="quantity" label="Quantity" defaultValue={3} min={1} max={100} step={1} required />
       <Stack direction="horizontal" gap={2}>
-        <Button type="submit" label="Submit" variant="primary" />
-        <Button type="reset" label="Reset" />
+        <Button type="submit" variant="default">Submit</Button>
+        <Button type="reset" variant="outline">Reset</Button>
       </Stack>
     </Form>
   );

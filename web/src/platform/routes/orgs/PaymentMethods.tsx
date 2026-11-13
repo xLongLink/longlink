@@ -29,7 +29,7 @@ export default function PaymentMethods({ base, canManage }: { base: string; canM
                     Payment Methods
                 </Heading>
                 {usage.stripe_enabled && canManage && (
-                    <Button label="Add card" size="sm" variant="primary" clickAction={registerCard} />
+                    <Button label="Add card" size="sm" variant="default" clickAction={registerCard} />
                 )}
             </Stack>
             <Divider />

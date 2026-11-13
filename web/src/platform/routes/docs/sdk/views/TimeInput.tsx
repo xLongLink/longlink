@@ -8,7 +8,6 @@ export default function TimeInputPage() {
     return (
         <ViewLayout
             name="TimeInput"
-            introduction={'Selects a constrained time using the standard picker.'}
             properties={[
                 {
                     name: 'label',
@@ -94,8 +93,8 @@ export default function StartTimeForm() {
     <Form action="/api/example" method="post">
       <TimeInput name="start_time" label="Start time" required />
       <Stack direction="horizontal" gap={2}>
-        <Button type="submit" label="Submit" variant="primary" />
-        <Button type="reset" label="Reset" />
+        <Button type="submit" variant="default">Submit</Button>
+        <Button type="reset" variant="outline">Reset</Button>
       </Stack>
     </Form>
   );

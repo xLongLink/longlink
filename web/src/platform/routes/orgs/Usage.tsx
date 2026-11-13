@@ -1,14 +1,14 @@
-import { Card } from '@/components/ui/Card';
 import { ExternalLink } from 'lucide-react';
 import { useApi } from '@/lib/hooks/use-api';
 import { Divider } from '@/components/ui/Divider';
 import { ApiBoundary } from '@/components/ApiBoundary';
-import { ProgressBar } from '@/components/ui/ProgressBar';
+import { InteractiveCard } from '@/components/ui/Card';
 import { NativeText as Text } from '@/components/ui/NativeText';
 import { NativeStack as Stack } from '@/components/ui/NativeStack';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { NativeButton as Button } from '@/components/ui/NativeButton';
 import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
+import { Progress, ProgressLabel, ProgressValue } from '@/components/ui/Progress';
 
 /** Shows the Organization's usage against free allowances or card-enabled capacity. */
 export default function Usage({ base }: { base: string }) {
@@ -25,7 +25,7 @@ export default function Usage({ base }: { base: string }) {
                 </Heading>
             </Stack>
             <Divider />
-            <Card padding={0} isClipped>
+            <InteractiveCard padding={0} isClipped>
                 <Stack gap={0}>
                     <Stack
                         direction="horizontal"
@@ -55,20 +55,14 @@ export default function Usage({ base }: { base: string }) {
                     </Stack>
                     <Divider />
                     <Stack gap={4} padding={4}>
-                        <ProgressBar
-                            label="Solutions"
-                            value={usage.solutions}
-                            max={usage.max_solutions}
-                            hasValueLabel
-                            formatValueLabel={() => `${usage.solutions} / ${usage.max_solutions}`}
-                        />
-                        <ProgressBar
-                            label="Users"
-                            value={usage.users}
-                            max={userScale}
-                            hasValueLabel
-                            formatValueLabel={() => `${usage.users} / ${userScale}`}
-                        />
+                        <Progress value={usage.solutions} max={usage.max_solutions}>
+                            <ProgressLabel>Solutions</ProgressLabel>
+                            <ProgressValue>{() => `${usage.solutions} / ${usage.max_solutions}`}</ProgressValue>
+                        </Progress>
+                        <Progress value={usage.users} max={userScale}>
+                            <ProgressLabel>Users</ProgressLabel>
+                            <ProgressValue>{() => `${usage.users} / ${userScale}`}</ProgressValue>
+                        </Progress>
                         {(['storage', 'database'] as const).map((resource) => (
                             <ApiBoundary
                                 key={resource}
@@ -95,7 +89,7 @@ export default function Usage({ base }: { base: string }) {
                         ))}
                     </Stack>
                 </Stack>
-            </Card>
+            </InteractiveCard>
         </Stack>
     );
 }
@@ -118,13 +112,10 @@ function UsageMeter({
     const capacity = hasPaymentMethod ? usage.quota_bytes : included;
 
     return (
-        <ProgressBar
-            label={resource === 'storage' ? 'File storage' : 'Database storage'}
-            value={usage.space_used}
-            max={capacity}
-            hasValueLabel
-            formatValueLabel={() => `${formatStorage(usage.space_used)} / ${formatStorage(capacity)}`}
-        />
+        <Progress value={usage.space_used} max={capacity}>
+            <ProgressLabel>{resource === 'storage' ? 'File storage' : 'Database storage'}</ProgressLabel>
+            <ProgressValue>{() => `${formatStorage(usage.space_used)} / ${formatStorage(capacity)}`}</ProgressValue>
+        </Progress>
     );
 }
 

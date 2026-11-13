@@ -8,7 +8,10 @@ export default function Tasks() {
         <Stack gap={4} paddingInline={8} paddingBlock={2}>
             <Stack direction="horizontal" align="center" justify="between" gap={3}>
                 <Heading level={1}>Tasks</Heading>
-                <Button label="Add task" icon="plus" variant="primary" onClick={() => setIsOpen(true)} />
+                <Button onClick={() => setIsOpen(true)}>
+                    <Icon icon="plus" size="sm" />
+                    Add task
+                </Button>
             </Stack>
             <Table
                 data={tasks}
@@ -81,18 +84,18 @@ export default function Tasks() {
                     },
                 ]}
             />
-            <Dialog title="Add task" isOpen={isOpen} onOpenChange={setIsOpen}>
+            <ViewDialog title="Add task" isOpen={isOpen} onOpenChange={setIsOpen}>
                 {isOpen && (
                     <Form action="/api/tasks" onSuccess={() => setIsOpen(false)}>
                         <TextInput name="title" label="Title" maxLength={255} required />
                         <FileInput name="attachment" label="Attachment" maxSize={10485760} required />
                         <Stack direction="horizontal" justify="end" gap={2}>
-                            <Button label="Cancel" onClick={() => setIsOpen(false)} />
-                            <Button label="Create task" type="submit" variant="primary" />
+                            <Button onClick={() => setIsOpen(false)}>Cancel</Button>
+                            <Button type="submit">Create task</Button>
                         </Stack>
                     </Form>
                 )}
-            </Dialog>
+            </ViewDialog>
         </Stack>
     );
 }

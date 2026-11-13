@@ -3,6 +3,16 @@ import { NavigationLink } from './Link';
 import { Card as Surface } from '@/components/shadcn/card';
 import type { CSSProperties, MouseEvent, ReactNode } from 'react';
 
+export {
+    Card,
+    CardHeader,
+    CardTitle,
+    CardDescription,
+    CardAction,
+    CardContent,
+    CardFooter,
+} from '@/components/shadcn/card';
+
 /** Surface gestures must not steal nested controls, portal events, or text selection. */
 function isSurfaceActivation(event: MouseEvent<HTMLElement>) {
     const root = event.currentTarget;
@@ -59,7 +69,7 @@ function activateLink(event: MouseEvent<HTMLElement>) {
     );
 }
 
-type CardProps = {
+type InteractiveCardProps = {
     /** Content rendered inside the card. */
     children?: ReactNode;
     /** Inner spacing using the theme spacing scale. */
@@ -97,7 +107,7 @@ type CardProps = {
 };
 
 /** Keeps native controls separate from card content, with selection taking priority over actions and links. */
-export function Card({
+export function InteractiveCard({
     label = 'Card',
     padding = 4,
     isClipped = false,
@@ -115,7 +125,7 @@ export function Card({
     minHeight,
     inert,
     'aria-hidden': ariaHidden,
-}: CardProps) {
+}: InteractiveCardProps) {
     const mode =
         onChange !== undefined
             ? 'selection'

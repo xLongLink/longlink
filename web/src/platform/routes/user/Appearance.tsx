@@ -1,8 +1,8 @@
-import { Card } from '@/components/ui/Card';
 import { Circle, Check } from 'lucide-react';
 import { accentColors } from '@/lib/appearance';
 import { Button } from '@/components/shadcn/button';
 import { useUpdateUser } from '@/lib/hooks/use-user';
+import { InteractiveCard } from '@/components/ui/Card';
 import { useAppearance } from '@/lib/hooks/use-appearance';
 import { NativeText as Text } from '@/components/ui/NativeText';
 import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
@@ -26,7 +26,7 @@ export default function AppearanceSettings() {
                             { value: 'dark', label: 'Dark', image: 'theme_dark.png' },
                         ] as const
                     ).map(({ value, label, image }) => (
-                        <Card
+                        <InteractiveCard
                             key={value}
                             label={label}
                             padding={2}
@@ -47,7 +47,7 @@ export default function AppearanceSettings() {
                                     className="aspect-3/2 w-40 max-w-full rounded-md object-cover"
                                 />
                             </div>
-                        </Card>
+                        </InteractiveCard>
                     ))}
                 </div>
             </div>
@@ -55,7 +55,7 @@ export default function AppearanceSettings() {
                 <Heading level={4} accessibilityLevel={3}>
                     Appearance
                 </Heading>
-                <Card padding={3}>
+                <InteractiveCard padding={3}>
                     <div className="flex flex-col gap-(--spacing-2)" role="group" aria-label="Accent color">
                         <Text>Accent color</Text>
                         <div className="flex flex-wrap gap-(--spacing-2)">
@@ -86,7 +86,7 @@ export default function AppearanceSettings() {
                             ))}
                         </div>
                     </div>
-                </Card>
+                </InteractiveCard>
             </div>
             {userUpdate.isPending && (
                 <Text type="supporting" color="secondary" role="status">

@@ -19,7 +19,7 @@ type TextInputProps = FieldProps & {
     onEnter?: () => void;
 };
 
-/** Edits themed text with optional local state and native form serialization. Required fields cannot be blank. */
+/** Custom form adapter with string callbacks, clear/reset, and Unicode code-point validation. */
 export function TextInput(props: TextInputProps) {
     // Let the wrapper own state only when the Solution does not provide a value.
     const field = useValue(props.value, props.defaultValue ?? '', props.onChange);

@@ -1,34 +1,16 @@
 import { useContext } from 'react';
-import type { StoneIconName } from './Icon';
+import type { ComponentProps } from 'react';
 import { ActionButton } from './ActionButton';
 import { ReportedError } from '@/lib/reported';
 import { LinkNavigationContext } from './contexts';
-import type { MouseEvent, ReactNode } from 'react';
 
-type ButtonProps = {
-    /** Visible button text and accessible label. */
-    label: string;
-    variant?: 'primary' | 'secondary' | 'ghost' | 'destructive';
-    size?: 'sm' | 'md' | 'lg';
-    type?: 'button' | 'submit' | 'reset';
-    name?: string;
-    value?: string | number | readonly string[];
-    form?: string;
-    icon?: StoneIconName;
-    endContent?: ReactNode;
-    width?: number | string;
-    disabled?: boolean;
-    /** Solution-relative destination or HTTP(S) URL to open in a new tab. */
-    href?: string;
-    /** Runs an action with automatic async loading and duplicate-click prevention until its promise settles. */
-    onClick?: (event: MouseEvent<HTMLButtonElement>) => void | Promise<void>;
-};
+type ButtonProps = ComponentProps<typeof ActionButton>;
 
-/** Gives onClick automatic asynchronous loading and duplicate-click prevention. */
+/** Adds async loading, duplicate activation protection, reported-error recovery, and scoped href navigation to shadcn Button. */
 export function Button({ onClick, ...props }: ButtonProps) {
     const navigate = useContext(LinkNavigationContext)?.navigate;
 
-    // Standardize advanced behavior even when untyped JSX supplies unsupported props.
+    // Scoped navigation runs after the synchronous handler so it can cancel the destination.
     return (
         <ActionButton
             {...props}

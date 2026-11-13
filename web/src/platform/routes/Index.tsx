@@ -142,14 +142,14 @@ export default function Home() {
                                     endContent={<Mail aria-hidden="true" size={16} />}
                                     href="mailto:info@longlink.dev"
                                     label="Contact Us"
-                                    variant="secondary"
+                                    variant="outline"
                                 />
                                 <Button
                                     className="w-full"
                                     endContent={<ArrowRight aria-hidden="true" size={16} />}
                                     href="/login/"
                                     label="Get Started"
-                                    variant="primary"
+                                    variant="default"
                                 />
                             </Grid>
                         </Stack>

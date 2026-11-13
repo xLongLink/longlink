@@ -1,11 +1,11 @@
 import { MoveRight } from 'lucide-react';
-import { Tabs, Tab } from '@/components/ui/Tabs';
 import { NativeLink as Link } from '@/components/ui/NativeLink';
 import { NativeText as Text } from '@/components/ui/NativeText';
 import { NativeStack as Stack } from '@/components/ui/NativeStack';
 import { DocumentationArticle } from '@/components/layouts/Article';
 import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
 import { NativeCodeBlock as CodeBlock } from '@/components/ui/NativeCodeBlock';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/Tabs';
 
 const article = {
     description: 'Build LongLink Solutions as standard Python and FastAPI services with the Solution SDK.',
@@ -59,13 +59,17 @@ export default function DocsArticleRoute() {
                 <Heading id="create-a-solution" level={2}>
                     Create a Solution
                 </Heading>
-                <Tabs hasDivider>
-                    <Tab label="GitHub" value="github">
+                <Tabs defaultValue="github">
+                    <TabsList variant="line">
+                        <TabsTrigger value="github">GitHub</TabsTrigger>
+                        <TabsTrigger value="standalone">Standalone</TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="github">
                         <CodeBlock code="uvx --from longlink longlink init --folder . --ci github" language="bash" />
-                    </Tab>
-                    <Tab label="Standalone" value="standalone">
+                    </TabsContent>
+                    <TabsContent value="standalone">
                         <CodeBlock code="uvx --from longlink longlink init --folder ." language="bash" />
-                    </Tab>
+                    </TabsContent>
                 </Tabs>
                 <Heading id="local-development" level={2}>
                     Local Development

@@ -14,7 +14,7 @@ type TextAreaProps = FieldProps & {
     autoComplete?: string;
 };
 
-/** Edits themed multi-line text with native form serialization. Required fields cannot be blank. */
+/** Custom form adapter with string callbacks, reset, and Unicode code-point validation. */
 export function TextArea(props: TextAreaProps) {
     // Keep optional editing state local while retaining native form reset behavior.
     const { maxLength } = props;

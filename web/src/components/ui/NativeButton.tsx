@@ -12,8 +12,8 @@ export function NativeButton({
     label,
     icon,
     endContent,
-    variant = 'secondary',
-    size = 'md',
+    variant = 'outline',
+    size = 'default',
     type = 'button',
     isDisabled = false,
     isLoading = false,
@@ -30,8 +30,8 @@ export function NativeButton({
     label: string;
     icon?: ReactNode;
     endContent?: ReactNode;
-    variant?: 'primary' | 'secondary' | 'ghost' | 'destructive';
-    size?: 'sm' | 'md' | 'lg';
+    variant?: ComponentPropsWithRef<typeof Button>['variant'];
+    size?: ComponentPropsWithRef<typeof Button>['size'];
     isDisabled?: boolean;
     isLoading?: boolean;
     href?: string;
@@ -86,8 +86,8 @@ export function NativeButton({
         <>
             <Button
                 {...props}
-                variant={variant === 'primary' ? 'default' : variant === 'secondary' ? 'outline' : variant}
-                size={size === 'md' ? 'default' : size}
+                variant={variant}
+                size={size}
                 className={cn('relative', className)}
                 style={{ ...props.style, width: width ?? props.style?.width }}
                 nativeButton={!isLink}

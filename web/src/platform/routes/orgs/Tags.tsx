@@ -209,7 +209,7 @@ function TagForm({
                         hasClear={false}
                     />
                     <Stack direction="horizontal" gap={2}>
-                        <Button label={tag ? 'Save' : 'Create tab'} type="submit" variant="primary" />
+                        <Button label={tag ? 'Save' : 'Create tab'} type="submit" variant="default" />
                         <Button label="Cancel" type="button" variant="ghost" onClick={onCancel} />
                     </Stack>
                 </Stack>
@@ -260,7 +260,7 @@ export function SolutionTags({
                     />
                     <Stack direction="horizontal" gap={2} justify="end">
                         <Button label="Cancel" type="button" variant="ghost" onClick={onClose} />
-                        <Button label="Save" type="submit" variant="primary" />
+                        <Button label="Save" type="submit" variant="default" />
                     </Stack>
                 </Stack>
             </Form>

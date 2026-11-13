@@ -9,7 +9,7 @@ const methods = { post: 'POST', put: 'PUT', patch: 'PATCH', delete: 'DELETE' } a
 
 /** Validates named fields and submits through a Platform callback or the Solution bridge. */
 export function Form(props: {
-    /** Named controls and layout, including an independent Stepper in wizard mode. */
+    /** Named controls and layout, including an independent custom Wizard. */
     children?: ReactNode;
     /** Solution-relative API path or a Platform callback receiving the complete form data. */
     action: string | ((data: FormData) => void | Promise<void>);
@@ -17,7 +17,7 @@ export function Form(props: {
     method?: 'post' | 'put' | 'patch' | 'delete';
     /** Native form ID for associating external submit or reset buttons. */
     id?: string;
-    /** Bounds the form height. Stepper owns its wizard panel layout. */
+    /** Bounds the form height. Wizard owns its panel layout. */
     height?: number | string;
     /** Prevents submission when Platform workflow requirements are not satisfied. */
     submitDisabled?: boolean;
@@ -30,7 +30,7 @@ export function Form(props: {
     const [isSubmitting, startSubmission] = useTransition();
     const [failure, setFailure] = useState<{ control: HTMLElement } | null>(null);
 
-    // Wait for a Stepper to reveal an invalid panel before moving focus into it.
+    // Wait for a Wizard to reveal an invalid panel before moving focus into it.
     useEffect(() => {
         if (!failure) return;
         failure.control.focus();
@@ -133,7 +133,7 @@ export function Form(props: {
                     if (event.defaultPrevented) return;
                     event.preventDefault();
 
-                    // Stepper intercepts intermediate submits before the final form validation.
+                    // Wizard intercepts intermediate submits before the final form validation.
                     if (pending.current || props.submitDisabled || !validate()) return;
                     submit(event.currentTarget, event.nativeEvent.submitter);
                 }}

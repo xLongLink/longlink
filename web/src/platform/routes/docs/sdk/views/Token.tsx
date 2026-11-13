@@ -8,7 +8,6 @@ export default function TokenPage() {
     return (
         <ViewLayout
             name="Token"
-            introduction={'Displays a tag, category, or selection with optional click and removal actions.'}
             properties={[
                 {
                     name: 'label',

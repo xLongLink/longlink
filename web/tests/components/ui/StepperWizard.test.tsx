@@ -6,7 +6,7 @@ import { Form } from '@/components/ui/Form';
 import { Button } from '@/components/ui/Button';
 import userEvent from '@testing-library/user-event';
 import { TextInput } from '@/components/ui/TextInput';
-import { Step, Stepper } from '@/components/ui/Stepper';
+import { Step, Wizard } from '@/components/ui/Stepper';
 
 /** Lets the owner accept navigation independently of the wizard's request. */
 function ControlledWizard({ onStepClick }: { onStepClick: (index: number) => void }) {
@@ -20,14 +20,14 @@ function ControlledWizard({ onStepClick }: { onStepClick: (index: number) => voi
             <button type="button" onClick={() => setActiveStep(1)}>
                 Select review
             </button>
-            <Stepper variant="wizard" activeStep={activeStep} onStepClick={onStepClick}>
+            <Wizard activeStep={activeStep} onStepClick={onStepClick}>
                 <Step label="Draft">
                     <input name="draft" defaultValue="Retained" />
                 </Step>
                 <Step label="Review">
                     <input name="review" />
                 </Step>
-            </Stepper>
+            </Wizard>
         </>
     );
 }
@@ -75,15 +75,17 @@ it('preserves step drafts through navigation, final validation, submission, and 
                 submissions.push([...data.entries()]);
             }}
         >
-            <Stepper variant="wizard">
+            <Wizard>
                 <Step label="Customer">
                     <TextInput label="Customer" name="customer" required />
                 </Step>
                 <Step label="Notes">
                     <TextInput label="Notes" name="notes" />
-                    <Button type="submit" label="Save" name="intent" value="save" />
+                    <Button variant="outline" type="submit" name="intent" value="save">
+                        Save
+                    </Button>
                 </Step>
-            </Stepper>
+            </Wizard>
         </Form>,
         async (output) => {
             const form = output.querySelector('form');
@@ -166,12 +168,15 @@ it('guards pending actions, announces failure, and permits retry without losing 
     const cancel = vi.fn();
     await withMounted(
         <form>
-            <Stepper
-                variant="wizard"
+            <Wizard
                 height={400}
                 onCancel={cancel}
                 next={() => ({ label: 'Check', action })}
-                finalAction={<Button type="submit" label="Finish" />}
+                finalAction={
+                    <Button variant="outline" type="submit">
+                        Finish
+                    </Button>
+                }
             >
                 <Step label="Draft">
                     <input name="draft" defaultValue="Retained" />
@@ -179,7 +184,7 @@ it('guards pending actions, announces failure, and permits retry without losing 
                 <Step label="Review">
                     <input name="review" />
                 </Step>
-            </Stepper>
+            </Wizard>
         </form>,
         async (output) => {
             const form = output.querySelector('form');

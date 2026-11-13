@@ -64,10 +64,7 @@ type DropdownMenuOption =
 /** @category Runtime */
 declare namespace React {
     namespace JSX {
-        interface Element {
-            readonly type: unknown;
-            readonly props: unknown;
-        }
+        type Element = NativeFrontend.FrontendElement;
 
         interface ElementChildrenAttribute {
             children: unknown;
@@ -4478,64 +4475,6 @@ type StoneIconName =
     | 'lucide:zoom-in'
     | 'lucide:zoom-out';
 
-/** @category Layouts @group Card */
-type CardProps = {
-    /** Content rendered inside the card. */
-    children?: ViewNode;
-    /** Inner spacing using the theme spacing scale. */
-    padding?: 0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10;
-    /** Clips full-bleed content to the card's rounded edges. */
-    isClipped?: boolean;
-    /** Background color variant, independent of the interaction mode. */
-    variant?: 'default' | 'transparent' | 'muted';
-    /** Card width; numbers are pixels and strings are CSS sizes. */
-    width?: number | string;
-    /** Card height; numbers are pixels and strings are CSS sizes. */
-    height?: number | string;
-    /** Maximum card width. */
-    maxWidth?: number | string;
-    /** Minimum card height. */
-    minHeight?: number | string;
-    /** Makes the card and its descendants non-interactive. */
-    inert?: boolean;
-    /** Accessible by default; set true only for decorative or redundant, non-interactive content. */
-    'aria-hidden'?: boolean | 'true' | 'false';
-    /** Accessible label for interactive cards; supply a descriptive label. */
-    label?: string;
-    /** Runs when the card surface is activated. */
-    onClick?: (event: ViewMouseEvent) => void;
-    /** Link destination, used when onChange is absent. */
-    href?: string;
-    /** Link target; external URLs open in a new tab in Views. */
-    target?: string;
-    /** Disables activation of an interactive card. */
-    isDisabled?: boolean;
-    /** Whether the card is selected. */
-    isSelected?: boolean;
-    /** Enables selection and receives its next state, overriding onClick and href. */
-    onChange?: (isSelected: boolean) => void;
-};
-
-/** @category Action @group Button */
-type ButtonProps = {
-    /** Visible button text and accessible label. */
-    label: string;
-    variant?: 'primary' | 'secondary' | 'ghost' | 'destructive';
-    size?: 'sm' | 'md' | 'lg';
-    type?: 'button' | 'submit' | 'reset';
-    name?: string;
-    value?: string | number | readonly string[];
-    form?: string;
-    icon?: StoneIconName;
-    endContent?: ViewNode;
-    width?: number | string;
-    disabled?: boolean;
-    /** Solution-relative destination or HTTP(S) URL to open in a new tab. */
-    href?: string;
-    /** Runs an action with automatic loading and duplicate-click prevention. */
-    onClick?: (event: ViewMouseEvent) => void | Promise<void>;
-};
-
 /** @category Form @group DateInput */
 type DateInputProps = FieldProps & {
     value?: ISODateString;
@@ -4622,16 +4561,6 @@ declare function GridSpan(props: {
     columns?: number | 'full';
 }): React.JSX.Element;
 
-/** @category Layouts */
-declare function Collapsible(props: {
-    children?: ViewNode;
-    trigger: ViewNode;
-    defaultIsOpen?: boolean;
-    isOpen?: boolean;
-    isDisabled?: boolean;
-    onOpenChange?: (isOpen: boolean) => void;
-}): React.JSX.Element;
-
 /** @category Display */
 declare function Heading(props: { children?: ViewNode; level?: 1 | 2 | 3 | 4 | 5 | 6 }): React.JSX.Element;
 
@@ -4679,13 +4608,6 @@ declare function Image(props: {
 }): React.JSX.Element;
 
 /** @category Display */
-declare function Badge(props: {
-    label?: ViewNode;
-    icon?: StoneIconName;
-    variant?: 'neutral' | 'info' | 'success' | 'warning' | 'error';
-}): React.JSX.Element;
-
-/** @category Display */
 declare function Token(props: {
     /** Visible text and accessible name for the token. Long labels truncate to fit. */
     label: string;
@@ -4698,21 +4620,6 @@ declare function Token(props: {
     onClick?: () => void;
     /** Shows a remove button and runs when it is clicked. */
     onRemove?: () => void;
-}): React.JSX.Element;
-
-/** @category Layouts */
-declare function Card(props: CardProps): React.JSX.Element;
-
-/** @category Action */
-declare function Button(props: ButtonProps): React.JSX.Element;
-
-/** @category Action */
-declare function ButtonGroup(props: {
-    children?: ViewNode;
-    label: string;
-    orientation?: 'horizontal' | 'vertical';
-    size?: 'sm' | 'md' | 'lg';
-    isDisabled?: boolean;
 }): React.JSX.Element;
 
 /** @category Action */
@@ -4728,35 +4635,12 @@ declare function DropdownMenu(props: {
     onOpenChange?: (isOpen: boolean) => void;
 }): React.JSX.Element;
 
-/** @category Action */
-declare function IconButton(props: {
-    label: string;
-    icon: StoneIconName;
-    variant?: 'primary' | 'secondary' | 'ghost' | 'destructive';
-    size?: 'sm' | 'md' | 'lg';
-    isDisabled?: boolean;
-    onClick?: (event: ViewMouseEvent) => void | Promise<void>;
-}): React.JSX.Element;
-
 /** @category Display */
 declare function Divider(props: {
     label?: ViewNode;
     variant?: 'subtle' | 'strong';
     orientation?: 'horizontal' | 'vertical';
     isFullBleed?: boolean;
-}): React.JSX.Element;
-
-/** @category Layouts */
-declare function Dialog(props: {
-    children?: ViewNode;
-    /** Shows a dialog header when a title is provided. */
-    title?: string;
-    /** Fullscreen fills about 95% of the screen, including over Platform navigation. Defaults to standard. */
-    variant?: 'standard' | 'fullscreen';
-    isOpen: boolean;
-    onOpenChange: (open: boolean) => void;
-    /** Spacing between the title and content; defaults to 3. */
-    gap?: Spacing;
 }): React.JSX.Element;
 
 /** Submits named themed fields and ordinary HTML inputs to a Solution API endpoint. @category Form */
@@ -4859,38 +4743,6 @@ declare function CheckboxInput(
         defaultChecked?: boolean;
         onChange?: (value: boolean) => void;
     }
-): React.JSX.Element;
-
-/** @category Form */
-declare function Switch(
-    props: FieldProps & {
-        value?: boolean;
-        defaultChecked?: boolean;
-        onChange?: (value: boolean) => void;
-    }
-): React.JSX.Element;
-
-/** @category Form */
-declare function Slider(
-    props: FieldProps & {
-        min?: number;
-        max?: number;
-        step?: number;
-    } & (
-            | {
-                  value?: number;
-                  defaultValue?: number;
-                  onChange?: (value: number) => void;
-                  onChangeEnd?: (value: number) => void;
-              }
-            | {
-                  value?: [number, number];
-                  defaultValue?: [number, number];
-                  onChange?: (value: [number, number]) => void;
-                  onChangeEnd?: (value: [number, number]) => void;
-                  minStepsBetweenThumbs?: number;
-              }
-        )
 ): React.JSX.Element;
 
 /** @category Form */
@@ -5009,73 +4861,6 @@ declare function CodeBlock(props: {
 }): React.JSX.Element;
 
 /** @category Display */
-declare function ProgressBar(props: {
-    label: string;
-    value?: number;
-    max?: number;
-    hasValueLabel?: boolean;
-    /** Formats usage counts or units instead of the default percentage. */
-    formatValueLabel?: (value: number, max: number) => string;
-    variant?: 'accent' | 'success' | 'warning' | 'error' | 'neutral';
-    marks?: ReadonlyArray<{ value: number; label: string }>;
-    isDisabled?: boolean;
-    isLabelHidden?: boolean;
-    isIndeterminate?: boolean;
-}): React.JSX.Element;
-
-/** @category Layouts */
-declare function Stepper(props: {
-    children?: ViewNode;
-    activeStep?: number;
-    orientation?: 'horizontal' | 'vertical';
-    /** Enables progress step activation, or receives wizard selection changes. */
-    onStepClick?: (index: number) => void;
-    /** Defaults to progress. Wizard mode owns persistent panels and Next/Back navigation. */
-    variant?: 'progress' | 'wizard';
-    height?: number | string;
-    /** Runs intermediate work after validation. Returning false prevents advancement. */
-    next?: (step: number) => { label: string; action: () => void | boolean | Promise<void | boolean> } | undefined;
-    onCancel?: () => void;
-    backVariant?: 'secondary' | 'ghost';
-}): React.JSX.Element;
-
-/** @category Layouts @group Stepper */
-declare function Step(props: {
-    /** Optional progress index; defaults to child order. Wizards always use child order. */
-    step?: number;
-    /** Visible label identifying the step. */
-    label: string;
-    /** Supporting text displayed below the step label. */
-    description?: string;
-    /** Persistent panel content in wizard mode; inline content in progress mode. */
-    children?: ViewNode;
-}): React.JSX.Element;
-
-/** @category Layouts */
-declare function Tabs(props: {
-    /** Tab elements defining labels and panel content. */
-    children?: ViewNode;
-    gap?: Spacing;
-    hasDivider?: boolean;
-    /** Receives the selected Tab value; use with value to control selection. */
-    onChange?: (value: string) => void;
-    /** Selected Tab value; omit for internal selection, initially choosing the first tab. */
-    value?: string;
-}): React.JSX.Element;
-
-/** @category Layouts @group Tabs */
-declare function Tab(props: {
-    /** Panel content mounted only while this tab is selected. */
-    children?: ViewNode;
-    /** Unique value identifying this tab. */
-    value: string;
-    /** Visible tab label and accessible panel name. */
-    label: string;
-    /** Whether the tab is disabled. */
-    isDisabled?: boolean;
-}): React.JSX.Element;
-
-/** @category Display */
 declare function EmptyState(props: { title: string; isCompact?: boolean }): React.JSX.Element;
 
 /** @category Action */
@@ -5154,16 +4939,6 @@ declare function Currency(props: {
     locale?: string;
 }): React.JSX.Element;
 
-/** @category Display */
-declare function FileViewer(props: {
-    /** Scoped Solution operation path returning the file to preview. */
-    src: string;
-    /** Attachment name used for accessible action labels and the downloaded filename. */
-    title: string;
-    /** Preview and download action size; inherits sizing when omitted. */
-    size?: 'sm' | 'md' | 'lg';
-}): React.JSX.Element;
-
 /** Shared data contract for category and trend charts. @category Charts @group AreaChart */
 type ChartProps = {
     label: string;
@@ -5222,3 +4997,7229 @@ declare function Maps(props: {
     /** Height in pixels; defaults to 320. */
     height?: number;
 }): React.JSX.Element;
+
+/** @category Action @group Button */
+declare function IconButton(props: {
+    label: string;
+    icon: StoneIconName;
+    variant?: Parameters<typeof Button>[0]['variant'];
+    size?: 'xs' | 'sm' | 'default' | 'lg';
+    isDisabled?: boolean;
+    onClick?: Parameters<typeof Button>[0]['onClick'];
+}): React.JSX.Element;
+
+// Native component declarations generated by web/scripts/frontend.mjs.
+declare namespace NativeFrontend {
+interface HTMLWebViewElement extends HTMLElement {
+}
+interface TrustedHTML {
+}
+type PropertyValue<TValue> = TValue extends Array<infer AValue> ? Array<AValue extends infer TUnpacked & {} ? TUnpacked : AValue> : TValue extends infer TUnpacked & {} ? TUnpacked : TValue;
+type Fallback<T> = {
+    [P in keyof T]: T[P] | readonly NonNullable<T[P]>[];
+};
+interface StandardLonghandProperties<TLength = (string & {}) | 0, TTime = string & {}> {
+    accentColor?: Property.AccentColor | undefined;
+    alignContent?: Property.AlignContent | undefined;
+    alignItems?: Property.AlignItems | undefined;
+    alignSelf?: Property.AlignSelf | undefined;
+    alignTracks?: Property.AlignTracks | undefined;
+    alignmentBaseline?: Property.AlignmentBaseline | undefined;
+    anchorName?: Property.AnchorName | undefined;
+    anchorScope?: Property.AnchorScope | undefined;
+    animationComposition?: Property.AnimationComposition | undefined;
+    animationDelay?: Property.AnimationDelay<TTime> | undefined;
+    animationDirection?: Property.AnimationDirection | undefined;
+    animationDuration?: Property.AnimationDuration<TTime> | undefined;
+    animationFillMode?: Property.AnimationFillMode | undefined;
+    animationIterationCount?: Property.AnimationIterationCount | undefined;
+    animationName?: Property.AnimationName | undefined;
+    animationPlayState?: Property.AnimationPlayState | undefined;
+    animationRangeEnd?: Property.AnimationRangeEnd<TLength> | undefined;
+    animationRangeStart?: Property.AnimationRangeStart<TLength> | undefined;
+    animationTimeline?: Property.AnimationTimeline | undefined;
+    animationTimingFunction?: Property.AnimationTimingFunction | undefined;
+    appearance?: Property.Appearance | undefined;
+    aspectRatio?: Property.AspectRatio | undefined;
+    backdropFilter?: Property.BackdropFilter | undefined;
+    backfaceVisibility?: Property.BackfaceVisibility | undefined;
+    backgroundAttachment?: Property.BackgroundAttachment | undefined;
+    backgroundBlendMode?: Property.BackgroundBlendMode | undefined;
+    backgroundClip?: Property.BackgroundClip | undefined;
+    backgroundColor?: Property.BackgroundColor | undefined;
+    backgroundImage?: Property.BackgroundImage | undefined;
+    backgroundOrigin?: Property.BackgroundOrigin | undefined;
+    backgroundPositionX?: Property.BackgroundPositionX<TLength> | undefined;
+    backgroundPositionY?: Property.BackgroundPositionY<TLength> | undefined;
+    backgroundRepeat?: Property.BackgroundRepeat | undefined;
+    backgroundSize?: Property.BackgroundSize<TLength> | undefined;
+    baselineShift?: Property.BaselineShift<TLength> | undefined;
+    blockSize?: Property.BlockSize<TLength> | undefined;
+    borderBlockEndColor?: Property.BorderBlockEndColor | undefined;
+    borderBlockEndStyle?: Property.BorderBlockEndStyle | undefined;
+    borderBlockEndWidth?: Property.BorderBlockEndWidth<TLength> | undefined;
+    borderBlockStartColor?: Property.BorderBlockStartColor | undefined;
+    borderBlockStartStyle?: Property.BorderBlockStartStyle | undefined;
+    borderBlockStartWidth?: Property.BorderBlockStartWidth<TLength> | undefined;
+    borderBottomColor?: Property.BorderBottomColor | undefined;
+    borderBottomLeftRadius?: Property.BorderBottomLeftRadius<TLength> | undefined;
+    borderBottomRightRadius?: Property.BorderBottomRightRadius<TLength> | undefined;
+    borderBottomStyle?: Property.BorderBottomStyle | undefined;
+    borderBottomWidth?: Property.BorderBottomWidth<TLength> | undefined;
+    borderCollapse?: Property.BorderCollapse | undefined;
+    borderEndEndRadius?: Property.BorderEndEndRadius<TLength> | undefined;
+    borderEndStartRadius?: Property.BorderEndStartRadius<TLength> | undefined;
+    borderImageOutset?: Property.BorderImageOutset<TLength> | undefined;
+    borderImageRepeat?: Property.BorderImageRepeat | undefined;
+    borderImageSlice?: Property.BorderImageSlice | undefined;
+    borderImageSource?: Property.BorderImageSource | undefined;
+    borderImageWidth?: Property.BorderImageWidth<TLength> | undefined;
+    borderInlineEndColor?: Property.BorderInlineEndColor | undefined;
+    borderInlineEndStyle?: Property.BorderInlineEndStyle | undefined;
+    borderInlineEndWidth?: Property.BorderInlineEndWidth<TLength> | undefined;
+    borderInlineStartColor?: Property.BorderInlineStartColor | undefined;
+    borderInlineStartStyle?: Property.BorderInlineStartStyle | undefined;
+    borderInlineStartWidth?: Property.BorderInlineStartWidth<TLength> | undefined;
+    borderLeftColor?: Property.BorderLeftColor | undefined;
+    borderLeftStyle?: Property.BorderLeftStyle | undefined;
+    borderLeftWidth?: Property.BorderLeftWidth<TLength> | undefined;
+    borderRightColor?: Property.BorderRightColor | undefined;
+    borderRightStyle?: Property.BorderRightStyle | undefined;
+    borderRightWidth?: Property.BorderRightWidth<TLength> | undefined;
+    borderSpacing?: Property.BorderSpacing<TLength> | undefined;
+    borderStartEndRadius?: Property.BorderStartEndRadius<TLength> | undefined;
+    borderStartStartRadius?: Property.BorderStartStartRadius<TLength> | undefined;
+    borderTopColor?: Property.BorderTopColor | undefined;
+    borderTopLeftRadius?: Property.BorderTopLeftRadius<TLength> | undefined;
+    borderTopRightRadius?: Property.BorderTopRightRadius<TLength> | undefined;
+    borderTopStyle?: Property.BorderTopStyle | undefined;
+    borderTopWidth?: Property.BorderTopWidth<TLength> | undefined;
+    bottom?: Property.Bottom<TLength> | undefined;
+    boxDecorationBreak?: Property.BoxDecorationBreak | undefined;
+    boxShadow?: Property.BoxShadow | undefined;
+    boxSizing?: Property.BoxSizing | undefined;
+    breakAfter?: Property.BreakAfter | undefined;
+    breakBefore?: Property.BreakBefore | undefined;
+    breakInside?: Property.BreakInside | undefined;
+    captionSide?: Property.CaptionSide | undefined;
+    caretColor?: Property.CaretColor | undefined;
+    caretShape?: Property.CaretShape | undefined;
+    clear?: Property.Clear | undefined;
+    clipPath?: Property.ClipPath | undefined;
+    clipRule?: Property.ClipRule | undefined;
+    color?: Property.Color | undefined;
+    colorAdjust?: Property.PrintColorAdjust | undefined;
+    colorInterpolationFilters?: Property.ColorInterpolationFilters | undefined;
+    colorScheme?: Property.ColorScheme | undefined;
+    columnCount?: Property.ColumnCount | undefined;
+    columnFill?: Property.ColumnFill | undefined;
+    columnGap?: Property.ColumnGap<TLength> | undefined;
+    columnRuleColor?: Property.ColumnRuleColor | undefined;
+    columnRuleStyle?: Property.ColumnRuleStyle | undefined;
+    columnRuleWidth?: Property.ColumnRuleWidth<TLength> | undefined;
+    columnSpan?: Property.ColumnSpan | undefined;
+    columnWidth?: Property.ColumnWidth<TLength> | undefined;
+    contain?: Property.Contain | undefined;
+    containIntrinsicBlockSize?: Property.ContainIntrinsicBlockSize<TLength> | undefined;
+    containIntrinsicHeight?: Property.ContainIntrinsicHeight<TLength> | undefined;
+    containIntrinsicInlineSize?: Property.ContainIntrinsicInlineSize<TLength> | undefined;
+    containIntrinsicWidth?: Property.ContainIntrinsicWidth<TLength> | undefined;
+    containerName?: Property.ContainerName | undefined;
+    containerType?: Property.ContainerType | undefined;
+    content?: Property.Content | undefined;
+    contentVisibility?: Property.ContentVisibility | undefined;
+    counterIncrement?: Property.CounterIncrement | undefined;
+    counterReset?: Property.CounterReset | undefined;
+    counterSet?: Property.CounterSet | undefined;
+    cursor?: Property.Cursor | undefined;
+    cx?: Property.Cx<TLength> | undefined;
+    cy?: Property.Cy<TLength> | undefined;
+    d?: Property.D | undefined;
+    direction?: Property.Direction | undefined;
+    display?: Property.Display | undefined;
+    dominantBaseline?: Property.DominantBaseline | undefined;
+    emptyCells?: Property.EmptyCells | undefined;
+    fieldSizing?: Property.FieldSizing | undefined;
+    fill?: Property.Fill | undefined;
+    fillOpacity?: Property.FillOpacity | undefined;
+    fillRule?: Property.FillRule | undefined;
+    filter?: Property.Filter | undefined;
+    flexBasis?: Property.FlexBasis<TLength> | undefined;
+    flexDirection?: Property.FlexDirection | undefined;
+    flexGrow?: Property.FlexGrow | undefined;
+    flexShrink?: Property.FlexShrink | undefined;
+    flexWrap?: Property.FlexWrap | undefined;
+    float?: Property.Float | undefined;
+    floodColor?: Property.FloodColor | undefined;
+    floodOpacity?: Property.FloodOpacity | undefined;
+    fontFamily?: Property.FontFamily | undefined;
+    fontFeatureSettings?: Property.FontFeatureSettings | undefined;
+    fontKerning?: Property.FontKerning | undefined;
+    fontLanguageOverride?: Property.FontLanguageOverride | undefined;
+    fontOpticalSizing?: Property.FontOpticalSizing | undefined;
+    fontPalette?: Property.FontPalette | undefined;
+    fontSize?: Property.FontSize<TLength> | undefined;
+    fontSizeAdjust?: Property.FontSizeAdjust | undefined;
+    fontSmooth?: Property.FontSmooth<TLength> | undefined;
+    fontStyle?: Property.FontStyle | undefined;
+    fontSynthesis?: Property.FontSynthesis | undefined;
+    fontSynthesisPosition?: Property.FontSynthesisPosition | undefined;
+    fontSynthesisSmallCaps?: Property.FontSynthesisSmallCaps | undefined;
+    fontSynthesisStyle?: Property.FontSynthesisStyle | undefined;
+    fontSynthesisWeight?: Property.FontSynthesisWeight | undefined;
+    fontVariant?: Property.FontVariant | undefined;
+    fontVariantAlternates?: Property.FontVariantAlternates | undefined;
+    fontVariantCaps?: Property.FontVariantCaps | undefined;
+    fontVariantEastAsian?: Property.FontVariantEastAsian | undefined;
+    fontVariantEmoji?: Property.FontVariantEmoji | undefined;
+    fontVariantLigatures?: Property.FontVariantLigatures | undefined;
+    fontVariantNumeric?: Property.FontVariantNumeric | undefined;
+    fontVariantPosition?: Property.FontVariantPosition | undefined;
+    fontVariationSettings?: Property.FontVariationSettings | undefined;
+    fontWeight?: Property.FontWeight | undefined;
+    fontWidth?: Property.FontWidth | undefined;
+    forcedColorAdjust?: Property.ForcedColorAdjust | undefined;
+    gridAutoColumns?: Property.GridAutoColumns<TLength> | undefined;
+    gridAutoFlow?: Property.GridAutoFlow | undefined;
+    gridAutoRows?: Property.GridAutoRows<TLength> | undefined;
+    gridColumnEnd?: Property.GridColumnEnd | undefined;
+    gridColumnStart?: Property.GridColumnStart | undefined;
+    gridRowEnd?: Property.GridRowEnd | undefined;
+    gridRowStart?: Property.GridRowStart | undefined;
+    gridTemplateAreas?: Property.GridTemplateAreas | undefined;
+    gridTemplateColumns?: Property.GridTemplateColumns<TLength> | undefined;
+    gridTemplateRows?: Property.GridTemplateRows<TLength> | undefined;
+    hangingPunctuation?: Property.HangingPunctuation | undefined;
+    height?: Property.Height<TLength> | undefined;
+    hyphenateCharacter?: Property.HyphenateCharacter | undefined;
+    hyphenateLimitChars?: Property.HyphenateLimitChars | undefined;
+    hyphens?: Property.Hyphens | undefined;
+    imageOrientation?: Property.ImageOrientation | undefined;
+    imageRendering?: Property.ImageRendering | undefined;
+    imageResolution?: Property.ImageResolution | undefined;
+    initialLetter?: Property.InitialLetter | undefined;
+    initialLetterAlign?: Property.InitialLetterAlign | undefined;
+    inlineSize?: Property.InlineSize<TLength> | undefined;
+    insetBlockEnd?: Property.InsetBlockEnd<TLength> | undefined;
+    insetBlockStart?: Property.InsetBlockStart<TLength> | undefined;
+    insetInlineEnd?: Property.InsetInlineEnd<TLength> | undefined;
+    insetInlineStart?: Property.InsetInlineStart<TLength> | undefined;
+    interpolateSize?: Property.InterpolateSize | undefined;
+    isolation?: Property.Isolation | undefined;
+    justifyContent?: Property.JustifyContent | undefined;
+    justifyItems?: Property.JustifyItems | undefined;
+    justifySelf?: Property.JustifySelf | undefined;
+    justifyTracks?: Property.JustifyTracks | undefined;
+    left?: Property.Left<TLength> | undefined;
+    letterSpacing?: Property.LetterSpacing<TLength> | undefined;
+    lightingColor?: Property.LightingColor | undefined;
+    lineBreak?: Property.LineBreak | undefined;
+    lineHeight?: Property.LineHeight<TLength> | undefined;
+    lineHeightStep?: Property.LineHeightStep<TLength> | undefined;
+    listStyleImage?: Property.ListStyleImage | undefined;
+    listStylePosition?: Property.ListStylePosition | undefined;
+    listStyleType?: Property.ListStyleType | undefined;
+    marginBlockEnd?: Property.MarginBlockEnd<TLength> | undefined;
+    marginBlockStart?: Property.MarginBlockStart<TLength> | undefined;
+    marginBottom?: Property.MarginBottom<TLength> | undefined;
+    marginInlineEnd?: Property.MarginInlineEnd<TLength> | undefined;
+    marginInlineStart?: Property.MarginInlineStart<TLength> | undefined;
+    marginLeft?: Property.MarginLeft<TLength> | undefined;
+    marginRight?: Property.MarginRight<TLength> | undefined;
+    marginTop?: Property.MarginTop<TLength> | undefined;
+    marginTrim?: Property.MarginTrim | undefined;
+    marker?: Property.Marker | undefined;
+    markerEnd?: Property.MarkerEnd | undefined;
+    markerMid?: Property.MarkerMid | undefined;
+    markerStart?: Property.MarkerStart | undefined;
+    maskBorderMode?: Property.MaskBorderMode | undefined;
+    maskBorderOutset?: Property.MaskBorderOutset<TLength> | undefined;
+    maskBorderRepeat?: Property.MaskBorderRepeat | undefined;
+    maskBorderSlice?: Property.MaskBorderSlice | undefined;
+    maskBorderSource?: Property.MaskBorderSource | undefined;
+    maskBorderWidth?: Property.MaskBorderWidth<TLength> | undefined;
+    maskClip?: Property.MaskClip | undefined;
+    maskComposite?: Property.MaskComposite | undefined;
+    maskImage?: Property.MaskImage | undefined;
+    maskMode?: Property.MaskMode | undefined;
+    maskOrigin?: Property.MaskOrigin | undefined;
+    maskPosition?: Property.MaskPosition<TLength> | undefined;
+    maskRepeat?: Property.MaskRepeat | undefined;
+    maskSize?: Property.MaskSize<TLength> | undefined;
+    maskType?: Property.MaskType | undefined;
+    masonryAutoFlow?: Property.MasonryAutoFlow | undefined;
+    mathDepth?: Property.MathDepth | undefined;
+    mathShift?: Property.MathShift | undefined;
+    mathStyle?: Property.MathStyle | undefined;
+    maxBlockSize?: Property.MaxBlockSize<TLength> | undefined;
+    maxHeight?: Property.MaxHeight<TLength> | undefined;
+    maxInlineSize?: Property.MaxInlineSize<TLength> | undefined;
+    maxLines?: Property.MaxLines | undefined;
+    maxWidth?: Property.MaxWidth<TLength> | undefined;
+    minBlockSize?: Property.MinBlockSize<TLength> | undefined;
+    minHeight?: Property.MinHeight<TLength> | undefined;
+    minInlineSize?: Property.MinInlineSize<TLength> | undefined;
+    minWidth?: Property.MinWidth<TLength> | undefined;
+    mixBlendMode?: Property.MixBlendMode | undefined;
+    motionDistance?: Property.OffsetDistance<TLength> | undefined;
+    motionPath?: Property.OffsetPath | undefined;
+    motionRotation?: Property.OffsetRotate | undefined;
+    objectFit?: Property.ObjectFit | undefined;
+    objectPosition?: Property.ObjectPosition<TLength> | undefined;
+    objectViewBox?: Property.ObjectViewBox | undefined;
+    offsetAnchor?: Property.OffsetAnchor<TLength> | undefined;
+    offsetDistance?: Property.OffsetDistance<TLength> | undefined;
+    offsetPath?: Property.OffsetPath | undefined;
+    offsetPosition?: Property.OffsetPosition<TLength> | undefined;
+    offsetRotate?: Property.OffsetRotate | undefined;
+    offsetRotation?: Property.OffsetRotate | undefined;
+    opacity?: Property.Opacity | undefined;
+    order?: Property.Order | undefined;
+    orphans?: Property.Orphans | undefined;
+    outlineColor?: Property.OutlineColor | undefined;
+    outlineOffset?: Property.OutlineOffset<TLength> | undefined;
+    outlineStyle?: Property.OutlineStyle | undefined;
+    outlineWidth?: Property.OutlineWidth<TLength> | undefined;
+    overflowAnchor?: Property.OverflowAnchor | undefined;
+    overflowBlock?: Property.OverflowBlock | undefined;
+    overflowClipBox?: Property.OverflowClipBox | undefined;
+    overflowClipMargin?: Property.OverflowClipMargin<TLength> | undefined;
+    overflowInline?: Property.OverflowInline | undefined;
+    overflowWrap?: Property.OverflowWrap | undefined;
+    overflowX?: Property.OverflowX | undefined;
+    overflowY?: Property.OverflowY | undefined;
+    overlay?: Property.Overlay | undefined;
+    overscrollBehaviorBlock?: Property.OverscrollBehaviorBlock | undefined;
+    overscrollBehaviorInline?: Property.OverscrollBehaviorInline | undefined;
+    overscrollBehaviorX?: Property.OverscrollBehaviorX | undefined;
+    overscrollBehaviorY?: Property.OverscrollBehaviorY | undefined;
+    paddingBlockEnd?: Property.PaddingBlockEnd<TLength> | undefined;
+    paddingBlockStart?: Property.PaddingBlockStart<TLength> | undefined;
+    paddingBottom?: Property.PaddingBottom<TLength> | undefined;
+    paddingInlineEnd?: Property.PaddingInlineEnd<TLength> | undefined;
+    paddingInlineStart?: Property.PaddingInlineStart<TLength> | undefined;
+    paddingLeft?: Property.PaddingLeft<TLength> | undefined;
+    paddingRight?: Property.PaddingRight<TLength> | undefined;
+    paddingTop?: Property.PaddingTop<TLength> | undefined;
+    page?: Property.Page | undefined;
+    paintOrder?: Property.PaintOrder | undefined;
+    perspective?: Property.Perspective<TLength> | undefined;
+    perspectiveOrigin?: Property.PerspectiveOrigin<TLength> | undefined;
+    pointerEvents?: Property.PointerEvents | undefined;
+    position?: Property.Position | undefined;
+    positionAnchor?: Property.PositionAnchor | undefined;
+    positionArea?: Property.PositionArea | undefined;
+    positionTryFallbacks?: Property.PositionTryFallbacks | undefined;
+    positionTryOrder?: Property.PositionTryOrder | undefined;
+    positionVisibility?: Property.PositionVisibility | undefined;
+    printColorAdjust?: Property.PrintColorAdjust | undefined;
+    quotes?: Property.Quotes | undefined;
+    r?: Property.R<TLength> | undefined;
+    resize?: Property.Resize | undefined;
+    right?: Property.Right<TLength> | undefined;
+    rotate?: Property.Rotate | undefined;
+    rowGap?: Property.RowGap<TLength> | undefined;
+    rubyAlign?: Property.RubyAlign | undefined;
+    rubyMerge?: Property.RubyMerge | undefined;
+    rubyOverhang?: Property.RubyOverhang | undefined;
+    rubyPosition?: Property.RubyPosition | undefined;
+    rx?: Property.Rx<TLength> | undefined;
+    ry?: Property.Ry<TLength> | undefined;
+    scale?: Property.Scale | undefined;
+    scrollBehavior?: Property.ScrollBehavior | undefined;
+    scrollInitialTarget?: Property.ScrollInitialTarget | undefined;
+    scrollMarginBlockEnd?: Property.ScrollMarginBlockEnd<TLength> | undefined;
+    scrollMarginBlockStart?: Property.ScrollMarginBlockStart<TLength> | undefined;
+    scrollMarginBottom?: Property.ScrollMarginBottom<TLength> | undefined;
+    scrollMarginInlineEnd?: Property.ScrollMarginInlineEnd<TLength> | undefined;
+    scrollMarginInlineStart?: Property.ScrollMarginInlineStart<TLength> | undefined;
+    scrollMarginLeft?: Property.ScrollMarginLeft<TLength> | undefined;
+    scrollMarginRight?: Property.ScrollMarginRight<TLength> | undefined;
+    scrollMarginTop?: Property.ScrollMarginTop<TLength> | undefined;
+    scrollPaddingBlockEnd?: Property.ScrollPaddingBlockEnd<TLength> | undefined;
+    scrollPaddingBlockStart?: Property.ScrollPaddingBlockStart<TLength> | undefined;
+    scrollPaddingBottom?: Property.ScrollPaddingBottom<TLength> | undefined;
+    scrollPaddingInlineEnd?: Property.ScrollPaddingInlineEnd<TLength> | undefined;
+    scrollPaddingInlineStart?: Property.ScrollPaddingInlineStart<TLength> | undefined;
+    scrollPaddingLeft?: Property.ScrollPaddingLeft<TLength> | undefined;
+    scrollPaddingRight?: Property.ScrollPaddingRight<TLength> | undefined;
+    scrollPaddingTop?: Property.ScrollPaddingTop<TLength> | undefined;
+    scrollSnapAlign?: Property.ScrollSnapAlign | undefined;
+    scrollSnapMarginBottom?: Property.ScrollMarginBottom<TLength> | undefined;
+    scrollSnapMarginLeft?: Property.ScrollMarginLeft<TLength> | undefined;
+    scrollSnapMarginRight?: Property.ScrollMarginRight<TLength> | undefined;
+    scrollSnapMarginTop?: Property.ScrollMarginTop<TLength> | undefined;
+    scrollSnapStop?: Property.ScrollSnapStop | undefined;
+    scrollSnapType?: Property.ScrollSnapType | undefined;
+    scrollTimelineAxis?: Property.ScrollTimelineAxis | undefined;
+    scrollTimelineName?: Property.ScrollTimelineName | undefined;
+    scrollbarColor?: Property.ScrollbarColor | undefined;
+    scrollbarGutter?: Property.ScrollbarGutter | undefined;
+    scrollbarWidth?: Property.ScrollbarWidth | undefined;
+    shapeImageThreshold?: Property.ShapeImageThreshold | undefined;
+    shapeMargin?: Property.ShapeMargin<TLength> | undefined;
+    shapeOutside?: Property.ShapeOutside | undefined;
+    shapeRendering?: Property.ShapeRendering | undefined;
+    speakAs?: Property.SpeakAs | undefined;
+    stopColor?: Property.StopColor | undefined;
+    stopOpacity?: Property.StopOpacity | undefined;
+    stroke?: Property.Stroke | undefined;
+    strokeColor?: Property.StrokeColor | undefined;
+    strokeDasharray?: Property.StrokeDasharray<TLength> | undefined;
+    strokeDashoffset?: Property.StrokeDashoffset<TLength> | undefined;
+    strokeLinecap?: Property.StrokeLinecap | undefined;
+    strokeLinejoin?: Property.StrokeLinejoin | undefined;
+    strokeMiterlimit?: Property.StrokeMiterlimit | undefined;
+    strokeOpacity?: Property.StrokeOpacity | undefined;
+    strokeWidth?: Property.StrokeWidth<TLength> | undefined;
+    tabSize?: Property.TabSize<TLength> | undefined;
+    tableLayout?: Property.TableLayout | undefined;
+    textAlign?: Property.TextAlign | undefined;
+    textAlignLast?: Property.TextAlignLast | undefined;
+    textAnchor?: Property.TextAnchor | undefined;
+    textAutospace?: Property.TextAutospace | undefined;
+    textBox?: Property.TextBox | undefined;
+    textBoxEdge?: Property.TextBoxEdge | undefined;
+    textBoxTrim?: Property.TextBoxTrim | undefined;
+    textCombineUpright?: Property.TextCombineUpright | undefined;
+    textDecorationColor?: Property.TextDecorationColor | undefined;
+    textDecorationLine?: Property.TextDecorationLine | undefined;
+    textDecorationSkip?: Property.TextDecorationSkip | undefined;
+    textDecorationSkipInk?: Property.TextDecorationSkipInk | undefined;
+    textDecorationStyle?: Property.TextDecorationStyle | undefined;
+    textDecorationThickness?: Property.TextDecorationThickness<TLength> | undefined;
+    textEmphasisColor?: Property.TextEmphasisColor | undefined;
+    textEmphasisPosition?: Property.TextEmphasisPosition | undefined;
+    textEmphasisStyle?: Property.TextEmphasisStyle | undefined;
+    textIndent?: Property.TextIndent<TLength> | undefined;
+    textJustify?: Property.TextJustify | undefined;
+    textOrientation?: Property.TextOrientation | undefined;
+    textOverflow?: Property.TextOverflow | undefined;
+    textRendering?: Property.TextRendering | undefined;
+    textShadow?: Property.TextShadow | undefined;
+    textSizeAdjust?: Property.TextSizeAdjust | undefined;
+    textSpacingTrim?: Property.TextSpacingTrim | undefined;
+    textTransform?: Property.TextTransform | undefined;
+    textUnderlineOffset?: Property.TextUnderlineOffset<TLength> | undefined;
+    textUnderlinePosition?: Property.TextUnderlinePosition | undefined;
+    textWrapMode?: Property.TextWrapMode | undefined;
+    textWrapStyle?: Property.TextWrapStyle | undefined;
+    timelineScope?: Property.TimelineScope | undefined;
+    top?: Property.Top<TLength> | undefined;
+    touchAction?: Property.TouchAction | undefined;
+    transform?: Property.Transform | undefined;
+    transformBox?: Property.TransformBox | undefined;
+    transformOrigin?: Property.TransformOrigin<TLength> | undefined;
+    transformStyle?: Property.TransformStyle | undefined;
+    transitionBehavior?: Property.TransitionBehavior | undefined;
+    transitionDelay?: Property.TransitionDelay<TTime> | undefined;
+    transitionDuration?: Property.TransitionDuration<TTime> | undefined;
+    transitionProperty?: Property.TransitionProperty | undefined;
+    transitionTimingFunction?: Property.TransitionTimingFunction | undefined;
+    translate?: Property.Translate<TLength> | undefined;
+    unicodeBidi?: Property.UnicodeBidi | undefined;
+    userSelect?: Property.UserSelect | undefined;
+    vectorEffect?: Property.VectorEffect | undefined;
+    verticalAlign?: Property.VerticalAlign<TLength> | undefined;
+    viewTimelineAxis?: Property.ViewTimelineAxis | undefined;
+    viewTimelineInset?: Property.ViewTimelineInset<TLength> | undefined;
+    viewTimelineName?: Property.ViewTimelineName | undefined;
+    viewTransitionClass?: Property.ViewTransitionClass | undefined;
+    viewTransitionName?: Property.ViewTransitionName | undefined;
+    visibility?: Property.Visibility | undefined;
+    whiteSpace?: Property.WhiteSpace | undefined;
+    whiteSpaceCollapse?: Property.WhiteSpaceCollapse | undefined;
+    widows?: Property.Widows | undefined;
+    width?: Property.Width<TLength> | undefined;
+    willChange?: Property.WillChange | undefined;
+    wordBreak?: Property.WordBreak | undefined;
+    wordSpacing?: Property.WordSpacing<TLength> | undefined;
+    wordWrap?: Property.WordWrap | undefined;
+    writingMode?: Property.WritingMode | undefined;
+    x?: Property.X<TLength> | undefined;
+    y?: Property.Y<TLength> | undefined;
+    zIndex?: Property.ZIndex | undefined;
+    zoom?: Property.Zoom | undefined;
+}
+interface StandardShorthandProperties<TLength = (string & {}) | 0, TTime = string & {}> {
+    all?: Property.All | undefined;
+    animation?: Property.Animation<TTime> | undefined;
+    animationRange?: Property.AnimationRange<TLength> | undefined;
+    background?: Property.Background<TLength> | undefined;
+    backgroundPosition?: Property.BackgroundPosition<TLength> | undefined;
+    border?: Property.Border<TLength> | undefined;
+    borderBlock?: Property.BorderBlock<TLength> | undefined;
+    borderBlockColor?: Property.BorderBlockColor | undefined;
+    borderBlockEnd?: Property.BorderBlockEnd<TLength> | undefined;
+    borderBlockStart?: Property.BorderBlockStart<TLength> | undefined;
+    borderBlockStyle?: Property.BorderBlockStyle | undefined;
+    borderBlockWidth?: Property.BorderBlockWidth<TLength> | undefined;
+    borderBottom?: Property.BorderBottom<TLength> | undefined;
+    borderColor?: Property.BorderColor | undefined;
+    borderImage?: Property.BorderImage | undefined;
+    borderInline?: Property.BorderInline<TLength> | undefined;
+    borderInlineColor?: Property.BorderInlineColor | undefined;
+    borderInlineEnd?: Property.BorderInlineEnd<TLength> | undefined;
+    borderInlineStart?: Property.BorderInlineStart<TLength> | undefined;
+    borderInlineStyle?: Property.BorderInlineStyle | undefined;
+    borderInlineWidth?: Property.BorderInlineWidth<TLength> | undefined;
+    borderLeft?: Property.BorderLeft<TLength> | undefined;
+    borderRadius?: Property.BorderRadius<TLength> | undefined;
+    borderRight?: Property.BorderRight<TLength> | undefined;
+    borderStyle?: Property.BorderStyle | undefined;
+    borderTop?: Property.BorderTop<TLength> | undefined;
+    borderWidth?: Property.BorderWidth<TLength> | undefined;
+    caret?: Property.Caret | undefined;
+    columnRule?: Property.ColumnRule<TLength> | undefined;
+    columns?: Property.Columns<TLength> | undefined;
+    containIntrinsicSize?: Property.ContainIntrinsicSize<TLength> | undefined;
+    container?: Property.Container | undefined;
+    flex?: Property.Flex<TLength> | undefined;
+    flexFlow?: Property.FlexFlow | undefined;
+    font?: Property.Font | undefined;
+    gap?: Property.Gap<TLength> | undefined;
+    grid?: Property.Grid | undefined;
+    gridArea?: Property.GridArea | undefined;
+    gridColumn?: Property.GridColumn | undefined;
+    gridRow?: Property.GridRow | undefined;
+    gridTemplate?: Property.GridTemplate | undefined;
+    inset?: Property.Inset<TLength> | undefined;
+    insetBlock?: Property.InsetBlock<TLength> | undefined;
+    insetInline?: Property.InsetInline<TLength> | undefined;
+    lineClamp?: Property.LineClamp | undefined;
+    listStyle?: Property.ListStyle | undefined;
+    margin?: Property.Margin<TLength> | undefined;
+    marginBlock?: Property.MarginBlock<TLength> | undefined;
+    marginInline?: Property.MarginInline<TLength> | undefined;
+    mask?: Property.Mask<TLength> | undefined;
+    maskBorder?: Property.MaskBorder | undefined;
+    motion?: Property.Offset<TLength> | undefined;
+    offset?: Property.Offset<TLength> | undefined;
+    outline?: Property.Outline<TLength> | undefined;
+    overflow?: Property.Overflow | undefined;
+    overscrollBehavior?: Property.OverscrollBehavior | undefined;
+    padding?: Property.Padding<TLength> | undefined;
+    paddingBlock?: Property.PaddingBlock<TLength> | undefined;
+    paddingInline?: Property.PaddingInline<TLength> | undefined;
+    placeContent?: Property.PlaceContent | undefined;
+    placeItems?: Property.PlaceItems | undefined;
+    placeSelf?: Property.PlaceSelf | undefined;
+    positionTry?: Property.PositionTry | undefined;
+    scrollMargin?: Property.ScrollMargin<TLength> | undefined;
+    scrollMarginBlock?: Property.ScrollMarginBlock<TLength> | undefined;
+    scrollMarginInline?: Property.ScrollMarginInline<TLength> | undefined;
+    scrollPadding?: Property.ScrollPadding<TLength> | undefined;
+    scrollPaddingBlock?: Property.ScrollPaddingBlock<TLength> | undefined;
+    scrollPaddingInline?: Property.ScrollPaddingInline<TLength> | undefined;
+    scrollSnapMargin?: Property.ScrollMargin<TLength> | undefined;
+    scrollTimeline?: Property.ScrollTimeline | undefined;
+    textDecoration?: Property.TextDecoration<TLength> | undefined;
+    textEmphasis?: Property.TextEmphasis | undefined;
+    textWrap?: Property.TextWrap | undefined;
+    transition?: Property.Transition<TTime> | undefined;
+    viewTimeline?: Property.ViewTimeline | undefined;
+}
+interface StandardProperties<TLength = (string & {}) | 0, TTime = string & {}> extends StandardLonghandProperties<TLength, TTime>, StandardShorthandProperties<TLength, TTime> {
+}
+interface VendorLonghandProperties<TLength = (string & {}) | 0, TTime = string & {}> {
+    MozAnimationDelay?: Property.AnimationDelay<TTime> | undefined;
+    MozAnimationDirection?: Property.AnimationDirection | undefined;
+    MozAnimationDuration?: Property.AnimationDuration<TTime> | undefined;
+    MozAnimationFillMode?: Property.AnimationFillMode | undefined;
+    MozAnimationIterationCount?: Property.AnimationIterationCount | undefined;
+    MozAnimationName?: Property.AnimationName | undefined;
+    MozAnimationPlayState?: Property.AnimationPlayState | undefined;
+    MozAnimationTimingFunction?: Property.AnimationTimingFunction | undefined;
+    MozAppearance?: Property.MozAppearance | undefined;
+    MozBackfaceVisibility?: Property.BackfaceVisibility | undefined;
+    MozBinding?: Property.MozBinding | undefined;
+    MozBorderBottomColors?: Property.MozBorderBottomColors | undefined;
+    MozBorderEndColor?: Property.BorderInlineEndColor | undefined;
+    MozBorderEndStyle?: Property.BorderInlineEndStyle | undefined;
+    MozBorderEndWidth?: Property.BorderInlineEndWidth<TLength> | undefined;
+    MozBorderLeftColors?: Property.MozBorderLeftColors | undefined;
+    MozBorderRightColors?: Property.MozBorderRightColors | undefined;
+    MozBorderStartColor?: Property.BorderInlineStartColor | undefined;
+    MozBorderStartStyle?: Property.BorderInlineStartStyle | undefined;
+    MozBorderTopColors?: Property.MozBorderTopColors | undefined;
+    MozBoxSizing?: Property.BoxSizing | undefined;
+    MozColumnRuleColor?: Property.ColumnRuleColor | undefined;
+    MozColumnRuleStyle?: Property.ColumnRuleStyle | undefined;
+    MozColumnRuleWidth?: Property.ColumnRuleWidth<TLength> | undefined;
+    MozColumnWidth?: Property.ColumnWidth<TLength> | undefined;
+    MozContextProperties?: Property.MozContextProperties | undefined;
+    MozFontFeatureSettings?: Property.FontFeatureSettings | undefined;
+    MozFontLanguageOverride?: Property.FontLanguageOverride | undefined;
+    MozHyphens?: Property.Hyphens | undefined;
+    MozMarginEnd?: Property.MarginInlineEnd<TLength> | undefined;
+    MozMarginStart?: Property.MarginInlineStart<TLength> | undefined;
+    MozOrient?: Property.MozOrient | undefined;
+    MozOsxFontSmoothing?: Property.FontSmooth<TLength> | undefined;
+    MozOutlineRadiusBottomleft?: Property.MozOutlineRadiusBottomleft<TLength> | undefined;
+    MozOutlineRadiusBottomright?: Property.MozOutlineRadiusBottomright<TLength> | undefined;
+    MozOutlineRadiusTopleft?: Property.MozOutlineRadiusTopleft<TLength> | undefined;
+    MozOutlineRadiusTopright?: Property.MozOutlineRadiusTopright<TLength> | undefined;
+    MozPaddingEnd?: Property.PaddingInlineEnd<TLength> | undefined;
+    MozPaddingStart?: Property.PaddingInlineStart<TLength> | undefined;
+    MozPerspective?: Property.Perspective<TLength> | undefined;
+    MozPerspectiveOrigin?: Property.PerspectiveOrigin<TLength> | undefined;
+    MozStackSizing?: Property.MozStackSizing | undefined;
+    MozTabSize?: Property.TabSize<TLength> | undefined;
+    MozTextBlink?: Property.MozTextBlink | undefined;
+    MozTextSizeAdjust?: Property.TextSizeAdjust | undefined;
+    MozTransform?: Property.Transform | undefined;
+    MozTransformOrigin?: Property.TransformOrigin<TLength> | undefined;
+    MozTransformStyle?: Property.TransformStyle | undefined;
+    MozUserModify?: Property.MozUserModify | undefined;
+    MozUserSelect?: Property.UserSelect | undefined;
+    MozWindowDragging?: Property.MozWindowDragging | undefined;
+    MozWindowShadow?: Property.MozWindowShadow | undefined;
+    msAccelerator?: Property.MsAccelerator | undefined;
+    msBlockProgression?: Property.MsBlockProgression | undefined;
+    msContentZoomChaining?: Property.MsContentZoomChaining | undefined;
+    msContentZoomLimitMax?: Property.MsContentZoomLimitMax | undefined;
+    msContentZoomLimitMin?: Property.MsContentZoomLimitMin | undefined;
+    msContentZoomSnapPoints?: Property.MsContentZoomSnapPoints | undefined;
+    msContentZoomSnapType?: Property.MsContentZoomSnapType | undefined;
+    msContentZooming?: Property.MsContentZooming | undefined;
+    msFilter?: Property.MsFilter | undefined;
+    msFlexDirection?: Property.FlexDirection | undefined;
+    msFlexPositive?: Property.FlexGrow | undefined;
+    msFlowFrom?: Property.MsFlowFrom | undefined;
+    msFlowInto?: Property.MsFlowInto | undefined;
+    msGridColumns?: Property.MsGridColumns<TLength> | undefined;
+    msGridRows?: Property.MsGridRows<TLength> | undefined;
+    msHighContrastAdjust?: Property.MsHighContrastAdjust | undefined;
+    msHyphenateLimitChars?: Property.MsHyphenateLimitChars | undefined;
+    msHyphenateLimitLines?: Property.MsHyphenateLimitLines | undefined;
+    msHyphenateLimitZone?: Property.MsHyphenateLimitZone<TLength> | undefined;
+    msHyphens?: Property.Hyphens | undefined;
+    msImeAlign?: Property.MsImeAlign | undefined;
+    msLineBreak?: Property.LineBreak | undefined;
+    msOrder?: Property.Order | undefined;
+    msOverflowStyle?: Property.MsOverflowStyle | undefined;
+    msOverflowX?: Property.OverflowX | undefined;
+    msOverflowY?: Property.OverflowY | undefined;
+    msScrollChaining?: Property.MsScrollChaining | undefined;
+    msScrollLimitXMax?: Property.MsScrollLimitXMax<TLength> | undefined;
+    msScrollLimitXMin?: Property.MsScrollLimitXMin<TLength> | undefined;
+    msScrollLimitYMax?: Property.MsScrollLimitYMax<TLength> | undefined;
+    msScrollLimitYMin?: Property.MsScrollLimitYMin<TLength> | undefined;
+    msScrollRails?: Property.MsScrollRails | undefined;
+    msScrollSnapPointsX?: Property.MsScrollSnapPointsX | undefined;
+    msScrollSnapPointsY?: Property.MsScrollSnapPointsY | undefined;
+    msScrollSnapType?: Property.MsScrollSnapType | undefined;
+    msScrollTranslation?: Property.MsScrollTranslation | undefined;
+    msScrollbar3dlightColor?: Property.MsScrollbar3dlightColor | undefined;
+    msScrollbarArrowColor?: Property.MsScrollbarArrowColor | undefined;
+    msScrollbarBaseColor?: Property.MsScrollbarBaseColor | undefined;
+    msScrollbarDarkshadowColor?: Property.MsScrollbarDarkshadowColor | undefined;
+    msScrollbarFaceColor?: Property.MsScrollbarFaceColor | undefined;
+    msScrollbarHighlightColor?: Property.MsScrollbarHighlightColor | undefined;
+    msScrollbarShadowColor?: Property.MsScrollbarShadowColor | undefined;
+    msScrollbarTrackColor?: Property.MsScrollbarTrackColor | undefined;
+    msTextAutospace?: Property.MsTextAutospace | undefined;
+    msTextCombineHorizontal?: Property.TextCombineUpright | undefined;
+    msTextOverflow?: Property.TextOverflow | undefined;
+    msTouchAction?: Property.TouchAction | undefined;
+    msTouchSelect?: Property.MsTouchSelect | undefined;
+    msTransform?: Property.Transform | undefined;
+    msTransformOrigin?: Property.TransformOrigin<TLength> | undefined;
+    msTransitionDelay?: Property.TransitionDelay<TTime> | undefined;
+    msTransitionDuration?: Property.TransitionDuration<TTime> | undefined;
+    msTransitionProperty?: Property.TransitionProperty | undefined;
+    msTransitionTimingFunction?: Property.TransitionTimingFunction | undefined;
+    msUserSelect?: Property.MsUserSelect | undefined;
+    msWordBreak?: Property.WordBreak | undefined;
+    msWrapFlow?: Property.MsWrapFlow | undefined;
+    msWrapMargin?: Property.MsWrapMargin<TLength> | undefined;
+    msWrapThrough?: Property.MsWrapThrough | undefined;
+    msWritingMode?: Property.WritingMode | undefined;
+    WebkitAlignContent?: Property.AlignContent | undefined;
+    WebkitAlignItems?: Property.AlignItems | undefined;
+    WebkitAlignSelf?: Property.AlignSelf | undefined;
+    WebkitAnimationDelay?: Property.AnimationDelay<TTime> | undefined;
+    WebkitAnimationDirection?: Property.AnimationDirection | undefined;
+    WebkitAnimationDuration?: Property.AnimationDuration<TTime> | undefined;
+    WebkitAnimationFillMode?: Property.AnimationFillMode | undefined;
+    WebkitAnimationIterationCount?: Property.AnimationIterationCount | undefined;
+    WebkitAnimationName?: Property.AnimationName | undefined;
+    WebkitAnimationPlayState?: Property.AnimationPlayState | undefined;
+    WebkitAnimationTimingFunction?: Property.AnimationTimingFunction | undefined;
+    WebkitAppearance?: Property.WebkitAppearance | undefined;
+    WebkitBackdropFilter?: Property.BackdropFilter | undefined;
+    WebkitBackfaceVisibility?: Property.BackfaceVisibility | undefined;
+    WebkitBackgroundClip?: Property.BackgroundClip | undefined;
+    WebkitBackgroundOrigin?: Property.BackgroundOrigin | undefined;
+    WebkitBackgroundSize?: Property.BackgroundSize<TLength> | undefined;
+    WebkitBorderBeforeColor?: Property.WebkitBorderBeforeColor | undefined;
+    WebkitBorderBeforeStyle?: Property.WebkitBorderBeforeStyle | undefined;
+    WebkitBorderBeforeWidth?: Property.WebkitBorderBeforeWidth<TLength> | undefined;
+    WebkitBorderBottomLeftRadius?: Property.BorderBottomLeftRadius<TLength> | undefined;
+    WebkitBorderBottomRightRadius?: Property.BorderBottomRightRadius<TLength> | undefined;
+    WebkitBorderImageSlice?: Property.BorderImageSlice | undefined;
+    WebkitBorderTopLeftRadius?: Property.BorderTopLeftRadius<TLength> | undefined;
+    WebkitBorderTopRightRadius?: Property.BorderTopRightRadius<TLength> | undefined;
+    WebkitBoxDecorationBreak?: Property.BoxDecorationBreak | undefined;
+    WebkitBoxReflect?: Property.WebkitBoxReflect<TLength> | undefined;
+    WebkitBoxShadow?: Property.BoxShadow | undefined;
+    WebkitBoxSizing?: Property.BoxSizing | undefined;
+    WebkitClipPath?: Property.ClipPath | undefined;
+    WebkitColumnCount?: Property.ColumnCount | undefined;
+    WebkitColumnFill?: Property.ColumnFill | undefined;
+    WebkitColumnRuleColor?: Property.ColumnRuleColor | undefined;
+    WebkitColumnRuleStyle?: Property.ColumnRuleStyle | undefined;
+    WebkitColumnRuleWidth?: Property.ColumnRuleWidth<TLength> | undefined;
+    WebkitColumnSpan?: Property.ColumnSpan | undefined;
+    WebkitColumnWidth?: Property.ColumnWidth<TLength> | undefined;
+    WebkitFilter?: Property.Filter | undefined;
+    WebkitFlexBasis?: Property.FlexBasis<TLength> | undefined;
+    WebkitFlexDirection?: Property.FlexDirection | undefined;
+    WebkitFlexGrow?: Property.FlexGrow | undefined;
+    WebkitFlexShrink?: Property.FlexShrink | undefined;
+    WebkitFlexWrap?: Property.FlexWrap | undefined;
+    WebkitFontFeatureSettings?: Property.FontFeatureSettings | undefined;
+    WebkitFontKerning?: Property.FontKerning | undefined;
+    WebkitFontSmoothing?: Property.FontSmooth<TLength> | undefined;
+    WebkitFontVariantLigatures?: Property.FontVariantLigatures | undefined;
+    WebkitHyphenateCharacter?: Property.HyphenateCharacter | undefined;
+    WebkitHyphens?: Property.Hyphens | undefined;
+    WebkitInitialLetter?: Property.InitialLetter | undefined;
+    WebkitJustifyContent?: Property.JustifyContent | undefined;
+    WebkitLineBreak?: Property.LineBreak | undefined;
+    WebkitLineClamp?: Property.WebkitLineClamp | undefined;
+    WebkitLogicalHeight?: Property.BlockSize<TLength> | undefined;
+    WebkitLogicalWidth?: Property.InlineSize<TLength> | undefined;
+    WebkitMarginEnd?: Property.MarginInlineEnd<TLength> | undefined;
+    WebkitMarginStart?: Property.MarginInlineStart<TLength> | undefined;
+    WebkitMaskAttachment?: Property.WebkitMaskAttachment | undefined;
+    WebkitMaskBoxImageOutset?: Property.MaskBorderOutset<TLength> | undefined;
+    WebkitMaskBoxImageRepeat?: Property.MaskBorderRepeat | undefined;
+    WebkitMaskBoxImageSlice?: Property.MaskBorderSlice | undefined;
+    WebkitMaskBoxImageSource?: Property.MaskBorderSource | undefined;
+    WebkitMaskBoxImageWidth?: Property.MaskBorderWidth<TLength> | undefined;
+    WebkitMaskClip?: Property.WebkitMaskClip | undefined;
+    WebkitMaskComposite?: Property.WebkitMaskComposite | undefined;
+    WebkitMaskImage?: Property.WebkitMaskImage | undefined;
+    WebkitMaskOrigin?: Property.WebkitMaskOrigin | undefined;
+    WebkitMaskPosition?: Property.WebkitMaskPosition<TLength> | undefined;
+    WebkitMaskPositionX?: Property.WebkitMaskPositionX<TLength> | undefined;
+    WebkitMaskPositionY?: Property.WebkitMaskPositionY<TLength> | undefined;
+    WebkitMaskRepeat?: Property.WebkitMaskRepeat | undefined;
+    WebkitMaskRepeatX?: Property.WebkitMaskRepeatX | undefined;
+    WebkitMaskRepeatY?: Property.WebkitMaskRepeatY | undefined;
+    WebkitMaskSize?: Property.WebkitMaskSize<TLength> | undefined;
+    WebkitMaxInlineSize?: Property.MaxInlineSize<TLength> | undefined;
+    WebkitOrder?: Property.Order | undefined;
+    WebkitOverflowScrolling?: Property.WebkitOverflowScrolling | undefined;
+    WebkitPaddingEnd?: Property.PaddingInlineEnd<TLength> | undefined;
+    WebkitPaddingStart?: Property.PaddingInlineStart<TLength> | undefined;
+    WebkitPerspective?: Property.Perspective<TLength> | undefined;
+    WebkitPerspectiveOrigin?: Property.PerspectiveOrigin<TLength> | undefined;
+    WebkitPrintColorAdjust?: Property.PrintColorAdjust | undefined;
+    WebkitRubyPosition?: Property.RubyPosition | undefined;
+    WebkitScrollSnapType?: Property.ScrollSnapType | undefined;
+    WebkitShapeMargin?: Property.ShapeMargin<TLength> | undefined;
+    WebkitTapHighlightColor?: Property.WebkitTapHighlightColor | undefined;
+    WebkitTextCombine?: Property.TextCombineUpright | undefined;
+    WebkitTextDecorationColor?: Property.TextDecorationColor | undefined;
+    WebkitTextDecorationLine?: Property.TextDecorationLine | undefined;
+    WebkitTextDecorationSkip?: Property.TextDecorationSkip | undefined;
+    WebkitTextDecorationStyle?: Property.TextDecorationStyle | undefined;
+    WebkitTextEmphasisColor?: Property.TextEmphasisColor | undefined;
+    WebkitTextEmphasisPosition?: Property.TextEmphasisPosition | undefined;
+    WebkitTextEmphasisStyle?: Property.TextEmphasisStyle | undefined;
+    WebkitTextFillColor?: Property.WebkitTextFillColor | undefined;
+    WebkitTextOrientation?: Property.TextOrientation | undefined;
+    WebkitTextSizeAdjust?: Property.TextSizeAdjust | undefined;
+    WebkitTextStrokeColor?: Property.WebkitTextStrokeColor | undefined;
+    WebkitTextStrokeWidth?: Property.WebkitTextStrokeWidth<TLength> | undefined;
+    WebkitTextUnderlinePosition?: Property.TextUnderlinePosition | undefined;
+    WebkitTouchCallout?: Property.WebkitTouchCallout | undefined;
+    WebkitTransform?: Property.Transform | undefined;
+    WebkitTransformOrigin?: Property.TransformOrigin<TLength> | undefined;
+    WebkitTransformStyle?: Property.TransformStyle | undefined;
+    WebkitTransitionDelay?: Property.TransitionDelay<TTime> | undefined;
+    WebkitTransitionDuration?: Property.TransitionDuration<TTime> | undefined;
+    WebkitTransitionProperty?: Property.TransitionProperty | undefined;
+    WebkitTransitionTimingFunction?: Property.TransitionTimingFunction | undefined;
+    WebkitUserModify?: Property.WebkitUserModify | undefined;
+    WebkitUserSelect?: Property.WebkitUserSelect | undefined;
+    WebkitWritingMode?: Property.WritingMode | undefined;
+}
+interface VendorShorthandProperties<TLength = (string & {}) | 0, TTime = string & {}> {
+    MozAnimation?: Property.Animation<TTime> | undefined;
+    MozBorderImage?: Property.BorderImage | undefined;
+    MozColumnRule?: Property.ColumnRule<TLength> | undefined;
+    MozColumns?: Property.Columns<TLength> | undefined;
+    MozOutlineRadius?: Property.MozOutlineRadius<TLength> | undefined;
+    MozTransition?: Property.Transition<TTime> | undefined;
+    msContentZoomLimit?: Property.MsContentZoomLimit | undefined;
+    msContentZoomSnap?: Property.MsContentZoomSnap | undefined;
+    msFlex?: Property.Flex<TLength> | undefined;
+    msScrollLimit?: Property.MsScrollLimit | undefined;
+    msScrollSnapX?: Property.MsScrollSnapX | undefined;
+    msScrollSnapY?: Property.MsScrollSnapY | undefined;
+    msTransition?: Property.Transition<TTime> | undefined;
+    WebkitAnimation?: Property.Animation<TTime> | undefined;
+    WebkitBorderBefore?: Property.WebkitBorderBefore<TLength> | undefined;
+    WebkitBorderImage?: Property.BorderImage | undefined;
+    WebkitBorderRadius?: Property.BorderRadius<TLength> | undefined;
+    WebkitColumnRule?: Property.ColumnRule<TLength> | undefined;
+    WebkitColumns?: Property.Columns<TLength> | undefined;
+    WebkitFlex?: Property.Flex<TLength> | undefined;
+    WebkitFlexFlow?: Property.FlexFlow | undefined;
+    WebkitMask?: Property.WebkitMask<TLength> | undefined;
+    WebkitMaskBoxImage?: Property.MaskBorder | undefined;
+    WebkitTextEmphasis?: Property.TextEmphasis | undefined;
+    WebkitTextStroke?: Property.WebkitTextStroke<TLength> | undefined;
+    WebkitTransition?: Property.Transition<TTime> | undefined;
+}
+interface VendorProperties<TLength = (string & {}) | 0, TTime = string & {}> extends VendorLonghandProperties<TLength, TTime>, VendorShorthandProperties<TLength, TTime> {
+}
+interface ObsoleteProperties<TLength = (string & {}) | 0, TTime = string & {}> {
+    boxAlign?: Property.BoxAlign | undefined;
+    boxDirection?: Property.BoxDirection | undefined;
+    boxFlex?: Property.BoxFlex | undefined;
+    boxFlexGroup?: Property.BoxFlexGroup | undefined;
+    boxLines?: Property.BoxLines | undefined;
+    boxOrdinalGroup?: Property.BoxOrdinalGroup | undefined;
+    boxOrient?: Property.BoxOrient | undefined;
+    boxPack?: Property.BoxPack | undefined;
+    clip?: Property.Clip | undefined;
+    fontStretch?: Property.FontStretch | undefined;
+    gridColumnGap?: Property.GridColumnGap<TLength> | undefined;
+    gridGap?: Property.GridGap<TLength> | undefined;
+    gridRowGap?: Property.GridRowGap<TLength> | undefined;
+    imeMode?: Property.ImeMode | undefined;
+    insetArea?: Property.PositionArea | undefined;
+    offsetBlock?: Property.InsetBlock<TLength> | undefined;
+    offsetBlockEnd?: Property.InsetBlockEnd<TLength> | undefined;
+    offsetBlockStart?: Property.InsetBlockStart<TLength> | undefined;
+    offsetInline?: Property.InsetInline<TLength> | undefined;
+    offsetInlineEnd?: Property.InsetInlineEnd<TLength> | undefined;
+    offsetInlineStart?: Property.InsetInlineStart<TLength> | undefined;
+    pageBreakAfter?: Property.PageBreakAfter | undefined;
+    pageBreakBefore?: Property.PageBreakBefore | undefined;
+    pageBreakInside?: Property.PageBreakInside | undefined;
+    positionTryOptions?: Property.PositionTryFallbacks | undefined;
+    scrollSnapCoordinate?: Property.ScrollSnapCoordinate<TLength> | undefined;
+    scrollSnapDestination?: Property.ScrollSnapDestination<TLength> | undefined;
+    scrollSnapPointsX?: Property.ScrollSnapPointsX | undefined;
+    scrollSnapPointsY?: Property.ScrollSnapPointsY | undefined;
+    scrollSnapTypeX?: Property.ScrollSnapTypeX | undefined;
+    scrollSnapTypeY?: Property.ScrollSnapTypeY | undefined;
+    KhtmlBoxAlign?: Property.BoxAlign | undefined;
+    KhtmlBoxDirection?: Property.BoxDirection | undefined;
+    KhtmlBoxFlex?: Property.BoxFlex | undefined;
+    KhtmlBoxFlexGroup?: Property.BoxFlexGroup | undefined;
+    KhtmlBoxLines?: Property.BoxLines | undefined;
+    KhtmlBoxOrdinalGroup?: Property.BoxOrdinalGroup | undefined;
+    KhtmlBoxOrient?: Property.BoxOrient | undefined;
+    KhtmlBoxPack?: Property.BoxPack | undefined;
+    KhtmlLineBreak?: Property.LineBreak | undefined;
+    KhtmlOpacity?: Property.Opacity | undefined;
+    KhtmlUserSelect?: Property.UserSelect | undefined;
+    MozBackgroundClip?: Property.BackgroundClip | undefined;
+    MozBackgroundOrigin?: Property.BackgroundOrigin | undefined;
+    MozBackgroundSize?: Property.BackgroundSize<TLength> | undefined;
+    MozBorderRadius?: Property.BorderRadius<TLength> | undefined;
+    MozBorderRadiusBottomleft?: Property.BorderBottomLeftRadius<TLength> | undefined;
+    MozBorderRadiusBottomright?: Property.BorderBottomRightRadius<TLength> | undefined;
+    MozBorderRadiusTopleft?: Property.BorderTopLeftRadius<TLength> | undefined;
+    MozBorderRadiusTopright?: Property.BorderTopRightRadius<TLength> | undefined;
+    MozBoxAlign?: Property.BoxAlign | undefined;
+    MozBoxDirection?: Property.BoxDirection | undefined;
+    MozBoxFlex?: Property.BoxFlex | undefined;
+    MozBoxOrdinalGroup?: Property.BoxOrdinalGroup | undefined;
+    MozBoxOrient?: Property.BoxOrient | undefined;
+    MozBoxPack?: Property.BoxPack | undefined;
+    MozBoxShadow?: Property.BoxShadow | undefined;
+    MozColumnCount?: Property.ColumnCount | undefined;
+    MozColumnFill?: Property.ColumnFill | undefined;
+    MozFloatEdge?: Property.MozFloatEdge | undefined;
+    MozForceBrokenImageIcon?: Property.MozForceBrokenImageIcon | undefined;
+    MozOpacity?: Property.Opacity | undefined;
+    MozOutline?: Property.Outline<TLength> | undefined;
+    MozOutlineColor?: Property.OutlineColor | undefined;
+    MozOutlineStyle?: Property.OutlineStyle | undefined;
+    MozOutlineWidth?: Property.OutlineWidth<TLength> | undefined;
+    MozTextAlignLast?: Property.TextAlignLast | undefined;
+    MozTextDecorationColor?: Property.TextDecorationColor | undefined;
+    MozTextDecorationLine?: Property.TextDecorationLine | undefined;
+    MozTextDecorationStyle?: Property.TextDecorationStyle | undefined;
+    MozTransitionDelay?: Property.TransitionDelay<TTime> | undefined;
+    MozTransitionDuration?: Property.TransitionDuration<TTime> | undefined;
+    MozTransitionProperty?: Property.TransitionProperty | undefined;
+    MozTransitionTimingFunction?: Property.TransitionTimingFunction | undefined;
+    MozUserFocus?: Property.MozUserFocus | undefined;
+    MozUserInput?: Property.MozUserInput | undefined;
+    msImeMode?: Property.ImeMode | undefined;
+    OAnimation?: Property.Animation<TTime> | undefined;
+    OAnimationDelay?: Property.AnimationDelay<TTime> | undefined;
+    OAnimationDirection?: Property.AnimationDirection | undefined;
+    OAnimationDuration?: Property.AnimationDuration<TTime> | undefined;
+    OAnimationFillMode?: Property.AnimationFillMode | undefined;
+    OAnimationIterationCount?: Property.AnimationIterationCount | undefined;
+    OAnimationName?: Property.AnimationName | undefined;
+    OAnimationPlayState?: Property.AnimationPlayState | undefined;
+    OAnimationTimingFunction?: Property.AnimationTimingFunction | undefined;
+    OBackgroundSize?: Property.BackgroundSize<TLength> | undefined;
+    OBorderImage?: Property.BorderImage | undefined;
+    OObjectFit?: Property.ObjectFit | undefined;
+    OObjectPosition?: Property.ObjectPosition<TLength> | undefined;
+    OTabSize?: Property.TabSize<TLength> | undefined;
+    OTextOverflow?: Property.TextOverflow | undefined;
+    OTransform?: Property.Transform | undefined;
+    OTransformOrigin?: Property.TransformOrigin<TLength> | undefined;
+    OTransition?: Property.Transition<TTime> | undefined;
+    OTransitionDelay?: Property.TransitionDelay<TTime> | undefined;
+    OTransitionDuration?: Property.TransitionDuration<TTime> | undefined;
+    OTransitionProperty?: Property.TransitionProperty | undefined;
+    OTransitionTimingFunction?: Property.TransitionTimingFunction | undefined;
+    WebkitBoxAlign?: Property.BoxAlign | undefined;
+    WebkitBoxDirection?: Property.BoxDirection | undefined;
+    WebkitBoxFlex?: Property.BoxFlex | undefined;
+    WebkitBoxFlexGroup?: Property.BoxFlexGroup | undefined;
+    WebkitBoxLines?: Property.BoxLines | undefined;
+    WebkitBoxOrdinalGroup?: Property.BoxOrdinalGroup | undefined;
+    WebkitBoxOrient?: Property.BoxOrient | undefined;
+    WebkitBoxPack?: Property.BoxPack | undefined;
+}
+interface SvgProperties<TLength = (string & {}) | 0, TTime = string & {}> {
+    alignmentBaseline?: Property.AlignmentBaseline | undefined;
+    baselineShift?: Property.BaselineShift<TLength> | undefined;
+    clip?: Property.Clip | undefined;
+    clipPath?: Property.ClipPath | undefined;
+    clipRule?: Property.ClipRule | undefined;
+    color?: Property.Color | undefined;
+    colorInterpolation?: Property.ColorInterpolation | undefined;
+    colorRendering?: Property.ColorRendering | undefined;
+    cursor?: Property.Cursor | undefined;
+    direction?: Property.Direction | undefined;
+    display?: Property.Display | undefined;
+    dominantBaseline?: Property.DominantBaseline | undefined;
+    fill?: Property.Fill | undefined;
+    fillOpacity?: Property.FillOpacity | undefined;
+    fillRule?: Property.FillRule | undefined;
+    filter?: Property.Filter | undefined;
+    floodColor?: Property.FloodColor | undefined;
+    floodOpacity?: Property.FloodOpacity | undefined;
+    font?: Property.Font | undefined;
+    fontFamily?: Property.FontFamily | undefined;
+    fontSize?: Property.FontSize<TLength> | undefined;
+    fontSizeAdjust?: Property.FontSizeAdjust | undefined;
+    fontStretch?: Property.FontStretch | undefined;
+    fontStyle?: Property.FontStyle | undefined;
+    fontVariant?: Property.FontVariant | undefined;
+    fontWeight?: Property.FontWeight | undefined;
+    glyphOrientationVertical?: Property.GlyphOrientationVertical | undefined;
+    imageRendering?: Property.ImageRendering | undefined;
+    letterSpacing?: Property.LetterSpacing<TLength> | undefined;
+    lightingColor?: Property.LightingColor | undefined;
+    lineHeight?: Property.LineHeight<TLength> | undefined;
+    marker?: Property.Marker | undefined;
+    markerEnd?: Property.MarkerEnd | undefined;
+    markerMid?: Property.MarkerMid | undefined;
+    markerStart?: Property.MarkerStart | undefined;
+    mask?: Property.Mask<TLength> | undefined;
+    opacity?: Property.Opacity | undefined;
+    overflow?: Property.Overflow | undefined;
+    paintOrder?: Property.PaintOrder | undefined;
+    pointerEvents?: Property.PointerEvents | undefined;
+    shapeRendering?: Property.ShapeRendering | undefined;
+    stopColor?: Property.StopColor | undefined;
+    stopOpacity?: Property.StopOpacity | undefined;
+    stroke?: Property.Stroke | undefined;
+    strokeDasharray?: Property.StrokeDasharray<TLength> | undefined;
+    strokeDashoffset?: Property.StrokeDashoffset<TLength> | undefined;
+    strokeLinecap?: Property.StrokeLinecap | undefined;
+    strokeLinejoin?: Property.StrokeLinejoin | undefined;
+    strokeMiterlimit?: Property.StrokeMiterlimit | undefined;
+    strokeOpacity?: Property.StrokeOpacity | undefined;
+    strokeWidth?: Property.StrokeWidth<TLength> | undefined;
+    textAnchor?: Property.TextAnchor | undefined;
+    textDecoration?: Property.TextDecoration<TLength> | undefined;
+    textRendering?: Property.TextRendering | undefined;
+    unicodeBidi?: Property.UnicodeBidi | undefined;
+    vectorEffect?: Property.VectorEffect | undefined;
+    visibility?: Property.Visibility | undefined;
+    whiteSpace?: Property.WhiteSpace | undefined;
+    wordSpacing?: Property.WordSpacing<TLength> | undefined;
+    writingMode?: Property.WritingMode | undefined;
+}
+interface Properties<TLength = (string & {}) | 0, TTime = string & {}> extends StandardProperties<TLength, TTime>, VendorProperties<TLength, TTime>, ObsoleteProperties<TLength, TTime>, SvgProperties<TLength, TTime> {
+}
+interface StandardLonghandPropertiesHyphen<TLength = (string & {}) | 0, TTime = string & {}> {
+    "accent-color"?: Property.AccentColor | undefined;
+    "align-content"?: Property.AlignContent | undefined;
+    "align-items"?: Property.AlignItems | undefined;
+    "align-self"?: Property.AlignSelf | undefined;
+    "align-tracks"?: Property.AlignTracks | undefined;
+    "alignment-baseline"?: Property.AlignmentBaseline | undefined;
+    "anchor-name"?: Property.AnchorName | undefined;
+    "anchor-scope"?: Property.AnchorScope | undefined;
+    "animation-composition"?: Property.AnimationComposition | undefined;
+    "animation-delay"?: Property.AnimationDelay<TTime> | undefined;
+    "animation-direction"?: Property.AnimationDirection | undefined;
+    "animation-duration"?: Property.AnimationDuration<TTime> | undefined;
+    "animation-fill-mode"?: Property.AnimationFillMode | undefined;
+    "animation-iteration-count"?: Property.AnimationIterationCount | undefined;
+    "animation-name"?: Property.AnimationName | undefined;
+    "animation-play-state"?: Property.AnimationPlayState | undefined;
+    "animation-range-end"?: Property.AnimationRangeEnd<TLength> | undefined;
+    "animation-range-start"?: Property.AnimationRangeStart<TLength> | undefined;
+    "animation-timeline"?: Property.AnimationTimeline | undefined;
+    "animation-timing-function"?: Property.AnimationTimingFunction | undefined;
+    appearance?: Property.Appearance | undefined;
+    "aspect-ratio"?: Property.AspectRatio | undefined;
+    "backdrop-filter"?: Property.BackdropFilter | undefined;
+    "backface-visibility"?: Property.BackfaceVisibility | undefined;
+    "background-attachment"?: Property.BackgroundAttachment | undefined;
+    "background-blend-mode"?: Property.BackgroundBlendMode | undefined;
+    "background-clip"?: Property.BackgroundClip | undefined;
+    "background-color"?: Property.BackgroundColor | undefined;
+    "background-image"?: Property.BackgroundImage | undefined;
+    "background-origin"?: Property.BackgroundOrigin | undefined;
+    "background-position-x"?: Property.BackgroundPositionX<TLength> | undefined;
+    "background-position-y"?: Property.BackgroundPositionY<TLength> | undefined;
+    "background-repeat"?: Property.BackgroundRepeat | undefined;
+    "background-size"?: Property.BackgroundSize<TLength> | undefined;
+    "baseline-shift"?: Property.BaselineShift<TLength> | undefined;
+    "block-size"?: Property.BlockSize<TLength> | undefined;
+    "border-block-end-color"?: Property.BorderBlockEndColor | undefined;
+    "border-block-end-style"?: Property.BorderBlockEndStyle | undefined;
+    "border-block-end-width"?: Property.BorderBlockEndWidth<TLength> | undefined;
+    "border-block-start-color"?: Property.BorderBlockStartColor | undefined;
+    "border-block-start-style"?: Property.BorderBlockStartStyle | undefined;
+    "border-block-start-width"?: Property.BorderBlockStartWidth<TLength> | undefined;
+    "border-bottom-color"?: Property.BorderBottomColor | undefined;
+    "border-bottom-left-radius"?: Property.BorderBottomLeftRadius<TLength> | undefined;
+    "border-bottom-right-radius"?: Property.BorderBottomRightRadius<TLength> | undefined;
+    "border-bottom-style"?: Property.BorderBottomStyle | undefined;
+    "border-bottom-width"?: Property.BorderBottomWidth<TLength> | undefined;
+    "border-collapse"?: Property.BorderCollapse | undefined;
+    "border-end-end-radius"?: Property.BorderEndEndRadius<TLength> | undefined;
+    "border-end-start-radius"?: Property.BorderEndStartRadius<TLength> | undefined;
+    "border-image-outset"?: Property.BorderImageOutset<TLength> | undefined;
+    "border-image-repeat"?: Property.BorderImageRepeat | undefined;
+    "border-image-slice"?: Property.BorderImageSlice | undefined;
+    "border-image-source"?: Property.BorderImageSource | undefined;
+    "border-image-width"?: Property.BorderImageWidth<TLength> | undefined;
+    "border-inline-end-color"?: Property.BorderInlineEndColor | undefined;
+    "border-inline-end-style"?: Property.BorderInlineEndStyle | undefined;
+    "border-inline-end-width"?: Property.BorderInlineEndWidth<TLength> | undefined;
+    "border-inline-start-color"?: Property.BorderInlineStartColor | undefined;
+    "border-inline-start-style"?: Property.BorderInlineStartStyle | undefined;
+    "border-inline-start-width"?: Property.BorderInlineStartWidth<TLength> | undefined;
+    "border-left-color"?: Property.BorderLeftColor | undefined;
+    "border-left-style"?: Property.BorderLeftStyle | undefined;
+    "border-left-width"?: Property.BorderLeftWidth<TLength> | undefined;
+    "border-right-color"?: Property.BorderRightColor | undefined;
+    "border-right-style"?: Property.BorderRightStyle | undefined;
+    "border-right-width"?: Property.BorderRightWidth<TLength> | undefined;
+    "border-spacing"?: Property.BorderSpacing<TLength> | undefined;
+    "border-start-end-radius"?: Property.BorderStartEndRadius<TLength> | undefined;
+    "border-start-start-radius"?: Property.BorderStartStartRadius<TLength> | undefined;
+    "border-top-color"?: Property.BorderTopColor | undefined;
+    "border-top-left-radius"?: Property.BorderTopLeftRadius<TLength> | undefined;
+    "border-top-right-radius"?: Property.BorderTopRightRadius<TLength> | undefined;
+    "border-top-style"?: Property.BorderTopStyle | undefined;
+    "border-top-width"?: Property.BorderTopWidth<TLength> | undefined;
+    bottom?: Property.Bottom<TLength> | undefined;
+    "box-decoration-break"?: Property.BoxDecorationBreak | undefined;
+    "box-shadow"?: Property.BoxShadow | undefined;
+    "box-sizing"?: Property.BoxSizing | undefined;
+    "break-after"?: Property.BreakAfter | undefined;
+    "break-before"?: Property.BreakBefore | undefined;
+    "break-inside"?: Property.BreakInside | undefined;
+    "caption-side"?: Property.CaptionSide | undefined;
+    "caret-color"?: Property.CaretColor | undefined;
+    "caret-shape"?: Property.CaretShape | undefined;
+    clear?: Property.Clear | undefined;
+    "clip-path"?: Property.ClipPath | undefined;
+    "clip-rule"?: Property.ClipRule | undefined;
+    color?: Property.Color | undefined;
+    "color-adjust"?: Property.PrintColorAdjust | undefined;
+    "color-interpolation-filters"?: Property.ColorInterpolationFilters | undefined;
+    "color-scheme"?: Property.ColorScheme | undefined;
+    "column-count"?: Property.ColumnCount | undefined;
+    "column-fill"?: Property.ColumnFill | undefined;
+    "column-gap"?: Property.ColumnGap<TLength> | undefined;
+    "column-rule-color"?: Property.ColumnRuleColor | undefined;
+    "column-rule-style"?: Property.ColumnRuleStyle | undefined;
+    "column-rule-width"?: Property.ColumnRuleWidth<TLength> | undefined;
+    "column-span"?: Property.ColumnSpan | undefined;
+    "column-width"?: Property.ColumnWidth<TLength> | undefined;
+    contain?: Property.Contain | undefined;
+    "contain-intrinsic-block-size"?: Property.ContainIntrinsicBlockSize<TLength> | undefined;
+    "contain-intrinsic-height"?: Property.ContainIntrinsicHeight<TLength> | undefined;
+    "contain-intrinsic-inline-size"?: Property.ContainIntrinsicInlineSize<TLength> | undefined;
+    "contain-intrinsic-width"?: Property.ContainIntrinsicWidth<TLength> | undefined;
+    "container-name"?: Property.ContainerName | undefined;
+    "container-type"?: Property.ContainerType | undefined;
+    content?: Property.Content | undefined;
+    "content-visibility"?: Property.ContentVisibility | undefined;
+    "counter-increment"?: Property.CounterIncrement | undefined;
+    "counter-reset"?: Property.CounterReset | undefined;
+    "counter-set"?: Property.CounterSet | undefined;
+    cursor?: Property.Cursor | undefined;
+    cx?: Property.Cx<TLength> | undefined;
+    cy?: Property.Cy<TLength> | undefined;
+    d?: Property.D | undefined;
+    direction?: Property.Direction | undefined;
+    display?: Property.Display | undefined;
+    "dominant-baseline"?: Property.DominantBaseline | undefined;
+    "empty-cells"?: Property.EmptyCells | undefined;
+    "field-sizing"?: Property.FieldSizing | undefined;
+    fill?: Property.Fill | undefined;
+    "fill-opacity"?: Property.FillOpacity | undefined;
+    "fill-rule"?: Property.FillRule | undefined;
+    filter?: Property.Filter | undefined;
+    "flex-basis"?: Property.FlexBasis<TLength> | undefined;
+    "flex-direction"?: Property.FlexDirection | undefined;
+    "flex-grow"?: Property.FlexGrow | undefined;
+    "flex-shrink"?: Property.FlexShrink | undefined;
+    "flex-wrap"?: Property.FlexWrap | undefined;
+    float?: Property.Float | undefined;
+    "flood-color"?: Property.FloodColor | undefined;
+    "flood-opacity"?: Property.FloodOpacity | undefined;
+    "font-family"?: Property.FontFamily | undefined;
+    "font-feature-settings"?: Property.FontFeatureSettings | undefined;
+    "font-kerning"?: Property.FontKerning | undefined;
+    "font-language-override"?: Property.FontLanguageOverride | undefined;
+    "font-optical-sizing"?: Property.FontOpticalSizing | undefined;
+    "font-palette"?: Property.FontPalette | undefined;
+    "font-size"?: Property.FontSize<TLength> | undefined;
+    "font-size-adjust"?: Property.FontSizeAdjust | undefined;
+    "font-smooth"?: Property.FontSmooth<TLength> | undefined;
+    "font-style"?: Property.FontStyle | undefined;
+    "font-synthesis"?: Property.FontSynthesis | undefined;
+    "font-synthesis-position"?: Property.FontSynthesisPosition | undefined;
+    "font-synthesis-small-caps"?: Property.FontSynthesisSmallCaps | undefined;
+    "font-synthesis-style"?: Property.FontSynthesisStyle | undefined;
+    "font-synthesis-weight"?: Property.FontSynthesisWeight | undefined;
+    "font-variant"?: Property.FontVariant | undefined;
+    "font-variant-alternates"?: Property.FontVariantAlternates | undefined;
+    "font-variant-caps"?: Property.FontVariantCaps | undefined;
+    "font-variant-east-asian"?: Property.FontVariantEastAsian | undefined;
+    "font-variant-emoji"?: Property.FontVariantEmoji | undefined;
+    "font-variant-ligatures"?: Property.FontVariantLigatures | undefined;
+    "font-variant-numeric"?: Property.FontVariantNumeric | undefined;
+    "font-variant-position"?: Property.FontVariantPosition | undefined;
+    "font-variation-settings"?: Property.FontVariationSettings | undefined;
+    "font-weight"?: Property.FontWeight | undefined;
+    "font-width"?: Property.FontWidth | undefined;
+    "forced-color-adjust"?: Property.ForcedColorAdjust | undefined;
+    "grid-auto-columns"?: Property.GridAutoColumns<TLength> | undefined;
+    "grid-auto-flow"?: Property.GridAutoFlow | undefined;
+    "grid-auto-rows"?: Property.GridAutoRows<TLength> | undefined;
+    "grid-column-end"?: Property.GridColumnEnd | undefined;
+    "grid-column-start"?: Property.GridColumnStart | undefined;
+    "grid-row-end"?: Property.GridRowEnd | undefined;
+    "grid-row-start"?: Property.GridRowStart | undefined;
+    "grid-template-areas"?: Property.GridTemplateAreas | undefined;
+    "grid-template-columns"?: Property.GridTemplateColumns<TLength> | undefined;
+    "grid-template-rows"?: Property.GridTemplateRows<TLength> | undefined;
+    "hanging-punctuation"?: Property.HangingPunctuation | undefined;
+    height?: Property.Height<TLength> | undefined;
+    "hyphenate-character"?: Property.HyphenateCharacter | undefined;
+    "hyphenate-limit-chars"?: Property.HyphenateLimitChars | undefined;
+    hyphens?: Property.Hyphens | undefined;
+    "image-orientation"?: Property.ImageOrientation | undefined;
+    "image-rendering"?: Property.ImageRendering | undefined;
+    "image-resolution"?: Property.ImageResolution | undefined;
+    "initial-letter"?: Property.InitialLetter | undefined;
+    "initial-letter-align"?: Property.InitialLetterAlign | undefined;
+    "inline-size"?: Property.InlineSize<TLength> | undefined;
+    "inset-block-end"?: Property.InsetBlockEnd<TLength> | undefined;
+    "inset-block-start"?: Property.InsetBlockStart<TLength> | undefined;
+    "inset-inline-end"?: Property.InsetInlineEnd<TLength> | undefined;
+    "inset-inline-start"?: Property.InsetInlineStart<TLength> | undefined;
+    "interpolate-size"?: Property.InterpolateSize | undefined;
+    isolation?: Property.Isolation | undefined;
+    "justify-content"?: Property.JustifyContent | undefined;
+    "justify-items"?: Property.JustifyItems | undefined;
+    "justify-self"?: Property.JustifySelf | undefined;
+    "justify-tracks"?: Property.JustifyTracks | undefined;
+    left?: Property.Left<TLength> | undefined;
+    "letter-spacing"?: Property.LetterSpacing<TLength> | undefined;
+    "lighting-color"?: Property.LightingColor | undefined;
+    "line-break"?: Property.LineBreak | undefined;
+    "line-height"?: Property.LineHeight<TLength> | undefined;
+    "line-height-step"?: Property.LineHeightStep<TLength> | undefined;
+    "list-style-image"?: Property.ListStyleImage | undefined;
+    "list-style-position"?: Property.ListStylePosition | undefined;
+    "list-style-type"?: Property.ListStyleType | undefined;
+    "margin-block-end"?: Property.MarginBlockEnd<TLength> | undefined;
+    "margin-block-start"?: Property.MarginBlockStart<TLength> | undefined;
+    "margin-bottom"?: Property.MarginBottom<TLength> | undefined;
+    "margin-inline-end"?: Property.MarginInlineEnd<TLength> | undefined;
+    "margin-inline-start"?: Property.MarginInlineStart<TLength> | undefined;
+    "margin-left"?: Property.MarginLeft<TLength> | undefined;
+    "margin-right"?: Property.MarginRight<TLength> | undefined;
+    "margin-top"?: Property.MarginTop<TLength> | undefined;
+    "margin-trim"?: Property.MarginTrim | undefined;
+    marker?: Property.Marker | undefined;
+    "marker-end"?: Property.MarkerEnd | undefined;
+    "marker-mid"?: Property.MarkerMid | undefined;
+    "marker-start"?: Property.MarkerStart | undefined;
+    "mask-border-mode"?: Property.MaskBorderMode | undefined;
+    "mask-border-outset"?: Property.MaskBorderOutset<TLength> | undefined;
+    "mask-border-repeat"?: Property.MaskBorderRepeat | undefined;
+    "mask-border-slice"?: Property.MaskBorderSlice | undefined;
+    "mask-border-source"?: Property.MaskBorderSource | undefined;
+    "mask-border-width"?: Property.MaskBorderWidth<TLength> | undefined;
+    "mask-clip"?: Property.MaskClip | undefined;
+    "mask-composite"?: Property.MaskComposite | undefined;
+    "mask-image"?: Property.MaskImage | undefined;
+    "mask-mode"?: Property.MaskMode | undefined;
+    "mask-origin"?: Property.MaskOrigin | undefined;
+    "mask-position"?: Property.MaskPosition<TLength> | undefined;
+    "mask-repeat"?: Property.MaskRepeat | undefined;
+    "mask-size"?: Property.MaskSize<TLength> | undefined;
+    "mask-type"?: Property.MaskType | undefined;
+    "masonry-auto-flow"?: Property.MasonryAutoFlow | undefined;
+    "math-depth"?: Property.MathDepth | undefined;
+    "math-shift"?: Property.MathShift | undefined;
+    "math-style"?: Property.MathStyle | undefined;
+    "max-block-size"?: Property.MaxBlockSize<TLength> | undefined;
+    "max-height"?: Property.MaxHeight<TLength> | undefined;
+    "max-inline-size"?: Property.MaxInlineSize<TLength> | undefined;
+    "max-lines"?: Property.MaxLines | undefined;
+    "max-width"?: Property.MaxWidth<TLength> | undefined;
+    "min-block-size"?: Property.MinBlockSize<TLength> | undefined;
+    "min-height"?: Property.MinHeight<TLength> | undefined;
+    "min-inline-size"?: Property.MinInlineSize<TLength> | undefined;
+    "min-width"?: Property.MinWidth<TLength> | undefined;
+    "mix-blend-mode"?: Property.MixBlendMode | undefined;
+    "motion-distance"?: Property.OffsetDistance<TLength> | undefined;
+    "motion-path"?: Property.OffsetPath | undefined;
+    "motion-rotation"?: Property.OffsetRotate | undefined;
+    "object-fit"?: Property.ObjectFit | undefined;
+    "object-position"?: Property.ObjectPosition<TLength> | undefined;
+    "object-view-box"?: Property.ObjectViewBox | undefined;
+    "offset-anchor"?: Property.OffsetAnchor<TLength> | undefined;
+    "offset-distance"?: Property.OffsetDistance<TLength> | undefined;
+    "offset-path"?: Property.OffsetPath | undefined;
+    "offset-position"?: Property.OffsetPosition<TLength> | undefined;
+    "offset-rotate"?: Property.OffsetRotate | undefined;
+    "offset-rotation"?: Property.OffsetRotate | undefined;
+    opacity?: Property.Opacity | undefined;
+    order?: Property.Order | undefined;
+    orphans?: Property.Orphans | undefined;
+    "outline-color"?: Property.OutlineColor | undefined;
+    "outline-offset"?: Property.OutlineOffset<TLength> | undefined;
+    "outline-style"?: Property.OutlineStyle | undefined;
+    "outline-width"?: Property.OutlineWidth<TLength> | undefined;
+    "overflow-anchor"?: Property.OverflowAnchor | undefined;
+    "overflow-block"?: Property.OverflowBlock | undefined;
+    "overflow-clip-box"?: Property.OverflowClipBox | undefined;
+    "overflow-clip-margin"?: Property.OverflowClipMargin<TLength> | undefined;
+    "overflow-inline"?: Property.OverflowInline | undefined;
+    "overflow-wrap"?: Property.OverflowWrap | undefined;
+    "overflow-x"?: Property.OverflowX | undefined;
+    "overflow-y"?: Property.OverflowY | undefined;
+    overlay?: Property.Overlay | undefined;
+    "overscroll-behavior-block"?: Property.OverscrollBehaviorBlock | undefined;
+    "overscroll-behavior-inline"?: Property.OverscrollBehaviorInline | undefined;
+    "overscroll-behavior-x"?: Property.OverscrollBehaviorX | undefined;
+    "overscroll-behavior-y"?: Property.OverscrollBehaviorY | undefined;
+    "padding-block-end"?: Property.PaddingBlockEnd<TLength> | undefined;
+    "padding-block-start"?: Property.PaddingBlockStart<TLength> | undefined;
+    "padding-bottom"?: Property.PaddingBottom<TLength> | undefined;
+    "padding-inline-end"?: Property.PaddingInlineEnd<TLength> | undefined;
+    "padding-inline-start"?: Property.PaddingInlineStart<TLength> | undefined;
+    "padding-left"?: Property.PaddingLeft<TLength> | undefined;
+    "padding-right"?: Property.PaddingRight<TLength> | undefined;
+    "padding-top"?: Property.PaddingTop<TLength> | undefined;
+    page?: Property.Page | undefined;
+    "paint-order"?: Property.PaintOrder | undefined;
+    perspective?: Property.Perspective<TLength> | undefined;
+    "perspective-origin"?: Property.PerspectiveOrigin<TLength> | undefined;
+    "pointer-events"?: Property.PointerEvents | undefined;
+    position?: Property.Position | undefined;
+    "position-anchor"?: Property.PositionAnchor | undefined;
+    "position-area"?: Property.PositionArea | undefined;
+    "position-try-fallbacks"?: Property.PositionTryFallbacks | undefined;
+    "position-try-order"?: Property.PositionTryOrder | undefined;
+    "position-visibility"?: Property.PositionVisibility | undefined;
+    "print-color-adjust"?: Property.PrintColorAdjust | undefined;
+    quotes?: Property.Quotes | undefined;
+    r?: Property.R<TLength> | undefined;
+    resize?: Property.Resize | undefined;
+    right?: Property.Right<TLength> | undefined;
+    rotate?: Property.Rotate | undefined;
+    "row-gap"?: Property.RowGap<TLength> | undefined;
+    "ruby-align"?: Property.RubyAlign | undefined;
+    "ruby-merge"?: Property.RubyMerge | undefined;
+    "ruby-overhang"?: Property.RubyOverhang | undefined;
+    "ruby-position"?: Property.RubyPosition | undefined;
+    rx?: Property.Rx<TLength> | undefined;
+    ry?: Property.Ry<TLength> | undefined;
+    scale?: Property.Scale | undefined;
+    "scroll-behavior"?: Property.ScrollBehavior | undefined;
+    "scroll-initial-target"?: Property.ScrollInitialTarget | undefined;
+    "scroll-margin-block-end"?: Property.ScrollMarginBlockEnd<TLength> | undefined;
+    "scroll-margin-block-start"?: Property.ScrollMarginBlockStart<TLength> | undefined;
+    "scroll-margin-bottom"?: Property.ScrollMarginBottom<TLength> | undefined;
+    "scroll-margin-inline-end"?: Property.ScrollMarginInlineEnd<TLength> | undefined;
+    "scroll-margin-inline-start"?: Property.ScrollMarginInlineStart<TLength> | undefined;
+    "scroll-margin-left"?: Property.ScrollMarginLeft<TLength> | undefined;
+    "scroll-margin-right"?: Property.ScrollMarginRight<TLength> | undefined;
+    "scroll-margin-top"?: Property.ScrollMarginTop<TLength> | undefined;
+    "scroll-padding-block-end"?: Property.ScrollPaddingBlockEnd<TLength> | undefined;
+    "scroll-padding-block-start"?: Property.ScrollPaddingBlockStart<TLength> | undefined;
+    "scroll-padding-bottom"?: Property.ScrollPaddingBottom<TLength> | undefined;
+    "scroll-padding-inline-end"?: Property.ScrollPaddingInlineEnd<TLength> | undefined;
+    "scroll-padding-inline-start"?: Property.ScrollPaddingInlineStart<TLength> | undefined;
+    "scroll-padding-left"?: Property.ScrollPaddingLeft<TLength> | undefined;
+    "scroll-padding-right"?: Property.ScrollPaddingRight<TLength> | undefined;
+    "scroll-padding-top"?: Property.ScrollPaddingTop<TLength> | undefined;
+    "scroll-snap-align"?: Property.ScrollSnapAlign | undefined;
+    "scroll-snap-margin-bottom"?: Property.ScrollMarginBottom<TLength> | undefined;
+    "scroll-snap-margin-left"?: Property.ScrollMarginLeft<TLength> | undefined;
+    "scroll-snap-margin-right"?: Property.ScrollMarginRight<TLength> | undefined;
+    "scroll-snap-margin-top"?: Property.ScrollMarginTop<TLength> | undefined;
+    "scroll-snap-stop"?: Property.ScrollSnapStop | undefined;
+    "scroll-snap-type"?: Property.ScrollSnapType | undefined;
+    "scroll-timeline-axis"?: Property.ScrollTimelineAxis | undefined;
+    "scroll-timeline-name"?: Property.ScrollTimelineName | undefined;
+    "scrollbar-color"?: Property.ScrollbarColor | undefined;
+    "scrollbar-gutter"?: Property.ScrollbarGutter | undefined;
+    "scrollbar-width"?: Property.ScrollbarWidth | undefined;
+    "shape-image-threshold"?: Property.ShapeImageThreshold | undefined;
+    "shape-margin"?: Property.ShapeMargin<TLength> | undefined;
+    "shape-outside"?: Property.ShapeOutside | undefined;
+    "shape-rendering"?: Property.ShapeRendering | undefined;
+    "speak-as"?: Property.SpeakAs | undefined;
+    "stop-color"?: Property.StopColor | undefined;
+    "stop-opacity"?: Property.StopOpacity | undefined;
+    stroke?: Property.Stroke | undefined;
+    "stroke-color"?: Property.StrokeColor | undefined;
+    "stroke-dasharray"?: Property.StrokeDasharray<TLength> | undefined;
+    "stroke-dashoffset"?: Property.StrokeDashoffset<TLength> | undefined;
+    "stroke-linecap"?: Property.StrokeLinecap | undefined;
+    "stroke-linejoin"?: Property.StrokeLinejoin | undefined;
+    "stroke-miterlimit"?: Property.StrokeMiterlimit | undefined;
+    "stroke-opacity"?: Property.StrokeOpacity | undefined;
+    "stroke-width"?: Property.StrokeWidth<TLength> | undefined;
+    "tab-size"?: Property.TabSize<TLength> | undefined;
+    "table-layout"?: Property.TableLayout | undefined;
+    "text-align"?: Property.TextAlign | undefined;
+    "text-align-last"?: Property.TextAlignLast | undefined;
+    "text-anchor"?: Property.TextAnchor | undefined;
+    "text-autospace"?: Property.TextAutospace | undefined;
+    "text-box"?: Property.TextBox | undefined;
+    "text-box-edge"?: Property.TextBoxEdge | undefined;
+    "text-box-trim"?: Property.TextBoxTrim | undefined;
+    "text-combine-upright"?: Property.TextCombineUpright | undefined;
+    "text-decoration-color"?: Property.TextDecorationColor | undefined;
+    "text-decoration-line"?: Property.TextDecorationLine | undefined;
+    "text-decoration-skip"?: Property.TextDecorationSkip | undefined;
+    "text-decoration-skip-ink"?: Property.TextDecorationSkipInk | undefined;
+    "text-decoration-style"?: Property.TextDecorationStyle | undefined;
+    "text-decoration-thickness"?: Property.TextDecorationThickness<TLength> | undefined;
+    "text-emphasis-color"?: Property.TextEmphasisColor | undefined;
+    "text-emphasis-position"?: Property.TextEmphasisPosition | undefined;
+    "text-emphasis-style"?: Property.TextEmphasisStyle | undefined;
+    "text-indent"?: Property.TextIndent<TLength> | undefined;
+    "text-justify"?: Property.TextJustify | undefined;
+    "text-orientation"?: Property.TextOrientation | undefined;
+    "text-overflow"?: Property.TextOverflow | undefined;
+    "text-rendering"?: Property.TextRendering | undefined;
+    "text-shadow"?: Property.TextShadow | undefined;
+    "text-size-adjust"?: Property.TextSizeAdjust | undefined;
+    "text-spacing-trim"?: Property.TextSpacingTrim | undefined;
+    "text-transform"?: Property.TextTransform | undefined;
+    "text-underline-offset"?: Property.TextUnderlineOffset<TLength> | undefined;
+    "text-underline-position"?: Property.TextUnderlinePosition | undefined;
+    "text-wrap-mode"?: Property.TextWrapMode | undefined;
+    "text-wrap-style"?: Property.TextWrapStyle | undefined;
+    "timeline-scope"?: Property.TimelineScope | undefined;
+    top?: Property.Top<TLength> | undefined;
+    "touch-action"?: Property.TouchAction | undefined;
+    transform?: Property.Transform | undefined;
+    "transform-box"?: Property.TransformBox | undefined;
+    "transform-origin"?: Property.TransformOrigin<TLength> | undefined;
+    "transform-style"?: Property.TransformStyle | undefined;
+    "transition-behavior"?: Property.TransitionBehavior | undefined;
+    "transition-delay"?: Property.TransitionDelay<TTime> | undefined;
+    "transition-duration"?: Property.TransitionDuration<TTime> | undefined;
+    "transition-property"?: Property.TransitionProperty | undefined;
+    "transition-timing-function"?: Property.TransitionTimingFunction | undefined;
+    translate?: Property.Translate<TLength> | undefined;
+    "unicode-bidi"?: Property.UnicodeBidi | undefined;
+    "user-select"?: Property.UserSelect | undefined;
+    "vector-effect"?: Property.VectorEffect | undefined;
+    "vertical-align"?: Property.VerticalAlign<TLength> | undefined;
+    "view-timeline-axis"?: Property.ViewTimelineAxis | undefined;
+    "view-timeline-inset"?: Property.ViewTimelineInset<TLength> | undefined;
+    "view-timeline-name"?: Property.ViewTimelineName | undefined;
+    "view-transition-class"?: Property.ViewTransitionClass | undefined;
+    "view-transition-name"?: Property.ViewTransitionName | undefined;
+    visibility?: Property.Visibility | undefined;
+    "white-space"?: Property.WhiteSpace | undefined;
+    "white-space-collapse"?: Property.WhiteSpaceCollapse | undefined;
+    widows?: Property.Widows | undefined;
+    width?: Property.Width<TLength> | undefined;
+    "will-change"?: Property.WillChange | undefined;
+    "word-break"?: Property.WordBreak | undefined;
+    "word-spacing"?: Property.WordSpacing<TLength> | undefined;
+    "word-wrap"?: Property.WordWrap | undefined;
+    "writing-mode"?: Property.WritingMode | undefined;
+    x?: Property.X<TLength> | undefined;
+    y?: Property.Y<TLength> | undefined;
+    "z-index"?: Property.ZIndex | undefined;
+    zoom?: Property.Zoom | undefined;
+}
+interface StandardShorthandPropertiesHyphen<TLength = (string & {}) | 0, TTime = string & {}> {
+    all?: Property.All | undefined;
+    animation?: Property.Animation<TTime> | undefined;
+    "animation-range"?: Property.AnimationRange<TLength> | undefined;
+    background?: Property.Background<TLength> | undefined;
+    "background-position"?: Property.BackgroundPosition<TLength> | undefined;
+    border?: Property.Border<TLength> | undefined;
+    "border-block"?: Property.BorderBlock<TLength> | undefined;
+    "border-block-color"?: Property.BorderBlockColor | undefined;
+    "border-block-end"?: Property.BorderBlockEnd<TLength> | undefined;
+    "border-block-start"?: Property.BorderBlockStart<TLength> | undefined;
+    "border-block-style"?: Property.BorderBlockStyle | undefined;
+    "border-block-width"?: Property.BorderBlockWidth<TLength> | undefined;
+    "border-bottom"?: Property.BorderBottom<TLength> | undefined;
+    "border-color"?: Property.BorderColor | undefined;
+    "border-image"?: Property.BorderImage | undefined;
+    "border-inline"?: Property.BorderInline<TLength> | undefined;
+    "border-inline-color"?: Property.BorderInlineColor | undefined;
+    "border-inline-end"?: Property.BorderInlineEnd<TLength> | undefined;
+    "border-inline-start"?: Property.BorderInlineStart<TLength> | undefined;
+    "border-inline-style"?: Property.BorderInlineStyle | undefined;
+    "border-inline-width"?: Property.BorderInlineWidth<TLength> | undefined;
+    "border-left"?: Property.BorderLeft<TLength> | undefined;
+    "border-radius"?: Property.BorderRadius<TLength> | undefined;
+    "border-right"?: Property.BorderRight<TLength> | undefined;
+    "border-style"?: Property.BorderStyle | undefined;
+    "border-top"?: Property.BorderTop<TLength> | undefined;
+    "border-width"?: Property.BorderWidth<TLength> | undefined;
+    caret?: Property.Caret | undefined;
+    "column-rule"?: Property.ColumnRule<TLength> | undefined;
+    columns?: Property.Columns<TLength> | undefined;
+    "contain-intrinsic-size"?: Property.ContainIntrinsicSize<TLength> | undefined;
+    container?: Property.Container | undefined;
+    flex?: Property.Flex<TLength> | undefined;
+    "flex-flow"?: Property.FlexFlow | undefined;
+    font?: Property.Font | undefined;
+    gap?: Property.Gap<TLength> | undefined;
+    grid?: Property.Grid | undefined;
+    "grid-area"?: Property.GridArea | undefined;
+    "grid-column"?: Property.GridColumn | undefined;
+    "grid-row"?: Property.GridRow | undefined;
+    "grid-template"?: Property.GridTemplate | undefined;
+    inset?: Property.Inset<TLength> | undefined;
+    "inset-block"?: Property.InsetBlock<TLength> | undefined;
+    "inset-inline"?: Property.InsetInline<TLength> | undefined;
+    "line-clamp"?: Property.LineClamp | undefined;
+    "list-style"?: Property.ListStyle | undefined;
+    margin?: Property.Margin<TLength> | undefined;
+    "margin-block"?: Property.MarginBlock<TLength> | undefined;
+    "margin-inline"?: Property.MarginInline<TLength> | undefined;
+    mask?: Property.Mask<TLength> | undefined;
+    "mask-border"?: Property.MaskBorder | undefined;
+    motion?: Property.Offset<TLength> | undefined;
+    offset?: Property.Offset<TLength> | undefined;
+    outline?: Property.Outline<TLength> | undefined;
+    overflow?: Property.Overflow | undefined;
+    "overscroll-behavior"?: Property.OverscrollBehavior | undefined;
+    padding?: Property.Padding<TLength> | undefined;
+    "padding-block"?: Property.PaddingBlock<TLength> | undefined;
+    "padding-inline"?: Property.PaddingInline<TLength> | undefined;
+    "place-content"?: Property.PlaceContent | undefined;
+    "place-items"?: Property.PlaceItems | undefined;
+    "place-self"?: Property.PlaceSelf | undefined;
+    "position-try"?: Property.PositionTry | undefined;
+    "scroll-margin"?: Property.ScrollMargin<TLength> | undefined;
+    "scroll-margin-block"?: Property.ScrollMarginBlock<TLength> | undefined;
+    "scroll-margin-inline"?: Property.ScrollMarginInline<TLength> | undefined;
+    "scroll-padding"?: Property.ScrollPadding<TLength> | undefined;
+    "scroll-padding-block"?: Property.ScrollPaddingBlock<TLength> | undefined;
+    "scroll-padding-inline"?: Property.ScrollPaddingInline<TLength> | undefined;
+    "scroll-snap-margin"?: Property.ScrollMargin<TLength> | undefined;
+    "scroll-timeline"?: Property.ScrollTimeline | undefined;
+    "text-decoration"?: Property.TextDecoration<TLength> | undefined;
+    "text-emphasis"?: Property.TextEmphasis | undefined;
+    "text-wrap"?: Property.TextWrap | undefined;
+    transition?: Property.Transition<TTime> | undefined;
+    "view-timeline"?: Property.ViewTimeline | undefined;
+}
+interface StandardPropertiesHyphen<TLength = (string & {}) | 0, TTime = string & {}> extends StandardLonghandPropertiesHyphen<TLength, TTime>, StandardShorthandPropertiesHyphen<TLength, TTime> {
+}
+interface VendorLonghandPropertiesHyphen<TLength = (string & {}) | 0, TTime = string & {}> {
+    "-moz-animation-delay"?: Property.AnimationDelay<TTime> | undefined;
+    "-moz-animation-direction"?: Property.AnimationDirection | undefined;
+    "-moz-animation-duration"?: Property.AnimationDuration<TTime> | undefined;
+    "-moz-animation-fill-mode"?: Property.AnimationFillMode | undefined;
+    "-moz-animation-iteration-count"?: Property.AnimationIterationCount | undefined;
+    "-moz-animation-name"?: Property.AnimationName | undefined;
+    "-moz-animation-play-state"?: Property.AnimationPlayState | undefined;
+    "-moz-animation-timing-function"?: Property.AnimationTimingFunction | undefined;
+    "-moz-appearance"?: Property.MozAppearance | undefined;
+    "-moz-backface-visibility"?: Property.BackfaceVisibility | undefined;
+    "-moz-binding"?: Property.MozBinding | undefined;
+    "-moz-border-bottom-colors"?: Property.MozBorderBottomColors | undefined;
+    "-moz-border-end-color"?: Property.BorderInlineEndColor | undefined;
+    "-moz-border-end-style"?: Property.BorderInlineEndStyle | undefined;
+    "-moz-border-end-width"?: Property.BorderInlineEndWidth<TLength> | undefined;
+    "-moz-border-left-colors"?: Property.MozBorderLeftColors | undefined;
+    "-moz-border-right-colors"?: Property.MozBorderRightColors | undefined;
+    "-moz-border-start-color"?: Property.BorderInlineStartColor | undefined;
+    "-moz-border-start-style"?: Property.BorderInlineStartStyle | undefined;
+    "-moz-border-top-colors"?: Property.MozBorderTopColors | undefined;
+    "-moz-box-sizing"?: Property.BoxSizing | undefined;
+    "-moz-column-rule-color"?: Property.ColumnRuleColor | undefined;
+    "-moz-column-rule-style"?: Property.ColumnRuleStyle | undefined;
+    "-moz-column-rule-width"?: Property.ColumnRuleWidth<TLength> | undefined;
+    "-moz-column-width"?: Property.ColumnWidth<TLength> | undefined;
+    "-moz-context-properties"?: Property.MozContextProperties | undefined;
+    "-moz-font-feature-settings"?: Property.FontFeatureSettings | undefined;
+    "-moz-font-language-override"?: Property.FontLanguageOverride | undefined;
+    "-moz-hyphens"?: Property.Hyphens | undefined;
+    "-moz-margin-end"?: Property.MarginInlineEnd<TLength> | undefined;
+    "-moz-margin-start"?: Property.MarginInlineStart<TLength> | undefined;
+    "-moz-orient"?: Property.MozOrient | undefined;
+    "-moz-osx-font-smoothing"?: Property.FontSmooth<TLength> | undefined;
+    "-moz-outline-radius-bottomleft"?: Property.MozOutlineRadiusBottomleft<TLength> | undefined;
+    "-moz-outline-radius-bottomright"?: Property.MozOutlineRadiusBottomright<TLength> | undefined;
+    "-moz-outline-radius-topleft"?: Property.MozOutlineRadiusTopleft<TLength> | undefined;
+    "-moz-outline-radius-topright"?: Property.MozOutlineRadiusTopright<TLength> | undefined;
+    "-moz-padding-end"?: Property.PaddingInlineEnd<TLength> | undefined;
+    "-moz-padding-start"?: Property.PaddingInlineStart<TLength> | undefined;
+    "-moz-perspective"?: Property.Perspective<TLength> | undefined;
+    "-moz-perspective-origin"?: Property.PerspectiveOrigin<TLength> | undefined;
+    "-moz-stack-sizing"?: Property.MozStackSizing | undefined;
+    "-moz-tab-size"?: Property.TabSize<TLength> | undefined;
+    "-moz-text-blink"?: Property.MozTextBlink | undefined;
+    "-moz-text-size-adjust"?: Property.TextSizeAdjust | undefined;
+    "-moz-transform"?: Property.Transform | undefined;
+    "-moz-transform-origin"?: Property.TransformOrigin<TLength> | undefined;
+    "-moz-transform-style"?: Property.TransformStyle | undefined;
+    "-moz-user-modify"?: Property.MozUserModify | undefined;
+    "-moz-user-select"?: Property.UserSelect | undefined;
+    "-moz-window-dragging"?: Property.MozWindowDragging | undefined;
+    "-moz-window-shadow"?: Property.MozWindowShadow | undefined;
+    "-ms-accelerator"?: Property.MsAccelerator | undefined;
+    "-ms-block-progression"?: Property.MsBlockProgression | undefined;
+    "-ms-content-zoom-chaining"?: Property.MsContentZoomChaining | undefined;
+    "-ms-content-zoom-limit-max"?: Property.MsContentZoomLimitMax | undefined;
+    "-ms-content-zoom-limit-min"?: Property.MsContentZoomLimitMin | undefined;
+    "-ms-content-zoom-snap-points"?: Property.MsContentZoomSnapPoints | undefined;
+    "-ms-content-zoom-snap-type"?: Property.MsContentZoomSnapType | undefined;
+    "-ms-content-zooming"?: Property.MsContentZooming | undefined;
+    "-ms-filter"?: Property.MsFilter | undefined;
+    "-ms-flex-direction"?: Property.FlexDirection | undefined;
+    "-ms-flex-positive"?: Property.FlexGrow | undefined;
+    "-ms-flow-from"?: Property.MsFlowFrom | undefined;
+    "-ms-flow-into"?: Property.MsFlowInto | undefined;
+    "-ms-grid-columns"?: Property.MsGridColumns<TLength> | undefined;
+    "-ms-grid-rows"?: Property.MsGridRows<TLength> | undefined;
+    "-ms-high-contrast-adjust"?: Property.MsHighContrastAdjust | undefined;
+    "-ms-hyphenate-limit-chars"?: Property.MsHyphenateLimitChars | undefined;
+    "-ms-hyphenate-limit-lines"?: Property.MsHyphenateLimitLines | undefined;
+    "-ms-hyphenate-limit-zone"?: Property.MsHyphenateLimitZone<TLength> | undefined;
+    "-ms-hyphens"?: Property.Hyphens | undefined;
+    "-ms-ime-align"?: Property.MsImeAlign | undefined;
+    "-ms-line-break"?: Property.LineBreak | undefined;
+    "-ms-order"?: Property.Order | undefined;
+    "-ms-overflow-style"?: Property.MsOverflowStyle | undefined;
+    "-ms-overflow-x"?: Property.OverflowX | undefined;
+    "-ms-overflow-y"?: Property.OverflowY | undefined;
+    "-ms-scroll-chaining"?: Property.MsScrollChaining | undefined;
+    "-ms-scroll-limit-x-max"?: Property.MsScrollLimitXMax<TLength> | undefined;
+    "-ms-scroll-limit-x-min"?: Property.MsScrollLimitXMin<TLength> | undefined;
+    "-ms-scroll-limit-y-max"?: Property.MsScrollLimitYMax<TLength> | undefined;
+    "-ms-scroll-limit-y-min"?: Property.MsScrollLimitYMin<TLength> | undefined;
+    "-ms-scroll-rails"?: Property.MsScrollRails | undefined;
+    "-ms-scroll-snap-points-x"?: Property.MsScrollSnapPointsX | undefined;
+    "-ms-scroll-snap-points-y"?: Property.MsScrollSnapPointsY | undefined;
+    "-ms-scroll-snap-type"?: Property.MsScrollSnapType | undefined;
+    "-ms-scroll-translation"?: Property.MsScrollTranslation | undefined;
+    "-ms-scrollbar-3dlight-color"?: Property.MsScrollbar3dlightColor | undefined;
+    "-ms-scrollbar-arrow-color"?: Property.MsScrollbarArrowColor | undefined;
+    "-ms-scrollbar-base-color"?: Property.MsScrollbarBaseColor | undefined;
+    "-ms-scrollbar-darkshadow-color"?: Property.MsScrollbarDarkshadowColor | undefined;
+    "-ms-scrollbar-face-color"?: Property.MsScrollbarFaceColor | undefined;
+    "-ms-scrollbar-highlight-color"?: Property.MsScrollbarHighlightColor | undefined;
+    "-ms-scrollbar-shadow-color"?: Property.MsScrollbarShadowColor | undefined;
+    "-ms-scrollbar-track-color"?: Property.MsScrollbarTrackColor | undefined;
+    "-ms-text-autospace"?: Property.MsTextAutospace | undefined;
+    "-ms-text-combine-horizontal"?: Property.TextCombineUpright | undefined;
+    "-ms-text-overflow"?: Property.TextOverflow | undefined;
+    "-ms-touch-action"?: Property.TouchAction | undefined;
+    "-ms-touch-select"?: Property.MsTouchSelect | undefined;
+    "-ms-transform"?: Property.Transform | undefined;
+    "-ms-transform-origin"?: Property.TransformOrigin<TLength> | undefined;
+    "-ms-transition-delay"?: Property.TransitionDelay<TTime> | undefined;
+    "-ms-transition-duration"?: Property.TransitionDuration<TTime> | undefined;
+    "-ms-transition-property"?: Property.TransitionProperty | undefined;
+    "-ms-transition-timing-function"?: Property.TransitionTimingFunction | undefined;
+    "-ms-user-select"?: Property.MsUserSelect | undefined;
+    "-ms-word-break"?: Property.WordBreak | undefined;
+    "-ms-wrap-flow"?: Property.MsWrapFlow | undefined;
+    "-ms-wrap-margin"?: Property.MsWrapMargin<TLength> | undefined;
+    "-ms-wrap-through"?: Property.MsWrapThrough | undefined;
+    "-ms-writing-mode"?: Property.WritingMode | undefined;
+    "-webkit-align-content"?: Property.AlignContent | undefined;
+    "-webkit-align-items"?: Property.AlignItems | undefined;
+    "-webkit-align-self"?: Property.AlignSelf | undefined;
+    "-webkit-animation-delay"?: Property.AnimationDelay<TTime> | undefined;
+    "-webkit-animation-direction"?: Property.AnimationDirection | undefined;
+    "-webkit-animation-duration"?: Property.AnimationDuration<TTime> | undefined;
+    "-webkit-animation-fill-mode"?: Property.AnimationFillMode | undefined;
+    "-webkit-animation-iteration-count"?: Property.AnimationIterationCount | undefined;
+    "-webkit-animation-name"?: Property.AnimationName | undefined;
+    "-webkit-animation-play-state"?: Property.AnimationPlayState | undefined;
+    "-webkit-animation-timing-function"?: Property.AnimationTimingFunction | undefined;
+    "-webkit-appearance"?: Property.WebkitAppearance | undefined;
+    "-webkit-backdrop-filter"?: Property.BackdropFilter | undefined;
+    "-webkit-backface-visibility"?: Property.BackfaceVisibility | undefined;
+    "-webkit-background-clip"?: Property.BackgroundClip | undefined;
+    "-webkit-background-origin"?: Property.BackgroundOrigin | undefined;
+    "-webkit-background-size"?: Property.BackgroundSize<TLength> | undefined;
+    "-webkit-border-before-color"?: Property.WebkitBorderBeforeColor | undefined;
+    "-webkit-border-before-style"?: Property.WebkitBorderBeforeStyle | undefined;
+    "-webkit-border-before-width"?: Property.WebkitBorderBeforeWidth<TLength> | undefined;
+    "-webkit-border-bottom-left-radius"?: Property.BorderBottomLeftRadius<TLength> | undefined;
+    "-webkit-border-bottom-right-radius"?: Property.BorderBottomRightRadius<TLength> | undefined;
+    "-webkit-border-image-slice"?: Property.BorderImageSlice | undefined;
+    "-webkit-border-top-left-radius"?: Property.BorderTopLeftRadius<TLength> | undefined;
+    "-webkit-border-top-right-radius"?: Property.BorderTopRightRadius<TLength> | undefined;
+    "-webkit-box-decoration-break"?: Property.BoxDecorationBreak | undefined;
+    "-webkit-box-reflect"?: Property.WebkitBoxReflect<TLength> | undefined;
+    "-webkit-box-shadow"?: Property.BoxShadow | undefined;
+    "-webkit-box-sizing"?: Property.BoxSizing | undefined;
+    "-webkit-clip-path"?: Property.ClipPath | undefined;
+    "-webkit-column-count"?: Property.ColumnCount | undefined;
+    "-webkit-column-fill"?: Property.ColumnFill | undefined;
+    "-webkit-column-rule-color"?: Property.ColumnRuleColor | undefined;
+    "-webkit-column-rule-style"?: Property.ColumnRuleStyle | undefined;
+    "-webkit-column-rule-width"?: Property.ColumnRuleWidth<TLength> | undefined;
+    "-webkit-column-span"?: Property.ColumnSpan | undefined;
+    "-webkit-column-width"?: Property.ColumnWidth<TLength> | undefined;
+    "-webkit-filter"?: Property.Filter | undefined;
+    "-webkit-flex-basis"?: Property.FlexBasis<TLength> | undefined;
+    "-webkit-flex-direction"?: Property.FlexDirection | undefined;
+    "-webkit-flex-grow"?: Property.FlexGrow | undefined;
+    "-webkit-flex-shrink"?: Property.FlexShrink | undefined;
+    "-webkit-flex-wrap"?: Property.FlexWrap | undefined;
+    "-webkit-font-feature-settings"?: Property.FontFeatureSettings | undefined;
+    "-webkit-font-kerning"?: Property.FontKerning | undefined;
+    "-webkit-font-smoothing"?: Property.FontSmooth<TLength> | undefined;
+    "-webkit-font-variant-ligatures"?: Property.FontVariantLigatures | undefined;
+    "-webkit-hyphenate-character"?: Property.HyphenateCharacter | undefined;
+    "-webkit-hyphens"?: Property.Hyphens | undefined;
+    "-webkit-initial-letter"?: Property.InitialLetter | undefined;
+    "-webkit-justify-content"?: Property.JustifyContent | undefined;
+    "-webkit-line-break"?: Property.LineBreak | undefined;
+    "-webkit-line-clamp"?: Property.WebkitLineClamp | undefined;
+    "-webkit-logical-height"?: Property.BlockSize<TLength> | undefined;
+    "-webkit-logical-width"?: Property.InlineSize<TLength> | undefined;
+    "-webkit-margin-end"?: Property.MarginInlineEnd<TLength> | undefined;
+    "-webkit-margin-start"?: Property.MarginInlineStart<TLength> | undefined;
+    "-webkit-mask-attachment"?: Property.WebkitMaskAttachment | undefined;
+    "-webkit-mask-box-image-outset"?: Property.MaskBorderOutset<TLength> | undefined;
+    "-webkit-mask-box-image-repeat"?: Property.MaskBorderRepeat | undefined;
+    "-webkit-mask-box-image-slice"?: Property.MaskBorderSlice | undefined;
+    "-webkit-mask-box-image-source"?: Property.MaskBorderSource | undefined;
+    "-webkit-mask-box-image-width"?: Property.MaskBorderWidth<TLength> | undefined;
+    "-webkit-mask-clip"?: Property.WebkitMaskClip | undefined;
+    "-webkit-mask-composite"?: Property.WebkitMaskComposite | undefined;
+    "-webkit-mask-image"?: Property.WebkitMaskImage | undefined;
+    "-webkit-mask-origin"?: Property.WebkitMaskOrigin | undefined;
+    "-webkit-mask-position"?: Property.WebkitMaskPosition<TLength> | undefined;
+    "-webkit-mask-position-x"?: Property.WebkitMaskPositionX<TLength> | undefined;
+    "-webkit-mask-position-y"?: Property.WebkitMaskPositionY<TLength> | undefined;
+    "-webkit-mask-repeat"?: Property.WebkitMaskRepeat | undefined;
+    "-webkit-mask-repeat-x"?: Property.WebkitMaskRepeatX | undefined;
+    "-webkit-mask-repeat-y"?: Property.WebkitMaskRepeatY | undefined;
+    "-webkit-mask-size"?: Property.WebkitMaskSize<TLength> | undefined;
+    "-webkit-max-inline-size"?: Property.MaxInlineSize<TLength> | undefined;
+    "-webkit-order"?: Property.Order | undefined;
+    "-webkit-overflow-scrolling"?: Property.WebkitOverflowScrolling | undefined;
+    "-webkit-padding-end"?: Property.PaddingInlineEnd<TLength> | undefined;
+    "-webkit-padding-start"?: Property.PaddingInlineStart<TLength> | undefined;
+    "-webkit-perspective"?: Property.Perspective<TLength> | undefined;
+    "-webkit-perspective-origin"?: Property.PerspectiveOrigin<TLength> | undefined;
+    "-webkit-print-color-adjust"?: Property.PrintColorAdjust | undefined;
+    "-webkit-ruby-position"?: Property.RubyPosition | undefined;
+    "-webkit-scroll-snap-type"?: Property.ScrollSnapType | undefined;
+    "-webkit-shape-margin"?: Property.ShapeMargin<TLength> | undefined;
+    "-webkit-tap-highlight-color"?: Property.WebkitTapHighlightColor | undefined;
+    "-webkit-text-combine"?: Property.TextCombineUpright | undefined;
+    "-webkit-text-decoration-color"?: Property.TextDecorationColor | undefined;
+    "-webkit-text-decoration-line"?: Property.TextDecorationLine | undefined;
+    "-webkit-text-decoration-skip"?: Property.TextDecorationSkip | undefined;
+    "-webkit-text-decoration-style"?: Property.TextDecorationStyle | undefined;
+    "-webkit-text-emphasis-color"?: Property.TextEmphasisColor | undefined;
+    "-webkit-text-emphasis-position"?: Property.TextEmphasisPosition | undefined;
+    "-webkit-text-emphasis-style"?: Property.TextEmphasisStyle | undefined;
+    "-webkit-text-fill-color"?: Property.WebkitTextFillColor | undefined;
+    "-webkit-text-orientation"?: Property.TextOrientation | undefined;
+    "-webkit-text-size-adjust"?: Property.TextSizeAdjust | undefined;
+    "-webkit-text-stroke-color"?: Property.WebkitTextStrokeColor | undefined;
+    "-webkit-text-stroke-width"?: Property.WebkitTextStrokeWidth<TLength> | undefined;
+    "-webkit-text-underline-position"?: Property.TextUnderlinePosition | undefined;
+    "-webkit-touch-callout"?: Property.WebkitTouchCallout | undefined;
+    "-webkit-transform"?: Property.Transform | undefined;
+    "-webkit-transform-origin"?: Property.TransformOrigin<TLength> | undefined;
+    "-webkit-transform-style"?: Property.TransformStyle | undefined;
+    "-webkit-transition-delay"?: Property.TransitionDelay<TTime> | undefined;
+    "-webkit-transition-duration"?: Property.TransitionDuration<TTime> | undefined;
+    "-webkit-transition-property"?: Property.TransitionProperty | undefined;
+    "-webkit-transition-timing-function"?: Property.TransitionTimingFunction | undefined;
+    "-webkit-user-modify"?: Property.WebkitUserModify | undefined;
+    "-webkit-user-select"?: Property.WebkitUserSelect | undefined;
+    "-webkit-writing-mode"?: Property.WritingMode | undefined;
+}
+interface VendorShorthandPropertiesHyphen<TLength = (string & {}) | 0, TTime = string & {}> {
+    "-moz-animation"?: Property.Animation<TTime> | undefined;
+    "-moz-border-image"?: Property.BorderImage | undefined;
+    "-moz-column-rule"?: Property.ColumnRule<TLength> | undefined;
+    "-moz-columns"?: Property.Columns<TLength> | undefined;
+    "-moz-outline-radius"?: Property.MozOutlineRadius<TLength> | undefined;
+    "-moz-transition"?: Property.Transition<TTime> | undefined;
+    "-ms-content-zoom-limit"?: Property.MsContentZoomLimit | undefined;
+    "-ms-content-zoom-snap"?: Property.MsContentZoomSnap | undefined;
+    "-ms-flex"?: Property.Flex<TLength> | undefined;
+    "-ms-scroll-limit"?: Property.MsScrollLimit | undefined;
+    "-ms-scroll-snap-x"?: Property.MsScrollSnapX | undefined;
+    "-ms-scroll-snap-y"?: Property.MsScrollSnapY | undefined;
+    "-ms-transition"?: Property.Transition<TTime> | undefined;
+    "-webkit-animation"?: Property.Animation<TTime> | undefined;
+    "-webkit-border-before"?: Property.WebkitBorderBefore<TLength> | undefined;
+    "-webkit-border-image"?: Property.BorderImage | undefined;
+    "-webkit-border-radius"?: Property.BorderRadius<TLength> | undefined;
+    "-webkit-column-rule"?: Property.ColumnRule<TLength> | undefined;
+    "-webkit-columns"?: Property.Columns<TLength> | undefined;
+    "-webkit-flex"?: Property.Flex<TLength> | undefined;
+    "-webkit-flex-flow"?: Property.FlexFlow | undefined;
+    "-webkit-mask"?: Property.WebkitMask<TLength> | undefined;
+    "-webkit-mask-box-image"?: Property.MaskBorder | undefined;
+    "-webkit-text-emphasis"?: Property.TextEmphasis | undefined;
+    "-webkit-text-stroke"?: Property.WebkitTextStroke<TLength> | undefined;
+    "-webkit-transition"?: Property.Transition<TTime> | undefined;
+}
+interface VendorPropertiesHyphen<TLength = (string & {}) | 0, TTime = string & {}> extends VendorLonghandPropertiesHyphen<TLength, TTime>, VendorShorthandPropertiesHyphen<TLength, TTime> {
+}
+interface ObsoletePropertiesHyphen<TLength = (string & {}) | 0, TTime = string & {}> {
+    "box-align"?: Property.BoxAlign | undefined;
+    "box-direction"?: Property.BoxDirection | undefined;
+    "box-flex"?: Property.BoxFlex | undefined;
+    "box-flex-group"?: Property.BoxFlexGroup | undefined;
+    "box-lines"?: Property.BoxLines | undefined;
+    "box-ordinal-group"?: Property.BoxOrdinalGroup | undefined;
+    "box-orient"?: Property.BoxOrient | undefined;
+    "box-pack"?: Property.BoxPack | undefined;
+    clip?: Property.Clip | undefined;
+    "font-stretch"?: Property.FontStretch | undefined;
+    "grid-column-gap"?: Property.GridColumnGap<TLength> | undefined;
+    "grid-gap"?: Property.GridGap<TLength> | undefined;
+    "grid-row-gap"?: Property.GridRowGap<TLength> | undefined;
+    "ime-mode"?: Property.ImeMode | undefined;
+    "inset-area"?: Property.PositionArea | undefined;
+    "offset-block"?: Property.InsetBlock<TLength> | undefined;
+    "offset-block-end"?: Property.InsetBlockEnd<TLength> | undefined;
+    "offset-block-start"?: Property.InsetBlockStart<TLength> | undefined;
+    "offset-inline"?: Property.InsetInline<TLength> | undefined;
+    "offset-inline-end"?: Property.InsetInlineEnd<TLength> | undefined;
+    "offset-inline-start"?: Property.InsetInlineStart<TLength> | undefined;
+    "page-break-after"?: Property.PageBreakAfter | undefined;
+    "page-break-before"?: Property.PageBreakBefore | undefined;
+    "page-break-inside"?: Property.PageBreakInside | undefined;
+    "position-try-options"?: Property.PositionTryFallbacks | undefined;
+    "scroll-snap-coordinate"?: Property.ScrollSnapCoordinate<TLength> | undefined;
+    "scroll-snap-destination"?: Property.ScrollSnapDestination<TLength> | undefined;
+    "scroll-snap-points-x"?: Property.ScrollSnapPointsX | undefined;
+    "scroll-snap-points-y"?: Property.ScrollSnapPointsY | undefined;
+    "scroll-snap-type-x"?: Property.ScrollSnapTypeX | undefined;
+    "scroll-snap-type-y"?: Property.ScrollSnapTypeY | undefined;
+    "-khtml-box-align"?: Property.BoxAlign | undefined;
+    "-khtml-box-direction"?: Property.BoxDirection | undefined;
+    "-khtml-box-flex"?: Property.BoxFlex | undefined;
+    "-khtml-box-flex-group"?: Property.BoxFlexGroup | undefined;
+    "-khtml-box-lines"?: Property.BoxLines | undefined;
+    "-khtml-box-ordinal-group"?: Property.BoxOrdinalGroup | undefined;
+    "-khtml-box-orient"?: Property.BoxOrient | undefined;
+    "-khtml-box-pack"?: Property.BoxPack | undefined;
+    "-khtml-line-break"?: Property.LineBreak | undefined;
+    "-khtml-opacity"?: Property.Opacity | undefined;
+    "-khtml-user-select"?: Property.UserSelect | undefined;
+    "-moz-background-clip"?: Property.BackgroundClip | undefined;
+    "-moz-background-origin"?: Property.BackgroundOrigin | undefined;
+    "-moz-background-size"?: Property.BackgroundSize<TLength> | undefined;
+    "-moz-border-radius"?: Property.BorderRadius<TLength> | undefined;
+    "-moz-border-radius-bottomleft"?: Property.BorderBottomLeftRadius<TLength> | undefined;
+    "-moz-border-radius-bottomright"?: Property.BorderBottomRightRadius<TLength> | undefined;
+    "-moz-border-radius-topleft"?: Property.BorderTopLeftRadius<TLength> | undefined;
+    "-moz-border-radius-topright"?: Property.BorderTopRightRadius<TLength> | undefined;
+    "-moz-box-align"?: Property.BoxAlign | undefined;
+    "-moz-box-direction"?: Property.BoxDirection | undefined;
+    "-moz-box-flex"?: Property.BoxFlex | undefined;
+    "-moz-box-ordinal-group"?: Property.BoxOrdinalGroup | undefined;
+    "-moz-box-orient"?: Property.BoxOrient | undefined;
+    "-moz-box-pack"?: Property.BoxPack | undefined;
+    "-moz-box-shadow"?: Property.BoxShadow | undefined;
+    "-moz-column-count"?: Property.ColumnCount | undefined;
+    "-moz-column-fill"?: Property.ColumnFill | undefined;
+    "-moz-float-edge"?: Property.MozFloatEdge | undefined;
+    "-moz-force-broken-image-icon"?: Property.MozForceBrokenImageIcon | undefined;
+    "-moz-opacity"?: Property.Opacity | undefined;
+    "-moz-outline"?: Property.Outline<TLength> | undefined;
+    "-moz-outline-color"?: Property.OutlineColor | undefined;
+    "-moz-outline-style"?: Property.OutlineStyle | undefined;
+    "-moz-outline-width"?: Property.OutlineWidth<TLength> | undefined;
+    "-moz-text-align-last"?: Property.TextAlignLast | undefined;
+    "-moz-text-decoration-color"?: Property.TextDecorationColor | undefined;
+    "-moz-text-decoration-line"?: Property.TextDecorationLine | undefined;
+    "-moz-text-decoration-style"?: Property.TextDecorationStyle | undefined;
+    "-moz-transition-delay"?: Property.TransitionDelay<TTime> | undefined;
+    "-moz-transition-duration"?: Property.TransitionDuration<TTime> | undefined;
+    "-moz-transition-property"?: Property.TransitionProperty | undefined;
+    "-moz-transition-timing-function"?: Property.TransitionTimingFunction | undefined;
+    "-moz-user-focus"?: Property.MozUserFocus | undefined;
+    "-moz-user-input"?: Property.MozUserInput | undefined;
+    "-ms-ime-mode"?: Property.ImeMode | undefined;
+    "-o-animation"?: Property.Animation<TTime> | undefined;
+    "-o-animation-delay"?: Property.AnimationDelay<TTime> | undefined;
+    "-o-animation-direction"?: Property.AnimationDirection | undefined;
+    "-o-animation-duration"?: Property.AnimationDuration<TTime> | undefined;
+    "-o-animation-fill-mode"?: Property.AnimationFillMode | undefined;
+    "-o-animation-iteration-count"?: Property.AnimationIterationCount | undefined;
+    "-o-animation-name"?: Property.AnimationName | undefined;
+    "-o-animation-play-state"?: Property.AnimationPlayState | undefined;
+    "-o-animation-timing-function"?: Property.AnimationTimingFunction | undefined;
+    "-o-background-size"?: Property.BackgroundSize<TLength> | undefined;
+    "-o-border-image"?: Property.BorderImage | undefined;
+    "-o-object-fit"?: Property.ObjectFit | undefined;
+    "-o-object-position"?: Property.ObjectPosition<TLength> | undefined;
+    "-o-tab-size"?: Property.TabSize<TLength> | undefined;
+    "-o-text-overflow"?: Property.TextOverflow | undefined;
+    "-o-transform"?: Property.Transform | undefined;
+    "-o-transform-origin"?: Property.TransformOrigin<TLength> | undefined;
+    "-o-transition"?: Property.Transition<TTime> | undefined;
+    "-o-transition-delay"?: Property.TransitionDelay<TTime> | undefined;
+    "-o-transition-duration"?: Property.TransitionDuration<TTime> | undefined;
+    "-o-transition-property"?: Property.TransitionProperty | undefined;
+    "-o-transition-timing-function"?: Property.TransitionTimingFunction | undefined;
+    "-webkit-box-align"?: Property.BoxAlign | undefined;
+    "-webkit-box-direction"?: Property.BoxDirection | undefined;
+    "-webkit-box-flex"?: Property.BoxFlex | undefined;
+    "-webkit-box-flex-group"?: Property.BoxFlexGroup | undefined;
+    "-webkit-box-lines"?: Property.BoxLines | undefined;
+    "-webkit-box-ordinal-group"?: Property.BoxOrdinalGroup | undefined;
+    "-webkit-box-orient"?: Property.BoxOrient | undefined;
+    "-webkit-box-pack"?: Property.BoxPack | undefined;
+}
+interface SvgPropertiesHyphen<TLength = (string & {}) | 0, TTime = string & {}> {
+    "alignment-baseline"?: Property.AlignmentBaseline | undefined;
+    "baseline-shift"?: Property.BaselineShift<TLength> | undefined;
+    clip?: Property.Clip | undefined;
+    "clip-path"?: Property.ClipPath | undefined;
+    "clip-rule"?: Property.ClipRule | undefined;
+    color?: Property.Color | undefined;
+    "color-interpolation"?: Property.ColorInterpolation | undefined;
+    "color-rendering"?: Property.ColorRendering | undefined;
+    cursor?: Property.Cursor | undefined;
+    direction?: Property.Direction | undefined;
+    display?: Property.Display | undefined;
+    "dominant-baseline"?: Property.DominantBaseline | undefined;
+    fill?: Property.Fill | undefined;
+    "fill-opacity"?: Property.FillOpacity | undefined;
+    "fill-rule"?: Property.FillRule | undefined;
+    filter?: Property.Filter | undefined;
+    "flood-color"?: Property.FloodColor | undefined;
+    "flood-opacity"?: Property.FloodOpacity | undefined;
+    font?: Property.Font | undefined;
+    "font-family"?: Property.FontFamily | undefined;
+    "font-size"?: Property.FontSize<TLength> | undefined;
+    "font-size-adjust"?: Property.FontSizeAdjust | undefined;
+    "font-stretch"?: Property.FontStretch | undefined;
+    "font-style"?: Property.FontStyle | undefined;
+    "font-variant"?: Property.FontVariant | undefined;
+    "font-weight"?: Property.FontWeight | undefined;
+    "glyph-orientation-vertical"?: Property.GlyphOrientationVertical | undefined;
+    "image-rendering"?: Property.ImageRendering | undefined;
+    "letter-spacing"?: Property.LetterSpacing<TLength> | undefined;
+    "lighting-color"?: Property.LightingColor | undefined;
+    "line-height"?: Property.LineHeight<TLength> | undefined;
+    marker?: Property.Marker | undefined;
+    "marker-end"?: Property.MarkerEnd | undefined;
+    "marker-mid"?: Property.MarkerMid | undefined;
+    "marker-start"?: Property.MarkerStart | undefined;
+    mask?: Property.Mask<TLength> | undefined;
+    opacity?: Property.Opacity | undefined;
+    overflow?: Property.Overflow | undefined;
+    "paint-order"?: Property.PaintOrder | undefined;
+    "pointer-events"?: Property.PointerEvents | undefined;
+    "shape-rendering"?: Property.ShapeRendering | undefined;
+    "stop-color"?: Property.StopColor | undefined;
+    "stop-opacity"?: Property.StopOpacity | undefined;
+    stroke?: Property.Stroke | undefined;
+    "stroke-dasharray"?: Property.StrokeDasharray<TLength> | undefined;
+    "stroke-dashoffset"?: Property.StrokeDashoffset<TLength> | undefined;
+    "stroke-linecap"?: Property.StrokeLinecap | undefined;
+    "stroke-linejoin"?: Property.StrokeLinejoin | undefined;
+    "stroke-miterlimit"?: Property.StrokeMiterlimit | undefined;
+    "stroke-opacity"?: Property.StrokeOpacity | undefined;
+    "stroke-width"?: Property.StrokeWidth<TLength> | undefined;
+    "text-anchor"?: Property.TextAnchor | undefined;
+    "text-decoration"?: Property.TextDecoration<TLength> | undefined;
+    "text-rendering"?: Property.TextRendering | undefined;
+    "unicode-bidi"?: Property.UnicodeBidi | undefined;
+    "vector-effect"?: Property.VectorEffect | undefined;
+    visibility?: Property.Visibility | undefined;
+    "white-space"?: Property.WhiteSpace | undefined;
+    "word-spacing"?: Property.WordSpacing<TLength> | undefined;
+    "writing-mode"?: Property.WritingMode | undefined;
+}
+interface PropertiesHyphen<TLength = (string & {}) | 0, TTime = string & {}> extends StandardPropertiesHyphen<TLength, TTime>, VendorPropertiesHyphen<TLength, TTime>, ObsoletePropertiesHyphen<TLength, TTime>, SvgPropertiesHyphen<TLength, TTime> {
+}
+type StandardLonghandPropertiesFallback<TLength = (string & {}) | 0, TTime = string & {}> = Fallback<StandardLonghandProperties<TLength, TTime>>;
+type StandardShorthandPropertiesFallback<TLength = (string & {}) | 0, TTime = string & {}> = Fallback<StandardShorthandProperties<TLength, TTime>>;
+interface StandardPropertiesFallback<TLength = (string & {}) | 0, TTime = string & {}> extends StandardLonghandPropertiesFallback<TLength, TTime>, StandardShorthandPropertiesFallback<TLength, TTime> {
+}
+type VendorLonghandPropertiesFallback<TLength = (string & {}) | 0, TTime = string & {}> = Fallback<VendorLonghandProperties<TLength, TTime>>;
+type VendorShorthandPropertiesFallback<TLength = (string & {}) | 0, TTime = string & {}> = Fallback<VendorShorthandProperties<TLength, TTime>>;
+interface VendorPropertiesFallback<TLength = (string & {}) | 0, TTime = string & {}> extends VendorLonghandPropertiesFallback<TLength, TTime>, VendorShorthandPropertiesFallback<TLength, TTime> {
+}
+type ObsoletePropertiesFallback<TLength = (string & {}) | 0, TTime = string & {}> = Fallback<ObsoleteProperties<TLength, TTime>>;
+type SvgPropertiesFallback<TLength = (string & {}) | 0, TTime = string & {}> = Fallback<SvgProperties<TLength, TTime>>;
+interface PropertiesFallback<TLength = (string & {}) | 0, TTime = string & {}> extends StandardPropertiesFallback<TLength, TTime>, VendorPropertiesFallback<TLength, TTime>, ObsoletePropertiesFallback<TLength, TTime>, SvgPropertiesFallback<TLength, TTime> {
+}
+type StandardLonghandPropertiesHyphenFallback<TLength = (string & {}) | 0, TTime = string & {}> = Fallback<StandardLonghandPropertiesHyphen<TLength, TTime>>;
+type StandardShorthandPropertiesHyphenFallback<TLength = (string & {}) | 0, TTime = string & {}> = Fallback<StandardShorthandPropertiesHyphen<TLength, TTime>>;
+interface StandardPropertiesHyphenFallback<TLength = (string & {}) | 0, TTime = string & {}> extends StandardLonghandPropertiesHyphenFallback<TLength, TTime>, StandardShorthandPropertiesHyphenFallback<TLength, TTime> {
+}
+type VendorLonghandPropertiesHyphenFallback<TLength = (string & {}) | 0, TTime = string & {}> = Fallback<VendorLonghandPropertiesHyphen<TLength, TTime>>;
+type VendorShorthandPropertiesHyphenFallback<TLength = (string & {}) | 0, TTime = string & {}> = Fallback<VendorShorthandPropertiesHyphen<TLength, TTime>>;
+interface VendorPropertiesHyphenFallback<TLength = (string & {}) | 0, TTime = string & {}> extends VendorLonghandPropertiesHyphenFallback<TLength, TTime>, VendorShorthandPropertiesHyphenFallback<TLength, TTime> {
+}
+type ObsoletePropertiesHyphenFallback<TLength = (string & {}) | 0, TTime = string & {}> = Fallback<ObsoletePropertiesHyphen<TLength, TTime>>;
+type SvgPropertiesHyphenFallback<TLength = (string & {}) | 0, TTime = string & {}> = Fallback<SvgPropertiesHyphen<TLength, TTime>>;
+interface PropertiesHyphenFallback<TLength = (string & {}) | 0, TTime = string & {}> extends StandardPropertiesHyphenFallback<TLength, TTime>, VendorPropertiesHyphenFallback<TLength, TTime>, ObsoletePropertiesHyphenFallback<TLength, TTime>, SvgPropertiesHyphenFallback<TLength, TTime> {
+}
+type AtRules = "@charset" | "@container" | "@counter-style" | "@document" | "@font-face" | "@font-feature-values" | "@font-palette-values" | "@import" | "@keyframes" | "@layer" | "@media" | "@namespace" | "@page" | "@position-try" | "@property" | "@scope" | "@starting-style" | "@supports" | "@view-transition";
+type AdvancedPseudos = ":-moz-any()" | ":-moz-dir" | ":-webkit-any()" | "::cue" | "::cue-region" | "::highlight" | "::part" | "::picker" | "::slotted" | "::view-transition-group" | "::view-transition-image-pair" | "::view-transition-new" | "::view-transition-old" | ":active-view-transition-type" | ":dir" | ":has" | ":host" | ":host-context" | ":is" | ":lang" | ":matches()" | ":not" | ":nth-child" | ":nth-last-child" | ":nth-last-of-type" | ":nth-of-type" | ":state" | ":where";
+type SimplePseudos = ":-khtml-any-link" | ":-moz-any-link" | ":-moz-focusring" | ":-moz-full-screen" | ":-moz-placeholder" | ":-moz-read-only" | ":-moz-read-write" | ":-moz-ui-invalid" | ":-moz-ui-valid" | ":-ms-fullscreen" | ":-ms-input-placeholder" | ":-webkit-any-link" | ":-webkit-autofill" | ":-webkit-full-screen" | "::-moz-placeholder" | "::-moz-progress-bar" | "::-moz-range-progress" | "::-moz-range-thumb" | "::-moz-range-track" | "::-moz-selection" | "::-ms-backdrop" | "::-ms-browse" | "::-ms-check" | "::-ms-clear" | "::-ms-expand" | "::-ms-fill" | "::-ms-fill-lower" | "::-ms-fill-upper" | "::-ms-input-placeholder" | "::-ms-reveal" | "::-ms-thumb" | "::-ms-ticks-after" | "::-ms-ticks-before" | "::-ms-tooltip" | "::-ms-track" | "::-ms-value" | "::-webkit-backdrop" | "::-webkit-file-upload-button" | "::-webkit-input-placeholder" | "::-webkit-progress-bar" | "::-webkit-progress-inner-value" | "::-webkit-progress-value" | "::-webkit-slider-runnable-track" | "::-webkit-slider-thumb" | "::after" | "::backdrop" | "::before" | "::checkmark" | "::cue" | "::cue-region" | "::details-content" | "::file-selector-button" | "::first-letter" | "::first-line" | "::grammar-error" | "::marker" | "::picker-icon" | "::placeholder" | "::scroll-marker" | "::scroll-marker-group" | "::selection" | "::spelling-error" | "::target-text" | "::view-transition" | ":active" | ":active-view-transition" | ":after" | ":any-link" | ":autofill" | ":before" | ":blank" | ":buffering" | ":checked" | ":current" | ":default" | ":defined" | ":disabled" | ":empty" | ":enabled" | ":first" | ":first-child" | ":first-letter" | ":first-line" | ":first-of-type" | ":focus" | ":focus-visible" | ":focus-within" | ":fullscreen" | ":future" | ":has-slotted" | ":host" | ":hover" | ":in-range" | ":indeterminate" | ":invalid" | ":last-child" | ":last-of-type" | ":left" | ":link" | ":local-link" | ":modal" | ":muted" | ":only-child" | ":only-of-type" | ":open" | ":optional" | ":out-of-range" | ":past" | ":paused" | ":picture-in-picture" | ":placeholder-shown" | ":playing" | ":popover-open" | ":read-only" | ":read-write" | ":required" | ":right" | ":root" | ":scope" | ":seeking" | ":stalled" | ":target" | ":target-current" | ":target-within" | ":user-invalid" | ":user-valid" | ":valid" | ":visited" | ":volume-locked" | ":xr-overlay";
+type Pseudos = AdvancedPseudos | SimplePseudos;
+type HtmlAttributes = "[abbr]" | "[accept-charset]" | "[accept]" | "[accesskey]" | "[action]" | "[align]" | "[alink]" | "[allow]" | "[allowfullscreen]" | "[allowpaymentrequest]" | "[alpha]" | "[alt]" | "[anchor]" | "[archive]" | "[as]" | "[async]" | "[attributionsourceid]" | "[attributionsrc]" | "[autobuffer]" | "[autocapitalize]" | "[autocomplete]" | "[autocorrect]" | "[autofocus]" | "[autoplay]" | "[axis]" | "[background]" | "[behavior]" | "[bgcolor]" | "[blocking]" | "[border]" | "[bottommargin]" | "[browsingtopics]" | "[capture]" | "[cellpadding]" | "[cellspacing]" | "[char]" | "[charoff]" | "[charset]" | "[checked]" | "[cite]" | "[class]" | "[classid]" | "[clear]" | "[closedby]" | "[codebase]" | "[codetype]" | "[color]" | "[colorspace]" | "[cols]" | "[colspan]" | "[command]" | "[commandfor]" | "[compact]" | "[content]" | "[contenteditable]" | "[controls]" | "[controlslist]" | "[coords]" | "[credentialless]" | "[cross-origin-top-navigation-by-user-activation]" | "[crossorigin]" | "[csp]" | "[data]" | "[datetime]" | "[declare]" | "[decoding]" | "[default]" | "[defer]" | "[dir]" | "[direction]" | "[dirname]" | "[disabled]" | "[disablepictureinpicture]" | "[disableremoteplayback]" | "[download]" | "[draggable]" | "[enctype]" | "[enterkeyhint]" | "[exportparts]" | "[face]" | "[fetchpriority]" | "[for]" | "[form]" | "[formaction]" | "[formenctype]" | "[formmethod]" | "[formnovalidate]" | "[formtarget]" | "[frame]" | "[frameborder]" | "[headers]" | "[height]" | "[hidden]" | "[high]" | "[href]" | "[hreflang]" | "[hreftranslate]" | "[hspace]" | "[http-equiv]" | "[id]" | "[imagesizes]" | "[imagesrcset]" | "[inert]" | "[inputmode]" | "[integrity]" | "[is]" | "[ismap]" | "[kind]" | "[label]" | "[lang]" | "[leftmargin]" | "[link]" | "[list]" | "[loading]" | "[longdesc]" | "[loop]" | "[low]" | "[marginheight]" | "[marginwidth]" | "[max]" | "[maxlength]" | "[media]" | "[method]" | "[min]" | "[minlength]" | "[moz-opaque]" | "[mozallowfullscreen]" | "[msallowfullscreen]" | "[multiple]" | "[muted]" | "[name]" | "[nohref]" | "[nomodule]" | "[nonce]" | "[noresize]" | "[noshade]" | "[novalidate]" | "[open]" | "[optimum]" | "[part]" | "[pattern]" | "[ping]" | "[placeholder]" | "[playsinline]" | "[popover]" | "[popovertarget]" | "[popovertargetaction]" | "[poster]" | "[preload]" | "[privateToken]" | "[readonly]" | "[referrerpolicy]" | "[rel]" | "[required]" | "[rev]" | "[reversed]" | "[rightmargin]" | "[rows]" | "[rowspan]" | "[rules]" | "[sandbox]" | "[scheme]" | "[scope]" | "[scrollamount]" | "[scrolldelay]" | "[scrolling]" | "[selected]" | "[shadowroot]" | "[shadowrootclonable]" | "[shadowrootdelegatesfocus]" | "[shadowrootmode]" | "[shadowrootserializable]" | "[shape]" | "[size]" | "[sizes]" | "[slot]" | "[span]" | "[spellcheck]" | "[src]" | "[srcdoc]" | "[srclang]" | "[srcset]" | "[standby]" | "[start]" | "[step]" | "[style]" | "[summary]" | "[tabindex]" | "[target]" | "[text]" | "[title]" | "[topmargin]" | "[translate]" | "[truespeed]" | "[type]" | "[usemap]" | "[valign]" | "[value]" | "[valuetype]" | "[version]" | "[virtualkeyboardpolicy]" | "[vlink]" | "[vspace]" | "[webkit-playsinline]" | "[webkitallowfullscreen]" | "[webkitdirectory]" | "[width]" | "[wrap]" | "[writingsuggestions]" | "[xmlns]";
+type SvgAttributes = "[-khtml-opacity]" | "[-moz-opacity]" | "[-moz-transform]" | "[-ms-text-overflow]" | "[-ms-transform]" | "[-ms-writing-mode]" | "[-o-text-overflow]" | "[-o-transform]" | "[-webkit-mask]" | "[-webkit-transform]" | "[-webkit-writing-mode]" | "[alignment-baseline]" | "[async]" | "[attributeName]" | "[attributeType]" | "[autofocus]" | "[azimuth]" | "[baseFrequency]" | "[baseProfile]" | "[baseline-shift]" | "[bias]" | "[by]" | "[calcMode]" | "[class]" | "[clip-path]" | "[clip-rule]" | "[clipPathUnits]" | "[clip]" | "[color-interpolation-filters]" | "[color-interpolation]" | "[color]" | "[crossorigin]" | "[cursor]" | "[cx]" | "[cy]" | "[d]" | "[decoding]" | "[defer]" | "[diffuseConstant]" | "[direction]" | "[display]" | "[divisor]" | "[dominant-baseline]" | "[download]" | "[dur]" | "[dx]" | "[dy]" | "[edgeMode]" | "[elevation]" | "[fetchpriority]" | "[fill-opacity]" | "[fill-rule]" | "[fill]" | "[filterUnits]" | "[filter]" | "[flood-color]" | "[flood-opacity]" | "[font-family]" | "[font-size-adjust]" | "[font-size]" | "[font-stretch]" | "[font-style]" | "[font-variant]" | "[font-weight]" | "[font-width]" | "[fr]" | "[from]" | "[fx]" | "[fy]" | "[glyph-orientation-horizontal]" | "[glyph-orientation-vertical]" | "[gradientTransform]" | "[gradientUnits]" | "[height]" | "[href]" | "[hreflang]" | "[id]" | "[image-rendering]" | "[in2]" | "[in]" | "[k1]" | "[k2]" | "[k3]" | "[k4]" | "[kernelMatrix]" | "[kernelUnitLength]" | "[keyPoints]" | "[lang]" | "[lengthAdjust]" | "[letter-spacing]" | "[lighting-color]" | "[limitingConeAngle]" | "[marker-end]" | "[marker-mid]" | "[marker-start]" | "[markerHeight]" | "[markerUnits]" | "[markerWidth]" | "[maskContentUnits]" | "[maskUnits]" | "[mask]" | "[media]" | "[mode]" | "[numOctaves]" | "[offset]" | "[opacity]" | "[operator]" | "[order]" | "[orient]" | "[origin]" | "[overflow]" | "[paint-order]" | "[path]" | "[patternContentUnits]" | "[patternTransform]" | "[patternUnits]" | "[ping]" | "[pointer-events]" | "[pointsAtX]" | "[pointsAtY]" | "[pointsAtZ]" | "[points]" | "[preserveAlpha]" | "[preserveAspectRatio]" | "[primitiveUnits]" | "[r]" | "[radius]" | "[refX]" | "[refY]" | "[referrerpolicy]" | "[rel]" | "[repeatCount]" | "[requiredExtensions]" | "[rotate]" | "[rx]" | "[ry]" | "[scale]" | "[seed]" | "[shape-rendering]" | "[side]" | "[spacing]" | "[specularConstant]" | "[specularExponent]" | "[spreadMethod]" | "[startOffset]" | "[stdDeviation]" | "[stitchTiles]" | "[stop-color]" | "[stop-opacity]" | "[stroke-dasharray]" | "[stroke-dashoffset]" | "[stroke-linecap]" | "[stroke-linejoin]" | "[stroke-miterlimit]" | "[stroke-opacity]" | "[stroke-width]" | "[stroke]" | "[style]" | "[surfaceScale]" | "[systemLanguage]" | "[tabindex]" | "[targetX]" | "[targetY]" | "[target]" | "[text-anchor]" | "[text-decoration]" | "[text-overflow]" | "[text-rendering]" | "[textLength]" | "[title]" | "[to]" | "[transform-origin]" | "[transform]" | "[type]" | "[unicode-bidi]" | "[values]" | "[vector-effect]" | "[version]" | "[viewBox]" | "[visibility]" | "[white-space]" | "[width]" | "[word-spacing]" | "[writing-mode]" | "[x1]" | "[x2]" | "[xChannelSelector]" | "[x]" | "[y1]" | "[y2]" | "[yChannelSelector]" | "[y]" | "[z]" | "[zoomAndPan]";
+type Globals = "-moz-initial" | "inherit" | "initial" | "revert" | "revert-layer" | "unset";
+namespace Property {
+    export type AccentColor = Globals | DataType.Color | "auto";
+    export type AlignContent = Globals | DataType.ContentDistribution | DataType.ContentPosition | "baseline" | "normal" | (string & {});
+    export type AlignItems = Globals | DataType.SelfPosition | "anchor-center" | "baseline" | "normal" | "stretch" | (string & {});
+    export type AlignSelf = Globals | DataType.SelfPosition | "anchor-center" | "auto" | "baseline" | "normal" | "stretch" | (string & {});
+    export type AlignTracks = Globals | DataType.ContentDistribution | DataType.ContentPosition | "baseline" | "normal" | (string & {});
+    export type AlignmentBaseline = Globals | "alphabetic" | "baseline" | "central" | "ideographic" | "mathematical" | "middle" | "text-after-edge" | "text-before-edge";
+    export type All = Globals;
+    export type AnchorName = Globals | "none" | (string & {});
+    export type AnchorScope = Globals | "all" | "none" | (string & {});
+    export type Animation<TTime = string & {}> = Globals | DataType.SingleAnimation<TTime> | (string & {});
+    export type AnimationComposition = Globals | DataType.SingleAnimationComposition | (string & {});
+    export type AnimationDelay<TTime = string & {}> = Globals | TTime | (string & {});
+    export type AnimationDirection = Globals | DataType.SingleAnimationDirection | (string & {});
+    export type AnimationDuration<TTime = string & {}> = Globals | TTime | "auto" | (string & {});
+    export type AnimationFillMode = Globals | DataType.SingleAnimationFillMode | (string & {});
+    export type AnimationIterationCount = Globals | "infinite" | (string & {}) | (number & {});
+    export type AnimationName = Globals | "none" | (string & {});
+    export type AnimationPlayState = Globals | "paused" | "running" | (string & {});
+    export type AnimationRange<TLength = (string & {}) | 0> = Globals | DataType.TimelineRangeName | TLength | "normal" | (string & {});
+    export type AnimationRangeEnd<TLength = (string & {}) | 0> = Globals | DataType.TimelineRangeName | TLength | "normal" | (string & {});
+    export type AnimationRangeStart<TLength = (string & {}) | 0> = Globals | DataType.TimelineRangeName | TLength | "normal" | (string & {});
+    export type AnimationTimeline = Globals | DataType.SingleAnimationTimeline | (string & {});
+    export type AnimationTimingFunction = Globals | DataType.EasingFunction | (string & {});
+    export type Appearance = Globals | DataType.CompatAuto | "auto" | "menulist-button" | "none" | "textfield";
+    export type AspectRatio = Globals | "auto" | (string & {}) | (number & {});
+    export type BackdropFilter = Globals | "none" | (string & {});
+    export type BackfaceVisibility = Globals | "hidden" | "visible";
+    export type Background<TLength = (string & {}) | 0> = Globals | DataType.BgLayer<TLength> | DataType.FinalBgLayer<TLength> | (string & {});
+    export type BackgroundAttachment = Globals | DataType.Attachment | (string & {});
+    export type BackgroundBlendMode = Globals | DataType.BlendMode | (string & {});
+    export type BackgroundClip = Globals | DataType.BgClip | (string & {});
+    export type BackgroundColor = Globals | DataType.Color;
+    export type BackgroundImage = Globals | "none" | (string & {});
+    export type BackgroundOrigin = Globals | DataType.VisualBox | (string & {});
+    export type BackgroundPosition<TLength = (string & {}) | 0> = Globals | DataType.BgPosition<TLength> | (string & {});
+    export type BackgroundPositionX<TLength = (string & {}) | 0> = Globals | TLength | "center" | "left" | "right" | "x-end" | "x-start" | (string & {});
+    export type BackgroundPositionY<TLength = (string & {}) | 0> = Globals | TLength | "bottom" | "center" | "top" | "y-end" | "y-start" | (string & {});
+    export type BackgroundRepeat = Globals | DataType.RepeatStyle | (string & {});
+    export type BackgroundSize<TLength = (string & {}) | 0> = Globals | DataType.BgSize<TLength> | (string & {});
+    export type BaselineShift<TLength = (string & {}) | 0> = Globals | TLength | "baseline" | "sub" | "super" | (string & {});
+    export type BlockSize<TLength = (string & {}) | 0> = Globals | TLength | "-moz-fit-content" | "-moz-max-content" | "-moz-min-content" | "auto" | "fit-content" | "max-content" | "min-content" | (string & {});
+    export type Border<TLength = (string & {}) | 0> = Globals | DataType.LineWidth<TLength> | DataType.LineStyle | DataType.Color | (string & {});
+    export type BorderBlock<TLength = (string & {}) | 0> = Globals | DataType.LineWidth<TLength> | DataType.LineStyle | DataType.Color | (string & {});
+    export type BorderBlockColor = Globals | DataType.Color | (string & {});
+    export type BorderBlockEnd<TLength = (string & {}) | 0> = Globals | DataType.LineWidth<TLength> | DataType.LineStyle | DataType.Color | (string & {});
+    export type BorderBlockEndColor = Globals | DataType.Color;
+    export type BorderBlockEndStyle = Globals | DataType.LineStyle;
+    export type BorderBlockEndWidth<TLength = (string & {}) | 0> = Globals | DataType.LineWidth<TLength>;
+    export type BorderBlockStart<TLength = (string & {}) | 0> = Globals | DataType.LineWidth<TLength> | DataType.LineStyle | DataType.Color | (string & {});
+    export type BorderBlockStartColor = Globals | DataType.Color;
+    export type BorderBlockStartStyle = Globals | DataType.LineStyle;
+    export type BorderBlockStartWidth<TLength = (string & {}) | 0> = Globals | DataType.LineWidth<TLength>;
+    export type BorderBlockStyle = Globals | DataType.LineStyle | (string & {});
+    export type BorderBlockWidth<TLength = (string & {}) | 0> = Globals | DataType.LineWidth<TLength> | (string & {});
+    export type BorderBottom<TLength = (string & {}) | 0> = Globals | DataType.LineWidth<TLength> | DataType.LineStyle | DataType.Color | (string & {});
+    export type BorderBottomColor = Globals | DataType.Color;
+    export type BorderBottomLeftRadius<TLength = (string & {}) | 0> = Globals | TLength | (string & {});
+    export type BorderBottomRightRadius<TLength = (string & {}) | 0> = Globals | TLength | (string & {});
+    export type BorderBottomStyle = Globals | DataType.LineStyle;
+    export type BorderBottomWidth<TLength = (string & {}) | 0> = Globals | DataType.LineWidth<TLength>;
+    export type BorderCollapse = Globals | "collapse" | "separate";
+    export type BorderColor = Globals | DataType.Color | (string & {});
+    export type BorderEndEndRadius<TLength = (string & {}) | 0> = Globals | TLength | (string & {});
+    export type BorderEndStartRadius<TLength = (string & {}) | 0> = Globals | TLength | (string & {});
+    export type BorderImage = Globals | "none" | "repeat" | "round" | "space" | "stretch" | (string & {}) | (number & {});
+    export type BorderImageOutset<TLength = (string & {}) | 0> = Globals | TLength | (string & {}) | (number & {});
+    export type BorderImageRepeat = Globals | "repeat" | "round" | "space" | "stretch" | (string & {});
+    export type BorderImageSlice = Globals | (string & {}) | (number & {});
+    export type BorderImageSource = Globals | "none" | (string & {});
+    export type BorderImageWidth<TLength = (string & {}) | 0> = Globals | TLength | "auto" | (string & {}) | (number & {});
+    export type BorderInline<TLength = (string & {}) | 0> = Globals | DataType.LineWidth<TLength> | DataType.LineStyle | DataType.Color | (string & {});
+    export type BorderInlineColor = Globals | DataType.Color | (string & {});
+    export type BorderInlineEnd<TLength = (string & {}) | 0> = Globals | DataType.LineWidth<TLength> | DataType.LineStyle | DataType.Color | (string & {});
+    export type BorderInlineEndColor = Globals | DataType.Color;
+    export type BorderInlineEndStyle = Globals | DataType.LineStyle;
+    export type BorderInlineEndWidth<TLength = (string & {}) | 0> = Globals | DataType.LineWidth<TLength>;
+    export type BorderInlineStart<TLength = (string & {}) | 0> = Globals | DataType.LineWidth<TLength> | DataType.LineStyle | DataType.Color | (string & {});
+    export type BorderInlineStartColor = Globals | DataType.Color;
+    export type BorderInlineStartStyle = Globals | DataType.LineStyle;
+    export type BorderInlineStartWidth<TLength = (string & {}) | 0> = Globals | DataType.LineWidth<TLength>;
+    export type BorderInlineStyle = Globals | DataType.LineStyle | (string & {});
+    export type BorderInlineWidth<TLength = (string & {}) | 0> = Globals | DataType.LineWidth<TLength> | (string & {});
+    export type BorderLeft<TLength = (string & {}) | 0> = Globals | DataType.LineWidth<TLength> | DataType.LineStyle | DataType.Color | (string & {});
+    export type BorderLeftColor = Globals | DataType.Color;
+    export type BorderLeftStyle = Globals | DataType.LineStyle;
+    export type BorderLeftWidth<TLength = (string & {}) | 0> = Globals | DataType.LineWidth<TLength>;
+    export type BorderRadius<TLength = (string & {}) | 0> = Globals | TLength | (string & {});
+    export type BorderRight<TLength = (string & {}) | 0> = Globals | DataType.LineWidth<TLength> | DataType.LineStyle | DataType.Color | (string & {});
+    export type BorderRightColor = Globals | DataType.Color;
+    export type BorderRightStyle = Globals | DataType.LineStyle;
+    export type BorderRightWidth<TLength = (string & {}) | 0> = Globals | DataType.LineWidth<TLength>;
+    export type BorderSpacing<TLength = (string & {}) | 0> = Globals | TLength | (string & {});
+    export type BorderStartEndRadius<TLength = (string & {}) | 0> = Globals | TLength | (string & {});
+    export type BorderStartStartRadius<TLength = (string & {}) | 0> = Globals | TLength | (string & {});
+    export type BorderStyle = Globals | DataType.LineStyle | (string & {});
+    export type BorderTop<TLength = (string & {}) | 0> = Globals | DataType.LineWidth<TLength> | DataType.LineStyle | DataType.Color | (string & {});
+    export type BorderTopColor = Globals | DataType.Color;
+    export type BorderTopLeftRadius<TLength = (string & {}) | 0> = Globals | TLength | (string & {});
+    export type BorderTopRightRadius<TLength = (string & {}) | 0> = Globals | TLength | (string & {});
+    export type BorderTopStyle = Globals | DataType.LineStyle;
+    export type BorderTopWidth<TLength = (string & {}) | 0> = Globals | DataType.LineWidth<TLength>;
+    export type BorderWidth<TLength = (string & {}) | 0> = Globals | DataType.LineWidth<TLength> | (string & {});
+    export type Bottom<TLength = (string & {}) | 0> = Globals | TLength | "auto" | (string & {});
+    export type BoxAlign = Globals | "baseline" | "center" | "end" | "start" | "stretch";
+    export type BoxDecorationBreak = Globals | "clone" | "slice";
+    export type BoxDirection = Globals | "inherit" | "normal" | "reverse";
+    export type BoxFlex = Globals | (number & {}) | (string & {});
+    export type BoxFlexGroup = Globals | (number & {}) | (string & {});
+    export type BoxLines = Globals | "multiple" | "single";
+    export type BoxOrdinalGroup = Globals | (number & {}) | (string & {});
+    export type BoxOrient = Globals | "block-axis" | "horizontal" | "inherit" | "inline-axis" | "vertical";
+    export type BoxPack = Globals | "center" | "end" | "justify" | "start";
+    export type BoxShadow = Globals | "none" | (string & {});
+    export type BoxSizing = Globals | "border-box" | "content-box";
+    export type BreakAfter = Globals | "all" | "always" | "auto" | "avoid" | "avoid-column" | "avoid-page" | "avoid-region" | "column" | "left" | "page" | "recto" | "region" | "right" | "verso";
+    export type BreakBefore = Globals | "all" | "always" | "auto" | "avoid" | "avoid-column" | "avoid-page" | "avoid-region" | "column" | "left" | "page" | "recto" | "region" | "right" | "verso";
+    export type BreakInside = Globals | "auto" | "avoid" | "avoid-column" | "avoid-page" | "avoid-region";
+    export type CaptionSide = Globals | "bottom" | "top";
+    export type Caret = Globals | DataType.Color | "auto" | "bar" | "block" | "underscore" | (string & {});
+    export type CaretColor = Globals | DataType.Color | "auto";
+    export type CaretShape = Globals | "auto" | "bar" | "block" | "underscore";
+    export type Clear = Globals | "both" | "inline-end" | "inline-start" | "left" | "none" | "right";
+    export type Clip = Globals | "auto" | (string & {});
+    export type ClipPath = Globals | DataType.GeometryBox | "none" | (string & {});
+    export type ClipRule = Globals | "evenodd" | "nonzero";
+    export type Color = Globals | DataType.Color;
+    export type PrintColorAdjust = Globals | "economy" | "exact";
+    export type ColorInterpolationFilters = Globals | "auto" | "linearRGB" | "sRGB";
+    export type ColorScheme = Globals | "dark" | "light" | "normal" | (string & {});
+    export type ColumnCount = Globals | "auto" | (number & {}) | (string & {});
+    export type ColumnFill = Globals | "auto" | "balance";
+    export type ColumnGap<TLength = (string & {}) | 0> = Globals | TLength | "normal" | (string & {});
+    export type ColumnRule<TLength = (string & {}) | 0> = Globals | DataType.LineWidth<TLength> | DataType.LineStyle | DataType.Color | (string & {});
+    export type ColumnRuleColor = Globals | DataType.Color;
+    export type ColumnRuleStyle = Globals | DataType.LineStyle | (string & {});
+    export type ColumnRuleWidth<TLength = (string & {}) | 0> = Globals | DataType.LineWidth<TLength> | (string & {});
+    export type ColumnSpan = Globals | "all" | "none";
+    export type ColumnWidth<TLength = (string & {}) | 0> = Globals | TLength | "auto";
+    export type Columns<TLength = (string & {}) | 0> = Globals | TLength | "auto" | (string & {}) | (number & {});
+    export type Contain = Globals | "content" | "inline-size" | "layout" | "none" | "paint" | "size" | "strict" | "style" | (string & {});
+    export type ContainIntrinsicBlockSize<TLength = (string & {}) | 0> = Globals | TLength | "none" | (string & {});
+    export type ContainIntrinsicHeight<TLength = (string & {}) | 0> = Globals | TLength | "none" | (string & {});
+    export type ContainIntrinsicInlineSize<TLength = (string & {}) | 0> = Globals | TLength | "none" | (string & {});
+    export type ContainIntrinsicSize<TLength = (string & {}) | 0> = Globals | TLength | "none" | (string & {});
+    export type ContainIntrinsicWidth<TLength = (string & {}) | 0> = Globals | TLength | "none" | (string & {});
+    export type Container = Globals | "none" | (string & {});
+    export type ContainerName = Globals | "none" | (string & {});
+    export type ContainerType = Globals | "inline-size" | "normal" | "scroll-state" | "size" | (string & {});
+    export type Content = Globals | DataType.Quote | "none" | "normal" | (string & {});
+    export type ContentVisibility = Globals | "auto" | "hidden" | "visible";
+    export type CounterIncrement = Globals | "none" | (string & {});
+    export type CounterReset = Globals | "none" | (string & {});
+    export type CounterSet = Globals | "none" | (string & {});
+    export type Cursor = Globals | DataType.CursorPredefined | (string & {});
+    export type Cx<TLength = (string & {}) | 0> = Globals | TLength | (string & {});
+    export type Cy<TLength = (string & {}) | 0> = Globals | TLength | (string & {});
+    export type D = Globals | "none" | (string & {});
+    export type Direction = Globals | "ltr" | "rtl";
+    export type Display = Globals | DataType.DisplayOutside | DataType.DisplayInside | DataType.DisplayInternal | DataType.DisplayLegacy | "contents" | "list-item" | "none" | (string & {});
+    export type DominantBaseline = Globals | "alphabetic" | "auto" | "central" | "hanging" | "ideographic" | "mathematical" | "middle" | "text-bottom" | "text-top";
+    export type EmptyCells = Globals | "hide" | "show";
+    export type FieldSizing = Globals | "content" | "fixed";
+    export type Fill = Globals | DataType.Paint;
+    export type FillOpacity = Globals | (string & {}) | (number & {});
+    export type FillRule = Globals | "evenodd" | "nonzero";
+    export type Filter = Globals | "none" | (string & {});
+    export type Flex<TLength = (string & {}) | 0> = Globals | TLength | "auto" | "content" | "fit-content" | "max-content" | "min-content" | "none" | (string & {}) | (number & {});
+    export type FlexBasis<TLength = (string & {}) | 0> = Globals | TLength | "-moz-fit-content" | "-moz-max-content" | "-moz-min-content" | "-webkit-auto" | "auto" | "content" | "fit-content" | "max-content" | "min-content" | (string & {});
+    export type FlexDirection = Globals | "column" | "column-reverse" | "row" | "row-reverse";
+    export type FlexFlow = Globals | "column" | "column-reverse" | "nowrap" | "row" | "row-reverse" | "wrap" | "wrap-reverse" | (string & {});
+    export type FlexGrow = Globals | (number & {}) | (string & {});
+    export type FlexShrink = Globals | (number & {}) | (string & {});
+    export type FlexWrap = Globals | "nowrap" | "wrap" | "wrap-reverse";
+    export type Float = Globals | "inline-end" | "inline-start" | "left" | "none" | "right";
+    export type FloodColor = Globals | DataType.Color;
+    export type FloodOpacity = Globals | (string & {}) | (number & {});
+    export type Font = Globals | DataType.SystemFamilyName | (string & {});
+    export type FontFamily = Globals | DataType.GenericFamily | (string & {});
+    export type FontFeatureSettings = Globals | "normal" | (string & {});
+    export type FontKerning = Globals | "auto" | "none" | "normal";
+    export type FontLanguageOverride = Globals | "normal" | (string & {});
+    export type FontOpticalSizing = Globals | "auto" | "none";
+    export type FontPalette = Globals | "dark" | "light" | "normal" | (string & {});
+    export type FontSize<TLength = (string & {}) | 0> = Globals | DataType.AbsoluteSize | TLength | "larger" | "math" | "smaller" | (string & {});
+    export type FontSizeAdjust = Globals | "from-font" | "none" | (string & {}) | (number & {});
+    export type FontSmooth<TLength = (string & {}) | 0> = Globals | DataType.AbsoluteSize | TLength | "always" | "auto" | "never";
+    export type FontStretch = Globals | DataType.FontStretchAbsolute;
+    export type FontStyle = Globals | "italic" | "normal" | "oblique" | (string & {});
+    export type FontSynthesis = Globals | "none" | "position" | "small-caps" | "style" | "weight" | (string & {});
+    export type FontSynthesisPosition = Globals | "auto" | "none";
+    export type FontSynthesisSmallCaps = Globals | "auto" | "none";
+    export type FontSynthesisStyle = Globals | "auto" | "none";
+    export type FontSynthesisWeight = Globals | "auto" | "none";
+    export type FontVariant = Globals | DataType.EastAsianVariantValues | "all-petite-caps" | "all-small-caps" | "common-ligatures" | "contextual" | "diagonal-fractions" | "discretionary-ligatures" | "full-width" | "historical-forms" | "historical-ligatures" | "lining-nums" | "no-common-ligatures" | "no-contextual" | "no-discretionary-ligatures" | "no-historical-ligatures" | "none" | "normal" | "oldstyle-nums" | "ordinal" | "petite-caps" | "proportional-nums" | "proportional-width" | "ruby" | "slashed-zero" | "small-caps" | "stacked-fractions" | "tabular-nums" | "titling-caps" | "unicase" | (string & {});
+    export type FontVariantAlternates = Globals | "historical-forms" | "normal" | (string & {});
+    export type FontVariantCaps = Globals | "all-petite-caps" | "all-small-caps" | "normal" | "petite-caps" | "small-caps" | "titling-caps" | "unicase";
+    export type FontVariantEastAsian = Globals | DataType.EastAsianVariantValues | "full-width" | "normal" | "proportional-width" | "ruby" | (string & {});
+    export type FontVariantEmoji = Globals | "emoji" | "normal" | "text" | "unicode";
+    export type FontVariantLigatures = Globals | "common-ligatures" | "contextual" | "discretionary-ligatures" | "historical-ligatures" | "no-common-ligatures" | "no-contextual" | "no-discretionary-ligatures" | "no-historical-ligatures" | "none" | "normal" | (string & {});
+    export type FontVariantNumeric = Globals | "diagonal-fractions" | "lining-nums" | "normal" | "oldstyle-nums" | "ordinal" | "proportional-nums" | "slashed-zero" | "stacked-fractions" | "tabular-nums" | (string & {});
+    export type FontVariantPosition = Globals | "normal" | "sub" | "super";
+    export type FontVariationSettings = Globals | "normal" | (string & {});
+    export type FontWeight = Globals | DataType.FontWeightAbsolute | "bolder" | "lighter";
+    export type FontWidth = Globals | "condensed" | "expanded" | "extra-condensed" | "extra-expanded" | "normal" | "semi-condensed" | "semi-expanded" | "ultra-condensed" | "ultra-expanded" | (string & {});
+    export type ForcedColorAdjust = Globals | "auto" | "none" | "preserve-parent-color";
+    export type Gap<TLength = (string & {}) | 0> = Globals | TLength | "normal" | (string & {});
+    export type Grid = Globals | "none" | (string & {});
+    export type GridArea = Globals | DataType.GridLine | (string & {});
+    export type GridAutoColumns<TLength = (string & {}) | 0> = Globals | DataType.TrackBreadth<TLength> | (string & {});
+    export type GridAutoFlow = Globals | "column" | "dense" | "row" | (string & {});
+    export type GridAutoRows<TLength = (string & {}) | 0> = Globals | DataType.TrackBreadth<TLength> | (string & {});
+    export type GridColumn = Globals | DataType.GridLine | (string & {});
+    export type GridColumnEnd = Globals | DataType.GridLine;
+    export type GridColumnGap<TLength = (string & {}) | 0> = Globals | TLength | (string & {});
+    export type GridColumnStart = Globals | DataType.GridLine;
+    export type GridGap<TLength = (string & {}) | 0> = Globals | TLength | (string & {});
+    export type GridRow = Globals | DataType.GridLine | (string & {});
+    export type GridRowEnd = Globals | DataType.GridLine;
+    export type GridRowGap<TLength = (string & {}) | 0> = Globals | TLength | (string & {});
+    export type GridRowStart = Globals | DataType.GridLine;
+    export type GridTemplate = Globals | "none" | (string & {});
+    export type GridTemplateAreas = Globals | "none" | (string & {});
+    export type GridTemplateColumns<TLength = (string & {}) | 0> = Globals | DataType.TrackBreadth<TLength> | "none" | "subgrid" | (string & {});
+    export type GridTemplateRows<TLength = (string & {}) | 0> = Globals | DataType.TrackBreadth<TLength> | "none" | "subgrid" | (string & {});
+    export type HangingPunctuation = Globals | "allow-end" | "first" | "force-end" | "last" | "none" | (string & {});
+    export type Height<TLength = (string & {}) | 0> = Globals | TLength | "-moz-fit-content" | "-moz-max-content" | "-moz-min-content" | "-webkit-fit-content" | "auto" | "fit-content" | "max-content" | "min-content" | (string & {});
+    export type HyphenateCharacter = Globals | "auto" | (string & {});
+    export type HyphenateLimitChars = Globals | "auto" | (string & {}) | (number & {});
+    export type Hyphens = Globals | "auto" | "manual" | "none";
+    export type ImageOrientation = Globals | "flip" | "from-image" | (string & {});
+    export type ImageRendering = Globals | "-moz-crisp-edges" | "-webkit-optimize-contrast" | "auto" | "crisp-edges" | "pixelated" | "smooth";
+    export type ImageResolution = Globals | "from-image" | (string & {});
+    export type ImeMode = Globals | "active" | "auto" | "disabled" | "inactive" | "normal";
+    export type InitialLetter = Globals | "normal" | (string & {}) | (number & {});
+    export type InitialLetterAlign = Globals | "alphabetic" | "auto" | "hanging" | "ideographic";
+    export type InlineSize<TLength = (string & {}) | 0> = Globals | TLength | "-moz-fit-content" | "-moz-max-content" | "-moz-min-content" | "-webkit-fill-available" | "auto" | "fit-content" | "max-content" | "min-content" | (string & {});
+    export type Inset<TLength = (string & {}) | 0> = Globals | TLength | "auto" | (string & {});
+    export type PositionArea = Globals | DataType.PositionArea | "none";
+    export type InsetBlock<TLength = (string & {}) | 0> = Globals | TLength | "auto" | (string & {});
+    export type InsetBlockEnd<TLength = (string & {}) | 0> = Globals | TLength | "auto" | (string & {});
+    export type InsetBlockStart<TLength = (string & {}) | 0> = Globals | TLength | "auto" | (string & {});
+    export type InsetInline<TLength = (string & {}) | 0> = Globals | TLength | "auto" | (string & {});
+    export type InsetInlineEnd<TLength = (string & {}) | 0> = Globals | TLength | "auto" | (string & {});
+    export type InsetInlineStart<TLength = (string & {}) | 0> = Globals | TLength | "auto" | (string & {});
+    export type InterpolateSize = Globals | "allow-keywords" | "numeric-only";
+    export type Isolation = Globals | "auto" | "isolate";
+    export type JustifyContent = Globals | DataType.ContentDistribution | DataType.ContentPosition | "left" | "normal" | "right" | (string & {});
+    export type JustifyItems = Globals | DataType.SelfPosition | "anchor-center" | "baseline" | "left" | "legacy" | "normal" | "right" | "stretch" | (string & {});
+    export type JustifySelf = Globals | DataType.SelfPosition | "anchor-center" | "auto" | "baseline" | "left" | "normal" | "right" | "stretch" | (string & {});
+    export type JustifyTracks = Globals | DataType.ContentDistribution | DataType.ContentPosition | "left" | "normal" | "right" | (string & {});
+    export type Left<TLength = (string & {}) | 0> = Globals | TLength | "auto" | (string & {});
+    export type LetterSpacing<TLength = (string & {}) | 0> = Globals | TLength | "normal";
+    export type LightingColor = Globals | DataType.Color;
+    export type LineBreak = Globals | "anywhere" | "auto" | "loose" | "normal" | "strict";
+    export type LineClamp = Globals | "none" | (number & {}) | (string & {});
+    export type LineHeight<TLength = (string & {}) | 0> = Globals | TLength | "normal" | (string & {}) | (number & {});
+    export type LineHeightStep<TLength = (string & {}) | 0> = Globals | TLength;
+    export type ListStyle = Globals | "inside" | "none" | "outside" | (string & {});
+    export type ListStyleImage = Globals | "none" | (string & {});
+    export type ListStylePosition = Globals | "inside" | "outside";
+    export type ListStyleType = Globals | "none" | (string & {});
+    export type Margin<TLength = (string & {}) | 0> = Globals | TLength | "auto" | (string & {});
+    export type MarginBlock<TLength = (string & {}) | 0> = Globals | TLength | "auto" | (string & {});
+    export type MarginBlockEnd<TLength = (string & {}) | 0> = Globals | TLength | "auto" | (string & {});
+    export type MarginBlockStart<TLength = (string & {}) | 0> = Globals | TLength | "auto" | (string & {});
+    export type MarginBottom<TLength = (string & {}) | 0> = Globals | TLength | "auto" | (string & {});
+    export type MarginInline<TLength = (string & {}) | 0> = Globals | TLength | "auto" | (string & {});
+    export type MarginInlineEnd<TLength = (string & {}) | 0> = Globals | TLength | "auto" | (string & {});
+    export type MarginInlineStart<TLength = (string & {}) | 0> = Globals | TLength | "auto" | (string & {});
+    export type MarginLeft<TLength = (string & {}) | 0> = Globals | TLength | "auto" | (string & {});
+    export type MarginRight<TLength = (string & {}) | 0> = Globals | TLength | "auto" | (string & {});
+    export type MarginTop<TLength = (string & {}) | 0> = Globals | TLength | "auto" | (string & {});
+    export type MarginTrim = Globals | "all" | "in-flow" | "none";
+    export type Marker = Globals | "none" | (string & {});
+    export type MarkerEnd = Globals | "none" | (string & {});
+    export type MarkerMid = Globals | "none" | (string & {});
+    export type MarkerStart = Globals | "none" | (string & {});
+    export type Mask<TLength = (string & {}) | 0> = Globals | DataType.MaskLayer<TLength> | (string & {});
+    export type MaskBorder = Globals | "alpha" | "luminance" | "none" | "repeat" | "round" | "space" | "stretch" | (string & {}) | (number & {});
+    export type MaskBorderMode = Globals | "alpha" | "luminance";
+    export type MaskBorderOutset<TLength = (string & {}) | 0> = Globals | TLength | (string & {}) | (number & {});
+    export type MaskBorderRepeat = Globals | "repeat" | "round" | "space" | "stretch" | (string & {});
+    export type MaskBorderSlice = Globals | (string & {}) | (number & {});
+    export type MaskBorderSource = Globals | "none" | (string & {});
+    export type MaskBorderWidth<TLength = (string & {}) | 0> = Globals | TLength | "auto" | (string & {}) | (number & {});
+    export type MaskClip = Globals | DataType.PaintBox | "no-clip" | "view-box" | (string & {});
+    export type MaskComposite = Globals | DataType.CompositingOperator | (string & {});
+    export type MaskImage = Globals | "none" | (string & {});
+    export type MaskMode = Globals | DataType.MaskingMode | (string & {});
+    export type MaskOrigin = Globals | DataType.PaintBox | "view-box" | (string & {});
+    export type MaskPosition<TLength = (string & {}) | 0> = Globals | DataType.Position<TLength> | (string & {});
+    export type MaskRepeat = Globals | DataType.RepeatStyle | (string & {});
+    export type MaskSize<TLength = (string & {}) | 0> = Globals | DataType.BgSize<TLength> | (string & {});
+    export type MaskType = Globals | "alpha" | "luminance";
+    export type MasonryAutoFlow = Globals | "definite-first" | "next" | "ordered" | "pack" | (string & {});
+    export type MathDepth = Globals | "auto-add" | (string & {}) | (number & {});
+    export type MathShift = Globals | "compact" | "normal";
+    export type MathStyle = Globals | "compact" | "normal";
+    export type MaxBlockSize<TLength = (string & {}) | 0> = Globals | TLength | "-moz-max-content" | "-moz-min-content" | "-webkit-fill-available" | "fit-content" | "max-content" | "min-content" | "none" | (string & {});
+    export type MaxHeight<TLength = (string & {}) | 0> = Globals | TLength | "-moz-fit-content" | "-moz-max-content" | "-moz-min-content" | "-webkit-fit-content" | "-webkit-max-content" | "-webkit-min-content" | "fit-content" | "intrinsic" | "max-content" | "min-content" | "none" | (string & {});
+    export type MaxInlineSize<TLength = (string & {}) | 0> = Globals | TLength | "-moz-fit-content" | "-moz-max-content" | "-moz-min-content" | "-webkit-fill-available" | "fit-content" | "max-content" | "min-content" | "none" | (string & {});
+    export type MaxLines = Globals | "none" | (number & {}) | (string & {});
+    export type MaxWidth<TLength = (string & {}) | 0> = Globals | TLength | "-moz-fit-content" | "-moz-max-content" | "-moz-min-content" | "-webkit-fit-content" | "-webkit-max-content" | "-webkit-min-content" | "fit-content" | "intrinsic" | "max-content" | "min-content" | "none" | (string & {});
+    export type MinBlockSize<TLength = (string & {}) | 0> = Globals | TLength | "-moz-max-content" | "-moz-min-content" | "-webkit-fill-available" | "auto" | "fit-content" | "max-content" | "min-content" | (string & {});
+    export type MinHeight<TLength = (string & {}) | 0> = Globals | TLength | "-moz-fit-content" | "-moz-max-content" | "-moz-min-content" | "-webkit-fit-content" | "-webkit-max-content" | "-webkit-min-content" | "auto" | "fit-content" | "intrinsic" | "max-content" | "min-content" | (string & {});
+    export type MinInlineSize<TLength = (string & {}) | 0> = Globals | TLength | "-moz-fit-content" | "-moz-max-content" | "-moz-min-content" | "-webkit-fill-available" | "auto" | "fit-content" | "max-content" | "min-content" | (string & {});
+    export type MinWidth<TLength = (string & {}) | 0> = Globals | TLength | "-moz-fit-content" | "-moz-max-content" | "-moz-min-content" | "-webkit-fit-content" | "-webkit-max-content" | "-webkit-min-content" | "auto" | "fit-content" | "intrinsic" | "max-content" | "min-content" | "min-intrinsic" | (string & {});
+    export type MixBlendMode = Globals | DataType.BlendMode | "plus-darker" | "plus-lighter";
+    export type Offset<TLength = (string & {}) | 0> = Globals | DataType.Position<TLength> | DataType.PaintBox | "auto" | "none" | "normal" | "view-box" | (string & {});
+    export type OffsetDistance<TLength = (string & {}) | 0> = Globals | TLength | (string & {});
+    export type OffsetPath = Globals | DataType.PaintBox | "none" | "view-box" | (string & {});
+    export type OffsetRotate = Globals | "auto" | "reverse" | (string & {});
+    export type ObjectFit = Globals | "contain" | "cover" | "fill" | "none" | "scale-down";
+    export type ObjectPosition<TLength = (string & {}) | 0> = Globals | DataType.Position<TLength>;
+    export type ObjectViewBox = Globals | "none" | (string & {});
+    export type OffsetAnchor<TLength = (string & {}) | 0> = Globals | DataType.Position<TLength> | "auto";
+    export type OffsetPosition<TLength = (string & {}) | 0> = Globals | DataType.Position<TLength> | "auto" | "normal";
+    export type Opacity = Globals | (string & {}) | (number & {});
+    export type Order = Globals | (number & {}) | (string & {});
+    export type Orphans = Globals | (number & {}) | (string & {});
+    export type Outline<TLength = (string & {}) | 0> = Globals | DataType.LineWidth<TLength> | DataType.OutlineLineStyle | DataType.Color | "auto" | (string & {});
+    export type OutlineColor = Globals | DataType.Color | "auto";
+    export type OutlineOffset<TLength = (string & {}) | 0> = Globals | TLength;
+    export type OutlineStyle = Globals | DataType.OutlineLineStyle | "auto";
+    export type OutlineWidth<TLength = (string & {}) | 0> = Globals | DataType.LineWidth<TLength>;
+    export type Overflow = Globals | "-moz-hidden-unscrollable" | "auto" | "clip" | "hidden" | "overlay" | "scroll" | "visible" | (string & {});
+    export type OverflowAnchor = Globals | "auto" | "none";
+    export type OverflowBlock = Globals | "auto" | "clip" | "hidden" | "scroll" | "visible";
+    export type OverflowClipBox = Globals | "content-box" | "padding-box";
+    export type OverflowClipMargin<TLength = (string & {}) | 0> = Globals | DataType.VisualBox | TLength | (string & {});
+    export type OverflowInline = Globals | "auto" | "clip" | "hidden" | "scroll" | "visible";
+    export type OverflowWrap = Globals | "anywhere" | "break-word" | "normal";
+    export type OverflowX = Globals | "-moz-hidden-unscrollable" | "auto" | "clip" | "hidden" | "overlay" | "scroll" | "visible";
+    export type OverflowY = Globals | "-moz-hidden-unscrollable" | "auto" | "clip" | "hidden" | "overlay" | "scroll" | "visible";
+    export type Overlay = Globals | "auto" | "none";
+    export type OverscrollBehavior = Globals | "auto" | "contain" | "none" | (string & {});
+    export type OverscrollBehaviorBlock = Globals | "auto" | "contain" | "none";
+    export type OverscrollBehaviorInline = Globals | "auto" | "contain" | "none";
+    export type OverscrollBehaviorX = Globals | "auto" | "contain" | "none";
+    export type OverscrollBehaviorY = Globals | "auto" | "contain" | "none";
+    export type Padding<TLength = (string & {}) | 0> = Globals | TLength | (string & {});
+    export type PaddingBlock<TLength = (string & {}) | 0> = Globals | TLength | (string & {});
+    export type PaddingBlockEnd<TLength = (string & {}) | 0> = Globals | TLength | (string & {});
+    export type PaddingBlockStart<TLength = (string & {}) | 0> = Globals | TLength | (string & {});
+    export type PaddingBottom<TLength = (string & {}) | 0> = Globals | TLength | (string & {});
+    export type PaddingInline<TLength = (string & {}) | 0> = Globals | TLength | (string & {});
+    export type PaddingInlineEnd<TLength = (string & {}) | 0> = Globals | TLength | (string & {});
+    export type PaddingInlineStart<TLength = (string & {}) | 0> = Globals | TLength | (string & {});
+    export type PaddingLeft<TLength = (string & {}) | 0> = Globals | TLength | (string & {});
+    export type PaddingRight<TLength = (string & {}) | 0> = Globals | TLength | (string & {});
+    export type PaddingTop<TLength = (string & {}) | 0> = Globals | TLength | (string & {});
+    export type Page = Globals | "auto" | (string & {});
+    export type PageBreakAfter = Globals | "always" | "auto" | "avoid" | "left" | "recto" | "right" | "verso";
+    export type PageBreakBefore = Globals | "always" | "auto" | "avoid" | "left" | "recto" | "right" | "verso";
+    export type PageBreakInside = Globals | "auto" | "avoid";
+    export type PaintOrder = Globals | "fill" | "markers" | "normal" | "stroke" | (string & {});
+    export type Perspective<TLength = (string & {}) | 0> = Globals | TLength | "none";
+    export type PerspectiveOrigin<TLength = (string & {}) | 0> = Globals | DataType.Position<TLength>;
+    export type PlaceContent = Globals | DataType.ContentDistribution | DataType.ContentPosition | "baseline" | "normal" | (string & {});
+    export type PlaceItems = Globals | DataType.SelfPosition | "anchor-center" | "baseline" | "normal" | "stretch" | (string & {});
+    export type PlaceSelf = Globals | DataType.SelfPosition | "anchor-center" | "auto" | "baseline" | "normal" | "stretch" | (string & {});
+    export type PointerEvents = Globals | "all" | "auto" | "fill" | "inherit" | "none" | "painted" | "stroke" | "visible" | "visibleFill" | "visiblePainted" | "visibleStroke";
+    export type Position = Globals | "-webkit-sticky" | "absolute" | "fixed" | "relative" | "static" | "sticky";
+    export type PositionAnchor = Globals | "auto" | (string & {});
+    export type PositionTry = Globals | DataType.TryTactic | DataType.PositionArea | "none" | (string & {});
+    export type PositionTryFallbacks = Globals | DataType.TryTactic | DataType.PositionArea | "none" | (string & {});
+    export type PositionTryOrder = Globals | DataType.TrySize | "normal";
+    export type PositionVisibility = Globals | "always" | "anchors-valid" | "anchors-visible" | "no-overflow" | (string & {});
+    export type Quotes = Globals | "auto" | "none" | (string & {});
+    export type R<TLength = (string & {}) | 0> = Globals | TLength | (string & {});
+    export type Resize = Globals | "block" | "both" | "horizontal" | "inline" | "none" | "vertical";
+    export type Right<TLength = (string & {}) | 0> = Globals | TLength | "auto" | (string & {});
+    export type Rotate = Globals | "none" | (string & {});
+    export type RowGap<TLength = (string & {}) | 0> = Globals | TLength | "normal" | (string & {});
+    export type RubyAlign = Globals | "center" | "space-around" | "space-between" | "start";
+    export type RubyMerge = Globals | "auto" | "collapse" | "separate";
+    export type RubyOverhang = Globals | "auto" | "none";
+    export type RubyPosition = Globals | "alternate" | "inter-character" | "over" | "under" | (string & {});
+    export type Rx<TLength = (string & {}) | 0> = Globals | TLength | (string & {});
+    export type Ry<TLength = (string & {}) | 0> = Globals | TLength | (string & {});
+    export type Scale = Globals | "none" | (string & {}) | (number & {});
+    export type ScrollBehavior = Globals | "auto" | "smooth";
+    export type ScrollInitialTarget = Globals | "nearest" | "none";
+    export type ScrollMargin<TLength = (string & {}) | 0> = Globals | TLength | (string & {});
+    export type ScrollMarginBlock<TLength = (string & {}) | 0> = Globals | TLength | (string & {});
+    export type ScrollMarginBlockEnd<TLength = (string & {}) | 0> = Globals | TLength;
+    export type ScrollMarginBlockStart<TLength = (string & {}) | 0> = Globals | TLength;
+    export type ScrollMarginBottom<TLength = (string & {}) | 0> = Globals | TLength;
+    export type ScrollMarginInline<TLength = (string & {}) | 0> = Globals | TLength | (string & {});
+    export type ScrollMarginInlineEnd<TLength = (string & {}) | 0> = Globals | TLength;
+    export type ScrollMarginInlineStart<TLength = (string & {}) | 0> = Globals | TLength;
+    export type ScrollMarginLeft<TLength = (string & {}) | 0> = Globals | TLength;
+    export type ScrollMarginRight<TLength = (string & {}) | 0> = Globals | TLength;
+    export type ScrollMarginTop<TLength = (string & {}) | 0> = Globals | TLength;
+    export type ScrollPadding<TLength = (string & {}) | 0> = Globals | TLength | "auto" | (string & {});
+    export type ScrollPaddingBlock<TLength = (string & {}) | 0> = Globals | TLength | "auto" | (string & {});
+    export type ScrollPaddingBlockEnd<TLength = (string & {}) | 0> = Globals | TLength | "auto" | (string & {});
+    export type ScrollPaddingBlockStart<TLength = (string & {}) | 0> = Globals | TLength | "auto" | (string & {});
+    export type ScrollPaddingBottom<TLength = (string & {}) | 0> = Globals | TLength | "auto" | (string & {});
+    export type ScrollPaddingInline<TLength = (string & {}) | 0> = Globals | TLength | "auto" | (string & {});
+    export type ScrollPaddingInlineEnd<TLength = (string & {}) | 0> = Globals | TLength | "auto" | (string & {});
+    export type ScrollPaddingInlineStart<TLength = (string & {}) | 0> = Globals | TLength | "auto" | (string & {});
+    export type ScrollPaddingLeft<TLength = (string & {}) | 0> = Globals | TLength | "auto" | (string & {});
+    export type ScrollPaddingRight<TLength = (string & {}) | 0> = Globals | TLength | "auto" | (string & {});
+    export type ScrollPaddingTop<TLength = (string & {}) | 0> = Globals | TLength | "auto" | (string & {});
+    export type ScrollSnapAlign = Globals | "center" | "end" | "none" | "start" | (string & {});
+    export type ScrollSnapCoordinate<TLength = (string & {}) | 0> = Globals | DataType.Position<TLength> | "none" | (string & {});
+    export type ScrollSnapDestination<TLength = (string & {}) | 0> = Globals | DataType.Position<TLength>;
+    export type ScrollSnapPointsX = Globals | "none" | (string & {});
+    export type ScrollSnapPointsY = Globals | "none" | (string & {});
+    export type ScrollSnapStop = Globals | "always" | "normal";
+    export type ScrollSnapType = Globals | "block" | "both" | "inline" | "none" | "x" | "y" | (string & {});
+    export type ScrollSnapTypeX = Globals | "mandatory" | "none" | "proximity";
+    export type ScrollSnapTypeY = Globals | "mandatory" | "none" | "proximity";
+    export type ScrollTimeline = Globals | "none" | (string & {});
+    export type ScrollTimelineAxis = Globals | "block" | "inline" | "x" | "y" | (string & {});
+    export type ScrollTimelineName = Globals | "none" | (string & {});
+    export type ScrollbarColor = Globals | "auto" | (string & {});
+    export type ScrollbarGutter = Globals | "auto" | "stable" | (string & {});
+    export type ScrollbarWidth = Globals | "auto" | "none" | "thin";
+    export type ShapeImageThreshold = Globals | (string & {}) | (number & {});
+    export type ShapeMargin<TLength = (string & {}) | 0> = Globals | TLength | (string & {});
+    export type ShapeOutside = Globals | DataType.VisualBox | "margin-box" | "none" | (string & {});
+    export type ShapeRendering = Globals | "auto" | "crispEdges" | "geometricPrecision" | "optimizeSpeed";
+    export type SpeakAs = Globals | "digits" | "literal-punctuation" | "no-punctuation" | "normal" | "spell-out" | (string & {});
+    export type StopColor = Globals | DataType.Color;
+    export type StopOpacity = Globals | (string & {}) | (number & {});
+    export type Stroke = Globals | DataType.Paint;
+    export type StrokeColor = Globals | DataType.Color;
+    export type StrokeDasharray<TLength = (string & {}) | 0> = Globals | DataType.Dasharray<TLength> | "none";
+    export type StrokeDashoffset<TLength = (string & {}) | 0> = Globals | TLength | (string & {}) | (number & {});
+    export type StrokeLinecap = Globals | "butt" | "round" | "square";
+    export type StrokeLinejoin = Globals | "arcs" | "bevel" | "miter" | "miter-clip" | "round";
+    export type StrokeMiterlimit = Globals | (number & {}) | (string & {});
+    export type StrokeOpacity = Globals | (string & {}) | (number & {});
+    export type StrokeWidth<TLength = (string & {}) | 0> = Globals | TLength | (string & {}) | (number & {});
+    export type TabSize<TLength = (string & {}) | 0> = Globals | TLength | (number & {}) | (string & {});
+    export type TableLayout = Globals | "auto" | "fixed";
+    export type TextAlign = Globals | "-khtml-center" | "-khtml-left" | "-khtml-right" | "-moz-center" | "-moz-left" | "-moz-right" | "-webkit-center" | "-webkit-left" | "-webkit-match-parent" | "-webkit-right" | "center" | "end" | "justify" | "left" | "match-parent" | "right" | "start";
+    export type TextAlignLast = Globals | "auto" | "center" | "end" | "justify" | "left" | "right" | "start";
+    export type TextAnchor = Globals | "end" | "middle" | "start";
+    export type TextAutospace = Globals | DataType.Autospace | "auto" | "normal";
+    export type TextBox = Globals | DataType.TextEdge | "auto" | "none" | "normal" | "trim-both" | "trim-end" | "trim-start" | (string & {});
+    export type TextBoxEdge = Globals | DataType.TextEdge | "auto";
+    export type TextBoxTrim = Globals | "none" | "trim-both" | "trim-end" | "trim-start";
+    export type TextCombineUpright = Globals | "all" | "digits" | "none" | (string & {});
+    export type TextDecoration<TLength = (string & {}) | 0> = Globals | DataType.Color | TLength | "auto" | "blink" | "dashed" | "dotted" | "double" | "from-font" | "grammar-error" | "line-through" | "none" | "overline" | "solid" | "spelling-error" | "underline" | "wavy" | (string & {});
+    export type TextDecorationColor = Globals | DataType.Color;
+    export type TextDecorationLine = Globals | "blink" | "grammar-error" | "line-through" | "none" | "overline" | "spelling-error" | "underline" | (string & {});
+    export type TextDecorationSkip = Globals | "box-decoration" | "edges" | "leading-spaces" | "none" | "objects" | "spaces" | "trailing-spaces" | (string & {});
+    export type TextDecorationSkipInk = Globals | "all" | "auto" | "none";
+    export type TextDecorationStyle = Globals | "dashed" | "dotted" | "double" | "solid" | "wavy";
+    export type TextDecorationThickness<TLength = (string & {}) | 0> = Globals | TLength | "auto" | "from-font" | (string & {});
+    export type TextEmphasis = Globals | DataType.Color | "circle" | "dot" | "double-circle" | "filled" | "none" | "open" | "sesame" | "triangle" | (string & {});
+    export type TextEmphasisColor = Globals | DataType.Color;
+    export type TextEmphasisPosition = Globals | "auto" | "over" | "under" | (string & {});
+    export type TextEmphasisStyle = Globals | "circle" | "dot" | "double-circle" | "filled" | "none" | "open" | "sesame" | "triangle" | (string & {});
+    export type TextIndent<TLength = (string & {}) | 0> = Globals | TLength | (string & {});
+    export type TextJustify = Globals | "auto" | "distribute" | "inter-character" | "inter-word" | "none";
+    export type TextOrientation = Globals | "mixed" | "sideways" | "sideways-right" | "upright";
+    export type TextOverflow = Globals | "clip" | "ellipsis" | (string & {});
+    export type TextRendering = Globals | "auto" | "geometricPrecision" | "optimizeLegibility" | "optimizeSpeed";
+    export type TextShadow = Globals | "none" | (string & {});
+    export type TextSizeAdjust = Globals | "auto" | "none" | (string & {});
+    export type TextSpacingTrim = Globals | "normal" | "space-all" | "space-first" | "trim-start";
+    export type TextTransform = Globals | "capitalize" | "full-size-kana" | "full-width" | "lowercase" | "math-auto" | "none" | "uppercase" | (string & {});
+    export type TextUnderlineOffset<TLength = (string & {}) | 0> = Globals | TLength | "auto" | (string & {});
+    export type TextUnderlinePosition = Globals | "auto" | "from-font" | "left" | "right" | "under" | (string & {});
+    export type TextWrap = Globals | "auto" | "balance" | "nowrap" | "pretty" | "stable" | "wrap" | (string & {});
+    export type TextWrapMode = Globals | "nowrap" | "wrap";
+    export type TextWrapStyle = Globals | "auto" | "balance" | "pretty" | "stable";
+    export type TimelineScope = Globals | "none" | (string & {});
+    export type Top<TLength = (string & {}) | 0> = Globals | TLength | "auto" | (string & {});
+    export type TouchAction = Globals | "-ms-manipulation" | "-ms-none" | "-ms-pan-x" | "-ms-pan-y" | "-ms-pinch-zoom" | "auto" | "manipulation" | "none" | "pan-down" | "pan-left" | "pan-right" | "pan-up" | "pan-x" | "pan-y" | "pinch-zoom" | (string & {});
+    export type Transform = Globals | "none" | (string & {});
+    export type TransformBox = Globals | "border-box" | "content-box" | "fill-box" | "stroke-box" | "view-box";
+    export type TransformOrigin<TLength = (string & {}) | 0> = Globals | TLength | "bottom" | "center" | "left" | "right" | "top" | (string & {});
+    export type TransformStyle = Globals | "flat" | "preserve-3d";
+    export type Transition<TTime = string & {}> = Globals | DataType.SingleTransition<TTime> | (string & {});
+    export type TransitionBehavior = Globals | "allow-discrete" | "normal" | (string & {});
+    export type TransitionDelay<TTime = string & {}> = Globals | TTime | (string & {});
+    export type TransitionDuration<TTime = string & {}> = Globals | TTime | (string & {});
+    export type TransitionProperty = Globals | "all" | "none" | (string & {});
+    export type TransitionTimingFunction = Globals | DataType.EasingFunction | (string & {});
+    export type Translate<TLength = (string & {}) | 0> = Globals | TLength | "none" | (string & {});
+    export type UnicodeBidi = Globals | "-moz-isolate" | "-moz-isolate-override" | "-moz-plaintext" | "-webkit-isolate" | "-webkit-isolate-override" | "-webkit-plaintext" | "bidi-override" | "embed" | "isolate" | "isolate-override" | "normal" | "plaintext";
+    export type UserSelect = Globals | "-moz-none" | "all" | "auto" | "none" | "text";
+    export type VectorEffect = Globals | "fixed-position" | "non-rotation" | "non-scaling-size" | "non-scaling-stroke" | "none";
+    export type VerticalAlign<TLength = (string & {}) | 0> = Globals | TLength | "baseline" | "bottom" | "middle" | "sub" | "super" | "text-bottom" | "text-top" | "top" | (string & {});
+    export type ViewTimeline = Globals | "none" | (string & {});
+    export type ViewTimelineAxis = Globals | "block" | "inline" | "x" | "y" | (string & {});
+    export type ViewTimelineInset<TLength = (string & {}) | 0> = Globals | TLength | "auto" | (string & {});
+    export type ViewTimelineName = Globals | "none" | (string & {});
+    export type ViewTransitionClass = Globals | "none" | (string & {});
+    export type ViewTransitionName = Globals | "match-element" | "none" | (string & {});
+    export type Visibility = Globals | "collapse" | "hidden" | "visible";
+    export type WhiteSpace = Globals | "-moz-pre-wrap" | "break-spaces" | "collapse" | "normal" | "nowrap" | "pre" | "pre-line" | "pre-wrap" | "preserve" | "preserve-breaks" | "preserve-spaces" | "wrap" | (string & {});
+    export type WhiteSpaceCollapse = Globals | "break-spaces" | "collapse" | "preserve" | "preserve-breaks" | "preserve-spaces";
+    export type Widows = Globals | (number & {}) | (string & {});
+    export type Width<TLength = (string & {}) | 0> = Globals | TLength | "-moz-fit-content" | "-moz-max-content" | "-moz-min-content" | "-webkit-fit-content" | "-webkit-max-content" | "auto" | "fit-content" | "intrinsic" | "max-content" | "min-content" | "min-intrinsic" | (string & {});
+    export type WillChange = Globals | DataType.AnimateableFeature | "auto" | (string & {});
+    export type WordBreak = Globals | "auto-phrase" | "break-all" | "break-word" | "keep-all" | "normal";
+    export type WordSpacing<TLength = (string & {}) | 0> = Globals | TLength | "normal";
+    export type WordWrap = Globals | "break-word" | "normal";
+    export type WritingMode = Globals | "horizontal-tb" | "sideways-lr" | "sideways-rl" | "vertical-lr" | "vertical-rl";
+    export type X<TLength = (string & {}) | 0> = Globals | TLength | (string & {});
+    export type Y<TLength = (string & {}) | 0> = Globals | TLength | (string & {});
+    export type ZIndex = Globals | "auto" | (number & {}) | (string & {});
+    export type Zoom = Globals | "normal" | "reset" | (string & {}) | (number & {});
+    export type MozAppearance = Globals | "-moz-mac-unified-toolbar" | "-moz-win-borderless-glass" | "-moz-win-browsertabbar-toolbox" | "-moz-win-communications-toolbox" | "-moz-win-communicationstext" | "-moz-win-exclude-glass" | "-moz-win-glass" | "-moz-win-media-toolbox" | "-moz-win-mediatext" | "-moz-window-button-box" | "-moz-window-button-box-maximized" | "-moz-window-button-close" | "-moz-window-button-maximize" | "-moz-window-button-minimize" | "-moz-window-button-restore" | "-moz-window-frame-bottom" | "-moz-window-frame-left" | "-moz-window-frame-right" | "-moz-window-titlebar" | "-moz-window-titlebar-maximized" | "button" | "button-arrow-down" | "button-arrow-next" | "button-arrow-previous" | "button-arrow-up" | "button-bevel" | "button-focus" | "caret" | "checkbox" | "checkbox-container" | "checkbox-label" | "checkmenuitem" | "dualbutton" | "groupbox" | "listbox" | "listitem" | "menuarrow" | "menubar" | "menucheckbox" | "menuimage" | "menuitem" | "menuitemtext" | "menulist" | "menulist-button" | "menulist-text" | "menulist-textfield" | "menupopup" | "menuradio" | "menuseparator" | "meterbar" | "meterchunk" | "none" | "progressbar" | "progressbar-vertical" | "progresschunk" | "progresschunk-vertical" | "radio" | "radio-container" | "radio-label" | "radiomenuitem" | "range" | "range-thumb" | "resizer" | "resizerpanel" | "scale-horizontal" | "scale-vertical" | "scalethumb-horizontal" | "scalethumb-vertical" | "scalethumbend" | "scalethumbstart" | "scalethumbtick" | "scrollbarbutton-down" | "scrollbarbutton-left" | "scrollbarbutton-right" | "scrollbarbutton-up" | "scrollbarthumb-horizontal" | "scrollbarthumb-vertical" | "scrollbartrack-horizontal" | "scrollbartrack-vertical" | "searchfield" | "separator" | "sheet" | "spinner" | "spinner-downbutton" | "spinner-textfield" | "spinner-upbutton" | "splitter" | "statusbar" | "statusbarpanel" | "tab" | "tab-scroll-arrow-back" | "tab-scroll-arrow-forward" | "tabpanel" | "tabpanels" | "textfield" | "textfield-multiline" | "toolbar" | "toolbarbutton" | "toolbarbutton-dropdown" | "toolbargripper" | "toolbox" | "tooltip" | "treeheader" | "treeheadercell" | "treeheadersortarrow" | "treeitem" | "treeline" | "treetwisty" | "treetwistyopen" | "treeview";
+    export type MozBinding = Globals | "none" | (string & {});
+    export type MozBorderBottomColors = Globals | DataType.Color | "none" | (string & {});
+    export type MozBorderLeftColors = Globals | DataType.Color | "none" | (string & {});
+    export type MozBorderRightColors = Globals | DataType.Color | "none" | (string & {});
+    export type MozBorderTopColors = Globals | DataType.Color | "none" | (string & {});
+    export type MozContextProperties = Globals | "fill" | "fill-opacity" | "none" | "stroke" | "stroke-opacity" | (string & {});
+    export type MozFloatEdge = Globals | "border-box" | "content-box" | "margin-box" | "padding-box";
+    export type MozForceBrokenImageIcon = Globals | 0 | (string & {}) | 1;
+    export type MozOrient = Globals | "block" | "horizontal" | "inline" | "vertical";
+    export type MozOutlineRadius<TLength = (string & {}) | 0> = Globals | TLength | (string & {});
+    export type MozOutlineRadiusBottomleft<TLength = (string & {}) | 0> = Globals | TLength | (string & {});
+    export type MozOutlineRadiusBottomright<TLength = (string & {}) | 0> = Globals | TLength | (string & {});
+    export type MozOutlineRadiusTopleft<TLength = (string & {}) | 0> = Globals | TLength | (string & {});
+    export type MozOutlineRadiusTopright<TLength = (string & {}) | 0> = Globals | TLength | (string & {});
+    export type MozStackSizing = Globals | "ignore" | "stretch-to-fit";
+    export type MozTextBlink = Globals | "blink" | "none";
+    export type MozUserFocus = Globals | "ignore" | "none" | "normal" | "select-after" | "select-all" | "select-before" | "select-menu" | "select-same";
+    export type MozUserInput = Globals | "auto" | "disabled" | "enabled" | "none";
+    export type MozUserModify = Globals | "read-only" | "read-write" | "write-only";
+    export type MozWindowDragging = Globals | "drag" | "no-drag";
+    export type MozWindowShadow = Globals | "default" | "menu" | "none" | "sheet" | "tooltip";
+    export type MsAccelerator = Globals | "false" | "true";
+    export type MsBlockProgression = Globals | "bt" | "lr" | "rl" | "tb";
+    export type MsContentZoomChaining = Globals | "chained" | "none";
+    export type MsContentZoomLimit = Globals | (string & {});
+    export type MsContentZoomLimitMax = Globals | (string & {});
+    export type MsContentZoomLimitMin = Globals | (string & {});
+    export type MsContentZoomSnap = Globals | "mandatory" | "none" | "proximity" | (string & {});
+    export type MsContentZoomSnapPoints = Globals | (string & {});
+    export type MsContentZoomSnapType = Globals | "mandatory" | "none" | "proximity";
+    export type MsContentZooming = Globals | "none" | "zoom";
+    export type MsFilter = Globals | (string & {});
+    export type MsFlowFrom = Globals | "none" | (string & {});
+    export type MsFlowInto = Globals | "none" | (string & {});
+    export type MsGridColumns<TLength = (string & {}) | 0> = Globals | DataType.TrackBreadth<TLength> | "none" | (string & {});
+    export type MsGridRows<TLength = (string & {}) | 0> = Globals | DataType.TrackBreadth<TLength> | "none" | (string & {});
+    export type MsHighContrastAdjust = Globals | "auto" | "none";
+    export type MsHyphenateLimitChars = Globals | "auto" | (string & {}) | (number & {});
+    export type MsHyphenateLimitLines = Globals | "no-limit" | (number & {}) | (string & {});
+    export type MsHyphenateLimitZone<TLength = (string & {}) | 0> = Globals | TLength | (string & {});
+    export type MsImeAlign = Globals | "after" | "auto";
+    export type MsOverflowStyle = Globals | "-ms-autohiding-scrollbar" | "auto" | "none" | "scrollbar";
+    export type MsScrollChaining = Globals | "chained" | "none";
+    export type MsScrollLimit = Globals | (string & {});
+    export type MsScrollLimitXMax<TLength = (string & {}) | 0> = Globals | TLength | "auto";
+    export type MsScrollLimitXMin<TLength = (string & {}) | 0> = Globals | TLength;
+    export type MsScrollLimitYMax<TLength = (string & {}) | 0> = Globals | TLength | "auto";
+    export type MsScrollLimitYMin<TLength = (string & {}) | 0> = Globals | TLength;
+    export type MsScrollRails = Globals | "none" | "railed";
+    export type MsScrollSnapPointsX = Globals | (string & {});
+    export type MsScrollSnapPointsY = Globals | (string & {});
+    export type MsScrollSnapType = Globals | "mandatory" | "none" | "proximity";
+    export type MsScrollSnapX = Globals | (string & {});
+    export type MsScrollSnapY = Globals | (string & {});
+    export type MsScrollTranslation = Globals | "none" | "vertical-to-horizontal";
+    export type MsScrollbar3dlightColor = Globals | DataType.Color;
+    export type MsScrollbarArrowColor = Globals | DataType.Color;
+    export type MsScrollbarBaseColor = Globals | DataType.Color;
+    export type MsScrollbarDarkshadowColor = Globals | DataType.Color;
+    export type MsScrollbarFaceColor = Globals | DataType.Color;
+    export type MsScrollbarHighlightColor = Globals | DataType.Color;
+    export type MsScrollbarShadowColor = Globals | DataType.Color;
+    export type MsScrollbarTrackColor = Globals | DataType.Color;
+    export type MsTextAutospace = Globals | "ideograph-alpha" | "ideograph-numeric" | "ideograph-parenthesis" | "ideograph-space" | "none";
+    export type MsTouchSelect = Globals | "grippers" | "none";
+    export type MsUserSelect = Globals | "element" | "none" | "text";
+    export type MsWrapFlow = Globals | "auto" | "both" | "clear" | "end" | "maximum" | "start";
+    export type MsWrapMargin<TLength = (string & {}) | 0> = Globals | TLength;
+    export type MsWrapThrough = Globals | "none" | "wrap";
+    export type WebkitAppearance = Globals | "-apple-pay-button" | "button" | "button-bevel" | "caret" | "checkbox" | "default-button" | "inner-spin-button" | "listbox" | "listitem" | "media-controls-background" | "media-controls-fullscreen-background" | "media-current-time-display" | "media-enter-fullscreen-button" | "media-exit-fullscreen-button" | "media-fullscreen-button" | "media-mute-button" | "media-overlay-play-button" | "media-play-button" | "media-seek-back-button" | "media-seek-forward-button" | "media-slider" | "media-sliderthumb" | "media-time-remaining-display" | "media-toggle-closed-captions-button" | "media-volume-slider" | "media-volume-slider-container" | "media-volume-sliderthumb" | "menulist" | "menulist-button" | "menulist-text" | "menulist-textfield" | "meter" | "none" | "progress-bar" | "progress-bar-value" | "push-button" | "radio" | "searchfield" | "searchfield-cancel-button" | "searchfield-decoration" | "searchfield-results-button" | "searchfield-results-decoration" | "slider-horizontal" | "slider-vertical" | "sliderthumb-horizontal" | "sliderthumb-vertical" | "square-button" | "textarea" | "textfield";
+    export type WebkitBorderBefore<TLength = (string & {}) | 0> = Globals | DataType.LineWidth<TLength> | DataType.LineStyle | DataType.Color | (string & {});
+    export type WebkitBorderBeforeColor = Globals | DataType.Color;
+    export type WebkitBorderBeforeStyle = Globals | DataType.LineStyle | (string & {});
+    export type WebkitBorderBeforeWidth<TLength = (string & {}) | 0> = Globals | DataType.LineWidth<TLength> | (string & {});
+    export type WebkitBoxReflect<TLength = (string & {}) | 0> = Globals | TLength | "above" | "below" | "left" | "right" | (string & {});
+    export type WebkitLineClamp = Globals | "none" | (number & {}) | (string & {});
+    export type WebkitMask<TLength = (string & {}) | 0> = Globals | DataType.Position<TLength> | DataType.RepeatStyle | DataType.VisualBox | "border" | "content" | "none" | "padding" | "text" | (string & {});
+    export type WebkitMaskAttachment = Globals | DataType.Attachment | (string & {});
+    export type WebkitMaskClip = Globals | DataType.PaintBox | "border" | "content" | "no-clip" | "padding" | "text" | "view-box" | (string & {});
+    export type WebkitMaskComposite = Globals | DataType.CompositeStyle | (string & {});
+    export type WebkitMaskImage = Globals | "none" | (string & {});
+    export type WebkitMaskOrigin = Globals | DataType.PaintBox | "border" | "content" | "padding" | "view-box" | (string & {});
+    export type WebkitMaskPosition<TLength = (string & {}) | 0> = Globals | DataType.Position<TLength> | (string & {});
+    export type WebkitMaskPositionX<TLength = (string & {}) | 0> = Globals | TLength | "center" | "left" | "right" | (string & {});
+    export type WebkitMaskPositionY<TLength = (string & {}) | 0> = Globals | TLength | "bottom" | "center" | "top" | (string & {});
+    export type WebkitMaskRepeat = Globals | DataType.RepeatStyle | (string & {});
+    export type WebkitMaskRepeatX = Globals | "no-repeat" | "repeat" | "round" | "space";
+    export type WebkitMaskRepeatY = Globals | "no-repeat" | "repeat" | "round" | "space";
+    export type WebkitMaskSize<TLength = (string & {}) | 0> = Globals | DataType.BgSize<TLength> | (string & {});
+    export type WebkitOverflowScrolling = Globals | "auto" | "touch";
+    export type WebkitTapHighlightColor = Globals | DataType.Color;
+    export type WebkitTextFillColor = Globals | DataType.Color;
+    export type WebkitTextStroke<TLength = (string & {}) | 0> = Globals | DataType.Color | TLength | (string & {});
+    export type WebkitTextStrokeColor = Globals | DataType.Color;
+    export type WebkitTextStrokeWidth<TLength = (string & {}) | 0> = Globals | TLength;
+    export type WebkitTouchCallout = Globals | "default" | "none";
+    export type WebkitUserModify = Globals | "read-only" | "read-write" | "read-write-plaintext-only";
+    export type WebkitUserSelect = Globals | "all" | "auto" | "none" | "text";
+    export type ColorInterpolation = Globals | "auto" | "linearRGB" | "sRGB";
+    export type ColorRendering = Globals | "auto" | "optimizeQuality" | "optimizeSpeed";
+    export type GlyphOrientationVertical = Globals | "auto" | (string & {}) | (number & {});
+}
+namespace AtRule {
+    export interface CounterStyle<TLength = (string & {}) | 0, TTime = string & {}> {
+        additiveSymbols?: string | undefined;
+        fallback?: string | undefined;
+        negative?: string | undefined;
+        pad?: string | undefined;
+        prefix?: string | undefined;
+        range?: Range | undefined;
+        speakAs?: SpeakAs | undefined;
+        suffix?: string | undefined;
+        symbols?: string | undefined;
+        system?: System | undefined;
+    }
+    export interface CounterStyleHyphen<TLength = (string & {}) | 0, TTime = string & {}> {
+        "additive-symbols"?: string | undefined;
+        fallback?: string | undefined;
+        negative?: string | undefined;
+        pad?: string | undefined;
+        prefix?: string | undefined;
+        range?: Range | undefined;
+        "speak-as"?: SpeakAs | undefined;
+        suffix?: string | undefined;
+        symbols?: string | undefined;
+        system?: System | undefined;
+    }
+    export type CounterStyleFallback<TLength = (string & {}) | 0, TTime = string & {}> = Fallback<CounterStyle<TLength, TTime>>;
+    export type CounterStyleHyphenFallback<TLength = (string & {}) | 0, TTime = string & {}> = Fallback<CounterStyleHyphen<TLength, TTime>>;
+    export interface FontFace<TLength = (string & {}) | 0, TTime = string & {}> {
+        MozFontFeatureSettings?: FontFeatureSettings | undefined;
+        ascentOverride?: AscentOverride | undefined;
+        descentOverride?: DescentOverride | undefined;
+        fontDisplay?: FontDisplay | undefined;
+        fontFamily?: string | undefined;
+        fontFeatureSettings?: FontFeatureSettings | undefined;
+        fontStretch?: FontStretch | undefined;
+        fontStyle?: FontStyle | undefined;
+        fontVariationSettings?: FontVariationSettings | undefined;
+        fontWeight?: FontWeight | undefined;
+        lineGapOverride?: LineGapOverride | undefined;
+        sizeAdjust?: string | undefined;
+        src?: string | undefined;
+        unicodeRange?: string | undefined;
+    }
+    export interface FontFaceHyphen<TLength = (string & {}) | 0, TTime = string & {}> {
+        "-moz-font-feature-settings"?: FontFeatureSettings | undefined;
+        "ascent-override"?: AscentOverride | undefined;
+        "descent-override"?: DescentOverride | undefined;
+        "font-display"?: FontDisplay | undefined;
+        "font-family"?: string | undefined;
+        "font-feature-settings"?: FontFeatureSettings | undefined;
+        "font-stretch"?: FontStretch | undefined;
+        "font-style"?: FontStyle | undefined;
+        "font-variation-settings"?: FontVariationSettings | undefined;
+        "font-weight"?: FontWeight | undefined;
+        "line-gap-override"?: LineGapOverride | undefined;
+        "size-adjust"?: string | undefined;
+        src?: string | undefined;
+        "unicode-range"?: string | undefined;
+    }
+    export type FontFaceFallback<TLength = (string & {}) | 0, TTime = string & {}> = Fallback<FontFace<TLength, TTime>>;
+    export type FontFaceHyphenFallback<TLength = (string & {}) | 0, TTime = string & {}> = Fallback<FontFaceHyphen<TLength, TTime>>;
+    export interface FontPaletteValues<TLength = (string & {}) | 0, TTime = string & {}> {
+        basePalette?: BasePalette | undefined;
+        fontFamily?: string | undefined;
+        overrideColors?: string | undefined;
+    }
+    export interface FontPaletteValuesHyphen<TLength = (string & {}) | 0, TTime = string & {}> {
+        "base-palette"?: BasePalette | undefined;
+        "font-family"?: string | undefined;
+        "override-colors"?: string | undefined;
+    }
+    export type FontPaletteValuesFallback<TLength = (string & {}) | 0, TTime = string & {}> = Fallback<FontPaletteValues<TLength, TTime>>;
+    export type FontPaletteValuesHyphenFallback<TLength = (string & {}) | 0, TTime = string & {}> = Fallback<FontPaletteValuesHyphen<TLength, TTime>>;
+    export interface Page<TLength = (string & {}) | 0, TTime = string & {}> {
+        bleed?: Bleed<TLength> | undefined;
+        marks?: Marks | undefined;
+        pageOrientation?: PageOrientation | undefined;
+        size?: Size<TLength> | undefined;
+    }
+    export interface PageHyphen<TLength = (string & {}) | 0, TTime = string & {}> {
+        bleed?: Bleed<TLength> | undefined;
+        marks?: Marks | undefined;
+        "page-orientation"?: PageOrientation | undefined;
+        size?: Size<TLength> | undefined;
+    }
+    export type PageFallback<TLength = (string & {}) | 0, TTime = string & {}> = Fallback<Page<TLength, TTime>>;
+    export type PageHyphenFallback<TLength = (string & {}) | 0, TTime = string & {}> = Fallback<PageHyphen<TLength, TTime>>;
+    export interface Property<TLength = (string & {}) | 0, TTime = string & {}> {
+        inherits?: Inherits | undefined;
+        initialValue?: string | undefined;
+        syntax?: string | undefined;
+    }
+    export interface PropertyHyphen<TLength = (string & {}) | 0, TTime = string & {}> {
+        inherits?: Inherits | undefined;
+        "initial-value"?: string | undefined;
+        syntax?: string | undefined;
+    }
+    export type PropertyFallback<TLength = (string & {}) | 0, TTime = string & {}> = Fallback<Property<TLength, TTime>>;
+    export type PropertyHyphenFallback<TLength = (string & {}) | 0, TTime = string & {}> = Fallback<PropertyHyphen<TLength, TTime>>;
+    export interface ViewTransition<TLength = (string & {}) | 0, TTime = string & {}> {
+        navigation?: Navigation | undefined;
+        types?: Types | undefined;
+    }
+    export interface ViewTransitionHyphen<TLength = (string & {}) | 0, TTime = string & {}> {
+        navigation?: Navigation | undefined;
+        types?: Types | undefined;
+    }
+    export type ViewTransitionFallback<TLength = (string & {}) | 0, TTime = string & {}> = Fallback<ViewTransition<TLength, TTime>>;
+    export type ViewTransitionHyphenFallback<TLength = (string & {}) | 0, TTime = string & {}> = Fallback<ViewTransitionHyphen<TLength, TTime>>;
+    type Range = "auto" | (string & {});
+    type SpeakAs = "auto" | "bullets" | "numbers" | "spell-out" | "words" | (string & {});
+    type System = "additive" | "alphabetic" | "cyclic" | "fixed" | "numeric" | "symbolic" | (string & {});
+    type FontFeatureSettings = "normal" | (string & {});
+    type AscentOverride = "normal" | (string & {});
+    type DescentOverride = "normal" | (string & {});
+    type FontDisplay = "auto" | "block" | "fallback" | "optional" | "swap";
+    type FontStretch = DataType.FontStretchAbsolute | (string & {});
+    type FontStyle = "italic" | "normal" | "oblique" | (string & {});
+    type FontVariationSettings = "normal" | (string & {});
+    type FontWeight = DataType.FontWeightAbsolute | (string & {});
+    type LineGapOverride = "normal" | (string & {});
+    type BasePalette = "dark" | "light" | (number & {}) | (string & {});
+    type Bleed<TLength> = TLength | "auto";
+    type Marks = "crop" | "cross" | "none" | (string & {});
+    type PageOrientation = "rotate-left" | "rotate-right" | "upright";
+    type Size<TLength> = DataType.PageSize | TLength | "auto" | "landscape" | "portrait" | (string & {});
+    type Inherits = "false" | "true";
+    type Navigation = "auto" | "none";
+    type Types = "none" | (string & {});
+}
+namespace DataType {
+    type AbsoluteSize = "large" | "medium" | "small" | "x-large" | "x-small" | "xx-large" | "xx-small" | "xxx-large";
+    type AnimateableFeature = "contents" | "scroll-position" | (string & {});
+    type Attachment = "fixed" | "local" | "scroll";
+    type Autospace = "ideograph-alpha" | "ideograph-numeric" | "insert" | "no-autospace" | "punctuation" | "replace" | (string & {});
+    type BgClip = VisualBox | "border-area" | "text";
+    type BgLayer<TLength> = BgPosition<TLength> | RepeatStyle | Attachment | VisualBox | "none" | (string & {});
+    type BgPosition<TLength> = TLength | "bottom" | "center" | "left" | "right" | "top" | (string & {});
+    type BgSize<TLength> = TLength | "auto" | "contain" | "cover" | (string & {});
+    type BlendMode = "color" | "color-burn" | "color-dodge" | "darken" | "difference" | "exclusion" | "hard-light" | "hue" | "lighten" | "luminosity" | "multiply" | "normal" | "overlay" | "saturation" | "screen" | "soft-light";
+    type Color = ColorBase | SystemColor | DeprecatedSystemColor | "currentColor" | (string & {});
+    type ColorBase = NamedColor | "transparent" | (string & {});
+    type CompatAuto = "button" | "checkbox" | "listbox" | "menulist" | "meter" | "progress-bar" | "radio" | "searchfield" | "textarea";
+    type CompositeStyle = "clear" | "copy" | "destination-atop" | "destination-in" | "destination-out" | "destination-over" | "source-atop" | "source-in" | "source-out" | "source-over" | "xor";
+    type CompositingOperator = "add" | "exclude" | "intersect" | "subtract";
+    type ContentDistribution = "space-around" | "space-between" | "space-evenly" | "stretch";
+    type ContentPosition = "center" | "end" | "flex-end" | "flex-start" | "start";
+    type CubicBezierEasingFunction = "ease" | "ease-in" | "ease-in-out" | "ease-out" | (string & {});
+    type CursorPredefined = "-moz-grab" | "-moz-zoom-in" | "-moz-zoom-out" | "-webkit-grab" | "-webkit-grabbing" | "-webkit-zoom-in" | "-webkit-zoom-out" | "alias" | "all-scroll" | "auto" | "cell" | "col-resize" | "context-menu" | "copy" | "crosshair" | "default" | "e-resize" | "ew-resize" | "grab" | "grabbing" | "help" | "move" | "n-resize" | "ne-resize" | "nesw-resize" | "no-drop" | "none" | "not-allowed" | "ns-resize" | "nw-resize" | "nwse-resize" | "pointer" | "progress" | "row-resize" | "s-resize" | "se-resize" | "sw-resize" | "text" | "vertical-text" | "w-resize" | "wait" | "zoom-in" | "zoom-out";
+    type Dasharray<TLength> = TLength | (string & {}) | (number & {});
+    type DeprecatedSystemColor = "ActiveBorder" | "ActiveCaption" | "AppWorkspace" | "Background" | "ButtonHighlight" | "ButtonShadow" | "CaptionText" | "InactiveBorder" | "InactiveCaption" | "InactiveCaptionText" | "InfoBackground" | "InfoText" | "Menu" | "MenuText" | "Scrollbar" | "ThreeDDarkShadow" | "ThreeDFace" | "ThreeDHighlight" | "ThreeDLightShadow" | "ThreeDShadow" | "Window" | "WindowFrame" | "WindowText";
+    type DisplayInside = "-ms-flexbox" | "-ms-grid" | "-webkit-flex" | "flex" | "flow" | "flow-root" | "grid" | "ruby" | "table";
+    type DisplayInternal = "ruby-base" | "ruby-base-container" | "ruby-text" | "ruby-text-container" | "table-caption" | "table-cell" | "table-column" | "table-column-group" | "table-footer-group" | "table-header-group" | "table-row" | "table-row-group";
+    type DisplayLegacy = "-ms-inline-flexbox" | "-ms-inline-grid" | "-webkit-inline-flex" | "inline-block" | "inline-flex" | "inline-grid" | "inline-list-item" | "inline-table";
+    type DisplayOutside = "block" | "inline" | "run-in";
+    type EasingFunction = CubicBezierEasingFunction | StepEasingFunction | "linear" | (string & {});
+    type EastAsianVariantValues = "jis04" | "jis78" | "jis83" | "jis90" | "simplified" | "traditional";
+    type FinalBgLayer<TLength> = BgPosition<TLength> | RepeatStyle | Attachment | VisualBox | Color | "none" | (string & {});
+    type FontStretchAbsolute = "condensed" | "expanded" | "extra-condensed" | "extra-expanded" | "normal" | "semi-condensed" | "semi-expanded" | "ultra-condensed" | "ultra-expanded" | (string & {});
+    type FontWeightAbsolute = "bold" | "normal" | (number & {}) | (string & {});
+    type GenericComplete = "-apple-system" | "cursive" | "fantasy" | "math" | "monospace" | "sans-serif" | "serif" | "system-ui";
+    type GenericFamily = GenericComplete | GenericIncomplete | "emoji" | "fangsong";
+    type GenericIncomplete = "ui-monospace" | "ui-rounded" | "ui-sans-serif" | "ui-serif";
+    type GeometryBox = VisualBox | "fill-box" | "margin-box" | "stroke-box" | "view-box";
+    type GridLine = "auto" | (string & {}) | (number & {});
+    type LineStyle = "dashed" | "dotted" | "double" | "groove" | "hidden" | "inset" | "none" | "outset" | "ridge" | "solid";
+    type LineWidth<TLength> = TLength | "medium" | "thick" | "thin";
+    type MaskLayer<TLength> = Position<TLength> | RepeatStyle | GeometryBox | CompositingOperator | MaskingMode | "no-clip" | "none" | (string & {});
+    type MaskingMode = "alpha" | "luminance" | "match-source";
+    type NamedColor = "aliceblue" | "antiquewhite" | "aqua" | "aquamarine" | "azure" | "beige" | "bisque" | "black" | "blanchedalmond" | "blue" | "blueviolet" | "brown" | "burlywood" | "cadetblue" | "chartreuse" | "chocolate" | "coral" | "cornflowerblue" | "cornsilk" | "crimson" | "cyan" | "darkblue" | "darkcyan" | "darkgoldenrod" | "darkgray" | "darkgreen" | "darkgrey" | "darkkhaki" | "darkmagenta" | "darkolivegreen" | "darkorange" | "darkorchid" | "darkred" | "darksalmon" | "darkseagreen" | "darkslateblue" | "darkslategray" | "darkslategrey" | "darkturquoise" | "darkviolet" | "deeppink" | "deepskyblue" | "dimgray" | "dimgrey" | "dodgerblue" | "firebrick" | "floralwhite" | "forestgreen" | "fuchsia" | "gainsboro" | "ghostwhite" | "gold" | "goldenrod" | "gray" | "green" | "greenyellow" | "grey" | "honeydew" | "hotpink" | "indianred" | "indigo" | "ivory" | "khaki" | "lavender" | "lavenderblush" | "lawngreen" | "lemonchiffon" | "lightblue" | "lightcoral" | "lightcyan" | "lightgoldenrodyellow" | "lightgray" | "lightgreen" | "lightgrey" | "lightpink" | "lightsalmon" | "lightseagreen" | "lightskyblue" | "lightslategray" | "lightslategrey" | "lightsteelblue" | "lightyellow" | "lime" | "limegreen" | "linen" | "magenta" | "maroon" | "mediumaquamarine" | "mediumblue" | "mediumorchid" | "mediumpurple" | "mediumseagreen" | "mediumslateblue" | "mediumspringgreen" | "mediumturquoise" | "mediumvioletred" | "midnightblue" | "mintcream" | "mistyrose" | "moccasin" | "navajowhite" | "navy" | "oldlace" | "olive" | "olivedrab" | "orange" | "orangered" | "orchid" | "palegoldenrod" | "palegreen" | "paleturquoise" | "palevioletred" | "papayawhip" | "peachpuff" | "peru" | "pink" | "plum" | "powderblue" | "purple" | "rebeccapurple" | "red" | "rosybrown" | "royalblue" | "saddlebrown" | "salmon" | "sandybrown" | "seagreen" | "seashell" | "sienna" | "silver" | "skyblue" | "slateblue" | "slategray" | "slategrey" | "snow" | "springgreen" | "steelblue" | "tan" | "teal" | "thistle" | "tomato" | "turquoise" | "violet" | "wheat" | "white" | "whitesmoke" | "yellow" | "yellowgreen";
+    type OutlineLineStyle = "dashed" | "dotted" | "double" | "groove" | "inset" | "none" | "outset" | "ridge" | "solid";
+    type PageSize = "A3" | "A4" | "A5" | "B4" | "B5" | "JIS-B4" | "JIS-B5" | "ledger" | "legal" | "letter";
+    type Paint = Color | "context-fill" | "context-stroke" | "none" | (string & {});
+    type PaintBox = VisualBox | "fill-box" | "stroke-box";
+    type Position<TLength> = TLength | "bottom" | "center" | "left" | "right" | "top" | (string & {});
+    type PositionArea = "block-end" | "block-start" | "bottom" | "center" | "end" | "inline-end" | "inline-start" | "left" | "right" | "self-block-end" | "self-block-start" | "self-end" | "self-inline-end" | "self-inline-start" | "self-start" | "span-all" | "span-block-end" | "span-block-start" | "span-bottom" | "span-end" | "span-inline-end" | "span-inline-start" | "span-left" | "span-right" | "span-self-block-end" | "span-self-block-start" | "span-self-end" | "span-self-inline-end" | "span-self-inline-start" | "span-self-start" | "span-start" | "span-top" | "span-x-end" | "span-x-self-end" | "span-x-self-start" | "span-x-start" | "span-y-end" | "span-y-self-end" | "span-y-self-start" | "span-y-start" | "start" | "top" | "x-end" | "x-self-end" | "x-self-start" | "x-start" | "y-end" | "y-self-end" | "y-self-start" | "y-start" | (string & {});
+    type Quote = "close-quote" | "no-close-quote" | "no-open-quote" | "open-quote";
+    type RepeatStyle = "no-repeat" | "repeat" | "repeat-x" | "repeat-y" | "round" | "space" | (string & {});
+    type SelfPosition = "center" | "end" | "flex-end" | "flex-start" | "self-end" | "self-start" | "start";
+    type SingleAnimation<TTime> = EasingFunction | SingleAnimationDirection | SingleAnimationFillMode | SingleAnimationTimeline | TTime | "auto" | "infinite" | "none" | "paused" | "running" | (string & {}) | (number & {});
+    type SingleAnimationComposition = "accumulate" | "add" | "replace";
+    type SingleAnimationDirection = "alternate" | "alternate-reverse" | "normal" | "reverse";
+    type SingleAnimationFillMode = "backwards" | "both" | "forwards" | "none";
+    type SingleAnimationTimeline = "auto" | "none" | (string & {});
+    type SingleTransition<TTime> = EasingFunction | TTime | "all" | "allow-discrete" | "none" | "normal" | (string & {});
+    type StepEasingFunction = "step-end" | "step-start" | (string & {});
+    type SystemColor = "AccentColor" | "AccentColorText" | "ActiveText" | "ButtonBorder" | "ButtonFace" | "ButtonText" | "Canvas" | "CanvasText" | "Field" | "FieldText" | "GrayText" | "Highlight" | "HighlightText" | "LinkText" | "Mark" | "MarkText" | "SelectedItem" | "SelectedItemText" | "VisitedText";
+    type SystemFamilyName = "caption" | "icon" | "menu" | "message-box" | "small-caption" | "status-bar";
+    type TextEdge = "cap" | "ex" | "ideographic" | "ideographic-ink" | "text" | (string & {});
+    type TimelineRangeName = "contain" | "cover" | "entry" | "entry-crossing" | "exit" | "exit-crossing";
+    type TrackBreadth<TLength> = TLength | "auto" | "max-content" | "min-content" | (string & {});
+    type TrySize = "most-block-size" | "most-height" | "most-inline-size" | "most-width";
+    type TryTactic = "flip-block" | "flip-inline" | "flip-start" | (string & {});
+    type VisualBox = "border-box" | "content-box" | "padding-box";
+}
+type NativeAnimationEvent = AnimationEvent;
+type NativeClipboardEvent = ClipboardEvent;
+type NativeCompositionEvent = CompositionEvent;
+type NativeDragEvent = DragEvent;
+type NativeFocusEvent = FocusEvent;
+type NativeInputEvent = InputEvent;
+type NativeKeyboardEvent = KeyboardEvent;
+type NativeMouseEvent = MouseEvent;
+type NativeTouchEvent = TouchEvent;
+type NativePointerEvent = PointerEvent;
+type NativeSubmitEvent = SubmitEvent;
+type NativeToggleEvent = ToggleEvent;
+type NativeTransitionEvent = TransitionEvent;
+type NativeUIEvent = UIEvent;
+type NativeWheelEvent = WheelEvent;
+type Booleanish = boolean | "true" | "false";
+type CrossOrigin = "anonymous" | "use-credentials" | "" | undefined;
+const UNDEFINED_VOID_ONLY: unique symbol;
+type AwaitedReactNode = React$1.ReactElement | string | number | bigint | Iterable<React$1.ReactNode> | React$1.ReactPortal | boolean | null | undefined | React$1.DO_NOT_USE_OR_YOU_WILL_BE_FIRED_EXPERIMENTAL_REACT_NODES[keyof React$1.DO_NOT_USE_OR_YOU_WILL_BE_FIRED_EXPERIMENTAL_REACT_NODES];
+type Destructor = () => void | {
+    [UNDEFINED_VOID_ONLY]: never;
+};
+type VoidOrUndefinedOnly = void | {
+    [UNDEFINED_VOID_ONLY]: never;
+};
+namespace React$1 {
+    type ElementType<P = any, Tag extends keyof JSX.IntrinsicElements = keyof JSX.IntrinsicElements> = {
+        [K in Tag]: P extends JSX.IntrinsicElements[K] ? K : never;
+    }[Tag] | ComponentType<P>;
+    type ComponentType<P = {}> = ComponentClass<P> | FunctionComponent<P>;
+    type JSXElementConstructor<P> = ((props: P) => ReactNode | Promise<ReactNode>) | (new (props: P, context: any) => Component<any, any>);
+    interface RefObject<T> {
+        current: T;
+    }
+    interface DO_NOT_USE_OR_YOU_WILL_BE_FIRED_CALLBACK_REF_RETURN_VALUES {
+    }
+    type RefCallback<T> = {
+        bivarianceHack(instance: T | null): void | (() => VoidOrUndefinedOnly) | DO_NOT_USE_OR_YOU_WILL_BE_FIRED_CALLBACK_REF_RETURN_VALUES[keyof DO_NOT_USE_OR_YOU_WILL_BE_FIRED_CALLBACK_REF_RETURN_VALUES];
+    }["bivarianceHack"];
+    type Ref<T> = RefCallback<T> | RefObject<T | null> | null;
+    type LegacyRef<T> = Ref<T>;
+    type ElementRef<C extends ForwardRefExoticComponent<any> | {
+        new (props: any, context: any): Component<any>;
+    } | ((props: any) => ReactNode) | keyof JSX.IntrinsicElements> = ComponentRef<C>;
+    type ComponentState = any;
+    interface DO_NOT_USE_OR_YOU_WILL_BE_FIRED_EXPERIMENTAL_KEY_TYPES {
+    }
+    type Key = string | number | bigint | DO_NOT_USE_OR_YOU_WILL_BE_FIRED_EXPERIMENTAL_KEY_TYPES[keyof DO_NOT_USE_OR_YOU_WILL_BE_FIRED_EXPERIMENTAL_KEY_TYPES];
+    interface Attributes {
+        key?: Key | null | undefined;
+    }
+    interface RefAttributes<T> extends Attributes {
+        ref?: Ref<T> | undefined;
+    }
+    interface ClassAttributes<T> extends RefAttributes<T> {
+    }
+    interface ReactElement<P = unknown, T extends string | JSXElementConstructor<any> = string | JSXElementConstructor<any>> {
+        type: T;
+        props: P;
+        key: string | null;
+    }
+    interface ReactComponentElement<T extends keyof JSX.IntrinsicElements | JSXElementConstructor<any>, P = Pick<ComponentProps<T>, Exclude<keyof ComponentProps<T>, "key" | "ref">>> extends ReactElement<P, Exclude<T, number>> {
+    }
+    interface FunctionComponentElement<P> extends ReactElement<P, FunctionComponent<P>> {
+        ref?: ("ref" extends keyof P ? P extends {
+            ref?: infer R | undefined;
+        } ? R : never : never) | undefined;
+    }
+    type CElement<P, T extends Component<P, ComponentState>> = ComponentElement<P, T>;
+    interface ComponentElement<P, T extends Component<P, ComponentState>> extends ReactElement<P, ComponentClass<P>> {
+        ref?: Ref<T> | undefined;
+    }
+    type ClassicElement<P> = CElement<P, ClassicComponent<P, ComponentState>>;
+    interface DOMElement<P extends HTMLAttributes<T> | SVGAttributes<T>, T extends Element> extends ReactElement<P, string> {
+        ref: Ref<T>;
+    }
+    interface ReactHTMLElement<T extends HTMLElement> extends DetailedReactHTMLElement<AllHTMLAttributes<T>, T> {
+    }
+    interface DetailedReactHTMLElement<P extends HTMLAttributes<T>, T extends HTMLElement> extends DOMElement<P, T> {
+        type: HTMLElementType;
+    }
+    interface ReactSVGElement extends DOMElement<SVGAttributes<SVGElement>, SVGElement> {
+        type: SVGElementType;
+    }
+    interface ReactPortal extends ReactElement {
+        children: ReactNode;
+    }
+    interface DO_NOT_USE_OR_YOU_WILL_BE_FIRED_EXPERIMENTAL_REACT_NODES {
+    }
+    type ReactNode = ReactElement | string | number | bigint | Iterable<ReactNode> | ReactPortal | boolean | null | undefined | DO_NOT_USE_OR_YOU_WILL_BE_FIRED_EXPERIMENTAL_REACT_NODES[keyof DO_NOT_USE_OR_YOU_WILL_BE_FIRED_EXPERIMENTAL_REACT_NODES] | Promise<AwaitedReactNode>;
+    function createElement(type: "input", props?: InputHTMLAttributes<HTMLInputElement> & ClassAttributes<HTMLInputElement> | null, ...children: ReactNode[]): DetailedReactHTMLElement<InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>;
+    function createElement<P extends HTMLAttributes<T>, T extends HTMLElement>(type: HTMLElementType, props?: ClassAttributes<T> & P | null, ...children: ReactNode[]): DetailedReactHTMLElement<P, T>;
+    function createElement<P extends SVGAttributes<T>, T extends SVGElement>(type: SVGElementType, props?: ClassAttributes<T> & P | null, ...children: ReactNode[]): ReactSVGElement;
+    function createElement<P extends DOMAttributes<T>, T extends Element>(type: string, props?: ClassAttributes<T> & P | null, ...children: ReactNode[]): DOMElement<P, T>;
+    function createElement<P extends {}>(type: FunctionComponent<P>, props?: Attributes & P | null, ...children: ReactNode[]): FunctionComponentElement<P>;
+    function createElement<P extends {}, T extends Component<P, ComponentState>, C extends ComponentClass<P>>(type: ClassType<P, T, C>, props?: ClassAttributes<T> & P | null, ...children: ReactNode[]): CElement<P, T>;
+    function createElement<P extends {}>(type: FunctionComponent<P> | ComponentClass<P> | string, props?: Attributes & P | null, ...children: ReactNode[]): ReactElement<P>;
+    function cloneElement<P extends HTMLAttributes<T>, T extends HTMLElement>(element: DetailedReactHTMLElement<P, T>, props?: P, ...children: ReactNode[]): DetailedReactHTMLElement<P, T>;
+    function cloneElement<P extends HTMLAttributes<T>, T extends HTMLElement>(element: ReactHTMLElement<T>, props?: P, ...children: ReactNode[]): ReactHTMLElement<T>;
+    function cloneElement<P extends SVGAttributes<T>, T extends SVGElement>(element: ReactSVGElement, props?: P, ...children: ReactNode[]): ReactSVGElement;
+    function cloneElement<P extends DOMAttributes<T>, T extends Element>(element: DOMElement<P, T>, props?: DOMAttributes<T> & P, ...children: ReactNode[]): DOMElement<P, T>;
+    function cloneElement<P>(element: FunctionComponentElement<P>, props?: Partial<P> & Attributes, ...children: ReactNode[]): FunctionComponentElement<P>;
+    function cloneElement<P, T extends Component<P, ComponentState>>(element: CElement<P, T>, props?: Partial<P> & ClassAttributes<T>, ...children: ReactNode[]): CElement<P, T>;
+    function cloneElement<P>(element: ReactElement<P>, props?: Partial<P> & Attributes, ...children: ReactNode[]): ReactElement<P>;
+    interface ProviderProps<T> {
+        value: T;
+        children?: ReactNode | undefined;
+    }
+    interface ConsumerProps<T> {
+        children: (value: T) => ReactNode;
+    }
+    interface ExoticComponent<P = {}> {
+        (props: P): ReactNode;
+        readonly $$typeof: symbol;
+    }
+    interface NamedExoticComponent<P = {}> extends ExoticComponent<P> {
+        displayName?: string | undefined;
+    }
+    interface ProviderExoticComponent<P> extends ExoticComponent<P> {
+    }
+    type ContextType<C extends Context<any>> = C extends Context<infer T> ? T : never;
+    type Provider<T> = ProviderExoticComponent<ProviderProps<T>>;
+    type Consumer<T> = ExoticComponent<ConsumerProps<T>>;
+    interface Context<T> extends Provider<T> {
+        Provider: Provider<T>;
+        Consumer: Consumer<T>;
+        displayName?: string | undefined;
+    }
+    function createContext<T>(defaultValue: T): Context<T>;
+    function isValidElement<P>(object: {} | null | undefined): object is ReactElement<P>;
+    const Children: {
+        map<T, C>(children: C | readonly C[], fn: (child: C, index: number) => T): C extends null | undefined ? C : Array<Exclude<T, boolean | null | undefined>>;
+        forEach<C>(children: C | readonly C[], fn: (child: C, index: number) => void): void;
+        count(children: any): number;
+        only<C>(children: C): C extends any[] ? never : C;
+        toArray(children: ReactNode | ReactNode[]): Array<Exclude<ReactNode, boolean | null | undefined>>;
+    };
+    export interface FragmentInstance {
+    }
+    export interface FragmentProps {
+        children?: React$1.ReactNode;
+        ref?: Ref<FragmentInstance> | undefined;
+    }
+    const Fragment: ExoticComponent<FragmentProps>;
+    const StrictMode: ExoticComponent<{
+        children?: ReactNode | undefined;
+    }>;
+    interface SuspenseProps {
+        children?: ReactNode | undefined;
+        fallback?: ReactNode;
+        name?: string | undefined;
+    }
+    const Suspense: ExoticComponent<SuspenseProps>;
+    const version: string;
+    type ProfilerOnRenderCallback = (id: string, phase: "mount" | "update" | "nested-update", actualDuration: number, baseDuration: number, startTime: number, commitTime: number) => void;
+    interface ProfilerProps {
+        children?: ReactNode | undefined;
+        id: string;
+        onRender: ProfilerOnRenderCallback;
+    }
+    const Profiler: ExoticComponent<ProfilerProps>;
+    type ReactInstance = Component<any> | Element;
+    interface Component<P = {}, S = {}, SS = any> extends ComponentLifecycle<P, S, SS> {
+    }
+    class Component<P, S> {
+        static contextType?: Context<any> | undefined;
+        static propTypes?: any;
+        context: unknown;
+        constructor(props: P);
+        constructor(props: P, context: any);
+        setState<K extends keyof S>(state: ((prevState: Readonly<S>, props: Readonly<P>) => Pick<S, K> | S | null) | (Pick<S, K> | S | null), callback?: () => void): void;
+        forceUpdate(callback?: () => void): void;
+        render(): ReactNode;
+        readonly props: Readonly<P>;
+        state: Readonly<S>;
+    }
+    class PureComponent<P = {}, S = {}, SS = any> extends Component<P, S, SS> {
+    }
+    interface ClassicComponent<P = {}, S = {}> extends Component<P, S> {
+        replaceState(nextState: S, callback?: () => void): void;
+        isMounted(): boolean;
+        getInitialState?(): S;
+    }
+    type FC<P = {}> = FunctionComponent<P>;
+    interface FunctionComponent<P = {}> {
+        (props: P): ReactNode | Promise<ReactNode>;
+        propTypes?: any;
+        displayName?: string | undefined;
+    }
+    type ForwardedRef<T> = ((instance: T | null) => void) | RefObject<T | null> | null;
+    interface ForwardRefRenderFunction<T, P = {}> {
+        (props: P, ref: ForwardedRef<T>): ReactNode;
+        displayName?: string | undefined;
+        propTypes?: any;
+    }
+    interface ComponentClass<P = {}, S = ComponentState> extends StaticLifecycle<P, S> {
+        new (props: P, context?: any): Component<P, S>;
+        propTypes?: any;
+        contextType?: Context<any> | undefined;
+        defaultProps?: Partial<P> | undefined;
+        displayName?: string | undefined;
+    }
+    interface ClassicComponentClass<P = {}> extends ComponentClass<P> {
+        new (props: P): ClassicComponent<P, ComponentState>;
+        getDefaultProps?(): P;
+    }
+    type ClassType<P, T extends Component<P, ComponentState>, C extends ComponentClass<P>> = C & (new (props: P, context: any) => T);
+    interface ComponentLifecycle<P, S, SS = any> extends NewLifecycle<P, S, SS>, DeprecatedLifecycle<P, S> {
+        componentDidMount?(): void;
+        shouldComponentUpdate?(nextProps: Readonly<P>, nextState: Readonly<S>, nextContext: any): boolean;
+        componentWillUnmount?(): void;
+        componentDidCatch?(error: Error, errorInfo: ErrorInfo): void;
+    }
+    interface StaticLifecycle<P, S> {
+        getDerivedStateFromProps?: GetDerivedStateFromProps<P, S> | undefined;
+        getDerivedStateFromError?: GetDerivedStateFromError<P, S> | undefined;
+    }
+    type GetDerivedStateFromProps<P, S> = (nextProps: Readonly<P>, prevState: S) => Partial<S> | null;
+    type GetDerivedStateFromError<P, S> = (error: any) => Partial<S> | null;
+    interface NewLifecycle<P, S, SS> {
+        getSnapshotBeforeUpdate?(prevProps: Readonly<P>, prevState: Readonly<S>): SS | null;
+        componentDidUpdate?(prevProps: Readonly<P>, prevState: Readonly<S>, snapshot?: SS): void;
+    }
+    interface DeprecatedLifecycle<P, S> {
+        componentWillMount?(): void;
+        UNSAFE_componentWillMount?(): void;
+        componentWillReceiveProps?(nextProps: Readonly<P>, nextContext: any): void;
+        UNSAFE_componentWillReceiveProps?(nextProps: Readonly<P>, nextContext: any): void;
+        componentWillUpdate?(nextProps: Readonly<P>, nextState: Readonly<S>, nextContext: any): void;
+        UNSAFE_componentWillUpdate?(nextProps: Readonly<P>, nextState: Readonly<S>, nextContext: any): void;
+    }
+    function createRef<T>(): RefObject<T | null>;
+    interface ForwardRefExoticComponent<P> extends NamedExoticComponent<P> {
+        propTypes?: any;
+    }
+    function forwardRef<T, P = {}>(render: ForwardRefRenderFunction<T, PropsWithoutRef<P>>): ForwardRefExoticComponent<PropsWithoutRef<P> & RefAttributes<T>>;
+    type PropsWithoutRef<Props> = Props extends any ? ("ref" extends keyof Props ? Omit<Props, "ref"> : Props) : Props;
+    type PropsWithRef<Props> = Props;
+    type PropsWithChildren<P = unknown> = P & {
+        children?: ReactNode | undefined;
+    };
+    type ComponentProps<T extends keyof JSX.IntrinsicElements | JSXElementConstructor<any>> = T extends JSXElementConstructor<infer Props> ? Props : T extends keyof JSX.IntrinsicElements ? JSX.IntrinsicElements[T] : {};
+    type ComponentPropsWithRef<T extends ElementType> = T extends JSXElementConstructor<infer Props> ? T extends abstract new (args: any) => any ? PropsWithoutRef<Props> & RefAttributes<InstanceType<T>> : Props : ComponentProps<T>;
+    type CustomComponentPropsWithRef<T extends ComponentType> = T extends JSXElementConstructor<infer Props> ? T extends abstract new (args: any) => any ? PropsWithoutRef<Props> & RefAttributes<InstanceType<T>> : Props : never;
+    type ComponentPropsWithoutRef<T extends ElementType> = PropsWithoutRef<ComponentProps<T>>;
+    type ComponentRef<T extends ElementType> = ComponentPropsWithRef<T> extends RefAttributes<infer Method> ? Method : never;
+    type MemoExoticComponent<T extends ComponentType<any>> = NamedExoticComponent<CustomComponentPropsWithRef<T>> & {
+        readonly type: T;
+    };
+    function memo<P extends object>(Component: FunctionComponent<P>, propsAreEqual?: (prevProps: Readonly<P>, nextProps: Readonly<P>) => boolean): NamedExoticComponent<P>;
+    function memo<T extends ComponentType<any>>(Component: T, propsAreEqual?: (prevProps: Readonly<ComponentProps<T>>, nextProps: Readonly<ComponentProps<T>>) => boolean): MemoExoticComponent<T>;
+    interface LazyExoticComponent<T extends ComponentType<any>> extends ExoticComponent<CustomComponentPropsWithRef<T>> {
+        readonly _result: T;
+    }
+    function lazy<T extends ComponentType<any>>(load: () => Promise<{
+        default: T;
+    }>): LazyExoticComponent<T>;
+    type SetStateAction<S> = S | ((prevState: S) => S);
+    type Dispatch<A> = (value: A) => void;
+    type DispatchWithoutAction = () => void;
+    type AnyActionArg = [
+    ] | [
+        any
+    ];
+    type ActionDispatch<ActionArg extends AnyActionArg> = (...args: ActionArg) => void;
+    type Reducer<S, A> = (prevState: S, action: A) => S;
+    type ReducerWithoutAction<S> = (prevState: S) => S;
+    type ReducerState<R extends Reducer<any, any>> = R extends Reducer<infer S, any> ? S : never;
+    type DependencyList = readonly unknown[];
+    type EffectCallback = () => void | Destructor;
+    interface MutableRefObject<T> {
+        current: T;
+    }
+    function useContext<T>(context: Context<T>): T;
+    function useState<S>(initialState: S | (() => S)): [
+        S,
+        Dispatch<SetStateAction<S>>
+    ];
+    function useState<S = undefined>(): [
+        S | undefined,
+        Dispatch<SetStateAction<S | undefined>>
+    ];
+    function useReducer<S, A extends AnyActionArg>(reducer: (prevState: S, ...args: A) => S, initialState: S): [
+        S,
+        ActionDispatch<A>
+    ];
+    function useReducer<S, I, A extends AnyActionArg>(reducer: (prevState: S, ...args: A) => S, initialArg: I, init: (i: I) => S): [
+        S,
+        ActionDispatch<A>
+    ];
+    function useRef<T>(initialValue: T): RefObject<T>;
+    function useRef<T>(initialValue: T | null): RefObject<T | null>;
+    function useRef<T>(initialValue: T | undefined): RefObject<T | undefined>;
+    function useLayoutEffect(effect: EffectCallback, deps?: DependencyList): void;
+    function useEffect(effect: EffectCallback, deps?: DependencyList): void;
+    export function useEffectEvent<T extends Function>(callback: T): T;
+    function useImperativeHandle<T, R extends T>(ref: Ref<T> | undefined, init: () => R, deps?: DependencyList): void;
+    function useCallback<T extends Function>(callback: T, deps: DependencyList): T;
+    function useMemo<T>(factory: () => T, deps: DependencyList): T;
+    function useDebugValue<T>(value: T, format?: (value: T) => any): void;
+    export type TransitionFunction = () => VoidOrUndefinedOnly | Promise<VoidOrUndefinedOnly>;
+    export interface TransitionStartFunction {
+        (callback: TransitionFunction): void;
+    }
+    export function useDeferredValue<T>(value: T, initialValue?: T): T;
+    export function useTransition(): [
+        boolean,
+        TransitionStartFunction
+    ];
+    export function startTransition(scope: TransitionFunction): void;
+    export function act(callback: () => VoidOrUndefinedOnly): void;
+    export function act<T>(callback: () => T | Promise<T>): Promise<T>;
+    export function useId(): string;
+    export function useInsertionEffect(effect: EffectCallback, deps?: DependencyList): void;
+    export function useSyncExternalStore<Snapshot>(subscribe: (onStoreChange: () => void) => () => void, getSnapshot: () => Snapshot, getServerSnapshot?: () => Snapshot): Snapshot;
+    export function useOptimistic<State>(passthrough: State): [
+        State,
+        (action: State | ((pendingState: State) => State)) => void
+    ];
+    export function useOptimistic<State, Action>(passthrough: State, reducer: (state: State, action: Action) => State): [
+        State,
+        (action: Action) => void
+    ];
+    interface UntrackedReactPromise<T> extends PromiseLike<T> {
+        status?: void;
+    }
+    export interface PendingReactPromise<T> extends PromiseLike<T> {
+        status: "pending";
+    }
+    export interface FulfilledReactPromise<T> extends PromiseLike<T> {
+        status: "fulfilled";
+        value: T;
+    }
+    export interface RejectedReactPromise<T> extends PromiseLike<T> {
+        status: "rejected";
+        reason: unknown;
+    }
+    export type ReactPromise<T> = UntrackedReactPromise<T> | PendingReactPromise<T> | FulfilledReactPromise<T> | RejectedReactPromise<T>;
+    export interface RendererUsable<T> {
+    }
+    export type Usable<T> = ReactPromise<T> | Context<T> | RendererUsable<T>[keyof RendererUsable<T>];
+    export function use<T>(usable: Usable<T>): T;
+    export function useActionState<State>(action: (state: Awaited<State>) => State | Promise<State>, initialState: Awaited<State>, permalink?: string): [
+        state: Awaited<State>,
+        dispatch: () => void,
+        isPending: boolean
+    ];
+    export function useActionState<State, Payload>(action: (state: Awaited<State>, payload: Payload) => State | Promise<State>, initialState: Awaited<State>, permalink?: string): [
+        state: Awaited<State>,
+        dispatch: (payload: Payload) => void,
+        isPending: boolean
+    ];
+    export function cache<CachedFunction extends Function>(fn: CachedFunction): CachedFunction;
+    export interface CacheSignal {
+    }
+    export function cacheSignal(): null | CacheSignal;
+    export interface ActivityProps {
+        mode?: "hidden" | "visible" | undefined;
+        name?: string | undefined;
+        children: ReactNode;
+    }
+    export const Activity: ExoticComponent<ActivityProps>;
+    export interface ViewTransitionInstance {
+        name: string;
+    }
+    export type ViewTransitionClassPerType = Record<"default" | (string & {}), "none" | "auto" | (string & {})>;
+    export type ViewTransitionClass = ViewTransitionClassPerType | ViewTransitionClassPerType[string];
+    export interface ViewTransitionProps {
+        children?: ReactNode | undefined;
+        default?: ViewTransitionClass | undefined;
+        enter?: ViewTransitionClass | undefined;
+        exit?: ViewTransitionClass | undefined;
+        name?: "auto" | (string & {}) | undefined;
+        onEnter?: (instance: ViewTransitionInstance, types: Array<string>) => void | (() => void);
+        onExit?: (instance: ViewTransitionInstance, types: Array<string>) => void | (() => void);
+        onShare?: (instance: ViewTransitionInstance, types: Array<string>) => void | (() => void);
+        onUpdate?: (instance: ViewTransitionInstance, types: Array<string>) => void | (() => void);
+        ref?: Ref<ViewTransitionInstance> | undefined;
+        share?: ViewTransitionClass | undefined;
+        update?: ViewTransitionClass | undefined;
+    }
+    export const ViewTransition: ExoticComponent<ViewTransitionProps>;
+    export function addTransitionType(type: string): void;
+    function captureOwnerStack(): string | null;
+    interface BaseSyntheticEvent<E = object, C = any, T = any> {
+        nativeEvent: E;
+        currentTarget: C;
+        target: T;
+        bubbles: boolean;
+        cancelable: boolean;
+        defaultPrevented: boolean;
+        eventPhase: number;
+        isTrusted: boolean;
+        preventDefault(): void;
+        isDefaultPrevented(): boolean;
+        stopPropagation(): void;
+        isPropagationStopped(): boolean;
+        persist(): void;
+        timeStamp: number;
+        type: string;
+    }
+    interface SyntheticEvent<T = Element, E = Event> extends BaseSyntheticEvent<E, EventTarget & T, EventTarget> {
+    }
+    interface ClipboardEvent<T = Element> extends SyntheticEvent<T, NativeClipboardEvent> {
+        clipboardData: DataTransfer;
+    }
+    interface CompositionEvent<T = Element> extends SyntheticEvent<T, NativeCompositionEvent> {
+        data: string;
+    }
+    interface DragEvent<T = Element> extends MouseEvent<T, NativeDragEvent> {
+        dataTransfer: DataTransfer;
+    }
+    interface PointerEvent<T = Element> extends MouseEvent<T, NativePointerEvent> {
+        pointerId: number;
+        pressure: number;
+        tangentialPressure: number;
+        tiltX: number;
+        tiltY: number;
+        twist: number;
+        width: number;
+        height: number;
+        pointerType: "mouse" | "pen" | "touch";
+        isPrimary: boolean;
+    }
+    interface FocusEvent<Target = Element, RelatedTarget = Element> extends SyntheticEvent<Target, NativeFocusEvent> {
+        relatedTarget: (EventTarget & RelatedTarget) | null;
+        target: EventTarget & Target;
+    }
+    interface FormEvent<T = Element> extends SyntheticEvent<T> {
+    }
+    interface InvalidEvent<T = Element> extends SyntheticEvent<T> {
+    }
+    interface ChangeEvent<CurrentTarget = Element, Target = Element> extends SyntheticEvent<CurrentTarget> {
+        target: EventTarget & CurrentTarget;
+    }
+    interface InputEvent<T = Element> extends SyntheticEvent<T, NativeInputEvent> {
+        data: string;
+    }
+    export type ModifierKey = "Alt" | "AltGraph" | "CapsLock" | "Control" | "Fn" | "FnLock" | "Hyper" | "Meta" | "NumLock" | "ScrollLock" | "Shift" | "Super" | "Symbol" | "SymbolLock";
+    interface KeyboardEvent<T = Element> extends UIEvent<T, NativeKeyboardEvent> {
+        altKey: boolean;
+        charCode: number;
+        ctrlKey: boolean;
+        code: string;
+        getModifierState(key: ModifierKey): boolean;
+        key: string;
+        keyCode: number;
+        locale: string;
+        location: number;
+        metaKey: boolean;
+        repeat: boolean;
+        shiftKey: boolean;
+        which: number;
+    }
+    interface MouseEvent<T = Element, E = NativeMouseEvent> extends UIEvent<T, E> {
+        altKey: boolean;
+        button: number;
+        buttons: number;
+        clientX: number;
+        clientY: number;
+        ctrlKey: boolean;
+        getModifierState(key: ModifierKey): boolean;
+        metaKey: boolean;
+        movementX: number;
+        movementY: number;
+        pageX: number;
+        pageY: number;
+        relatedTarget: EventTarget | null;
+        screenX: number;
+        screenY: number;
+        shiftKey: boolean;
+    }
+    interface SubmitEvent<T = Element> extends SyntheticEvent<T, NativeSubmitEvent> {
+        submitter: HTMLElement | null;
+        target: EventTarget & HTMLFormElement;
+    }
+    interface TouchEvent<T = Element> extends UIEvent<T, NativeTouchEvent> {
+        altKey: boolean;
+        changedTouches: TouchList;
+        ctrlKey: boolean;
+        getModifierState(key: ModifierKey): boolean;
+        metaKey: boolean;
+        shiftKey: boolean;
+        targetTouches: TouchList;
+        touches: TouchList;
+    }
+    interface UIEvent<T = Element, E = NativeUIEvent> extends SyntheticEvent<T, E> {
+        detail: number;
+        view: AbstractView;
+    }
+    interface WheelEvent<T = Element> extends MouseEvent<T, NativeWheelEvent> {
+        deltaMode: number;
+        deltaX: number;
+        deltaY: number;
+        deltaZ: number;
+    }
+    interface AnimationEvent<T = Element> extends SyntheticEvent<T, NativeAnimationEvent> {
+        animationName: string;
+        elapsedTime: number;
+        pseudoElement: string;
+    }
+    interface ToggleEvent<T = Element> extends SyntheticEvent<T, NativeToggleEvent> {
+        oldState: "closed" | "open";
+        newState: "closed" | "open";
+    }
+    interface TransitionEvent<T = Element> extends SyntheticEvent<T, NativeTransitionEvent> {
+        elapsedTime: number;
+        propertyName: string;
+        pseudoElement: string;
+    }
+    type EventHandler<E extends SyntheticEvent<any>> = {
+        bivarianceHack(event: E): void;
+    }["bivarianceHack"];
+    type ReactEventHandler<T = Element> = EventHandler<SyntheticEvent<T>>;
+    type ClipboardEventHandler<T = Element> = EventHandler<ClipboardEvent<T>>;
+    type CompositionEventHandler<T = Element> = EventHandler<CompositionEvent<T>>;
+    type DragEventHandler<T = Element> = EventHandler<DragEvent<T>>;
+    type FocusEventHandler<T = Element> = EventHandler<FocusEvent<T>>;
+    type FormEventHandler<T = Element> = EventHandler<FormEvent<T>>;
+    type ChangeEventHandler<CurrentTarget = Element, Target = Element> = EventHandler<ChangeEvent<CurrentTarget, Target>>;
+    type InputEventHandler<T = Element> = EventHandler<InputEvent<T>>;
+    type KeyboardEventHandler<T = Element> = EventHandler<KeyboardEvent<T>>;
+    type MouseEventHandler<T = Element> = EventHandler<MouseEvent<T>>;
+    type SubmitEventHandler<T = Element> = EventHandler<SubmitEvent<T>>;
+    type TouchEventHandler<T = Element> = EventHandler<TouchEvent<T>>;
+    type PointerEventHandler<T = Element> = EventHandler<PointerEvent<T>>;
+    type UIEventHandler<T = Element> = EventHandler<UIEvent<T>>;
+    type WheelEventHandler<T = Element> = EventHandler<WheelEvent<T>>;
+    type AnimationEventHandler<T = Element> = EventHandler<AnimationEvent<T>>;
+    type ToggleEventHandler<T = Element> = EventHandler<ToggleEvent<T>>;
+    type TransitionEventHandler<T = Element> = EventHandler<TransitionEvent<T>>;
+    interface HTMLProps<T> extends AllHTMLAttributes<T>, ClassAttributes<T> {
+    }
+    type DetailedHTMLProps<E extends HTMLAttributes<T>, T> = ClassAttributes<T> & E;
+    interface SVGProps<T> extends SVGAttributes<T>, ClassAttributes<T> {
+    }
+    interface SVGLineElementAttributes<T> extends SVGProps<T> {
+    }
+    interface SVGTextElementAttributes<T> extends SVGProps<T> {
+    }
+    interface DOMAttributes<T> {
+        children?: ReactNode | undefined;
+        dangerouslySetInnerHTML?: {
+            __html: string | TrustedHTML;
+        } | undefined;
+        onCopy?: ClipboardEventHandler<T> | undefined;
+        onCopyCapture?: ClipboardEventHandler<T> | undefined;
+        onCut?: ClipboardEventHandler<T> | undefined;
+        onCutCapture?: ClipboardEventHandler<T> | undefined;
+        onPaste?: ClipboardEventHandler<T> | undefined;
+        onPasteCapture?: ClipboardEventHandler<T> | undefined;
+        onCompositionEnd?: CompositionEventHandler<T> | undefined;
+        onCompositionEndCapture?: CompositionEventHandler<T> | undefined;
+        onCompositionStart?: CompositionEventHandler<T> | undefined;
+        onCompositionStartCapture?: CompositionEventHandler<T> | undefined;
+        onCompositionUpdate?: CompositionEventHandler<T> | undefined;
+        onCompositionUpdateCapture?: CompositionEventHandler<T> | undefined;
+        onFocus?: FocusEventHandler<T> | undefined;
+        onFocusCapture?: FocusEventHandler<T> | undefined;
+        onBlur?: FocusEventHandler<T> | undefined;
+        onBlurCapture?: FocusEventHandler<T> | undefined;
+        onChange?: ChangeEventHandler<T> | undefined;
+        onChangeCapture?: ChangeEventHandler<T> | undefined;
+        onBeforeInput?: InputEventHandler<T> | undefined;
+        onBeforeInputCapture?: InputEventHandler<T> | undefined;
+        onInput?: InputEventHandler<T> | undefined;
+        onInputCapture?: InputEventHandler<T> | undefined;
+        onReset?: ReactEventHandler<T> | undefined;
+        onResetCapture?: ReactEventHandler<T> | undefined;
+        onSubmit?: SubmitEventHandler<T> | undefined;
+        onSubmitCapture?: SubmitEventHandler<T> | undefined;
+        onInvalid?: ReactEventHandler<T> | undefined;
+        onInvalidCapture?: ReactEventHandler<T> | undefined;
+        onLoad?: ReactEventHandler<T> | undefined;
+        onLoadCapture?: ReactEventHandler<T> | undefined;
+        onError?: ReactEventHandler<T> | undefined;
+        onErrorCapture?: ReactEventHandler<T> | undefined;
+        onKeyDown?: KeyboardEventHandler<T> | undefined;
+        onKeyDownCapture?: KeyboardEventHandler<T> | undefined;
+        onKeyPress?: KeyboardEventHandler<T> | undefined;
+        onKeyPressCapture?: KeyboardEventHandler<T> | undefined;
+        onKeyUp?: KeyboardEventHandler<T> | undefined;
+        onKeyUpCapture?: KeyboardEventHandler<T> | undefined;
+        onAbort?: ReactEventHandler<T> | undefined;
+        onAbortCapture?: ReactEventHandler<T> | undefined;
+        onCanPlay?: ReactEventHandler<T> | undefined;
+        onCanPlayCapture?: ReactEventHandler<T> | undefined;
+        onCanPlayThrough?: ReactEventHandler<T> | undefined;
+        onCanPlayThroughCapture?: ReactEventHandler<T> | undefined;
+        onDurationChange?: ReactEventHandler<T> | undefined;
+        onDurationChangeCapture?: ReactEventHandler<T> | undefined;
+        onEmptied?: ReactEventHandler<T> | undefined;
+        onEmptiedCapture?: ReactEventHandler<T> | undefined;
+        onEncrypted?: ReactEventHandler<T> | undefined;
+        onEncryptedCapture?: ReactEventHandler<T> | undefined;
+        onEnded?: ReactEventHandler<T> | undefined;
+        onEndedCapture?: ReactEventHandler<T> | undefined;
+        onLoadedData?: ReactEventHandler<T> | undefined;
+        onLoadedDataCapture?: ReactEventHandler<T> | undefined;
+        onLoadedMetadata?: ReactEventHandler<T> | undefined;
+        onLoadedMetadataCapture?: ReactEventHandler<T> | undefined;
+        onLoadStart?: ReactEventHandler<T> | undefined;
+        onLoadStartCapture?: ReactEventHandler<T> | undefined;
+        onPause?: ReactEventHandler<T> | undefined;
+        onPauseCapture?: ReactEventHandler<T> | undefined;
+        onPlay?: ReactEventHandler<T> | undefined;
+        onPlayCapture?: ReactEventHandler<T> | undefined;
+        onPlaying?: ReactEventHandler<T> | undefined;
+        onPlayingCapture?: ReactEventHandler<T> | undefined;
+        onProgress?: ReactEventHandler<T> | undefined;
+        onProgressCapture?: ReactEventHandler<T> | undefined;
+        onRateChange?: ReactEventHandler<T> | undefined;
+        onRateChangeCapture?: ReactEventHandler<T> | undefined;
+        onSeeked?: ReactEventHandler<T> | undefined;
+        onSeekedCapture?: ReactEventHandler<T> | undefined;
+        onSeeking?: ReactEventHandler<T> | undefined;
+        onSeekingCapture?: ReactEventHandler<T> | undefined;
+        onStalled?: ReactEventHandler<T> | undefined;
+        onStalledCapture?: ReactEventHandler<T> | undefined;
+        onSuspend?: ReactEventHandler<T> | undefined;
+        onSuspendCapture?: ReactEventHandler<T> | undefined;
+        onTimeUpdate?: ReactEventHandler<T> | undefined;
+        onTimeUpdateCapture?: ReactEventHandler<T> | undefined;
+        onVolumeChange?: ReactEventHandler<T> | undefined;
+        onVolumeChangeCapture?: ReactEventHandler<T> | undefined;
+        onWaiting?: ReactEventHandler<T> | undefined;
+        onWaitingCapture?: ReactEventHandler<T> | undefined;
+        onAuxClick?: MouseEventHandler<T> | undefined;
+        onAuxClickCapture?: MouseEventHandler<T> | undefined;
+        onClick?: MouseEventHandler<T> | undefined;
+        onClickCapture?: MouseEventHandler<T> | undefined;
+        onContextMenu?: MouseEventHandler<T> | undefined;
+        onContextMenuCapture?: MouseEventHandler<T> | undefined;
+        onDoubleClick?: MouseEventHandler<T> | undefined;
+        onDoubleClickCapture?: MouseEventHandler<T> | undefined;
+        onDrag?: DragEventHandler<T> | undefined;
+        onDragCapture?: DragEventHandler<T> | undefined;
+        onDragEnd?: DragEventHandler<T> | undefined;
+        onDragEndCapture?: DragEventHandler<T> | undefined;
+        onDragEnter?: DragEventHandler<T> | undefined;
+        onDragEnterCapture?: DragEventHandler<T> | undefined;
+        onDragExit?: DragEventHandler<T> | undefined;
+        onDragExitCapture?: DragEventHandler<T> | undefined;
+        onDragLeave?: DragEventHandler<T> | undefined;
+        onDragLeaveCapture?: DragEventHandler<T> | undefined;
+        onDragOver?: DragEventHandler<T> | undefined;
+        onDragOverCapture?: DragEventHandler<T> | undefined;
+        onDragStart?: DragEventHandler<T> | undefined;
+        onDragStartCapture?: DragEventHandler<T> | undefined;
+        onDrop?: DragEventHandler<T> | undefined;
+        onDropCapture?: DragEventHandler<T> | undefined;
+        onMouseDown?: MouseEventHandler<T> | undefined;
+        onMouseDownCapture?: MouseEventHandler<T> | undefined;
+        onMouseEnter?: MouseEventHandler<T> | undefined;
+        onMouseLeave?: MouseEventHandler<T> | undefined;
+        onMouseMove?: MouseEventHandler<T> | undefined;
+        onMouseMoveCapture?: MouseEventHandler<T> | undefined;
+        onMouseOut?: MouseEventHandler<T> | undefined;
+        onMouseOutCapture?: MouseEventHandler<T> | undefined;
+        onMouseOver?: MouseEventHandler<T> | undefined;
+        onMouseOverCapture?: MouseEventHandler<T> | undefined;
+        onMouseUp?: MouseEventHandler<T> | undefined;
+        onMouseUpCapture?: MouseEventHandler<T> | undefined;
+        onSelect?: ReactEventHandler<T> | undefined;
+        onSelectCapture?: ReactEventHandler<T> | undefined;
+        onTouchCancel?: TouchEventHandler<T> | undefined;
+        onTouchCancelCapture?: TouchEventHandler<T> | undefined;
+        onTouchEnd?: TouchEventHandler<T> | undefined;
+        onTouchEndCapture?: TouchEventHandler<T> | undefined;
+        onTouchMove?: TouchEventHandler<T> | undefined;
+        onTouchMoveCapture?: TouchEventHandler<T> | undefined;
+        onTouchStart?: TouchEventHandler<T> | undefined;
+        onTouchStartCapture?: TouchEventHandler<T> | undefined;
+        onPointerDown?: PointerEventHandler<T> | undefined;
+        onPointerDownCapture?: PointerEventHandler<T> | undefined;
+        onPointerMove?: PointerEventHandler<T> | undefined;
+        onPointerMoveCapture?: PointerEventHandler<T> | undefined;
+        onPointerUp?: PointerEventHandler<T> | undefined;
+        onPointerUpCapture?: PointerEventHandler<T> | undefined;
+        onPointerCancel?: PointerEventHandler<T> | undefined;
+        onPointerCancelCapture?: PointerEventHandler<T> | undefined;
+        onPointerEnter?: PointerEventHandler<T> | undefined;
+        onPointerLeave?: PointerEventHandler<T> | undefined;
+        onPointerOver?: PointerEventHandler<T> | undefined;
+        onPointerOverCapture?: PointerEventHandler<T> | undefined;
+        onPointerOut?: PointerEventHandler<T> | undefined;
+        onPointerOutCapture?: PointerEventHandler<T> | undefined;
+        onGotPointerCapture?: PointerEventHandler<T> | undefined;
+        onGotPointerCaptureCapture?: PointerEventHandler<T> | undefined;
+        onLostPointerCapture?: PointerEventHandler<T> | undefined;
+        onLostPointerCaptureCapture?: PointerEventHandler<T> | undefined;
+        onScroll?: UIEventHandler<T> | undefined;
+        onScrollCapture?: UIEventHandler<T> | undefined;
+        onScrollEnd?: UIEventHandler<T> | undefined;
+        onScrollEndCapture?: UIEventHandler<T> | undefined;
+        onWheel?: WheelEventHandler<T> | undefined;
+        onWheelCapture?: WheelEventHandler<T> | undefined;
+        onAnimationStart?: AnimationEventHandler<T> | undefined;
+        onAnimationStartCapture?: AnimationEventHandler<T> | undefined;
+        onAnimationEnd?: AnimationEventHandler<T> | undefined;
+        onAnimationEndCapture?: AnimationEventHandler<T> | undefined;
+        onAnimationIteration?: AnimationEventHandler<T> | undefined;
+        onAnimationIterationCapture?: AnimationEventHandler<T> | undefined;
+        onToggle?: ToggleEventHandler<T> | undefined;
+        onBeforeToggle?: ToggleEventHandler<T> | undefined;
+        onTransitionCancel?: TransitionEventHandler<T> | undefined;
+        onTransitionCancelCapture?: TransitionEventHandler<T> | undefined;
+        onTransitionEnd?: TransitionEventHandler<T> | undefined;
+        onTransitionEndCapture?: TransitionEventHandler<T> | undefined;
+        onTransitionRun?: TransitionEventHandler<T> | undefined;
+        onTransitionRunCapture?: TransitionEventHandler<T> | undefined;
+        onTransitionStart?: TransitionEventHandler<T> | undefined;
+        onTransitionStartCapture?: TransitionEventHandler<T> | undefined;
+    }
+    export interface CSSProperties extends CSS$1.Properties<string | number> {
+    }
+    interface AriaAttributes {
+        "aria-activedescendant"?: string | undefined;
+        "aria-atomic"?: Booleanish | undefined;
+        "aria-autocomplete"?: "none" | "inline" | "list" | "both" | undefined;
+        "aria-braillelabel"?: string | undefined;
+        "aria-brailleroledescription"?: string | undefined;
+        "aria-busy"?: Booleanish | undefined;
+        "aria-checked"?: boolean | "false" | "mixed" | "true" | undefined;
+        "aria-colcount"?: number | undefined;
+        "aria-colindex"?: number | undefined;
+        "aria-colindextext"?: string | undefined;
+        "aria-colspan"?: number | undefined;
+        "aria-controls"?: string | undefined;
+        "aria-current"?: boolean | "false" | "true" | "page" | "step" | "location" | "date" | "time" | undefined;
+        "aria-describedby"?: string | undefined;
+        "aria-description"?: string | undefined;
+        "aria-details"?: string | undefined;
+        "aria-disabled"?: Booleanish | undefined;
+        "aria-dropeffect"?: "none" | "copy" | "execute" | "link" | "move" | "popup" | undefined;
+        "aria-errormessage"?: string | undefined;
+        "aria-expanded"?: Booleanish | undefined;
+        "aria-flowto"?: string | undefined;
+        "aria-grabbed"?: Booleanish | undefined;
+        "aria-haspopup"?: boolean | "false" | "true" | "menu" | "listbox" | "tree" | "grid" | "dialog" | undefined;
+        "aria-hidden"?: Booleanish | undefined;
+        "aria-invalid"?: boolean | "false" | "true" | "grammar" | "spelling" | undefined;
+        "aria-keyshortcuts"?: string | undefined;
+        "aria-label"?: string | undefined;
+        "aria-labelledby"?: string | undefined;
+        "aria-level"?: number | undefined;
+        "aria-live"?: "off" | "assertive" | "polite" | undefined;
+        "aria-modal"?: Booleanish | undefined;
+        "aria-multiline"?: Booleanish | undefined;
+        "aria-multiselectable"?: Booleanish | undefined;
+        "aria-orientation"?: "horizontal" | "vertical" | undefined;
+        "aria-owns"?: string | undefined;
+        "aria-placeholder"?: string | undefined;
+        "aria-posinset"?: number | undefined;
+        "aria-pressed"?: boolean | "false" | "mixed" | "true" | undefined;
+        "aria-readonly"?: Booleanish | undefined;
+        "aria-relevant"?: "additions" | "additions removals" | "additions text" | "all" | "removals" | "removals additions" | "removals text" | "text" | "text additions" | "text removals" | undefined;
+        "aria-required"?: Booleanish | undefined;
+        "aria-roledescription"?: string | undefined;
+        "aria-rowcount"?: number | undefined;
+        "aria-rowindex"?: number | undefined;
+        "aria-rowindextext"?: string | undefined;
+        "aria-rowspan"?: number | undefined;
+        "aria-selected"?: Booleanish | undefined;
+        "aria-setsize"?: number | undefined;
+        "aria-sort"?: "none" | "ascending" | "descending" | "other" | undefined;
+        "aria-valuemax"?: number | undefined;
+        "aria-valuemin"?: number | undefined;
+        "aria-valuenow"?: number | undefined;
+        "aria-valuetext"?: string | undefined;
+    }
+    type AriaRole = "alert" | "alertdialog" | "application" | "article" | "banner" | "button" | "cell" | "checkbox" | "columnheader" | "combobox" | "complementary" | "contentinfo" | "definition" | "dialog" | "directory" | "document" | "feed" | "figure" | "form" | "grid" | "gridcell" | "group" | "heading" | "img" | "link" | "list" | "listbox" | "listitem" | "log" | "main" | "marquee" | "math" | "menu" | "menubar" | "menuitem" | "menuitemcheckbox" | "menuitemradio" | "navigation" | "none" | "note" | "option" | "presentation" | "progressbar" | "radio" | "radiogroup" | "region" | "row" | "rowgroup" | "rowheader" | "scrollbar" | "search" | "searchbox" | "separator" | "slider" | "spinbutton" | "status" | "switch" | "tab" | "table" | "tablist" | "tabpanel" | "term" | "textbox" | "timer" | "toolbar" | "tooltip" | "tree" | "treegrid" | "treeitem" | (string & {});
+    interface HTMLAttributes<T> extends AriaAttributes, DOMAttributes<T> {
+        defaultChecked?: boolean | undefined;
+        defaultValue?: string | number | readonly string[] | undefined;
+        suppressContentEditableWarning?: boolean | undefined;
+        suppressHydrationWarning?: boolean | undefined;
+        accessKey?: string | undefined;
+        autoCapitalize?: "off" | "none" | "on" | "sentences" | "words" | "characters" | undefined | (string & {});
+        autoFocus?: boolean | undefined;
+        className?: string | undefined;
+        contentEditable?: Booleanish | "inherit" | "plaintext-only" | undefined;
+        contextMenu?: string | undefined;
+        dir?: string | undefined;
+        draggable?: Booleanish | undefined;
+        enterKeyHint?: "enter" | "done" | "go" | "next" | "previous" | "search" | "send" | undefined;
+        hidden?: boolean | undefined;
+        id?: string | undefined;
+        lang?: string | undefined;
+        nonce?: string | undefined;
+        slot?: string | undefined;
+        spellCheck?: Booleanish | undefined;
+        style?: CSSProperties | undefined;
+        tabIndex?: number | undefined;
+        title?: string | undefined;
+        translate?: "yes" | "no" | undefined;
+        radioGroup?: string | undefined;
+        role?: AriaRole | undefined;
+        about?: string | undefined;
+        content?: string | undefined;
+        datatype?: string | undefined;
+        inlist?: any;
+        prefix?: string | undefined;
+        property?: string | undefined;
+        rel?: string | undefined;
+        resource?: string | undefined;
+        rev?: string | undefined;
+        typeof?: string | undefined;
+        vocab?: string | undefined;
+        autoCorrect?: string | undefined;
+        autoSave?: string | undefined;
+        color?: string | undefined;
+        itemProp?: string | undefined;
+        itemScope?: boolean | undefined;
+        itemType?: string | undefined;
+        itemID?: string | undefined;
+        itemRef?: string | undefined;
+        results?: number | undefined;
+        security?: string | undefined;
+        unselectable?: "on" | "off" | undefined;
+        popover?: "" | "auto" | "manual" | "hint" | undefined;
+        popoverTargetAction?: "toggle" | "show" | "hide" | undefined;
+        popoverTarget?: string | undefined;
+        inert?: boolean | undefined;
+        inputMode?: "none" | "text" | "tel" | "url" | "email" | "numeric" | "decimal" | "search" | undefined;
+        is?: string | undefined;
+        exportparts?: string | undefined;
+        part?: string | undefined;
+    }
+    interface DO_NOT_USE_OR_YOU_WILL_BE_FIRED_EXPERIMENTAL_FORM_ACTIONS {
+    }
+    interface AllHTMLAttributes<T> extends HTMLAttributes<T> {
+        accept?: string | undefined;
+        acceptCharset?: string | undefined;
+        action?: string | undefined | ((formData: FormData) => void | Promise<void>) | DO_NOT_USE_OR_YOU_WILL_BE_FIRED_EXPERIMENTAL_FORM_ACTIONS[keyof DO_NOT_USE_OR_YOU_WILL_BE_FIRED_EXPERIMENTAL_FORM_ACTIONS];
+        allowFullScreen?: boolean | undefined;
+        allowTransparency?: boolean | undefined;
+        alt?: string | undefined;
+        as?: string | undefined;
+        async?: boolean | undefined;
+        autoComplete?: string | undefined;
+        autoPlay?: boolean | undefined;
+        capture?: boolean | "user" | "environment" | undefined;
+        cellPadding?: number | string | undefined;
+        cellSpacing?: number | string | undefined;
+        charSet?: string | undefined;
+        challenge?: string | undefined;
+        checked?: boolean | undefined;
+        cite?: string | undefined;
+        classID?: string | undefined;
+        cols?: number | undefined;
+        colSpan?: number | undefined;
+        controls?: boolean | undefined;
+        coords?: string | undefined;
+        crossOrigin?: CrossOrigin;
+        data?: string | undefined;
+        dateTime?: string | undefined;
+        default?: boolean | undefined;
+        defer?: boolean | undefined;
+        disabled?: boolean | undefined;
+        download?: any;
+        encType?: string | undefined;
+        form?: string | undefined;
+        formAction?: string | undefined | ((formData: FormData) => void | Promise<void>) | DO_NOT_USE_OR_YOU_WILL_BE_FIRED_EXPERIMENTAL_FORM_ACTIONS[keyof DO_NOT_USE_OR_YOU_WILL_BE_FIRED_EXPERIMENTAL_FORM_ACTIONS];
+        formEncType?: string | undefined;
+        formMethod?: string | undefined;
+        formNoValidate?: boolean | undefined;
+        formTarget?: string | undefined;
+        frameBorder?: number | string | undefined;
+        headers?: string | undefined;
+        height?: number | string | undefined;
+        high?: number | undefined;
+        href?: string | undefined;
+        hrefLang?: string | undefined;
+        htmlFor?: string | undefined;
+        httpEquiv?: string | undefined;
+        integrity?: string | undefined;
+        keyParams?: string | undefined;
+        keyType?: string | undefined;
+        kind?: string | undefined;
+        label?: string | undefined;
+        list?: string | undefined;
+        loop?: boolean | undefined;
+        low?: number | undefined;
+        manifest?: string | undefined;
+        marginHeight?: number | undefined;
+        marginWidth?: number | undefined;
+        max?: number | string | undefined;
+        maxLength?: number | undefined;
+        media?: string | undefined;
+        mediaGroup?: string | undefined;
+        method?: string | undefined;
+        min?: number | string | undefined;
+        minLength?: number | undefined;
+        multiple?: boolean | undefined;
+        muted?: boolean | undefined;
+        name?: string | undefined;
+        noValidate?: boolean | undefined;
+        open?: boolean | undefined;
+        optimum?: number | undefined;
+        pattern?: string | undefined;
+        placeholder?: string | undefined;
+        playsInline?: boolean | undefined;
+        poster?: string | undefined;
+        preload?: string | undefined;
+        readOnly?: boolean | undefined;
+        required?: boolean | undefined;
+        reversed?: boolean | undefined;
+        rows?: number | undefined;
+        rowSpan?: number | undefined;
+        sandbox?: string | undefined;
+        scope?: string | undefined;
+        scoped?: boolean | undefined;
+        scrolling?: string | undefined;
+        seamless?: boolean | undefined;
+        selected?: boolean | undefined;
+        shape?: string | undefined;
+        size?: number | undefined;
+        sizes?: string | undefined;
+        span?: number | undefined;
+        src?: string | undefined;
+        srcDoc?: string | undefined;
+        srcLang?: string | undefined;
+        srcSet?: string | undefined;
+        start?: number | undefined;
+        step?: number | string | undefined;
+        summary?: string | undefined;
+        target?: string | undefined;
+        type?: string | undefined;
+        useMap?: string | undefined;
+        value?: string | readonly string[] | number | undefined;
+        width?: number | string | undefined;
+        wmode?: string | undefined;
+        wrap?: string | undefined;
+    }
+    type HTMLAttributeReferrerPolicy = "" | "no-referrer" | "no-referrer-when-downgrade" | "origin" | "origin-when-cross-origin" | "same-origin" | "strict-origin" | "strict-origin-when-cross-origin" | "unsafe-url";
+    type HTMLAttributeAnchorTarget = "_self" | "_blank" | "_parent" | "_top" | (string & {});
+    interface AnchorHTMLAttributes<T> extends HTMLAttributes<T> {
+        download?: any;
+        href?: string | undefined;
+        hrefLang?: string | undefined;
+        media?: string | undefined;
+        ping?: string | undefined;
+        target?: HTMLAttributeAnchorTarget | undefined;
+        type?: string | undefined;
+        referrerPolicy?: HTMLAttributeReferrerPolicy | undefined;
+    }
+    interface AudioHTMLAttributes<T> extends MediaHTMLAttributes<T> {
+    }
+    interface AreaHTMLAttributes<T> extends HTMLAttributes<T> {
+        alt?: string | undefined;
+        coords?: string | undefined;
+        download?: any;
+        href?: string | undefined;
+        hrefLang?: string | undefined;
+        media?: string | undefined;
+        referrerPolicy?: HTMLAttributeReferrerPolicy | undefined;
+        shape?: string | undefined;
+        target?: string | undefined;
+    }
+    interface BaseHTMLAttributes<T> extends HTMLAttributes<T> {
+        href?: string | undefined;
+        target?: string | undefined;
+    }
+    interface BlockquoteHTMLAttributes<T> extends HTMLAttributes<T> {
+        cite?: string | undefined;
+    }
+    interface ButtonHTMLAttributes<T> extends HTMLAttributes<T> {
+        disabled?: boolean | undefined;
+        form?: string | undefined;
+        formAction?: string | ((formData: FormData) => void | Promise<void>) | DO_NOT_USE_OR_YOU_WILL_BE_FIRED_EXPERIMENTAL_FORM_ACTIONS[keyof DO_NOT_USE_OR_YOU_WILL_BE_FIRED_EXPERIMENTAL_FORM_ACTIONS] | undefined;
+        formEncType?: string | undefined;
+        formMethod?: string | undefined;
+        formNoValidate?: boolean | undefined;
+        formTarget?: string | undefined;
+        name?: string | undefined;
+        type?: "submit" | "reset" | "button" | undefined;
+        value?: string | readonly string[] | number | undefined;
+    }
+    interface CanvasHTMLAttributes<T> extends HTMLAttributes<T> {
+        height?: number | string | undefined;
+        width?: number | string | undefined;
+    }
+    interface ColHTMLAttributes<T> extends HTMLAttributes<T> {
+        span?: number | undefined;
+        width?: number | string | undefined;
+    }
+    interface ColgroupHTMLAttributes<T> extends HTMLAttributes<T> {
+        span?: number | undefined;
+    }
+    interface DataHTMLAttributes<T> extends HTMLAttributes<T> {
+        value?: string | readonly string[] | number | undefined;
+    }
+    interface DetailsHTMLAttributes<T> extends HTMLAttributes<T> {
+        open?: boolean | undefined;
+        name?: string | undefined;
+    }
+    interface DelHTMLAttributes<T> extends HTMLAttributes<T> {
+        cite?: string | undefined;
+        dateTime?: string | undefined;
+    }
+    interface DialogHTMLAttributes<T> extends HTMLAttributes<T> {
+        closedby?: "any" | "closerequest" | "none" | undefined;
+        onCancel?: ReactEventHandler<T> | undefined;
+        onClose?: ReactEventHandler<T> | undefined;
+        open?: boolean | undefined;
+    }
+    interface EmbedHTMLAttributes<T> extends HTMLAttributes<T> {
+        height?: number | string | undefined;
+        src?: string | undefined;
+        type?: string | undefined;
+        width?: number | string | undefined;
+    }
+    interface FieldsetHTMLAttributes<T> extends HTMLAttributes<T> {
+        disabled?: boolean | undefined;
+        form?: string | undefined;
+        name?: string | undefined;
+    }
+    interface FormHTMLAttributes<T> extends HTMLAttributes<T> {
+        acceptCharset?: string | undefined;
+        action?: string | undefined | ((formData: FormData) => void | Promise<void>) | DO_NOT_USE_OR_YOU_WILL_BE_FIRED_EXPERIMENTAL_FORM_ACTIONS[keyof DO_NOT_USE_OR_YOU_WILL_BE_FIRED_EXPERIMENTAL_FORM_ACTIONS];
+        autoComplete?: string | undefined;
+        encType?: string | undefined;
+        method?: string | undefined;
+        name?: string | undefined;
+        noValidate?: boolean | undefined;
+        target?: string | undefined;
+    }
+    interface HtmlHTMLAttributes<T> extends HTMLAttributes<T> {
+        manifest?: string | undefined;
+    }
+    interface IframeHTMLAttributes<T> extends HTMLAttributes<T> {
+        allow?: string | undefined;
+        allowFullScreen?: boolean | undefined;
+        allowTransparency?: boolean | undefined;
+        frameBorder?: number | string | undefined;
+        height?: number | string | undefined;
+        loading?: "eager" | "lazy" | undefined;
+        marginHeight?: number | undefined;
+        marginWidth?: number | undefined;
+        name?: string | undefined;
+        referrerPolicy?: HTMLAttributeReferrerPolicy | undefined;
+        sandbox?: string | undefined;
+        scrolling?: string | undefined;
+        seamless?: boolean | undefined;
+        src?: string | undefined;
+        srcDoc?: string | undefined;
+        width?: number | string | undefined;
+    }
+    interface DO_NOT_USE_OR_YOU_WILL_BE_FIRED_EXPERIMENTAL_IMG_SRC_TYPES {
+    }
+    interface ImgHTMLAttributes<T> extends HTMLAttributes<T> {
+        alt?: string | undefined;
+        crossOrigin?: CrossOrigin;
+        decoding?: "async" | "auto" | "sync" | undefined;
+        fetchPriority?: "high" | "low" | "auto" | undefined;
+        height?: number | string | undefined;
+        loading?: "eager" | "lazy" | undefined;
+        referrerPolicy?: HTMLAttributeReferrerPolicy | undefined;
+        sizes?: string | undefined;
+        src?: string | DO_NOT_USE_OR_YOU_WILL_BE_FIRED_EXPERIMENTAL_IMG_SRC_TYPES[keyof DO_NOT_USE_OR_YOU_WILL_BE_FIRED_EXPERIMENTAL_IMG_SRC_TYPES] | undefined;
+        srcSet?: string | undefined;
+        useMap?: string | undefined;
+        width?: number | string | undefined;
+    }
+    interface InsHTMLAttributes<T> extends HTMLAttributes<T> {
+        cite?: string | undefined;
+        dateTime?: string | undefined;
+    }
+    type HTMLInputTypeAttribute = "button" | "checkbox" | "color" | "date" | "datetime-local" | "email" | "file" | "hidden" | "image" | "month" | "number" | "password" | "radio" | "range" | "reset" | "search" | "submit" | "tel" | "text" | "time" | "url" | "week" | (string & {});
+    type AutoFillAddressKind = "billing" | "shipping";
+    type AutoFillBase = "" | "off" | "on";
+    type AutoFillContactField = "email" | "tel" | "tel-area-code" | "tel-country-code" | "tel-extension" | "tel-local" | "tel-local-prefix" | "tel-local-suffix" | "tel-national";
+    type AutoFillContactKind = "home" | "mobile" | "work";
+    type AutoFillCredentialField = "webauthn";
+    type AutoFillNormalField = "additional-name" | "address-level1" | "address-level2" | "address-level3" | "address-level4" | "address-line1" | "address-line2" | "address-line3" | "bday-day" | "bday-month" | "bday-year" | "cc-csc" | "cc-exp" | "cc-exp-month" | "cc-exp-year" | "cc-family-name" | "cc-given-name" | "cc-name" | "cc-number" | "cc-type" | "country" | "country-name" | "current-password" | "family-name" | "given-name" | "honorific-prefix" | "honorific-suffix" | "name" | "new-password" | "one-time-code" | "organization" | "postal-code" | "street-address" | "transaction-amount" | "transaction-currency" | "username";
+    type OptionalPrefixToken<T extends string> = `${T} ` | "";
+    type OptionalPostfixToken<T extends string> = ` ${T}` | "";
+    type AutoFillField = AutoFillNormalField | `${OptionalPrefixToken<AutoFillContactKind>}${AutoFillContactField}`;
+    type AutoFillSection = `section-${string}`;
+    type AutoFill = AutoFillBase | `${OptionalPrefixToken<AutoFillSection>}${OptionalPrefixToken<AutoFillAddressKind>}${AutoFillField}${OptionalPostfixToken<AutoFillCredentialField>}`;
+    type HTMLInputAutoCompleteAttribute = AutoFill | (string & {});
+    interface InputHTMLAttributes<T> extends HTMLAttributes<T> {
+        accept?: string | undefined;
+        alt?: string | undefined;
+        autoComplete?: HTMLInputAutoCompleteAttribute | undefined;
+        capture?: boolean | "user" | "environment" | undefined;
+        checked?: boolean | undefined;
+        disabled?: boolean | undefined;
+        form?: string | undefined;
+        formAction?: string | ((formData: FormData) => void | Promise<void>) | DO_NOT_USE_OR_YOU_WILL_BE_FIRED_EXPERIMENTAL_FORM_ACTIONS[keyof DO_NOT_USE_OR_YOU_WILL_BE_FIRED_EXPERIMENTAL_FORM_ACTIONS] | undefined;
+        formEncType?: string | undefined;
+        formMethod?: string | undefined;
+        formNoValidate?: boolean | undefined;
+        formTarget?: string | undefined;
+        height?: number | string | undefined;
+        list?: string | undefined;
+        max?: number | string | undefined;
+        maxLength?: number | undefined;
+        min?: number | string | undefined;
+        minLength?: number | undefined;
+        multiple?: boolean | undefined;
+        name?: string | undefined;
+        pattern?: string | undefined;
+        placeholder?: string | undefined;
+        readOnly?: boolean | undefined;
+        required?: boolean | undefined;
+        size?: number | undefined;
+        src?: string | undefined;
+        step?: number | string | undefined;
+        type?: HTMLInputTypeAttribute | undefined;
+        value?: string | readonly string[] | number | undefined;
+        width?: number | string | undefined;
+        onChange?: ChangeEventHandler<T, HTMLInputElement> | undefined;
+    }
+    interface KeygenHTMLAttributes<T> extends HTMLAttributes<T> {
+        challenge?: string | undefined;
+        disabled?: boolean | undefined;
+        form?: string | undefined;
+        keyType?: string | undefined;
+        keyParams?: string | undefined;
+        name?: string | undefined;
+    }
+    interface LabelHTMLAttributes<T> extends HTMLAttributes<T> {
+        form?: string | undefined;
+        htmlFor?: string | undefined;
+    }
+    interface LiHTMLAttributes<T> extends HTMLAttributes<T> {
+        value?: string | readonly string[] | number | undefined;
+    }
+    interface LinkHTMLAttributes<T> extends HTMLAttributes<T> {
+        as?: string | undefined;
+        blocking?: "render" | (string & {}) | undefined;
+        crossOrigin?: CrossOrigin;
+        fetchPriority?: "high" | "low" | "auto" | undefined;
+        href?: string | undefined;
+        hrefLang?: string | undefined;
+        integrity?: string | undefined;
+        media?: string | undefined;
+        imageSrcSet?: string | undefined;
+        imageSizes?: string | undefined;
+        referrerPolicy?: HTMLAttributeReferrerPolicy | undefined;
+        sizes?: string | undefined;
+        type?: string | undefined;
+        charSet?: string | undefined;
+        precedence?: string | undefined;
+    }
+    interface MapHTMLAttributes<T> extends HTMLAttributes<T> {
+        name?: string | undefined;
+    }
+    interface MenuHTMLAttributes<T> extends HTMLAttributes<T> {
+        type?: string | undefined;
+    }
+    interface DO_NOT_USE_OR_YOU_WILL_BE_FIRED_EXPERIMENTAL_MEDIA_SRC_TYPES {
+    }
+    interface MediaHTMLAttributes<T> extends HTMLAttributes<T> {
+        autoPlay?: boolean | undefined;
+        controls?: boolean | undefined;
+        controlsList?: string | undefined;
+        crossOrigin?: CrossOrigin;
+        loop?: boolean | undefined;
+        mediaGroup?: string | undefined;
+        muted?: boolean | undefined;
+        playsInline?: boolean | undefined;
+        preload?: string | undefined;
+        src?: string | DO_NOT_USE_OR_YOU_WILL_BE_FIRED_EXPERIMENTAL_MEDIA_SRC_TYPES[keyof DO_NOT_USE_OR_YOU_WILL_BE_FIRED_EXPERIMENTAL_MEDIA_SRC_TYPES] | undefined;
+    }
+    interface MetaHTMLAttributes<T> extends HTMLAttributes<T> {
+        charSet?: string | undefined;
+        content?: string | undefined;
+        httpEquiv?: string | undefined;
+        media?: string | undefined;
+        name?: string | undefined;
+    }
+    interface MeterHTMLAttributes<T> extends HTMLAttributes<T> {
+        form?: string | undefined;
+        high?: number | undefined;
+        low?: number | undefined;
+        max?: number | string | undefined;
+        min?: number | string | undefined;
+        optimum?: number | undefined;
+        value?: string | readonly string[] | number | undefined;
+    }
+    interface QuoteHTMLAttributes<T> extends HTMLAttributes<T> {
+        cite?: string | undefined;
+    }
+    interface ObjectHTMLAttributes<T> extends HTMLAttributes<T> {
+        classID?: string | undefined;
+        data?: string | undefined;
+        form?: string | undefined;
+        height?: number | string | undefined;
+        name?: string | undefined;
+        type?: string | undefined;
+        useMap?: string | undefined;
+        width?: number | string | undefined;
+        wmode?: string | undefined;
+    }
+    interface OlHTMLAttributes<T> extends HTMLAttributes<T> {
+        reversed?: boolean | undefined;
+        start?: number | undefined;
+        type?: "1" | "a" | "A" | "i" | "I" | undefined;
+    }
+    interface OptgroupHTMLAttributes<T> extends HTMLAttributes<T> {
+        disabled?: boolean | undefined;
+        label?: string | undefined;
+    }
+    interface OptionHTMLAttributes<T> extends HTMLAttributes<T> {
+        disabled?: boolean | undefined;
+        label?: string | undefined;
+        selected?: boolean | undefined;
+        value?: string | readonly string[] | number | undefined;
+    }
+    interface OutputHTMLAttributes<T> extends HTMLAttributes<T> {
+        form?: string | undefined;
+        htmlFor?: string | undefined;
+        name?: string | undefined;
+    }
+    interface ParamHTMLAttributes<T> extends HTMLAttributes<T> {
+        name?: string | undefined;
+        value?: string | readonly string[] | number | undefined;
+    }
+    interface ProgressHTMLAttributes<T> extends HTMLAttributes<T> {
+        max?: number | string | undefined;
+        value?: string | readonly string[] | number | undefined;
+    }
+    interface SlotHTMLAttributes<T> extends HTMLAttributes<T> {
+        name?: string | undefined;
+    }
+    interface ScriptHTMLAttributes<T> extends HTMLAttributes<T> {
+        async?: boolean | undefined;
+        blocking?: "render" | (string & {}) | undefined;
+        charSet?: string | undefined;
+        crossOrigin?: CrossOrigin;
+        defer?: boolean | undefined;
+        fetchPriority?: "high" | "low" | "auto" | undefined;
+        integrity?: string | undefined;
+        noModule?: boolean | undefined;
+        referrerPolicy?: HTMLAttributeReferrerPolicy | undefined;
+        src?: string | undefined;
+        type?: string | undefined;
+    }
+    interface SelectHTMLAttributes<T> extends HTMLAttributes<T> {
+        autoComplete?: string | undefined;
+        disabled?: boolean | undefined;
+        form?: string | undefined;
+        multiple?: boolean | undefined;
+        name?: string | undefined;
+        required?: boolean | undefined;
+        size?: number | undefined;
+        value?: string | readonly string[] | number | undefined;
+        onChange?: ChangeEventHandler<T, HTMLSelectElement> | undefined;
+    }
+    interface SourceHTMLAttributes<T> extends HTMLAttributes<T> {
+        height?: number | string | undefined;
+        media?: string | undefined;
+        sizes?: string | undefined;
+        src?: string | undefined;
+        srcSet?: string | undefined;
+        type?: string | undefined;
+        width?: number | string | undefined;
+    }
+    interface StyleHTMLAttributes<T> extends HTMLAttributes<T> {
+        blocking?: "render" | (string & {}) | undefined;
+        media?: string | undefined;
+        scoped?: boolean | undefined;
+        type?: string | undefined;
+        href?: string | undefined;
+        precedence?: string | undefined;
+    }
+    interface TableHTMLAttributes<T> extends HTMLAttributes<T> {
+        align?: "left" | "center" | "right" | undefined;
+        bgcolor?: string | undefined;
+        border?: number | undefined;
+        cellPadding?: number | string | undefined;
+        cellSpacing?: number | string | undefined;
+        frame?: boolean | undefined;
+        rules?: "none" | "groups" | "rows" | "columns" | "all" | undefined;
+        summary?: string | undefined;
+        width?: number | string | undefined;
+    }
+    interface TextareaHTMLAttributes<T> extends HTMLAttributes<T> {
+        autoComplete?: string | undefined;
+        cols?: number | undefined;
+        dirName?: string | undefined;
+        disabled?: boolean | undefined;
+        form?: string | undefined;
+        maxLength?: number | undefined;
+        minLength?: number | undefined;
+        name?: string | undefined;
+        placeholder?: string | undefined;
+        readOnly?: boolean | undefined;
+        required?: boolean | undefined;
+        rows?: number | undefined;
+        value?: string | readonly string[] | number | undefined;
+        wrap?: string | undefined;
+        onChange?: ChangeEventHandler<T, HTMLTextAreaElement> | undefined;
+    }
+    interface TdHTMLAttributes<T> extends HTMLAttributes<T> {
+        align?: "left" | "center" | "right" | "justify" | "char" | undefined;
+        colSpan?: number | undefined;
+        headers?: string | undefined;
+        rowSpan?: number | undefined;
+        scope?: string | undefined;
+        abbr?: string | undefined;
+        height?: number | string | undefined;
+        width?: number | string | undefined;
+        valign?: "top" | "middle" | "bottom" | "baseline" | undefined;
+    }
+    interface ThHTMLAttributes<T> extends HTMLAttributes<T> {
+        align?: "left" | "center" | "right" | "justify" | "char" | undefined;
+        colSpan?: number | undefined;
+        headers?: string | undefined;
+        rowSpan?: number | undefined;
+        scope?: string | undefined;
+        abbr?: string | undefined;
+    }
+    interface TimeHTMLAttributes<T> extends HTMLAttributes<T> {
+        dateTime?: string | undefined;
+    }
+    interface TrackHTMLAttributes<T> extends HTMLAttributes<T> {
+        default?: boolean | undefined;
+        kind?: string | undefined;
+        label?: string | undefined;
+        src?: string | undefined;
+        srcLang?: string | undefined;
+    }
+    interface VideoHTMLAttributes<T> extends MediaHTMLAttributes<T> {
+        height?: number | string | undefined;
+        playsInline?: boolean | undefined;
+        poster?: string | undefined;
+        width?: number | string | undefined;
+        disablePictureInPicture?: boolean | undefined;
+        disableRemotePlayback?: boolean | undefined;
+        onResize?: ReactEventHandler<T> | undefined;
+        onResizeCapture?: ReactEventHandler<T> | undefined;
+    }
+    interface SVGAttributes<T> extends AriaAttributes, DOMAttributes<T> {
+        suppressHydrationWarning?: boolean | undefined;
+        className?: string | undefined;
+        color?: string | undefined;
+        height?: number | string | undefined;
+        id?: string | undefined;
+        lang?: string | undefined;
+        max?: number | string | undefined;
+        media?: string | undefined;
+        method?: string | undefined;
+        min?: number | string | undefined;
+        name?: string | undefined;
+        nonce?: string | undefined;
+        part?: string | undefined;
+        slot?: string | undefined;
+        style?: CSSProperties | undefined;
+        target?: string | undefined;
+        type?: string | undefined;
+        width?: number | string | undefined;
+        role?: AriaRole | undefined;
+        tabIndex?: number | undefined;
+        crossOrigin?: CrossOrigin;
+        accentHeight?: number | string | undefined;
+        accumulate?: "none" | "sum" | undefined;
+        additive?: "replace" | "sum" | undefined;
+        alignmentBaseline?: "auto" | "baseline" | "before-edge" | "text-before-edge" | "middle" | "central" | "after-edge" | "text-after-edge" | "ideographic" | "alphabetic" | "hanging" | "mathematical" | "inherit" | undefined;
+        allowReorder?: "no" | "yes" | undefined;
+        alphabetic?: number | string | undefined;
+        amplitude?: number | string | undefined;
+        arabicForm?: "initial" | "medial" | "terminal" | "isolated" | undefined;
+        ascent?: number | string | undefined;
+        attributeName?: string | undefined;
+        attributeType?: string | undefined;
+        autoReverse?: Booleanish | undefined;
+        azimuth?: number | string | undefined;
+        baseFrequency?: number | string | undefined;
+        baselineShift?: number | string | undefined;
+        baseProfile?: number | string | undefined;
+        bbox?: number | string | undefined;
+        begin?: number | string | undefined;
+        bias?: number | string | undefined;
+        by?: number | string | undefined;
+        calcMode?: number | string | undefined;
+        capHeight?: number | string | undefined;
+        clip?: number | string | undefined;
+        clipPath?: string | undefined;
+        clipPathUnits?: number | string | undefined;
+        clipRule?: number | string | undefined;
+        colorInterpolation?: number | string | undefined;
+        colorInterpolationFilters?: "auto" | "sRGB" | "linearRGB" | "inherit" | undefined;
+        colorProfile?: number | string | undefined;
+        colorRendering?: number | string | undefined;
+        contentScriptType?: number | string | undefined;
+        contentStyleType?: number | string | undefined;
+        cursor?: number | string | undefined;
+        cx?: number | string | undefined;
+        cy?: number | string | undefined;
+        d?: string | undefined;
+        decelerate?: number | string | undefined;
+        descent?: number | string | undefined;
+        diffuseConstant?: number | string | undefined;
+        direction?: number | string | undefined;
+        display?: number | string | undefined;
+        divisor?: number | string | undefined;
+        dominantBaseline?: "auto" | "use-script" | "no-change" | "reset-size" | "ideographic" | "alphabetic" | "hanging" | "mathematical" | "central" | "middle" | "text-after-edge" | "text-before-edge" | "inherit" | undefined;
+        dur?: number | string | undefined;
+        dx?: number | string | undefined;
+        dy?: number | string | undefined;
+        edgeMode?: number | string | undefined;
+        elevation?: number | string | undefined;
+        enableBackground?: number | string | undefined;
+        end?: number | string | undefined;
+        exponent?: number | string | undefined;
+        externalResourcesRequired?: Booleanish | undefined;
+        fill?: string | undefined;
+        fillOpacity?: number | string | undefined;
+        fillRule?: "nonzero" | "evenodd" | "inherit" | undefined;
+        filter?: string | undefined;
+        filterRes?: number | string | undefined;
+        filterUnits?: number | string | undefined;
+        floodColor?: number | string | undefined;
+        floodOpacity?: number | string | undefined;
+        focusable?: Booleanish | "auto" | undefined;
+        fontFamily?: string | undefined;
+        fontSize?: number | string | undefined;
+        fontSizeAdjust?: number | string | undefined;
+        fontStretch?: number | string | undefined;
+        fontStyle?: number | string | undefined;
+        fontVariant?: number | string | undefined;
+        fontWeight?: number | string | undefined;
+        format?: number | string | undefined;
+        fr?: number | string | undefined;
+        from?: number | string | undefined;
+        fx?: number | string | undefined;
+        fy?: number | string | undefined;
+        g1?: number | string | undefined;
+        g2?: number | string | undefined;
+        glyphName?: number | string | undefined;
+        glyphOrientationHorizontal?: number | string | undefined;
+        glyphOrientationVertical?: number | string | undefined;
+        glyphRef?: number | string | undefined;
+        gradientTransform?: string | undefined;
+        gradientUnits?: string | undefined;
+        hanging?: number | string | undefined;
+        horizAdvX?: number | string | undefined;
+        horizOriginX?: number | string | undefined;
+        href?: string | undefined;
+        ideographic?: number | string | undefined;
+        imageRendering?: number | string | undefined;
+        in2?: number | string | undefined;
+        in?: string | undefined;
+        intercept?: number | string | undefined;
+        k1?: number | string | undefined;
+        k2?: number | string | undefined;
+        k3?: number | string | undefined;
+        k4?: number | string | undefined;
+        k?: number | string | undefined;
+        kernelMatrix?: number | string | undefined;
+        kernelUnitLength?: number | string | undefined;
+        kerning?: number | string | undefined;
+        keyPoints?: number | string | undefined;
+        keySplines?: number | string | undefined;
+        keyTimes?: number | string | undefined;
+        lengthAdjust?: number | string | undefined;
+        letterSpacing?: number | string | undefined;
+        lightingColor?: number | string | undefined;
+        limitingConeAngle?: number | string | undefined;
+        local?: number | string | undefined;
+        markerEnd?: string | undefined;
+        markerHeight?: number | string | undefined;
+        markerMid?: string | undefined;
+        markerStart?: string | undefined;
+        markerUnits?: number | string | undefined;
+        markerWidth?: number | string | undefined;
+        mask?: string | undefined;
+        maskContentUnits?: number | string | undefined;
+        maskUnits?: number | string | undefined;
+        mathematical?: number | string | undefined;
+        mode?: number | string | undefined;
+        numOctaves?: number | string | undefined;
+        offset?: number | string | undefined;
+        opacity?: number | string | undefined;
+        operator?: number | string | undefined;
+        order?: number | string | undefined;
+        orient?: number | string | undefined;
+        orientation?: number | string | undefined;
+        origin?: number | string | undefined;
+        overflow?: number | string | undefined;
+        overlinePosition?: number | string | undefined;
+        overlineThickness?: number | string | undefined;
+        paintOrder?: number | string | undefined;
+        panose1?: number | string | undefined;
+        path?: string | undefined;
+        pathLength?: number | string | undefined;
+        patternContentUnits?: string | undefined;
+        patternTransform?: number | string | undefined;
+        patternUnits?: string | undefined;
+        pointerEvents?: number | string | undefined;
+        points?: string | undefined;
+        pointsAtX?: number | string | undefined;
+        pointsAtY?: number | string | undefined;
+        pointsAtZ?: number | string | undefined;
+        preserveAlpha?: Booleanish | undefined;
+        preserveAspectRatio?: string | undefined;
+        primitiveUnits?: number | string | undefined;
+        r?: number | string | undefined;
+        radius?: number | string | undefined;
+        refX?: number | string | undefined;
+        refY?: number | string | undefined;
+        renderingIntent?: number | string | undefined;
+        repeatCount?: number | string | undefined;
+        repeatDur?: number | string | undefined;
+        requiredExtensions?: number | string | undefined;
+        requiredFeatures?: number | string | undefined;
+        restart?: number | string | undefined;
+        result?: string | undefined;
+        rotate?: number | string | undefined;
+        rx?: number | string | undefined;
+        ry?: number | string | undefined;
+        scale?: number | string | undefined;
+        seed?: number | string | undefined;
+        shapeRendering?: number | string | undefined;
+        slope?: number | string | undefined;
+        spacing?: number | string | undefined;
+        specularConstant?: number | string | undefined;
+        specularExponent?: number | string | undefined;
+        speed?: number | string | undefined;
+        spreadMethod?: string | undefined;
+        startOffset?: number | string | undefined;
+        stdDeviation?: number | string | undefined;
+        stemh?: number | string | undefined;
+        stemv?: number | string | undefined;
+        stitchTiles?: number | string | undefined;
+        stopColor?: string | undefined;
+        stopOpacity?: number | string | undefined;
+        strikethroughPosition?: number | string | undefined;
+        strikethroughThickness?: number | string | undefined;
+        string?: number | string | undefined;
+        stroke?: string | undefined;
+        strokeDasharray?: string | number | undefined;
+        strokeDashoffset?: string | number | undefined;
+        strokeLinecap?: "butt" | "round" | "square" | "inherit" | undefined;
+        strokeLinejoin?: "miter" | "round" | "bevel" | "inherit" | undefined;
+        strokeMiterlimit?: number | string | undefined;
+        strokeOpacity?: number | string | undefined;
+        strokeWidth?: number | string | undefined;
+        surfaceScale?: number | string | undefined;
+        systemLanguage?: number | string | undefined;
+        tableValues?: number | string | undefined;
+        targetX?: number | string | undefined;
+        targetY?: number | string | undefined;
+        textAnchor?: "start" | "middle" | "end" | "inherit" | undefined;
+        textDecoration?: number | string | undefined;
+        textLength?: number | string | undefined;
+        textRendering?: number | string | undefined;
+        to?: number | string | undefined;
+        transform?: string | undefined;
+        u1?: number | string | undefined;
+        u2?: number | string | undefined;
+        underlinePosition?: number | string | undefined;
+        underlineThickness?: number | string | undefined;
+        unicode?: number | string | undefined;
+        unicodeBidi?: number | string | undefined;
+        unicodeRange?: number | string | undefined;
+        unitsPerEm?: number | string | undefined;
+        vAlphabetic?: number | string | undefined;
+        values?: string | undefined;
+        vectorEffect?: number | string | undefined;
+        version?: string | undefined;
+        vertAdvY?: number | string | undefined;
+        vertOriginX?: number | string | undefined;
+        vertOriginY?: number | string | undefined;
+        vHanging?: number | string | undefined;
+        vIdeographic?: number | string | undefined;
+        viewBox?: string | undefined;
+        viewTarget?: number | string | undefined;
+        visibility?: number | string | undefined;
+        vMathematical?: number | string | undefined;
+        widths?: number | string | undefined;
+        wordSpacing?: number | string | undefined;
+        writingMode?: number | string | undefined;
+        x1?: number | string | undefined;
+        x2?: number | string | undefined;
+        x?: number | string | undefined;
+        xChannelSelector?: string | undefined;
+        xHeight?: number | string | undefined;
+        xlinkActuate?: string | undefined;
+        xlinkArcrole?: string | undefined;
+        xlinkHref?: string | undefined;
+        xlinkRole?: string | undefined;
+        xlinkShow?: string | undefined;
+        xlinkTitle?: string | undefined;
+        xlinkType?: string | undefined;
+        xmlBase?: string | undefined;
+        xmlLang?: string | undefined;
+        xmlns?: string | undefined;
+        xmlnsXlink?: string | undefined;
+        xmlSpace?: string | undefined;
+        y1?: number | string | undefined;
+        y2?: number | string | undefined;
+        y?: number | string | undefined;
+        yChannelSelector?: string | undefined;
+        z?: number | string | undefined;
+        zoomAndPan?: string | undefined;
+    }
+    interface WebViewHTMLAttributes<T> extends HTMLAttributes<T> {
+        allowFullScreen?: boolean | undefined;
+        allowpopups?: boolean | undefined;
+        autosize?: boolean | undefined;
+        blinkfeatures?: string | undefined;
+        disableblinkfeatures?: string | undefined;
+        disableguestresize?: boolean | undefined;
+        disablewebsecurity?: boolean | undefined;
+        guestinstance?: string | undefined;
+        httpreferrer?: string | undefined;
+        nodeintegration?: boolean | undefined;
+        partition?: string | undefined;
+        plugins?: boolean | undefined;
+        preload?: string | undefined;
+        src?: string | undefined;
+        useragent?: string | undefined;
+        webpreferences?: string | undefined;
+    }
+    type HTMLElementType = "a" | "abbr" | "address" | "area" | "article" | "aside" | "audio" | "b" | "base" | "bdi" | "bdo" | "big" | "blockquote" | "body" | "br" | "button" | "canvas" | "caption" | "center" | "cite" | "code" | "col" | "colgroup" | "data" | "datalist" | "dd" | "del" | "details" | "dfn" | "dialog" | "div" | "dl" | "dt" | "em" | "embed" | "fieldset" | "figcaption" | "figure" | "footer" | "form" | "h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "head" | "header" | "hgroup" | "hr" | "html" | "i" | "iframe" | "img" | "input" | "ins" | "kbd" | "keygen" | "label" | "legend" | "li" | "link" | "main" | "map" | "mark" | "menu" | "menuitem" | "meta" | "meter" | "nav" | "noscript" | "object" | "ol" | "optgroup" | "option" | "output" | "p" | "param" | "picture" | "pre" | "progress" | "q" | "rp" | "rt" | "ruby" | "s" | "samp" | "search" | "slot" | "script" | "section" | "select" | "small" | "source" | "span" | "strong" | "style" | "sub" | "summary" | "sup" | "table" | "template" | "tbody" | "td" | "textarea" | "tfoot" | "th" | "thead" | "time" | "title" | "tr" | "track" | "u" | "ul" | "var" | "video" | "wbr" | "webview";
+    type SVGElementType = "animate" | "circle" | "clipPath" | "defs" | "desc" | "ellipse" | "feBlend" | "feColorMatrix" | "feComponentTransfer" | "feComposite" | "feConvolveMatrix" | "feDiffuseLighting" | "feDisplacementMap" | "feDistantLight" | "feDropShadow" | "feFlood" | "feFuncA" | "feFuncB" | "feFuncG" | "feFuncR" | "feGaussianBlur" | "feImage" | "feMerge" | "feMergeNode" | "feMorphology" | "feOffset" | "fePointLight" | "feSpecularLighting" | "feSpotLight" | "feTile" | "feTurbulence" | "filter" | "foreignObject" | "g" | "image" | "line" | "linearGradient" | "marker" | "mask" | "metadata" | "path" | "pattern" | "polygon" | "polyline" | "radialGradient" | "rect" | "stop" | "svg" | "switch" | "symbol" | "text" | "textPath" | "tspan" | "use" | "view";
+    interface AbstractView {
+        styleMedia: StyleMedia;
+        document: Document;
+    }
+    interface Touch {
+        identifier: number;
+        target: EventTarget;
+        screenX: number;
+        screenY: number;
+        clientX: number;
+        clientY: number;
+        pageX: number;
+        pageY: number;
+    }
+    interface TouchList {
+        [index: number]: Touch;
+        length: number;
+        item(index: number): Touch;
+        identifiedTouch(identifier: number): Touch;
+    }
+    interface ErrorInfo {
+        componentStack?: string | null;
+    }
+    namespace JSX {
+        type ElementType = string | React$1.JSXElementConstructor<any>;
+        interface Element extends React$1.ReactElement<any, any> {
+        }
+        interface ElementClass extends React$1.Component<any> {
+            render(): React$1.ReactNode;
+        }
+        interface ElementAttributesProperty {
+            props: {};
+        }
+        interface ElementChildrenAttribute {
+            children: {};
+        }
+        type LibraryManagedAttributes<C, P> = C extends React$1.MemoExoticComponent<infer T> | React$1.LazyExoticComponent<infer T> ? T extends React$1.MemoExoticComponent<infer U> | React$1.LazyExoticComponent<infer U> ? ReactManagedAttributes<U, P> : ReactManagedAttributes<T, P> : ReactManagedAttributes<C, P>;
+        interface IntrinsicAttributes extends React$1.Attributes {
+        }
+        interface IntrinsicClassAttributes<T> extends React$1.ClassAttributes<T> {
+        }
+        interface IntrinsicElements {
+            a: React$1.DetailedHTMLProps<React$1.AnchorHTMLAttributes<HTMLAnchorElement>, HTMLAnchorElement>;
+            abbr: React$1.DetailedHTMLProps<React$1.HTMLAttributes<HTMLElement>, HTMLElement>;
+            address: React$1.DetailedHTMLProps<React$1.HTMLAttributes<HTMLElement>, HTMLElement>;
+            area: React$1.DetailedHTMLProps<React$1.AreaHTMLAttributes<HTMLAreaElement>, HTMLAreaElement>;
+            article: React$1.DetailedHTMLProps<React$1.HTMLAttributes<HTMLElement>, HTMLElement>;
+            aside: React$1.DetailedHTMLProps<React$1.HTMLAttributes<HTMLElement>, HTMLElement>;
+            audio: React$1.DetailedHTMLProps<React$1.AudioHTMLAttributes<HTMLAudioElement>, HTMLAudioElement>;
+            b: React$1.DetailedHTMLProps<React$1.HTMLAttributes<HTMLElement>, HTMLElement>;
+            base: React$1.DetailedHTMLProps<React$1.BaseHTMLAttributes<HTMLBaseElement>, HTMLBaseElement>;
+            bdi: React$1.DetailedHTMLProps<React$1.HTMLAttributes<HTMLElement>, HTMLElement>;
+            bdo: React$1.DetailedHTMLProps<React$1.HTMLAttributes<HTMLElement>, HTMLElement>;
+            big: React$1.DetailedHTMLProps<React$1.HTMLAttributes<HTMLElement>, HTMLElement>;
+            blockquote: React$1.DetailedHTMLProps<React$1.BlockquoteHTMLAttributes<HTMLQuoteElement>, HTMLQuoteElement>;
+            body: React$1.DetailedHTMLProps<React$1.HTMLAttributes<HTMLBodyElement>, HTMLBodyElement>;
+            br: React$1.DetailedHTMLProps<React$1.HTMLAttributes<HTMLBRElement>, HTMLBRElement>;
+            button: React$1.DetailedHTMLProps<React$1.ButtonHTMLAttributes<HTMLButtonElement>, HTMLButtonElement>;
+            canvas: React$1.DetailedHTMLProps<React$1.CanvasHTMLAttributes<HTMLCanvasElement>, HTMLCanvasElement>;
+            caption: React$1.DetailedHTMLProps<React$1.HTMLAttributes<HTMLElement>, HTMLElement>;
+            center: React$1.DetailedHTMLProps<React$1.HTMLAttributes<HTMLElement>, HTMLElement>;
+            cite: React$1.DetailedHTMLProps<React$1.HTMLAttributes<HTMLElement>, HTMLElement>;
+            code: React$1.DetailedHTMLProps<React$1.HTMLAttributes<HTMLElement>, HTMLElement>;
+            col: React$1.DetailedHTMLProps<React$1.ColHTMLAttributes<HTMLTableColElement>, HTMLTableColElement>;
+            colgroup: React$1.DetailedHTMLProps<React$1.ColgroupHTMLAttributes<HTMLTableColElement>, HTMLTableColElement>;
+            data: React$1.DetailedHTMLProps<React$1.DataHTMLAttributes<HTMLDataElement>, HTMLDataElement>;
+            datalist: React$1.DetailedHTMLProps<React$1.HTMLAttributes<HTMLDataListElement>, HTMLDataListElement>;
+            dd: React$1.DetailedHTMLProps<React$1.HTMLAttributes<HTMLElement>, HTMLElement>;
+            del: React$1.DetailedHTMLProps<React$1.DelHTMLAttributes<HTMLModElement>, HTMLModElement>;
+            details: React$1.DetailedHTMLProps<React$1.DetailsHTMLAttributes<HTMLDetailsElement>, HTMLDetailsElement>;
+            dfn: React$1.DetailedHTMLProps<React$1.HTMLAttributes<HTMLElement>, HTMLElement>;
+            dialog: React$1.DetailedHTMLProps<React$1.DialogHTMLAttributes<HTMLDialogElement>, HTMLDialogElement>;
+            div: React$1.DetailedHTMLProps<React$1.HTMLAttributes<HTMLDivElement>, HTMLDivElement>;
+            dl: React$1.DetailedHTMLProps<React$1.HTMLAttributes<HTMLDListElement>, HTMLDListElement>;
+            dt: React$1.DetailedHTMLProps<React$1.HTMLAttributes<HTMLElement>, HTMLElement>;
+            em: React$1.DetailedHTMLProps<React$1.HTMLAttributes<HTMLElement>, HTMLElement>;
+            embed: React$1.DetailedHTMLProps<React$1.EmbedHTMLAttributes<HTMLEmbedElement>, HTMLEmbedElement>;
+            fieldset: React$1.DetailedHTMLProps<React$1.FieldsetHTMLAttributes<HTMLFieldSetElement>, HTMLFieldSetElement>;
+            figcaption: React$1.DetailedHTMLProps<React$1.HTMLAttributes<HTMLElement>, HTMLElement>;
+            figure: React$1.DetailedHTMLProps<React$1.HTMLAttributes<HTMLElement>, HTMLElement>;
+            footer: React$1.DetailedHTMLProps<React$1.HTMLAttributes<HTMLElement>, HTMLElement>;
+            form: React$1.DetailedHTMLProps<React$1.FormHTMLAttributes<HTMLFormElement>, HTMLFormElement>;
+            h1: React$1.DetailedHTMLProps<React$1.HTMLAttributes<HTMLHeadingElement>, HTMLHeadingElement>;
+            h2: React$1.DetailedHTMLProps<React$1.HTMLAttributes<HTMLHeadingElement>, HTMLHeadingElement>;
+            h3: React$1.DetailedHTMLProps<React$1.HTMLAttributes<HTMLHeadingElement>, HTMLHeadingElement>;
+            h4: React$1.DetailedHTMLProps<React$1.HTMLAttributes<HTMLHeadingElement>, HTMLHeadingElement>;
+            h5: React$1.DetailedHTMLProps<React$1.HTMLAttributes<HTMLHeadingElement>, HTMLHeadingElement>;
+            h6: React$1.DetailedHTMLProps<React$1.HTMLAttributes<HTMLHeadingElement>, HTMLHeadingElement>;
+            head: React$1.DetailedHTMLProps<React$1.HTMLAttributes<HTMLHeadElement>, HTMLHeadElement>;
+            header: React$1.DetailedHTMLProps<React$1.HTMLAttributes<HTMLElement>, HTMLElement>;
+            hgroup: React$1.DetailedHTMLProps<React$1.HTMLAttributes<HTMLElement>, HTMLElement>;
+            hr: React$1.DetailedHTMLProps<React$1.HTMLAttributes<HTMLHRElement>, HTMLHRElement>;
+            html: React$1.DetailedHTMLProps<React$1.HtmlHTMLAttributes<HTMLHtmlElement>, HTMLHtmlElement>;
+            i: React$1.DetailedHTMLProps<React$1.HTMLAttributes<HTMLElement>, HTMLElement>;
+            iframe: React$1.DetailedHTMLProps<React$1.IframeHTMLAttributes<HTMLIFrameElement>, HTMLIFrameElement>;
+            img: React$1.DetailedHTMLProps<React$1.ImgHTMLAttributes<HTMLImageElement>, HTMLImageElement>;
+            input: React$1.DetailedHTMLProps<React$1.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>;
+            ins: React$1.DetailedHTMLProps<React$1.InsHTMLAttributes<HTMLModElement>, HTMLModElement>;
+            kbd: React$1.DetailedHTMLProps<React$1.HTMLAttributes<HTMLElement>, HTMLElement>;
+            keygen: React$1.DetailedHTMLProps<React$1.KeygenHTMLAttributes<HTMLElement>, HTMLElement>;
+            label: React$1.DetailedHTMLProps<React$1.LabelHTMLAttributes<HTMLLabelElement>, HTMLLabelElement>;
+            legend: React$1.DetailedHTMLProps<React$1.HTMLAttributes<HTMLLegendElement>, HTMLLegendElement>;
+            li: React$1.DetailedHTMLProps<React$1.LiHTMLAttributes<HTMLLIElement>, HTMLLIElement>;
+            link: React$1.DetailedHTMLProps<React$1.LinkHTMLAttributes<HTMLLinkElement>, HTMLLinkElement>;
+            main: React$1.DetailedHTMLProps<React$1.HTMLAttributes<HTMLElement>, HTMLElement>;
+            map: React$1.DetailedHTMLProps<React$1.MapHTMLAttributes<HTMLMapElement>, HTMLMapElement>;
+            mark: React$1.DetailedHTMLProps<React$1.HTMLAttributes<HTMLElement>, HTMLElement>;
+            menu: React$1.DetailedHTMLProps<React$1.MenuHTMLAttributes<HTMLElement>, HTMLElement>;
+            menuitem: React$1.DetailedHTMLProps<React$1.HTMLAttributes<HTMLElement>, HTMLElement>;
+            meta: React$1.DetailedHTMLProps<React$1.MetaHTMLAttributes<HTMLMetaElement>, HTMLMetaElement>;
+            meter: React$1.DetailedHTMLProps<React$1.MeterHTMLAttributes<HTMLMeterElement>, HTMLMeterElement>;
+            nav: React$1.DetailedHTMLProps<React$1.HTMLAttributes<HTMLElement>, HTMLElement>;
+            noindex: React$1.DetailedHTMLProps<React$1.HTMLAttributes<HTMLElement>, HTMLElement>;
+            noscript: React$1.DetailedHTMLProps<React$1.HTMLAttributes<HTMLElement>, HTMLElement>;
+            object: React$1.DetailedHTMLProps<React$1.ObjectHTMLAttributes<HTMLObjectElement>, HTMLObjectElement>;
+            ol: React$1.DetailedHTMLProps<React$1.OlHTMLAttributes<HTMLOListElement>, HTMLOListElement>;
+            optgroup: React$1.DetailedHTMLProps<React$1.OptgroupHTMLAttributes<HTMLOptGroupElement>, HTMLOptGroupElement>;
+            option: React$1.DetailedHTMLProps<React$1.OptionHTMLAttributes<HTMLOptionElement>, HTMLOptionElement>;
+            output: React$1.DetailedHTMLProps<React$1.OutputHTMLAttributes<HTMLOutputElement>, HTMLOutputElement>;
+            p: React$1.DetailedHTMLProps<React$1.HTMLAttributes<HTMLParagraphElement>, HTMLParagraphElement>;
+            param: React$1.DetailedHTMLProps<React$1.ParamHTMLAttributes<HTMLParamElement>, HTMLParamElement>;
+            picture: React$1.DetailedHTMLProps<React$1.HTMLAttributes<HTMLElement>, HTMLElement>;
+            pre: React$1.DetailedHTMLProps<React$1.HTMLAttributes<HTMLPreElement>, HTMLPreElement>;
+            progress: React$1.DetailedHTMLProps<React$1.ProgressHTMLAttributes<HTMLProgressElement>, HTMLProgressElement>;
+            q: React$1.DetailedHTMLProps<React$1.QuoteHTMLAttributes<HTMLQuoteElement>, HTMLQuoteElement>;
+            rp: React$1.DetailedHTMLProps<React$1.HTMLAttributes<HTMLElement>, HTMLElement>;
+            rt: React$1.DetailedHTMLProps<React$1.HTMLAttributes<HTMLElement>, HTMLElement>;
+            ruby: React$1.DetailedHTMLProps<React$1.HTMLAttributes<HTMLElement>, HTMLElement>;
+            s: React$1.DetailedHTMLProps<React$1.HTMLAttributes<HTMLElement>, HTMLElement>;
+            samp: React$1.DetailedHTMLProps<React$1.HTMLAttributes<HTMLElement>, HTMLElement>;
+            search: React$1.DetailedHTMLProps<React$1.HTMLAttributes<HTMLElement>, HTMLElement>;
+            slot: React$1.DetailedHTMLProps<React$1.SlotHTMLAttributes<HTMLSlotElement>, HTMLSlotElement>;
+            script: React$1.DetailedHTMLProps<React$1.ScriptHTMLAttributes<HTMLScriptElement>, HTMLScriptElement>;
+            section: React$1.DetailedHTMLProps<React$1.HTMLAttributes<HTMLElement>, HTMLElement>;
+            select: React$1.DetailedHTMLProps<React$1.SelectHTMLAttributes<HTMLSelectElement>, HTMLSelectElement>;
+            small: React$1.DetailedHTMLProps<React$1.HTMLAttributes<HTMLElement>, HTMLElement>;
+            source: React$1.DetailedHTMLProps<React$1.SourceHTMLAttributes<HTMLSourceElement>, HTMLSourceElement>;
+            span: React$1.DetailedHTMLProps<React$1.HTMLAttributes<HTMLSpanElement>, HTMLSpanElement>;
+            strong: React$1.DetailedHTMLProps<React$1.HTMLAttributes<HTMLElement>, HTMLElement>;
+            style: React$1.DetailedHTMLProps<React$1.StyleHTMLAttributes<HTMLStyleElement>, HTMLStyleElement>;
+            sub: React$1.DetailedHTMLProps<React$1.HTMLAttributes<HTMLElement>, HTMLElement>;
+            summary: React$1.DetailedHTMLProps<React$1.HTMLAttributes<HTMLElement>, HTMLElement>;
+            sup: React$1.DetailedHTMLProps<React$1.HTMLAttributes<HTMLElement>, HTMLElement>;
+            table: React$1.DetailedHTMLProps<React$1.TableHTMLAttributes<HTMLTableElement>, HTMLTableElement>;
+            template: React$1.DetailedHTMLProps<React$1.HTMLAttributes<HTMLTemplateElement>, HTMLTemplateElement>;
+            tbody: React$1.DetailedHTMLProps<React$1.HTMLAttributes<HTMLTableSectionElement>, HTMLTableSectionElement>;
+            td: React$1.DetailedHTMLProps<React$1.TdHTMLAttributes<HTMLTableDataCellElement>, HTMLTableDataCellElement>;
+            textarea: React$1.DetailedHTMLProps<React$1.TextareaHTMLAttributes<HTMLTextAreaElement>, HTMLTextAreaElement>;
+            tfoot: React$1.DetailedHTMLProps<React$1.HTMLAttributes<HTMLTableSectionElement>, HTMLTableSectionElement>;
+            th: React$1.DetailedHTMLProps<React$1.ThHTMLAttributes<HTMLTableHeaderCellElement>, HTMLTableHeaderCellElement>;
+            thead: React$1.DetailedHTMLProps<React$1.HTMLAttributes<HTMLTableSectionElement>, HTMLTableSectionElement>;
+            time: React$1.DetailedHTMLProps<React$1.TimeHTMLAttributes<HTMLTimeElement>, HTMLTimeElement>;
+            title: React$1.DetailedHTMLProps<React$1.HTMLAttributes<HTMLTitleElement>, HTMLTitleElement>;
+            tr: React$1.DetailedHTMLProps<React$1.HTMLAttributes<HTMLTableRowElement>, HTMLTableRowElement>;
+            track: React$1.DetailedHTMLProps<React$1.TrackHTMLAttributes<HTMLTrackElement>, HTMLTrackElement>;
+            u: React$1.DetailedHTMLProps<React$1.HTMLAttributes<HTMLElement>, HTMLElement>;
+            ul: React$1.DetailedHTMLProps<React$1.HTMLAttributes<HTMLUListElement>, HTMLUListElement>;
+            "var": React$1.DetailedHTMLProps<React$1.HTMLAttributes<HTMLElement>, HTMLElement>;
+            video: React$1.DetailedHTMLProps<React$1.VideoHTMLAttributes<HTMLVideoElement>, HTMLVideoElement>;
+            wbr: React$1.DetailedHTMLProps<React$1.HTMLAttributes<HTMLElement>, HTMLElement>;
+            webview: React$1.DetailedHTMLProps<React$1.WebViewHTMLAttributes<HTMLWebViewElement>, HTMLWebViewElement>;
+            svg: React$1.SVGProps<SVGSVGElement>;
+            animate: React$1.SVGProps<SVGElement>;
+            animateMotion: React$1.SVGProps<SVGElement>;
+            animateTransform: React$1.SVGProps<SVGElement>;
+            circle: React$1.SVGProps<SVGCircleElement>;
+            clipPath: React$1.SVGProps<SVGClipPathElement>;
+            defs: React$1.SVGProps<SVGDefsElement>;
+            desc: React$1.SVGProps<SVGDescElement>;
+            ellipse: React$1.SVGProps<SVGEllipseElement>;
+            feBlend: React$1.SVGProps<SVGFEBlendElement>;
+            feColorMatrix: React$1.SVGProps<SVGFEColorMatrixElement>;
+            feComponentTransfer: React$1.SVGProps<SVGFEComponentTransferElement>;
+            feComposite: React$1.SVGProps<SVGFECompositeElement>;
+            feConvolveMatrix: React$1.SVGProps<SVGFEConvolveMatrixElement>;
+            feDiffuseLighting: React$1.SVGProps<SVGFEDiffuseLightingElement>;
+            feDisplacementMap: React$1.SVGProps<SVGFEDisplacementMapElement>;
+            feDistantLight: React$1.SVGProps<SVGFEDistantLightElement>;
+            feDropShadow: React$1.SVGProps<SVGFEDropShadowElement>;
+            feFlood: React$1.SVGProps<SVGFEFloodElement>;
+            feFuncA: React$1.SVGProps<SVGFEFuncAElement>;
+            feFuncB: React$1.SVGProps<SVGFEFuncBElement>;
+            feFuncG: React$1.SVGProps<SVGFEFuncGElement>;
+            feFuncR: React$1.SVGProps<SVGFEFuncRElement>;
+            feGaussianBlur: React$1.SVGProps<SVGFEGaussianBlurElement>;
+            feImage: React$1.SVGProps<SVGFEImageElement>;
+            feMerge: React$1.SVGProps<SVGFEMergeElement>;
+            feMergeNode: React$1.SVGProps<SVGFEMergeNodeElement>;
+            feMorphology: React$1.SVGProps<SVGFEMorphologyElement>;
+            feOffset: React$1.SVGProps<SVGFEOffsetElement>;
+            fePointLight: React$1.SVGProps<SVGFEPointLightElement>;
+            feSpecularLighting: React$1.SVGProps<SVGFESpecularLightingElement>;
+            feSpotLight: React$1.SVGProps<SVGFESpotLightElement>;
+            feTile: React$1.SVGProps<SVGFETileElement>;
+            feTurbulence: React$1.SVGProps<SVGFETurbulenceElement>;
+            filter: React$1.SVGProps<SVGFilterElement>;
+            foreignObject: React$1.SVGProps<SVGForeignObjectElement>;
+            g: React$1.SVGProps<SVGGElement>;
+            image: React$1.SVGProps<SVGImageElement>;
+            line: React$1.SVGLineElementAttributes<SVGLineElement>;
+            linearGradient: React$1.SVGProps<SVGLinearGradientElement>;
+            marker: React$1.SVGProps<SVGMarkerElement>;
+            mask: React$1.SVGProps<SVGMaskElement>;
+            metadata: React$1.SVGProps<SVGMetadataElement>;
+            mpath: React$1.SVGProps<SVGElement>;
+            path: React$1.SVGProps<SVGPathElement>;
+            pattern: React$1.SVGProps<SVGPatternElement>;
+            polygon: React$1.SVGProps<SVGPolygonElement>;
+            polyline: React$1.SVGProps<SVGPolylineElement>;
+            radialGradient: React$1.SVGProps<SVGRadialGradientElement>;
+            rect: React$1.SVGProps<SVGRectElement>;
+            set: React$1.SVGProps<SVGSetElement>;
+            stop: React$1.SVGProps<SVGStopElement>;
+            switch: React$1.SVGProps<SVGSwitchElement>;
+            symbol: React$1.SVGProps<SVGSymbolElement>;
+            text: React$1.SVGTextElementAttributes<SVGTextElement>;
+            textPath: React$1.SVGProps<SVGTextPathElement>;
+            tspan: React$1.SVGProps<SVGTSpanElement>;
+            use: React$1.SVGProps<SVGUseElement>;
+            view: React$1.SVGProps<SVGViewElement>;
+        }
+    }
+}
+type InexactPartial<T> = {
+    [K in keyof T]?: T[K] | undefined;
+};
+type Defaultize<P, D> = P extends any ? string extends keyof P ? P : Pick<P, Exclude<keyof P, keyof D>> & InexactPartial<Pick<P, Extract<keyof P, keyof D>>> & InexactPartial<Pick<D, Exclude<keyof D, keyof P>>> : never;
+type ReactManagedAttributes<C, P> = C extends {
+    defaultProps: infer D;
+} ? Defaultize<P, D> : P;
+const none: "none";
+const triggerPress: "trigger-press";
+const triggerHover: "trigger-hover";
+const triggerFocus: "trigger-focus";
+const outsidePress: "outside-press";
+const itemPress: "item-press";
+const closePress: "close-press";
+const linkPress: "link-press";
+const clearPress: "clear-press";
+const chipRemovePress: "chip-remove-press";
+const trackPress: "track-press";
+const incrementPress: "increment-press";
+const decrementPress: "decrement-press";
+const inputChange: "input-change";
+const inputClear: "input-clear";
+const inputBlur: "input-blur";
+const inputPaste: "input-paste";
+const inputPress: "input-press";
+const focusOut: "focus-out";
+const escapeKey: "escape-key";
+const closeWatcher: "close-watcher";
+const listNavigation: "list-navigation";
+const keyboard: "keyboard";
+const pointer: "pointer";
+const drag: "drag";
+const wheel: "wheel";
+const scrub: "scrub";
+const popupClose: "popup-close";
+const cancelOpen: "cancel-open";
+const siblingOpen: "sibling-open";
+const disabled: "disabled";
+const missing: "missing";
+const initial: "initial";
+const imperativeAction: "imperative-action";
+const swipe: "swipe";
+const windowResize: "window-resize";
+interface ReasonToEventMap {
+    [none]: Event;
+    [triggerPress]: MouseEvent | PointerEvent | TouchEvent | KeyboardEvent;
+    [triggerHover]: MouseEvent;
+    [triggerFocus]: FocusEvent;
+    [outsidePress]: MouseEvent | PointerEvent | TouchEvent;
+    [itemPress]: MouseEvent | KeyboardEvent | PointerEvent;
+    [closePress]: MouseEvent | KeyboardEvent | PointerEvent;
+    [linkPress]: MouseEvent | PointerEvent;
+    [clearPress]: PointerEvent | MouseEvent | KeyboardEvent;
+    [chipRemovePress]: PointerEvent | MouseEvent | KeyboardEvent;
+    [trackPress]: PointerEvent | MouseEvent | TouchEvent;
+    [incrementPress]: PointerEvent | MouseEvent | TouchEvent;
+    [decrementPress]: PointerEvent | MouseEvent | TouchEvent;
+    [inputChange]: InputEvent | Event;
+    [inputClear]: InputEvent | FocusEvent | Event;
+    [inputBlur]: FocusEvent;
+    [inputPaste]: ClipboardEvent;
+    [inputPress]: MouseEvent | PointerEvent | TouchEvent | KeyboardEvent;
+    [focusOut]: FocusEvent | KeyboardEvent;
+    [escapeKey]: KeyboardEvent;
+    [closeWatcher]: Event;
+    [listNavigation]: KeyboardEvent;
+    [keyboard]: KeyboardEvent;
+    [pointer]: PointerEvent;
+    [drag]: PointerEvent | TouchEvent;
+    [swipe]: PointerEvent | TouchEvent;
+    [wheel]: WheelEvent;
+    [scrub]: PointerEvent;
+    [cancelOpen]: MouseEvent;
+    [siblingOpen]: Event;
+    [disabled]: Event;
+    [missing]: Event;
+    [initial]: Event;
+    [imperativeAction]: Event;
+    [windowResize]: UIEvent;
+}
+type ReasonToEvent<Reason extends string> = Reason extends keyof ReasonToEventMap ? ReasonToEventMap[Reason] : Event;
+type BaseUIChangeEventDetail<Reason extends string, CustomProperties extends object> = {
+    reason: Reason;
+    event: ReasonToEvent<Reason>;
+    cancel: () => void;
+    allowPropagation: () => void;
+    isCanceled: boolean;
+    isPropagationAllowed: boolean;
+    trigger: Element | undefined;
+} & CustomProperties;
+type BaseUIChangeEventDetails<Reason extends string, CustomProperties extends object = {}> = Reason extends string ? BaseUIChangeEventDetail<Reason, CustomProperties> & {} : never;
+type BaseUIGenericEventDetail<Reason extends string, CustomProperties extends object> = {
+    reason: Reason;
+    event: ReasonToEvent<Reason>;
+} & CustomProperties;
+type BaseUIGenericEventDetails<Reason extends string, CustomProperties extends object = {}> = Reason extends string ? BaseUIGenericEventDetail<Reason, CustomProperties> & {} : never;
+type BaseUIHighlightEventDetails<Reason extends string, CustomProperties extends object = {}> = Reason extends typeof pointer ? {
+    reason: Reason;
+    event: MouseEvent | PointerEvent;
+} & CustomProperties : BaseUIGenericEventDetails<Reason, CustomProperties>;
+type HTMLProps<T = any> = React$1.HTMLAttributes<T> & {
+    ref?: React$1.Ref<T> | undefined;
+};
+type ComponentRenderFn<Props, State> = (props: Props, state: State) => React$1.ReactElement<unknown>;
+type BaseUIEvent<E extends React$1.SyntheticEvent<Element, Event>> = E & {
+    preventBaseUIHandler: () => void;
+    readonly baseUIHandlerPrevented?: boolean | undefined;
+};
+type WithPreventBaseUIHandler<T> = T extends ((event: infer E) => any) ? E extends React$1.SyntheticEvent<Element, Event> ? (event: BaseUIEvent<E>) => ReturnType<T> : T : T extends undefined ? undefined : T;
+type WithBaseUIEvent<T> = {
+    [K in keyof T]: WithPreventBaseUIHandler<T[K]>;
+};
+type BaseUIComponentProps<ElementType extends React$1.ElementType, State, RenderFunctionProps = HTMLProps> = Omit<WithBaseUIEvent<React$1.ComponentPropsWithRef<ElementType>>, "className" | "color" | "defaultValue" | "defaultChecked" | "style"> & {
+    className?: string | ((state: State) => string | undefined) | undefined;
+    render?: React$1.ReactElement | ComponentRenderFn<RenderFunctionProps, State> | undefined;
+    style?: React$1.CSSProperties | ((state: State) => React$1.CSSProperties | undefined) | undefined;
+};
+interface NativeButtonProps {
+    nativeButton?: boolean | undefined;
+}
+interface NonNativeButtonProps {
+    nativeButton?: boolean | undefined;
+}
+type Orientation = "horizontal" | "vertical";
+type StateAttributesMapping<State> = {
+    [Property in keyof State]?: (state: State[Property]) => Record<string, string> | null;
+};
+function useRender<State extends Record<string, unknown>, RenderedElementType extends Element, Enabled extends boolean | undefined = undefined>(params: useRender.Parameters<State, RenderedElementType, Enabled>): useRender.ReturnValue<Enabled>;
+type UseRenderRenderProp<State = Record<string, unknown>> = React$1.ReactElement | ComponentRenderFn<React$1.HTMLAttributes<any>, State>;
+type UseRenderElementProps<ElementType extends React$1.ElementType> = React$1.ComponentPropsWithRef<ElementType>;
+type UseRenderComponentProps<ElementType extends React$1.ElementType, State = {}, RenderFunctionProps = HTMLProps> = React$1.ComponentPropsWithRef<ElementType> & {
+    render?: React$1.ReactElement | ComponentRenderFn<RenderFunctionProps, State> | undefined;
+};
+interface UseRenderParameters<State, RenderedElementType extends Element, Enabled extends boolean | undefined> {
+    render?: UseRenderRenderProp<State> | undefined;
+    ref?: React$1.Ref<RenderedElementType> | React$1.Ref<RenderedElementType>[] | undefined;
+    state?: State | undefined;
+    stateAttributesMapping?: StateAttributesMapping<State> | undefined;
+    props?: Record<string, unknown> | undefined;
+    enabled?: Enabled | undefined;
+    defaultTagName?: keyof React$1.JSX.IntrinsicElements | undefined;
+}
+type UseRenderReturnValue<Enabled extends boolean | undefined> = Enabled extends false ? null : React$1.ReactElement;
+interface UseRenderState {
+}
+namespace useRender {
+    type State = UseRenderState;
+    type RenderProp<TState = Record<string, unknown>> = UseRenderRenderProp<TState>;
+    type ElementProps<ElementType extends React$1.ElementType> = UseRenderElementProps<ElementType>;
+    type ComponentProps<ElementType extends React$1.ElementType, TState = {}, RenderFunctionProps = HTMLProps> = UseRenderComponentProps<ElementType, TState, RenderFunctionProps>;
+    type Parameters<TState, RenderedElementType extends Element, Enabled extends boolean | undefined> = UseRenderParameters<TState, RenderedElementType, Enabled>;
+    type ReturnValue<Enabled extends boolean | undefined> = UseRenderReturnValue<Enabled>;
+}
+type ClassValue = ClassArray | ClassDictionary | string | number | bigint | null | boolean | undefined;
+type ClassDictionary = Record<string, any>;
+type ClassArray = ClassValue[];
+type ClassValue$1 = ClassValue;
+type ClassProp = {
+    class: ClassValue$1;
+    className?: never;
+} | {
+    class?: never;
+    className: ClassValue$1;
+} | {
+    class?: never;
+    className?: never;
+};
+type OmitUndefined<T> = T extends undefined ? never : T;
+type VariantProps<Component extends (...args: any) => any> = Omit<OmitUndefined<Parameters<Component>[0]>, "class" | "className">;
+const badgeVariants: (props?: ({
+    variant?: "default" | "outline" | "secondary" | "info" | "success" | "warning" | "destructive" | "focus" | "invert" | "primary-light" | "warning-light" | "success-light" | "info-light" | "destructive-light" | "invert-light" | "focus-light" | "primary-outline" | "warning-outline" | "success-outline" | "info-outline" | "destructive-outline" | "invert-outline" | "focus-outline" | null | undefined;
+    size?: "default" | "xs" | "sm" | "lg" | "xl" | null | undefined;
+    radius?: "default" | "full" | null | undefined;
+} & ClassProp) | undefined) => string;
+interface BadgeProps extends useRender.ComponentProps<"span"> {
+    variant?: VariantProps<typeof badgeVariants>["variant"];
+    size?: VariantProps<typeof badgeVariants>["size"];
+    radius?: VariantProps<typeof badgeVariants>["radius"];
+}
+export function Badge({ className, variant, size, radius, render, ...props }: BadgeProps): React$1.ReactElement<unknown, string | React$1.JSXElementConstructor<any>>;
+export function Input({ className, type, ...props }: React$1.ComponentProps<"input">): React$1.JSX.Element;
+export function Textarea({ className, ...props }: React$1.ComponentProps<"textarea">): React$1.JSX.Element;
+function Label({ className, ...props }: React$1.ComponentProps<"label">): React$1.JSX.Element;
+export function FieldSet({ className, ...props }: React$1.ComponentProps<"fieldset">): React$1.JSX.Element;
+export function FieldLegend({ className, variant, ...props }: React$1.ComponentProps<"legend"> & {
+    variant?: "legend" | "label";
+}): React$1.JSX.Element;
+export function FieldGroup({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
+const fieldVariants: (props?: ({
+    orientation?: "horizontal" | "vertical" | "responsive" | null | undefined;
+} & ClassProp) | undefined) => string;
+export function Field({ className, orientation, ...props }: React$1.ComponentProps<"div"> & VariantProps<typeof fieldVariants>): React$1.JSX.Element;
+export function FieldContent({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
+export function FieldLabel({ className, ...props }: React$1.ComponentProps<typeof Label>): React$1.JSX.Element;
+export function FieldTitle({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
+export function FieldDescription({ className, ...props }: React$1.ComponentProps<"p">): React$1.JSX.Element;
+export function FieldSeparator({ children, className, ...props }: React$1.ComponentProps<"div"> & {
+    children?: React$1.ReactNode;
+}): React$1.JSX.Element;
+export function FieldError({ className, children, errors, ...props }: React$1.ComponentProps<"div"> & {
+    errors?: Array<{
+        message?: string;
+    } | undefined>;
+}): React$1.JSX.Element | null;
+const Button: React$1.ForwardRefExoticComponent<Omit<ButtonProps, "ref"> & React$1.RefAttributes<HTMLElement>>;
+interface ButtonState {
+    disabled: boolean;
+}
+interface ButtonProps extends NativeButtonProps, BaseUIComponentProps<"button", ButtonState> {
+    focusableWhenDisabled?: boolean | undefined;
+}
+namespace Button {
+    type State = ButtonState;
+    type Props = ButtonProps;
+}
+const buttonVariants: (props?: ({
+    variant?: "default" | "outline" | "secondary" | "destructive" | "link" | "ghost" | null | undefined;
+    size?: "default" | "xs" | "sm" | "lg" | "icon" | "icon-xs" | "icon-sm" | "icon-lg" | null | undefined;
+} & ClassProp) | undefined) => string;
+function Button$1({ className, variant, size, ...props }: Button.Props & VariantProps<typeof buttonVariants>): React$1.JSX.Element;
+export function InputGroup({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
+const inputGroupAddonVariants: (props?: ({
+    align?: "inline-start" | "inline-end" | "block-start" | "block-end" | null | undefined;
+} & ClassProp) | undefined) => string;
+export function InputGroupAddon({ className, align, ...props }: React$1.ComponentProps<"div"> & VariantProps<typeof inputGroupAddonVariants>): React$1.JSX.Element;
+const inputGroupButtonVariants: (props?: ({
+    size?: "xs" | "sm" | "icon-xs" | "icon-sm" | null | undefined;
+} & ClassProp) | undefined) => string;
+export function InputGroupButton({ className, type, variant, size, ...props }: Omit<React$1.ComponentProps<typeof Button$1>, "size" | "type"> & VariantProps<typeof inputGroupButtonVariants> & {
+    type?: "button" | "submit" | "reset";
+}): React$1.JSX.Element;
+export function InputGroupText({ className, ...props }: React$1.ComponentProps<"span">): React$1.JSX.Element;
+export function InputGroupInput({ className, ...props }: React$1.ComponentProps<"input">): React$1.JSX.Element;
+export function InputGroupTextarea({ className, ...props }: React$1.ComponentProps<"textarea">): React$1.JSX.Element;
+type TransitionStatus = "starting" | "ending" | "idle" | undefined;
+interface UseCollapsibleRootReturnValue {
+    defaultPanelId: React$1.HTMLAttributes<Element>["id"];
+    disabled: boolean;
+    handleTrigger: (event: React$1.MouseEvent | React$1.KeyboardEvent) => void;
+    mounted: boolean;
+    open: boolean;
+    panelId: React$1.HTMLAttributes<Element>["id"];
+    setMounted: (nextMounted: boolean) => void;
+    setOpen: (open: boolean) => void;
+    setPanelIdState: React$1.Dispatch<React$1.SetStateAction<string | null | undefined>>;
+    transitionStatus: TransitionStatus;
+}
+const CollapsibleRoot: React$1.ForwardRefExoticComponent<Omit<CollapsibleRootProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
+interface CollapsibleRootState extends Pick<UseCollapsibleRootReturnValue, "open" | "disabled" | "transitionStatus"> {
+}
+interface CollapsibleRootProps extends BaseUIComponentProps<"div", CollapsibleRootState> {
+    open?: boolean | undefined;
+    defaultOpen?: boolean | undefined;
+    onOpenChange?: ((open: boolean, eventDetails: CollapsibleRootChangeEventDetails) => void) | undefined;
+    disabled?: boolean | undefined;
+}
+type CollapsibleRootChangeEventReason = typeof triggerPress | typeof none;
+type CollapsibleRootChangeEventDetails = BaseUIChangeEventDetails<CollapsibleRootChangeEventReason>;
+namespace CollapsibleRoot {
+    type State = CollapsibleRootState;
+    type Props = CollapsibleRootProps;
+    type ChangeEventReason = CollapsibleRootChangeEventReason;
+    type ChangeEventDetails = CollapsibleRootChangeEventDetails;
+}
+const CollapsibleTrigger: React$1.ForwardRefExoticComponent<Omit<CollapsibleTriggerProps, "ref"> & React$1.RefAttributes<HTMLButtonElement>>;
+interface CollapsibleTriggerState extends CollapsibleRootState {
+}
+interface CollapsibleTriggerProps extends NativeButtonProps, BaseUIComponentProps<"button", CollapsibleTriggerState> {
+}
+namespace CollapsibleTrigger {
+    type State = CollapsibleTriggerState;
+    type Props = CollapsibleTriggerProps;
+}
+const CollapsiblePanel: React$1.ForwardRefExoticComponent<Omit<CollapsiblePanelProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
+interface CollapsiblePanelState extends CollapsibleRootState {
+    transitionStatus: TransitionStatus;
+}
+interface CollapsiblePanelProps extends BaseUIComponentProps<"div", CollapsiblePanelState> {
+    hiddenUntilFound?: boolean | undefined;
+    keepMounted?: boolean | undefined;
+}
+namespace CollapsiblePanel {
+    type State = CollapsiblePanelState;
+    type Props = CollapsiblePanelProps;
+}
+function Collapsible$1({ ...props }: Collapsible.Root.Props): React$1.JSX.Element;
+function CollapsibleTrigger$1({ ...props }: Collapsible.Trigger.Props): React$1.JSX.Element;
+export function CollapsibleContent({ ...props }: Collapsible.Panel.Props): React$1.JSX.Element;
+export function Disclosure(props: {
+    children?: React$1.ReactNode;
+    trigger: React$1.ReactNode;
+    defaultIsOpen?: boolean;
+    isOpen?: boolean;
+    isDisabled?: boolean;
+    onOpenChange?: (isOpen: boolean) => void;
+}): React$1.JSX.Element;
+type Errors = Record<string, string | string[]>;
+interface FormContext {
+    errors: Errors;
+    clearErrors: (name: string | undefined) => void;
+    elementRef: React$1.RefObject<HTMLFormElement | null>;
+    formRef: React$1.RefObject<{
+        fields: Map<string, {
+            name: string | undefined;
+            validate: () => void;
+            validityData: FieldValidityData;
+            controlRef: React$1.RefObject<HTMLElement | null>;
+            getValue: () => unknown;
+        }>;
+    }>;
+    validationMode: Form.ValidationMode;
+    submitCountRef: React$1.RefObject<number>;
+}
+const FormContext: React$1.Context<FormContext>;
+const Form: {
+    <FormValues extends Record<string, any> = Record<string, any>>(props: Form.Props<FormValues> & {
+        ref?: React$1.Ref<HTMLFormElement> | undefined;
+    }): React$1.JSX.Element;
+};
+type FormSubmitEventReason = typeof none;
+type FormSubmitEventDetails = BaseUIGenericEventDetails<Form.SubmitEventReason>;
+type FormValidationMode = "onSubmit" | "onBlur" | "onChange";
+interface FormActions {
+    validate: (fieldName?: string | undefined) => void;
+}
+interface FormState {
+}
+interface FormProps<FormValues extends Record<string, any> = Record<string, any>> extends BaseUIComponentProps<"form", FormState, React$1.ComponentPropsWithRef<"form">> {
+    validationMode?: FormValidationMode | undefined;
+    errors?: FormContext["errors"] | undefined;
+    onFormSubmit?: ((formValues: FormValues, eventDetails: Form.SubmitEventDetails) => void) | undefined;
+    actionsRef?: React$1.RefObject<Form.Actions | null> | undefined;
+}
+namespace Form {
+    type Props<FormValues extends Record<string, any> = Record<string, any>> = FormProps<FormValues>;
+    type State = FormState;
+    type Actions = FormActions;
+    type ValidationMode = FormValidationMode;
+    type SubmitEventReason = FormSubmitEventReason;
+    type SubmitEventDetails = FormSubmitEventDetails;
+    type Values<FormValues extends Record<string, any> = Record<string, any>> = FormValues;
+}
+const FieldRoot: React$1.ForwardRefExoticComponent<Omit<FieldRootProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
+interface FieldValidityData {
+    state: {
+        badInput: boolean;
+        customError: boolean;
+        patternMismatch: boolean;
+        rangeOverflow: boolean;
+        rangeUnderflow: boolean;
+        stepMismatch: boolean;
+        tooLong: boolean;
+        tooShort: boolean;
+        typeMismatch: boolean;
+        valueMissing: boolean;
+        valid: boolean | null;
+    };
+    error: string;
+    errors: string[];
+    value: unknown;
+    initialValue: unknown;
+}
+interface FieldRootActions {
+    validate: () => void;
+}
+interface FieldRootState {
+    disabled: boolean;
+    touched: boolean;
+    dirty: boolean;
+    valid: boolean | null;
+    filled: boolean;
+    focused: boolean;
+}
+interface FieldRootProps extends BaseUIComponentProps<"div", FieldRootState> {
+    disabled?: boolean | undefined;
+    name?: string | undefined;
+    validate?: ((value: unknown, formValues: Form.Values) => string | string[] | null | void | Promise<string | string[] | null | void>) | undefined;
+    validationMode?: Form.ValidationMode | undefined;
+    validationDebounceTime?: number | undefined;
+    invalid?: boolean | undefined;
+    dirty?: boolean | undefined;
+    touched?: boolean | undefined;
+    actionsRef?: React$1.RefObject<FieldRoot.Actions | null> | undefined;
+}
+namespace FieldRoot {
+    type State = FieldRootState;
+    type Props = FieldRootProps;
+    type Actions = FieldRootActions;
+}
+const SwitchRoot: React$1.ForwardRefExoticComponent<Omit<SwitchRootProps, "ref"> & React$1.RefAttributes<HTMLElement>>;
+interface SwitchRootState extends FieldRootState {
+    checked: boolean;
+    disabled: boolean;
+    readOnly: boolean;
+    required: boolean;
+}
+interface SwitchRootProps extends NonNativeButtonProps, Omit<BaseUIComponentProps<"span", SwitchRootState>, "onChange"> {
+    id?: string | undefined;
+    checked?: boolean | undefined;
+    defaultChecked?: boolean | undefined;
+    disabled?: boolean | undefined;
+    inputRef?: React$1.Ref<HTMLInputElement> | undefined;
+    name?: string | undefined;
+    form?: string | undefined;
+    onCheckedChange?: ((checked: boolean, eventDetails: SwitchRoot.ChangeEventDetails) => void) | undefined;
+    readOnly?: boolean | undefined;
+    required?: boolean | undefined;
+    value?: string | undefined;
+    uncheckedValue?: string | undefined;
+}
+type SwitchRootChangeEventReason = typeof none;
+type SwitchRootChangeEventDetails = BaseUIChangeEventDetails<SwitchRoot.ChangeEventReason>;
+namespace SwitchRoot {
+    type State = SwitchRootState;
+    type Props = SwitchRootProps;
+    type ChangeEventReason = SwitchRootChangeEventReason;
+    type ChangeEventDetails = SwitchRootChangeEventDetails;
+}
+const SwitchThumb: React$1.ForwardRefExoticComponent<Omit<SwitchThumbProps, "ref"> & React$1.RefAttributes<HTMLSpanElement>>;
+interface SwitchThumbProps extends BaseUIComponentProps<"span", SwitchThumbState> {
+}
+interface SwitchThumbState extends SwitchRootState {
+}
+namespace SwitchThumb {
+    type Props = SwitchThumbProps;
+    type State = SwitchThumbState;
+}
+function Switch$1({ className, size, ...props }: Switch.Root.Props & {
+    size?: "sm" | "default";
+}): React$1.JSX.Element;
+type Spacing = 0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10;
+type FieldProps = {
+    label: string;
+    description?: string;
+    name?: string;
+    required?: boolean;
+    disabled?: boolean;
+};
+export function SwitchField(props: FieldProps & {
+    value?: boolean;
+    defaultChecked?: boolean;
+    onChange?: (value: boolean) => void;
+}): React$1.JSX.Element;
+const CheckboxRoot: React$1.ForwardRefExoticComponent<Omit<CheckboxRootProps, "ref"> & React$1.RefAttributes<HTMLElement>>;
+interface CheckboxRootState extends FieldRootState {
+    checked: boolean;
+    disabled: boolean;
+    readOnly: boolean;
+    required: boolean;
+    indeterminate: boolean;
+}
+interface CheckboxRootProps extends NonNativeButtonProps, Omit<BaseUIComponentProps<"span", CheckboxRootState>, "onChange" | "value"> {
+    id?: string | undefined;
+    name?: string | undefined;
+    form?: string | undefined;
+    checked?: boolean | undefined;
+    defaultChecked?: boolean | undefined;
+    disabled?: boolean | undefined;
+    onCheckedChange?: ((checked: boolean, eventDetails: CheckboxRootChangeEventDetails) => void) | undefined;
+    readOnly?: boolean | undefined;
+    required?: boolean | undefined;
+    indeterminate?: boolean | undefined;
+    inputRef?: React$1.Ref<HTMLInputElement> | undefined;
+    parent?: boolean | undefined;
+    uncheckedValue?: string | undefined;
+    value?: string | undefined;
+}
+type CheckboxRootChangeEventReason = typeof none;
+type CheckboxRootChangeEventDetails = BaseUIChangeEventDetails<CheckboxRoot.ChangeEventReason>;
+namespace CheckboxRoot {
+    type State = CheckboxRootState;
+    type Props = CheckboxRootProps;
+    type ChangeEventReason = CheckboxRootChangeEventReason;
+    type ChangeEventDetails = CheckboxRootChangeEventDetails;
+}
+const CheckboxIndicator: React$1.ForwardRefExoticComponent<Omit<CheckboxIndicatorProps, "ref"> & React$1.RefAttributes<HTMLSpanElement>>;
+interface CheckboxIndicatorState extends CheckboxRootState {
+    transitionStatus: TransitionStatus;
+}
+interface CheckboxIndicatorProps extends BaseUIComponentProps<"span", CheckboxIndicatorState> {
+    keepMounted?: boolean | undefined;
+}
+namespace CheckboxIndicator {
+    type State = CheckboxIndicatorState;
+    type Props = CheckboxIndicatorProps;
+}
+function Checkbox$1({ className, indeterminate, ...props }: Checkbox.Root.Props): React$1.JSX.Element;
+type StepperOrientation = "horizontal" | "vertical";
+type StepIndicators = {
+    active?: React$1.ReactNode;
+    completed?: React$1.ReactNode;
+    inactive?: React$1.ReactNode;
+    loading?: React$1.ReactNode;
+};
+interface StepperProps extends React$1.HTMLAttributes<HTMLDivElement> {
+    defaultValue?: number;
+    value?: number;
+    onValueChange?: (value: number) => void;
+    orientation?: StepperOrientation;
+    indicators?: StepIndicators;
+}
+export function Stepper({ defaultValue, value, onValueChange, orientation, className, children, indicators, ...props }: StepperProps): React$1.JSX.Element;
+interface StepperItemProps extends React$1.HTMLAttributes<HTMLDivElement> {
+    step: number;
+    completed?: boolean;
+    disabled?: boolean;
+    loading?: boolean;
+}
+export function StepperItem({ step, completed, disabled, loading, className, children, ...props }: StepperItemProps): React$1.JSX.Element;
+type StepperTriggerProps = UseRenderComponentProps<"button">;
+export function StepperTrigger({ className, children, tabIndex, render, ...props }: StepperTriggerProps): React$1.ReactElement<unknown, string | React$1.JSXElementConstructor<any>>;
+export function StepperIndicator({ children, className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
+export function StepperSeparator({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
+export function StepperTitle({ children, className, ...props }: React$1.ComponentProps<"h3">): React$1.JSX.Element;
+export function StepperDescription({ children, className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
+export function StepperNav({ children, className, ...props }: React$1.ComponentProps<"nav">): React$1.JSX.Element;
+export function StepperPanel({ children, className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
+interface StepperContentProps extends React$1.ComponentProps<"div"> {
+    value: number;
+    forceMount?: boolean;
+}
+export function StepperContent({ value, forceMount, children, className, ...props }: StepperContentProps): React$1.JSX.Element | null;
+type StepProps = {
+    step?: number;
+    label: string;
+    description?: string;
+    children?: React$1.ReactNode;
+};
+type ProgressStepperProps = {
+    children?: React$1.ReactNode;
+    activeStep?: number;
+    orientation?: "horizontal" | "vertical";
+    onStepClick?: (index: number) => void;
+};
+type WizardProps = Omit<ProgressStepperProps, "onStepClick"> & {
+    onStepClick?: (index: number) => void;
+    height?: number | string;
+    next?: (step: number) => {
+        label: string;
+        action: () => void | boolean | Promise<void | boolean>;
+    } | undefined;
+    onCancel?: () => void;
+    finalAction?: React$1.ReactNode;
+    backVariant?: "outline" | "ghost";
+};
+export function ProgressStepper(props: ProgressStepperProps): React$1.JSX.Element;
+export function Wizard(props: WizardProps): React$1.JSX.Element;
+export function Step(props: StepProps): React$1.JSX.Element;
+type ActionClickEvent = Parameters<NonNullable<React$1.ComponentProps<typeof Button$1>["onClick"]>>[0];
+function ActionButton({ children, variant, size: requestedSize, type, disabled, onClick, href, name, value, form, className, onClickCapture, onKeyDown, onKeyUp, ...props }: Omit<React$1.ComponentProps<typeof Button$1>, "onClick"> & {
+    onClick?: (event: ActionClickEvent) => void | Promise<void>;
+    href?: string;
+}): React$1.JSX.Element;
+type ButtonProps$1 = React$1.ComponentProps<typeof ActionButton>;
+function Button$2({ onClick, ...props }: ButtonProps$1): React$1.JSX.Element;
+export function ButtonGroup({ children, label, orientation, size: requestedSize, isDisabled, }: {
+    children?: React$1.ReactNode;
+    label: string;
+    orientation?: "horizontal" | "vertical";
+    size?: "sm" | "default" | "lg";
+    isDisabled?: boolean;
+}): React$1.JSX.Element;
+export function FileViewer({ src, title, size, }: {
+    src: string;
+    title: string;
+    size?: "sm" | "md" | "lg";
+}): React$1.JSX.Element;
+export function Card({ className, size, ...props }: React$1.ComponentProps<"div"> & {
+    size?: "default" | "sm";
+}): React$1.JSX.Element;
+export function CardHeader({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
+export function CardTitle({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
+export function CardDescription({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
+export function CardAction({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
+export function CardContent({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
+export function CardFooter({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
+type InteractiveCardProps = {
+    children?: React$1.ReactNode;
+    padding?: 0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10;
+    isClipped?: boolean;
+    variant?: "default" | "transparent" | "muted";
+    width?: number | string;
+    height?: number | string;
+    maxWidth?: number | string;
+    minHeight?: number | string;
+    inert?: boolean;
+    "aria-hidden"?: boolean | "true" | "false";
+    label?: string;
+    onClick?: (event: React$1.MouseEvent<HTMLElement>) => void;
+    href?: string;
+    target?: string;
+    isDisabled?: boolean;
+    isSelected?: boolean;
+    onChange?: (isSelected: boolean) => void;
+};
+export function InteractiveCard({ label, padding, isClipped, variant, onClick, href, target, isDisabled, isSelected, onChange, children, width, height, maxWidth, minHeight, inert, "aria-hidden": ariaHidden, }: InteractiveCardProps): React$1.JSX.Element;
+const DialogBackdrop: React$1.ForwardRefExoticComponent<Omit<DialogBackdropProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
+interface DialogBackdropProps extends BaseUIComponentProps<"div", DialogBackdropState> {
+    forceRender?: boolean | undefined;
+}
+interface DialogBackdropState {
+    open: boolean;
+    transitionStatus: TransitionStatus;
+}
+namespace DialogBackdrop {
+    type Props = DialogBackdropProps;
+    type State = DialogBackdropState;
+}
+const DialogClose: React$1.ForwardRefExoticComponent<Omit<DialogCloseProps, "ref"> & React$1.RefAttributes<HTMLButtonElement>>;
+interface DialogCloseProps extends NativeButtonProps, BaseUIComponentProps<"button", DialogCloseState> {
+}
+interface DialogCloseState {
+    disabled: boolean;
+}
+namespace DialogClose {
+    type Props = DialogCloseProps;
+    type State = DialogCloseState;
+}
+const DialogDescription: React$1.ForwardRefExoticComponent<Omit<DialogDescriptionProps, "ref"> & React$1.RefAttributes<HTMLParagraphElement>>;
+interface DialogDescriptionProps extends BaseUIComponentProps<"p", DialogDescriptionState> {
+}
+interface DialogDescriptionState {
+}
+namespace DialogDescription {
+    type Props = DialogDescriptionProps;
+    type State = DialogDescriptionState;
+}
+type InteractionType = "mouse" | "touch" | "pen" | "keyboard" | "";
+const DialogPopup: React$1.ForwardRefExoticComponent<Omit<DialogPopupProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
+interface DialogPopupProps extends BaseUIComponentProps<"div", DialogPopupState> {
+    initialFocus?: boolean | React$1.RefObject<HTMLElement | null> | ((openType: InteractionType) => boolean | HTMLElement | null | void) | undefined;
+    finalFocus?: boolean | React$1.RefObject<HTMLElement | null> | ((closeType: InteractionType) => boolean | HTMLElement | null | void) | undefined;
+}
+interface DialogPopupState {
+    open: boolean;
+    transitionStatus: TransitionStatus;
+    nested: boolean;
+    nestedDialogOpen: boolean;
+}
+namespace DialogPopup {
+    type Props = DialogPopupProps;
+    type State = DialogPopupState;
+}
+const DialogPortal: React$1.ForwardRefExoticComponent<Omit<DialogPortalProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
+interface DialogPortalState {
+}
+interface DialogPortalProps extends BaseUIComponentProps<"div", DialogPortalState> {
+    keepMounted?: boolean | undefined;
+    container?: HTMLElement | ShadowRoot | React$1.RefObject<HTMLElement | ShadowRoot | null> | null | undefined;
+}
+namespace DialogPortal {
+    type State = DialogPortalState;
+    type Props = DialogPortalProps;
+}
+type Listener<T> = (state: T) => void;
+class Store<State> {
+    static create<T, This extends Store<T>>(this: new (state: T) => This, state: T): This;
+    state: State;
+    private listeners;
+    private updateTick;
+    constructor(state: State);
+    subscribe: (fn: Listener<State>) => () => void;
+    getSnapshot: () => State;
+    setState(newState: State): void;
+    update<const Key extends keyof State>(changes: Pick<State, Key>): void;
+    set<Key extends keyof State>(key: Key, value: State[Key]): void;
+    notifyAll(): void;
+    use<F extends (...args: any) => any>(selector: F, ...args: SelectorArgs<F>): ReturnType<F>;
+}
+type SelectorArgs<Selector> = Selector extends ((...params: infer Params) => any) ? Tail<Params> : never;
+type Tail<T extends readonly any[]> = T extends readonly [
+    any,
+    ...infer Rest
+] ? Rest : [
+];
+class ReactStore<State extends object, Context = Record<string, never>, Selectors extends Record<string, SelectorFunction<State>> = Record<string, never>> extends Store<State> {
+    constructor(state: State, context?: Context, selectors?: Selectors);
+    readonly context: Context;
+    private selectors;
+    useSyncedValue<Key extends keyof State>(key: Key, value: State[Key]): void;
+    useSyncedValueWithCleanup<Key extends KeysAllowingUndefined<State>>(key: Key, value: State[Key]): void;
+    useSyncedValues<const Key extends keyof State>(statePart: Pick<State, Key>): void;
+    useControlledProp<Key extends keyof State>(key: Key, controlled: State[Key] | undefined): void;
+    select<Key extends keyof Selectors>(key: Key, ...args: SelectorArgs$1<Selectors[Key]>): ReturnType<Selectors[Key]>;
+    useState<Key extends keyof Selectors>(key: Key, ...args: SelectorArgs$1<Selectors[Key]>): ReturnType<Selectors[Key]>;
+    useContextCallback<Key extends ContextFunctionKeys<Context>>(key: Key, fn: ContextFunction<Context, Key> | undefined): void;
+    useStateSetter<const Key extends keyof State>(key: Key): (value: State[Key]) => void;
+    observe<Key extends keyof Selectors>(selector: Key, listener: (newValue: ReturnType<Selectors[Key]>, oldValue: ReturnType<Selectors[Key]>, store: this) => void): () => void;
+    observe<Selector extends ObserveSelector<State>>(selector: Selector, listener: (newValue: ReturnType<Selector>, oldValue: ReturnType<Selector>, store: this) => void): () => void;
+}
+type MaybeCallable = (...args: any[]) => any;
+type ContextFunctionKeys<Context> = {
+    [Key in keyof Context]-?: Extract<Context[Key], MaybeCallable> extends never ? never : Key;
+}[keyof Context];
+type ContextFunction<Context, Key extends keyof Context> = Extract<Context[Key], MaybeCallable>;
+type KeysAllowingUndefined<State> = {
+    [Key in keyof State]-?: undefined extends State[Key] ? Key : never;
+}[keyof State];
+type ObserveSelector<State> = (state: State) => any;
+type SelectorFunction<State> = (state: State, ...args: any[]) => any;
+type Tail$1<T extends readonly any[]> = T extends readonly [
+    any,
+    ...infer Rest
+] ? Rest : [
+];
+type SelectorArgs$1<Selector> = Selector extends ((...params: infer Params) => any) ? Tail$1<Params> : never;
+type AlignedPlacement = `${Side}-${Alignment}`;
+type Alignment = "start" | "end";
+type Axis = "x" | "y";
+type ClientRectObject = Prettify<Rect & SideObject>;
+type Coords = {
+    [key in Axis]: number;
+};
+type Dimensions = {
+    [key in Length]: number;
+};
+type Length = "width" | "height";
+type Padding = number | Prettify<{
+    [K in Side]?: number | undefined;
+}>;
+type Placement = Prettify<Side | AlignedPlacement>;
+type Prettify<T> = {
+    [K in keyof T]: T[K];
+} & {};
+type Rect = Prettify<Coords & Dimensions>;
+type Side = "top" | "right" | "bottom" | "left";
+type SideObject = {
+    [key in Side]: number;
+};
+type Strategy = "absolute" | "fixed";
+interface ComputePositionReturn extends Coords {
+    placement: Placement;
+    strategy: Strategy;
+    middlewareData: MiddlewareData;
+}
+interface MiddlewareData {
+    [key: string]: any;
+    arrow?: (Partial<Coords> & {
+        centerOffset: number;
+        alignmentOffset?: number | undefined;
+    }) | undefined;
+    autoPlacement?: {
+        index?: number | undefined;
+        overflows: Array<{
+            placement: Placement;
+            overflows: Array<number>;
+        }>;
+    } | undefined;
+    flip?: {
+        index?: number | undefined;
+        overflows: Array<{
+            placement: Placement;
+            overflows: Array<number>;
+        }>;
+    } | undefined;
+    hide?: {
+        referenceHidden?: boolean | undefined;
+        escaped?: boolean | undefined;
+        referenceHiddenOffsets?: SideObject | undefined;
+        escapedOffsets?: SideObject | undefined;
+    } | undefined;
+    offset?: (Coords & {
+        placement: Placement;
+    }) | undefined;
+    shift?: (Coords & {
+        enabled: {
+            [key in Axis]: boolean;
+        };
+    }) | undefined;
+}
+interface VirtualElement {
+    getBoundingClientRect(): ClientRectObject;
+    getClientRects?: (() => Array<ClientRectObject> | DOMRectList) | undefined;
+    contextElement?: Element | undefined;
+}
+type Prettify$1<T> = {
+    [K in keyof T]: T[K];
+} & {};
+type ReferenceType = Element | VirtualElement;
+type UseFloatingData = Prettify$1<ComputePositionReturn & {
+    isPositioned: boolean;
+}>;
+type UseFloatingReturn<RT extends ReferenceType = ReferenceType> = Prettify$1<UseFloatingData & {
+    update: () => void;
+    floatingStyles: React$1.CSSProperties;
+    refs: {
+        reference: React$1.MutableRefObject<RT | null>;
+        floating: React$1.MutableRefObject<HTMLElement | null>;
+        setReference: (node: RT | null) => void;
+        setFloating: (node: HTMLElement | null) => void;
+    };
+    elements: {
+        reference: RT | null;
+        floating: HTMLElement | null;
+    };
+}>;
+class PopupTriggerMap {
+    private idMap;
+    add(id: string, element: Element): void;
+    delete(id: string): void;
+    hasElement(element: Element): boolean;
+    hasMatchingElement(predicate: (el: Element) => boolean): boolean;
+    getById(id: string): Element | undefined;
+    entries(): IterableIterator<[
+        string,
+        Element
+    ]>;
+    elements(): IterableIterator<Element>;
+    get size(): number;
+}
+interface PopupHandleStoreWithTriggers {
+    readonly context: {
+        readonly triggerElements: PopupTriggerMap;
+    };
+}
+interface PopupHandleStoreWithOpen extends PopupHandleStoreWithTriggers {
+    setOpen(open: boolean, eventDetails: BaseUIChangeEventDetails<typeof imperativeAction>): void;
+}
+class BasePopupHandle<HandleStore extends PopupHandleStoreWithTriggers, Store extends HandleStore & PopupHandleStoreWithOpen> {
+    protected readonly fallbackStore: HandleStore;
+    private readonly componentName;
+    private readonly throwOnMissingTrigger;
+    private readonly attachedStores;
+    private attachedStoreValue;
+    private readonly storeListeners;
+    constructor(fallbackStore: HandleStore, componentName: string, throwOnMissingTrigger?: boolean);
+    protected get attachedStore(): Store | null;
+    private setActiveStore;
+    protected openByTrigger(triggerId: string | null | undefined): void;
+    protected closePopup(): void;
+}
+type NarrowedElement<T> = T extends Element ? T : Element;
+interface ExtendedRefs {
+    reference: React$1.RefObject<ReferenceType$1 | null>;
+    floating: React$1.RefObject<HTMLElement | null>;
+    domReference: React$1.RefObject<NarrowedElement<ReferenceType$1> | null>;
+    setReference(node: ReferenceType$1 | null): void;
+    setFloating(node: HTMLElement | null): void;
+    setPositionReference(node: ReferenceType$1 | null): void;
+}
+interface ExtendedElements {
+    reference: ReferenceType$1 | null;
+    floating: HTMLElement | null;
+    domReference: NarrowedElement<ReferenceType$1> | null;
+}
+interface FloatingEvents {
+    emit<T extends string>(event: T, data?: any): void;
+    on(event: string, handler: (data: any) => void): void;
+    off(event: string, handler: (data: any) => void): void;
+}
+interface ContextData {
+    openEvent?: Event | undefined;
+    floatingContext?: FloatingContext | undefined;
+    [key: string]: any;
+}
+type FloatingRootContext = FloatingRootStore;
+type FloatingContext = Omit<UseFloatingReturn<ReferenceType$1>, "refs" | "elements"> & {
+    open: boolean;
+    onOpenChange(open: boolean, eventDetails: BaseUIChangeEventDetails<string>): void;
+    events: FloatingEvents;
+    dataRef: React$1.RefObject<ContextData>;
+    nodeId: string | undefined;
+    floatingId: string | undefined;
+    refs: ExtendedRefs;
+    elements: ExtendedElements;
+    rootStore: FloatingRootContext;
+};
+type ReferenceType$1 = Element | VirtualElement;
+interface FloatingRootState {
+    open: boolean;
+    transitionStatus: TransitionStatus | undefined;
+    domReferenceElement: Element | null;
+    referenceElement: ReferenceType$1 | null;
+    floatingElement: HTMLElement | null;
+    positionReference: ReferenceType$1 | null;
+    floatingId: string | undefined;
+}
+interface FloatingRootStoreContext {
+    onOpenChange: ((open: boolean, eventDetails: BaseUIChangeEventDetails<string>) => void) | undefined;
+    readonly dataRef: React$1.RefObject<ContextData>;
+    readonly events: FloatingEvents;
+    nested: boolean;
+    readonly triggerElements: PopupTriggerMap;
+}
+const selectors: {
+    open: (state: FloatingRootState) => boolean;
+    transitionStatus: (state: FloatingRootState) => TransitionStatus;
+    domReferenceElement: (state: FloatingRootState) => Element | null;
+    referenceElement: (state: FloatingRootState) => ReferenceType$1 | null;
+    floatingElement: (state: FloatingRootState) => HTMLElement | null;
+    floatingId: (state: FloatingRootState) => string | undefined;
+};
+interface FloatingRootStoreOptions {
+    open: boolean;
+    transitionStatus: TransitionStatus | undefined;
+    referenceElement: ReferenceType$1 | null;
+    floatingElement: HTMLElement | null;
+    triggerElements: PopupTriggerMap;
+    floatingId: string | undefined;
+    syncOnly: boolean;
+    nested: boolean;
+    onOpenChange: ((open: boolean, eventDetails: BaseUIChangeEventDetails<string>) => void) | undefined;
+}
+class FloatingRootStore extends ReactStore<Readonly<FloatingRootState>, FloatingRootStoreContext, typeof selectors> {
+    private readonly syncOnly;
+    constructor(options: FloatingRootStoreOptions);
+    syncOpenEvent: (newOpen: boolean, event: Event | undefined) => void;
+    dispatchOpenChange: (newOpen: boolean, eventDetails: BaseUIChangeEventDetails<string>) => void;
+    setOpen: (newOpen: boolean, eventDetails: BaseUIChangeEventDetails<string>) => void;
+}
+type PopupStoreState<Payload> = {
+    open: boolean;
+    readonly openProp: boolean | undefined;
+    mounted: boolean;
+    transitionStatus: TransitionStatus;
+    floatingRootContext: FloatingRootContext;
+    floatingId: string | undefined;
+    triggerCount: number;
+    preventUnmountingOnClose: boolean;
+    payload: Payload | undefined;
+    activeTriggerId: string | null;
+    activeTriggerElement: Element | null;
+    openedWithoutTrigger: boolean;
+    readonly triggerIdProp: string | null | undefined;
+    popupElement: HTMLElement | null;
+    positionerElement: HTMLElement | null;
+    activeTriggerProps: HTMLProps;
+    inactiveTriggerProps: HTMLProps;
+    popupProps: HTMLProps;
+};
+type PopupStoreContext<ChangeEventDetails> = {
+    readonly triggerElements: PopupTriggerMap;
+    readonly popupRef: React$1.RefObject<HTMLElement | null>;
+    onOpenChange?: ((open: boolean, eventDetails: ChangeEventDetails) => void) | undefined;
+    onOpenChangeComplete: ((open: boolean) => void) | undefined;
+};
+type S = PopupStoreState<unknown>;
+const activeTriggerIdSelector: (state: S) => string | null;
+const openSelector: (state: S) => boolean;
+const popupIdSelector: (state: S) => string | undefined;
+const popupStoreSelectors: {
+    open: typeof openSelector;
+    mounted: (state: S) => boolean;
+    transitionStatus: (state: S) => TransitionStatus;
+    floatingRootContext: (state: S) => FloatingRootStore;
+    triggerCount: (state: S) => number;
+    preventUnmountingOnClose: (state: S) => boolean;
+    payload: (state: S) => unknown;
+    activeTriggerId: typeof activeTriggerIdSelector;
+    activeTriggerElement: (state: S) => Element | null;
+    popupId: typeof popupIdSelector;
+    isTriggerActive: (state: S, triggerId: string | undefined) => boolean;
+    isOpenedByTrigger: (state: S, triggerId: string | undefined) => boolean;
+    isMountedByTrigger: (state: S, triggerId: string | undefined) => boolean;
+    triggerProps: (state: S, isActive: boolean) => HTMLProps;
+    triggerPopupId: (state: S, triggerId: string | undefined) => string | undefined;
+    popupProps: (state: S) => HTMLProps;
+    popupElement: (state: S) => HTMLElement | null;
+    positionerElement: (state: S) => HTMLElement | null;
+};
+type PopupStoreSelectors = typeof popupStoreSelectors;
+type PopupTriggerStoreKeys = "context" | "select" | "set" | "state" | "update" | "useState";
+type PopupTriggerDataStore<State extends PopupStoreState<unknown>> = Pick<ReactStore<Readonly<State>, PopupStoreContext<never>, PopupStoreSelectors>, PopupTriggerStoreKeys>;
+type PayloadChildRenderFunction<Payload> = (arg: {
+    payload: Payload | undefined;
+}) => React$1.ReactNode;
+const DialogTitle: React$1.ForwardRefExoticComponent<Omit<DialogTitleProps, "ref"> & React$1.RefAttributes<HTMLHeadingElement>>;
+interface DialogTitleProps extends BaseUIComponentProps<"h2", DialogTitleState> {
+}
+interface DialogTitleState {
+}
+namespace DialogTitle {
+    type Props = DialogTitleProps;
+    type State = DialogTitleState;
+}
+const DialogTrigger: DialogTrigger;
+interface DialogTrigger {
+    <Payload>(componentProps: DialogTriggerProps<Payload> & React$1.RefAttributes<HTMLElement>): React$1.JSX.Element;
+}
+interface DialogTriggerProps<Payload = unknown> extends NativeButtonProps, BaseUIComponentProps<"button", DialogTriggerState> {
+    handle?: DialogHandle<Payload> | undefined;
+    payload?: Payload | undefined;
+    id?: string | undefined;
+}
+interface DialogTriggerState {
+    disabled: boolean;
+    open: boolean;
+}
+namespace DialogTrigger {
+    type Props<Payload = unknown> = DialogTriggerProps<Payload>;
+    type State = DialogTriggerState;
+}
+const DialogViewport: React$1.ForwardRefExoticComponent<Omit<DialogViewportProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
+interface DialogViewportState {
+    open: boolean;
+    transitionStatus: TransitionStatus;
+    nested: boolean;
+    nestedDialogOpen: boolean;
+}
+interface DialogViewportProps extends BaseUIComponentProps<"div", DialogViewportState> {
+}
+namespace DialogViewport {
+    type State = DialogViewportState;
+    type Props = DialogViewportProps;
+}
+interface Group<Item = any> {
+    [key: string]: unknown;
+    items: ReadonlyArray<Item>;
+}
+class ComboboxItemCollection<in out Item, Value = Item> {
+    private constructor();
+    private readonly __itemCollectionBrand;
+}
+type InternalAriaComboboxProps<Value, Mode extends SelectionMode$1, Item = Value> = AriaComboboxProps<Value, Mode, Item> & {
+    filterQuery?: string | undefined;
+};
+function AriaCombobox<Value, Mode extends SelectionMode$1 = "none", Item = Value>(props: Omit<InternalAriaComboboxProps<Value, Mode, Item>, "items"> & {
+    items?: readonly any[] | ComboboxItemCollection<Item, any> | undefined;
+}): React$1.JSX.Element;
+type SelectionMode$1 = "single" | "multiple" | "none";
+type ComboboxItemValueType<ItemValue, Mode extends SelectionMode$1> = Mode extends "multiple" ? ItemValue[] : ItemValue;
+interface ComboboxRootProps<ItemValue, Item = ItemValue> {
+    children?: React$1.ReactNode;
+    name?: string | undefined;
+    form?: string | undefined;
+    id?: string | undefined;
+    required?: boolean | undefined;
+    readOnly?: boolean | undefined;
+    disabled?: boolean | undefined;
+    defaultOpen?: boolean | undefined;
+    open?: boolean | undefined;
+    onOpenChange?: ((open: boolean, eventDetails: AriaCombobox.OpenChangeEventDetails) => void) | undefined;
+    onOpenChangeComplete?: ((open: boolean) => void) | undefined;
+    openOnInputClick?: boolean | undefined;
+    autoHighlight?: boolean | "always" | undefined;
+    keepHighlight?: boolean | undefined;
+    highlightItemOnHover?: boolean | undefined;
+    loopFocus?: boolean | undefined;
+    inputValue?: React$1.ComponentProps<"input">["value"] | undefined;
+    onInputValueChange?: ((value: string, eventDetails: AriaCombobox.ChangeEventDetails) => void) | undefined;
+    defaultInputValue?: React$1.ComponentProps<"input">["defaultValue"] | undefined;
+    actionsRef?: React$1.RefObject<AriaCombobox.Actions | null> | undefined;
+    onItemHighlighted?: ((itemValue: ItemValue | undefined, eventDetails: AriaCombobox.HighlightEventDetails) => void) | undefined;
+    inputRef?: React$1.Ref<HTMLInputElement> | undefined;
+    grid?: boolean | undefined;
+    items?: readonly any[] | readonly Group<any>[] | ComboboxItemCollection<Item, ItemValue> | undefined;
+    filteredItems?: readonly Item[] | readonly Group<Item>[] | undefined;
+    filter?: null | ((item: Item, query: string, itemToString?: (item: Item) => string) => boolean) | undefined;
+    itemToStringLabel?: ((itemValue: ItemValue) => string) | undefined;
+    itemToStringValue?: ((itemValue: ItemValue) => string) | undefined;
+    isItemEqualToValue?: ((itemValue: ItemValue, value: ItemValue) => boolean) | undefined;
+    virtualized?: boolean | undefined;
+    inline?: boolean | undefined;
+    modal?: boolean | undefined;
+    limit?: number | undefined;
+    autoComplete?: "list" | "both" | "inline" | "none" | undefined;
+    formAutoComplete?: string | undefined;
+    locale?: Intl.LocalesArgument | undefined;
+    submitOnItemClick?: boolean | undefined;
+    fillInputOnItemPress?: boolean | undefined;
+}
+interface AriaComboboxState {
+}
+type AriaComboboxProps<Value, Mode extends SelectionMode$1 = "none", Item = Value> = ComboboxRootProps<Value, Item> & {
+    selectionMode: Mode;
+    selectedValue?: ComboboxItemValueType<Value, Mode> | undefined;
+    defaultSelectedValue?: ComboboxItemValueType<Value, Mode> | null | undefined;
+    onSelectedValueChange?: ((value: ComboboxItemValueType<Value, Mode>, eventDetails: AriaCombobox.ChangeEventDetails) => void) | undefined;
+};
+namespace AriaCombobox {
+    type Props<Value, Mode extends SelectionMode$1 = "none", Item = Value> = AriaComboboxProps<Value, Mode, Item>;
+    type State = AriaComboboxState;
+    interface Actions {
+        unmount: () => void;
+        close: () => void;
+    }
+    type HighlightEventReason = typeof keyboard | typeof pointer | typeof none;
+    type HighlightEventDetails = BaseUIHighlightEventDetails<HighlightEventReason, {
+        index: number;
+    }>;
+    type ChangeEventReason = typeof triggerPress | typeof inputPress | typeof outsidePress | typeof itemPress | typeof closePress | typeof escapeKey | typeof listNavigation | typeof focusOut | typeof inputChange | typeof inputClear | typeof clearPress | typeof chipRemovePress | typeof cancelOpen | typeof imperativeAction | typeof none;
+    type OpenChangeEventDetails = ChangeEventDetails & {
+        preventUnmountOnClose: () => void;
+    };
+    type ChangeEventDetails = BaseUIChangeEventDetails<ChangeEventReason> & {
+        isItemPress?: boolean | undefined;
+    };
+}
+type Side$1 = "top" | "bottom" | "left" | "right" | "inline-end" | "inline-start";
+type Align = "start" | "center" | "end";
+type Boundary = "clipping-ancestors" | Element | Element[] | Rect;
+type OffsetFunction = (data: {
+    side: Side$1;
+    align: Align;
+    anchor: {
+        width: number;
+        height: number;
+    };
+    positioner: {
+        width: number;
+        height: number;
+    };
+}) => number;
+interface SideFlipMode {
+    side?: "flip" | "none" | undefined;
+    align?: "flip" | "shift" | "none" | undefined;
+    fallbackAxisSide?: "start" | "end" | "none" | undefined;
+}
+interface SideShiftMode {
+    side?: "shift" | "none" | undefined;
+    align?: "shift" | "none" | undefined;
+    fallbackAxisSide?: "start" | "end" | "none" | undefined;
+}
+type CollisionAvoidance = SideFlipMode | SideShiftMode;
+interface UseAnchorPositioningSharedParameters {
+    anchor?: Element | null | VirtualElement | React$1.RefObject<Element | null> | (() => Element | VirtualElement | null) | undefined;
+    positionMethod?: "absolute" | "fixed" | undefined;
+    side?: Side$1 | undefined;
+    sideOffset?: number | OffsetFunction | undefined;
+    align?: Align | undefined;
+    alignOffset?: number | OffsetFunction | undefined;
+    collisionBoundary?: Boundary | undefined;
+    collisionPadding?: Padding | undefined;
+    sticky?: boolean | undefined;
+    arrowPadding?: number | undefined;
+    disableAnchorTracking?: boolean | undefined;
+    collisionAvoidance?: CollisionAvoidance | undefined;
+}
+const ComboboxInput: React$1.ForwardRefExoticComponent<Omit<ComboboxInputProps, "ref"> & React$1.RefAttributes<HTMLInputElement>>;
+interface ComboboxInputState extends FieldRootState {
+    open: boolean;
+    popupSide: Side$1 | null;
+    listEmpty: boolean;
+    readOnly: boolean;
+}
+interface ComboboxInputProps extends BaseUIComponentProps<"input", ComboboxInputState> {
+    disabled?: boolean | undefined;
+}
+namespace ComboboxInput {
+    type State = ComboboxInputState;
+    type Props = ComboboxInputProps;
+}
+const ComboboxIcon: React$1.ForwardRefExoticComponent<Omit<ComboboxIconProps, "ref"> & React$1.RefAttributes<HTMLSpanElement>>;
+interface ComboboxIconState {
+}
+interface ComboboxIconProps extends BaseUIComponentProps<"span", ComboboxIconState> {
+}
+namespace ComboboxIcon {
+    type State = ComboboxIconState;
+    type Props = ComboboxIconProps;
+}
+const ComboboxClear: React$1.ForwardRefExoticComponent<Omit<ComboboxClearProps, "ref"> & React$1.RefAttributes<HTMLButtonElement>>;
+interface ComboboxClearState {
+    open: boolean;
+    disabled: boolean;
+    visible: boolean;
+    transitionStatus: TransitionStatus;
+}
+interface ComboboxClearProps extends NativeButtonProps, BaseUIComponentProps<"button", ComboboxClearState> {
+    disabled?: boolean | undefined;
+    keepMounted?: boolean | undefined;
+}
+namespace ComboboxClear {
+    type State = ComboboxClearState;
+    type Props = ComboboxClearProps;
+}
+const ComboboxList: React$1.ForwardRefExoticComponent<Omit<ComboboxListProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
+interface ComboboxListState {
+    empty: boolean;
+}
+interface ComboboxListProps extends Omit<BaseUIComponentProps<"div", ComboboxListState>, "children"> {
+    children?: React$1.ReactNode | ((item: any, index: number) => React$1.ReactNode);
+}
+namespace ComboboxList {
+    type State = ComboboxListState;
+    type Props = ComboboxListProps;
+}
+const ComboboxStatus: React$1.ForwardRefExoticComponent<Omit<ComboboxStatusProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
+interface ComboboxStatusState {
+}
+interface ComboboxStatusProps extends BaseUIComponentProps<"div", ComboboxStatusState> {
+}
+namespace ComboboxStatus {
+    type State = ComboboxStatusState;
+    type Props = ComboboxStatusProps;
+}
+const ComboboxPortal: React$1.ForwardRefExoticComponent<Omit<ComboboxPortalProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
+interface ComboboxPortalState {
+}
+interface ComboboxPortalProps extends BaseUIComponentProps<"div", ComboboxPortalState> {
+    keepMounted?: boolean | undefined;
+    container?: HTMLElement | ShadowRoot | React$1.RefObject<HTMLElement | ShadowRoot | null> | null | undefined;
+}
+namespace ComboboxPortal {
+    type State = ComboboxPortalState;
+    type Props = ComboboxPortalProps;
+}
+const ComboboxBackdrop: React$1.ForwardRefExoticComponent<Omit<ComboboxBackdropProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
+interface ComboboxBackdropProps extends BaseUIComponentProps<"div", ComboboxBackdropState> {
+}
+interface ComboboxBackdropState {
+    open: boolean;
+    transitionStatus: TransitionStatus;
+}
+namespace ComboboxBackdrop {
+    type Props = ComboboxBackdropProps;
+    type State = ComboboxBackdropState;
+}
+const ComboboxPositioner: React$1.ForwardRefExoticComponent<Omit<ComboboxPositionerProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
+interface ComboboxPositionerState {
+    open: boolean;
+    side: Side$1;
+    align: Align;
+    anchorHidden: boolean;
+    empty: boolean;
+}
+interface ComboboxPositionerProps extends UseAnchorPositioningSharedParameters, BaseUIComponentProps<"div", ComboboxPositionerState> {
+}
+namespace ComboboxPositioner {
+    type State = ComboboxPositionerState;
+    type Props = ComboboxPositionerProps;
+}
+const ComboboxPopup: React$1.ForwardRefExoticComponent<Omit<ComboboxPopupProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
+interface ComboboxPopupState {
+    open: boolean;
+    side: Side$1;
+    align: Align;
+    anchorHidden: boolean;
+    transitionStatus: TransitionStatus;
+    empty: boolean;
+}
+interface ComboboxPopupProps extends BaseUIComponentProps<"div", ComboboxPopupState> {
+    initialFocus?: boolean | React$1.RefObject<HTMLElement | null> | ((openType: InteractionType) => void | boolean | HTMLElement | null) | undefined;
+    finalFocus?: boolean | React$1.RefObject<HTMLElement | null> | ((closeType: InteractionType) => void | boolean | HTMLElement | null) | undefined;
+}
+namespace ComboboxPopup {
+    type State = ComboboxPopupState;
+    type Props = ComboboxPopupProps;
+}
+const ComboboxArrow: React$1.ForwardRefExoticComponent<Omit<ComboboxArrowProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
+interface ComboboxArrowState {
+    open: boolean;
+    side: Side$1;
+    align: Align;
+    uncentered: boolean;
+}
+interface ComboboxArrowProps extends BaseUIComponentProps<"div", ComboboxArrowState> {
+}
+namespace ComboboxArrow {
+    type State = ComboboxArrowState;
+    type Props = ComboboxArrowProps;
+}
+const ComboboxGroup: React$1.ForwardRefExoticComponent<Omit<ComboboxGroupProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
+interface ComboboxGroupState {
+}
+interface ComboboxGroupProps extends BaseUIComponentProps<"div", ComboboxGroupState> {
+    items?: readonly any[] | undefined;
+}
+namespace ComboboxGroup {
+    type State = ComboboxGroupState;
+    type Props = ComboboxGroupProps;
+}
+const ComboboxGroupLabel: React$1.ForwardRefExoticComponent<Omit<ComboboxGroupLabelProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
+interface ComboboxGroupLabelState {
+}
+interface ComboboxGroupLabelProps extends BaseUIComponentProps<"div", ComboboxGroupLabelState> {
+}
+namespace ComboboxGroupLabel {
+    type State = ComboboxGroupLabelState;
+    type Props = ComboboxGroupLabelProps;
+}
+const ComboboxRow: React$1.ForwardRefExoticComponent<Omit<ComboboxRowProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
+interface ComboboxRowState {
+}
+interface ComboboxRowProps extends BaseUIComponentProps<"div", ComboboxRowState> {
+}
+namespace ComboboxRow {
+    type State = ComboboxRowState;
+    type Props = ComboboxRowProps;
+}
+function ComboboxCollection(props: ComboboxCollection.Props): React$1.JSX.Element;
+interface ComboboxCollectionState {
+}
+interface ComboboxCollectionProps {
+    children: (item: any, index: number) => React$1.ReactNode;
+}
+namespace ComboboxCollection {
+    type State = ComboboxCollectionState;
+    type Props = ComboboxCollectionProps;
+}
+const ComboboxEmpty: React$1.ForwardRefExoticComponent<Omit<ComboboxEmptyProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
+interface ComboboxEmptyState {
+}
+interface ComboboxEmptyProps extends BaseUIComponentProps<"div", ComboboxEmptyState> {
+}
+namespace ComboboxEmpty {
+    type State = ComboboxEmptyState;
+    type Props = ComboboxEmptyProps;
+}
+interface GetFilterParameters extends Intl.CollatorOptions {
+    locale?: Intl.LocalesArgument | undefined;
+}
+interface Filter {
+    contains: <Item>(item: Item, query: string, itemToString?: (item: Item) => string) => boolean;
+    startsWith: <Item>(item: Item, query: string, itemToString?: (item: Item) => string) => boolean;
+    endsWith: <Item>(item: Item, query: string, itemToString?: (item: Item) => string) => boolean;
+}
+interface UseComboboxFilterOptions extends GetFilterParameters {
+    multiple?: boolean | undefined;
+    value?: any;
+}
+function useComboboxFilter(options?: UseComboboxFilterOptions): Filter;
+function useFilteredItems<T>(): T[];
+function ComboboxRoot<Value, Multiple extends boolean | undefined = false, Item = Value>(props: ComboboxRoot.Props<Value, Multiple, Item>): React$1.JSX.Element;
+type ModeFromMultiple<Multiple extends boolean | undefined> = Multiple extends true ? "multiple" : "single";
+type ComboboxInputValue<Value, Multiple extends boolean | undefined> = Multiple extends true ? readonly Value[] : Value;
+type ComboboxOutputValue<Value, Multiple extends boolean | undefined> = Multiple extends true ? Value[] : Value;
+type ComboboxRootProps$1<Value, Multiple extends boolean | undefined = false, Item = Value> = Omit<AriaCombobox.Props<Value, ModeFromMultiple<Multiple>, Item>, "fillInputOnItemPress" | "autoComplete" | "formAutoComplete" | "submitOnItemClick" | "autoHighlight" | "keepHighlight" | "highlightItemOnHover" | "itemToStringLabel" | "itemToStringValue" | "isItemEqualToValue" | "selectionMode" | "defaultSelectedValue" | "selectedValue" | "onSelectedValueChange" | "actionsRef" | "onOpenChange" | "onInputValueChange" | "onItemHighlighted"> & {
+    multiple?: Multiple | undefined;
+    autoComplete?: string | undefined;
+    autoHighlight?: boolean | undefined;
+    highlightItemOnHover?: boolean | undefined;
+    itemToStringLabel?: ((itemValue: Value) => string) | undefined;
+    itemToStringValue?: ((itemValue: Value) => string) | undefined;
+    isItemEqualToValue?: ((itemValue: Value, value: Value) => boolean) | undefined;
+    defaultValue?: ComboboxInputValue<Value, Multiple> | null | undefined;
+    actionsRef?: React$1.RefObject<ComboboxRoot.Actions | null> | undefined;
+    onOpenChange?: ((open: boolean, eventDetails: ComboboxRoot.OpenChangeEventDetails) => void) | undefined;
+    onInputValueChange?: ((inputValue: string, eventDetails: ComboboxRoot.ChangeEventDetails) => void) | undefined;
+    onItemHighlighted?: ((highlightedValue: Value | undefined, eventDetails: ComboboxRoot.HighlightEventDetails) => void) | undefined;
+    value?: ComboboxInputValue<Value, Multiple> | null | undefined;
+    onValueChange?: ((value: ComboboxOutputValue<Value, Multiple> | (Multiple extends true ? never : null), eventDetails: ComboboxRoot.ChangeEventDetails) => void) | undefined;
+};
+interface ComboboxRootState extends AriaComboboxState {
+}
+type ComboboxRootActions = AriaCombobox.Actions;
+type ComboboxRootOpenChangeEventDetails = AriaCombobox.OpenChangeEventDetails;
+type ComboboxRootChangeEventReason = AriaCombobox.ChangeEventReason;
+type ComboboxRootChangeEventDetails = AriaCombobox.ChangeEventDetails;
+type ComboboxRootHighlightEventReason = AriaCombobox.HighlightEventReason;
+type ComboboxRootHighlightEventDetails = AriaCombobox.HighlightEventDetails;
+namespace ComboboxRoot {
+    type Props<Value, Multiple extends boolean | undefined = false, Item = Value> = ComboboxRootProps$1<Value, Multiple, Item>;
+    type State = ComboboxRootState;
+    type Actions = ComboboxRootActions;
+    type ChangeEventReason = ComboboxRootChangeEventReason;
+    type ChangeEventDetails = ComboboxRootChangeEventDetails;
+    type OpenChangeEventDetails = ComboboxRootOpenChangeEventDetails;
+    type HighlightEventReason = ComboboxRootHighlightEventReason;
+    type HighlightEventDetails = ComboboxRootHighlightEventDetails;
+}
+const ComboboxLabel: React$1.ForwardRefExoticComponent<Omit<ComboboxLabelProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
+interface ComboboxLabelState extends FieldRoot.State {
+}
+interface ComboboxLabelProps extends Omit<BaseUIComponentProps<"div", ComboboxLabelState>, "id"> {
+}
+namespace ComboboxLabel {
+    type State = ComboboxLabelState;
+    type Props = ComboboxLabelProps;
+}
+function ComboboxValue(props: ComboboxValue.Props): React$1.ReactElement;
+interface ComboboxValueState {
+}
+interface ComboboxValueProps {
+    children?: React$1.ReactNode | ((selectedValue: any) => React$1.ReactNode);
+    placeholder?: React$1.ReactNode;
+}
+namespace ComboboxValue {
+    type State = ComboboxValueState;
+    type Props = ComboboxValueProps;
+}
+const ComboboxInputGroup: React$1.ForwardRefExoticComponent<Omit<ComboboxInputGroupProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
+interface ComboboxInputGroupState extends FieldRoot.State {
+    open: boolean;
+    disabled: boolean;
+    readOnly: boolean;
+    popupSide: Side$1 | null;
+    listEmpty: boolean;
+    placeholder: boolean;
+}
+interface ComboboxInputGroupProps extends BaseUIComponentProps<"div", ComboboxInputGroup.State> {
+}
+namespace ComboboxInputGroup {
+    type State = ComboboxInputGroupState;
+    type Props = ComboboxInputGroupProps;
+}
+const ComboboxTrigger: React$1.ForwardRefExoticComponent<Omit<ComboboxTriggerProps, "ref"> & React$1.RefAttributes<HTMLButtonElement>>;
+interface ComboboxTriggerState extends FieldRootState {
+    open: boolean;
+    disabled: boolean;
+    readOnly: boolean;
+    popupSide: Side$1 | null;
+    listEmpty: boolean;
+    placeholder: boolean;
+}
+interface ComboboxTriggerProps extends NativeButtonProps, BaseUIComponentProps<"button", ComboboxTriggerState> {
+    disabled?: boolean | undefined;
+}
+namespace ComboboxTrigger {
+    type State = ComboboxTriggerState;
+    type Props = ComboboxTriggerProps;
+}
+const ComboboxItem: React$1.NamedExoticComponent<Omit<ComboboxItemProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
+interface ComboboxItemState {
+    disabled: boolean;
+    selected: boolean;
+    highlighted: boolean;
+}
+interface ComboboxItemProps extends NonNativeButtonProps, Omit<BaseUIComponentProps<"div", ComboboxItemState>, "id"> {
+    children?: React$1.ReactNode;
+    onClick?: BaseUIComponentProps<"div", ComboboxItemState>["onClick"] | undefined;
+    index?: number | undefined;
+    value?: any;
+    disabled?: boolean | undefined;
+}
+namespace ComboboxItem {
+    type State = ComboboxItemState;
+    type Props = ComboboxItemProps;
+}
+const ComboboxItemIndicator: React$1.ForwardRefExoticComponent<Omit<ComboboxItemIndicatorProps, "ref"> & React$1.RefAttributes<HTMLSpanElement>>;
+interface ComboboxItemIndicatorProps extends BaseUIComponentProps<"span", ComboboxItemIndicatorState> {
+    children?: React$1.ReactNode;
+    keepMounted?: boolean | undefined;
+}
+interface ComboboxItemIndicatorState {
+    selected: boolean;
+    transitionStatus: TransitionStatus;
+}
+namespace ComboboxItemIndicator {
+    type Props = ComboboxItemIndicatorProps;
+    type State = ComboboxItemIndicatorState;
+}
+const ComboboxChips: React$1.ForwardRefExoticComponent<Omit<ComboboxChipsProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
+interface ComboboxChipsState {
+}
+interface ComboboxChipsProps extends BaseUIComponentProps<"div", ComboboxChipsState> {
+}
+namespace ComboboxChips {
+    type State = ComboboxChipsState;
+    type Props = ComboboxChipsProps;
+}
+const ComboboxChip: React$1.ForwardRefExoticComponent<Omit<ComboboxChipProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
+interface ComboboxChipState {
+    disabled: boolean;
+}
+interface ComboboxChipProps extends BaseUIComponentProps<"div", ComboboxChipState> {
+}
+namespace ComboboxChip {
+    type State = ComboboxChipState;
+    type Props = ComboboxChipProps;
+}
+const ComboboxChipRemove: React$1.ForwardRefExoticComponent<Omit<ComboboxChipRemoveProps, "ref"> & React$1.RefAttributes<HTMLButtonElement>>;
+interface ComboboxChipRemoveState {
+    disabled: boolean;
+}
+interface ComboboxChipRemoveProps extends NativeButtonProps, BaseUIComponentProps<"button", ComboboxChipRemoveState> {
+}
+namespace ComboboxChipRemove {
+    type State = ComboboxChipRemoveState;
+    type Props = ComboboxChipRemoveProps;
+}
+interface ComboboxSeparatorProps extends BaseUIComponentProps<"div", ComboboxSeparatorState> {
+    orientation?: Orientation | undefined;
+}
+interface ComboboxSeparatorState {
+    orientation: Orientation;
+}
+const ComboboxSeparator: React$1.ForwardRefExoticComponent<ComboboxSeparatorProps & React$1.RefAttributes<HTMLDivElement>>;
+namespace ComboboxSeparator {
+    type Props = ComboboxSeparatorProps;
+    type State = ComboboxSeparatorState;
+}
+type ComboboxPrimitiveValue = string | number | bigint | boolean;
+type RemoveIndexSignature<Type> = {
+    [Key in keyof Type as string extends Key ? never : number extends Key ? never : symbol extends Key ? never : Key]: Type[Key];
+};
+type HasGroupShape<Item> = Item extends object ? "items" extends keyof RemoveIndexSignature<Item> ? [
+    Extract<NonNullable<Item["items"]>, ReadonlyArray<unknown>>
+] extends [
+    never
+] ? never[] extends NonNullable<Item["items"]> ? true : never : true : never : never;
+type IsAny<T> = 0 extends 1 & T ? true : false;
+type GroupShapedItemsError = "Base UI: items passed to createItems() cannot have an `items` array property because it marks a group. Rename the field or cast the data.";
+type RejectGroupShapedItems<Item> = IsAny<Item> extends true ? unknown : true extends HasGroupShape<Item> ? GroupShapedItemsError : unknown;
+type ComboboxItemsData<Item> = (Extract<Item, {
+    items: ReadonlyArray<unknown>;
+}> extends never ? readonly Item[] : never) | readonly {
+    items: ReadonlyArray<Item>;
+}[];
+interface CreateComboboxItemsOptions<Item, Value extends ComboboxPrimitiveValue = ComboboxPrimitiveValue> {
+    getValue: (item: Item) => Value;
+    getLabel: (item: Item) => string;
+}
+function createComboboxItems<Item, Value extends ComboboxPrimitiveValue>(data: ComboboxItemsData<Item> & RejectGroupShapedItems<Item> | undefined, options: CreateComboboxItemsOptions<Item, Value>): ComboboxItemCollection<Item, Value>;
+const ProgressRoot: React$1.ForwardRefExoticComponent<Omit<ProgressRootProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
+type ProgressStatus = "indeterminate" | "progressing" | "complete";
+interface ProgressRootState {
+    status: ProgressStatus;
+}
+interface ProgressRootProps extends BaseUIComponentProps<"div", ProgressRootState> {
+    "aria-valuetext"?: React$1.AriaAttributes["aria-valuetext"] | undefined;
+    format?: Intl.NumberFormatOptions | undefined;
+    getAriaValueText?: ((formattedValue: string, value: number | null) => string) | undefined;
+    locale?: Intl.LocalesArgument | undefined;
+    max?: number | undefined;
+    min?: number | undefined;
+    value: number | null;
+}
+namespace ProgressRoot {
+    type State = ProgressRootState;
+    type Props = ProgressRootProps;
+}
+const ProgressTrack: React$1.ForwardRefExoticComponent<Omit<ProgressTrackProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
+interface ProgressTrackState extends ProgressRootState {
+}
+interface ProgressTrackProps extends BaseUIComponentProps<"div", ProgressTrackState> {
+}
+namespace ProgressTrack {
+    type State = ProgressTrackState;
+    type Props = ProgressTrackProps;
+}
+const ProgressIndicator: React$1.ForwardRefExoticComponent<Omit<ProgressIndicatorProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
+interface ProgressIndicatorState extends ProgressRootState {
+}
+interface ProgressIndicatorProps extends BaseUIComponentProps<"div", ProgressIndicatorState> {
+}
+namespace ProgressIndicator {
+    type State = ProgressIndicatorState;
+    type Props = ProgressIndicatorProps;
+}
+const ProgressValue: React$1.ForwardRefExoticComponent<Omit<ProgressValueProps, "ref"> & React$1.RefAttributes<HTMLSpanElement>>;
+interface ProgressValueState extends ProgressRootState {
+}
+interface ProgressValueProps extends Omit<BaseUIComponentProps<"span", ProgressValueState>, "children"> {
+    children?: null | ((formattedValue: string | null, value: number | null) => React$1.ReactNode) | undefined;
+}
+namespace ProgressValue {
+    type State = ProgressValueState;
+    type Props = ProgressValueProps;
+}
+const ProgressLabel: React$1.ForwardRefExoticComponent<Omit<ProgressLabelProps, "ref"> & React$1.RefAttributes<HTMLSpanElement>>;
+interface ProgressLabelState extends ProgressRootState {
+}
+interface ProgressLabelProps extends BaseUIComponentProps<"span", ProgressLabelState> {
+}
+namespace ProgressLabel {
+    type State = ProgressLabelState;
+    type Props = ProgressLabelProps;
+}
+function SelectRoot<Value, Multiple extends boolean | undefined = false>(props: SelectRoot.Props<Value, Multiple>): React$1.JSX.Element;
+type SelectInputValue<Value, Multiple extends boolean | undefined> = Multiple extends true ? readonly Value[] : Value;
+type SelectOutputValue<Value, Multiple extends boolean | undefined> = Multiple extends true ? Value[] : Value;
+interface SelectRootProps<Value, Multiple extends boolean | undefined = false> {
+    children?: React$1.ReactNode;
+    inputRef?: React$1.Ref<HTMLInputElement> | undefined;
+    name?: string | undefined;
+    form?: string | undefined;
+    autoComplete?: string | undefined;
+    id?: string | undefined;
+    required?: boolean | undefined;
+    readOnly?: boolean | undefined;
+    disabled?: boolean | undefined;
+    multiple?: Multiple | undefined;
+    highlightItemOnHover?: boolean | undefined;
+    defaultOpen?: boolean | undefined;
+    onOpenChange?: ((open: boolean, eventDetails: SelectRootOpenChangeEventDetails) => void) | undefined;
+    onOpenChangeComplete?: ((open: boolean) => void) | undefined;
+    open?: boolean | undefined;
+    modal?: boolean | undefined;
+    actionsRef?: React$1.RefObject<SelectRootActions | null> | undefined;
+    items?: Record<string, React$1.ReactNode> | ReadonlyArray<{
+        label: React$1.ReactNode;
+        value: any;
+    }> | ReadonlyArray<Group<any>> | undefined;
+    itemToStringLabel?: ((itemValue: Value) => string) | undefined;
+    itemToStringValue?: ((itemValue: Value) => string) | undefined;
+    isItemEqualToValue?: ((itemValue: Value, value: Value) => boolean) | undefined;
+    defaultValue?: SelectInputValue<Value, Multiple> | null | undefined;
+    value?: SelectInputValue<Value, Multiple> | null | undefined;
+    onValueChange?: ((value: SelectOutputValue<Value, Multiple> | (Multiple extends true ? never : null), eventDetails: SelectRootChangeEventDetails) => void) | undefined;
+}
+interface SelectRootState {
+}
+interface SelectRootActions {
+    unmount: () => void;
+    close: () => void;
+}
+type SelectRootChangeEventReason = typeof triggerPress | typeof outsidePress | typeof escapeKey | typeof windowResize | typeof itemPress | typeof focusOut | typeof listNavigation | typeof cancelOpen | typeof imperativeAction | typeof none;
+type SelectRootOpenChangeEventDetails = SelectRootChangeEventDetails & {
+    preventUnmountOnClose: () => void;
+};
+type SelectRootChangeEventDetails = BaseUIChangeEventDetails<SelectRootChangeEventReason>;
+namespace SelectRoot {
+    type Props<Value, Multiple extends boolean | undefined = false> = SelectRootProps<Value, Multiple>;
+    type State = SelectRootState;
+    type Actions = SelectRootActions;
+    type ChangeEventReason = SelectRootChangeEventReason;
+    type ChangeEventDetails = SelectRootChangeEventDetails;
+    type OpenChangeEventDetails = SelectRootOpenChangeEventDetails;
+}
+const SelectLabel: React$1.ForwardRefExoticComponent<Omit<SelectLabelProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
+type SelectLabelState = FieldRoot.State;
+interface SelectLabelProps extends Omit<BaseUIComponentProps<"div", SelectLabel.State>, "id"> {
+}
+namespace SelectLabel {
+    type State = SelectLabelState;
+    type Props = SelectLabelProps;
+}
+const SelectTrigger: React$1.ForwardRefExoticComponent<Omit<SelectTriggerProps, "ref"> & React$1.RefAttributes<HTMLButtonElement>>;
+interface SelectTriggerState extends FieldRootState {
+    open: boolean;
+    readOnly: boolean;
+    popupSide: Side$1 | null;
+    value: any;
+    placeholder: boolean;
+}
+interface SelectTriggerProps extends NativeButtonProps, BaseUIComponentProps<"button", SelectTriggerState> {
+    children?: React$1.ReactNode;
+    disabled?: boolean | undefined;
+}
+namespace SelectTrigger {
+    type State = SelectTriggerState;
+    type Props = SelectTriggerProps;
+}
+const SelectValue: React$1.ForwardRefExoticComponent<Omit<SelectValueProps, "ref"> & React$1.RefAttributes<HTMLSpanElement>>;
+interface SelectValueState {
+    value: any;
+    placeholder: boolean;
+}
+interface SelectValueProps extends Omit<BaseUIComponentProps<"span", SelectValueState>, "children"> {
+    children?: React$1.ReactNode | ((value: any) => React$1.ReactNode);
+    placeholder?: React$1.ReactNode;
+}
+namespace SelectValue {
+    type State = SelectValueState;
+    type Props = SelectValueProps;
+}
+const SelectIcon: React$1.ForwardRefExoticComponent<Omit<SelectIconProps, "ref"> & React$1.RefAttributes<HTMLSpanElement>>;
+interface SelectIconState {
+    open: boolean;
+}
+interface SelectIconProps extends BaseUIComponentProps<"span", SelectIconState> {
+}
+namespace SelectIcon {
+    type State = SelectIconState;
+    type Props = SelectIconProps;
+}
+const SelectPortal: React$1.ForwardRefExoticComponent<Omit<SelectPortalProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
+interface SelectPortalState {
+}
+interface SelectPortalProps extends BaseUIComponentProps<"div", SelectPortalState> {
+    container?: HTMLElement | ShadowRoot | React$1.RefObject<HTMLElement | ShadowRoot | null> | null | undefined;
+}
+namespace SelectPortal {
+    type State = SelectPortalState;
+    type Props = SelectPortalProps;
+}
+const SelectBackdrop: React$1.ForwardRefExoticComponent<Omit<SelectBackdropProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
+interface SelectBackdropState {
+    open: boolean;
+    transitionStatus: TransitionStatus;
+}
+interface SelectBackdropProps extends BaseUIComponentProps<"div", SelectBackdropState> {
+}
+namespace SelectBackdrop {
+    type State = SelectBackdropState;
+    type Props = SelectBackdropProps;
+}
+const SelectPositioner: React$1.ForwardRefExoticComponent<Omit<SelectPositionerProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
+interface SelectPositionerState {
+    open: boolean;
+    side: Side$1 | "none";
+    align: Align;
+    anchorHidden: boolean;
+}
+interface SelectPositionerProps extends UseAnchorPositioningSharedParameters, BaseUIComponentProps<"div", SelectPositionerState> {
+    alignItemWithTrigger?: boolean | undefined;
+}
+namespace SelectPositioner {
+    type State = SelectPositionerState;
+    type Props = SelectPositionerProps;
+}
+const SelectPopup: React$1.ForwardRefExoticComponent<Omit<SelectPopupProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
+interface SelectPopupProps extends BaseUIComponentProps<"div", SelectPopupState> {
+    children?: React$1.ReactNode;
+    finalFocus?: boolean | React$1.RefObject<HTMLElement | null> | ((closeType: InteractionType) => boolean | HTMLElement | null | void) | undefined;
+}
+interface SelectPopupState {
+    side: Side$1 | "none";
+    align: Align;
+    open: boolean;
+    transitionStatus: TransitionStatus;
+}
+namespace SelectPopup {
+    type Props = SelectPopupProps;
+    type State = SelectPopupState;
+}
+const SelectList: React$1.ForwardRefExoticComponent<Omit<SelectListProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
+interface SelectListProps extends BaseUIComponentProps<"div", SelectListState> {
+}
+interface SelectListState {
+}
+namespace SelectList {
+    type Props = SelectListProps;
+    type State = SelectListState;
+}
+const SelectItem: React$1.NamedExoticComponent<Omit<SelectItemProps, "ref"> & React$1.RefAttributes<HTMLElement>>;
+interface SelectItemState {
+    disabled: boolean;
+    selected: boolean;
+    highlighted: boolean;
+}
+interface SelectItemProps extends NonNativeButtonProps, Omit<BaseUIComponentProps<"div", SelectItemState>, "id"> {
+    children?: React$1.ReactNode;
+    value?: any;
+    disabled?: boolean | undefined;
+    label?: string | undefined;
+}
+namespace SelectItem {
+    type State = SelectItemState;
+    type Props = SelectItemProps;
+}
+const SelectItemIndicator: React$1.ForwardRefExoticComponent<Omit<SelectItemIndicatorProps, "ref"> & React$1.RefAttributes<HTMLSpanElement>>;
+interface SelectItemIndicatorState {
+    selected: boolean;
+    transitionStatus: TransitionStatus;
+}
+interface SelectItemIndicatorProps extends BaseUIComponentProps<"span", SelectItemIndicatorState> {
+    children?: React$1.ReactNode;
+    keepMounted?: boolean | undefined;
+}
+namespace SelectItemIndicator {
+    type State = SelectItemIndicatorState;
+    type Props = SelectItemIndicatorProps;
+}
+const SelectItemText: React$1.NamedExoticComponent<Omit<SelectItemTextProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
+interface SelectItemTextState {
+}
+interface SelectItemTextProps extends BaseUIComponentProps<"div", SelectItemTextState> {
+}
+namespace SelectItemText {
+    type State = SelectItemTextState;
+    type Props = SelectItemTextProps;
+}
+const SelectArrow: React$1.ForwardRefExoticComponent<Omit<SelectArrowProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
+interface SelectArrowState {
+    open: boolean;
+    side: Side$1 | "none";
+    align: Align;
+    uncentered: boolean;
+}
+interface SelectArrowProps extends BaseUIComponentProps<"div", SelectArrowState> {
+}
+namespace SelectArrow {
+    type State = SelectArrowState;
+    type Props = SelectArrowProps;
+}
+const SelectScrollDownArrow: React$1.ForwardRefExoticComponent<Omit<SelectScrollDownArrowProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
+interface SelectScrollDownArrowState {
+}
+interface SelectScrollDownArrowProps extends BaseUIComponentProps<"div", SelectScrollDownArrowState> {
+    keepMounted?: boolean | undefined;
+}
+namespace SelectScrollDownArrow {
+    type State = SelectScrollDownArrowState;
+    type Props = SelectScrollDownArrowProps;
+}
+const SelectScrollUpArrow: React$1.ForwardRefExoticComponent<Omit<SelectScrollUpArrowProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
+interface SelectScrollUpArrowState {
+}
+interface SelectScrollUpArrowProps extends BaseUIComponentProps<"div", SelectScrollUpArrowState> {
+    keepMounted?: boolean | undefined;
+}
+namespace SelectScrollUpArrow {
+    type State = SelectScrollUpArrowState;
+    type Props = SelectScrollUpArrowProps;
+}
+const SelectGroup: React$1.ForwardRefExoticComponent<Omit<SelectGroupProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
+interface SelectGroupState {
+}
+interface SelectGroupProps extends BaseUIComponentProps<"div", SelectGroupState> {
+}
+namespace SelectGroup {
+    type State = SelectGroupState;
+    type Props = SelectGroupProps;
+}
+const SelectGroupLabel: React$1.ForwardRefExoticComponent<Omit<SelectGroupLabelProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
+interface SelectGroupLabelState {
+}
+interface SelectGroupLabelProps extends BaseUIComponentProps<"div", SelectGroupLabelState> {
+}
+namespace SelectGroupLabel {
+    type State = SelectGroupLabelState;
+    type Props = SelectGroupLabelProps;
+}
+interface SelectSeparatorProps extends BaseUIComponentProps<"div", SelectSeparatorState> {
+    orientation?: Orientation | undefined;
+}
+interface SelectSeparatorState {
+    orientation: Orientation;
+}
+const SelectSeparator: React$1.ForwardRefExoticComponent<SelectSeparatorProps & React$1.RefAttributes<HTMLDivElement>>;
+namespace SelectSeparator {
+    type Props = SelectSeparatorProps;
+    type State = SelectSeparatorState;
+}
+const SliderRoot: {
+    <Value extends number | readonly number[]>(props: SliderRoot.Props<Value> & {
+        ref?: React$1.Ref<HTMLDivElement> | undefined;
+    }): React$1.JSX.Element;
+};
+interface SliderRootState extends FieldRootState {
+    activeThumbIndex: number;
+    disabled: boolean;
+    dragging: boolean;
+    max: number;
+    min: number;
+    minStepsBetweenValues: number;
+    orientation: Orientation;
+    step: number;
+    values: readonly number[];
+}
+interface SliderRootProps<Value extends number | readonly number[] = number | readonly number[]> extends BaseUIComponentProps<"div", SliderRootState> {
+    defaultValue?: Value | undefined;
+    disabled?: boolean | undefined;
+    format?: Intl.NumberFormatOptions | undefined;
+    locale?: Intl.LocalesArgument | undefined;
+    max?: number | undefined;
+    min?: number | undefined;
+    minStepsBetweenValues?: number | undefined;
+    name?: string | undefined;
+    form?: string | undefined;
+    orientation?: Orientation | undefined;
+    step?: number | undefined;
+    largeStep?: number | undefined;
+    thumbAlignment?: "center" | "edge" | "edge-client-only" | undefined;
+    thumbCollisionBehavior?: "push" | "swap" | "none" | undefined;
+    value?: Value | undefined;
+    onValueChange?: ((value: Value extends number ? number : Value, eventDetails: SliderRoot.ChangeEventDetails) => void) | undefined;
+    onValueCommitted?: ((value: Value extends number ? number : Value, eventDetails: SliderRoot.CommitEventDetails) => void) | undefined;
+}
+interface SliderRootChangeEventCustomProperties {
+    activeThumbIndex: number;
+}
+type SliderRootChangeEventReason = typeof inputChange | typeof trackPress | typeof drag | typeof keyboard | typeof none;
+type SliderRootChangeEventDetails = BaseUIChangeEventDetails<SliderRoot.ChangeEventReason, SliderRootChangeEventCustomProperties>;
+type SliderRootCommitEventReason = typeof inputChange | typeof trackPress | typeof drag | typeof keyboard | typeof none;
+type SliderRootCommitEventDetails = BaseUIGenericEventDetails<SliderRoot.CommitEventReason>;
+namespace SliderRoot {
+    type State = SliderRootState;
+    type Props<Value extends number | readonly number[] = number | readonly number[]> = SliderRootProps<Value>;
+    type ChangeEventReason = SliderRootChangeEventReason;
+    type ChangeEventDetails = SliderRootChangeEventDetails;
+    type CommitEventReason = SliderRootCommitEventReason;
+    type CommitEventDetails = SliderRootCommitEventDetails;
+}
+const SliderLabel: React$1.ForwardRefExoticComponent<Omit<SliderLabelProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
+type SliderLabelState = SliderRoot.State;
+interface SliderLabelProps extends Omit<BaseUIComponentProps<"div", SliderLabel.State>, "id"> {
+}
+namespace SliderLabel {
+    type State = SliderLabelState;
+    type Props = SliderLabelProps;
+}
+const SliderValue: React$1.ForwardRefExoticComponent<Omit<SliderValueProps, "ref"> & React$1.RefAttributes<HTMLOutputElement>>;
+interface SliderValueState extends SliderRootState {
+}
+interface SliderValueProps extends Omit<BaseUIComponentProps<"output", SliderValueState>, "children"> {
+    children?: null | ((formattedValues: readonly string[], values: readonly number[]) => React$1.ReactNode) | undefined;
+}
+namespace SliderValue {
+    type State = SliderValueState;
+    type Props = SliderValueProps;
+}
+const SliderControl: React$1.ForwardRefExoticComponent<Omit<SliderControlProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
+interface SliderControlState extends SliderRootState {
+}
+interface SliderControlProps extends BaseUIComponentProps<"div", SliderControlState> {
+}
+namespace SliderControl {
+    type State = SliderControlState;
+    type Props = SliderControlProps;
+}
+const SliderTrack: React$1.ForwardRefExoticComponent<Omit<SliderTrackProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
+interface SliderTrackState extends SliderRootState {
+}
+interface SliderTrackProps extends BaseUIComponentProps<"div", SliderTrackState> {
+}
+namespace SliderTrack {
+    type State = SliderTrackState;
+    type Props = SliderTrackProps;
+}
+const SliderThumb: React$1.ForwardRefExoticComponent<Omit<SliderThumbProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
+interface SliderThumbState extends SliderRootState {
+}
+interface SliderThumbProps extends Omit<BaseUIComponentProps<"div", SliderThumbState>, "onBlur" | "onFocus" | "onKeyDown"> {
+    disabled?: boolean | undefined;
+    "aria-valuetext"?: React$1.AriaAttributes["aria-valuetext"] | undefined;
+    getAriaLabel?: ((index: number) => string) | null | undefined;
+    getAriaValueText?: ((formattedValue: string, value: number, index: number) => string) | null | undefined;
+    index?: number | undefined;
+    inputRef?: React$1.Ref<HTMLInputElement> | undefined;
+    onBlur?: React$1.FocusEventHandler<HTMLInputElement> | undefined;
+    onFocus?: React$1.FocusEventHandler<HTMLInputElement> | undefined;
+    onKeyDown?: React$1.KeyboardEventHandler<HTMLInputElement> | undefined;
+    tabIndex?: number | undefined;
+}
+namespace SliderThumb {
+    type State = SliderThumbState;
+    type Props = SliderThumbProps;
+}
+const SliderIndicator: React$1.ForwardRefExoticComponent<Omit<SliderIndicatorProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
+interface SliderIndicatorState extends SliderRootState {
+}
+interface SliderIndicatorProps extends BaseUIComponentProps<"div", SliderIndicatorState> {
+}
+namespace SliderIndicator {
+    type State = SliderIndicatorState;
+    type Props = SliderIndicatorProps;
+}
+const TabsTab: React$1.ForwardRefExoticComponent<Omit<TabsTabProps, "ref"> & React$1.RefAttributes<HTMLElement>>;
+type TabsTabValue = any | null;
+type TabsTabActivationDirection = "left" | "right" | "up" | "down" | "none";
+interface TabsTabPosition {
+    left: number;
+    right: number;
+    top: number;
+    bottom: number;
+}
+interface TabsTabSize {
+    width: number;
+    height: number;
+}
+interface TabsTabMetadata {
+    disabled: boolean;
+    id: string | undefined;
+    value: TabsTab.Value | undefined;
+}
+interface TabsTabState {
+    disabled: boolean;
+    active: boolean;
+    orientation: TabsRoot.Orientation;
+    tabActivationDirection: TabsTab.ActivationDirection;
+}
+interface TabsTabProps extends NativeButtonProps, BaseUIComponentProps<"button", TabsTabState> {
+    value: TabsTab.Value;
+    disabled?: boolean | undefined;
+}
+namespace TabsTab {
+    type Value = TabsTabValue;
+    type ActivationDirection = TabsTabActivationDirection;
+    type Position = TabsTabPosition;
+    type Size = TabsTabSize;
+    type Metadata = TabsTabMetadata;
+    type State = TabsTabState;
+    type Props = TabsTabProps;
+}
+const TabsRoot: React$1.ForwardRefExoticComponent<Omit<TabsRootProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
+type TabsRootOrientation = Orientation;
+interface TabsRootState {
+    orientation: TabsRoot.Orientation;
+    tabActivationDirection: TabsTab.ActivationDirection;
+}
+interface TabsRootProps extends BaseUIComponentProps<"div", TabsRootState> {
+    value?: TabsTab.Value | undefined;
+    defaultValue?: TabsTab.Value | undefined;
+    orientation?: TabsRoot.Orientation | undefined;
+    onValueChange?: ((value: TabsTab.Value, eventDetails: TabsRoot.ChangeEventDetails) => void) | undefined;
+}
+type TabsRootChangeEventReason = typeof none | typeof disabled | typeof missing | typeof initial;
+type TabsRootChangeEventDetails = BaseUIChangeEventDetails<TabsRoot.ChangeEventReason, {
+    activationDirection: TabsTab.ActivationDirection;
+}>;
+namespace TabsRoot {
+    type State = TabsRootState;
+    type Props = TabsRootProps;
+    type Orientation = TabsRootOrientation;
+    type ChangeEventReason = TabsRootChangeEventReason;
+    type ChangeEventDetails = TabsRootChangeEventDetails;
+}
+const TabsIndicator: React$1.ForwardRefExoticComponent<Omit<TabsIndicatorProps, "ref"> & React$1.RefAttributes<HTMLSpanElement>>;
+interface TabsIndicatorState extends TabsRootState {
+    activeTabPosition: TabsTab.Position | null;
+    activeTabSize: TabsTab.Size | null;
+    orientation: TabsRoot.Orientation;
+}
+interface TabsIndicatorProps extends BaseUIComponentProps<"span", TabsIndicatorState> {
+    renderBeforeHydration?: boolean | undefined;
+}
+namespace TabsIndicator {
+    type State = TabsIndicatorState;
+    type Props = TabsIndicatorProps;
+}
+const TabsPanel: React$1.ForwardRefExoticComponent<Omit<TabsPanelProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
+interface TabsPanelMetadata {
+    id?: string | undefined;
+    value: TabsTab.Value;
+}
+interface TabsPanelState extends TabsRootState {
+    hidden: boolean;
+    transitionStatus: TransitionStatus;
+}
+interface TabsPanelProps extends BaseUIComponentProps<"div", TabsPanelState> {
+    value: TabsTab.Value;
+    keepMounted?: boolean | undefined;
+}
+namespace TabsPanel {
+    type Metadata = TabsPanelMetadata;
+    type State = TabsPanelState;
+    type Props = TabsPanelProps;
+}
+const TabsList: React$1.ForwardRefExoticComponent<Omit<TabsListProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
+interface TabsListState extends TabsRootState {
+}
+interface TabsListProps extends BaseUIComponentProps<"div", TabsListState> {
+    activateOnFocus?: boolean | undefined;
+    loopFocus?: boolean | undefined;
+}
+namespace TabsList {
+    type State = TabsListState;
+    type Props = TabsListProps;
+}
+type State<Payload> = PopupStoreState<Payload> & {
+    modal: boolean | "trap-focus";
+    disablePointerDismissal: boolean;
+    openMethod: InteractionType | null;
+    nested: boolean;
+    nestedOpenDialogCount: number;
+    nestedOpenDrawerCount: number;
+    titleElementId: string | undefined;
+    descriptionElementId: string | undefined;
+    viewportElement: HTMLElement | null;
+    role: "dialog" | "alertdialog";
+};
+type Context = PopupStoreContext<DialogRoot.ChangeEventDetails> & {
+    readonly popupRef: React$1.RefObject<HTMLElement | null>;
+    readonly backdropRef: React$1.RefObject<HTMLDivElement | null>;
+    readonly internalBackdropRef: React$1.RefObject<HTMLDivElement | null>;
+    readonly outsidePressEnabledRef: React$1.MutableRefObject<boolean>;
+    readonly onNestedDialogOpen?: ((dialogCount: number, drawerCount: number) => void) | undefined;
+};
+const selectors$1: {
+    open: (state: {
+        open: boolean;
+        readonly openProp: boolean | undefined;
+        mounted: boolean;
+        transitionStatus: TransitionStatus;
+        floatingRootContext: FloatingRootContext;
+        floatingId: string | undefined;
+        triggerCount: number;
+        preventUnmountingOnClose: boolean;
+        payload: unknown;
+        activeTriggerId: string | null;
+        activeTriggerElement: Element | null;
+        openedWithoutTrigger: boolean;
+        readonly triggerIdProp: string | null | undefined;
+        popupElement: HTMLElement | null;
+        positionerElement: HTMLElement | null;
+        activeTriggerProps: HTMLProps;
+        inactiveTriggerProps: HTMLProps;
+        popupProps: HTMLProps;
+    }) => boolean;
+    mounted: (state: {
+        open: boolean;
+        readonly openProp: boolean | undefined;
+        mounted: boolean;
+        transitionStatus: TransitionStatus;
+        floatingRootContext: FloatingRootContext;
+        floatingId: string | undefined;
+        triggerCount: number;
+        preventUnmountingOnClose: boolean;
+        payload: unknown;
+        activeTriggerId: string | null;
+        activeTriggerElement: Element | null;
+        openedWithoutTrigger: boolean;
+        readonly triggerIdProp: string | null | undefined;
+        popupElement: HTMLElement | null;
+        positionerElement: HTMLElement | null;
+        activeTriggerProps: HTMLProps;
+        inactiveTriggerProps: HTMLProps;
+        popupProps: HTMLProps;
+    }) => boolean;
+    transitionStatus: (state: {
+        open: boolean;
+        readonly openProp: boolean | undefined;
+        mounted: boolean;
+        transitionStatus: TransitionStatus;
+        floatingRootContext: FloatingRootContext;
+        floatingId: string | undefined;
+        triggerCount: number;
+        preventUnmountingOnClose: boolean;
+        payload: unknown;
+        activeTriggerId: string | null;
+        activeTriggerElement: Element | null;
+        openedWithoutTrigger: boolean;
+        readonly triggerIdProp: string | null | undefined;
+        popupElement: HTMLElement | null;
+        positionerElement: HTMLElement | null;
+        activeTriggerProps: HTMLProps;
+        inactiveTriggerProps: HTMLProps;
+        popupProps: HTMLProps;
+    }) => TransitionStatus;
+    floatingRootContext: (state: {
+        open: boolean;
+        readonly openProp: boolean | undefined;
+        mounted: boolean;
+        transitionStatus: TransitionStatus;
+        floatingRootContext: FloatingRootContext;
+        floatingId: string | undefined;
+        triggerCount: number;
+        preventUnmountingOnClose: boolean;
+        payload: unknown;
+        activeTriggerId: string | null;
+        activeTriggerElement: Element | null;
+        openedWithoutTrigger: boolean;
+        readonly triggerIdProp: string | null | undefined;
+        popupElement: HTMLElement | null;
+        positionerElement: HTMLElement | null;
+        activeTriggerProps: HTMLProps;
+        inactiveTriggerProps: HTMLProps;
+        popupProps: HTMLProps;
+    }) => FloatingRootStore;
+    triggerCount: (state: {
+        open: boolean;
+        readonly openProp: boolean | undefined;
+        mounted: boolean;
+        transitionStatus: TransitionStatus;
+        floatingRootContext: FloatingRootContext;
+        floatingId: string | undefined;
+        triggerCount: number;
+        preventUnmountingOnClose: boolean;
+        payload: unknown;
+        activeTriggerId: string | null;
+        activeTriggerElement: Element | null;
+        openedWithoutTrigger: boolean;
+        readonly triggerIdProp: string | null | undefined;
+        popupElement: HTMLElement | null;
+        positionerElement: HTMLElement | null;
+        activeTriggerProps: HTMLProps;
+        inactiveTriggerProps: HTMLProps;
+        popupProps: HTMLProps;
+    }) => number;
+    preventUnmountingOnClose: (state: {
+        open: boolean;
+        readonly openProp: boolean | undefined;
+        mounted: boolean;
+        transitionStatus: TransitionStatus;
+        floatingRootContext: FloatingRootContext;
+        floatingId: string | undefined;
+        triggerCount: number;
+        preventUnmountingOnClose: boolean;
+        payload: unknown;
+        activeTriggerId: string | null;
+        activeTriggerElement: Element | null;
+        openedWithoutTrigger: boolean;
+        readonly triggerIdProp: string | null | undefined;
+        popupElement: HTMLElement | null;
+        positionerElement: HTMLElement | null;
+        activeTriggerProps: HTMLProps;
+        inactiveTriggerProps: HTMLProps;
+        popupProps: HTMLProps;
+    }) => boolean;
+    payload: (state: {
+        open: boolean;
+        readonly openProp: boolean | undefined;
+        mounted: boolean;
+        transitionStatus: TransitionStatus;
+        floatingRootContext: FloatingRootContext;
+        floatingId: string | undefined;
+        triggerCount: number;
+        preventUnmountingOnClose: boolean;
+        payload: unknown;
+        activeTriggerId: string | null;
+        activeTriggerElement: Element | null;
+        openedWithoutTrigger: boolean;
+        readonly triggerIdProp: string | null | undefined;
+        popupElement: HTMLElement | null;
+        positionerElement: HTMLElement | null;
+        activeTriggerProps: HTMLProps;
+        inactiveTriggerProps: HTMLProps;
+        popupProps: HTMLProps;
+    }) => unknown;
+    activeTriggerId: (state: {
+        open: boolean;
+        readonly openProp: boolean | undefined;
+        mounted: boolean;
+        transitionStatus: TransitionStatus;
+        floatingRootContext: FloatingRootContext;
+        floatingId: string | undefined;
+        triggerCount: number;
+        preventUnmountingOnClose: boolean;
+        payload: unknown;
+        activeTriggerId: string | null;
+        activeTriggerElement: Element | null;
+        openedWithoutTrigger: boolean;
+        readonly triggerIdProp: string | null | undefined;
+        popupElement: HTMLElement | null;
+        positionerElement: HTMLElement | null;
+        activeTriggerProps: HTMLProps;
+        inactiveTriggerProps: HTMLProps;
+        popupProps: HTMLProps;
+    }) => string | null;
+    activeTriggerElement: (state: {
+        open: boolean;
+        readonly openProp: boolean | undefined;
+        mounted: boolean;
+        transitionStatus: TransitionStatus;
+        floatingRootContext: FloatingRootContext;
+        floatingId: string | undefined;
+        triggerCount: number;
+        preventUnmountingOnClose: boolean;
+        payload: unknown;
+        activeTriggerId: string | null;
+        activeTriggerElement: Element | null;
+        openedWithoutTrigger: boolean;
+        readonly triggerIdProp: string | null | undefined;
+        popupElement: HTMLElement | null;
+        positionerElement: HTMLElement | null;
+        activeTriggerProps: HTMLProps;
+        inactiveTriggerProps: HTMLProps;
+        popupProps: HTMLProps;
+    }) => Element | null;
+    popupId: (state: {
+        open: boolean;
+        readonly openProp: boolean | undefined;
+        mounted: boolean;
+        transitionStatus: TransitionStatus;
+        floatingRootContext: FloatingRootContext;
+        floatingId: string | undefined;
+        triggerCount: number;
+        preventUnmountingOnClose: boolean;
+        payload: unknown;
+        activeTriggerId: string | null;
+        activeTriggerElement: Element | null;
+        openedWithoutTrigger: boolean;
+        readonly triggerIdProp: string | null | undefined;
+        popupElement: HTMLElement | null;
+        positionerElement: HTMLElement | null;
+        activeTriggerProps: HTMLProps;
+        inactiveTriggerProps: HTMLProps;
+        popupProps: HTMLProps;
+    }) => string | undefined;
+    isTriggerActive: (state: {
+        open: boolean;
+        readonly openProp: boolean | undefined;
+        mounted: boolean;
+        transitionStatus: TransitionStatus;
+        floatingRootContext: FloatingRootContext;
+        floatingId: string | undefined;
+        triggerCount: number;
+        preventUnmountingOnClose: boolean;
+        payload: unknown;
+        activeTriggerId: string | null;
+        activeTriggerElement: Element | null;
+        openedWithoutTrigger: boolean;
+        readonly triggerIdProp: string | null | undefined;
+        popupElement: HTMLElement | null;
+        positionerElement: HTMLElement | null;
+        activeTriggerProps: HTMLProps;
+        inactiveTriggerProps: HTMLProps;
+        popupProps: HTMLProps;
+    }, triggerId: string | undefined) => boolean;
+    isOpenedByTrigger: (state: {
+        open: boolean;
+        readonly openProp: boolean | undefined;
+        mounted: boolean;
+        transitionStatus: TransitionStatus;
+        floatingRootContext: FloatingRootContext;
+        floatingId: string | undefined;
+        triggerCount: number;
+        preventUnmountingOnClose: boolean;
+        payload: unknown;
+        activeTriggerId: string | null;
+        activeTriggerElement: Element | null;
+        openedWithoutTrigger: boolean;
+        readonly triggerIdProp: string | null | undefined;
+        popupElement: HTMLElement | null;
+        positionerElement: HTMLElement | null;
+        activeTriggerProps: HTMLProps;
+        inactiveTriggerProps: HTMLProps;
+        popupProps: HTMLProps;
+    }, triggerId: string | undefined) => boolean;
+    isMountedByTrigger: (state: {
+        open: boolean;
+        readonly openProp: boolean | undefined;
+        mounted: boolean;
+        transitionStatus: TransitionStatus;
+        floatingRootContext: FloatingRootContext;
+        floatingId: string | undefined;
+        triggerCount: number;
+        preventUnmountingOnClose: boolean;
+        payload: unknown;
+        activeTriggerId: string | null;
+        activeTriggerElement: Element | null;
+        openedWithoutTrigger: boolean;
+        readonly triggerIdProp: string | null | undefined;
+        popupElement: HTMLElement | null;
+        positionerElement: HTMLElement | null;
+        activeTriggerProps: HTMLProps;
+        inactiveTriggerProps: HTMLProps;
+        popupProps: HTMLProps;
+    }, triggerId: string | undefined) => boolean;
+    triggerProps: (state: {
+        open: boolean;
+        readonly openProp: boolean | undefined;
+        mounted: boolean;
+        transitionStatus: TransitionStatus;
+        floatingRootContext: FloatingRootContext;
+        floatingId: string | undefined;
+        triggerCount: number;
+        preventUnmountingOnClose: boolean;
+        payload: unknown;
+        activeTriggerId: string | null;
+        activeTriggerElement: Element | null;
+        openedWithoutTrigger: boolean;
+        readonly triggerIdProp: string | null | undefined;
+        popupElement: HTMLElement | null;
+        positionerElement: HTMLElement | null;
+        activeTriggerProps: HTMLProps;
+        inactiveTriggerProps: HTMLProps;
+        popupProps: HTMLProps;
+    }, isActive: boolean) => HTMLProps;
+    triggerPopupId: (state: {
+        open: boolean;
+        readonly openProp: boolean | undefined;
+        mounted: boolean;
+        transitionStatus: TransitionStatus;
+        floatingRootContext: FloatingRootContext;
+        floatingId: string | undefined;
+        triggerCount: number;
+        preventUnmountingOnClose: boolean;
+        payload: unknown;
+        activeTriggerId: string | null;
+        activeTriggerElement: Element | null;
+        openedWithoutTrigger: boolean;
+        readonly triggerIdProp: string | null | undefined;
+        popupElement: HTMLElement | null;
+        positionerElement: HTMLElement | null;
+        activeTriggerProps: HTMLProps;
+        inactiveTriggerProps: HTMLProps;
+        popupProps: HTMLProps;
+    }, triggerId: string | undefined) => string | undefined;
+    popupProps: (state: {
+        open: boolean;
+        readonly openProp: boolean | undefined;
+        mounted: boolean;
+        transitionStatus: TransitionStatus;
+        floatingRootContext: FloatingRootContext;
+        floatingId: string | undefined;
+        triggerCount: number;
+        preventUnmountingOnClose: boolean;
+        payload: unknown;
+        activeTriggerId: string | null;
+        activeTriggerElement: Element | null;
+        openedWithoutTrigger: boolean;
+        readonly triggerIdProp: string | null | undefined;
+        popupElement: HTMLElement | null;
+        positionerElement: HTMLElement | null;
+        activeTriggerProps: HTMLProps;
+        inactiveTriggerProps: HTMLProps;
+        popupProps: HTMLProps;
+    }) => HTMLProps;
+    popupElement: (state: {
+        open: boolean;
+        readonly openProp: boolean | undefined;
+        mounted: boolean;
+        transitionStatus: TransitionStatus;
+        floatingRootContext: FloatingRootContext;
+        floatingId: string | undefined;
+        triggerCount: number;
+        preventUnmountingOnClose: boolean;
+        payload: unknown;
+        activeTriggerId: string | null;
+        activeTriggerElement: Element | null;
+        openedWithoutTrigger: boolean;
+        readonly triggerIdProp: string | null | undefined;
+        popupElement: HTMLElement | null;
+        positionerElement: HTMLElement | null;
+        activeTriggerProps: HTMLProps;
+        inactiveTriggerProps: HTMLProps;
+        popupProps: HTMLProps;
+    }) => HTMLElement | null;
+    positionerElement: (state: {
+        open: boolean;
+        readonly openProp: boolean | undefined;
+        mounted: boolean;
+        transitionStatus: TransitionStatus;
+        floatingRootContext: FloatingRootContext;
+        floatingId: string | undefined;
+        triggerCount: number;
+        preventUnmountingOnClose: boolean;
+        payload: unknown;
+        activeTriggerId: string | null;
+        activeTriggerElement: Element | null;
+        openedWithoutTrigger: boolean;
+        readonly triggerIdProp: string | null | undefined;
+        popupElement: HTMLElement | null;
+        positionerElement: HTMLElement | null;
+        activeTriggerProps: HTMLProps;
+        inactiveTriggerProps: HTMLProps;
+        popupProps: HTMLProps;
+    }) => HTMLElement | null;
+    modal: (state: State<unknown>) => "trap-focus" | boolean;
+    nested: (state: State<unknown>) => boolean;
+    nestedOpenDialogCount: (state: State<unknown>) => number;
+    nestedOpenDrawerCount: (state: State<unknown>) => number;
+    disablePointerDismissal: (state: State<unknown>) => boolean;
+    openMethod: (state: State<unknown>) => InteractionType | null;
+    descriptionElementId: (state: State<unknown>) => string | undefined;
+    titleElementId: (state: State<unknown>) => string | undefined;
+    viewportElement: (state: State<unknown>) => HTMLElement | null;
+    role: (state: State<unknown>) => "alertdialog" | "dialog";
+};
+type DialogHandleStore<Payload> = PopupTriggerDataStore<State<Payload>>;
+class DialogStore<Payload> extends ReactStore<Readonly<State<Payload>>, Context, typeof selectors$1> {
+    constructor(initialState: Partial<State<Payload>> | undefined, floatingId: string | undefined, nested: boolean);
+    setOpen: (nextOpen: boolean, eventDetails: Omit<DialogRoot.ChangeEventDetails, "preventUnmountOnClose">) => void;
+}
+class DialogHandle<Payload> extends BasePopupHandle<DialogHandleStore<Payload>, DialogStore<Payload>> {
+    constructor();
+    open(triggerId: string | null): void;
+    openWithPayload(payload: Payload): void;
+    close(): void;
+    get isOpen(): boolean;
+}
+function createDialogHandle<Payload>(): DialogHandle<Payload>;
+const DialogRoot: <Payload>(props: DialogRoot.Props<Payload>) => React$1.JSX.Element;
+interface DialogRootState {
+}
+interface DialogRootProps<Payload = unknown> {
+    open?: boolean | undefined;
+    defaultOpen?: boolean | undefined;
+    modal?: boolean | "trap-focus" | undefined;
+    onOpenChange?: ((open: boolean, eventDetails: DialogRoot.ChangeEventDetails) => void) | undefined;
+    onOpenChangeComplete?: ((open: boolean) => void) | undefined;
+    disablePointerDismissal?: boolean | undefined;
+    actionsRef?: React$1.RefObject<DialogRoot.Actions | null> | undefined;
+    handle?: DialogHandle<Payload> | undefined;
+    children?: React$1.ReactNode | PayloadChildRenderFunction<Payload>;
+    triggerId?: string | null | undefined;
+    defaultTriggerId?: string | null | undefined;
+}
+interface DialogRootActions {
+    unmount: () => void;
+    close: () => void;
+}
+type DialogRootChangeEventReason = typeof triggerPress | typeof outsidePress | typeof escapeKey | typeof closePress | typeof focusOut | typeof imperativeAction | typeof none;
+type DialogRootChangeEventDetails = BaseUIChangeEventDetails<DialogRoot.ChangeEventReason> & {
+    preventUnmountOnClose: () => void;
+};
+namespace DialogRoot {
+    type State = DialogRootState;
+    type Props<Payload = unknown> = DialogRootProps<Payload>;
+    type Actions = DialogRootActions;
+    type ChangeEventReason = DialogRootChangeEventReason;
+    type ChangeEventDetails = DialogRootChangeEventDetails;
+}
+export function Dialog({ ...props }: DialogRoot.Props): React$1.JSX.Element;
+function DialogTrigger$1({ ...props }: DialogTrigger.Props): React$1.JSX.Element;
+function DialogPortal$1({ ...props }: DialogPortal.Props): React$1.JSX.Element;
+function DialogClose$1({ ...props }: DialogClose.Props): React$1.JSX.Element;
+export function DialogOverlay({ className, ...props }: DialogBackdrop.Props): React$1.JSX.Element;
+export function DialogContent({ className, children, showCloseButton, ...props }: DialogPopup.Props & {
+    showCloseButton?: boolean;
+}): React$1.JSX.Element;
+export function DialogHeader({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
+export function DialogFooter({ className, showCloseButton, children, ...props }: React$1.ComponentProps<"div"> & {
+    showCloseButton?: boolean;
+}): React$1.JSX.Element;
+function DialogTitle$1({ className, ...props }: DialogTitle.Props): React$1.JSX.Element;
+function DialogDescription$1({ className, ...props }: DialogDescription.Props): React$1.JSX.Element;
+export function ViewDialog(props: {
+    children?: React$1.ReactNode;
+    title?: string;
+    variant?: "standard" | "fullscreen";
+    isOpen: boolean;
+    onOpenChange: (open: boolean) => void;
+    gap?: Spacing;
+    paddingInline?: Spacing;
+}): React$1.JSX.Element;
+export const Select: typeof SelectRoot;
+function SelectGroup$1({ className, ...props }: SelectGroup.Props): React$1.JSX.Element;
+function SelectValue$1({ className, ...props }: SelectValue.Props): React$1.JSX.Element;
+function SelectTrigger$1({ className, size, children, ...props }: SelectTrigger.Props & {
+    size?: "sm" | "default";
+}): React$1.JSX.Element;
+export function SelectContent({ className, children, side, sideOffset, align, alignOffset, alignItemWithTrigger, ...props }: SelectPopup.Props & Pick<SelectPositioner.Props, "align" | "alignOffset" | "side" | "sideOffset" | "alignItemWithTrigger">): React$1.JSX.Element;
+function SelectLabel$1({ className, ...props }: SelectGroupLabel.Props): React$1.JSX.Element;
+function SelectItem$1({ className, children, ...props }: SelectItem.Props): React$1.JSX.Element;
+function SelectSeparator$1({ className, ...props }: SelectSeparator.Props): React$1.JSX.Element;
+export function SelectScrollUpButton({ className, ...props }: React$1.ComponentProps<typeof SelectScrollUpArrow>): React$1.JSX.Element;
+export function SelectScrollDownButton({ className, ...props }: React$1.ComponentProps<typeof SelectScrollDownArrow>): React$1.JSX.Element;
+export const Combobox: typeof ComboboxRoot;
+function ComboboxValue$1({ ...props }: ComboboxValue.Props): React$1.JSX.Element;
+function ComboboxTrigger$1({ className, children, ...props }: ComboboxTrigger.Props): React$1.JSX.Element;
+function ComboboxInput$1({ className, children, disabled, showTrigger, showClear, ...props }: ComboboxInput.Props & {
+    showTrigger?: boolean;
+    showClear?: boolean;
+}): React$1.JSX.Element;
+export function ComboboxContent({ className, side, sideOffset, align, alignOffset, anchor, ...props }: ComboboxPopup.Props & Pick<ComboboxPositioner.Props, "side" | "align" | "sideOffset" | "alignOffset" | "anchor">): React$1.JSX.Element;
+function ComboboxList$1({ className, ...props }: ComboboxList.Props): React$1.JSX.Element;
+function ComboboxItem$1({ className, children, ...props }: ComboboxItem.Props): React$1.JSX.Element;
+function ComboboxGroup$1({ className, ...props }: ComboboxGroup.Props): React$1.JSX.Element;
+function ComboboxLabel$1({ className, ...props }: ComboboxGroupLabel.Props): React$1.JSX.Element;
+function ComboboxCollection$1({ ...props }: ComboboxCollection.Props): React$1.JSX.Element;
+function ComboboxEmpty$1({ className, ...props }: ComboboxEmpty.Props): React$1.JSX.Element;
+function ComboboxSeparator$1({ className, ...props }: ComboboxSeparator.Props): React$1.JSX.Element;
+function ComboboxChips$1({ className, ...props }: React$1.ComponentPropsWithRef<typeof ComboboxChips> & ComboboxChips.Props): React$1.JSX.Element;
+function ComboboxChip$1({ className, children, showRemove, ...props }: ComboboxChip.Props & {
+    showRemove?: boolean;
+}): React$1.JSX.Element;
+export function ComboboxChipsInput({ className, ...props }: ComboboxInput.Props): React$1.JSX.Element;
+export function useComboboxAnchor(): React$1.RefObject<HTMLDivElement | null>;
+function Tabs$1({ className, orientation, ...props }: Tabs.Root.Props): React$1.JSX.Element;
+const tabsListVariants: (props?: ({
+    variant?: "default" | "line" | null | undefined;
+} & ClassProp) | undefined) => string;
+function TabsList$1({ className, variant, ...props }: Tabs.List.Props & VariantProps<typeof tabsListVariants>): React$1.JSX.Element;
+export function TabsTrigger({ className, ...props }: Tabs.Tab.Props): React$1.JSX.Element;
+export function TabsContent({ className, ...props }: Tabs.Panel.Props): React$1.JSX.Element;
+function Slider$1<Value extends number | readonly number[]>({ className, defaultValue, value, min, max, children, ...props }: Slider.Root.Props<Value>): React$1.JSX.Element;
+function SliderControl$1({ className, ...props }: Slider.Control.Props): React$1.JSX.Element;
+function SliderTrack$1({ className, ...props }: Slider.Track.Props): React$1.JSX.Element;
+export function SliderRange({ className, ...props }: Slider.Indicator.Props): React$1.JSX.Element;
+function SliderThumb$1({ className, ...props }: Slider.Thumb.Props): React$1.JSX.Element;
+export function SliderField<Value extends number | readonly number[]>({ label, description, required, children, defaultValue, value, min, ...props }: FieldProps & Slider.Root.Props<Value>): React$1.JSX.Element;
+function Progress$1({ className, children, value, ...props }: Progress.Root.Props): React$1.JSX.Element;
+function ProgressTrack$1({ className, ...props }: Progress.Track.Props): React$1.JSX.Element;
+function ProgressIndicator$1({ className, ...props }: Progress.Indicator.Props): React$1.JSX.Element;
+function ProgressLabel$1({ className, ...props }: Progress.Label.Props): React$1.JSX.Element;
+function ProgressValue$1({ className, ...props }: Progress.Value.Props): React$1.JSX.Element;
+export type FrontendElement = React$1.JSX.Element;
+namespace CSS$1 {
+    export { AdvancedPseudos, AtRule, AtRules, DataType, Fallback, Globals, HtmlAttributes, ObsoleteProperties, ObsoletePropertiesFallback, ObsoletePropertiesHyphen, ObsoletePropertiesHyphenFallback, Properties, PropertiesFallback, PropertiesHyphen, PropertiesHyphenFallback, Property, PropertyValue, Pseudos, SimplePseudos, StandardLonghandProperties, StandardLonghandPropertiesFallback, StandardLonghandPropertiesHyphen, StandardLonghandPropertiesHyphenFallback, StandardProperties, StandardPropertiesFallback, StandardPropertiesHyphen, StandardPropertiesHyphenFallback, StandardShorthandProperties, StandardShorthandPropertiesFallback, StandardShorthandPropertiesHyphen, StandardShorthandPropertiesHyphenFallback, SvgAttributes, SvgProperties, SvgPropertiesFallback, SvgPropertiesHyphen, SvgPropertiesHyphenFallback, VendorLonghandProperties, VendorLonghandPropertiesFallback, VendorLonghandPropertiesHyphen, VendorLonghandPropertiesHyphenFallback, VendorProperties, VendorPropertiesFallback, VendorPropertiesHyphen, VendorPropertiesHyphenFallback, VendorShorthandProperties, VendorShorthandPropertiesFallback, VendorShorthandPropertiesHyphen, VendorShorthandPropertiesHyphenFallback };
+}
+namespace Collapsible {
+    export { CollapsiblePanel as Panel, CollapsibleRoot as Root, CollapsibleTrigger as Trigger };
+}
+namespace Switch {
+    export { SwitchRoot as Root, SwitchThumb as Thumb };
+}
+namespace Checkbox {
+    export { CheckboxIndicator as Indicator, CheckboxRoot as Root };
+}
+namespace Progress {
+    export { ProgressIndicator as Indicator, ProgressLabel as Label, ProgressRoot as Root, ProgressStatus as Status, ProgressTrack as Track, ProgressValue as Value };
+}
+namespace Slider {
+    export { SliderControl as Control, SliderIndicator as Indicator, SliderLabel as Label, SliderRoot as Root, SliderThumb as Thumb, SliderTrack as Track, SliderValue as Value };
+}
+namespace Tabs {
+    export { TabsIndicator as Indicator, TabsList as List, TabsPanel as Panel, TabsRoot as Root, TabsTab as Tab };
+}
+export { Button$2 as Button, Checkbox$1 as Checkbox, Collapsible$1 as Collapsible, CollapsibleTrigger$1 as CollapsibleTrigger, ComboboxChip$1 as ComboboxChip, ComboboxChips$1 as ComboboxChips, ComboboxCollection$1 as ComboboxCollection, ComboboxEmpty$1 as ComboboxEmpty, ComboboxGroup$1 as ComboboxGroup, ComboboxInput$1 as ComboboxInput, ComboboxItem$1 as ComboboxItem, ComboboxLabel$1 as ComboboxLabel, ComboboxList$1 as ComboboxList, ComboboxSeparator$1 as ComboboxSeparator, ComboboxTrigger$1 as ComboboxTrigger, ComboboxValue$1 as ComboboxValue, DialogClose$1 as DialogClose, DialogDescription$1 as DialogDescription, DialogPortal$1 as DialogPortal, DialogTitle$1 as DialogTitle, DialogTrigger$1 as DialogTrigger, Progress$1 as Progress, ProgressIndicator$1 as ProgressIndicator, ProgressLabel$1 as ProgressLabel, ProgressTrack$1 as ProgressTrack, ProgressValue$1 as ProgressValue, SelectGroup$1 as SelectGroup, SelectItem$1 as SelectItem, SelectLabel$1 as SelectLabel, SelectSeparator$1 as SelectSeparator, SelectTrigger$1 as SelectTrigger, SelectValue$1 as SelectValue, Slider$1 as Slider, SliderControl$1 as SliderControl, SliderThumb$1 as SliderThumb, SliderTrack$1 as SliderTrack, Switch$1 as Switch, Tabs$1 as Tabs, TabsList$1 as TabsList, };
+}
+
+declare const Badge: typeof NativeFrontend.Badge;
+declare const Button: typeof NativeFrontend.Button;
+declare const ButtonGroup: typeof NativeFrontend.ButtonGroup;
+declare const Card: typeof NativeFrontend.Card;
+declare const CardAction: typeof NativeFrontend.CardAction;
+declare const CardContent: typeof NativeFrontend.CardContent;
+declare const CardDescription: typeof NativeFrontend.CardDescription;
+declare const CardFooter: typeof NativeFrontend.CardFooter;
+declare const CardHeader: typeof NativeFrontend.CardHeader;
+declare const CardTitle: typeof NativeFrontend.CardTitle;
+declare const Checkbox: typeof NativeFrontend.Checkbox;
+declare const Collapsible: typeof NativeFrontend.Collapsible;
+declare const CollapsibleContent: typeof NativeFrontend.CollapsibleContent;
+declare const CollapsibleTrigger: typeof NativeFrontend.CollapsibleTrigger;
+declare const Combobox: typeof NativeFrontend.Combobox;
+declare const ComboboxChip: typeof NativeFrontend.ComboboxChip;
+declare const ComboboxChips: typeof NativeFrontend.ComboboxChips;
+declare const ComboboxChipsInput: typeof NativeFrontend.ComboboxChipsInput;
+declare const ComboboxCollection: typeof NativeFrontend.ComboboxCollection;
+declare const ComboboxContent: typeof NativeFrontend.ComboboxContent;
+declare const ComboboxEmpty: typeof NativeFrontend.ComboboxEmpty;
+declare const ComboboxGroup: typeof NativeFrontend.ComboboxGroup;
+declare const ComboboxInput: typeof NativeFrontend.ComboboxInput;
+declare const ComboboxItem: typeof NativeFrontend.ComboboxItem;
+declare const ComboboxLabel: typeof NativeFrontend.ComboboxLabel;
+declare const ComboboxList: typeof NativeFrontend.ComboboxList;
+declare const ComboboxSeparator: typeof NativeFrontend.ComboboxSeparator;
+declare const ComboboxTrigger: typeof NativeFrontend.ComboboxTrigger;
+declare const ComboboxValue: typeof NativeFrontend.ComboboxValue;
+declare const Dialog: typeof NativeFrontend.Dialog;
+declare const DialogClose: typeof NativeFrontend.DialogClose;
+declare const DialogContent: typeof NativeFrontend.DialogContent;
+declare const DialogDescription: typeof NativeFrontend.DialogDescription;
+declare const DialogFooter: typeof NativeFrontend.DialogFooter;
+declare const DialogHeader: typeof NativeFrontend.DialogHeader;
+declare const DialogOverlay: typeof NativeFrontend.DialogOverlay;
+declare const DialogPortal: typeof NativeFrontend.DialogPortal;
+declare const DialogTitle: typeof NativeFrontend.DialogTitle;
+declare const DialogTrigger: typeof NativeFrontend.DialogTrigger;
+declare const Disclosure: typeof NativeFrontend.Disclosure;
+declare const Field: typeof NativeFrontend.Field;
+declare const FieldContent: typeof NativeFrontend.FieldContent;
+declare const FieldDescription: typeof NativeFrontend.FieldDescription;
+declare const FieldError: typeof NativeFrontend.FieldError;
+declare const FieldGroup: typeof NativeFrontend.FieldGroup;
+declare const FieldLabel: typeof NativeFrontend.FieldLabel;
+declare const FieldLegend: typeof NativeFrontend.FieldLegend;
+declare const FieldSeparator: typeof NativeFrontend.FieldSeparator;
+declare const FieldSet: typeof NativeFrontend.FieldSet;
+declare const FieldTitle: typeof NativeFrontend.FieldTitle;
+declare const FileViewer: typeof NativeFrontend.FileViewer;
+declare const Input: typeof NativeFrontend.Input;
+declare const InputGroup: typeof NativeFrontend.InputGroup;
+declare const InputGroupAddon: typeof NativeFrontend.InputGroupAddon;
+declare const InputGroupButton: typeof NativeFrontend.InputGroupButton;
+declare const InputGroupInput: typeof NativeFrontend.InputGroupInput;
+declare const InputGroupText: typeof NativeFrontend.InputGroupText;
+declare const InputGroupTextarea: typeof NativeFrontend.InputGroupTextarea;
+declare const InteractiveCard: typeof NativeFrontend.InteractiveCard;
+declare const Progress: typeof NativeFrontend.Progress;
+declare const ProgressIndicator: typeof NativeFrontend.ProgressIndicator;
+declare const ProgressLabel: typeof NativeFrontend.ProgressLabel;
+declare const ProgressStepper: typeof NativeFrontend.ProgressStepper;
+declare const ProgressTrack: typeof NativeFrontend.ProgressTrack;
+declare const ProgressValue: typeof NativeFrontend.ProgressValue;
+declare const Select: typeof NativeFrontend.Select;
+declare const SelectContent: typeof NativeFrontend.SelectContent;
+declare const SelectGroup: typeof NativeFrontend.SelectGroup;
+declare const SelectItem: typeof NativeFrontend.SelectItem;
+declare const SelectLabel: typeof NativeFrontend.SelectLabel;
+declare const SelectScrollDownButton: typeof NativeFrontend.SelectScrollDownButton;
+declare const SelectScrollUpButton: typeof NativeFrontend.SelectScrollUpButton;
+declare const SelectSeparator: typeof NativeFrontend.SelectSeparator;
+declare const SelectTrigger: typeof NativeFrontend.SelectTrigger;
+declare const SelectValue: typeof NativeFrontend.SelectValue;
+declare const Slider: typeof NativeFrontend.Slider;
+declare const SliderControl: typeof NativeFrontend.SliderControl;
+declare const SliderField: typeof NativeFrontend.SliderField;
+declare const SliderRange: typeof NativeFrontend.SliderRange;
+declare const SliderThumb: typeof NativeFrontend.SliderThumb;
+declare const SliderTrack: typeof NativeFrontend.SliderTrack;
+declare const Step: typeof NativeFrontend.Step;
+declare const Stepper: typeof NativeFrontend.Stepper;
+declare const StepperContent: typeof NativeFrontend.StepperContent;
+declare const StepperDescription: typeof NativeFrontend.StepperDescription;
+declare const StepperIndicator: typeof NativeFrontend.StepperIndicator;
+declare const StepperItem: typeof NativeFrontend.StepperItem;
+declare const StepperNav: typeof NativeFrontend.StepperNav;
+declare const StepperPanel: typeof NativeFrontend.StepperPanel;
+declare const StepperSeparator: typeof NativeFrontend.StepperSeparator;
+declare const StepperTitle: typeof NativeFrontend.StepperTitle;
+declare const StepperTrigger: typeof NativeFrontend.StepperTrigger;
+declare const Switch: typeof NativeFrontend.Switch;
+declare const SwitchField: typeof NativeFrontend.SwitchField;
+declare const Tabs: typeof NativeFrontend.Tabs;
+declare const TabsContent: typeof NativeFrontend.TabsContent;
+declare const TabsList: typeof NativeFrontend.TabsList;
+declare const TabsTrigger: typeof NativeFrontend.TabsTrigger;
+declare const Textarea: typeof NativeFrontend.Textarea;
+declare const ViewDialog: typeof NativeFrontend.ViewDialog;
+declare const Wizard: typeof NativeFrontend.Wizard;
+declare const useComboboxAnchor: typeof NativeFrontend.useComboboxAnchor;

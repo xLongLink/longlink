@@ -25,15 +25,16 @@ export function FileViewer({
     return (
         <Stack gap={2}>
             <Stack direction="horizontal" gap={2} wrap="wrap">
-                <Button variant="ghost" size={size} label={title} onClick={() => setOpen(!open)} />
+                <Button variant="ghost" size={size === 'md' ? 'default' : size} onClick={() => setOpen(!open)}>
+                    {title}
+                </Button>
                 <Button
                     variant="ghost"
-                    size={size}
-                    label={`Download ${title}`}
+                    size={size === 'md' ? 'default' : size}
                     onClick={async () => {
                         await attachment.download(src, title);
                     }}
-                />
+                >{`Download ${title}`}</Button>
             </Stack>
             {attachment.error && (
                 <span role="alert">

@@ -6,7 +6,6 @@ export default function SankeyChartPage() {
     return (
         <ViewLayout
             name="SankeyChart"
-            introduction="Shows quantities flowing between nodes. Provide an acyclic graph with positive link values; intermediate inflows and outflows should balance. Wide diagrams scroll within their own region."
             properties={[
                 { name: 'label', type: 'string', description: 'Accessible name for the scrollable chart region.' },
                 {

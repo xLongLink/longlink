@@ -7,21 +7,25 @@ export default function BadgePage() {
     return (
         <ViewLayout
             name="Badge"
-            introduction={'Displays a count or enumerated state.'}
             properties={[
                 {
-                    name: 'label',
+                    name: 'children',
                     type: 'ReactNode',
-                    description: 'Badge content, truncated when space is limited.',
+                    description: 'Badge content, including optional icons.',
                 },
                 {
-                    name: 'icon',
-                    type: 'StoneIconName',
-                    description: 'Optional leading icon.',
+                    name: 'size',
+                    type: '"default" | "xs" | "sm" | "lg" | "xl"',
+                    description: 'Badge size.',
+                },
+                {
+                    name: 'radius',
+                    type: '"default" | "full"',
+                    description: 'Style radius or pill shape.',
                 },
                 {
                     name: 'variant',
-                    type: '"success" | "error" | "warning" | "info" | "neutral"',
+                    type: '"default" | "secondary" | "outline" | "info" | "success" | "warning" | "destructive" | "focus" | "invert" | "primary-light" | "warning-light" | "success-light" | "info-light" | "destructive-light" | "invert-light" | "focus-light" | "primary-outline" | "warning-outline" | "success-outline" | "info-outline" | "destructive-outline" | "invert-outline" | "focus-outline"',
                     description: 'Status or color variant.',
                 },
             ]}
@@ -29,7 +33,7 @@ export default function BadgePage() {
                 title: 'Badge',
                 preview: <BadgeExample />,
                 code: `function Example() {
-  return <Badge label="Open" variant="info" />;
+  return <Badge variant="info-light">Open</Badge>;
 }`,
             }}
         />
@@ -39,5 +43,5 @@ export default function BadgePage() {
 /** Renders the page's badge example for documentation and the catalog. */
 export function BadgeExample() {
     // Display the sample order state.
-    return <Badge label="Open" variant="info" />;
+    return <Badge variant="info-light">Open</Badge>;
 }

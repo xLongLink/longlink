@@ -7,7 +7,6 @@ export default function StackPage() {
     return (
         <ViewLayout
             name="Stack"
-            introduction={'Arranges View content using the LongLink spacing scale.'}
             properties={[
                 {
                     name: 'children',

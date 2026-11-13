@@ -2,11 +2,10 @@ import ViewLayout from './ViewLayout';
 import { ChartExample, type ChartName } from './ChartExample';
 
 /** Documents the shared data contract without duplicating it across chart types. */
-export default function ChartDocumentation({ name, introduction }: { name: ChartName; introduction: string }) {
+export default function ChartDocumentation({ name }: { name: ChartName }) {
     return (
         <ViewLayout
             name={name}
-            introduction={introduction}
             properties={[
                 { name: 'label', type: 'string', description: 'Accessible chart name.' },
                 {

@@ -1,4 +1,3 @@
-import { InlineCode } from '@/components/shadcn/inline-code';
 import { NativeLink as Link } from '@/components/ui/NativeLink';
 import { NativeText as Text } from '@/components/ui/NativeText';
 import { NativeStack as Stack } from '@/components/ui/NativeStack';
@@ -115,3 +114,5 @@ async def report(
         </DocumentationArticle>
     );
 }
+
+import { InlineCode } from '@/components/shadcn/inline-code';

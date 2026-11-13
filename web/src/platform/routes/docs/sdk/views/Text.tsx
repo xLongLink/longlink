@@ -7,7 +7,6 @@ export default function TextPage() {
     return (
         <ViewLayout
             name="Text"
-            introduction={'Displays View text with semantic typography, alignment, wrapping, and truncation controls.'}
             properties={[
                 {
                     name: 'children',
@@ -103,7 +102,7 @@ export function TextExample() {
     // Show normal text alongside bold and italic emphasis.
     return (
         <Text>
-            Normal <b>bold</b> and <i>italic</i> text.
+            Normal <b>bold</b> and <i>italic</i>
         </Text>
     );
 }

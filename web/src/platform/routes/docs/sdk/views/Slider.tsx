@@ -1,6 +1,6 @@
 import ViewLayout from './ViewLayout';
 import FormPreview from './FormPreview';
-import { Slider } from '@/components/ui/Slider';
+import { SliderField } from '@/components/ui/Slider';
 
 /** Documents Slider in LongLink Views. */
 export default function SliderPage() {
@@ -8,17 +8,16 @@ export default function SliderPage() {
     return (
         <ViewLayout
             name="Slider"
-            introduction={'Edits a number or range using a standard horizontal slider.'}
             properties={[
                 {
-                    name: 'label',
+                    name: 'SliderField.label',
                     type: 'string',
-                    description: 'Label text (always rendered for accessibility).',
+                    description: 'SliderField label text.',
                 },
                 {
-                    name: 'description',
+                    name: 'SliderField.description',
                     type: 'string',
-                    description: 'Description text rendered below the label.',
+                    description: 'SliderField description rendered below the label.',
                 },
                 {
                     name: 'name',
@@ -26,9 +25,9 @@ export default function SliderPage() {
                     description: "Includes the themed control's value under this form submission name.",
                 },
                 {
-                    name: 'required',
+                    name: 'SliderField.required',
                     type: 'boolean',
-                    description: 'Requires a value before native form submission.',
+                    description: 'Marks the SliderField label as required; sliders always have a value.',
                 },
                 {
                     name: 'disabled',
@@ -52,27 +51,27 @@ export default function SliderPage() {
                 },
                 {
                     name: 'value',
-                    type: '(number) | ([number, number])',
+                    type: 'number | readonly number[]',
                     description:
-                        'Current value: a `number` for single thumb mode or `[number, number]` for range mode.',
+                        'Current value: a number for one thumb or a readonly number array for multiple thumbs.',
                 },
                 {
                     name: 'defaultValue',
-                    type: '(number) | ([number, number])',
+                    type: 'number | readonly number[]',
                     description: 'Initial value.',
                 },
                 {
-                    name: 'onChange',
-                    type: '((value: number) => void) | ((value: [number, number]) => void)',
-                    description: 'Callback fired on value change during drag.',
+                    name: 'onValueChange',
+                    type: '(value, eventDetails) => void',
+                    description: 'Native callback fired when the value changes.',
                 },
                 {
-                    name: 'onChangeEnd',
-                    type: '((value: number) => void) | ((value: [number, number]) => void)',
-                    description: 'Callback fired when drag ends.',
+                    name: 'onValueCommitted',
+                    type: '(value, eventDetails) => void',
+                    description: 'Native callback fired when an interaction commits a value.',
                 },
                 {
-                    name: 'minStepsBetweenThumbs',
+                    name: 'minStepsBetweenValues',
                     type: 'number',
                     description:
                         'Minimum number of steps between thumbs in range mode; prevents thumbs from overlapping.',
@@ -89,10 +88,9 @@ export default function SliderPage() {
 export default function ProgressForm() {
   return (
     <Form action="/api/example" method="post">
-      <Slider name="progress" label="Progress" defaultValue={60} min={0} max={100} step={1} />
+      <SliderField name="progress" label="Progress" defaultValue={60} min={0} max={100} step={1} />
       <Stack direction="horizontal" gap={2}>
-        <Button type="submit" label="Submit" variant="primary" />
-        <Button type="reset" label="Reset" />
+        <Button type="submit" variant="default">Submit</Button>
       </Stack>
     </Form>
   );
@@ -104,6 +102,6 @@ export default function ProgressForm() {
 
 /** Shows a named slider whose value is included in native form data. */
 export function SliderExample() {
-    // Restore the initial progress with the same reset button as other form fields.
-    return <Slider name="progress" label="Progress" defaultValue={60} min={0} max={100} step={1} />;
+    // Delegate editing and named form inputs to the native slider.
+    return <SliderField name="progress" label="Progress" defaultValue={60} min={0} max={100} step={1} />;
 }

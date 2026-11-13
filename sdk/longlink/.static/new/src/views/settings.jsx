@@ -21,7 +21,7 @@ export default function ProjectSettings() {
                     <MenuItem label="General">
                         <Stack gap={4} maxWidth={640}>
                             <Heading level={2}>General</Heading>
-                            <Button label="Open fullscreen settings" onClick={() => setIsFullscreenOpen(true)} />
+                            <Button onClick={() => setIsFullscreenOpen(true)}>Open fullscreen settings</Button>
                             <TextInput label="Company name" value={company} onChange={setCompany} />
                             <Selector
                                 label="Default currency"
@@ -34,7 +34,7 @@ export default function ProjectSettings() {
                     <MenuItem label="Approvals">
                         <Stack gap={4} maxWidth={640}>
                             <Heading level={2}>Approvals</Heading>
-                            <Switch
+                            <SwitchField
                                 label="Require project approval"
                                 value={approvalRequired}
                                 onChange={setApprovalRequired}
@@ -51,12 +51,12 @@ export default function ProjectSettings() {
                     <MenuItem label="Notifications">
                         <Stack gap={4} maxWidth={640}>
                             <Heading level={2}>Notifications</Heading>
-                            <Switch
+                            <SwitchField
                                 label="Project awaiting approval"
                                 value={pendingNotifications}
                                 onChange={setPendingNotifications}
                             />
-                            <Switch
+                            <SwitchField
                                 label="Project approved"
                                 value={approvedNotifications}
                                 onChange={setApprovedNotifications}
@@ -65,7 +65,7 @@ export default function ProjectSettings() {
                     </MenuItem>
                 </MenuSection>
             </Menu>
-            <Dialog
+            <ViewDialog
                 variant="fullscreen"
                 title="Fullscreen settings"
                 isOpen={isFullscreenOpen}
@@ -79,10 +79,14 @@ export default function ProjectSettings() {
                         onChange={setCurrency}
                         options={['CHF', 'EUR', 'USD']}
                     />
-                    <Switch label="Require project approval" value={approvalRequired} onChange={setApprovalRequired} />
-                    <Button label="Done" onClick={() => setIsFullscreenOpen(false)} />
+                    <SwitchField
+                        label="Require project approval"
+                        value={approvalRequired}
+                        onChange={setApprovalRequired}
+                    />
+                    <Button onClick={() => setIsFullscreenOpen(false)}>Done</Button>
                 </Stack>
-            </Dialog>
+            </ViewDialog>
         </Stack>
     );
 }

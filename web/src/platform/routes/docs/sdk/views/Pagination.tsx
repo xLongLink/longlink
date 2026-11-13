@@ -36,7 +36,6 @@ export default function PaginationPage() {
                     description: 'Accessible navigation label; defaults to Pagination.',
                 },
             ]}
-            introduction="Pagination supplies page controls, bounds, and accessible navigation for tables or galleries. Pages start at 1. The Solution owns page state and data fetching; pass the total item count and page size returned or used by your API."
             example={{
                 title: 'Server pagination',
                 preview: <PaginationExample />,

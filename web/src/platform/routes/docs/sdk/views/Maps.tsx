@@ -11,7 +11,6 @@ export default function MapsPage() {
     return (
         <ViewLayout
             name="Maps"
-            introduction="Renders polygon boundaries from GeoJSON or TopoJSON using React Simple Maps. Supply your own geographic data for countries, regions or custom areas. The example uses locally bundled World Atlas boundaries."
             properties={[
                 { name: 'label', type: 'string', description: 'Accessible name for the map.' },
                 {

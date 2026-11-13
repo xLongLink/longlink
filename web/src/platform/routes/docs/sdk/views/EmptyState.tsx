@@ -7,7 +7,6 @@ export default function EmptyStatePage() {
     return (
         <ViewLayout
             name="EmptyState"
-            introduction={'Describes an empty View region without custom decorative slots.'}
             properties={[
                 {
                     name: 'title',

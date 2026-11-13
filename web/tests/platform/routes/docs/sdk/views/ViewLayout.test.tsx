@@ -7,7 +7,7 @@ import ViewLayout from '@/platform/routes/docs/sdk/views/ViewLayout';
 
 it('rejects references absent from the published component catalog', () => {
     // Act / Assert
-    expect(() => renderStatic(<ViewLayout name="MissingComponent" introduction="" />)).toThrow(
+    expect(() => renderStatic(<ViewLayout name="MissingComponent" />)).toThrow(
         'Missing View documentation: MissingComponent'
     );
 });
@@ -19,7 +19,6 @@ it('keeps an edited preview mounted while its code switch changes modes', async 
     await withMounted(
         <ViewLayout
             name="Button"
-            introduction="Actions in a View."
             example={{ title: 'Draft action', code, preview: <input aria-label="Preview draft" /> }}
         />,
         async (output) => {
@@ -46,7 +45,6 @@ it('opens the example first and lets readers switch to the property reference an
     await withMounted(
         <ViewLayout
             name="Card"
-            introduction="Content in a View."
             properties={[{ name: 'padding', type: 'number', description: 'Inner spacing.' }]}
             example={{ title: 'Plain card', code: '<Card />', preview: <p>Order details</p> }}
         />,

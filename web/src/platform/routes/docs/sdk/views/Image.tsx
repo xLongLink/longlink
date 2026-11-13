@@ -8,7 +8,6 @@ export default function ImagePage() {
     return (
         <ViewLayout
             name="Image"
-            introduction={''}
             properties={[
                 {
                     name: 'src',

@@ -2,15 +2,15 @@
 import { act, useState } from 'react';
 import { it, expect, vi } from 'vitest';
 import userEvent from '@testing-library/user-event';
+import { Disclosure } from '@/components/ui/Disclosure';
 import { renderStatic, withMounted } from '../../render';
-import { Collapsible } from '@/components/ui/Collapsible';
 
 it('honors an authored initially open disclosure', () => {
     // Act
     const output = renderStatic(
-        <Collapsible trigger="Details" defaultIsOpen>
+        <Disclosure trigger="Details" defaultIsOpen>
             Order details
-        </Collapsible>
+        </Disclosure>
     );
 
     // Assert
@@ -21,9 +21,9 @@ it('honors an authored initially open disclosure', () => {
 it('toggles by keyboard without discarding an entered draft', async () => {
     // Closing a disclosure must hide its fields, not destroy their local form state.
     await withMounted(
-        <Collapsible trigger="Details">
+        <Disclosure trigger="Details">
             <input aria-label="Draft" />
-        </Collapsible>,
+        </Disclosure>,
         async (output) => {
             const keyboard = userEvent.setup();
             const trigger = output.querySelector<HTMLButtonElement>('button');
@@ -50,9 +50,9 @@ it('requests a controlled change without overriding its owner', async () => {
     // A controlled disclosure stays closed until its owner accepts the requested value.
     const changed = vi.fn();
     await withMounted(
-        <Collapsible trigger="Details" isOpen={false} onOpenChange={changed}>
+        <Disclosure trigger="Details" isOpen={false} onOpenChange={changed}>
             Private details
-        </Collapsible>,
+        </Disclosure>,
         async (output) => {
             const trigger = output.querySelector<HTMLButtonElement>('button');
 
@@ -69,9 +69,9 @@ it('does not activate a disabled disclosure', async () => {
     // Disabled state must prevent activation.
     const changed = vi.fn();
     await withMounted(
-        <Collapsible trigger="Details" defaultIsOpen={false} isDisabled onOpenChange={changed}>
+        <Disclosure trigger="Details" defaultIsOpen={false} isDisabled onOpenChange={changed}>
             Details
-        </Collapsible>,
+        </Disclosure>,
         async (output) => {
             const trigger = output.querySelector<HTMLButtonElement>('button');
 
@@ -90,11 +90,11 @@ it('returns focus to the trigger when a focused panel closes', async () => {
         const [open, setOpen] = useState(true);
 
         return (
-            <Collapsible trigger="Details" isOpen={open} onOpenChange={setOpen}>
+            <Disclosure trigger="Details" isOpen={open} onOpenChange={setOpen}>
                 <button type="button" onClick={() => setOpen(false)}>
                     Done
                 </button>
-            </Collapsible>
+            </Disclosure>
         );
     }
 

@@ -2,9 +2,9 @@
 import { act, useState } from 'react';
 import { it, expect, vi } from 'vitest';
 import { Button } from '@/components/ui/Button';
-import { Dialog } from '@/components/ui/Dialog';
 import userEvent from '@testing-library/user-event';
 import { IconButton } from '@/components/ui/IconButton';
+import { ViewDialog } from '@/components/ui/ViewDialog';
 import { renderStatic, withMounted } from '../../render';
 import { ButtonGroup } from '@/components/ui/ButtonGroup';
 import { DropdownMenu } from '@/components/ui/DropdownMenu';
@@ -14,7 +14,7 @@ it('names the group while retaining its actions', () => {
     // Act
     const output = renderStatic(
         <ButtonGroup label="Order actions">
-            <Button label="Save" />
+            <Button variant="outline">Save</Button>
         </ButtonGroup>
     );
 
@@ -29,10 +29,14 @@ it.each(['horizontal', 'vertical'] as const)(
         // Keyboard users enter once, then reach links and enabled actions without activating them.
         await withMounted(
             <ButtonGroup label="Actions" orientation={orientation}>
-                <Button label="Save" />
-                <Button label="Unavailable" disabled />
-                <Button label="Docs" href="https://example.com/docs" />
-                <Button label="Publish" />
+                <Button variant="outline">Save</Button>
+                <Button variant="outline" disabled>
+                    Unavailable
+                </Button>
+                <Button variant="outline" href="https://example.com/docs">
+                    Docs
+                </Button>
+                <Button variant="outline">Publish</Button>
             </ButtonGroup>,
             async (output) => {
                 const controls = Array.from(output.querySelectorAll<HTMLElement>('button, a'));
@@ -71,16 +75,22 @@ it('inherits generic size while allowing action and group overrides', () => {
     const output = renderStatic(
         <ControlSizeContext value="lg">
             <ButtonGroup label="Inherited">
-                <Button label="Large" />
-                <Button label="Small" size="sm" />
+                <Button variant="outline">Large</Button>
+                <Button variant="outline" size="sm">
+                    Small
+                </Button>
             </ButtonGroup>
-            <ButtonGroup label="Override" size="md">
-                <Button label="Medium" />
+            <ButtonGroup label="Override" size="default">
+                <Button variant="outline">Medium</Button>
             </ButtonGroup>
         </ControlSizeContext>
     );
 
-    expect(Array.from(output.querySelectorAll('button'), (button) => button.dataset.size)).toEqual(['lg', 'sm', 'md']);
+    expect(Array.from(output.querySelectorAll('button'), (button) => button.dataset.size)).toEqual([
+        'lg',
+        'sm',
+        'default',
+    ]);
 });
 
 it('repairs its tab stop when an action disappears and keeps disabled groups reachable', async () => {
@@ -92,12 +102,12 @@ it('repairs its tab stop when an action disappears and keeps disabled groups rea
             <>
                 <button onClick={() => setVisible(false)}>Remove</button>
                 <ButtonGroup label="Actions">
-                    {visible && <Button label="First" />}
-                    <Button label="Second" />
+                    {visible && <Button variant="outline">First</Button>}
+                    <Button variant="outline">Second</Button>
                 </ButtonGroup>
                 <ButtonGroup label="Disabled" isDisabled>
-                    <Button label="Disabled first" />
-                    <Button label="Disabled second" />
+                    <Button variant="outline">Disabled first</Button>
+                    <Button variant="outline">Disabled second</Button>
                 </ButtonGroup>
             </>
         );
@@ -116,7 +126,7 @@ it('roves text actions, icon actions and menu triggers without opening the menu'
     const open = vi.fn();
     await withMounted(
         <ButtonGroup label="Mixed" size="lg">
-            <Button label="Native" />
+            <Button variant="outline">Native</Button>
             <IconButton label="Copy" icon="copy" />
             <DropdownMenu button={{ label: 'More' }} items={[]} onOpenChange={open} />
         </ButtonGroup>,
@@ -140,12 +150,16 @@ it('disables all grouped actions without leaking group membership into a dialog'
     const recover = vi.fn();
     await withMounted(
         <ButtonGroup label="Disabled" isDisabled>
-            <Button label="Native" onClick={blocked} />
+            <Button variant="outline" onClick={blocked}>
+                Native
+            </Button>
             <IconButton label="Copy" icon="copy" onClick={blocked} />
             <DropdownMenu button={{ label: 'More' }} items={[]} />
-            <Dialog isOpen title="Recovery" onOpenChange={() => {}}>
-                <Button label="Recover" onClick={recover} />
-            </Dialog>
+            <ViewDialog isOpen title="Recovery" onOpenChange={() => {}}>
+                <Button variant="outline" onClick={recover}>
+                    Recover
+                </Button>
+            </ViewDialog>
         </ButtonGroup>,
         async (output) => {
             const actions = Array.from(output.querySelectorAll<HTMLButtonElement>('[role="group"] > button'));
@@ -175,16 +189,16 @@ it('keeps nested groups and menu layers outside its roving order', async () => {
     // An arrow within an independent surface must never move focus to an outer action.
     await withMounted(
         <ButtonGroup label="Outer">
-            <Button label="Outer first" />
+            <Button variant="outline">Outer first</Button>
             <ButtonGroup label="Inner">
-                <Button label="Inner first" />
-                <Button label="Inner last" />
+                <Button variant="outline">Inner first</Button>
+                <Button variant="outline">Inner last</Button>
             </ButtonGroup>
             <section role="menu">
                 <button>Menu first</button>
                 <button>Menu last</button>
             </section>
-            <Button label="Outer last" />
+            <Button variant="outline">Outer last</Button>
         </ButtonGroup>,
         async (output) => {
             const controls = Array.from(output.querySelectorAll('button'));
@@ -212,9 +226,13 @@ it.each(['touch', 'pen'] as const)(
         const disabled = vi.fn();
         await withMounted(
             <ButtonGroup label="Touch actions">
-                <Button label="Native" onClick={first} />
+                <Button variant="outline" onClick={first}>
+                    Native
+                </Button>
                 <IconButton label="Copy" icon="copy" onClick={other} />
-                <Button label="Unavailable" disabled onClick={disabled} />
+                <Button variant="outline" disabled onClick={disabled}>
+                    Unavailable
+                </Button>
             </ButtonGroup>,
             async (output) => {
                 const group = output.querySelector<HTMLElement>('[role="group"]');
@@ -310,7 +328,9 @@ it('cancels scroll flicks and second fingers without swallowing a later keyboard
     await withMounted(
         <section style={{ overflowY: 'auto' }}>
             <ButtonGroup label="Scrollable actions">
-                <Button label="Save" onClick={action} />
+                <Button variant="outline" onClick={action}>
+                    Save
+                </Button>
             </ButtonGroup>
         </section>,
         async (output) => {
@@ -391,7 +411,9 @@ it('cancels a pending hold when its group is disabled and permits a fresh press 
                     Toggle
                 </button>
                 <ButtonGroup label="Actions" isDisabled={disabled}>
-                    <Button label="Save" onClick={action} />
+                    <Button variant="outline" onClick={action}>
+                        Save
+                    </Button>
                 </ButtonGroup>
             </section>
         );
@@ -449,7 +471,7 @@ it('lets a grouped menu own its touch press without a second group activation cl
 
     await withMounted(
         <ButtonGroup label="Actions">
-            <Button label="Save" />
+            <Button variant="outline">Save</Button>
             <DropdownMenu button={{ label: 'More' }} items={[{ label: 'Archive', onClick: action }]} />
         </ButtonGroup>,
         async (output) => {

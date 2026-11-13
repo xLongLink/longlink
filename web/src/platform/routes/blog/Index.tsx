@@ -44,7 +44,7 @@ export default function Blog() {
                                         The idea behind LongLink
                                     </Text>
                                     <Stack className="mt-auto pt-8" align="center">
-                                        <Button href="/blog/why-longlink/" label="Read article" variant="primary" />
+                                        <Button href="/blog/why-longlink/" label="Read article" variant="default" />
                                     </Stack>
                                 </Stack>
                             </div>

@@ -3,11 +3,11 @@ import { useState } from 'react';
 import { useApiError } from '@/lib/errors';
 import { Badge } from '@/components/ui/Badge';
 import { Avatar } from '@/components/ui/Avatar';
-import { Dialog } from '@/components/ui/Dialog';
 import { Divider } from '@/components/ui/Divider';
 import { ExternalLink, Plus } from 'lucide-react';
 import { apiQueryOptions } from '@/lib/react-query';
 import CreateOrganization from './CreateOrganization';
+import { ViewDialog } from '@/components/ui/ViewDialog';
 import { Illustration } from '@/components/Illustration';
 import { NativeLink as Link } from '@/components/ui/NativeLink';
 import { NativeText as Text } from '@/components/ui/NativeText';
@@ -111,7 +111,7 @@ export default function OrganizationManagement({ presentation }: { presentation:
                         <Stack direction="horizontal" gap={3} justify="center" wrap="wrap">
                             <Button
                                 label="Read the docs"
-                                variant="secondary"
+                                variant="outline"
                                 href="/docs/"
                                 target="_blank"
                                 rel="noopener noreferrer"
@@ -119,7 +119,7 @@ export default function OrganizationManagement({ presentation }: { presentation:
                             />
                             <Button
                                 label="Create organization"
-                                variant="primary"
+                                variant="default"
                                 icon={<Plus className="size-4" aria-hidden="true" />}
                                 onClick={() => setSelected({ type: 'create' })}
                             />
@@ -147,7 +147,7 @@ export default function OrganizationManagement({ presentation }: { presentation:
                                                     <Link href={`/orgs/${row.organization.id}`}>
                                                         {row.organization.name}
                                                     </Link>
-                                                    <Badge label={row.role} />
+                                                    <Badge variant="secondary">{row.role}</Badge>
                                                 </Stack>
                                             ) : (
                                                 <Link href={`/orgs/${row.organization.id}`}>
@@ -175,7 +175,7 @@ export default function OrganizationManagement({ presentation }: { presentation:
                                                       <Button
                                                           label="Decline"
                                                           size="sm"
-                                                          variant="secondary"
+                                                          variant="outline"
                                                           onClick={() =>
                                                               setSelected({
                                                                   type: 'decline',
@@ -187,7 +187,7 @@ export default function OrganizationManagement({ presentation }: { presentation:
                                                       <Button
                                                           label="Accept"
                                                           size="sm"
-                                                          variant="primary"
+                                                          variant="default"
                                                           onClick={() =>
                                                               setSelected({
                                                                   type: 'accept',
@@ -216,7 +216,7 @@ export default function OrganizationManagement({ presentation }: { presentation:
                 />
             )}
             {selected && selected.type !== 'create' && (
-                <Dialog
+                <ViewDialog
                     isOpen
                     title={selected.type === 'accept' ? 'Accept invitation' : 'Decline invitation'}
                     onOpenChange={(open) => {
@@ -233,7 +233,7 @@ export default function OrganizationManagement({ presentation }: { presentation:
                             <Button label="Cancel" variant="ghost" onClick={closeSelected} />
                             <Button
                                 label={selected.type === 'accept' ? 'Accept' : 'Decline'}
-                                variant={selected.type === 'accept' ? 'primary' : 'destructive'}
+                                variant={selected.type === 'accept' ? 'default' : 'destructive'}
                                 clickAction={async () => {
                                     // Apply only the confirmed invitation action and report server failures.
                                     try {
@@ -259,7 +259,7 @@ export default function OrganizationManagement({ presentation }: { presentation:
                             />
                         </Stack>
                     </Stack>
-                </Dialog>
+                </ViewDialog>
             )}
         </>
     );

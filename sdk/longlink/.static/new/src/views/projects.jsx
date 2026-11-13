@@ -29,15 +29,16 @@ export default function Projects() {
                                         {project.name}
                                     </Text>
                                     <Badge
-                                        label={project.status}
                                         variant={
                                             project.status === 'Completed'
-                                                ? 'success'
+                                                ? 'success-light'
                                                 : project.status === 'In progress'
-                                                  ? 'warning'
-                                                  : 'neutral'
+                                                  ? 'warning-light'
+                                                  : 'secondary'
                                         }
-                                    />
+                                    >
+                                        {project.status}
+                                    </Badge>
                                 </Stack>
                                 <Text type="supporting" maxLines={2}>
                                     {project.description}
