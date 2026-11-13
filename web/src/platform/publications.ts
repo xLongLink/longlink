@@ -122,7 +122,7 @@ export const componentDocumentation = [
     { name: 'Stack', category: 'Layouts', icon: Layers },
     { name: 'Stepper', category: 'Layouts', icon: Waypoints },
     { name: 'Switch', category: 'Form', icon: ToggleLeft },
-    { name: 'DataTable', category: 'Display', icon: Table2 },
+    { name: 'Table', category: 'Display', icon: Table2 },
     { name: 'Tabs', category: 'Layouts', icon: PanelsTopLeft },
     { name: 'Text', category: 'Display', icon: Type },
     { name: 'Textarea', category: 'Form', icon: TextAlignStart },
@@ -147,14 +147,7 @@ export const componentDocumentation = [
                     : 'Custom',
         reference: 'reference' in provenance ? provenance.reference : undefined,
         justification: 'justification' in provenance ? provenance.justification : undefined,
-        label:
-            component.name === 'Button'
-                ? 'Buttons'
-                : component.name === 'Icon'
-                  ? 'Icons'
-                  : component.name === 'DataTable'
-                    ? 'Table'
-                    : component.name,
+        label: component.name === 'Button' ? 'Buttons' : component.name === 'Icon' ? 'Icons' : component.name,
         slug:
             component.name === 'RadialBarChart'
                 ? 'radial-chart'
@@ -164,12 +157,10 @@ export const componentDocumentation = [
                     ? 'buttons'
                     : component.name === 'Icon'
                       ? 'icons'
-                      : component.name === 'DataTable'
-                        ? 'table'
-                        : component.name
-                              .replace(/([a-z])([A-Z])/g, '$1-$2')
-                              .replace(/\s+/g, '-')
-                              .toLowerCase()
+                      : component.name
+                            .replace(/([a-z])([A-Z])/g, '$1-$2')
+                            .replace(/\s+/g, '-')
+                            .toLowerCase()
     };
 });
 

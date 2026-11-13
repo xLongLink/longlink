@@ -1,19 +1,19 @@
 import { GridExample } from './views/grid';
 import { MapsExample } from './views/maps';
 import { TextExample } from './views/text';
-import { IconExample } from './views/icons';
-import { BadgeExample } from './views/badge';
-import { EmptyExample } from './views/empty';
 import { InputExample } from './views/input';
 import { StackExample } from './views/stack';
+import { TableExample } from './views/table';
 import { AvatarExample } from './views/avatar';
 import { SelectExample } from './views/select';
 import { SliderExample } from './views/slider';
 import { SwitchExample } from './views/switch';
 import { Grid } from '@/components/custom/grid';
-import { HeadingExample } from './views/heading';
+import { Icon } from '@/components/custom/icon';
+import { Badge } from '@/components/reui/badge';
 import { StepperExample } from './views/stepper';
 import { Link as RouterLink } from 'react-router';
+import { CheckboxInputExample } from './views/checkbox-input';
 import { ComboboxExample } from './views/combobox';
 import { ProgressExample } from './views/progress';
 import { TextareaExample } from './views/textarea';
@@ -24,21 +24,21 @@ import { DateInputExample } from './views/date-input';
 import { FileInputExample } from './views/file-input';
 import { TimeInputExample } from './views/time-input';
 import { Divider } from '@/components/custom/divider';
-import { FileViewerExample } from './views/file-viewer';
 import { RadioGroupExample } from './views/radio-group';
 import { Currency } from '@/components/custom/currency';
 import { DropdownMenuExample } from './views/dropdown-menu';
 import { Disclosure } from '@/components/custom/disclosure';
-import { CheckboxInputExample } from './views/checkbox-input';
+import { FileText, FolderCode, ImageIcon } from 'lucide-react';
 import { componentDocumentation } from '@/platform/publications';
 import { DocumentationArticle } from '@/components/layouts/article';
-import { ModelDirectory } from '@/components/custom/model-directory';
+import { Heading as ViewHeading } from '@/components/custom/heading';
 import { NativeText as Text } from '@/components/custom/native-text';
 import { Tabs, TabsList, TabsTrigger } from '@/components/shadcn/tabs';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { DataTable, proportional } from '@/components/custom/data-table';
 import { viewHooks, documentationCategories } from '@/lib/documentation';
 import { NativeHeading as Heading } from '@/components/custom/native-heading';
+import { Empty, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/shadcn/empty';
 import { Card, CardTitle, CardHeader, CardFooter, CardContent, CardDescription } from '@/components/shadcn/card';
 import {
     CodeBlock,
@@ -77,7 +77,13 @@ const previews = new Map(
             </div>
         ),
         Avatar: <AvatarExample />,
-        Badge: <BadgeExample />,
+        Badge: (
+            <div className="flex flex-wrap items-center justify-center gap-2">
+                <Badge variant="secondary">Draft</Badge>
+                <Badge variant="warning-light">Pending</Badge>
+                <Badge variant="success-light">Paid</Badge>
+            </div>
+        ),
         Button: <Button>Button</Button>,
         Card: (
             <Card>
@@ -103,17 +109,50 @@ const previews = new Map(
         ),
         Divider: <Divider label="or" />,
         DropdownMenu: <DropdownMenuExample />,
-        Empty: <EmptyExample />,
+        Empty: (
+            <Empty>
+                <EmptyHeader>
+                    <EmptyMedia variant="icon">
+                        <FolderCode aria-hidden="true" />
+                    </EmptyMedia>
+                    <EmptyTitle>No projects</EmptyTitle>
+                </EmptyHeader>
+            </Empty>
+        ),
         FileInput: <FileInputExample />,
-        FileViewer: <FileViewerExample />,
+        FileViewer: (
+            <Card className="aspect-[3/4] w-2/5 bg-white text-black" aria-label="PDF document preview">
+                <CardHeader>
+                    <FileText className="size-6 text-neutral-500" aria-hidden="true" />
+                </CardHeader>
+                <CardContent className="flex flex-col gap-2" aria-hidden="true">
+                    <div className="h-1 w-full bg-neutral-200" />
+                    <div className="h-1 w-full bg-neutral-200" />
+                    <div className="h-1 w-4/5 bg-neutral-200" />
+                    <div className="mt-2 h-1 w-full bg-neutral-200" />
+                    <div className="h-1 w-3/5 bg-neutral-200" />
+                </CardContent>
+            </Card>
+        ),
         Grid: <GridExample />,
         // Keep article section spacing out of the centered heading thumbnail.
         Heading: (
             <Stack className="[&_:is(.native-heading,.view-heading)]:mt-0">
-                <HeadingExample />
+                <ViewHeading level={1}>Heading</ViewHeading>
             </Stack>
         ),
-        Icon: <IconExample />,
+        Icon: (
+            <div className="flex items-center gap-4">
+                <Icon icon="info" size="md" />
+                <Icon icon="check" size="md" />
+                <Icon icon="clock" size="md" />
+            </div>
+        ),
+        Image: (
+            <Card className="aspect-[4/3] w-2/5 items-center justify-center" role="img" aria-label="Image preview">
+                <ImageIcon className="size-10 text-muted-foreground" aria-hidden="true" />
+            </Card>
+        ),
         Input: <InputExample />,
         Link: <span className="underline">Link</span>,
         // Show only the navigation in the thumbnail; the full Menu has a fixed-width sidebar and content panel.
@@ -133,7 +172,7 @@ const previews = new Map(
         Stack: <StackExample />,
         Stepper: <StepperExample />,
         Switch: <SwitchExample />,
-        DataTable: <ModelDirectory />,
+        Table: <TableExample />,
         // Keep the thumbnail focused on the tab strip rather than its panel content.
         Tabs: (
             <Tabs defaultValue="overview">
@@ -236,7 +275,9 @@ export default function Item({ params }) {
                                                         maxWidth="100%"
                                                         align={
                                                             component.category === 'Form' &&
-                                                            !['Checkbox', 'RadioGroup', 'Switch'].includes(component.name)
+                                                            !['Checkbox', 'RadioGroup', 'Switch'].includes(
+                                                                component.name
+                                                            )
                                                                 ? 'stretch'
                                                                 : 'center'
                                                         }

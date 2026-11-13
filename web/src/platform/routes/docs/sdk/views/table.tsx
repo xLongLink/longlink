@@ -1,25 +1,25 @@
 import ViewLayout from './view-layout';
 import { ModelDirectory } from '@/components/custom/model-directory';
 import modelDirectorySource from '@/components/custom/model-directory?raw';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/shadcn/table';
 
-/** Documents data-driven tables in LongLink Views. */
+/** Documents native shadcn table composition in LongLink Views. */
 export default function TablePage() {
     // Render this component's authored examples in the shared documentation layout.
     return (
         <ViewLayout
-            name="DataTable"
+            name="Table"
             properties={[
-                { name: 'data', type: 'T[]', description: 'Data objects displayed as rows.' },
                 {
-                    name: 'hasHover',
-                    type: 'boolean',
-                    description: 'Applies a hover highlight background to rows on pointer devices.'
+                    name: 'children',
+                    type: 'ReactNode',
+                    description:
+                        'Compose TableHeader, TableBody, TableFooter, TableRow, TableHead, TableCell, and TableCaption.'
                 },
-                { name: 'isStriped', type: 'boolean', description: 'Applies a background wash to even-numbered rows.' },
                 {
-                    name: 'columns',
-                    type: '{ key: string; header?: ReactNode; width?: ColumnWidth; align?: "start" | "center" | "end"; renderCell?: ((row: T) => ReactNode); }[]',
-                    description: 'Columns with custom cells and proportional() or pixel() widths.'
+                    name: 'className',
+                    type: 'string',
+                    description: 'Native table classes. Table parts also accept standard HTML attributes and events.'
                 }
             ]}
             example={{
@@ -29,5 +29,34 @@ export default function TablePage() {
                 language: 'tsx'
             }}
         />
+    );
+}
+
+/** Shows a small table using native shadcn parts without a data adapter. */
+export function TableExample() {
+    const projects = [
+        { name: 'Website', status: 'Active' },
+        { name: 'Mobile app', status: 'Draft' },
+        { name: 'Dashboard', status: 'Active' }
+    ];
+
+    // Keep the catalog preview smaller than the full model directory.
+    return (
+        <Table>
+            <TableHeader>
+                <TableRow>
+                    <TableHead>Project</TableHead>
+                    <TableHead>Status</TableHead>
+                </TableRow>
+            </TableHeader>
+            <TableBody className="[&_tr]:border-border/50">
+                {projects.map((project) => (
+                    <TableRow key={project.name}>
+                        <TableCell>{project.name}</TableCell>
+                        <TableCell>{project.status}</TableCell>
+                    </TableRow>
+                ))}
+            </TableBody>
+        </Table>
     );
 }

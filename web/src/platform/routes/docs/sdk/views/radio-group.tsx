@@ -40,7 +40,7 @@ export default function RadioGroupPage() {
 export default function PlanForm() {
   return (
     <Form action="/api/example" method="post">
-      <RadioGroup name="plan" defaultValue="team" aria-label="Plan" required>
+      <RadioGroup className="mx-auto w-fit" name="plan" defaultValue="team" aria-label="Plan" required>
         <Field orientation="horizontal">
           <RadioGroupItem id="plan-solo" value="solo" />
           <FieldLabel htmlFor="plan-solo">Solo</FieldLabel>
@@ -64,7 +64,7 @@ export function RadioGroupExample() {
 
     // Keep label associations unique across catalog and documentation previews.
     return (
-        <RadioGroup name="plan" defaultValue="team" aria-label="Plan" required>
+        <RadioGroup className="mx-auto w-fit" name="plan" defaultValue="team" aria-label="Plan" required>
             <Field orientation="horizontal">
                 <RadioGroupItem id={`${id}-solo`} value="solo" />
                 <FieldLabel htmlFor={`${id}-solo`}>Solo</FieldLabel>
