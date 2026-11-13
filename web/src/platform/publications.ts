@@ -111,8 +111,6 @@ export const componentDocumentation = [
     { name: 'MoreMenu', category: 'Action', icon: Menu },
     { name: 'MultiSelector', category: 'Form', icon: CheckSquare },
     { name: 'NumberInput', category: 'Form', icon: ArrowUpDown },
-    { name: 'Pagination', category: 'Action', icon: BookOpen },
-    { name: 'DataPagination', category: 'Action', icon: BookOpen },
     { name: 'Progress', category: 'Display', icon: Layers },
     { name: 'RadioList', category: 'Form', icon: List },
     { name: 'Selector', category: 'Form', icon: ChevronDown },
@@ -122,7 +120,6 @@ export const componentDocumentation = [
     { name: 'Stack', category: 'Layouts', icon: Layers },
     { name: 'Stepper', category: 'Layouts', icon: Waypoints },
     { name: 'Switch', category: 'Form', icon: Settings2 },
-    { name: 'Table', category: 'Display', icon: Columns3 },
     { name: 'DataTable', category: 'Display', icon: Columns3 },
     { name: 'Tabs', category: 'Layouts', icon: PanelTop },
     { name: 'Text', category: 'Display', icon: Type },
@@ -143,14 +140,16 @@ export const componentDocumentation = [
         sourceLabel: provenance.source === 'shadcn' ? 'shadcn/ui' : provenance.source === 'reui' ? 'ReUI' : 'Custom',
         reference: 'reference' in provenance ? provenance.reference : undefined,
         justification: 'justification' in provenance ? provenance.justification : undefined,
-        label: component.name === 'Button' ? 'Buttons' : component.name,
+        label: component.name === 'Button' ? 'Buttons' : component.name === 'DataTable' ? 'Table' : component.name,
         slug:
             component.name === 'Button'
                 ? 'buttons'
-                : component.name
-                      .replace(/([a-z])([A-Z])/g, '$1-$2')
-                      .replace(/\s+/g, '-')
-                      .toLowerCase()
+                : component.name === 'DataTable'
+                  ? 'table'
+                  : component.name
+                        .replace(/([a-z])([A-Z])/g, '$1-$2')
+                        .replace(/\s+/g, '-')
+                        .toLowerCase()
     };
 });
 

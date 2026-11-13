@@ -5,7 +5,6 @@ import { TextExample } from './views/text';
 import { BadgeExample } from './views/badge';
 import { InputExample } from './views/input';
 import { StackExample } from './views/stack';
-import { TableExample } from './views/table';
 import { TokenExample } from './views/token';
 import { AvatarExample } from './views/avatar';
 import { SelectExample } from './views/select';
@@ -24,14 +23,12 @@ import { TextAreaExample } from './views/text-area';
 import { Button } from '@/components/shadcn/button';
 import { ChartExample } from './views/chart-example';
 import { TimestampExample } from './views/timestamp';
-import { DataTableExample } from './views/data-table';
 import { DateInputExample } from './views/date-input';
 import { FileInputExample } from './views/file-input';
 import { RadioListExample } from './views/radio-list';
 import { TextInputExample } from './views/text-input';
 import { TimeInputExample } from './views/time-input';
 import { Divider } from '@/components/custom/divider';
-import { PaginationExample } from './views/pagination';
 import { ActionMenuExample } from './views/action-menu';
 import { EmptyStateExample } from './views/empty-state';
 import { FileViewerExample } from './views/file-viewer';
@@ -43,10 +40,10 @@ import { DropdownMenuExample } from './views/dropdown-menu';
 import { Disclosure } from '@/components/custom/disclosure';
 import { CheckboxInputExample } from './views/checkbox-input';
 import { MultiSelectorExample } from './views/multi-selector';
-import { DataPaginationExample } from './views/data-pagination';
 import { componentDocumentation } from '@/platform/publications';
 import { GeneratedAvatarExample } from './views/generated-avatar';
 import { DocumentationArticle } from '@/components/layouts/article';
+import { ModelDirectory } from '@/components/custom/model-directory';
 import { NativeText as Text } from '@/components/custom/native-text';
 import { Tabs, TabsList, TabsTrigger } from '@/components/shadcn/tabs';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
@@ -89,8 +86,6 @@ const previews = new Map(
         Avatar: <AvatarExample />,
         GeneratedAvatar: <GeneratedAvatarExample />,
         ViewDialog: <ViewDialogExample />,
-        Pagination: <PaginationExample />,
-        DataPagination: <DataPaginationExample />,
         Badge: <BadgeExample />,
         Button: <Button>Button</Button>,
         Card: (
@@ -158,8 +153,7 @@ const previews = new Map(
         Stack: <StackExample />,
         Stepper: <StepperExample />,
         Switch: <SwitchExample />,
-        Table: <TableExample />,
-        DataTable: <DataTableExample />,
+        DataTable: <ModelDirectory />,
         Token: <TokenExample />,
         // Keep the thumbnail focused on the tab strip rather than its panel content.
         Tabs: (

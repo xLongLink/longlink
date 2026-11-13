@@ -14,7 +14,7 @@ import { CodeBlock, CodeBlockCopyButton } from '@/components/reui/code-block/cod
 
 type ViewProperty = { name: string; type: string; description?: string };
 
-type ViewExample = { title: string; code: string; preview: ReactNode };
+type ViewExample = { title: string; code: string; preview: ReactNode; language?: 'jsx' | 'tsx' };
 
 /** Keeps an example's showcase mounted while switching between preview and code. */
 function ExampleWindow({ example }: { example: ViewExample }) {
@@ -51,7 +51,7 @@ function ExampleWindow({ example }: { example: ViewExample }) {
                     {showCode && (
                         <CodeBlock
                             code={example.code}
-                            language="jsx"
+                            language={example.language ?? 'jsx'}
                             showLineNumbers
                             className="h-full"
                         >

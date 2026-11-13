@@ -1,59 +1,33 @@
 import ViewLayout from './view-layout';
-import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '@/components/shadcn/table';
+import { ModelDirectory } from '@/components/custom/model-directory';
+import modelDirectorySource from '@/components/custom/model-directory?raw';
 
-/** Documents the native shadcn table family. */
+/** Documents data-driven tables in LongLink Views. */
 export default function TablePage() {
+    // Render this component's authored examples in the shared documentation layout.
     return (
         <ViewLayout
-            name="Table"
+            name="DataTable"
             properties={[
+                { name: 'data', type: 'T[]', description: 'Data objects displayed as rows.' },
                 {
-                    name: 'children',
-                    type: 'ReactNode',
-                    description:
-                        'Compose TableCaption, TableHeader, TableBody, TableFooter, TableRow, TableHead, and TableCell. Each accepts its native HTML element props.'
+                    name: 'hasHover',
+                    type: 'boolean',
+                    description: 'Applies a hover highlight background to rows on pointer devices.'
+                },
+                { name: 'isStriped', type: 'boolean', description: 'Applies a background wash to even-numbered rows.' },
+                {
+                    name: 'columns',
+                    type: '{ key: string; header?: ReactNode; width?: ColumnWidth; align?: "start" | "center" | "end"; renderCell?: ((row: T) => ReactNode); }[]',
+                    description: 'Columns with custom cells and proportional() or pixel() widths.'
                 }
             ]}
             example={{
-                title: 'Table',
-                preview: <TableExample />,
-                code: `<Table aria-label="Orders">
-  <TableCaption>Current orders</TableCaption>
-  <TableHeader>
-    <TableRow>
-      <TableHead scope="col">Item</TableHead>
-      <TableHead scope="col">Status</TableHead>
-    </TableRow>
-  </TableHeader>
-  <TableBody>
-    <TableRow>
-      <TableCell>Order</TableCell>
-      <TableCell>Open</TableCell>
-    </TableRow>
-  </TableBody>
-</Table>`
+                title: 'Model directory',
+                preview: <ModelDirectory />,
+                code: modelDirectorySource,
+                language: 'tsx'
             }}
         />
-    );
-}
-
-/** Renders a composed native table. */
-export function TableExample() {
-    return (
-        <Table aria-label="Orders">
-            <TableCaption>Current orders</TableCaption>
-            <TableHeader>
-                <TableRow>
-                    <TableHead scope="col">Item</TableHead>
-                    <TableHead scope="col">Status</TableHead>
-                </TableRow>
-            </TableHeader>
-            <TableBody>
-                <TableRow>
-                    <TableCell>Order</TableCell>
-                    <TableCell>Open</TableCell>
-                </TableRow>
-            </TableBody>
-        </Table>
     );
 }
