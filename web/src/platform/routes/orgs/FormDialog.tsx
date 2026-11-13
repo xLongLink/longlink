@@ -1,11 +1,11 @@
 import type { ReactNode } from 'react';
-import { Dialog } from '@/components/ui/Dialog';
-import { NativeStack as Stack } from '@/components/ui/NativeStack';
+import { ViewDialog } from '@/components/custom/ViewDialog';
+import { NativeStack as Stack } from '@/components/custom/NativeStack';
 
 /** Frames single-step organization forms in a centered, scrolling dialog column. */
 export function FormDialog({ children, gap, onClose }: { children: ReactNode; gap: 6 | 8; onClose: () => void }) {
     return (
-        <Dialog
+        <ViewDialog
             isOpen
             onOpenChange={(open) => {
                 if (!open) onClose();
@@ -16,6 +16,6 @@ export function FormDialog({ children, gap, onClose }: { children: ReactNode; ga
                     {children}
                 </Stack>
             </Stack>
-        </Dialog>
+        </ViewDialog>
     );
 }

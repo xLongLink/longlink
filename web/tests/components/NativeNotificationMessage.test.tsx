@@ -5,7 +5,7 @@ import { flushSync } from 'react-dom';
 import { it, expect, vi } from 'vitest';
 import { createRoot } from 'react-dom/client';
 import { createErrorReporter } from '@/lib/errors';
-import { NativeLoading } from '@/components/ui/NativeLoading';
+import { NativeLoading } from '@/components/custom/NativeLoading';
 import { NativeNotificationMessage } from '@/components/NativeNotificationMessage';
 
 it('delivers a startup API error before document load completes while initial loading status stays silent', async () => {

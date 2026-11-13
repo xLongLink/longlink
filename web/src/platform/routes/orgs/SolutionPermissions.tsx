@@ -2,17 +2,17 @@ import { z } from 'zod';
 import { api } from '@/lib/api';
 import { useState } from 'react';
 import { useApiError } from '@/lib/errors';
-import { Avatar } from '@/components/ui/Avatar';
-import { Picker } from '@/components/ui/Picker';
+import { Picker } from '@/components/custom/Picker';
 import { apiQueryOptions } from '@/lib/react-query';
 import { ApiBoundary } from '@/components/ApiBoundary';
 import { Ban, Eye, Pencil, Shield } from 'lucide-react';
-import { NativeText as Text } from '@/components/ui/NativeText';
-import { NativeStack as Stack } from '@/components/ui/NativeStack';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
-import { NativeButton as Button } from '@/components/ui/NativeButton';
+import { NativeText as Text } from '@/components/custom/NativeText';
+import { GeneratedAvatar } from '@/components/custom/GeneratedAvatar';
+import { NativeStack as Stack } from '@/components/custom/NativeStack';
 import { DataTable, proportional } from '@/components/custom/DataTable';
-import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
+import { NativeButton as Button } from '@/components/custom/NativeButton';
+import { NativeHeading as Heading } from '@/components/custom/NativeHeading';
 import { useMutation, useQueryClient, useSuspenseQueries } from '@tanstack/react-query';
 
 /** Assigns SDK-defined Solution roles without changing organization roles. */
@@ -118,7 +118,7 @@ function MemberPermissions({
                         width: proportional(2),
                         renderCell: (member) => (
                             <Stack direction="horizontal" gap={3} align="center">
-                                <Avatar name={member.name} src={member.avatar} seed={member.id} />
+                                <GeneratedAvatar name={member.name} src={member.avatar} seed={member.id} />
                                 <Stack gap={0}>
                                     <Text>{member.name}</Text>
                                     <Text type="supporting">{member.email}</Text>

@@ -1,5 +1,5 @@
 import { useId } from 'react';
-import type { FieldProps } from '../ui/types';
+import type { FieldProps } from './types';
 import type { Slider as SliderPrimitive } from '@base-ui/react/slider';
 import { FieldContent, FieldDescription, FieldTitle } from '@/components/shadcn/field';
 import { Slider, SliderControl, SliderTrack, SliderRange, SliderThumb } from '@/components/shadcn/slider';

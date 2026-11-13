@@ -3,15 +3,15 @@ import { TextField } from './Field';
 import { Mail } from 'lucide-react';
 import { AuthLayout } from './AuthLayout';
 import { useSearchParams } from 'react-router';
-import { Divider } from '@/components/ui/Divider';
 import { useForm, useWatch } from 'react-hook-form';
+import { Divider } from '@/components/custom/Divider';
 import { useNotification } from '@/lib/notifications';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { NativeLink as Link } from '@/components/ui/NativeLink';
-import { NativeText as Text } from '@/components/ui/NativeText';
-import { NativeStack as Stack } from '@/components/ui/NativeStack';
+import { NativeLink as Link } from '@/components/custom/NativeLink';
+import { NativeText as Text } from '@/components/custom/NativeText';
 import { emailPayloadSchema, type EmailPayload } from './validation';
-import { NativeButton as Button } from '@/components/ui/NativeButton';
+import { NativeStack as Stack } from '@/components/custom/NativeStack';
+import { NativeButton as Button } from '@/components/custom/NativeButton';
 
 /** Starts stateless account registration with an email verification link. */
 export default function Register() {

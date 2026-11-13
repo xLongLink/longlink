@@ -1,6 +1,6 @@
 import ViewLayout from './ViewLayout';
-import { Grid } from '@/components/ui/Grid';
-import { NativeStack as Stack } from '@/components/ui/NativeStack';
+import { Grid } from '@/components/custom/Grid';
+import { NativeStack as Stack } from '@/components/custom/NativeStack';
 
 /** Documents Grid in LongLink Views. */
 export default function GridPage() {

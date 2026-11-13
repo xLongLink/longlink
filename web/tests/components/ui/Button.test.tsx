@@ -1,17 +1,17 @@
 import { it, expect, vi } from 'vitest';
-import { Form } from '@/components/ui/Form';
 import { ReportedError } from '@/lib/reported';
-import { Button } from '@/components/custom/Button';
+import { Form } from '@/components/custom/Form';
 import userEvent from '@testing-library/user-event';
 import { ErrorBoundary } from 'react-error-boundary';
-import { IconButton } from '@/components/ui/IconButton';
 // @vitest-environment happy-dom
 import { act, createRef, type MouseEvent } from 'react';
 import { renderStatic, withMounted } from '../../render';
-import { ButtonGroup } from '@/components/ui/ButtonGroup';
-import { LinkNavigationContext } from '@/components/ui/contexts';
-import { Button as StandardButton } from '@/components/ui/Button';
+import { IconButton } from '@/components/custom/IconButton';
+import { ActionButton } from '@/components/custom/ActionButton';
 import { Dialog, DialogTrigger } from '@/components/shadcn/dialog';
+import { LinkNavigationContext } from '@/components/custom/contexts';
+import { Button as StandardButton } from '@/components/shadcn/button';
+import { ActionButtonGroup } from '@/components/custom/ActionButtonGroup';
 
 it('composes a dialog trigger with native props, merged click handlers, and both refs', async () => {
     const buttonRef = createRef<HTMLButtonElement>();
@@ -56,7 +56,7 @@ it('composes a dialog trigger with native props, merged click handlers, and both
 
 it('does not accidentally submit the surrounding form', () => {
     // Act
-    const output = renderStatic(<Button>Run action</Button>);
+    const output = renderStatic(<ActionButton>Run action</ActionButton>);
 
     // Assert
     expect(output.querySelector('button')?.getAttribute('type')).toBe('button');
@@ -68,11 +68,11 @@ it('preserves native link keyboard semantics inside a group', async () => {
     const user = userEvent.setup();
 
     await withMounted(
-        <ButtonGroup label="Navigation">
-            <Button href="https://example.com/docs" onClick={action}>
+        <ActionButtonGroup label="Navigation">
+            <ActionButton href="https://example.com/docs" onClick={action}>
                 Docs
-            </Button>
-        </ButtonGroup>,
+            </ActionButton>
+        </ActionButtonGroup>,
         async (output) => {
             const anchor = output.querySelector('a');
 
@@ -90,9 +90,9 @@ it('preserves native link keyboard semantics inside a group', async () => {
 it.each(['submit', 'reset'] as const)('does not expose a disabled native %s action before hydration', (type) => {
     // Aria-disabled controls have no event guard in server HTML, so their native form action must be withheld.
     const output = renderStatic(
-        <Button type={type} name="intent" value="publish" disabled>
+        <ActionButton type={type} name="intent" value="publish" disabled>
             Unavailable
-        </Button>
+        </ActionButton>
     );
 
     const control = output.querySelector('button');
@@ -117,7 +117,7 @@ it.each(['button', 'icon'] as const)(
         try {
             await withMounted(
                 kind === 'button' ? (
-                    <Button onClick={action}>Save</Button>
+                    <ActionButton onClick={action}>Save</ActionButton>
                 ) : (
                     <IconButton label="Save" icon="check" onClick={action} />
                 ),
@@ -164,10 +164,10 @@ it('retains submitter data and reset behavior through the real form', async () =
             }}
         >
             <input name="title" defaultValue="Original" />
-            <Button type="submit" name="intent" value="publish">
+            <ActionButton type="submit" name="intent" value="publish">
                 Publish
-            </Button>
-            <Button type="reset">Reset</Button>
+            </ActionButton>
+            <ActionButton type="reset">Reset</ActionButton>
         </Form>,
         async (output) => {
             const buttons = output.querySelectorAll<HTMLButtonElement>('button');
@@ -202,12 +202,12 @@ it('keeps grouped actions sized and disabled, excluding disabled submitter data'
                     submitted();
                 }}
             >
-                <ButtonGroup label="Actions" size="lg" isDisabled>
-                    <Button type="submit" name="intent" value="publish" onClick={action}>
+                <ActionButtonGroup label="Actions" size="lg" isDisabled>
+                    <ActionButton type="submit" name="intent" value="publish" onClick={action}>
                         Publish
-                    </Button>
+                    </ActionButton>
                     <IconButton label="Delete" icon="trash" onClick={action} />
-                </ButtonGroup>
+                </ActionButtonGroup>
             </form>
         </section>,
         async (output) => {
@@ -233,10 +233,10 @@ it('lets actions cancel scoped navigation before it reaches the host', async () 
     const navigate = vi.fn();
     await withMounted(
         <LinkNavigationContext value={{ baseUrl: 'https://example.com/', navigate }}>
-            <Button href="/orders" onClick={(event) => event.preventDefault()}>
+            <ActionButton href="/orders" onClick={(event) => event.preventDefault()}>
                 Blocked
-            </Button>
-            <Button href="/orders">Open</Button>
+            </ActionButton>
+            <ActionButton href="/orders">Open</ActionButton>
         </LinkNavigationContext>,
         async (output) => {
             const controls = output.querySelectorAll<HTMLButtonElement>('button');
@@ -255,12 +255,12 @@ it('keeps a native link outside the scoped host and honors click cancellation', 
     const prevented: boolean[] = [];
     await withMounted(
         <>
-            <Button href="https://example.com/docs" onClick={(event) => event.preventDefault()}>
+            <ActionButton href="https://example.com/docs" onClick={(event) => event.preventDefault()}>
                 Docs
-            </Button>
-            <Button href="https://example.com/disabled" disabled>
+            </ActionButton>
+            <ActionButton href="https://example.com/disabled" disabled>
                 Disabled
-            </Button>
+            </ActionButton>
         </>,
         async (output) => {
             const anchor = output.querySelector('a');
@@ -289,7 +289,7 @@ it.each([new ReportedError('Already reported'), new DOMException('Canceled', 'Ab
 
         await withMounted(
             <ErrorBoundary fallback={<p role="alert">View failed</p>}>
-                <Button onClick={action}>Retry</Button>
+                <ActionButton onClick={action}>Retry</ActionButton>
             </ErrorBoundary>,
             async (output) => {
                 const control = output.querySelector('button');
@@ -312,13 +312,13 @@ it('still exposes unexpected action failures to the View error boundary', async 
     try {
         await withMounted(
             <ErrorBoundary fallback={<p role="alert">View failed</p>}>
-                <Button
+                <ActionButton
                     onClick={async () => {
                         throw new Error('Unexpected');
                     }}
                 >
                     Run
-                </Button>
+                </ActionButton>
             </ErrorBoundary>,
             async (output) => {
                 await act(async () => output.querySelector('button')?.click());

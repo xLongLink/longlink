@@ -3,14 +3,14 @@ import { TextField } from './Field';
 import { AuthLayout } from './AuthLayout';
 import { useForm } from 'react-hook-form';
 import { Mail, CircleCheck } from 'lucide-react';
-import { Divider } from '@/components/ui/Divider';
+import { Divider } from '@/components/custom/Divider';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useAnnouncement } from '@/components/ui/announcement';
-import { NativeLink as Link } from '@/components/ui/NativeLink';
-import { NativeText as Text } from '@/components/ui/NativeText';
-import { NativeStack as Stack } from '@/components/ui/NativeStack';
+import { useAnnouncement } from '@/components/custom/announcement';
+import { NativeLink as Link } from '@/components/custom/NativeLink';
+import { NativeText as Text } from '@/components/custom/NativeText';
 import { emailPayloadSchema, type EmailPayload } from './validation';
-import { NativeButton as Button } from '@/components/ui/NativeButton';
+import { NativeStack as Stack } from '@/components/custom/NativeStack';
+import { NativeButton as Button } from '@/components/custom/NativeButton';
 
 /** Requests a password reset email without disclosing whether an account exists. */
 export default function ForgotPassword() {

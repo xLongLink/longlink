@@ -7,7 +7,7 @@ import { membership } from '../../render';
 import { withMounted } from '../../../render';
 import userEvent from '@testing-library/user-event';
 import { ApiProvider } from '@/components/ApiProvider';
-import { IconRequestContext } from '@/components/ui/contexts';
+import { IconRequestContext } from '@/components/custom/contexts';
 import Management from '@/platform/routes/orgs/SolutionManagement';
 import type { OrganizationContext } from '@/platform/layouts/Organization';
 

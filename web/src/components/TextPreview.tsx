@@ -1,11 +1,11 @@
 import { textLanguage } from '@/lib/files';
-import { Dialog } from '@/components/ui/Dialog';
-import { NativeCodeBlock as CodeBlock } from '@/components/ui/NativeCodeBlock';
+import { ViewDialog } from '@/components/custom/ViewDialog';
+import { NativeCodeBlock as CodeBlock } from '@/components/custom/NativeCodeBlock';
 
 /** Displays text attachments with filename-based syntax highlighting, never executing their contents. */
 export function TextPreview({ text, title, onClose }: { text: string; title: string; onClose: () => void }) {
     return (
-        <Dialog title={title} variant="fullscreen" isOpen onOpenChange={(open) => !open && onClose()}>
+        <ViewDialog title={title} variant="fullscreen" isOpen onOpenChange={(open) => !open && onClose()}>
             <CodeBlock
                 code={text}
                 language={textLanguage(title) ?? 'plaintext'}
@@ -14,6 +14,6 @@ export function TextPreview({ text, title, onClose }: { text: string; title: str
                 width="100%"
                 container="section"
             />
-        </Dialog>
+        </ViewDialog>
     );
 }

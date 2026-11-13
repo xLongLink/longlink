@@ -1,8 +1,8 @@
 // @vitest-environment happy-dom
 import { it, expect } from 'vitest';
 import { renderStatic } from '../../render';
-import { TimeInput } from '@/components/ui/TimeInput';
-import type { ISOTimeString } from '@/components/ui/temporal';
+import { TimeInput } from '@/components/custom/TimeInput';
+import type { ISOTimeString } from '@/components/custom/temporal';
 
 it('serializes one canonical time rather than picker display fields', () => {
     // Act

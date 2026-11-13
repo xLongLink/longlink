@@ -1,7 +1,7 @@
 import * as host from '@/views/host';
 import ViewLayout from './ViewLayout';
-import { FileViewer } from '@/components/ui/FileViewer';
-import { FileRequestContext } from '@/components/ui/preview';
+import { FileViewer } from '@/components/custom/FileViewer';
+import { FileRequestContext } from '@/components/custom/preview';
 
 /** Documents file previews and attachment downloads through the scoped Solution API. */
 export default function FileViewerPage() {

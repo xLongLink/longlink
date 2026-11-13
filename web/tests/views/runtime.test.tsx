@@ -546,9 +546,9 @@ it('controls the LongLink Dialog with public Buttons inside an authored View', a
         const [open, setOpen] = useState(false);
         return <>
             <Button variant="outline" onClick={() => setOpen(true)}>Open order</Button>
-            <Dialog title="Order details" isOpen={open} onOpenChange={setOpen}>
+            <ViewDialog title="Order details" isOpen={open} onOpenChange={setOpen}>
                 <p>Review the order</p>
-            </Dialog>
+            </ViewDialog>
         </>;
     }`);
 

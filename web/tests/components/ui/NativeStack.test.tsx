@@ -3,7 +3,7 @@ import { createRef } from 'react';
 import { it, expect } from 'vitest';
 import userEvent from '@testing-library/user-event';
 import { renderStatic, withMounted } from '../../render';
-import { NativeStack } from '@/components/ui/NativeStack';
+import { NativeStack } from '@/components/custom/NativeStack';
 
 it('preserves native spacing defaults, zero overrides, and pixel sizing during Stack migration', () => {
     const output = renderStatic(

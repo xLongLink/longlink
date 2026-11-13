@@ -2,17 +2,17 @@ import { cn } from 'cn';
 import { z } from 'zod';
 import { api } from '@/lib/api';
 import { useState } from 'react';
-import { Form } from '@/components/ui/Form';
-import { Button } from '@/components/ui/Button';
-import { Dialog } from '@/components/ui/Dialog';
-import { TextInput } from '@/components/ui/TextInput';
+import { Form } from '@/components/custom/Form';
+import { Button } from '@/components/shadcn/button';
 import { Illustration } from '@/components/Illustration';
+import { TextInput } from '@/components/custom/TextInput';
 import { Step, Wizard } from '@/components/custom/Wizard';
+import { ViewDialog } from '@/components/custom/ViewDialog';
 import { buttonVariants } from '@/components/shadcn/button';
-import { NativeText as Text } from '@/components/ui/NativeText';
-import { NativeStack as Stack } from '@/components/ui/NativeStack';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
-import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
+import { NativeText as Text } from '@/components/custom/NativeText';
+import { NativeStack as Stack } from '@/components/custom/NativeStack';
+import { NativeHeading as Heading } from '@/components/custom/NativeHeading';
 
 /** Owns one creation attempt, shared by the organization list and settings pages. */
 export default function CreateSolution({
@@ -68,7 +68,7 @@ export default function CreateSolution({
 
     // Keep the existing dialog frame and content width while sharing all wizard mechanics.
     return (
-        <Dialog
+        <ViewDialog
             isOpen
             onOpenChange={(open) => {
                 if (!open) onClose();
@@ -193,6 +193,6 @@ export default function CreateSolution({
                     </Step>
                 </Wizard>
             </Form>
-        </Dialog>
+        </ViewDialog>
     );
 }

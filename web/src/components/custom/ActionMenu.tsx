@@ -1,7 +1,7 @@
-import { MenuControl } from '@/components/ui/menus';
-import type { ActionMenuOption } from '@/components/ui/menus';
+import { MenuControl } from '@/components/custom/menus';
+import type { ActionMenuOption } from '@/components/custom/menus';
 
-export type { ActionMenuItemData, ActionMenuOption } from '@/components/ui/menus';
+export type { ActionMenuItemData, ActionMenuOption } from '@/components/custom/menus';
 
 /** Opens an action menu using standard anchored presentation and placement. */
 export function ActionMenu(props: {

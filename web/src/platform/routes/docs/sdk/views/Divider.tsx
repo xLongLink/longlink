@@ -1,5 +1,5 @@
 import ViewLayout from './ViewLayout';
-import { Divider } from '@/components/ui/Divider';
+import { Divider } from '@/components/custom/Divider';
 
 /** Documents Divider in LongLink Views. */
 export default function DividerPage() {

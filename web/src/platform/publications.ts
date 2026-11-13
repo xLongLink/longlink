@@ -1,4 +1,5 @@
 import { documentationCategories } from '../lib/documentation';
+import viewCatalog from '../../../sdk/longlink/.static/jsx/components.json';
 import {
     AppWindow,
     ChartArea,
@@ -81,14 +82,18 @@ export const componentDocumentation = [
     { name: 'SankeyChart', category: 'Charts', icon: ChartNoAxesCombined },
     { name: 'Maps', category: 'Others', icon: Map },
     { name: 'Avatar', category: 'Display', icon: Users },
+    { name: 'GeneratedAvatar', category: 'Display', icon: Users },
     { name: 'Badge', category: 'Display', icon: Circle },
     { name: 'Button', category: 'Action', icon: PanelTop },
+    { name: 'ButtonGroup', category: 'Action', icon: PanelTop },
+    { name: 'ActionButtonGroup', category: 'Action', icon: PanelTop },
     { name: 'Card', category: 'Layouts', icon: PanelTop },
     { name: 'CheckboxInput', category: 'Form', icon: CheckSquare },
     { name: 'Collapsible', category: 'Layouts', icon: ChevronDown },
     { name: 'Currency', category: 'Display', icon: CreditCard },
     { name: 'DateInput', category: 'Form', icon: Calendar },
     { name: 'Dialog', category: 'Layouts', icon: AppWindow },
+    { name: 'ViewDialog', category: 'Layouts', icon: AppWindow },
     { name: 'Divider', category: 'Display', icon: Columns3 },
     { name: 'DropdownMenu', category: 'Action', icon: ChevronDown },
     { name: 'ActionMenu', category: 'Action', icon: ChevronDown },
@@ -109,6 +114,7 @@ export const componentDocumentation = [
     { name: 'MultiSelector', category: 'Form', icon: CheckSquare },
     { name: 'NumberInput', category: 'Form', icon: ArrowUpDown },
     { name: 'Pagination', category: 'Action', icon: BookOpen },
+    { name: 'DataPagination', category: 'Action', icon: BookOpen },
     { name: 'Progress', category: 'Display', icon: Layers },
     { name: 'RadioList', category: 'Form', icon: List },
     { name: 'Selector', category: 'Form', icon: ChevronDown },
@@ -127,17 +133,28 @@ export const componentDocumentation = [
     { name: 'TimeInput', category: 'Form', icon: Clock },
     { name: 'Timestamp', category: 'Display', icon: Calendar },
     { name: 'Token', category: 'Display', icon: Gem }
-].map((component) => ({
-    ...component,
-    label: component.name === 'Button' ? 'Buttons' : component.name,
-    slug:
-        component.name === 'Button'
-            ? 'buttons'
-            : component.name
-                  .replace(/([a-z])([A-Z])/g, '$1-$2')
-                  .replace(/\s+/g, '-')
-                  .toLowerCase()
-}));
+].map((component) => {
+    // Share component ownership and custom justifications with the packaged SDK documentation.
+    const provenance = viewCatalog.components.find((entry) => entry.name === component.name);
+
+    if (!provenance) throw new Error(`Missing component provenance: ${component.name}`);
+
+    return {
+        ...component,
+        source: provenance.source,
+        sourceLabel: provenance.source === 'shadcn' ? 'shadcn/ui' : provenance.source === 'reui' ? 'ReUI' : 'Custom',
+        reference: 'reference' in provenance ? provenance.reference : undefined,
+        justification: 'justification' in provenance ? provenance.justification : undefined,
+        label: component.name === 'Button' ? 'Buttons' : component.name,
+        slug:
+            component.name === 'Button'
+                ? 'buttons'
+                : component.name
+                      .replace(/([a-z])([A-Z])/g, '$1-$2')
+                      .replace(/\s+/g, '-')
+                      .toLowerCase()
+    };
+});
 
 export const documentationIntroduction: DocumentationSection = {
     title: 'Introduction',

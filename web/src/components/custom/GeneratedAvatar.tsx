@@ -33,7 +33,7 @@ type AvatarProps = { shape?: undefined | 'circle' | 'rounded' | 'square' } & {
 /* oxlint-enable anti-slop/no-shape-in-symbol-names */
 
 /** Uses local Waves fallbacks for rounded organization avatars and Glyphs for users. */
-export function Avatar({ kind, src, name, seed, ...props }: AvatarProps) {
+export function GeneratedAvatar({ kind, src, name, seed, ...props }: AvatarProps) {
     // Native pages identify the owner; existing Views may still supply the geometry prop.
     props.shape = kind === 'organization' ? 'rounded' : (props.shape ?? 'circle');
 

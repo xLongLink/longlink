@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 import { it, expect } from 'vitest';
 import { renderStatic } from '../../render';
-import { Currency } from '@/components/ui/Currency';
+import { Currency } from '@/components/custom/Currency';
 
 it('formats the supplied currency in the requested locale', () => {
     // Act

@@ -6,30 +6,30 @@ import { useState } from 'react';
 import Invoices from './Invoices';
 import Registries from './Registries';
 import { useApiError } from '@/lib/errors';
-import { Form } from '@/components/ui/Form';
 import { useApi } from '@/lib/hooks/use-api';
 import PaymentMethods from './PaymentMethods';
-import { Avatar } from '@/components/ui/Avatar';
-import { Dialog } from '@/components/ui/Dialog';
-import { Divider } from '@/components/ui/Divider';
-import { Selector } from '@/components/ui/Selector';
+import { Form } from '@/components/custom/Form';
 import SolutionManagement from './SolutionManagement';
-import { TextInput } from '@/components/ui/TextInput';
+import { Divider } from '@/components/custom/Divider';
 import * as permissions from '@/platform/permissions';
 import { ApiBoundary } from '@/components/ApiBoundary';
 import { DeletionDialog } from '@/components/Deletion';
 import { useQueryClient } from '@tanstack/react-query';
+import { Selector } from '@/components/custom/Selector';
 import { Illustration } from '@/components/Illustration';
+import { TextInput } from '@/components/custom/TextInput';
+import { ViewDialog } from '@/components/custom/ViewDialog';
 import { useAuthenticatedUser } from '@/lib/hooks/use-user';
-import { NativeMoreMenu } from '@/components/ui/NativeMoreMenu';
-import { NativeText as Text } from '@/components/ui/NativeText';
-import { NativeStack as Stack } from '@/components/ui/NativeStack';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { Boxes, Building2, CreditCard, Users } from 'lucide-react';
-import { NativeButton as Button } from '@/components/ui/NativeButton';
+import { NativeMoreMenu } from '@/components/custom/NativeMoreMenu';
+import { NativeText as Text } from '@/components/custom/NativeText';
+import { GeneratedAvatar } from '@/components/custom/GeneratedAvatar';
+import { NativeStack as Stack } from '@/components/custom/NativeStack';
 import { DataTable, proportional } from '@/components/custom/DataTable';
-import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
+import { NativeButton as Button } from '@/components/custom/NativeButton';
 import type { OrganizationContext } from '@/platform/layouts/Organization';
+import { NativeHeading as Heading } from '@/components/custom/NativeHeading';
 import { Link, useLocation, useNavigate, useOutletContext } from 'react-router';
 import '@/platform/components/settings-navigation.css';
 import { IllustratedDialogContent } from '@/platform/components/IllustratedDialogContent';
@@ -70,7 +70,7 @@ export default function OrganizationSettings() {
         <Stack gap={8}>
             <title>Organization Settings | LongLink</title>
             <Stack direction="horizontal" gap={3} align="center">
-                <Avatar kind="organization" name={membership.organization.name} />
+                <GeneratedAvatar kind="organization" name={membership.organization.name} />
                 <Stack gap={0}>
                     <Heading level={4} accessibilityLevel={1}>
                         {membership.organization.name}
@@ -277,7 +277,7 @@ function MembersSection({ base, role }: { base: string; role: OrganizationContex
                             width: proportional(1),
                             renderCell: (row) => (
                                 <Stack direction="horizontal" gap={3} align="center">
-                                    <Avatar name={row.user.name} src={row.user.avatar} seed={row.user.id} />
+                                    <GeneratedAvatar name={row.user.name} src={row.user.avatar} seed={row.user.id} />
                                     <Stack align="start">
                                         <Stack direction="horizontal" gap={1} align="center">
                                             <Text>{row.user.name}</Text>
@@ -331,7 +331,7 @@ function MembersSection({ base, role }: { base: string; role: OrganizationContex
                 />
             </Stack>
             {canManageSelectedMember && member && (
-                <Dialog
+                <ViewDialog
                     isOpen
                     title={member.action.kind === 'remove' ? 'Remove member' : 'Change role'}
                     onOpenChange={(open) => {
@@ -390,7 +390,7 @@ function MembersSection({ base, role }: { base: string; role: OrganizationContex
                             />
                         </Stack>
                     </Stack>
-                </Dialog>
+                </ViewDialog>
             )}
         </>
     );
@@ -486,7 +486,7 @@ function InvitationsSection({ base, role }: { base: string; role: OrganizationCo
                 />
             </Stack>
             {/* Match organization creation with a centered form and a desktop-only illustration. */}
-            <Dialog
+            <ViewDialog
                 isOpen={invitationAttempt !== null}
                 paddingInline={0}
                 onOpenChange={(open) => {
@@ -561,7 +561,7 @@ function InvitationsSection({ base, role }: { base: string; role: OrganizationCo
                         </Form>
                     </Stack>
                 </IllustratedDialogContent>
-            </Dialog>
+            </ViewDialog>
         </>
     );
 }

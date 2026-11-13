@@ -1,5 +1,5 @@
 import ViewLayout from './ViewLayout';
-import { NativeStack as Stack } from '@/components/ui/NativeStack';
+import { NativeStack as Stack } from '@/components/custom/NativeStack';
 
 /** Documents Stack in LongLink Views. */
 export default function StackPage() {

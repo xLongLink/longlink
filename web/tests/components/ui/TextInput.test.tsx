@@ -2,8 +2,8 @@
 import { act } from 'react';
 import { it, expect } from 'vitest';
 import userEvent from '@testing-library/user-event';
-import { TextInput } from '@/components/ui/TextInput';
 import { renderStatic, withMounted } from '../../render';
+import { TextInput } from '@/components/custom/TextInput';
 
 it('preserves authored default values and submission names', () => {
     // Act

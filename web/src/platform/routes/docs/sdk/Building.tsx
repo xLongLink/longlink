@@ -1,9 +1,9 @@
 import { DataTable } from '@/components/custom/DataTable';
-import { NativeText as Text } from '@/components/ui/NativeText';
-import { NativeStack as Stack } from '@/components/ui/NativeStack';
+import { NativeText as Text } from '@/components/custom/NativeText';
 import { DocumentationArticle } from '@/components/layouts/Article';
-import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
-import { NativeCodeBlock as CodeBlock } from '@/components/ui/NativeCodeBlock';
+import { NativeStack as Stack } from '@/components/custom/NativeStack';
+import { NativeHeading as Heading } from '@/components/custom/NativeHeading';
+import { NativeCodeBlock as CodeBlock } from '@/components/custom/NativeCodeBlock';
 
 const article = {
     description: 'Build and package a LongLink project for deployment.',

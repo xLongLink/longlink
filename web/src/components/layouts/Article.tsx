@@ -1,6 +1,6 @@
 import './article.css';
 import { Page } from '@/components/Page';
-import { Divider } from '@/components/ui/Divider';
+import { Divider } from '@/components/custom/Divider';
 import { documentationPaths } from '@/platform/publications';
 import { PathBreadcrumb } from '@/components/breadcrumb/Path';
 import { useEffect, useEffectEvent, type ReactNode } from 'react';

@@ -1,6 +1,6 @@
 import ViewLayout from './ViewLayout';
 import FormPreview from './FormPreview';
-import { SliderField } from '@/components/ui/Slider';
+import { SliderField } from '@/components/custom/SliderField';
 
 /** Documents Slider in LongLink Views. */
 export default function SliderPage() {

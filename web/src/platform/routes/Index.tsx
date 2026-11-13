@@ -1,5 +1,5 @@
 import { Page } from '@/components/Page';
-import { Grid } from '@/components/ui/Grid';
+import { Grid } from '@/components/custom/Grid';
 import { ArrowRight, Mail } from 'lucide-react';
 import { Docker } from '@/components/svg/Docker';
 import { Python } from '@/components/svg/Python';
@@ -10,11 +10,11 @@ import { Kubernetes } from '@/components/svg/Kubernetes';
 import { Postgresql } from '@/components/svg/Postgresql';
 import { Typescript } from '@/components/svg/Typescript';
 import { Tailwindcss } from '@/components/svg/Tailwindcss';
-import { NativeLink as Link } from '@/components/ui/NativeLink';
-import { NativeText as Text } from '@/components/ui/NativeText';
-import { NativeStack as Stack } from '@/components/ui/NativeStack';
-import { NativeButton as Button } from '@/components/ui/NativeButton';
-import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
+import { NativeLink as Link } from '@/components/custom/NativeLink';
+import { NativeText as Text } from '@/components/custom/NativeText';
+import { NativeStack as Stack } from '@/components/custom/NativeStack';
+import { NativeButton as Button } from '@/components/custom/NativeButton';
+import { NativeHeading as Heading } from '@/components/custom/NativeHeading';
 
 const homeDescription =
     'LongLink is the open-source foundation for building, deploying, and operating dedicated business software in Python.';

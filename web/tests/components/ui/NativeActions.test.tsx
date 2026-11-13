@@ -5,8 +5,8 @@ import { it, expect, vi } from 'vitest';
 import { withMounted } from '../../render';
 import { useLocation } from 'react-router';
 import userEvent from '@testing-library/user-event';
-import { NativeLink } from '@/components/ui/NativeLink';
-import { NativeButton } from '@/components/ui/NativeButton';
+import { NativeLink } from '@/components/custom/NativeLink';
+import { NativeButton } from '@/components/custom/NativeButton';
 
 /** Exposes actual router state after clicks without replacing navigation. */
 function Location() {

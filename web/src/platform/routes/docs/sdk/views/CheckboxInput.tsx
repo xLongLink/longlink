@@ -1,6 +1,6 @@
 import ViewLayout from './ViewLayout';
 import FormPreview from './FormPreview';
-import { CheckboxInput } from '@/components/ui/CheckboxInput';
+import { CheckboxInput } from '@/components/custom/CheckboxInput';
 
 /** Documents CheckboxInput in LongLink Views. */
 export default function CheckboxInputPage() {

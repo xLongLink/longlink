@@ -1,11 +1,11 @@
 // @vitest-environment happy-dom
 import { act, createRef } from 'react';
 import { it, expect, vi } from 'vitest';
-import { Text } from '@/components/ui/Text';
+import { Text } from '@/components/custom/Text';
 import userEvent from '@testing-library/user-event';
-import { NativeText } from '@/components/ui/NativeText';
 import { renderStatic, withMounted } from '../../render';
-import { NativeHeading } from '@/components/ui/NativeHeading';
+import { NativeText } from '@/components/custom/NativeText';
+import { NativeHeading } from '@/components/custom/NativeHeading';
 
 it('preserves heading targets while separating the accessible level from visual sizing', () => {
     const output = renderStatic(

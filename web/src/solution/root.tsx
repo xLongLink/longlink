@@ -5,7 +5,7 @@ import { ApiBoundary } from '@/components/ApiBoundary';
 import { ApiProvider } from '@/components/ApiProvider';
 import { appearanceBootstrap } from '@/lib/appearance';
 import { AppearanceProvider } from '@/components/Appearance';
-import { IconRequestContext } from '@/components/ui/contexts';
+import { IconRequestContext } from '@/components/custom/contexts';
 import { Links, Meta, Outlet, Scripts, ScrollRestoration } from 'react-router';
 import '@/index.css';
 

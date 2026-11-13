@@ -1,14 +1,14 @@
 import { ExternalLink } from 'lucide-react';
 import { useApi } from '@/lib/hooks/use-api';
-import { Divider } from '@/components/ui/Divider';
+import { Divider } from '@/components/custom/Divider';
 import { ApiBoundary } from '@/components/ApiBoundary';
-import { InteractiveCard } from '@/components/ui/Card';
-import { NativeText as Text } from '@/components/ui/NativeText';
-import { NativeStack as Stack } from '@/components/ui/NativeStack';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
-import { NativeButton as Button } from '@/components/ui/NativeButton';
-import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
-import { Progress, ProgressLabel, ProgressValue } from '@/components/ui/Progress';
+import { NativeText as Text } from '@/components/custom/NativeText';
+import { InteractiveCard } from '@/components/custom/InteractiveCard';
+import { NativeStack as Stack } from '@/components/custom/NativeStack';
+import { NativeButton as Button } from '@/components/custom/NativeButton';
+import { NativeHeading as Heading } from '@/components/custom/NativeHeading';
+import { Progress, ProgressLabel, ProgressValue } from '@/components/shadcn/progress';
 
 /** Shows the Organization's usage against free allowances or card-enabled capacity. */
 export default function Usage({ base }: { base: string }) {

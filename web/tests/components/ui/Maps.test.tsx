@@ -2,9 +2,9 @@
 import { it, expect } from 'vitest';
 import { act, useState } from 'react';
 import { withMounted } from '../../render';
-import { Maps } from '@/components/ui/Maps';
+import { Maps } from '@/components/custom/Maps';
 import userEvent from '@testing-library/user-event';
-import { prepareMap, type MapData } from '@/components/ui/maps';
+import { prepareMap, type MapData } from '@/components/custom/maps';
 
 it('selects custom regions by stable ID through pointer and keyboard controls', async () => {
     const user = userEvent.setup();

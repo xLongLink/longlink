@@ -1,10 +1,10 @@
-import { NativeLink as Link } from '@/components/ui/NativeLink';
-import { NativeText as Text } from '@/components/ui/NativeText';
-import { NativeStack as Stack } from '@/components/ui/NativeStack';
+import { NativeLink as Link } from '@/components/custom/NativeLink';
+import { NativeText as Text } from '@/components/custom/NativeText';
 import { DocumentationArticle } from '@/components/layouts/Article';
+import { NativeStack as Stack } from '@/components/custom/NativeStack';
 import { DataTable, proportional } from '@/components/custom/DataTable';
-import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
-import { NativeCodeBlock as CodeBlock } from '@/components/ui/NativeCodeBlock';
+import { NativeHeading as Heading } from '@/components/custom/NativeHeading';
+import { NativeCodeBlock as CodeBlock } from '@/components/custom/NativeCodeBlock';
 
 const article = {
     title: 'Platform | LongLink Self Hosted Documentation',

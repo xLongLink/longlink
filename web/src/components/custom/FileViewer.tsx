@@ -2,8 +2,8 @@ import { Text } from './Text';
 import { Stack } from './Stack';
 import { useId, useState } from 'react';
 import { useDownload, usePreview } from './preview';
-import { Button } from '@/components/custom/Button';
 import { Spinner } from '@/components/shadcn/spinner';
+import { ActionButton } from '@/components/custom/ActionButton';
 
 /** Previews images, PDFs, and plain text on demand and downloads attachments through the scoped host capability. */
 export function FileViewer({
@@ -25,16 +25,16 @@ export function FileViewer({
     return (
         <Stack gap={2}>
             <Stack direction="horizontal" gap={2} wrap="wrap">
-                <Button variant="ghost" size={size === 'md' ? 'default' : size} onClick={() => setOpen(!open)}>
+                <ActionButton variant="ghost" size={size === 'md' ? 'default' : size} onClick={() => setOpen(!open)}>
                     {title}
-                </Button>
-                <Button
+                </ActionButton>
+                <ActionButton
                     variant="ghost"
                     size={size === 'md' ? 'default' : size}
                     onClick={async () => {
                         await attachment.download(src, title);
                     }}
-                >{`Download ${title}`}</Button>
+                >{`Download ${title}`}</ActionButton>
             </Stack>
             {attachment.error && (
                 <span role="alert">

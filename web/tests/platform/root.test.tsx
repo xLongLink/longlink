@@ -5,7 +5,7 @@ import { it, expect, vi } from 'vitest';
 import PlatformRoot from '@/platform/root';
 import { Wordmark } from '@/components/Wordmark';
 import { Route, Routes, useLocation } from 'react-router';
-import { NativeLink as Link } from '@/components/ui/NativeLink';
+import { NativeLink as Link } from '@/components/custom/NativeLink';
 
 it('uses native links for client-side navigation under the Platform root', async () => {
     // Arrange

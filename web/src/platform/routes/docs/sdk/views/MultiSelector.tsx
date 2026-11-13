@@ -1,6 +1,6 @@
 import ViewLayout from './ViewLayout';
 import FormPreview from './FormPreview';
-import { MultiSelector } from '@/components/ui/MultiSelector';
+import { MultiSelector } from '@/components/custom/MultiSelector';
 
 /** Documents MultiSelector in LongLink Views. */
 export default function MultiSelectorPage() {

@@ -1,4 +1,4 @@
-import { useAnnouncement } from '@/components/ui/announcement';
+import { useAnnouncement } from '@/components/custom/announcement';
 
 /** Announces a Sonner message through an initially empty, scoped live channel. */
 export function NativeNotificationMessage({

@@ -2,10 +2,10 @@
 import { act } from 'react';
 import { it, expect } from 'vitest';
 import { createPortal } from 'react-dom';
-import { Form } from '@/components/ui/Form';
+import { Form } from '@/components/custom/Form';
 import userEvent from '@testing-library/user-event';
 import { renderStatic, withMounted } from '../../render';
-import { NumberInput } from '@/components/ui/NumberInput';
+import { NumberInput } from '@/components/custom/NumberInput';
 
 it('does not invent zero for an omitted numeric field', () => {
     // Act

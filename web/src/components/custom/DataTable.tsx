@@ -1,5 +1,5 @@
 import type { TableColumn } from './table';
-import { EmptyState } from '@/components/ui/EmptyState';
+import { EmptyState } from '@/components/custom/EmptyState';
 import { useTable, type ColumnDef } from '@tanstack/react-table';
 import { renderTableValue, tableColumns, tableWidths } from './table';
 import { DataGridTable } from '@/components/reui/data-grid/data-grid-table';

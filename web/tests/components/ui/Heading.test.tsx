@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 import { it, expect } from 'vitest';
 import { renderStatic } from '../../render';
-import { Heading } from '@/components/ui/Heading';
+import { Heading } from '@/components/custom/Heading';
 
 it('uses section heading semantics unless another level is requested', () => {
     // Act

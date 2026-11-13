@@ -2,9 +2,9 @@
 import { act, useState } from 'react';
 import { it, expect, vi } from 'vitest';
 import userEvent from '@testing-library/user-event';
-import { InteractiveCard } from '@/components/ui/Card';
 import { renderStatic, withMounted } from '../../render';
-import { LinkNavigationContext } from '@/components/ui/contexts';
+import { LinkNavigationContext } from '@/components/custom/contexts';
+import { InteractiveCard } from '@/components/custom/InteractiveCard';
 
 it('retains content without making a plain card an action', () => {
     // Act

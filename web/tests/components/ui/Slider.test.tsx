@@ -3,8 +3,9 @@ import { act } from 'react';
 import { it, expect } from 'vitest';
 import { withMounted } from '../../render';
 import userEvent from '@testing-library/user-event';
+import { SliderField } from '@/components/custom/SliderField';
 import { SliderExample } from '@/platform/routes/docs/sdk/views/Slider';
-import { SliderControl, SliderField, SliderRange, SliderThumb, SliderTrack } from '@/components/ui/Slider';
+import { SliderControl, SliderRange, SliderThumb, SliderTrack } from '@/components/shadcn/slider';
 
 /** Supplies layout measurements that Happy DOM cannot calculate. */
 function measureSlider(form: HTMLFormElement | null) {

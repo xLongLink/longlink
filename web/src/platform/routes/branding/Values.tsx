@@ -1,8 +1,8 @@
 import { PublicArticle } from '@/components/layouts/Article';
-import { NativeLink as Link } from '@/components/ui/NativeLink';
-import { NativeText as Text } from '@/components/ui/NativeText';
-import { NativeStack as Stack } from '@/components/ui/NativeStack';
-import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
+import { NativeLink as Link } from '@/components/custom/NativeLink';
+import { NativeText as Text } from '@/components/custom/NativeText';
+import { NativeStack as Stack } from '@/components/custom/NativeStack';
+import { NativeHeading as Heading } from '@/components/custom/NativeHeading';
 
 const article = {
     description: 'The values behind the LongLink brand.',

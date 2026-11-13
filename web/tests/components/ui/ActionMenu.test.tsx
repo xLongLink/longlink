@@ -4,7 +4,7 @@ import { it, expect, vi } from 'vitest';
 import userEvent from '@testing-library/user-event';
 import { renderStatic, withMounted } from '../../render';
 import { ActionMenu } from '@/components/custom/ActionMenu';
-import { LinkNavigationContext } from '@/components/ui/contexts';
+import { LinkNavigationContext } from '@/components/custom/contexts';
 
 it('retains an authored trigger without prematurely opening the popup', () => {
     // Act

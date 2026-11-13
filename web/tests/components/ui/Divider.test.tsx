@@ -2,7 +2,7 @@
 import { it, expect } from 'vitest';
 import { compile } from 'tailwindcss';
 import { renderStatic } from '../../render';
-import { Divider } from '@/components/ui/Divider';
+import { Divider } from '@/components/custom/Divider';
 
 it.each([
     { orientation: 'horizontal', dimension: 'height' },

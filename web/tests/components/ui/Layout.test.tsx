@@ -3,10 +3,10 @@ import { it, expect } from 'vitest';
 import { act, useState } from 'react';
 import Content from '@/components/layouts/Content';
 import userEvent from '@testing-library/user-event';
-import { Grid, GridSpan } from '@/components/ui/Grid';
 import { renderStatic, withMounted } from '../../render';
-import { Stack, StackItem } from '@/components/ui/Stack';
+import { Grid, GridSpan } from '@/components/custom/Grid';
 import { PageContainer } from '@/components/PageContainer';
+import { Stack, StackItem } from '@/components/custom/Stack';
 
 it('keeps Platform pages free of View spacing defaults and honors zero inline padding', () => {
     // Platform pages must not inherit the View Stack's implicit gap or lose their full-height sizing chain.

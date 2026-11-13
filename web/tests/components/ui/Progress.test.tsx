@@ -3,7 +3,7 @@ import { it, expect } from 'vitest';
 import { act, useState } from 'react';
 import { withMounted } from '../../render';
 import userEvent from '@testing-library/user-event';
-import { Progress, ProgressLabel, ProgressValue } from '@/components/ui/Progress';
+import { Progress, ProgressLabel, ProgressValue } from '@/components/shadcn/progress';
 
 it('updates visible usage and accessible progress together through native composition', async () => {
     function Usage() {

@@ -2,10 +2,10 @@
 import { act, useState } from 'react';
 import { it, expect, vi } from 'vitest';
 import { withMounted } from '../../render';
-import { Form } from '@/components/ui/Form';
-import { Button } from '@/components/ui/Button';
+import { Form } from '@/components/custom/Form';
+import { Button } from '@/components/shadcn/button';
 import userEvent from '@testing-library/user-event';
-import { TextInput } from '@/components/ui/TextInput';
+import { TextInput } from '@/components/custom/TextInput';
 import { Step, Wizard } from '@/components/custom/Wizard';
 
 /** Lets the owner accept navigation independently of the wizard's request. */

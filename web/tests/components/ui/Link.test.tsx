@@ -4,9 +4,9 @@ import { it, expect, vi } from 'vitest';
 import { ReportedError } from '@/lib/reported';
 import userEvent from '@testing-library/user-event';
 import { renderStatic, withMounted } from '../../render';
-import { Link, NavigationLink } from '@/components/ui/Link';
-import { FileRequestContext } from '@/components/ui/preview';
-import { LinkNavigationContext } from '@/components/ui/contexts';
+import { Link, NavigationLink } from '@/components/custom/Link';
+import { FileRequestContext } from '@/components/custom/preview';
+import { LinkNavigationContext } from '@/components/custom/contexts';
 
 it('keeps a Solution-relative destination on the rendered link', () => {
     // Act

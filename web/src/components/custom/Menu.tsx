@@ -3,7 +3,7 @@ import { spacing } from './layout';
 import type { Spacing } from './types';
 import { ChevronDown } from 'lucide-react';
 import { MenuNavigationContext } from './contexts';
-import { Icon, type StoneIconName } from '@/components/ui/Icon';
+import { Icon, type StoneIconName } from '@/components/custom/Icon';
 import { Button, buttonVariants } from '@/components/shadcn/button';
 import { Children, isValidElement, useContext, type ReactElement, type ReactNode } from 'react';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/shadcn/collapsible';

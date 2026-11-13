@@ -1,8 +1,8 @@
-import { Text } from '@/components/ui/Text';
 import { useRef, useTransition } from 'react';
 import { X, LoaderCircle } from 'lucide-react';
-import { Heading } from '@/components/ui/Heading';
+import { Text } from '@/components/custom/Text';
 import { Button } from '@/components/shadcn/button';
+import { Heading } from '@/components/custom/Heading';
 import {
     AlertDialog,
     AlertDialogContent,

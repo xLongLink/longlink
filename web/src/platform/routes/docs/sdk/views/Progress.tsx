@@ -1,5 +1,5 @@
 import ViewLayout from './ViewLayout';
-import { Progress, ProgressLabel, ProgressValue } from '@/components/ui/Progress';
+import { Progress, ProgressLabel, ProgressValue } from '@/components/shadcn/progress';
 
 /** Documents the native shadcn Progress composition. */
 export default function ProgressPage() {

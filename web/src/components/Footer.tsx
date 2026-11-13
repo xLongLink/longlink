@@ -1,7 +1,7 @@
 import { Package } from 'lucide-react';
 import { Wordmark } from '@/components/Wordmark';
-import { Divider } from '@/components/ui/Divider';
 import { Link as RouterLink } from 'react-router';
+import { Divider } from '@/components/custom/Divider';
 import { GitHubIcon } from '@/components/svg/GitHubIcon';
 import { LinkedInIcon } from '@/components/svg/LinkedInIcon';
 

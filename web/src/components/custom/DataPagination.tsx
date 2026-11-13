@@ -9,7 +9,7 @@ import {
 } from '@/components/shadcn/pagination';
 
 /** Navigates pages of table or gallery items without owning their data or selection. */
-export function Pagination(props: {
+export function DataPagination(props: {
     /** Current page number, starting at 1. */
     page: number;
     /** Receives the selected page number. */

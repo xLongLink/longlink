@@ -42,7 +42,7 @@ export default function Tasks() {
                         width: proportional(1),
                         renderCell: (task) => (
                             <Stack direction="horizontal" align="center" gap={2}>
-                                <Avatar
+                                <GeneratedAvatar
                                     name={task.created_by.name}
                                     seed={task.created_by.id}
                                     src={task.created_by.avatar}
@@ -84,7 +84,7 @@ export default function Tasks() {
                     },
                 ]}
             />
-            <Dialog title="Add task" isOpen={isOpen} onOpenChange={setIsOpen}>
+            <ViewDialog title="Add task" isOpen={isOpen} onOpenChange={setIsOpen}>
                 {isOpen && (
                     <Form action="/api/tasks" onSuccess={() => setIsOpen(false)}>
                         <TextInput name="title" label="Title" maxLength={255} required />
@@ -95,7 +95,7 @@ export default function Tasks() {
                         </Stack>
                     </Form>
                 )}
-            </Dialog>
+            </ViewDialog>
         </Stack>
     );
 }

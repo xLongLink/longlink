@@ -1,10 +1,10 @@
-import { Picker } from '../ui/Picker';
-import { useValue } from '../ui/value';
-import { FormField } from '../ui/FormField';
-import type { FieldProps } from '../ui/types';
-import { selectorOptions, type SelectorOptionType } from '../ui/options';
+import { Picker } from './Picker';
+import { useValue } from './value';
+import { FormField } from './FormField';
+import type { FieldProps } from './types';
+import { selectorOptions, type SelectorOptionType } from './options';
 
-export type { SelectorOptionData, SelectorOptionType } from '../ui/options';
+export type { SelectorOptionData, SelectorOptionType } from './options';
 
 type SelectorProps = FieldProps & {
     options: SelectorOptionType[];

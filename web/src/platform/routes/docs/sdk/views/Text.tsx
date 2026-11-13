@@ -1,5 +1,5 @@
 import ViewLayout from './ViewLayout';
-import { Text } from '@/components/ui/Text';
+import { Text } from '@/components/custom/Text';
 
 /** Documents Text in LongLink Views. */
 export default function TextPage() {

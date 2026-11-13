@@ -1,56 +1,62 @@
-import { useState } from 'react';
 import ViewLayout from './ViewLayout';
-import { Pagination } from '@/components/ui/Pagination';
+import {
+    Pagination,
+    PaginationContent,
+    PaginationItem,
+    PaginationLink,
+    PaginationPrevious,
+    PaginationNext
+} from '@/components/shadcn/pagination';
 
-/** Documents shared pagination for Solution tables and galleries. */
 export default function PaginationPage() {
-    // Keep server queries and selected-page state in the Solution while sharing navigation controls.
     return (
         <ViewLayout
             name="Pagination"
             properties={[
-                { name: 'page', type: 'number', description: 'Current page number, starting at 1.' },
+                { name: 'children', type: 'ReactNode', description: 'Compose PaginationContent and PaginationItem.' },
+                { name: 'PaginationLink.href', type: 'string', description: 'Destination URL for the page.' },
+                { name: 'PaginationLink.isActive', type: 'boolean', description: 'Identifies the current page.' },
                 {
-                    name: 'onPageChange',
-                    type: '(page: number) => void',
-                    description: 'Receives the selected page number.'
-                },
-                {
-                    name: 'totalItems',
-                    type: 'number',
-                    description: 'Total item count used to calculate pages, overriding totalPages.'
-                },
-                {
-                    name: 'pageSize',
-                    type: 'number',
-                    description:
-                        'Number of items per page. Coerced to a positive integer; non-finite values fall back to the default.'
-                },
-                { name: 'label', type: 'string', description: 'Accessible navigation label; defaults to Pagination.' }
+                    name: 'PaginationPrevious / PaginationNext',
+                    type: 'anchor props',
+                    description: 'Links to the adjacent pages.'
+                }
             ]}
             example={{
-                title: 'Server pagination',
+                title: 'Pagination',
                 preview: <PaginationExample />,
-                code: `export default function Items() {
-  const [page, setPage] = useState(1);
-  const [items] = useApi(\`/api/items?page=\${page}&page_size=8\`);
-
-  return (
-    <Stack gap={4}>
-      <DataTable data={items.items} />
-      <Pagination page={page} onPageChange={setPage} totalItems={items.total} pageSize={8} />
-    </Stack>
-  );
-}`
+                code: `<Pagination>
+  <PaginationContent>
+    <PaginationItem><PaginationPrevious href="?page=1" /></PaginationItem>
+    <PaginationItem><PaginationLink href="?page=1">1</PaginationLink></PaginationItem>
+    <PaginationItem><PaginationLink href="?page=2" isActive>2</PaginationLink></PaginationItem>
+    <PaginationItem><PaginationNext href="?page=3" /></PaginationItem>
+  </PaginationContent>
+</Pagination>`
             }}
         />
     );
 }
 
-/** Demonstrates controlled pagination without network requests. */
-function PaginationExample() {
-    // Let the shared controls own page bounds while retaining the selected page locally.
-    const [page, setPage] = useState(1);
-
-    return <Pagination page={page} onPageChange={setPage} totalItems={80} pageSize={8} />;
+export function PaginationExample() {
+    return (
+        <Pagination>
+            <PaginationContent>
+                <PaginationItem>
+                    <PaginationPrevious href="?page=1" />
+                </PaginationItem>
+                <PaginationItem>
+                    <PaginationLink href="?page=1">1</PaginationLink>
+                </PaginationItem>
+                <PaginationItem>
+                    <PaginationLink href="?page=2" isActive>
+                        2
+                    </PaginationLink>
+                </PaginationItem>
+                <PaginationItem>
+                    <PaginationNext href="?page=3" />
+                </PaginationItem>
+            </PaginationContent>
+        </Pagination>
+    );
 }

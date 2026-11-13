@@ -1,6 +1,6 @@
 import ViewLayout from './ViewLayout';
-import { Currency } from '@/components/ui/Currency';
-import { NativeText as Text } from '@/components/ui/NativeText';
+import { Currency } from '@/components/custom/Currency';
+import { NativeText as Text } from '@/components/custom/NativeText';
 
 /** Documents locale-aware currency formatting. */
 export default function CurrencyPage() {

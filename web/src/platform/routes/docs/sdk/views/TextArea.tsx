@@ -1,6 +1,6 @@
 import ViewLayout from './ViewLayout';
 import FormPreview from './FormPreview';
-import { TextArea } from '@/components/ui/TextArea';
+import { TextArea } from '@/components/custom/TextArea';
 
 /** Documents TextArea in LongLink Views. */
 export default function TextAreaPage() {

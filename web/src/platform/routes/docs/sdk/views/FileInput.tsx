@@ -1,6 +1,6 @@
 import ViewLayout from './ViewLayout';
 import FormPreview from './FormPreview';
-import { FileInput } from '@/components/ui/FileInput';
+import { FileInput } from '@/components/custom/FileInput';
 
 /** Documents FileInput in LongLink Views. */
 export default function FileInputPage() {

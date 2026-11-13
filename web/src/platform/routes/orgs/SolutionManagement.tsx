@@ -4,26 +4,26 @@ import { useState } from 'react';
 import { SolutionTags } from './Tags';
 import { useApi } from '@/lib/hooks/use-api';
 import CreateSolution from './CreateSolution';
-import { Dialog } from '@/components/ui/Dialog';
 import { OpenAI } from '@/components/svg/OpenAI';
 import DeploymentReview from './DeploymentReview';
-import { Divider } from '@/components/ui/Divider';
+import { Divider } from '@/components/custom/Divider';
 import { useNotification } from '@/lib/notifications';
 import * as permissions from '@/platform/permissions';
 import { ApiBoundary } from '@/components/ApiBoundary';
 import { DeletionDialog } from '@/components/Deletion';
 import SolutionPermissions from './SolutionPermissions';
 import { Illustration } from '@/components/Illustration';
-import { NativeLink as Link } from '@/components/ui/NativeLink';
-import { NativeMoreMenu } from '@/components/ui/NativeMoreMenu';
-import { NativeText as Text } from '@/components/ui/NativeText';
-import { NativeStack as Stack } from '@/components/ui/NativeStack';
+import { ViewDialog } from '@/components/custom/ViewDialog';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
-import { NativeButton as Button } from '@/components/ui/NativeButton';
+import { NativeLink as Link } from '@/components/custom/NativeLink';
+import { NativeMoreMenu } from '@/components/custom/NativeMoreMenu';
+import { NativeText as Text } from '@/components/custom/NativeText';
+import { NativeStack as Stack } from '@/components/custom/NativeStack';
 import { DataTable, proportional } from '@/components/custom/DataTable';
-import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
+import { NativeButton as Button } from '@/components/custom/NativeButton';
 import type { OrganizationContext } from '@/platform/layouts/Organization';
-import { NativeCodeBlock as CodeBlock } from '@/components/ui/NativeCodeBlock';
+import { NativeHeading as Heading } from '@/components/custom/NativeHeading';
+import { NativeCodeBlock as CodeBlock } from '@/components/custom/NativeCodeBlock';
 import { IllustratedDialogContent } from '@/platform/components/IllustratedDialogContent';
 import { ExternalLink, Logs, Plug, Plus, RefreshCw, Shield, Tags, Trash } from 'lucide-react';
 
@@ -310,7 +310,7 @@ export default function SolutionManagement({
                 <CreateSolution organizationId={organization.id} onSuccess={onSuccess} onClose={closeSelected} />
             )}
             {selected?.kind === 'permissions' && (
-                <Dialog
+                <ViewDialog
                     isOpen
                     onOpenChange={(open) => {
                         if (!open) closeSelected();
@@ -323,7 +323,7 @@ export default function SolutionManagement({
                             onClose={closeSelected}
                         />
                     </ApiBoundary>
-                </Dialog>
+                </ViewDialog>
             )}
             {selected?.kind === 'tags' && (
                 <SolutionTags
@@ -344,7 +344,7 @@ export default function SolutionManagement({
                 />
             )}
             {selected?.kind === 'logs' && (
-                <Dialog
+                <ViewDialog
                     isOpen
                     onOpenChange={(open) => {
                         if (!open) closeSelected();
@@ -355,11 +355,11 @@ export default function SolutionManagement({
                             <SolutionLogs solutionId={selected.id} onClose={closeSelected} />
                         </ApiBoundary>
                     </Stack>
-                </Dialog>
+                </ViewDialog>
             )}
             {/* Offer direct MCP connection details and the selected Solution's credential-free package. */}
             {selected?.kind === 'mcp' && (
-                <Dialog
+                <ViewDialog
                     isOpen
                     onOpenChange={(open) => {
                         if (!open) closeSelected();
@@ -412,7 +412,7 @@ export default function SolutionManagement({
                             </Stack>
                         </Stack>
                     </IllustratedDialogContent>
-                </Dialog>
+                </ViewDialog>
             )}
             <DeletionDialog
                 confirmation={

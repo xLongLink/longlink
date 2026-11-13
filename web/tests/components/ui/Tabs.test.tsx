@@ -3,7 +3,7 @@ import { act, useState } from 'react';
 import { it, expect, vi } from 'vitest';
 import { withMounted } from '../../render';
 import userEvent from '@testing-library/user-event';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/Tabs';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/shadcn/tabs';
 
 it('selects composed panels without activating disabled tabs', async () => {
     // Nested labels and separate panels must remain connected through native composition.

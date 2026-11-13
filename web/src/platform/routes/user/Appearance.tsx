@@ -2,10 +2,10 @@ import { Circle, Check } from 'lucide-react';
 import { accentColors } from '@/lib/appearance';
 import { Button } from '@/components/shadcn/button';
 import { useUpdateUser } from '@/lib/hooks/use-user';
-import { InteractiveCard } from '@/components/ui/Card';
 import { useAppearance } from '@/lib/hooks/use-appearance';
-import { NativeText as Text } from '@/components/ui/NativeText';
-import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
+import { NativeText as Text } from '@/components/custom/NativeText';
+import { InteractiveCard } from '@/components/custom/InteractiveCard';
+import { NativeHeading as Heading } from '@/components/custom/NativeHeading';
 
 /** Previews and saves personal appearance without changing any Solution configuration. */
 export default function AppearanceSettings() {

@@ -1,22 +1,22 @@
 import { api } from '@/lib/api';
 import { useState } from 'react';
 import { useApiError } from '@/lib/errors';
-import { Badge } from '@/components/ui/Badge';
-import { Avatar } from '@/components/ui/Avatar';
-import { Dialog } from '@/components/ui/Dialog';
-import { Divider } from '@/components/ui/Divider';
+import { Badge } from '@/components/reui/badge';
 import { ExternalLink, Plus } from 'lucide-react';
 import { apiQueryOptions } from '@/lib/react-query';
 import CreateOrganization from './CreateOrganization';
+import { Divider } from '@/components/custom/Divider';
 import { Illustration } from '@/components/Illustration';
-import { NativeLink as Link } from '@/components/ui/NativeLink';
-import { NativeText as Text } from '@/components/ui/NativeText';
-import { NativeStack as Stack } from '@/components/ui/NativeStack';
+import { ViewDialog } from '@/components/custom/ViewDialog';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
-import { NativeButton as Button } from '@/components/ui/NativeButton';
+import { NativeLink as Link } from '@/components/custom/NativeLink';
+import { NativeText as Text } from '@/components/custom/NativeText';
+import { GeneratedAvatar } from '@/components/custom/GeneratedAvatar';
+import { NativeStack as Stack } from '@/components/custom/NativeStack';
 import { DataTable, proportional } from '@/components/custom/DataTable';
-import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
+import { NativeButton as Button } from '@/components/custom/NativeButton';
 import { useQueryClient, useSuspenseQueries } from '@tanstack/react-query';
+import { NativeHeading as Heading } from '@/components/custom/NativeHeading';
 
 const membershipsQuery = apiQueryOptions('/api/v1/me/organizations', schemas.zUserOrganizationMembership.array());
 
@@ -138,7 +138,7 @@ export default function OrganizationManagement({ presentation }: { presentation:
                                 width: proportional(1),
                                 renderCell: (row) => (
                                     <Stack direction="horizontal" gap={3} align="center">
-                                        <Avatar kind="organization" name={row.organization.name} />
+                                        <GeneratedAvatar kind="organization" name={row.organization.name} />
                                         <Stack align="start" gap={presentation === 'overview' ? 0 : undefined}>
                                             {row.kind === 'invitation' ? (
                                                 <Text>{row.organization.name}</Text>
@@ -216,7 +216,7 @@ export default function OrganizationManagement({ presentation }: { presentation:
                 />
             )}
             {selected && selected.type !== 'create' && (
-                <Dialog
+                <ViewDialog
                     isOpen
                     title={selected.type === 'accept' ? 'Accept invitation' : 'Decline invitation'}
                     onOpenChange={(open) => {
@@ -259,7 +259,7 @@ export default function OrganizationManagement({ presentation }: { presentation:
                             />
                         </Stack>
                     </Stack>
-                </Dialog>
+                </ViewDialog>
             )}
         </>
     );

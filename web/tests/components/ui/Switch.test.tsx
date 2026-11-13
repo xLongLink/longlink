@@ -2,9 +2,9 @@
 import { it, expect } from 'vitest';
 import { act, useState } from 'react';
 import { withMounted } from '../../render';
-import { Switch } from '@/components/ui/Switch';
-import { Checkbox } from '@/components/ui/Checkbox';
+import { Switch } from '@/components/shadcn/switch';
 import userEvent from '@testing-library/user-event';
+import { Checkbox } from '@/components/shadcn/checkbox';
 
 it.each([
     ['switch', Switch],

@@ -3,8 +3,8 @@ import { ApiError } from '@/lib/api';
 import { LoaderCircle } from 'lucide-react';
 import { ReportedError } from '@/lib/reported';
 import { isCanceledRequest } from '@/lib/errors';
+import { NativeNavigationLink } from './NativeLink';
 import { Button } from '@/components/shadcn/button';
-import { NativeNavigationLink } from '../ui/NativeLink';
 import { useRef, useState, type ComponentPropsWithRef, type MouseEvent, type ReactNode } from 'react';
 
 /** Runs trusted native actions with recoverable failure feedback and immediate duplicate-click protection. */

@@ -5,12 +5,12 @@ import { api, ApiError } from '@/lib/api';
 import { useForm } from 'react-hook-form';
 import { CircleCheck } from 'lucide-react';
 import { passwordSchema } from './validation';
-import { Divider } from '@/components/ui/Divider';
+import { Divider } from '@/components/custom/Divider';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useAnnouncement } from '@/components/ui/announcement';
 import { useFragmentToken } from '@/lib/hooks/use-fragment-token';
-import { NativeStack as Stack } from '@/components/ui/NativeStack';
-import { NativeButton as Button } from '@/components/ui/NativeButton';
+import { useAnnouncement } from '@/components/custom/announcement';
+import { NativeStack as Stack } from '@/components/custom/NativeStack';
+import { NativeButton as Button } from '@/components/custom/NativeButton';
 import { useVerification, type VerificationRequest } from '@/lib/hooks/use-verification';
 
 const PASSWORD_RESET_TOKEN_KEY = 'longlink.password-reset.token';

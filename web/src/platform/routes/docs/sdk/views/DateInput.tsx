@@ -1,6 +1,6 @@
 import ViewLayout from './ViewLayout';
 import FormPreview from './FormPreview';
-import { DateInput } from '@/components/ui/DateInput';
+import { DateInput } from '@/components/custom/DateInput';
 
 /** Documents DateInput in LongLink Views. */
 export default function DateInputPage() {

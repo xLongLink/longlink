@@ -1,6 +1,6 @@
 import ViewLayout from './ViewLayout';
 import FormPreview from './FormPreview';
-import { RadioList, RadioListItem } from '@/components/ui/RadioList';
+import { RadioList, RadioListItem } from '@/components/custom/RadioList';
 
 /** Documents RadioList in LongLink Views. */
 export default function RadioListPage() {

@@ -2,7 +2,7 @@
 import { act } from 'react';
 import { it, expect } from 'vitest';
 import { withMounted } from '../../../../../render';
-import { TextInput } from '@/components/ui/TextInput';
+import { TextInput } from '@/components/custom/TextInput';
 import FormPreview from '@/platform/routes/docs/sdk/views/FormPreview';
 
 it('displays submitted example fields without sending a Platform request', async () => {

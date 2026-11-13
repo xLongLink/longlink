@@ -3,7 +3,7 @@ import { act } from 'react';
 import { it, expect } from 'vitest';
 import { withMounted } from '../../render';
 import userEvent from '@testing-library/user-event';
-import { RadioList, RadioListItem } from '@/components/ui/RadioList';
+import { RadioList, RadioListItem } from '@/components/custom/RadioList';
 
 it('allows an unanswered optional group and removes a locally selected answer on reset', async () => {
     const user = userEvent.setup();

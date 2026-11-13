@@ -1,48 +1,37 @@
 import type { JSX } from 'react';
 
-export { Badge } from '../src/components/ui/Badge';
+export { Badge } from '../src/components/reui/badge';
+export * from '../src/components/shadcn/avatar';
+export { ButtonGroup, ButtonGroupText, ButtonGroupSeparator } from '../src/components/shadcn/button-group';
+export * from '../src/components/shadcn/dialog';
+export * from '../src/components/shadcn/pagination';
 export * from '../src/components/shadcn/empty';
 export { EmptyState } from '../src/components/custom/EmptyState';
-export * from '../src/components/ui/DropdownMenu';
-export * from '../src/components/ui/Table';
+export * from '../src/components/shadcn/dropdown-menu';
+export * from '../src/components/shadcn/table';
 export { DataTable } from '../src/components/custom/DataTable';
 export { Input } from '../src/components/shadcn/input';
 export { Textarea } from '../src/components/shadcn/textarea';
 export * from '../src/components/shadcn/field';
 export * from '../src/components/shadcn/input-group';
-export * from '../src/components/ui/Collapsible';
-export { Disclosure } from '../src/components/ui/Disclosure';
-export { Switch } from '../src/components/ui/Switch';
-export { SwitchField } from '../src/components/ui/SwitchField';
-export { Checkbox } from '../src/components/ui/Checkbox';
-export {
-    Stepper,
-    StepperNav,
-    StepperItem,
-    StepperTrigger,
-    StepperIndicator,
-    StepperSeparator,
-    StepperTitle,
-    StepperDescription,
-    StepperPanel,
-    StepperContent,
-} from '../src/components/ui/Stepper';
+export * from '../src/components/shadcn/collapsible';
+export { Disclosure } from '../src/components/custom/Disclosure';
+export { Switch } from '../src/components/shadcn/switch';
+export { SwitchField } from '../src/components/custom/SwitchField';
+export { Checkbox } from '../src/components/shadcn/checkbox';
+export { Stepper, StepperNav, StepperItem, StepperTrigger, StepperIndicator, StepperSeparator, StepperTitle, StepperDescription, StepperPanel, StepperContent } from '../src/components/reui/stepper';
 export { ProgressStepper, Wizard, Step } from '../src/components/custom/Wizard';
-export { Button } from '../src/components/ui/Button';
-export { Button as ActionButton } from '../src/components/custom/Button';
-export { ButtonGroup } from '../src/components/ui/ButtonGroup';
-export { FileViewer } from '../src/components/ui/FileViewer';
-export * from '../src/components/ui/Card';
-export * from '../src/components/ui/Dialog';
-export * from '../src/components/ui/Select';
-export * from '../src/components/ui/Combobox';
-export { Tabs, TabsList, TabsTrigger, TabsContent } from '../src/components/ui/Tabs';
-export { Slider, SliderControl, SliderTrack, SliderRange, SliderThumb, SliderField } from '../src/components/ui/Slider';
-export {
-    Progress,
-    ProgressLabel,
-    ProgressValue,
-    ProgressTrack,
-    ProgressIndicator,
-} from '../src/components/ui/Progress';
+export { Button } from '../src/components/shadcn/button';
+export { ActionButton } from '../src/components/custom/ActionButton';
+export { ActionButtonGroup } from '../src/components/custom/ActionButtonGroup';
+export { FileViewer } from '../src/components/custom/FileViewer';
+export * from '../src/components/shadcn/card';
+export * from '../src/components/custom/InteractiveCard';
+export * from '../src/components/custom/ViewDialog';
+export * from '../src/components/shadcn/select';
+export * from '../src/components/shadcn/combobox';
+export { Tabs, TabsList, TabsTrigger, TabsContent } from '../src/components/shadcn/tabs';
+export { Slider, SliderControl, SliderTrack, SliderRange, SliderThumb } from '../src/components/shadcn/slider';
+export { SliderField } from '../src/components/custom/SliderField';
+export { Progress, ProgressLabel, ProgressValue, ProgressTrack, ProgressIndicator } from '../src/components/shadcn/progress';
 export type FrontendElement = JSX.Element;

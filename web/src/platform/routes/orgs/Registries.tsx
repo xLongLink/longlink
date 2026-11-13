@@ -2,18 +2,18 @@ import type { z } from 'zod';
 import { api } from '@/lib/api';
 import { useState } from 'react';
 import { FormDialog } from './FormDialog';
-import { Form } from '@/components/ui/Form';
 import { useApi } from '@/lib/hooks/use-api';
-import { Divider } from '@/components/ui/Divider';
-import { TextInput } from '@/components/ui/TextInput';
+import { Form } from '@/components/custom/Form';
+import { Divider } from '@/components/custom/Divider';
 import { DeletionDialog } from '@/components/Deletion';
 import { Illustration } from '@/components/Illustration';
-import { NativeText as Text } from '@/components/ui/NativeText';
-import { NativeStack as Stack } from '@/components/ui/NativeStack';
+import { TextInput } from '@/components/custom/TextInput';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
-import { NativeButton as Button } from '@/components/ui/NativeButton';
+import { NativeText as Text } from '@/components/custom/NativeText';
+import { NativeStack as Stack } from '@/components/custom/NativeStack';
 import { DataTable, proportional } from '@/components/custom/DataTable';
-import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
+import { NativeButton as Button } from '@/components/custom/NativeButton';
+import { NativeHeading as Heading } from '@/components/custom/NativeHeading';
 
 type Registry = z.output<typeof schemas.zRegistryResponse>;
 

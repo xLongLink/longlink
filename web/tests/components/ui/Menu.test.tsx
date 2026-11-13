@@ -1,10 +1,10 @@
 import { it, expect, vi } from 'vitest';
 import userEvent from '@testing-library/user-event';
 import { renderStatic, withMounted } from '../../render';
-import { MenuNavigationContext } from '@/components/ui/contexts';
 // @vitest-environment happy-dom
 import { act, useEffect, useState, type FormEvent } from 'react';
-import { Menu, MenuSection, MenuItem, MenuSubSection } from '@/components/ui/Menu';
+import { MenuNavigationContext } from '@/components/custom/contexts';
+import { Menu, MenuSection, MenuItem, MenuSubSection } from '@/components/custom/Menu';
 
 it('selects the first authored item before fragment navigation', () => {
     // Act

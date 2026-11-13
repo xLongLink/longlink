@@ -12,6 +12,38 @@ const nativeComposition = (
             <CardDescription>Settings</CardDescription>
         </CardHeader>
         <CardContent>
+            <Avatar>
+                <AvatarImage src="/account.png" alt="Account" />
+                <AvatarFallback>AC</AvatarFallback>
+            </Avatar>
+            <GeneratedAvatar name="Account" />
+            <ButtonGroup aria-label="Actions" orientation="vertical">
+                <Button>Save</Button>
+                <Button>Cancel</Button>
+            </ButtonGroup>
+            <Dialog
+                defaultOpen={false}
+                onOpenChange={(open, details) => {
+                    open.valueOf();
+                    details.cancel();
+                }}
+            >
+                <DialogTrigger render={<Button />}>Open</DialogTrigger>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Details</DialogTitle>
+                        <DialogDescription>Review the order.</DialogDescription>
+                    </DialogHeader>
+                    <DialogClose render={<Button />}>Close</DialogClose>
+                </DialogContent>
+            </Dialog>
+            <Pagination aria-label="Pages">
+                <PaginationContent>
+                    <PaginationItem><PaginationLink href="?page=1" isActive>1</PaginationLink></PaginationItem>
+                    <PaginationItem><PaginationNext href="?page=2" /></PaginationItem>
+                </PaginationContent>
+            </Pagination>
+            <DataPagination page={1} onPageChange={(page) => page.toFixed()} totalItems={50} pageSize={10} />
             <Field>
                 <FieldLabel htmlFor="native-name">Name</FieldLabel>
                 <Input
@@ -131,7 +163,7 @@ const nativeComposition = (
             >
                 Save
             </Button>
-            <ButtonGroup label="Actions" size="default">
+            <ActionButtonGroup label="Actions" size="default">
                 <IconButton
                     icon="check"
                     label="Approve"
@@ -141,7 +173,7 @@ const nativeComposition = (
                         event.currentTarget.focus();
                     }}
                 />
-            </ButtonGroup>
+            </ActionButtonGroup>
             <FileViewer src="/attachment" title="Attachment" size="md" />
             <Tabs value={selected} onValueChange={(value) => setSelected(String(value))}>
                 <TabsList variant="line">
@@ -188,9 +220,9 @@ const nativeComposition = (
 
 const _adapters = (
     <InteractiveCard padding={4} isSelected onChange={() => {}}>
-        <Dialog isOpen onOpenChange={() => {}} title="Title" variant="fullscreen" gap={4} paddingInline={4}>
+        <ViewDialog isOpen onOpenChange={() => {}} title="Title" variant="fullscreen" gap={4} paddingInline={4}>
             {nativeComposition}
-        </Dialog>
+        </ViewDialog>
     </InteractiveCard>
 );
 
@@ -200,11 +232,11 @@ const _badVariant = <Badge variant="not-a-variant" />;
 const _legacyButton = <Button label="Save" />;
 // @ts-expect-error Slider inference must preserve numeric scalar values.
 const _badSlider = <Slider defaultValue={10} onValueChange={(value) => value.map(Math.round)} />;
-// @ts-expect-error Dialog visibility changes require a controlled callback.
-const _legacyDialog = <Dialog isOpen title="Title" />;
+// @ts-expect-error ViewDialog visibility changes require a controlled callback.
+const _legacyDialog = <ViewDialog isOpen title="Title" />;
 
-// @ts-expect-error ButtonGroup no longer accepts the legacy medium size.
-const _legacyGroupSize = <ButtonGroup label="Actions" size="md" />;
+// @ts-expect-error ActionButtonGroup no longer accepts the legacy medium size.
+const _legacyGroupSize = <ActionButtonGroup label="Actions" size="md" />;
 
 // @ts-expect-error IconButton uses native Button variants.
 const _legacyIconVariant = <IconButton icon="check" label="Approve" variant="primary" />;
@@ -213,3 +245,12 @@ const _legacyIconVariant = <IconButton icon="check" label="Approve" variant="pri
 const _legacyTable = <Table data={[{ name: 'Order' }]} />;
 // @ts-expect-error Native DropdownMenu does not accept data-driven action items.
 const _legacyMenu = <DropdownMenu items={[]} />;
+
+// @ts-expect-error Native Avatar does not generate artwork from the custom name prop.
+const _customAvatarProps = <Avatar name="Account" />;
+// @ts-expect-error Native ButtonGroup does not coordinate the custom disabled group contract.
+const _customGroupProps = <ButtonGroup isDisabled />;
+// @ts-expect-error Native Dialog uses open/defaultOpen, not the host-coordinated ViewDialog contract.
+const _customDialogProps = <Dialog isOpen />;
+// @ts-expect-error Native Pagination is composed from anchors, not the custom data pagination contract.
+const _customPaginationProps = <Pagination page={1} totalItems={50} pageSize={10} onPageChange={() => {}} />;

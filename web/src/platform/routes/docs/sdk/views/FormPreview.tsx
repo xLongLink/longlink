@@ -1,9 +1,9 @@
-import { Form } from '@/components/ui/Form';
-import { Button } from '@/components/ui/Button';
+import { Form } from '@/components/custom/Form';
 import { useState, type ReactNode } from 'react';
-import { NativeText as Text } from '@/components/ui/NativeText';
-import { NativeStack as Stack } from '@/components/ui/NativeStack';
-import { NativeCodeBlock as CodeBlock } from '@/components/ui/NativeCodeBlock';
+import { Button } from '@/components/shadcn/button';
+import { NativeText as Text } from '@/components/custom/NativeText';
+import { NativeStack as Stack } from '@/components/custom/NativeStack';
+import { NativeCodeBlock as CodeBlock } from '@/components/custom/NativeCodeBlock';
 
 /** Exercises the real Form locally and displays submitted fields without sending API requests. */
 export default function FormPreview({ children, stepped = false }: { children: ReactNode; stepped?: boolean }) {

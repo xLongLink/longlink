@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 import { act } from 'react';
 import { it, expect, vi } from 'vitest';
-import { Text } from '@/components/ui/Text';
+import { Text } from '@/components/custom/Text';
 import userEvent from '@testing-library/user-event';
 import { renderStatic, withMounted } from '../../render';
 

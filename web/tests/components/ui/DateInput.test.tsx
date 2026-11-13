@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 import { it, expect } from 'vitest';
 import { renderStatic } from '../../render';
-import { DateInput } from '@/components/ui/DateInput';
+import { DateInput } from '@/components/custom/DateInput';
 
 it('serializes canonical ISO dates independently of the picker display', () => {
     // Act

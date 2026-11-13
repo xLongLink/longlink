@@ -1,5 +1,5 @@
 import ViewLayout from './ViewLayout';
-import { Image } from '@/components/ui/Image';
+import { Image } from '@/components/custom/Image';
 import photo from '../../../../../../../sdk/longlink/.static/new/src/assets/skyline.jpg?inline';
 
 /** Documents landscape photos in LongLink Views. */

@@ -1,16 +1,16 @@
 import { cn } from 'cn';
 import { api, ApiError } from '@/lib/api';
 import { SidebarContext } from '@/lib/sidebar';
-import { Avatar } from '@/components/ui/Avatar';
-import { Divider } from '@/components/ui/Divider';
 import { Link as RouterLink } from 'react-router';
 import { adminNavigation } from '@/platform/admin';
 import { isNetworkError, isTimeoutError } from 'ky';
 import { useContext, useRef, useState } from 'react';
+import { Divider } from '@/components/custom/Divider';
 import { clearAppearanceCache } from '@/lib/appearance';
 import { useAuthenticatedUser } from '@/lib/hooks/use-user';
 import { Button, buttonVariants } from '@/components/shadcn/button';
 import { Popover as PopoverPrimitive } from '@base-ui/react/popover';
+import { GeneratedAvatar } from '@/components/custom/GeneratedAvatar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/shadcn/popover';
 import { BookOpen, Building2, ChevronsUpDown, ExternalLink, Settings2 } from 'lucide-react';
 
@@ -58,7 +58,7 @@ export function ProfileMenu() {
 
     const identity = (
         <>
-            <Avatar size="sm" src={user.avatar} name={user.name} seed={user.id} />
+            <GeneratedAvatar size="sm" src={user.avatar} name={user.name} seed={user.id} />
             <span className="flex min-w-0 flex-1 flex-col text-start leading-tight">
                 <span className="truncate text-sm font-medium">{user.name}</span>
                 <span className="truncate text-xs text-muted-foreground">{user.email}</span>
@@ -86,7 +86,7 @@ export function ProfileMenu() {
                         <ChevronsUpDown aria-hidden="true" className="text-muted-foreground" size={16} />
                     </>
                 ) : (
-                    <Avatar size="sm" src={user.avatar} name={user.name} seed={user.id} />
+                    <GeneratedAvatar size="sm" src={user.avatar} name={user.name} seed={user.id} />
                 )}
             </PopoverTrigger>
             <PopoverContent

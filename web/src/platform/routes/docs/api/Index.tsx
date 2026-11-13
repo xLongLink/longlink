@@ -1,7 +1,7 @@
-import { NativeText as Text } from '@/components/ui/NativeText';
-import { NativeStack as Stack } from '@/components/ui/NativeStack';
+import { NativeText as Text } from '@/components/custom/NativeText';
 import { DocumentationArticle } from '@/components/layouts/Article';
-import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
+import { NativeStack as Stack } from '@/components/custom/NativeStack';
+import { NativeHeading as Heading } from '@/components/custom/NativeHeading';
 
 const article = {
     description: 'Learn how the LongLink Platform manages organizations, Solutions, and shared infrastructure.',

@@ -6,9 +6,9 @@ import * as components from './components';
 import { createRoot } from 'react-dom/client';
 import { ReportedError } from '@/lib/reported';
 import { ErrorBoundary } from 'react-error-boundary';
-import { useConfirm } from '@/components/ui/confirmation';
-import { FileRequestContext } from '@/components/ui/preview';
-import { NativeLoading } from '@/components/ui/NativeLoading';
+import { useConfirm } from '@/components/custom/confirmation';
+import { FileRequestContext } from '@/components/custom/preview';
+import { NativeLoading } from '@/components/custom/NativeLoading';
 import { QueryClient, QueryClientProvider, QueryErrorResetBoundary, useSuspenseQuery } from '@tanstack/react-query';
 import {
     FormRequestContext,
@@ -16,7 +16,7 @@ import {
     LinkNavigationContext,
     MenuNavigationContext,
     DialogActivityContext
-} from '@/components/ui/contexts';
+} from '@/components/custom/contexts';
 import {
     requestSchema,
     parametersSchema,

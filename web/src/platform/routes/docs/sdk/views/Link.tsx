@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import ViewLayout from './ViewLayout';
-import { Link } from '@/components/ui/Link';
-import { Dialog } from '@/components/ui/Dialog';
-import { NativeText as Text } from '@/components/ui/NativeText';
-import { NativeStack as Stack } from '@/components/ui/NativeStack';
+import { Link } from '@/components/custom/Link';
+import { ViewDialog } from '@/components/custom/ViewDialog';
+import { NativeText as Text } from '@/components/custom/NativeText';
+import { NativeStack as Stack } from '@/components/custom/NativeStack';
 
 /** Documents Link in LongLink Views. */
 export default function LinkPage() {
@@ -43,11 +43,11 @@ export default function LinkPage() {
         sample-document.txt
       </Link>
       <Link onClick={() => setIsOpen(true)}>Document details</Link>
-      <Dialog title="Document details" isOpen={isOpen} onOpenChange={setIsOpen}>
+      <ViewDialog title="Document details" isOpen={isOpen} onOpenChange={setIsOpen}>
         <Stack padding={4}>
           <Text>Document details opened without navigation.</Text>
         </Stack>
-      </Dialog>
+      </ViewDialog>
     </Stack>
   );
 }`
@@ -65,11 +65,11 @@ export function LinkExample() {
         <Stack>
             <Link to="/docs/sdk/views">Docs</Link>
             <Link onClick={() => setIsOpen(true)}>Document details</Link>
-            <Dialog title="Document details" isOpen={isOpen} onOpenChange={setIsOpen}>
+            <ViewDialog title="Document details" isOpen={isOpen} onOpenChange={setIsOpen}>
                 <Stack padding={4}>
                     <Text>Document details opened without navigation.</Text>
                 </Stack>
-            </Dialog>
+            </ViewDialog>
         </Stack>
     );
 }

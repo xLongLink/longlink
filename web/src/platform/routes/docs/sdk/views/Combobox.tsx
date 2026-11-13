@@ -7,7 +7,7 @@ import {
     ComboboxInput,
     ComboboxItem,
     ComboboxList
-} from '@/components/ui/Combobox';
+} from '@/components/shadcn/combobox';
 
 /** Documents the installed searchable shadcn composition. */
 export default function ComboboxPage() {

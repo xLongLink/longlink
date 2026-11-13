@@ -1,13 +1,13 @@
 import { useApi } from '@/lib/hooks/use-api';
-import { Token } from '@/components/ui/Token';
-import { Divider } from '@/components/ui/Divider';
+import { Token } from '@/components/custom/Token';
+import { Divider } from '@/components/custom/Divider';
 import { ApiBoundary } from '@/components/ApiBoundary';
-import { NativeLink as Link } from '@/components/ui/NativeLink';
-import { NativeText as Text } from '@/components/ui/NativeText';
-import { NativeStack as Stack } from '@/components/ui/NativeStack';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
+import { NativeLink as Link } from '@/components/custom/NativeLink';
+import { NativeText as Text } from '@/components/custom/NativeText';
+import { NativeStack as Stack } from '@/components/custom/NativeStack';
 import { DataTable, proportional } from '@/components/custom/DataTable';
-import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
+import { NativeHeading as Heading } from '@/components/custom/NativeHeading';
 
 /** Keeps private invoice reads scoped to the active owner-only settings section. */
 export default function Invoices({ base, canManage }: { base: string; canManage: boolean }) {

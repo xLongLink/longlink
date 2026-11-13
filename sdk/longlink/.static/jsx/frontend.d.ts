@@ -4584,14 +4584,14 @@ declare function Text(props: {
 }): React.JSX.Element;
 
 /** @category Display */
-declare function Avatar(
+declare function GeneratedAvatar(
     props: {
         shape?: undefined | 'circle' | 'rounded' | 'square';
     } & {
         name?: string;
         /** Stable identity for generated avatars, independent of the display name. */
         seed?: string;
-        /** Avatar style for a user or organization. */
+        /** GeneratedAvatar style for a user or organization. */
         kind?: 'user' | 'organization';
         src?: string | null;
         alt?: string;
@@ -4793,7 +4793,7 @@ declare function RadioListItem(props: {
 }): React.JSX.Element;
 
 /** @category Action */
-declare function Pagination(props: {
+declare function DataPagination(props: {
     /** Current page number, starting at 1. */
     page: number;
     /** Receives the selected page number. */
@@ -9727,21 +9727,171 @@ interface BadgeProps extends useRender.ComponentProps<"span"> {
     radius?: VariantProps<typeof badgeVariants>["radius"];
 }
 export function Badge({ className, variant, size, radius, render, ...props }: BadgeProps): React$1.ReactElement<unknown, string | React$1.JSXElementConstructor<any>>;
-export function Empty({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
-export function EmptyHeader({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
-const emptyMediaVariants: (props?: ({
-    variant?: "default" | "icon" | null | undefined;
+const AvatarRoot: React$1.ForwardRefExoticComponent<Omit<AvatarRootProps, "ref"> & React$1.RefAttributes<HTMLSpanElement>>;
+type ImageLoadingStatus = "idle" | "loading" | "loaded" | "error";
+interface AvatarRootState {
+    imageLoadingStatus: ImageLoadingStatus;
+}
+interface AvatarRootProps extends BaseUIComponentProps<"span", AvatarRootState> {
+}
+namespace AvatarRoot {
+    type State = AvatarRootState;
+    type Props = AvatarRootProps;
+}
+type TransitionStatus = "starting" | "ending" | "idle" | undefined;
+const AvatarImage: React$1.ForwardRefExoticComponent<Omit<AvatarImageProps, "ref"> & React$1.RefAttributes<HTMLImageElement>>;
+interface AvatarImageState extends AvatarRootState {
+    transitionStatus: TransitionStatus;
+}
+interface AvatarImageProps extends BaseUIComponentProps<"img", AvatarImageState, React$1.ComponentPropsWithRef<"img">> {
+    onLoadingStatusChange?: ((status: ImageLoadingStatus) => void) | undefined;
+    keepMounted?: boolean | undefined;
+}
+namespace AvatarImage {
+    type State = AvatarImageState;
+    type Props = AvatarImageProps;
+}
+const AvatarFallback: React$1.ForwardRefExoticComponent<Omit<AvatarFallbackProps, "ref"> & React$1.RefAttributes<HTMLSpanElement>>;
+interface AvatarFallbackState extends AvatarRootState {
+}
+interface AvatarFallbackProps extends BaseUIComponentProps<"span", AvatarFallbackState> {
+    delay?: number | undefined;
+}
+namespace AvatarFallback {
+    type State = AvatarFallbackState;
+    type Props = AvatarFallbackProps;
+}
+function Avatar$1({ className, ...props }: Avatar.Root.Props): React$1.JSX.Element;
+function AvatarImage$1({ className, ...props }: Avatar.Image.Props): React$1.JSX.Element;
+function AvatarFallback$1({ className, ...props }: Avatar.Fallback.Props): React$1.JSX.Element;
+const Separator: React$1.ForwardRefExoticComponent<Omit<SeparatorProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
+interface SeparatorProps extends BaseUIComponentProps<"div", SeparatorState> {
+    orientation?: Orientation | undefined;
+}
+interface SeparatorState {
+    orientation: Orientation;
+}
+namespace Separator {
+    type Props = SeparatorProps;
+    type State = SeparatorState;
+}
+function Separator$1({ className, orientation, ...props }: Separator.Props): React$1.JSX.Element;
+const buttonGroupVariants: (props?: ({
+    orientation?: "horizontal" | "vertical" | null | undefined;
 } & ClassProp) | undefined) => string;
-export function EmptyMedia({ className, variant, ...props }: React$1.ComponentProps<"div"> & VariantProps<typeof emptyMediaVariants>): React$1.JSX.Element;
-export function EmptyTitle({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
-export function EmptyDescription({ className, ...props }: React$1.ComponentProps<"p">): React$1.JSX.Element;
-export function EmptyContent({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
-export function EmptyState(props: {
-    title: string;
-    description?: string;
-    headingLevel?: 1 | 3;
-    isCompact?: boolean;
-}): React$1.JSX.Element;
+export function ButtonGroup({ className, orientation, ...props }: React$1.ComponentProps<"div"> & VariantProps<typeof buttonGroupVariants>): React$1.JSX.Element;
+export function ButtonGroupText({ className, render, ...props }: useRender.ComponentProps<"div">): React$1.ReactElement<unknown, string | React$1.JSXElementConstructor<any>>;
+export function ButtonGroupSeparator({ className, orientation, ...props }: React$1.ComponentProps<typeof Separator$1>): React$1.JSX.Element;
+const DialogBackdrop: React$1.ForwardRefExoticComponent<Omit<DialogBackdropProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
+interface DialogBackdropProps extends BaseUIComponentProps<"div", DialogBackdropState> {
+    forceRender?: boolean | undefined;
+}
+interface DialogBackdropState {
+    open: boolean;
+    transitionStatus: TransitionStatus;
+}
+namespace DialogBackdrop {
+    type Props = DialogBackdropProps;
+    type State = DialogBackdropState;
+}
+const DialogClose: React$1.ForwardRefExoticComponent<Omit<DialogCloseProps, "ref"> & React$1.RefAttributes<HTMLButtonElement>>;
+interface DialogCloseProps extends NativeButtonProps, BaseUIComponentProps<"button", DialogCloseState> {
+}
+interface DialogCloseState {
+    disabled: boolean;
+}
+namespace DialogClose {
+    type Props = DialogCloseProps;
+    type State = DialogCloseState;
+}
+const DialogDescription: React$1.ForwardRefExoticComponent<Omit<DialogDescriptionProps, "ref"> & React$1.RefAttributes<HTMLParagraphElement>>;
+interface DialogDescriptionProps extends BaseUIComponentProps<"p", DialogDescriptionState> {
+}
+interface DialogDescriptionState {
+}
+namespace DialogDescription {
+    type Props = DialogDescriptionProps;
+    type State = DialogDescriptionState;
+}
+type InteractionType = "mouse" | "touch" | "pen" | "keyboard" | "";
+const DialogPopup: React$1.ForwardRefExoticComponent<Omit<DialogPopupProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
+interface DialogPopupProps extends BaseUIComponentProps<"div", DialogPopupState> {
+    initialFocus?: boolean | React$1.RefObject<HTMLElement | null> | ((openType: InteractionType) => boolean | HTMLElement | null | void) | undefined;
+    finalFocus?: boolean | React$1.RefObject<HTMLElement | null> | ((closeType: InteractionType) => boolean | HTMLElement | null | void) | undefined;
+}
+interface DialogPopupState {
+    open: boolean;
+    transitionStatus: TransitionStatus;
+    nested: boolean;
+    nestedDialogOpen: boolean;
+}
+namespace DialogPopup {
+    type Props = DialogPopupProps;
+    type State = DialogPopupState;
+}
+const DialogPortal: React$1.ForwardRefExoticComponent<Omit<DialogPortalProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
+interface DialogPortalState {
+}
+interface DialogPortalProps extends BaseUIComponentProps<"div", DialogPortalState> {
+    keepMounted?: boolean | undefined;
+    container?: HTMLElement | ShadowRoot | React$1.RefObject<HTMLElement | ShadowRoot | null> | null | undefined;
+}
+namespace DialogPortal {
+    type State = DialogPortalState;
+    type Props = DialogPortalProps;
+}
+type Listener<T> = (state: T) => void;
+class Store<State> {
+    static create<T, This extends Store<T>>(this: new (state: T) => This, state: T): This;
+    state: State;
+    private listeners;
+    private updateTick;
+    constructor(state: State);
+    subscribe: (fn: Listener<State>) => () => void;
+    getSnapshot: () => State;
+    setState(newState: State): void;
+    update<const Key extends keyof State>(changes: Pick<State, Key>): void;
+    set<Key extends keyof State>(key: Key, value: State[Key]): void;
+    notifyAll(): void;
+    use<F extends (...args: any) => any>(selector: F, ...args: SelectorArgs<F>): ReturnType<F>;
+}
+type SelectorArgs<Selector> = Selector extends ((...params: infer Params) => any) ? Tail<Params> : never;
+type Tail<T extends readonly any[]> = T extends readonly [
+    any,
+    ...infer Rest
+] ? Rest : [
+];
+class ReactStore<State extends object, Context = Record<string, never>, Selectors extends Record<string, SelectorFunction<State>> = Record<string, never>> extends Store<State> {
+    constructor(state: State, context?: Context, selectors?: Selectors);
+    readonly context: Context;
+    private selectors;
+    useSyncedValue<Key extends keyof State>(key: Key, value: State[Key]): void;
+    useSyncedValueWithCleanup<Key extends KeysAllowingUndefined<State>>(key: Key, value: State[Key]): void;
+    useSyncedValues<const Key extends keyof State>(statePart: Pick<State, Key>): void;
+    useControlledProp<Key extends keyof State>(key: Key, controlled: State[Key] | undefined): void;
+    select<Key extends keyof Selectors>(key: Key, ...args: SelectorArgs$1<Selectors[Key]>): ReturnType<Selectors[Key]>;
+    useState<Key extends keyof Selectors>(key: Key, ...args: SelectorArgs$1<Selectors[Key]>): ReturnType<Selectors[Key]>;
+    useContextCallback<Key extends ContextFunctionKeys<Context>>(key: Key, fn: ContextFunction<Context, Key> | undefined): void;
+    useStateSetter<const Key extends keyof State>(key: Key): (value: State[Key]) => void;
+    observe<Key extends keyof Selectors>(selector: Key, listener: (newValue: ReturnType<Selectors[Key]>, oldValue: ReturnType<Selectors[Key]>, store: this) => void): () => void;
+    observe<Selector extends ObserveSelector<State>>(selector: Selector, listener: (newValue: ReturnType<Selector>, oldValue: ReturnType<Selector>, store: this) => void): () => void;
+}
+type MaybeCallable = (...args: any[]) => any;
+type ContextFunctionKeys<Context> = {
+    [Key in keyof Context]-?: Extract<Context[Key], MaybeCallable> extends never ? never : Key;
+}[keyof Context];
+type ContextFunction<Context, Key extends keyof Context> = Extract<Context[Key], MaybeCallable>;
+type KeysAllowingUndefined<State> = {
+    [Key in keyof State]-?: undefined extends State[Key] ? Key : never;
+}[keyof State];
+type ObserveSelector<State> = (state: State) => any;
+type SelectorFunction<State> = (state: State, ...args: any[]) => any;
+type Tail$1<T extends readonly any[]> = T extends readonly [
+    any,
+    ...infer Rest
+] ? Rest : [
+];
+type SelectorArgs$1<Selector> = Selector extends ((...params: infer Params) => any) ? Tail$1<Params> : never;
 type AlignedPlacement = `${Side}-${Alignment}`;
 type Alignment = "start" | "end";
 type Axis = "x" | "y";
@@ -9832,58 +9982,6 @@ type UseFloatingReturn<RT extends ReferenceType = ReferenceType> = Prettify$1<Us
         floating: HTMLElement | null;
     };
 }>;
-type Listener<T> = (state: T) => void;
-class Store<State> {
-    static create<T, This extends Store<T>>(this: new (state: T) => This, state: T): This;
-    state: State;
-    private listeners;
-    private updateTick;
-    constructor(state: State);
-    subscribe: (fn: Listener<State>) => () => void;
-    getSnapshot: () => State;
-    setState(newState: State): void;
-    update<const Key extends keyof State>(changes: Pick<State, Key>): void;
-    set<Key extends keyof State>(key: Key, value: State[Key]): void;
-    notifyAll(): void;
-    use<F extends (...args: any) => any>(selector: F, ...args: SelectorArgs<F>): ReturnType<F>;
-}
-type SelectorArgs<Selector> = Selector extends ((...params: infer Params) => any) ? Tail<Params> : never;
-type Tail<T extends readonly any[]> = T extends readonly [
-    any,
-    ...infer Rest
-] ? Rest : [
-];
-class ReactStore<State extends object, Context = Record<string, never>, Selectors extends Record<string, SelectorFunction<State>> = Record<string, never>> extends Store<State> {
-    constructor(state: State, context?: Context, selectors?: Selectors);
-    readonly context: Context;
-    private selectors;
-    useSyncedValue<Key extends keyof State>(key: Key, value: State[Key]): void;
-    useSyncedValueWithCleanup<Key extends KeysAllowingUndefined<State>>(key: Key, value: State[Key]): void;
-    useSyncedValues<const Key extends keyof State>(statePart: Pick<State, Key>): void;
-    useControlledProp<Key extends keyof State>(key: Key, controlled: State[Key] | undefined): void;
-    select<Key extends keyof Selectors>(key: Key, ...args: SelectorArgs$1<Selectors[Key]>): ReturnType<Selectors[Key]>;
-    useState<Key extends keyof Selectors>(key: Key, ...args: SelectorArgs$1<Selectors[Key]>): ReturnType<Selectors[Key]>;
-    useContextCallback<Key extends ContextFunctionKeys<Context>>(key: Key, fn: ContextFunction<Context, Key> | undefined): void;
-    useStateSetter<const Key extends keyof State>(key: Key): (value: State[Key]) => void;
-    observe<Key extends keyof Selectors>(selector: Key, listener: (newValue: ReturnType<Selectors[Key]>, oldValue: ReturnType<Selectors[Key]>, store: this) => void): () => void;
-    observe<Selector extends ObserveSelector<State>>(selector: Selector, listener: (newValue: ReturnType<Selector>, oldValue: ReturnType<Selector>, store: this) => void): () => void;
-}
-type MaybeCallable = (...args: any[]) => any;
-type ContextFunctionKeys<Context> = {
-    [Key in keyof Context]-?: Extract<Context[Key], MaybeCallable> extends never ? never : Key;
-}[keyof Context];
-type ContextFunction<Context, Key extends keyof Context> = Extract<Context[Key], MaybeCallable>;
-type KeysAllowingUndefined<State> = {
-    [Key in keyof State]-?: undefined extends State[Key] ? Key : never;
-}[keyof State];
-type ObserveSelector<State> = (state: State) => any;
-type SelectorFunction<State> = (state: State, ...args: any[]) => any;
-type Tail$1<T extends readonly any[]> = T extends readonly [
-    any,
-    ...infer Rest
-] ? Rest : [
-];
-type SelectorArgs$1<Selector> = Selector extends ((...params: infer Params) => any) ? Tail$1<Params> : never;
 class PopupTriggerMap {
     private idMap;
     add(id: string, element: Element): void;
@@ -9919,79 +10017,11 @@ class BasePopupHandle<HandleStore extends PopupHandleStoreWithTriggers, Store ex
     protected openByTrigger(triggerId: string | null | undefined): void;
     protected closePopup(): void;
 }
-type InteractionType = "mouse" | "touch" | "pen" | "keyboard" | "";
-type TransitionStatus = "starting" | "ending" | "idle" | undefined;
-type PopupStoreState<Payload> = {
-    open: boolean;
-    readonly openProp: boolean | undefined;
-    mounted: boolean;
-    transitionStatus: TransitionStatus;
-    floatingRootContext: FloatingRootContext;
-    floatingId: string | undefined;
-    triggerCount: number;
-    preventUnmountingOnClose: boolean;
-    payload: Payload | undefined;
-    activeTriggerId: string | null;
-    activeTriggerElement: Element | null;
-    openedWithoutTrigger: boolean;
-    readonly triggerIdProp: string | null | undefined;
-    popupElement: HTMLElement | null;
-    positionerElement: HTMLElement | null;
-    activeTriggerProps: HTMLProps;
-    inactiveTriggerProps: HTMLProps;
-    popupProps: HTMLProps;
-};
-type PopupStoreContext<ChangeEventDetails> = {
-    readonly triggerElements: PopupTriggerMap;
-    readonly popupRef: React$1.RefObject<HTMLElement | null>;
-    onOpenChange?: ((open: boolean, eventDetails: ChangeEventDetails) => void) | undefined;
-    onOpenChangeComplete: ((open: boolean) => void) | undefined;
-};
-type PopupTriggerStoreKeys = "context" | "select" | "set" | "state" | "update" | "useState";
-type PayloadChildRenderFunction<Payload> = (arg: {
-    payload: Payload | undefined;
-}) => React$1.ReactNode;
-interface FloatingRootState {
-    open: boolean;
-    transitionStatus: TransitionStatus | undefined;
-    domReferenceElement: Element | null;
-    referenceElement: ReferenceType$1 | null;
-    floatingElement: HTMLElement | null;
-    positionReference: ReferenceType$1 | null;
-    floatingId: string | undefined;
-}
-interface FloatingRootStoreContext {
-    onOpenChange: ((open: boolean, eventDetails: BaseUIChangeEventDetails<string>) => void) | undefined;
-    readonly dataRef: React$1.RefObject<ContextData>;
+class FloatingTreeStore {
+    readonly nodesRef: React$1.RefObject<Array<FloatingNodeType>>;
     readonly events: FloatingEvents;
-    nested: boolean;
-    readonly triggerElements: PopupTriggerMap;
-}
-const selectors: {
-    open: (state: FloatingRootState) => boolean;
-    transitionStatus: (state: FloatingRootState) => TransitionStatus;
-    domReferenceElement: (state: FloatingRootState) => Element | null;
-    referenceElement: (state: FloatingRootState) => ReferenceType$1 | null;
-    floatingElement: (state: FloatingRootState) => HTMLElement | null;
-    floatingId: (state: FloatingRootState) => string | undefined;
-};
-interface FloatingRootStoreOptions {
-    open: boolean;
-    transitionStatus: TransitionStatus | undefined;
-    referenceElement: ReferenceType$1 | null;
-    floatingElement: HTMLElement | null;
-    triggerElements: PopupTriggerMap;
-    floatingId: string | undefined;
-    syncOnly: boolean;
-    nested: boolean;
-    onOpenChange: ((open: boolean, eventDetails: BaseUIChangeEventDetails<string>) => void) | undefined;
-}
-class FloatingRootStore extends ReactStore<Readonly<FloatingRootState>, FloatingRootStoreContext, typeof selectors> {
-    private readonly syncOnly;
-    constructor(options: FloatingRootStoreOptions);
-    syncOpenEvent: (newOpen: boolean, event: Event | undefined) => void;
-    dispatchOpenChange: (newOpen: boolean, eventDetails: BaseUIChangeEventDetails<string>) => void;
-    setOpen: (newOpen: boolean, eventDetails: BaseUIChangeEventDetails<string>) => void;
+    addNode(node: FloatingNodeType): void;
+    removeNode(node: FloatingNodeType): void;
 }
 type NarrowedElement<T> = T extends Element ? T : Element;
 interface ExtendedRefs {
@@ -10035,11 +10065,347 @@ interface FloatingNodeType {
     context?: FloatingContext | undefined;
 }
 type ReferenceType$1 = Element | VirtualElement;
-class FloatingTreeStore {
-    readonly nodesRef: React$1.RefObject<Array<FloatingNodeType>>;
+interface FloatingRootState {
+    open: boolean;
+    transitionStatus: TransitionStatus | undefined;
+    domReferenceElement: Element | null;
+    referenceElement: ReferenceType$1 | null;
+    floatingElement: HTMLElement | null;
+    positionReference: ReferenceType$1 | null;
+    floatingId: string | undefined;
+}
+interface FloatingRootStoreContext {
+    onOpenChange: ((open: boolean, eventDetails: BaseUIChangeEventDetails<string>) => void) | undefined;
+    readonly dataRef: React$1.RefObject<ContextData>;
     readonly events: FloatingEvents;
-    addNode(node: FloatingNodeType): void;
-    removeNode(node: FloatingNodeType): void;
+    nested: boolean;
+    readonly triggerElements: PopupTriggerMap;
+}
+const selectors: {
+    open: (state: FloatingRootState) => boolean;
+    transitionStatus: (state: FloatingRootState) => TransitionStatus;
+    domReferenceElement: (state: FloatingRootState) => Element | null;
+    referenceElement: (state: FloatingRootState) => ReferenceType$1 | null;
+    floatingElement: (state: FloatingRootState) => HTMLElement | null;
+    floatingId: (state: FloatingRootState) => string | undefined;
+};
+interface FloatingRootStoreOptions {
+    open: boolean;
+    transitionStatus: TransitionStatus | undefined;
+    referenceElement: ReferenceType$1 | null;
+    floatingElement: HTMLElement | null;
+    triggerElements: PopupTriggerMap;
+    floatingId: string | undefined;
+    syncOnly: boolean;
+    nested: boolean;
+    onOpenChange: ((open: boolean, eventDetails: BaseUIChangeEventDetails<string>) => void) | undefined;
+}
+class FloatingRootStore extends ReactStore<Readonly<FloatingRootState>, FloatingRootStoreContext, typeof selectors> {
+    private readonly syncOnly;
+    constructor(options: FloatingRootStoreOptions);
+    syncOpenEvent: (newOpen: boolean, event: Event | undefined) => void;
+    dispatchOpenChange: (newOpen: boolean, eventDetails: BaseUIChangeEventDetails<string>) => void;
+    setOpen: (newOpen: boolean, eventDetails: BaseUIChangeEventDetails<string>) => void;
+}
+type PopupStoreState<Payload> = {
+    open: boolean;
+    readonly openProp: boolean | undefined;
+    mounted: boolean;
+    transitionStatus: TransitionStatus;
+    floatingRootContext: FloatingRootContext;
+    floatingId: string | undefined;
+    triggerCount: number;
+    preventUnmountingOnClose: boolean;
+    payload: Payload | undefined;
+    activeTriggerId: string | null;
+    activeTriggerElement: Element | null;
+    openedWithoutTrigger: boolean;
+    readonly triggerIdProp: string | null | undefined;
+    popupElement: HTMLElement | null;
+    positionerElement: HTMLElement | null;
+    activeTriggerProps: HTMLProps;
+    inactiveTriggerProps: HTMLProps;
+    popupProps: HTMLProps;
+};
+type PopupStoreContext<ChangeEventDetails> = {
+    readonly triggerElements: PopupTriggerMap;
+    readonly popupRef: React$1.RefObject<HTMLElement | null>;
+    onOpenChange?: ((open: boolean, eventDetails: ChangeEventDetails) => void) | undefined;
+    onOpenChangeComplete: ((open: boolean) => void) | undefined;
+};
+type S = PopupStoreState<unknown>;
+const activeTriggerIdSelector: (state: S) => string | null;
+const openSelector: (state: S) => boolean;
+const popupIdSelector: (state: S) => string | undefined;
+const popupStoreSelectors: {
+    open: typeof openSelector;
+    mounted: (state: S) => boolean;
+    transitionStatus: (state: S) => TransitionStatus;
+    floatingRootContext: (state: S) => FloatingRootStore;
+    triggerCount: (state: S) => number;
+    preventUnmountingOnClose: (state: S) => boolean;
+    payload: (state: S) => unknown;
+    activeTriggerId: typeof activeTriggerIdSelector;
+    activeTriggerElement: (state: S) => Element | null;
+    popupId: typeof popupIdSelector;
+    isTriggerActive: (state: S, triggerId: string | undefined) => boolean;
+    isOpenedByTrigger: (state: S, triggerId: string | undefined) => boolean;
+    isMountedByTrigger: (state: S, triggerId: string | undefined) => boolean;
+    triggerProps: (state: S, isActive: boolean) => HTMLProps;
+    triggerPopupId: (state: S, triggerId: string | undefined) => string | undefined;
+    popupProps: (state: S) => HTMLProps;
+    popupElement: (state: S) => HTMLElement | null;
+    positionerElement: (state: S) => HTMLElement | null;
+};
+type PopupStoreSelectors = typeof popupStoreSelectors;
+type PopupTriggerStoreKeys = "context" | "select" | "set" | "state" | "update" | "useState";
+type PopupTriggerDataStore<State extends PopupStoreState<unknown>> = Pick<ReactStore<Readonly<State>, PopupStoreContext<never>, PopupStoreSelectors>, PopupTriggerStoreKeys>;
+type PayloadChildRenderFunction<Payload> = (arg: {
+    payload: Payload | undefined;
+}) => React$1.ReactNode;
+const CollapsibleRoot: React$1.ForwardRefExoticComponent<Omit<CollapsibleRootProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
+interface CollapsibleRootState extends Pick<UseCollapsibleRootReturnValue, "open" | "disabled" | "transitionStatus"> {
+}
+interface CollapsibleRootProps extends BaseUIComponentProps<"div", CollapsibleRootState> {
+    open?: boolean | undefined;
+    defaultOpen?: boolean | undefined;
+    onOpenChange?: ((open: boolean, eventDetails: CollapsibleRootChangeEventDetails) => void) | undefined;
+    disabled?: boolean | undefined;
+}
+type CollapsibleRootChangeEventReason = typeof triggerPress | typeof none;
+type CollapsibleRootChangeEventDetails = BaseUIChangeEventDetails<CollapsibleRootChangeEventReason>;
+namespace CollapsibleRoot {
+    type State = CollapsibleRootState;
+    type Props = CollapsibleRootProps;
+    type ChangeEventReason = CollapsibleRootChangeEventReason;
+    type ChangeEventDetails = CollapsibleRootChangeEventDetails;
+}
+interface UseCollapsibleRootReturnValue {
+    defaultPanelId: React$1.HTMLAttributes<Element>["id"];
+    disabled: boolean;
+    handleTrigger: (event: React$1.MouseEvent | React$1.KeyboardEvent) => void;
+    mounted: boolean;
+    open: boolean;
+    panelId: React$1.HTMLAttributes<Element>["id"];
+    setMounted: (nextMounted: boolean) => void;
+    setOpen: (open: boolean) => void;
+    setPanelIdState: React$1.Dispatch<React$1.SetStateAction<string | null | undefined>>;
+    transitionStatus: TransitionStatus;
+}
+const DialogTitle: React$1.ForwardRefExoticComponent<Omit<DialogTitleProps, "ref"> & React$1.RefAttributes<HTMLHeadingElement>>;
+interface DialogTitleProps extends BaseUIComponentProps<"h2", DialogTitleState> {
+}
+interface DialogTitleState {
+}
+namespace DialogTitle {
+    type Props = DialogTitleProps;
+    type State = DialogTitleState;
+}
+const DialogTrigger: DialogTrigger;
+interface DialogTrigger {
+    <Payload>(componentProps: DialogTriggerProps<Payload> & React$1.RefAttributes<HTMLElement>): React$1.JSX.Element;
+}
+interface DialogTriggerProps<Payload = unknown> extends NativeButtonProps, BaseUIComponentProps<"button", DialogTriggerState> {
+    handle?: DialogHandle<Payload> | undefined;
+    payload?: Payload | undefined;
+    id?: string | undefined;
+}
+interface DialogTriggerState {
+    disabled: boolean;
+    open: boolean;
+}
+namespace DialogTrigger {
+    type Props<Payload = unknown> = DialogTriggerProps<Payload>;
+    type State = DialogTriggerState;
+}
+const DialogViewport: React$1.ForwardRefExoticComponent<Omit<DialogViewportProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
+interface DialogViewportState {
+    open: boolean;
+    transitionStatus: TransitionStatus;
+    nested: boolean;
+    nestedDialogOpen: boolean;
+}
+interface DialogViewportProps extends BaseUIComponentProps<"div", DialogViewportState> {
+}
+namespace DialogViewport {
+    type State = DialogViewportState;
+    type Props = DialogViewportProps;
+}
+interface Group<Item = any> {
+    [key: string]: unknown;
+    items: ReadonlyArray<Item>;
+}
+class ComboboxItemCollection<in out Item, Value = Item> {
+    private constructor();
+    private readonly __itemCollectionBrand;
+}
+type InternalAriaComboboxProps<Value, Mode extends SelectionMode$1, Item = Value> = AriaComboboxProps<Value, Mode, Item> & {
+    filterQuery?: string | undefined;
+};
+function AriaCombobox<Value, Mode extends SelectionMode$1 = "none", Item = Value>(props: Omit<InternalAriaComboboxProps<Value, Mode, Item>, "items"> & {
+    items?: readonly any[] | ComboboxItemCollection<Item, any> | undefined;
+}): React$1.JSX.Element;
+type SelectionMode$1 = "single" | "multiple" | "none";
+type ComboboxItemValueType<ItemValue, Mode extends SelectionMode$1> = Mode extends "multiple" ? ItemValue[] : ItemValue;
+interface ComboboxRootProps<ItemValue, Item = ItemValue> {
+    children?: React$1.ReactNode;
+    name?: string | undefined;
+    form?: string | undefined;
+    id?: string | undefined;
+    required?: boolean | undefined;
+    readOnly?: boolean | undefined;
+    disabled?: boolean | undefined;
+    defaultOpen?: boolean | undefined;
+    open?: boolean | undefined;
+    onOpenChange?: ((open: boolean, eventDetails: AriaCombobox.OpenChangeEventDetails) => void) | undefined;
+    onOpenChangeComplete?: ((open: boolean) => void) | undefined;
+    openOnInputClick?: boolean | undefined;
+    autoHighlight?: boolean | "always" | undefined;
+    keepHighlight?: boolean | undefined;
+    highlightItemOnHover?: boolean | undefined;
+    loopFocus?: boolean | undefined;
+    inputValue?: React$1.ComponentProps<"input">["value"] | undefined;
+    onInputValueChange?: ((value: string, eventDetails: AriaCombobox.ChangeEventDetails) => void) | undefined;
+    defaultInputValue?: React$1.ComponentProps<"input">["defaultValue"] | undefined;
+    actionsRef?: React$1.RefObject<AriaCombobox.Actions | null> | undefined;
+    onItemHighlighted?: ((itemValue: ItemValue | undefined, eventDetails: AriaCombobox.HighlightEventDetails) => void) | undefined;
+    inputRef?: React$1.Ref<HTMLInputElement> | undefined;
+    grid?: boolean | undefined;
+    items?: readonly any[] | readonly Group<any>[] | ComboboxItemCollection<Item, ItemValue> | undefined;
+    filteredItems?: readonly Item[] | readonly Group<Item>[] | undefined;
+    filter?: null | ((item: Item, query: string, itemToString?: (item: Item) => string) => boolean) | undefined;
+    itemToStringLabel?: ((itemValue: ItemValue) => string) | undefined;
+    itemToStringValue?: ((itemValue: ItemValue) => string) | undefined;
+    isItemEqualToValue?: ((itemValue: ItemValue, value: ItemValue) => boolean) | undefined;
+    virtualized?: boolean | undefined;
+    inline?: boolean | undefined;
+    modal?: boolean | undefined;
+    limit?: number | undefined;
+    autoComplete?: "list" | "both" | "inline" | "none" | undefined;
+    formAutoComplete?: string | undefined;
+    locale?: Intl.LocalesArgument | undefined;
+    submitOnItemClick?: boolean | undefined;
+    fillInputOnItemPress?: boolean | undefined;
+}
+interface AriaComboboxState {
+}
+type AriaComboboxProps<Value, Mode extends SelectionMode$1 = "none", Item = Value> = ComboboxRootProps<Value, Item> & {
+    selectionMode: Mode;
+    selectedValue?: ComboboxItemValueType<Value, Mode> | undefined;
+    defaultSelectedValue?: ComboboxItemValueType<Value, Mode> | null | undefined;
+    onSelectedValueChange?: ((value: ComboboxItemValueType<Value, Mode>, eventDetails: AriaCombobox.ChangeEventDetails) => void) | undefined;
+};
+namespace AriaCombobox {
+    type Props<Value, Mode extends SelectionMode$1 = "none", Item = Value> = AriaComboboxProps<Value, Mode, Item>;
+    type State = AriaComboboxState;
+    interface Actions {
+        unmount: () => void;
+        close: () => void;
+    }
+    type HighlightEventReason = typeof keyboard | typeof pointer | typeof none;
+    type HighlightEventDetails = BaseUIHighlightEventDetails<HighlightEventReason, {
+        index: number;
+    }>;
+    type ChangeEventReason = typeof triggerPress | typeof inputPress | typeof outsidePress | typeof itemPress | typeof closePress | typeof escapeKey | typeof listNavigation | typeof focusOut | typeof inputChange | typeof inputClear | typeof clearPress | typeof chipRemovePress | typeof cancelOpen | typeof imperativeAction | typeof none;
+    type OpenChangeEventDetails = ChangeEventDetails & {
+        preventUnmountOnClose: () => void;
+    };
+    type ChangeEventDetails = BaseUIChangeEventDetails<ChangeEventReason> & {
+        isItemPress?: boolean | undefined;
+    };
+}
+type Errors = Record<string, string | string[]>;
+interface FormContext {
+    errors: Errors;
+    clearErrors: (name: string | undefined) => void;
+    elementRef: React$1.RefObject<HTMLFormElement | null>;
+    formRef: React$1.RefObject<{
+        fields: Map<string, {
+            name: string | undefined;
+            validate: () => void;
+            validityData: FieldValidityData;
+            controlRef: React$1.RefObject<HTMLElement | null>;
+            getValue: () => unknown;
+        }>;
+    }>;
+    validationMode: Form.ValidationMode;
+    submitCountRef: React$1.RefObject<number>;
+}
+const FormContext: React$1.Context<FormContext>;
+const Form: {
+    <FormValues extends Record<string, any> = Record<string, any>>(props: Form.Props<FormValues> & {
+        ref?: React$1.Ref<HTMLFormElement> | undefined;
+    }): React$1.JSX.Element;
+};
+type FormSubmitEventReason = typeof none;
+type FormSubmitEventDetails = BaseUIGenericEventDetails<Form.SubmitEventReason>;
+type FormValidationMode = "onSubmit" | "onBlur" | "onChange";
+interface FormActions {
+    validate: (fieldName?: string | undefined) => void;
+}
+interface FormState {
+}
+interface FormProps<FormValues extends Record<string, any> = Record<string, any>> extends BaseUIComponentProps<"form", FormState, React$1.ComponentPropsWithRef<"form">> {
+    validationMode?: FormValidationMode | undefined;
+    errors?: FormContext["errors"] | undefined;
+    onFormSubmit?: ((formValues: FormValues, eventDetails: Form.SubmitEventDetails) => void) | undefined;
+    actionsRef?: React$1.RefObject<Form.Actions | null> | undefined;
+}
+namespace Form {
+    type Props<FormValues extends Record<string, any> = Record<string, any>> = FormProps<FormValues>;
+    type State = FormState;
+    type Actions = FormActions;
+    type ValidationMode = FormValidationMode;
+    type SubmitEventReason = FormSubmitEventReason;
+    type SubmitEventDetails = FormSubmitEventDetails;
+    type Values<FormValues extends Record<string, any> = Record<string, any>> = FormValues;
+}
+const FieldRoot: React$1.ForwardRefExoticComponent<Omit<FieldRootProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
+interface FieldValidityData {
+    state: {
+        badInput: boolean;
+        customError: boolean;
+        patternMismatch: boolean;
+        rangeOverflow: boolean;
+        rangeUnderflow: boolean;
+        stepMismatch: boolean;
+        tooLong: boolean;
+        tooShort: boolean;
+        typeMismatch: boolean;
+        valueMissing: boolean;
+        valid: boolean | null;
+    };
+    error: string;
+    errors: string[];
+    value: unknown;
+    initialValue: unknown;
+}
+interface FieldRootActions {
+    validate: () => void;
+}
+interface FieldRootState {
+    disabled: boolean;
+    touched: boolean;
+    dirty: boolean;
+    valid: boolean | null;
+    filled: boolean;
+    focused: boolean;
+}
+interface FieldRootProps extends BaseUIComponentProps<"div", FieldRootState> {
+    disabled?: boolean | undefined;
+    name?: string | undefined;
+    validate?: ((value: unknown, formValues: Form.Values) => string | string[] | null | void | Promise<string | string[] | null | void>) | undefined;
+    validationMode?: Form.ValidationMode | undefined;
+    validationDebounceTime?: number | undefined;
+    invalid?: boolean | undefined;
+    dirty?: boolean | undefined;
+    touched?: boolean | undefined;
+    actionsRef?: React$1.RefObject<FieldRoot.Actions | null> | undefined;
+}
+namespace FieldRoot {
+    type State = FieldRootState;
+    type Props = FieldRootProps;
+    type Actions = FieldRootActions;
 }
 type Side$1 = "top" | "bottom" | "left" | "right" | "inline-end" | "inline-start";
 type Align = "start" | "center" | "end";
@@ -10081,6 +10447,448 @@ interface UseAnchorPositioningSharedParameters {
     disableAnchorTracking?: boolean | undefined;
     collisionAvoidance?: CollisionAvoidance | undefined;
 }
+const ComboboxInput: React$1.ForwardRefExoticComponent<Omit<ComboboxInputProps, "ref"> & React$1.RefAttributes<HTMLInputElement>>;
+interface ComboboxInputState extends FieldRootState {
+    open: boolean;
+    popupSide: Side$1 | null;
+    listEmpty: boolean;
+    readOnly: boolean;
+}
+interface ComboboxInputProps extends BaseUIComponentProps<"input", ComboboxInputState> {
+    disabled?: boolean | undefined;
+}
+namespace ComboboxInput {
+    type State = ComboboxInputState;
+    type Props = ComboboxInputProps;
+}
+const ComboboxIcon: React$1.ForwardRefExoticComponent<Omit<ComboboxIconProps, "ref"> & React$1.RefAttributes<HTMLSpanElement>>;
+interface ComboboxIconState {
+}
+interface ComboboxIconProps extends BaseUIComponentProps<"span", ComboboxIconState> {
+}
+namespace ComboboxIcon {
+    type State = ComboboxIconState;
+    type Props = ComboboxIconProps;
+}
+const ComboboxClear: React$1.ForwardRefExoticComponent<Omit<ComboboxClearProps, "ref"> & React$1.RefAttributes<HTMLButtonElement>>;
+interface ComboboxClearState {
+    open: boolean;
+    disabled: boolean;
+    visible: boolean;
+    transitionStatus: TransitionStatus;
+}
+interface ComboboxClearProps extends NativeButtonProps, BaseUIComponentProps<"button", ComboboxClearState> {
+    disabled?: boolean | undefined;
+    keepMounted?: boolean | undefined;
+}
+namespace ComboboxClear {
+    type State = ComboboxClearState;
+    type Props = ComboboxClearProps;
+}
+const ComboboxList: React$1.ForwardRefExoticComponent<Omit<ComboboxListProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
+interface ComboboxListState {
+    empty: boolean;
+}
+interface ComboboxListProps extends Omit<BaseUIComponentProps<"div", ComboboxListState>, "children"> {
+    children?: React$1.ReactNode | ((item: any, index: number) => React$1.ReactNode);
+}
+namespace ComboboxList {
+    type State = ComboboxListState;
+    type Props = ComboboxListProps;
+}
+const ComboboxStatus: React$1.ForwardRefExoticComponent<Omit<ComboboxStatusProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
+interface ComboboxStatusState {
+}
+interface ComboboxStatusProps extends BaseUIComponentProps<"div", ComboboxStatusState> {
+}
+namespace ComboboxStatus {
+    type State = ComboboxStatusState;
+    type Props = ComboboxStatusProps;
+}
+const ComboboxPortal: React$1.ForwardRefExoticComponent<Omit<ComboboxPortalProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
+interface ComboboxPortalState {
+}
+interface ComboboxPortalProps extends BaseUIComponentProps<"div", ComboboxPortalState> {
+    keepMounted?: boolean | undefined;
+    container?: HTMLElement | ShadowRoot | React$1.RefObject<HTMLElement | ShadowRoot | null> | null | undefined;
+}
+namespace ComboboxPortal {
+    type State = ComboboxPortalState;
+    type Props = ComboboxPortalProps;
+}
+const ComboboxBackdrop: React$1.ForwardRefExoticComponent<Omit<ComboboxBackdropProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
+interface ComboboxBackdropProps extends BaseUIComponentProps<"div", ComboboxBackdropState> {
+}
+interface ComboboxBackdropState {
+    open: boolean;
+    transitionStatus: TransitionStatus;
+}
+namespace ComboboxBackdrop {
+    type Props = ComboboxBackdropProps;
+    type State = ComboboxBackdropState;
+}
+const ComboboxPositioner: React$1.ForwardRefExoticComponent<Omit<ComboboxPositionerProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
+interface ComboboxPositionerState {
+    open: boolean;
+    side: Side$1;
+    align: Align;
+    anchorHidden: boolean;
+    empty: boolean;
+}
+interface ComboboxPositionerProps extends UseAnchorPositioningSharedParameters, BaseUIComponentProps<"div", ComboboxPositionerState> {
+}
+namespace ComboboxPositioner {
+    type State = ComboboxPositionerState;
+    type Props = ComboboxPositionerProps;
+}
+const ComboboxPopup: React$1.ForwardRefExoticComponent<Omit<ComboboxPopupProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
+interface ComboboxPopupState {
+    open: boolean;
+    side: Side$1;
+    align: Align;
+    anchorHidden: boolean;
+    transitionStatus: TransitionStatus;
+    empty: boolean;
+}
+interface ComboboxPopupProps extends BaseUIComponentProps<"div", ComboboxPopupState> {
+    initialFocus?: boolean | React$1.RefObject<HTMLElement | null> | ((openType: InteractionType) => void | boolean | HTMLElement | null) | undefined;
+    finalFocus?: boolean | React$1.RefObject<HTMLElement | null> | ((closeType: InteractionType) => void | boolean | HTMLElement | null) | undefined;
+}
+namespace ComboboxPopup {
+    type State = ComboboxPopupState;
+    type Props = ComboboxPopupProps;
+}
+const ComboboxArrow: React$1.ForwardRefExoticComponent<Omit<ComboboxArrowProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
+interface ComboboxArrowState {
+    open: boolean;
+    side: Side$1;
+    align: Align;
+    uncentered: boolean;
+}
+interface ComboboxArrowProps extends BaseUIComponentProps<"div", ComboboxArrowState> {
+}
+namespace ComboboxArrow {
+    type State = ComboboxArrowState;
+    type Props = ComboboxArrowProps;
+}
+const ComboboxGroup: React$1.ForwardRefExoticComponent<Omit<ComboboxGroupProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
+interface ComboboxGroupState {
+}
+interface ComboboxGroupProps extends BaseUIComponentProps<"div", ComboboxGroupState> {
+    items?: readonly any[] | undefined;
+}
+namespace ComboboxGroup {
+    type State = ComboboxGroupState;
+    type Props = ComboboxGroupProps;
+}
+const ComboboxGroupLabel: React$1.ForwardRefExoticComponent<Omit<ComboboxGroupLabelProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
+interface ComboboxGroupLabelState {
+}
+interface ComboboxGroupLabelProps extends BaseUIComponentProps<"div", ComboboxGroupLabelState> {
+}
+namespace ComboboxGroupLabel {
+    type State = ComboboxGroupLabelState;
+    type Props = ComboboxGroupLabelProps;
+}
+const ComboboxRow: React$1.ForwardRefExoticComponent<Omit<ComboboxRowProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
+interface ComboboxRowState {
+}
+interface ComboboxRowProps extends BaseUIComponentProps<"div", ComboboxRowState> {
+}
+namespace ComboboxRow {
+    type State = ComboboxRowState;
+    type Props = ComboboxRowProps;
+}
+function ComboboxCollection(props: ComboboxCollection.Props): React$1.JSX.Element;
+interface ComboboxCollectionState {
+}
+interface ComboboxCollectionProps {
+    children: (item: any, index: number) => React$1.ReactNode;
+}
+namespace ComboboxCollection {
+    type State = ComboboxCollectionState;
+    type Props = ComboboxCollectionProps;
+}
+const ComboboxEmpty: React$1.ForwardRefExoticComponent<Omit<ComboboxEmptyProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
+interface ComboboxEmptyState {
+}
+interface ComboboxEmptyProps extends BaseUIComponentProps<"div", ComboboxEmptyState> {
+}
+namespace ComboboxEmpty {
+    type State = ComboboxEmptyState;
+    type Props = ComboboxEmptyProps;
+}
+function getFilter(options?: GetFilterParameters): Filter;
+interface GetFilterParameters extends Intl.CollatorOptions {
+    locale?: Intl.LocalesArgument | undefined;
+}
+interface Filter {
+    contains: <Item>(item: Item, query: string, itemToString?: (item: Item) => string) => boolean;
+    startsWith: <Item>(item: Item, query: string, itemToString?: (item: Item) => string) => boolean;
+    endsWith: <Item>(item: Item, query: string, itemToString?: (item: Item) => string) => boolean;
+}
+interface UseComboboxFilterOptions extends GetFilterParameters {
+    multiple?: boolean | undefined;
+    value?: any;
+}
+function useComboboxFilter(options?: UseComboboxFilterOptions): Filter;
+function useFilteredItems<T>(): T[];
+const Button: React$1.ForwardRefExoticComponent<Omit<ButtonProps, "ref"> & React$1.RefAttributes<HTMLElement>>;
+interface ButtonState {
+    disabled: boolean;
+}
+interface ButtonProps extends NativeButtonProps, BaseUIComponentProps<"button", ButtonState> {
+    focusableWhenDisabled?: boolean | undefined;
+}
+namespace Button {
+    type State = ButtonState;
+    type Props = ButtonProps;
+}
+const CheckboxRoot: React$1.ForwardRefExoticComponent<Omit<CheckboxRootProps, "ref"> & React$1.RefAttributes<HTMLElement>>;
+interface CheckboxRootState extends FieldRootState {
+    checked: boolean;
+    disabled: boolean;
+    readOnly: boolean;
+    required: boolean;
+    indeterminate: boolean;
+}
+interface CheckboxRootProps extends NonNativeButtonProps, Omit<BaseUIComponentProps<"span", CheckboxRootState>, "onChange" | "value"> {
+    id?: string | undefined;
+    name?: string | undefined;
+    form?: string | undefined;
+    checked?: boolean | undefined;
+    defaultChecked?: boolean | undefined;
+    disabled?: boolean | undefined;
+    onCheckedChange?: ((checked: boolean, eventDetails: CheckboxRootChangeEventDetails) => void) | undefined;
+    readOnly?: boolean | undefined;
+    required?: boolean | undefined;
+    indeterminate?: boolean | undefined;
+    inputRef?: React$1.Ref<HTMLInputElement> | undefined;
+    parent?: boolean | undefined;
+    uncheckedValue?: string | undefined;
+    value?: string | undefined;
+}
+type CheckboxRootChangeEventReason = typeof none;
+type CheckboxRootChangeEventDetails = BaseUIChangeEventDetails<CheckboxRoot.ChangeEventReason>;
+namespace CheckboxRoot {
+    type State = CheckboxRootState;
+    type Props = CheckboxRootProps;
+    type ChangeEventReason = CheckboxRootChangeEventReason;
+    type ChangeEventDetails = CheckboxRootChangeEventDetails;
+}
+const CheckboxIndicator: React$1.ForwardRefExoticComponent<Omit<CheckboxIndicatorProps, "ref"> & React$1.RefAttributes<HTMLSpanElement>>;
+interface CheckboxIndicatorState extends CheckboxRootState {
+    transitionStatus: TransitionStatus;
+}
+interface CheckboxIndicatorProps extends BaseUIComponentProps<"span", CheckboxIndicatorState> {
+    keepMounted?: boolean | undefined;
+}
+namespace CheckboxIndicator {
+    type State = CheckboxIndicatorState;
+    type Props = CheckboxIndicatorProps;
+}
+const CollapsibleTrigger: React$1.ForwardRefExoticComponent<Omit<CollapsibleTriggerProps, "ref"> & React$1.RefAttributes<HTMLButtonElement>>;
+interface CollapsibleTriggerState extends CollapsibleRootState {
+}
+interface CollapsibleTriggerProps extends NativeButtonProps, BaseUIComponentProps<"button", CollapsibleTriggerState> {
+}
+namespace CollapsibleTrigger {
+    type State = CollapsibleTriggerState;
+    type Props = CollapsibleTriggerProps;
+}
+const CollapsiblePanel: React$1.ForwardRefExoticComponent<Omit<CollapsiblePanelProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
+interface CollapsiblePanelState extends CollapsibleRootState {
+    transitionStatus: TransitionStatus;
+}
+interface CollapsiblePanelProps extends BaseUIComponentProps<"div", CollapsiblePanelState> {
+    hiddenUntilFound?: boolean | undefined;
+    keepMounted?: boolean | undefined;
+}
+namespace CollapsiblePanel {
+    type State = CollapsiblePanelState;
+    type Props = CollapsiblePanelProps;
+}
+function ComboboxRoot<Value, Multiple extends boolean | undefined = false, Item = Value>(props: ComboboxRoot.Props<Value, Multiple, Item>): React$1.JSX.Element;
+type ModeFromMultiple<Multiple extends boolean | undefined> = Multiple extends true ? "multiple" : "single";
+type ComboboxInputValue<Value, Multiple extends boolean | undefined> = Multiple extends true ? readonly Value[] : Value;
+type ComboboxOutputValue<Value, Multiple extends boolean | undefined> = Multiple extends true ? Value[] : Value;
+type ComboboxRootProps$1<Value, Multiple extends boolean | undefined = false, Item = Value> = Omit<AriaCombobox.Props<Value, ModeFromMultiple<Multiple>, Item>, "fillInputOnItemPress" | "autoComplete" | "formAutoComplete" | "submitOnItemClick" | "autoHighlight" | "keepHighlight" | "highlightItemOnHover" | "itemToStringLabel" | "itemToStringValue" | "isItemEqualToValue" | "selectionMode" | "defaultSelectedValue" | "selectedValue" | "onSelectedValueChange" | "actionsRef" | "onOpenChange" | "onInputValueChange" | "onItemHighlighted"> & {
+    multiple?: Multiple | undefined;
+    autoComplete?: string | undefined;
+    autoHighlight?: boolean | undefined;
+    highlightItemOnHover?: boolean | undefined;
+    itemToStringLabel?: ((itemValue: Value) => string) | undefined;
+    itemToStringValue?: ((itemValue: Value) => string) | undefined;
+    isItemEqualToValue?: ((itemValue: Value, value: Value) => boolean) | undefined;
+    defaultValue?: ComboboxInputValue<Value, Multiple> | null | undefined;
+    actionsRef?: React$1.RefObject<ComboboxRoot.Actions | null> | undefined;
+    onOpenChange?: ((open: boolean, eventDetails: ComboboxRoot.OpenChangeEventDetails) => void) | undefined;
+    onInputValueChange?: ((inputValue: string, eventDetails: ComboboxRoot.ChangeEventDetails) => void) | undefined;
+    onItemHighlighted?: ((highlightedValue: Value | undefined, eventDetails: ComboboxRoot.HighlightEventDetails) => void) | undefined;
+    value?: ComboboxInputValue<Value, Multiple> | null | undefined;
+    onValueChange?: ((value: ComboboxOutputValue<Value, Multiple> | (Multiple extends true ? never : null), eventDetails: ComboboxRoot.ChangeEventDetails) => void) | undefined;
+};
+interface ComboboxRootState extends AriaComboboxState {
+}
+type ComboboxRootActions = AriaCombobox.Actions;
+type ComboboxRootOpenChangeEventDetails = AriaCombobox.OpenChangeEventDetails;
+type ComboboxRootChangeEventReason = AriaCombobox.ChangeEventReason;
+type ComboboxRootChangeEventDetails = AriaCombobox.ChangeEventDetails;
+type ComboboxRootHighlightEventReason = AriaCombobox.HighlightEventReason;
+type ComboboxRootHighlightEventDetails = AriaCombobox.HighlightEventDetails;
+namespace ComboboxRoot {
+    type Props<Value, Multiple extends boolean | undefined = false, Item = Value> = ComboboxRootProps$1<Value, Multiple, Item>;
+    type State = ComboboxRootState;
+    type Actions = ComboboxRootActions;
+    type ChangeEventReason = ComboboxRootChangeEventReason;
+    type ChangeEventDetails = ComboboxRootChangeEventDetails;
+    type OpenChangeEventDetails = ComboboxRootOpenChangeEventDetails;
+    type HighlightEventReason = ComboboxRootHighlightEventReason;
+    type HighlightEventDetails = ComboboxRootHighlightEventDetails;
+}
+const ComboboxLabel: React$1.ForwardRefExoticComponent<Omit<ComboboxLabelProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
+interface ComboboxLabelState extends FieldRoot.State {
+}
+interface ComboboxLabelProps extends Omit<BaseUIComponentProps<"div", ComboboxLabelState>, "id"> {
+}
+namespace ComboboxLabel {
+    type State = ComboboxLabelState;
+    type Props = ComboboxLabelProps;
+}
+function ComboboxValue(props: ComboboxValue.Props): React$1.ReactElement;
+interface ComboboxValueState {
+}
+interface ComboboxValueProps {
+    children?: React$1.ReactNode | ((selectedValue: any) => React$1.ReactNode);
+    placeholder?: React$1.ReactNode;
+}
+namespace ComboboxValue {
+    type State = ComboboxValueState;
+    type Props = ComboboxValueProps;
+}
+const ComboboxInputGroup: React$1.ForwardRefExoticComponent<Omit<ComboboxInputGroupProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
+interface ComboboxInputGroupState extends FieldRoot.State {
+    open: boolean;
+    disabled: boolean;
+    readOnly: boolean;
+    popupSide: Side$1 | null;
+    listEmpty: boolean;
+    placeholder: boolean;
+}
+interface ComboboxInputGroupProps extends BaseUIComponentProps<"div", ComboboxInputGroup.State> {
+}
+namespace ComboboxInputGroup {
+    type State = ComboboxInputGroupState;
+    type Props = ComboboxInputGroupProps;
+}
+const ComboboxTrigger: React$1.ForwardRefExoticComponent<Omit<ComboboxTriggerProps, "ref"> & React$1.RefAttributes<HTMLButtonElement>>;
+interface ComboboxTriggerState extends FieldRootState {
+    open: boolean;
+    disabled: boolean;
+    readOnly: boolean;
+    popupSide: Side$1 | null;
+    listEmpty: boolean;
+    placeholder: boolean;
+}
+interface ComboboxTriggerProps extends NativeButtonProps, BaseUIComponentProps<"button", ComboboxTriggerState> {
+    disabled?: boolean | undefined;
+}
+namespace ComboboxTrigger {
+    type State = ComboboxTriggerState;
+    type Props = ComboboxTriggerProps;
+}
+const ComboboxItem: React$1.NamedExoticComponent<Omit<ComboboxItemProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
+interface ComboboxItemState {
+    disabled: boolean;
+    selected: boolean;
+    highlighted: boolean;
+}
+interface ComboboxItemProps extends NonNativeButtonProps, Omit<BaseUIComponentProps<"div", ComboboxItemState>, "id"> {
+    children?: React$1.ReactNode;
+    onClick?: BaseUIComponentProps<"div", ComboboxItemState>["onClick"] | undefined;
+    index?: number | undefined;
+    value?: any;
+    disabled?: boolean | undefined;
+}
+namespace ComboboxItem {
+    type State = ComboboxItemState;
+    type Props = ComboboxItemProps;
+}
+const ComboboxItemIndicator: React$1.ForwardRefExoticComponent<Omit<ComboboxItemIndicatorProps, "ref"> & React$1.RefAttributes<HTMLSpanElement>>;
+interface ComboboxItemIndicatorProps extends BaseUIComponentProps<"span", ComboboxItemIndicatorState> {
+    children?: React$1.ReactNode;
+    keepMounted?: boolean | undefined;
+}
+interface ComboboxItemIndicatorState {
+    selected: boolean;
+    transitionStatus: TransitionStatus;
+}
+namespace ComboboxItemIndicator {
+    type Props = ComboboxItemIndicatorProps;
+    type State = ComboboxItemIndicatorState;
+}
+const ComboboxChips: React$1.ForwardRefExoticComponent<Omit<ComboboxChipsProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
+interface ComboboxChipsState {
+}
+interface ComboboxChipsProps extends BaseUIComponentProps<"div", ComboboxChipsState> {
+}
+namespace ComboboxChips {
+    type State = ComboboxChipsState;
+    type Props = ComboboxChipsProps;
+}
+const ComboboxChip: React$1.ForwardRefExoticComponent<Omit<ComboboxChipProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
+interface ComboboxChipState {
+    disabled: boolean;
+}
+interface ComboboxChipProps extends BaseUIComponentProps<"div", ComboboxChipState> {
+}
+namespace ComboboxChip {
+    type State = ComboboxChipState;
+    type Props = ComboboxChipProps;
+}
+const ComboboxChipRemove: React$1.ForwardRefExoticComponent<Omit<ComboboxChipRemoveProps, "ref"> & React$1.RefAttributes<HTMLButtonElement>>;
+interface ComboboxChipRemoveState {
+    disabled: boolean;
+}
+interface ComboboxChipRemoveProps extends NativeButtonProps, BaseUIComponentProps<"button", ComboboxChipRemoveState> {
+}
+namespace ComboboxChipRemove {
+    type State = ComboboxChipRemoveState;
+    type Props = ComboboxChipRemoveProps;
+}
+interface ComboboxSeparatorProps extends BaseUIComponentProps<"div", ComboboxSeparatorState> {
+    orientation?: Orientation | undefined;
+}
+interface ComboboxSeparatorState {
+    orientation: Orientation;
+}
+const ComboboxSeparator: React$1.ForwardRefExoticComponent<ComboboxSeparatorProps & React$1.RefAttributes<HTMLDivElement>>;
+namespace ComboboxSeparator {
+    type Props = ComboboxSeparatorProps;
+    type State = ComboboxSeparatorState;
+}
+type ComboboxPrimitiveValue = string | number | bigint | boolean;
+type RemoveIndexSignature<Type> = {
+    [Key in keyof Type as string extends Key ? never : number extends Key ? never : symbol extends Key ? never : Key]: Type[Key];
+};
+type HasGroupShape<Item> = Item extends object ? "items" extends keyof RemoveIndexSignature<Item> ? [
+    Extract<NonNullable<Item["items"]>, ReadonlyArray<unknown>>
+] extends [
+    never
+] ? never[] extends NonNullable<Item["items"]> ? true : never : true : never : never;
+type IsAny<T> = 0 extends 1 & T ? true : false;
+type GroupShapedItemsError = "Base UI: items passed to createItems() cannot have an `items` array property because it marks a group. Rename the field or cast the data.";
+type RejectGroupShapedItems<Item> = IsAny<Item> extends true ? unknown : true extends HasGroupShape<Item> ? GroupShapedItemsError : unknown;
+type ComboboxItemsData<Item> = (Extract<Item, {
+    items: ReadonlyArray<unknown>;
+}> extends never ? readonly Item[] : never) | readonly {
+    items: ReadonlyArray<Item>;
+}[];
+interface CreateComboboxItemsOptions<Item, Value extends ComboboxPrimitiveValue = ComboboxPrimitiveValue> {
+    getValue: (item: Item) => Value;
+    getLabel: (item: Item) => string;
+}
+function createComboboxItems<Item, Value extends ComboboxPrimitiveValue>(data: ComboboxItemsData<Item> & RejectGroupShapedItems<Item> | undefined, options: CreateComboboxItemsOptions<Item, Value>): ComboboxItemCollection<Item, Value>;
 const MenuArrow: React$1.ForwardRefExoticComponent<Omit<MenuArrowProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
 interface MenuArrowState {
     open: boolean;
@@ -10573,24 +11381,6 @@ interface MenubarContext {
     rootId: string | undefined;
 }
 const MenubarContext: React$1.Context<MenubarContext | null>;
-function ContextMenuRoot(props: ContextMenuRoot.Props): React$1.JSX.Element;
-interface ContextMenuRootState {
-}
-interface ContextMenuRootProps extends Omit<MenuRoot.Props, "handle" | "triggerId" | "defaultTriggerId" | "modal" | "openOnHover" | "delay" | "closeDelay" | "closeParentOnEsc" | "onOpenChange" | "children"> {
-    onOpenChange?: ((open: boolean, eventDetails: ContextMenuRoot.ChangeEventDetails) => void) | undefined;
-    closeParentOnEsc?: MenuRoot.Props["closeParentOnEsc"] | undefined;
-    children?: React$1.ReactNode | undefined;
-}
-type ContextMenuRootActions = MenuRoot.Actions;
-type ContextMenuRootChangeEventReason = MenuRoot.ChangeEventReason;
-type ContextMenuRootChangeEventDetails = BaseUIChangeEventDetails<ContextMenuRoot.ChangeEventReason>;
-namespace ContextMenuRoot {
-    type State = ContextMenuRootState;
-    type Props = ContextMenuRootProps;
-    type Actions = ContextMenuRootActions;
-    type ChangeEventReason = ContextMenuRootChangeEventReason;
-    type ChangeEventDetails = ContextMenuRootChangeEventDetails;
-}
 interface ContextMenuRootContext {
     anchor: {
         getBoundingClientRect: () => DOMRect;
@@ -10910,17 +11700,6 @@ namespace MenuViewport {
     type Props = MenuViewportProps;
     type State = MenuViewportState;
 }
-const Separator: React$1.ForwardRefExoticComponent<Omit<SeparatorProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
-interface SeparatorProps extends BaseUIComponentProps<"div", SeparatorState> {
-    orientation?: Orientation | undefined;
-}
-interface SeparatorState {
-    orientation: Orientation;
-}
-namespace Separator {
-    type Props = SeparatorProps;
-    type State = SeparatorState;
-}
 const MenuSubmenuTrigger: React$1.ForwardRefExoticComponent<Omit<MenuSubmenuTriggerProps, "ref"> & React$1.RefAttributes<HTMLElement>>;
 interface MenuSubmenuTriggerState {
     disabled: boolean;
@@ -11019,500 +11798,78 @@ namespace MenuEmpty {
     type State = MenuEmptyState;
     type Props = MenuEmptyProps;
 }
-function getFilter(options?: GetFilterParameters): Filter;
-interface GetFilterParameters extends Intl.CollatorOptions {
+function ContextMenuRoot(props: ContextMenuRoot.Props): React$1.JSX.Element;
+interface ContextMenuRootState {
+}
+interface ContextMenuRootProps extends Omit<MenuRoot.Props, "handle" | "triggerId" | "defaultTriggerId" | "modal" | "openOnHover" | "delay" | "closeDelay" | "closeParentOnEsc" | "onOpenChange" | "children"> {
+    onOpenChange?: ((open: boolean, eventDetails: ContextMenuRoot.ChangeEventDetails) => void) | undefined;
+    closeParentOnEsc?: MenuRoot.Props["closeParentOnEsc"] | undefined;
+    children?: React$1.ReactNode | undefined;
+}
+type ContextMenuRootActions = MenuRoot.Actions;
+type ContextMenuRootChangeEventReason = MenuRoot.ChangeEventReason;
+type ContextMenuRootChangeEventDetails = BaseUIChangeEventDetails<ContextMenuRoot.ChangeEventReason>;
+namespace ContextMenuRoot {
+    type State = ContextMenuRootState;
+    type Props = ContextMenuRootProps;
+    type Actions = ContextMenuRootActions;
+    type ChangeEventReason = ContextMenuRootChangeEventReason;
+    type ChangeEventDetails = ContextMenuRootChangeEventDetails;
+}
+const ProgressRoot: React$1.ForwardRefExoticComponent<Omit<ProgressRootProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
+type ProgressStatus = "indeterminate" | "progressing" | "complete";
+interface ProgressRootState {
+    status: ProgressStatus;
+}
+interface ProgressRootProps extends BaseUIComponentProps<"div", ProgressRootState> {
+    "aria-valuetext"?: React$1.AriaAttributes["aria-valuetext"] | undefined;
+    format?: Intl.NumberFormatOptions | undefined;
+    getAriaValueText?: ((formattedValue: string, value: number | null) => string) | undefined;
     locale?: Intl.LocalesArgument | undefined;
+    max?: number | undefined;
+    min?: number | undefined;
+    value: number | null;
 }
-interface Filter {
-    contains: <Item>(item: Item, query: string, itemToString?: (item: Item) => string) => boolean;
-    startsWith: <Item>(item: Item, query: string, itemToString?: (item: Item) => string) => boolean;
-    endsWith: <Item>(item: Item, query: string, itemToString?: (item: Item) => string) => boolean;
+namespace ProgressRoot {
+    type State = ProgressRootState;
+    type Props = ProgressRootProps;
 }
-export function DropdownMenu({ ...props }: MenuRoot.Props): React$1.JSX.Element;
-export function DropdownMenuPortal({ ...props }: MenuPortal.Props): React$1.JSX.Element;
-export function DropdownMenuTrigger({ ...props }: MenuTrigger.Props): React$1.JSX.Element;
-export function DropdownMenuContent({ align, alignOffset, side, sideOffset, className, ...props }: MenuPopup.Props & Pick<MenuPositioner.Props, "align" | "alignOffset" | "side" | "sideOffset">): React$1.JSX.Element;
-export function DropdownMenuGroup({ ...props }: MenuGroup.Props): React$1.JSX.Element;
-export function DropdownMenuLabel({ className, inset, ...props }: MenuGroupLabel.Props & {
-    inset?: boolean;
-}): React$1.JSX.Element;
-export function DropdownMenuItem({ className, inset, variant, ...props }: MenuItem.Props & {
-    inset?: boolean;
-    variant?: "default" | "destructive";
-}): React$1.JSX.Element;
-export function DropdownMenuSub({ ...props }: MenuSubmenuRoot.Props): React$1.JSX.Element;
-export function DropdownMenuSubTrigger({ className, inset, children, ...props }: MenuSubmenuTrigger.Props & {
-    inset?: boolean;
-}): React$1.JSX.Element;
-export function DropdownMenuSubContent({ align, alignOffset, side, sideOffset, className, ...props }: React$1.ComponentProps<typeof DropdownMenuContent>): React$1.JSX.Element;
-export function DropdownMenuCheckboxItem({ className, children, checked, inset, ...props }: MenuCheckboxItem.Props & {
-    inset?: boolean;
-}): React$1.JSX.Element;
-export function DropdownMenuRadioGroup({ ...props }: MenuRadioGroup.Props): React$1.JSX.Element;
-export function DropdownMenuRadioItem({ className, children, inset, ...props }: MenuRadioItem.Props & {
-    inset?: boolean;
-}): React$1.JSX.Element;
-export function DropdownMenuSeparator({ className, ...props }: Separator.Props): React$1.JSX.Element;
-export function DropdownMenuShortcut({ className, ...props }: React$1.ComponentProps<"span">): React$1.JSX.Element;
-export function Table({ className, ...props }: React$1.ComponentProps<"table">): React$1.JSX.Element;
-export function TableHeader({ className, ...props }: React$1.ComponentProps<"thead">): React$1.JSX.Element;
-export function TableBody({ className, ...props }: React$1.ComponentProps<"tbody">): React$1.JSX.Element;
-export function TableFooter({ className, ...props }: React$1.ComponentProps<"tfoot">): React$1.JSX.Element;
-export function TableRow({ className, ...props }: React$1.ComponentProps<"tr">): React$1.JSX.Element;
-export function TableHead({ className, ...props }: React$1.ComponentProps<"th">): React$1.JSX.Element;
-export function TableCell({ className, ...props }: React$1.ComponentProps<"td">): React$1.JSX.Element;
-export function TableCaption({ className, ...props }: React$1.ComponentProps<"caption">): React$1.JSX.Element;
-type ColumnWidth = {
-    type: "proportional";
-    value: number;
-    minWidth?: number;
-} | {
-    type: "pixel";
-    value: number;
-};
-type TableColumn<T extends Record<string, unknown>> = {
-    key: string;
-    header?: React$1.ReactNode;
-    width?: ColumnWidth;
-    align?: "start" | "center" | "end";
-    renderCell?: (row: T) => React$1.ReactNode;
-};
-export function DataTable<T extends Record<string, unknown>>({ data, columns, hasHover, isStriped, idKey, density, verticalAlign }: {
-    data: T[];
-    columns?: TableColumn<T>[];
-    hasHover?: boolean;
-    isStriped?: boolean;
-    idKey?: keyof T | ((row: T) => string | number);
-    density?: "compact";
-    verticalAlign?: "top" | "middle" | "bottom";
-}): React$1.JSX.Element;
-export function Input({ className, type, ...props }: React$1.ComponentProps<"input">): React$1.JSX.Element;
-export function Textarea({ className, ...props }: React$1.ComponentProps<"textarea">): React$1.JSX.Element;
-function Label({ className, ...props }: React$1.ComponentProps<"label">): React$1.JSX.Element;
-export function FieldSet({ className, ...props }: React$1.ComponentProps<"fieldset">): React$1.JSX.Element;
-export function FieldLegend({ className, variant, ...props }: React$1.ComponentProps<"legend"> & {
-    variant?: "legend" | "label";
-}): React$1.JSX.Element;
-export function FieldGroup({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
-const fieldVariants: (props?: ({
-    orientation?: "horizontal" | "vertical" | "responsive" | null | undefined;
-} & ClassProp) | undefined) => string;
-export function Field({ className, orientation, ...props }: React$1.ComponentProps<"div"> & VariantProps<typeof fieldVariants>): React$1.JSX.Element;
-export function FieldContent({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
-export function FieldLabel({ className, ...props }: React$1.ComponentProps<typeof Label>): React$1.JSX.Element;
-export function FieldTitle({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
-export function FieldDescription({ className, ...props }: React$1.ComponentProps<"p">): React$1.JSX.Element;
-export function FieldSeparator({ children, className, ...props }: React$1.ComponentProps<"div"> & {
-    children?: React$1.ReactNode;
-}): React$1.JSX.Element;
-export function FieldError({ className, children, errors, ...props }: React$1.ComponentProps<"div"> & {
-    errors?: Array<{
-        message?: string;
-    } | undefined>;
-}): React$1.JSX.Element | null;
-const Button: React$1.ForwardRefExoticComponent<Omit<ButtonProps, "ref"> & React$1.RefAttributes<HTMLElement>>;
-interface ButtonState {
-    disabled: boolean;
+const ProgressTrack: React$1.ForwardRefExoticComponent<Omit<ProgressTrackProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
+interface ProgressTrackState extends ProgressRootState {
 }
-interface ButtonProps extends NativeButtonProps, BaseUIComponentProps<"button", ButtonState> {
-    focusableWhenDisabled?: boolean | undefined;
+interface ProgressTrackProps extends BaseUIComponentProps<"div", ProgressTrackState> {
 }
-namespace Button {
-    type State = ButtonState;
-    type Props = ButtonProps;
+namespace ProgressTrack {
+    type State = ProgressTrackState;
+    type Props = ProgressTrackProps;
 }
-const buttonVariants: (props?: ({
-    variant?: "default" | "outline" | "secondary" | "destructive" | "link" | "ghost" | null | undefined;
-    size?: "default" | "xs" | "sm" | "lg" | "icon" | "icon-xs" | "icon-sm" | "icon-lg" | null | undefined;
-} & ClassProp) | undefined) => string;
-function Button$1({ className, variant, size, ...props }: Button.Props & VariantProps<typeof buttonVariants>): React$1.JSX.Element;
-export function InputGroup({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
-const inputGroupAddonVariants: (props?: ({
-    align?: "inline-end" | "inline-start" | "block-end" | "block-start" | null | undefined;
-} & ClassProp) | undefined) => string;
-export function InputGroupAddon({ className, align, ...props }: React$1.ComponentProps<"div"> & VariantProps<typeof inputGroupAddonVariants>): React$1.JSX.Element;
-const inputGroupButtonVariants: (props?: ({
-    size?: "xs" | "sm" | "icon-xs" | "icon-sm" | null | undefined;
-} & ClassProp) | undefined) => string;
-export function InputGroupButton({ className, type, variant, size, ...props }: Omit<React$1.ComponentProps<typeof Button$1>, "size" | "type"> & VariantProps<typeof inputGroupButtonVariants> & {
-    type?: "button" | "submit" | "reset";
-}): React$1.JSX.Element;
-export function InputGroupText({ className, ...props }: React$1.ComponentProps<"span">): React$1.JSX.Element;
-export function InputGroupInput({ className, ...props }: React$1.ComponentProps<"input">): React$1.JSX.Element;
-export function InputGroupTextarea({ className, ...props }: React$1.ComponentProps<"textarea">): React$1.JSX.Element;
-interface UseCollapsibleRootReturnValue {
-    defaultPanelId: React$1.HTMLAttributes<Element>["id"];
-    disabled: boolean;
-    handleTrigger: (event: React$1.MouseEvent | React$1.KeyboardEvent) => void;
-    mounted: boolean;
-    open: boolean;
-    panelId: React$1.HTMLAttributes<Element>["id"];
-    setMounted: (nextMounted: boolean) => void;
-    setOpen: (open: boolean) => void;
-    setPanelIdState: React$1.Dispatch<React$1.SetStateAction<string | null | undefined>>;
-    transitionStatus: TransitionStatus;
+const ProgressIndicator: React$1.ForwardRefExoticComponent<Omit<ProgressIndicatorProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
+interface ProgressIndicatorState extends ProgressRootState {
 }
-const CollapsibleRoot: React$1.ForwardRefExoticComponent<Omit<CollapsibleRootProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
-interface CollapsibleRootState extends Pick<UseCollapsibleRootReturnValue, "open" | "disabled" | "transitionStatus"> {
+interface ProgressIndicatorProps extends BaseUIComponentProps<"div", ProgressIndicatorState> {
 }
-interface CollapsibleRootProps extends BaseUIComponentProps<"div", CollapsibleRootState> {
-    open?: boolean | undefined;
-    defaultOpen?: boolean | undefined;
-    onOpenChange?: ((open: boolean, eventDetails: CollapsibleRootChangeEventDetails) => void) | undefined;
-    disabled?: boolean | undefined;
+namespace ProgressIndicator {
+    type State = ProgressIndicatorState;
+    type Props = ProgressIndicatorProps;
 }
-type CollapsibleRootChangeEventReason = typeof triggerPress | typeof none;
-type CollapsibleRootChangeEventDetails = BaseUIChangeEventDetails<CollapsibleRootChangeEventReason>;
-namespace CollapsibleRoot {
-    type State = CollapsibleRootState;
-    type Props = CollapsibleRootProps;
-    type ChangeEventReason = CollapsibleRootChangeEventReason;
-    type ChangeEventDetails = CollapsibleRootChangeEventDetails;
+const ProgressValue: React$1.ForwardRefExoticComponent<Omit<ProgressValueProps, "ref"> & React$1.RefAttributes<HTMLSpanElement>>;
+interface ProgressValueState extends ProgressRootState {
 }
-const CollapsibleTrigger: React$1.ForwardRefExoticComponent<Omit<CollapsibleTriggerProps, "ref"> & React$1.RefAttributes<HTMLButtonElement>>;
-interface CollapsibleTriggerState extends CollapsibleRootState {
+interface ProgressValueProps extends Omit<BaseUIComponentProps<"span", ProgressValueState>, "children"> {
+    children?: null | ((formattedValue: string | null, value: number | null) => React$1.ReactNode) | undefined;
 }
-interface CollapsibleTriggerProps extends NativeButtonProps, BaseUIComponentProps<"button", CollapsibleTriggerState> {
+namespace ProgressValue {
+    type State = ProgressValueState;
+    type Props = ProgressValueProps;
 }
-namespace CollapsibleTrigger {
-    type State = CollapsibleTriggerState;
-    type Props = CollapsibleTriggerProps;
+const ProgressLabel: React$1.ForwardRefExoticComponent<Omit<ProgressLabelProps, "ref"> & React$1.RefAttributes<HTMLSpanElement>>;
+interface ProgressLabelState extends ProgressRootState {
 }
-const CollapsiblePanel: React$1.ForwardRefExoticComponent<Omit<CollapsiblePanelProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
-interface CollapsiblePanelState extends CollapsibleRootState {
-    transitionStatus: TransitionStatus;
+interface ProgressLabelProps extends BaseUIComponentProps<"span", ProgressLabelState> {
 }
-interface CollapsiblePanelProps extends BaseUIComponentProps<"div", CollapsiblePanelState> {
-    hiddenUntilFound?: boolean | undefined;
-    keepMounted?: boolean | undefined;
-}
-namespace CollapsiblePanel {
-    type State = CollapsiblePanelState;
-    type Props = CollapsiblePanelProps;
-}
-function Collapsible$1({ ...props }: Collapsible.Root.Props): React$1.JSX.Element;
-function CollapsibleTrigger$1({ ...props }: Collapsible.Trigger.Props): React$1.JSX.Element;
-export function CollapsibleContent({ ...props }: Collapsible.Panel.Props): React$1.JSX.Element;
-export function Disclosure(props: {
-    children?: React$1.ReactNode;
-    trigger: React$1.ReactNode;
-    defaultIsOpen?: boolean;
-    isOpen?: boolean;
-    isDisabled?: boolean;
-    onOpenChange?: (isOpen: boolean) => void;
-}): React$1.JSX.Element;
-type Errors = Record<string, string | string[]>;
-interface FormContext {
-    errors: Errors;
-    clearErrors: (name: string | undefined) => void;
-    elementRef: React$1.RefObject<HTMLFormElement | null>;
-    formRef: React$1.RefObject<{
-        fields: Map<string, {
-            name: string | undefined;
-            validate: () => void;
-            validityData: FieldValidityData;
-            controlRef: React$1.RefObject<HTMLElement | null>;
-            getValue: () => unknown;
-        }>;
-    }>;
-    validationMode: Form.ValidationMode;
-    submitCountRef: React$1.RefObject<number>;
-}
-const FormContext: React$1.Context<FormContext>;
-const Form: {
-    <FormValues extends Record<string, any> = Record<string, any>>(props: Form.Props<FormValues> & {
-        ref?: React$1.Ref<HTMLFormElement> | undefined;
-    }): React$1.JSX.Element;
-};
-type FormSubmitEventReason = typeof none;
-type FormSubmitEventDetails = BaseUIGenericEventDetails<Form.SubmitEventReason>;
-type FormValidationMode = "onSubmit" | "onBlur" | "onChange";
-interface FormActions {
-    validate: (fieldName?: string | undefined) => void;
-}
-interface FormState {
-}
-interface FormProps<FormValues extends Record<string, any> = Record<string, any>> extends BaseUIComponentProps<"form", FormState, React$1.ComponentPropsWithRef<"form">> {
-    validationMode?: FormValidationMode | undefined;
-    errors?: FormContext["errors"] | undefined;
-    onFormSubmit?: ((formValues: FormValues, eventDetails: Form.SubmitEventDetails) => void) | undefined;
-    actionsRef?: React$1.RefObject<Form.Actions | null> | undefined;
-}
-namespace Form {
-    type Props<FormValues extends Record<string, any> = Record<string, any>> = FormProps<FormValues>;
-    type State = FormState;
-    type Actions = FormActions;
-    type ValidationMode = FormValidationMode;
-    type SubmitEventReason = FormSubmitEventReason;
-    type SubmitEventDetails = FormSubmitEventDetails;
-    type Values<FormValues extends Record<string, any> = Record<string, any>> = FormValues;
-}
-const FieldRoot: React$1.ForwardRefExoticComponent<Omit<FieldRootProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
-interface FieldValidityData {
-    state: {
-        badInput: boolean;
-        customError: boolean;
-        patternMismatch: boolean;
-        rangeOverflow: boolean;
-        rangeUnderflow: boolean;
-        stepMismatch: boolean;
-        tooLong: boolean;
-        tooShort: boolean;
-        typeMismatch: boolean;
-        valueMissing: boolean;
-        valid: boolean | null;
-    };
-    error: string;
-    errors: string[];
-    value: unknown;
-    initialValue: unknown;
-}
-interface FieldRootActions {
-    validate: () => void;
-}
-interface FieldRootState {
-    disabled: boolean;
-    touched: boolean;
-    dirty: boolean;
-    valid: boolean | null;
-    filled: boolean;
-    focused: boolean;
-}
-interface FieldRootProps extends BaseUIComponentProps<"div", FieldRootState> {
-    disabled?: boolean | undefined;
-    name?: string | undefined;
-    validate?: ((value: unknown, formValues: Form.Values) => string | string[] | null | void | Promise<string | string[] | null | void>) | undefined;
-    validationMode?: Form.ValidationMode | undefined;
-    validationDebounceTime?: number | undefined;
-    invalid?: boolean | undefined;
-    dirty?: boolean | undefined;
-    touched?: boolean | undefined;
-    actionsRef?: React$1.RefObject<FieldRoot.Actions | null> | undefined;
-}
-namespace FieldRoot {
-    type State = FieldRootState;
-    type Props = FieldRootProps;
-    type Actions = FieldRootActions;
-}
-const SwitchRoot: React$1.ForwardRefExoticComponent<Omit<SwitchRootProps, "ref"> & React$1.RefAttributes<HTMLElement>>;
-interface SwitchRootState extends FieldRootState {
-    checked: boolean;
-    disabled: boolean;
-    readOnly: boolean;
-    required: boolean;
-}
-interface SwitchRootProps extends NonNativeButtonProps, Omit<BaseUIComponentProps<"span", SwitchRootState>, "onChange"> {
-    id?: string | undefined;
-    checked?: boolean | undefined;
-    defaultChecked?: boolean | undefined;
-    disabled?: boolean | undefined;
-    inputRef?: React$1.Ref<HTMLInputElement> | undefined;
-    name?: string | undefined;
-    form?: string | undefined;
-    onCheckedChange?: ((checked: boolean, eventDetails: SwitchRoot.ChangeEventDetails) => void) | undefined;
-    readOnly?: boolean | undefined;
-    required?: boolean | undefined;
-    value?: string | undefined;
-    uncheckedValue?: string | undefined;
-}
-type SwitchRootChangeEventReason = typeof none;
-type SwitchRootChangeEventDetails = BaseUIChangeEventDetails<SwitchRoot.ChangeEventReason>;
-namespace SwitchRoot {
-    type State = SwitchRootState;
-    type Props = SwitchRootProps;
-    type ChangeEventReason = SwitchRootChangeEventReason;
-    type ChangeEventDetails = SwitchRootChangeEventDetails;
-}
-const SwitchThumb: React$1.ForwardRefExoticComponent<Omit<SwitchThumbProps, "ref"> & React$1.RefAttributes<HTMLSpanElement>>;
-interface SwitchThumbProps extends BaseUIComponentProps<"span", SwitchThumbState> {
-}
-interface SwitchThumbState extends SwitchRootState {
-}
-namespace SwitchThumb {
-    type Props = SwitchThumbProps;
-    type State = SwitchThumbState;
-}
-function Switch$1({ className, size, ...props }: Switch.Root.Props & {
-    size?: "sm" | "default";
-}): React$1.JSX.Element;
-type Spacing = 0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10;
-type FieldProps = {
-    label: string;
-    description?: string;
-    name?: string;
-    required?: boolean;
-    disabled?: boolean;
-};
-export function SwitchField(props: FieldProps & {
-    value?: boolean;
-    defaultChecked?: boolean;
-    onChange?: (value: boolean) => void;
-}): React$1.JSX.Element;
-const CheckboxRoot: React$1.ForwardRefExoticComponent<Omit<CheckboxRootProps, "ref"> & React$1.RefAttributes<HTMLElement>>;
-interface CheckboxRootState extends FieldRootState {
-    checked: boolean;
-    disabled: boolean;
-    readOnly: boolean;
-    required: boolean;
-    indeterminate: boolean;
-}
-interface CheckboxRootProps extends NonNativeButtonProps, Omit<BaseUIComponentProps<"span", CheckboxRootState>, "onChange" | "value"> {
-    id?: string | undefined;
-    name?: string | undefined;
-    form?: string | undefined;
-    checked?: boolean | undefined;
-    defaultChecked?: boolean | undefined;
-    disabled?: boolean | undefined;
-    onCheckedChange?: ((checked: boolean, eventDetails: CheckboxRootChangeEventDetails) => void) | undefined;
-    readOnly?: boolean | undefined;
-    required?: boolean | undefined;
-    indeterminate?: boolean | undefined;
-    inputRef?: React$1.Ref<HTMLInputElement> | undefined;
-    parent?: boolean | undefined;
-    uncheckedValue?: string | undefined;
-    value?: string | undefined;
-}
-type CheckboxRootChangeEventReason = typeof none;
-type CheckboxRootChangeEventDetails = BaseUIChangeEventDetails<CheckboxRoot.ChangeEventReason>;
-namespace CheckboxRoot {
-    type State = CheckboxRootState;
-    type Props = CheckboxRootProps;
-    type ChangeEventReason = CheckboxRootChangeEventReason;
-    type ChangeEventDetails = CheckboxRootChangeEventDetails;
-}
-const CheckboxIndicator: React$1.ForwardRefExoticComponent<Omit<CheckboxIndicatorProps, "ref"> & React$1.RefAttributes<HTMLSpanElement>>;
-interface CheckboxIndicatorState extends CheckboxRootState {
-    transitionStatus: TransitionStatus;
-}
-interface CheckboxIndicatorProps extends BaseUIComponentProps<"span", CheckboxIndicatorState> {
-    keepMounted?: boolean | undefined;
-}
-namespace CheckboxIndicator {
-    type State = CheckboxIndicatorState;
-    type Props = CheckboxIndicatorProps;
-}
-function Checkbox$1({ className, indeterminate, ...props }: Checkbox.Root.Props): React$1.JSX.Element;
-type StepperOrientation = "horizontal" | "vertical";
-type StepIndicators = {
-    active?: React$1.ReactNode;
-    completed?: React$1.ReactNode;
-    inactive?: React$1.ReactNode;
-    loading?: React$1.ReactNode;
-};
-interface StepperProps extends React$1.HTMLAttributes<HTMLDivElement> {
-    defaultValue?: number;
-    value?: number;
-    onValueChange?: (value: number) => void;
-    orientation?: StepperOrientation;
-    indicators?: StepIndicators;
-}
-export function Stepper({ defaultValue, value, onValueChange, orientation, className, children, indicators, ...props }: StepperProps): React$1.JSX.Element;
-interface StepperItemProps extends React$1.HTMLAttributes<HTMLDivElement> {
-    step: number;
-    completed?: boolean;
-    disabled?: boolean;
-    loading?: boolean;
-}
-export function StepperItem({ step, completed, disabled, loading, className, children, ...props }: StepperItemProps): React$1.JSX.Element;
-type StepperTriggerProps = UseRenderComponentProps<"button">;
-export function StepperTrigger({ className, children, tabIndex, render, ...props }: StepperTriggerProps): React$1.ReactElement<unknown, string | React$1.JSXElementConstructor<any>>;
-export function StepperIndicator({ children, className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
-export function StepperSeparator({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
-export function StepperTitle({ children, className, ...props }: React$1.ComponentProps<"h3">): React$1.JSX.Element;
-export function StepperDescription({ children, className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
-export function StepperNav({ children, className, ...props }: React$1.ComponentProps<"nav">): React$1.JSX.Element;
-export function StepperPanel({ children, className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
-interface StepperContentProps extends React$1.ComponentProps<"div"> {
-    value: number;
-    forceMount?: boolean;
-}
-export function StepperContent({ value, forceMount, children, className, ...props }: StepperContentProps): React$1.JSX.Element | null;
-type StepProps = {
-    step?: number;
-    label: string;
-    description?: string;
-    children?: React$1.ReactNode;
-};
-type ProgressStepperProps = {
-    children?: React$1.ReactNode;
-    activeStep?: number;
-    orientation?: "horizontal" | "vertical";
-    onStepClick?: (index: number) => void;
-};
-type WizardProps = Omit<ProgressStepperProps, "onStepClick"> & {
-    onStepClick?: (index: number) => void;
-    height?: number | string;
-    next?: (step: number) => {
-        label: string;
-        action: () => void | boolean | Promise<void | boolean>;
-    } | undefined;
-    onCancel?: () => void;
-    finalAction?: React$1.ReactNode;
-    backVariant?: "outline" | "ghost";
-};
-export function ProgressStepper(props: ProgressStepperProps): React$1.JSX.Element;
-export function Wizard(props: WizardProps): React$1.JSX.Element;
-export function Step(props: StepProps): React$1.JSX.Element;
-type ActionClickEvent = Parameters<NonNullable<React$1.ComponentProps<typeof Button$1>["onClick"]>>[0];
-function ActionButton({ children, variant, size: requestedSize, type, disabled, onClick, href, name, value, form, className, onClickCapture, onKeyDown, onKeyUp, ...props }: Omit<React$1.ComponentProps<typeof Button$1>, "onClick"> & {
-    onClick?: (event: ActionClickEvent) => void | Promise<void>;
-    href?: string;
-}): React$1.JSX.Element;
-type ButtonProps$1 = React$1.ComponentProps<typeof ActionButton>;
-function Button$2({ onClick, ...props }: ButtonProps$1): React$1.JSX.Element;
-export function ButtonGroup({ children, label, orientation, size: requestedSize, isDisabled }: {
-    children?: React$1.ReactNode;
-    label: string;
-    orientation?: "horizontal" | "vertical";
-    size?: "sm" | "default" | "lg";
-    isDisabled?: boolean;
-}): React$1.JSX.Element;
-export function FileViewer({ src, title, size }: {
-    src: string;
-    title: string;
-    size?: "sm" | "md" | "lg";
-}): React$1.JSX.Element;
-export function Card({ className, size, ...props }: React$1.ComponentProps<"div"> & {
-    size?: "default" | "sm";
-}): React$1.JSX.Element;
-export function CardHeader({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
-export function CardTitle({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
-export function CardDescription({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
-export function CardAction({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
-export function CardContent({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
-export function CardFooter({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
-type InteractiveCardProps = {
-    children?: React$1.ReactNode;
-    padding?: 0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10;
-    isClipped?: boolean;
-    variant?: "default" | "transparent" | "muted";
-    width?: number | string;
-    height?: number | string;
-    maxWidth?: number | string;
-    minHeight?: number | string;
-    inert?: boolean;
-    "aria-hidden"?: boolean | "true" | "false";
-    label?: string;
-    onClick?: (event: React$1.MouseEvent<HTMLElement>) => void;
-    href?: string;
-    target?: string;
-    isDisabled?: boolean;
-    isSelected?: boolean;
-    onChange?: (isSelected: boolean) => void;
-};
-export function InteractiveCard({ label, padding, isClipped, variant, onClick, href, target, isDisabled, isSelected, onChange, children, width, height, maxWidth, minHeight, inert, "aria-hidden": ariaHidden }: InteractiveCardProps): React$1.JSX.Element;
-export function Dialog(props: {
-    children?: React$1.ReactNode;
-    title?: string;
-    variant?: "standard" | "fullscreen";
-    isOpen: boolean;
-    onOpenChange: (open: boolean) => void;
-    gap?: Spacing;
-    paddingInline?: Spacing;
-}): React$1.JSX.Element;
-interface Group<Item = any> {
-    [key: string]: unknown;
-    items: ReadonlyArray<Item>;
+namespace ProgressLabel {
+    type State = ProgressLabelState;
+    type Props = ProgressLabelProps;
 }
 function SelectRoot<Value, Multiple extends boolean | undefined = false>(props: SelectRoot.Props<Value, Multiple>): React$1.JSX.Element;
 type SelectInputValue<Value, Multiple extends boolean | undefined> = Multiple extends true ? readonly Value[] : Value;
@@ -11771,510 +12128,6 @@ namespace SelectSeparator {
     type Props = SelectSeparatorProps;
     type State = SelectSeparatorState;
 }
-export const Select: typeof SelectRoot;
-function SelectGroup$1({ className, ...props }: SelectGroup.Props): React$1.JSX.Element;
-function SelectValue$1({ className, ...props }: SelectValue.Props): React$1.JSX.Element;
-function SelectTrigger$1({ className, size, children, ...props }: SelectTrigger.Props & {
-    size?: "sm" | "default";
-}): React$1.JSX.Element;
-export function SelectContent({ className, children, side, sideOffset, align, alignOffset, alignItemWithTrigger, ...props }: SelectPopup.Props & Pick<SelectPositioner.Props, "align" | "alignOffset" | "side" | "sideOffset" | "alignItemWithTrigger">): React$1.JSX.Element;
-function SelectLabel$1({ className, ...props }: SelectGroupLabel.Props): React$1.JSX.Element;
-function SelectItem$1({ className, children, ...props }: SelectItem.Props): React$1.JSX.Element;
-function SelectSeparator$1({ className, ...props }: SelectSeparator.Props): React$1.JSX.Element;
-export function SelectScrollUpButton({ className, ...props }: React$1.ComponentProps<typeof SelectScrollUpArrow>): React$1.JSX.Element;
-export function SelectScrollDownButton({ className, ...props }: React$1.ComponentProps<typeof SelectScrollDownArrow>): React$1.JSX.Element;
-class ComboboxItemCollection<in out Item, Value = Item> {
-    private constructor();
-    private readonly __itemCollectionBrand;
-}
-type InternalAriaComboboxProps<Value, Mode extends SelectionMode$1, Item = Value> = AriaComboboxProps<Value, Mode, Item> & {
-    filterQuery?: string | undefined;
-};
-function AriaCombobox<Value, Mode extends SelectionMode$1 = "none", Item = Value>(props: Omit<InternalAriaComboboxProps<Value, Mode, Item>, "items"> & {
-    items?: readonly any[] | ComboboxItemCollection<Item, any> | undefined;
-}): React$1.JSX.Element;
-type SelectionMode$1 = "single" | "multiple" | "none";
-type ComboboxItemValueType<ItemValue, Mode extends SelectionMode$1> = Mode extends "multiple" ? ItemValue[] : ItemValue;
-interface ComboboxRootProps<ItemValue, Item = ItemValue> {
-    children?: React$1.ReactNode;
-    name?: string | undefined;
-    form?: string | undefined;
-    id?: string | undefined;
-    required?: boolean | undefined;
-    readOnly?: boolean | undefined;
-    disabled?: boolean | undefined;
-    defaultOpen?: boolean | undefined;
-    open?: boolean | undefined;
-    onOpenChange?: ((open: boolean, eventDetails: AriaCombobox.OpenChangeEventDetails) => void) | undefined;
-    onOpenChangeComplete?: ((open: boolean) => void) | undefined;
-    openOnInputClick?: boolean | undefined;
-    autoHighlight?: boolean | "always" | undefined;
-    keepHighlight?: boolean | undefined;
-    highlightItemOnHover?: boolean | undefined;
-    loopFocus?: boolean | undefined;
-    inputValue?: React$1.ComponentProps<"input">["value"] | undefined;
-    onInputValueChange?: ((value: string, eventDetails: AriaCombobox.ChangeEventDetails) => void) | undefined;
-    defaultInputValue?: React$1.ComponentProps<"input">["defaultValue"] | undefined;
-    actionsRef?: React$1.RefObject<AriaCombobox.Actions | null> | undefined;
-    onItemHighlighted?: ((itemValue: ItemValue | undefined, eventDetails: AriaCombobox.HighlightEventDetails) => void) | undefined;
-    inputRef?: React$1.Ref<HTMLInputElement> | undefined;
-    grid?: boolean | undefined;
-    items?: readonly any[] | readonly Group<any>[] | ComboboxItemCollection<Item, ItemValue> | undefined;
-    filteredItems?: readonly Item[] | readonly Group<Item>[] | undefined;
-    filter?: null | ((item: Item, query: string, itemToString?: (item: Item) => string) => boolean) | undefined;
-    itemToStringLabel?: ((itemValue: ItemValue) => string) | undefined;
-    itemToStringValue?: ((itemValue: ItemValue) => string) | undefined;
-    isItemEqualToValue?: ((itemValue: ItemValue, value: ItemValue) => boolean) | undefined;
-    virtualized?: boolean | undefined;
-    inline?: boolean | undefined;
-    modal?: boolean | undefined;
-    limit?: number | undefined;
-    autoComplete?: "list" | "both" | "inline" | "none" | undefined;
-    formAutoComplete?: string | undefined;
-    locale?: Intl.LocalesArgument | undefined;
-    submitOnItemClick?: boolean | undefined;
-    fillInputOnItemPress?: boolean | undefined;
-}
-interface AriaComboboxState {
-}
-type AriaComboboxProps<Value, Mode extends SelectionMode$1 = "none", Item = Value> = ComboboxRootProps<Value, Item> & {
-    selectionMode: Mode;
-    selectedValue?: ComboboxItemValueType<Value, Mode> | undefined;
-    defaultSelectedValue?: ComboboxItemValueType<Value, Mode> | null | undefined;
-    onSelectedValueChange?: ((value: ComboboxItemValueType<Value, Mode>, eventDetails: AriaCombobox.ChangeEventDetails) => void) | undefined;
-};
-namespace AriaCombobox {
-    type Props<Value, Mode extends SelectionMode$1 = "none", Item = Value> = AriaComboboxProps<Value, Mode, Item>;
-    type State = AriaComboboxState;
-    interface Actions {
-        unmount: () => void;
-        close: () => void;
-    }
-    type HighlightEventReason = typeof keyboard | typeof pointer | typeof none;
-    type HighlightEventDetails = BaseUIHighlightEventDetails<HighlightEventReason, {
-        index: number;
-    }>;
-    type ChangeEventReason = typeof triggerPress | typeof inputPress | typeof outsidePress | typeof itemPress | typeof closePress | typeof escapeKey | typeof listNavigation | typeof focusOut | typeof inputChange | typeof inputClear | typeof clearPress | typeof chipRemovePress | typeof cancelOpen | typeof imperativeAction | typeof none;
-    type OpenChangeEventDetails = ChangeEventDetails & {
-        preventUnmountOnClose: () => void;
-    };
-    type ChangeEventDetails = BaseUIChangeEventDetails<ChangeEventReason> & {
-        isItemPress?: boolean | undefined;
-    };
-}
-const ComboboxInput: React$1.ForwardRefExoticComponent<Omit<ComboboxInputProps, "ref"> & React$1.RefAttributes<HTMLInputElement>>;
-interface ComboboxInputState extends FieldRootState {
-    open: boolean;
-    popupSide: Side$1 | null;
-    listEmpty: boolean;
-    readOnly: boolean;
-}
-interface ComboboxInputProps extends BaseUIComponentProps<"input", ComboboxInputState> {
-    disabled?: boolean | undefined;
-}
-namespace ComboboxInput {
-    type State = ComboboxInputState;
-    type Props = ComboboxInputProps;
-}
-const ComboboxIcon: React$1.ForwardRefExoticComponent<Omit<ComboboxIconProps, "ref"> & React$1.RefAttributes<HTMLSpanElement>>;
-interface ComboboxIconState {
-}
-interface ComboboxIconProps extends BaseUIComponentProps<"span", ComboboxIconState> {
-}
-namespace ComboboxIcon {
-    type State = ComboboxIconState;
-    type Props = ComboboxIconProps;
-}
-const ComboboxClear: React$1.ForwardRefExoticComponent<Omit<ComboboxClearProps, "ref"> & React$1.RefAttributes<HTMLButtonElement>>;
-interface ComboboxClearState {
-    open: boolean;
-    disabled: boolean;
-    visible: boolean;
-    transitionStatus: TransitionStatus;
-}
-interface ComboboxClearProps extends NativeButtonProps, BaseUIComponentProps<"button", ComboboxClearState> {
-    disabled?: boolean | undefined;
-    keepMounted?: boolean | undefined;
-}
-namespace ComboboxClear {
-    type State = ComboboxClearState;
-    type Props = ComboboxClearProps;
-}
-const ComboboxList: React$1.ForwardRefExoticComponent<Omit<ComboboxListProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
-interface ComboboxListState {
-    empty: boolean;
-}
-interface ComboboxListProps extends Omit<BaseUIComponentProps<"div", ComboboxListState>, "children"> {
-    children?: React$1.ReactNode | ((item: any, index: number) => React$1.ReactNode);
-}
-namespace ComboboxList {
-    type State = ComboboxListState;
-    type Props = ComboboxListProps;
-}
-const ComboboxStatus: React$1.ForwardRefExoticComponent<Omit<ComboboxStatusProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
-interface ComboboxStatusState {
-}
-interface ComboboxStatusProps extends BaseUIComponentProps<"div", ComboboxStatusState> {
-}
-namespace ComboboxStatus {
-    type State = ComboboxStatusState;
-    type Props = ComboboxStatusProps;
-}
-const ComboboxPortal: React$1.ForwardRefExoticComponent<Omit<ComboboxPortalProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
-interface ComboboxPortalState {
-}
-interface ComboboxPortalProps extends BaseUIComponentProps<"div", ComboboxPortalState> {
-    keepMounted?: boolean | undefined;
-    container?: HTMLElement | ShadowRoot | React$1.RefObject<HTMLElement | ShadowRoot | null> | null | undefined;
-}
-namespace ComboboxPortal {
-    type State = ComboboxPortalState;
-    type Props = ComboboxPortalProps;
-}
-const ComboboxBackdrop: React$1.ForwardRefExoticComponent<Omit<ComboboxBackdropProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
-interface ComboboxBackdropProps extends BaseUIComponentProps<"div", ComboboxBackdropState> {
-}
-interface ComboboxBackdropState {
-    open: boolean;
-    transitionStatus: TransitionStatus;
-}
-namespace ComboboxBackdrop {
-    type Props = ComboboxBackdropProps;
-    type State = ComboboxBackdropState;
-}
-const ComboboxPositioner: React$1.ForwardRefExoticComponent<Omit<ComboboxPositionerProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
-interface ComboboxPositionerState {
-    open: boolean;
-    side: Side$1;
-    align: Align;
-    anchorHidden: boolean;
-    empty: boolean;
-}
-interface ComboboxPositionerProps extends UseAnchorPositioningSharedParameters, BaseUIComponentProps<"div", ComboboxPositionerState> {
-}
-namespace ComboboxPositioner {
-    type State = ComboboxPositionerState;
-    type Props = ComboboxPositionerProps;
-}
-const ComboboxPopup: React$1.ForwardRefExoticComponent<Omit<ComboboxPopupProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
-interface ComboboxPopupState {
-    open: boolean;
-    side: Side$1;
-    align: Align;
-    anchorHidden: boolean;
-    transitionStatus: TransitionStatus;
-    empty: boolean;
-}
-interface ComboboxPopupProps extends BaseUIComponentProps<"div", ComboboxPopupState> {
-    initialFocus?: boolean | React$1.RefObject<HTMLElement | null> | ((openType: InteractionType) => void | boolean | HTMLElement | null) | undefined;
-    finalFocus?: boolean | React$1.RefObject<HTMLElement | null> | ((closeType: InteractionType) => void | boolean | HTMLElement | null) | undefined;
-}
-namespace ComboboxPopup {
-    type State = ComboboxPopupState;
-    type Props = ComboboxPopupProps;
-}
-const ComboboxArrow: React$1.ForwardRefExoticComponent<Omit<ComboboxArrowProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
-interface ComboboxArrowState {
-    open: boolean;
-    side: Side$1;
-    align: Align;
-    uncentered: boolean;
-}
-interface ComboboxArrowProps extends BaseUIComponentProps<"div", ComboboxArrowState> {
-}
-namespace ComboboxArrow {
-    type State = ComboboxArrowState;
-    type Props = ComboboxArrowProps;
-}
-const ComboboxGroup: React$1.ForwardRefExoticComponent<Omit<ComboboxGroupProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
-interface ComboboxGroupState {
-}
-interface ComboboxGroupProps extends BaseUIComponentProps<"div", ComboboxGroupState> {
-    items?: readonly any[] | undefined;
-}
-namespace ComboboxGroup {
-    type State = ComboboxGroupState;
-    type Props = ComboboxGroupProps;
-}
-const ComboboxGroupLabel: React$1.ForwardRefExoticComponent<Omit<ComboboxGroupLabelProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
-interface ComboboxGroupLabelState {
-}
-interface ComboboxGroupLabelProps extends BaseUIComponentProps<"div", ComboboxGroupLabelState> {
-}
-namespace ComboboxGroupLabel {
-    type State = ComboboxGroupLabelState;
-    type Props = ComboboxGroupLabelProps;
-}
-const ComboboxRow: React$1.ForwardRefExoticComponent<Omit<ComboboxRowProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
-interface ComboboxRowState {
-}
-interface ComboboxRowProps extends BaseUIComponentProps<"div", ComboboxRowState> {
-}
-namespace ComboboxRow {
-    type State = ComboboxRowState;
-    type Props = ComboboxRowProps;
-}
-function ComboboxCollection(props: ComboboxCollection.Props): React$1.JSX.Element;
-interface ComboboxCollectionState {
-}
-interface ComboboxCollectionProps {
-    children: (item: any, index: number) => React$1.ReactNode;
-}
-namespace ComboboxCollection {
-    type State = ComboboxCollectionState;
-    type Props = ComboboxCollectionProps;
-}
-const ComboboxEmpty: React$1.ForwardRefExoticComponent<Omit<ComboboxEmptyProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
-interface ComboboxEmptyState {
-}
-interface ComboboxEmptyProps extends BaseUIComponentProps<"div", ComboboxEmptyState> {
-}
-namespace ComboboxEmpty {
-    type State = ComboboxEmptyState;
-    type Props = ComboboxEmptyProps;
-}
-interface UseComboboxFilterOptions extends GetFilterParameters {
-    multiple?: boolean | undefined;
-    value?: any;
-}
-function useComboboxFilter(options?: UseComboboxFilterOptions): Filter;
-function useFilteredItems<T>(): T[];
-function ComboboxRoot<Value, Multiple extends boolean | undefined = false, Item = Value>(props: ComboboxRoot.Props<Value, Multiple, Item>): React$1.JSX.Element;
-type ModeFromMultiple<Multiple extends boolean | undefined> = Multiple extends true ? "multiple" : "single";
-type ComboboxInputValue<Value, Multiple extends boolean | undefined> = Multiple extends true ? readonly Value[] : Value;
-type ComboboxOutputValue<Value, Multiple extends boolean | undefined> = Multiple extends true ? Value[] : Value;
-type ComboboxRootProps$1<Value, Multiple extends boolean | undefined = false, Item = Value> = Omit<AriaCombobox.Props<Value, ModeFromMultiple<Multiple>, Item>, "fillInputOnItemPress" | "autoComplete" | "formAutoComplete" | "submitOnItemClick" | "autoHighlight" | "keepHighlight" | "highlightItemOnHover" | "itemToStringLabel" | "itemToStringValue" | "isItemEqualToValue" | "selectionMode" | "defaultSelectedValue" | "selectedValue" | "onSelectedValueChange" | "actionsRef" | "onOpenChange" | "onInputValueChange" | "onItemHighlighted"> & {
-    multiple?: Multiple | undefined;
-    autoComplete?: string | undefined;
-    autoHighlight?: boolean | undefined;
-    highlightItemOnHover?: boolean | undefined;
-    itemToStringLabel?: ((itemValue: Value) => string) | undefined;
-    itemToStringValue?: ((itemValue: Value) => string) | undefined;
-    isItemEqualToValue?: ((itemValue: Value, value: Value) => boolean) | undefined;
-    defaultValue?: ComboboxInputValue<Value, Multiple> | null | undefined;
-    actionsRef?: React$1.RefObject<ComboboxRoot.Actions | null> | undefined;
-    onOpenChange?: ((open: boolean, eventDetails: ComboboxRoot.OpenChangeEventDetails) => void) | undefined;
-    onInputValueChange?: ((inputValue: string, eventDetails: ComboboxRoot.ChangeEventDetails) => void) | undefined;
-    onItemHighlighted?: ((highlightedValue: Value | undefined, eventDetails: ComboboxRoot.HighlightEventDetails) => void) | undefined;
-    value?: ComboboxInputValue<Value, Multiple> | null | undefined;
-    onValueChange?: ((value: ComboboxOutputValue<Value, Multiple> | (Multiple extends true ? never : null), eventDetails: ComboboxRoot.ChangeEventDetails) => void) | undefined;
-};
-interface ComboboxRootState extends AriaComboboxState {
-}
-type ComboboxRootActions = AriaCombobox.Actions;
-type ComboboxRootOpenChangeEventDetails = AriaCombobox.OpenChangeEventDetails;
-type ComboboxRootChangeEventReason = AriaCombobox.ChangeEventReason;
-type ComboboxRootChangeEventDetails = AriaCombobox.ChangeEventDetails;
-type ComboboxRootHighlightEventReason = AriaCombobox.HighlightEventReason;
-type ComboboxRootHighlightEventDetails = AriaCombobox.HighlightEventDetails;
-namespace ComboboxRoot {
-    type Props<Value, Multiple extends boolean | undefined = false, Item = Value> = ComboboxRootProps$1<Value, Multiple, Item>;
-    type State = ComboboxRootState;
-    type Actions = ComboboxRootActions;
-    type ChangeEventReason = ComboboxRootChangeEventReason;
-    type ChangeEventDetails = ComboboxRootChangeEventDetails;
-    type OpenChangeEventDetails = ComboboxRootOpenChangeEventDetails;
-    type HighlightEventReason = ComboboxRootHighlightEventReason;
-    type HighlightEventDetails = ComboboxRootHighlightEventDetails;
-}
-const ComboboxLabel: React$1.ForwardRefExoticComponent<Omit<ComboboxLabelProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
-interface ComboboxLabelState extends FieldRoot.State {
-}
-interface ComboboxLabelProps extends Omit<BaseUIComponentProps<"div", ComboboxLabelState>, "id"> {
-}
-namespace ComboboxLabel {
-    type State = ComboboxLabelState;
-    type Props = ComboboxLabelProps;
-}
-function ComboboxValue(props: ComboboxValue.Props): React$1.ReactElement;
-interface ComboboxValueState {
-}
-interface ComboboxValueProps {
-    children?: React$1.ReactNode | ((selectedValue: any) => React$1.ReactNode);
-    placeholder?: React$1.ReactNode;
-}
-namespace ComboboxValue {
-    type State = ComboboxValueState;
-    type Props = ComboboxValueProps;
-}
-const ComboboxInputGroup: React$1.ForwardRefExoticComponent<Omit<ComboboxInputGroupProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
-interface ComboboxInputGroupState extends FieldRoot.State {
-    open: boolean;
-    disabled: boolean;
-    readOnly: boolean;
-    popupSide: Side$1 | null;
-    listEmpty: boolean;
-    placeholder: boolean;
-}
-interface ComboboxInputGroupProps extends BaseUIComponentProps<"div", ComboboxInputGroup.State> {
-}
-namespace ComboboxInputGroup {
-    type State = ComboboxInputGroupState;
-    type Props = ComboboxInputGroupProps;
-}
-const ComboboxTrigger: React$1.ForwardRefExoticComponent<Omit<ComboboxTriggerProps, "ref"> & React$1.RefAttributes<HTMLButtonElement>>;
-interface ComboboxTriggerState extends FieldRootState {
-    open: boolean;
-    disabled: boolean;
-    readOnly: boolean;
-    popupSide: Side$1 | null;
-    listEmpty: boolean;
-    placeholder: boolean;
-}
-interface ComboboxTriggerProps extends NativeButtonProps, BaseUIComponentProps<"button", ComboboxTriggerState> {
-    disabled?: boolean | undefined;
-}
-namespace ComboboxTrigger {
-    type State = ComboboxTriggerState;
-    type Props = ComboboxTriggerProps;
-}
-const ComboboxItem: React$1.NamedExoticComponent<Omit<ComboboxItemProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
-interface ComboboxItemState {
-    disabled: boolean;
-    selected: boolean;
-    highlighted: boolean;
-}
-interface ComboboxItemProps extends NonNativeButtonProps, Omit<BaseUIComponentProps<"div", ComboboxItemState>, "id"> {
-    children?: React$1.ReactNode;
-    onClick?: BaseUIComponentProps<"div", ComboboxItemState>["onClick"] | undefined;
-    index?: number | undefined;
-    value?: any;
-    disabled?: boolean | undefined;
-}
-namespace ComboboxItem {
-    type State = ComboboxItemState;
-    type Props = ComboboxItemProps;
-}
-const ComboboxItemIndicator: React$1.ForwardRefExoticComponent<Omit<ComboboxItemIndicatorProps, "ref"> & React$1.RefAttributes<HTMLSpanElement>>;
-interface ComboboxItemIndicatorProps extends BaseUIComponentProps<"span", ComboboxItemIndicatorState> {
-    children?: React$1.ReactNode;
-    keepMounted?: boolean | undefined;
-}
-interface ComboboxItemIndicatorState {
-    selected: boolean;
-    transitionStatus: TransitionStatus;
-}
-namespace ComboboxItemIndicator {
-    type Props = ComboboxItemIndicatorProps;
-    type State = ComboboxItemIndicatorState;
-}
-const ComboboxChips: React$1.ForwardRefExoticComponent<Omit<ComboboxChipsProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
-interface ComboboxChipsState {
-}
-interface ComboboxChipsProps extends BaseUIComponentProps<"div", ComboboxChipsState> {
-}
-namespace ComboboxChips {
-    type State = ComboboxChipsState;
-    type Props = ComboboxChipsProps;
-}
-const ComboboxChip: React$1.ForwardRefExoticComponent<Omit<ComboboxChipProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
-interface ComboboxChipState {
-    disabled: boolean;
-}
-interface ComboboxChipProps extends BaseUIComponentProps<"div", ComboboxChipState> {
-}
-namespace ComboboxChip {
-    type State = ComboboxChipState;
-    type Props = ComboboxChipProps;
-}
-const ComboboxChipRemove: React$1.ForwardRefExoticComponent<Omit<ComboboxChipRemoveProps, "ref"> & React$1.RefAttributes<HTMLButtonElement>>;
-interface ComboboxChipRemoveState {
-    disabled: boolean;
-}
-interface ComboboxChipRemoveProps extends NativeButtonProps, BaseUIComponentProps<"button", ComboboxChipRemoveState> {
-}
-namespace ComboboxChipRemove {
-    type State = ComboboxChipRemoveState;
-    type Props = ComboboxChipRemoveProps;
-}
-interface ComboboxSeparatorProps extends BaseUIComponentProps<"div", ComboboxSeparatorState> {
-    orientation?: Orientation | undefined;
-}
-interface ComboboxSeparatorState {
-    orientation: Orientation;
-}
-const ComboboxSeparator: React$1.ForwardRefExoticComponent<ComboboxSeparatorProps & React$1.RefAttributes<HTMLDivElement>>;
-namespace ComboboxSeparator {
-    type Props = ComboboxSeparatorProps;
-    type State = ComboboxSeparatorState;
-}
-type ComboboxPrimitiveValue = string | number | bigint | boolean;
-type RemoveIndexSignature<Type> = {
-    [Key in keyof Type as string extends Key ? never : number extends Key ? never : symbol extends Key ? never : Key]: Type[Key];
-};
-type HasGroupShape<Item> = Item extends object ? "items" extends keyof RemoveIndexSignature<Item> ? [
-    Extract<NonNullable<Item["items"]>, ReadonlyArray<unknown>>
-] extends [
-    never
-] ? never[] extends NonNullable<Item["items"]> ? true : never : true : never : never;
-type IsAny<T> = 0 extends 1 & T ? true : false;
-type GroupShapedItemsError = "Base UI: items passed to createItems() cannot have an `items` array property because it marks a group. Rename the field or cast the data.";
-type RejectGroupShapedItems<Item> = IsAny<Item> extends true ? unknown : true extends HasGroupShape<Item> ? GroupShapedItemsError : unknown;
-type ComboboxItemsData<Item> = (Extract<Item, {
-    items: ReadonlyArray<unknown>;
-}> extends never ? readonly Item[] : never) | readonly {
-    items: ReadonlyArray<Item>;
-}[];
-interface CreateComboboxItemsOptions<Item, Value extends ComboboxPrimitiveValue = ComboboxPrimitiveValue> {
-    getValue: (item: Item) => Value;
-    getLabel: (item: Item) => string;
-}
-function createComboboxItems<Item, Value extends ComboboxPrimitiveValue>(data: ComboboxItemsData<Item> & RejectGroupShapedItems<Item> | undefined, options: CreateComboboxItemsOptions<Item, Value>): ComboboxItemCollection<Item, Value>;
-const ProgressRoot: React$1.ForwardRefExoticComponent<Omit<ProgressRootProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
-type ProgressStatus = "indeterminate" | "progressing" | "complete";
-interface ProgressRootState {
-    status: ProgressStatus;
-}
-interface ProgressRootProps extends BaseUIComponentProps<"div", ProgressRootState> {
-    "aria-valuetext"?: React$1.AriaAttributes["aria-valuetext"] | undefined;
-    format?: Intl.NumberFormatOptions | undefined;
-    getAriaValueText?: ((formattedValue: string, value: number | null) => string) | undefined;
-    locale?: Intl.LocalesArgument | undefined;
-    max?: number | undefined;
-    min?: number | undefined;
-    value: number | null;
-}
-namespace ProgressRoot {
-    type State = ProgressRootState;
-    type Props = ProgressRootProps;
-}
-const ProgressTrack: React$1.ForwardRefExoticComponent<Omit<ProgressTrackProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
-interface ProgressTrackState extends ProgressRootState {
-}
-interface ProgressTrackProps extends BaseUIComponentProps<"div", ProgressTrackState> {
-}
-namespace ProgressTrack {
-    type State = ProgressTrackState;
-    type Props = ProgressTrackProps;
-}
-const ProgressIndicator: React$1.ForwardRefExoticComponent<Omit<ProgressIndicatorProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
-interface ProgressIndicatorState extends ProgressRootState {
-}
-interface ProgressIndicatorProps extends BaseUIComponentProps<"div", ProgressIndicatorState> {
-}
-namespace ProgressIndicator {
-    type State = ProgressIndicatorState;
-    type Props = ProgressIndicatorProps;
-}
-const ProgressValue: React$1.ForwardRefExoticComponent<Omit<ProgressValueProps, "ref"> & React$1.RefAttributes<HTMLSpanElement>>;
-interface ProgressValueState extends ProgressRootState {
-}
-interface ProgressValueProps extends Omit<BaseUIComponentProps<"span", ProgressValueState>, "children"> {
-    children?: null | ((formattedValue: string | null, value: number | null) => React$1.ReactNode) | undefined;
-}
-namespace ProgressValue {
-    type State = ProgressValueState;
-    type Props = ProgressValueProps;
-}
-const ProgressLabel: React$1.ForwardRefExoticComponent<Omit<ProgressLabelProps, "ref"> & React$1.RefAttributes<HTMLSpanElement>>;
-interface ProgressLabelState extends ProgressRootState {
-}
-interface ProgressLabelProps extends BaseUIComponentProps<"span", ProgressLabelState> {
-}
-namespace ProgressLabel {
-    type State = ProgressLabelState;
-    type Props = ProgressLabelProps;
-}
 const SliderRoot: {
     <Value extends number | readonly number[]>(props: SliderRoot.Props<Value> & {
         ref?: React$1.Ref<HTMLDivElement> | undefined;
@@ -12389,6 +12242,44 @@ namespace SliderIndicator {
     type State = SliderIndicatorState;
     type Props = SliderIndicatorProps;
 }
+const SwitchRoot: React$1.ForwardRefExoticComponent<Omit<SwitchRootProps, "ref"> & React$1.RefAttributes<HTMLElement>>;
+interface SwitchRootState extends FieldRootState {
+    checked: boolean;
+    disabled: boolean;
+    readOnly: boolean;
+    required: boolean;
+}
+interface SwitchRootProps extends NonNativeButtonProps, Omit<BaseUIComponentProps<"span", SwitchRootState>, "onChange"> {
+    id?: string | undefined;
+    checked?: boolean | undefined;
+    defaultChecked?: boolean | undefined;
+    disabled?: boolean | undefined;
+    inputRef?: React$1.Ref<HTMLInputElement> | undefined;
+    name?: string | undefined;
+    form?: string | undefined;
+    onCheckedChange?: ((checked: boolean, eventDetails: SwitchRoot.ChangeEventDetails) => void) | undefined;
+    readOnly?: boolean | undefined;
+    required?: boolean | undefined;
+    value?: string | undefined;
+    uncheckedValue?: string | undefined;
+}
+type SwitchRootChangeEventReason = typeof none;
+type SwitchRootChangeEventDetails = BaseUIChangeEventDetails<SwitchRoot.ChangeEventReason>;
+namespace SwitchRoot {
+    type State = SwitchRootState;
+    type Props = SwitchRootProps;
+    type ChangeEventReason = SwitchRootChangeEventReason;
+    type ChangeEventDetails = SwitchRootChangeEventDetails;
+}
+const SwitchThumb: React$1.ForwardRefExoticComponent<Omit<SwitchThumbProps, "ref"> & React$1.RefAttributes<HTMLSpanElement>>;
+interface SwitchThumbProps extends BaseUIComponentProps<"span", SwitchThumbState> {
+}
+interface SwitchThumbState extends SwitchRootState {
+}
+namespace SwitchThumb {
+    type Props = SwitchThumbProps;
+    type State = SwitchThumbState;
+}
 const TabsTab: React$1.ForwardRefExoticComponent<Omit<TabsTabProps, "ref"> & React$1.RefAttributes<HTMLElement>>;
 type TabsTabValue = any | null;
 type TabsTabActivationDirection = "left" | "right" | "up" | "down" | "none";
@@ -12491,6 +12382,743 @@ namespace TabsList {
     type State = TabsListState;
     type Props = TabsListProps;
 }
+type State$1<Payload> = PopupStoreState<Payload> & {
+    modal: boolean | "trap-focus";
+    disablePointerDismissal: boolean;
+    openMethod: InteractionType | null;
+    nested: boolean;
+    nestedOpenDialogCount: number;
+    nestedOpenDrawerCount: number;
+    titleElementId: string | undefined;
+    descriptionElementId: string | undefined;
+    viewportElement: HTMLElement | null;
+    role: "dialog" | "alertdialog";
+};
+type Context$1 = PopupStoreContext<DialogRoot.ChangeEventDetails> & {
+    readonly popupRef: React$1.RefObject<HTMLElement | null>;
+    readonly backdropRef: React$1.RefObject<HTMLDivElement | null>;
+    readonly internalBackdropRef: React$1.RefObject<HTMLDivElement | null>;
+    readonly outsidePressEnabledRef: React$1.MutableRefObject<boolean>;
+    readonly onNestedDialogOpen?: ((dialogCount: number, drawerCount: number) => void) | undefined;
+};
+const selectors$2: {
+    open: (state: {
+        open: boolean;
+        readonly openProp: boolean | undefined;
+        mounted: boolean;
+        transitionStatus: TransitionStatus;
+        floatingRootContext: FloatingRootContext;
+        floatingId: string | undefined;
+        triggerCount: number;
+        preventUnmountingOnClose: boolean;
+        payload: unknown;
+        activeTriggerId: string | null;
+        activeTriggerElement: Element | null;
+        openedWithoutTrigger: boolean;
+        readonly triggerIdProp: string | null | undefined;
+        popupElement: HTMLElement | null;
+        positionerElement: HTMLElement | null;
+        activeTriggerProps: HTMLProps;
+        inactiveTriggerProps: HTMLProps;
+        popupProps: HTMLProps;
+    }) => boolean;
+    mounted: (state: {
+        open: boolean;
+        readonly openProp: boolean | undefined;
+        mounted: boolean;
+        transitionStatus: TransitionStatus;
+        floatingRootContext: FloatingRootContext;
+        floatingId: string | undefined;
+        triggerCount: number;
+        preventUnmountingOnClose: boolean;
+        payload: unknown;
+        activeTriggerId: string | null;
+        activeTriggerElement: Element | null;
+        openedWithoutTrigger: boolean;
+        readonly triggerIdProp: string | null | undefined;
+        popupElement: HTMLElement | null;
+        positionerElement: HTMLElement | null;
+        activeTriggerProps: HTMLProps;
+        inactiveTriggerProps: HTMLProps;
+        popupProps: HTMLProps;
+    }) => boolean;
+    transitionStatus: (state: {
+        open: boolean;
+        readonly openProp: boolean | undefined;
+        mounted: boolean;
+        transitionStatus: TransitionStatus;
+        floatingRootContext: FloatingRootContext;
+        floatingId: string | undefined;
+        triggerCount: number;
+        preventUnmountingOnClose: boolean;
+        payload: unknown;
+        activeTriggerId: string | null;
+        activeTriggerElement: Element | null;
+        openedWithoutTrigger: boolean;
+        readonly triggerIdProp: string | null | undefined;
+        popupElement: HTMLElement | null;
+        positionerElement: HTMLElement | null;
+        activeTriggerProps: HTMLProps;
+        inactiveTriggerProps: HTMLProps;
+        popupProps: HTMLProps;
+    }) => TransitionStatus;
+    floatingRootContext: (state: {
+        open: boolean;
+        readonly openProp: boolean | undefined;
+        mounted: boolean;
+        transitionStatus: TransitionStatus;
+        floatingRootContext: FloatingRootContext;
+        floatingId: string | undefined;
+        triggerCount: number;
+        preventUnmountingOnClose: boolean;
+        payload: unknown;
+        activeTriggerId: string | null;
+        activeTriggerElement: Element | null;
+        openedWithoutTrigger: boolean;
+        readonly triggerIdProp: string | null | undefined;
+        popupElement: HTMLElement | null;
+        positionerElement: HTMLElement | null;
+        activeTriggerProps: HTMLProps;
+        inactiveTriggerProps: HTMLProps;
+        popupProps: HTMLProps;
+    }) => FloatingRootStore;
+    triggerCount: (state: {
+        open: boolean;
+        readonly openProp: boolean | undefined;
+        mounted: boolean;
+        transitionStatus: TransitionStatus;
+        floatingRootContext: FloatingRootContext;
+        floatingId: string | undefined;
+        triggerCount: number;
+        preventUnmountingOnClose: boolean;
+        payload: unknown;
+        activeTriggerId: string | null;
+        activeTriggerElement: Element | null;
+        openedWithoutTrigger: boolean;
+        readonly triggerIdProp: string | null | undefined;
+        popupElement: HTMLElement | null;
+        positionerElement: HTMLElement | null;
+        activeTriggerProps: HTMLProps;
+        inactiveTriggerProps: HTMLProps;
+        popupProps: HTMLProps;
+    }) => number;
+    preventUnmountingOnClose: (state: {
+        open: boolean;
+        readonly openProp: boolean | undefined;
+        mounted: boolean;
+        transitionStatus: TransitionStatus;
+        floatingRootContext: FloatingRootContext;
+        floatingId: string | undefined;
+        triggerCount: number;
+        preventUnmountingOnClose: boolean;
+        payload: unknown;
+        activeTriggerId: string | null;
+        activeTriggerElement: Element | null;
+        openedWithoutTrigger: boolean;
+        readonly triggerIdProp: string | null | undefined;
+        popupElement: HTMLElement | null;
+        positionerElement: HTMLElement | null;
+        activeTriggerProps: HTMLProps;
+        inactiveTriggerProps: HTMLProps;
+        popupProps: HTMLProps;
+    }) => boolean;
+    payload: (state: {
+        open: boolean;
+        readonly openProp: boolean | undefined;
+        mounted: boolean;
+        transitionStatus: TransitionStatus;
+        floatingRootContext: FloatingRootContext;
+        floatingId: string | undefined;
+        triggerCount: number;
+        preventUnmountingOnClose: boolean;
+        payload: unknown;
+        activeTriggerId: string | null;
+        activeTriggerElement: Element | null;
+        openedWithoutTrigger: boolean;
+        readonly triggerIdProp: string | null | undefined;
+        popupElement: HTMLElement | null;
+        positionerElement: HTMLElement | null;
+        activeTriggerProps: HTMLProps;
+        inactiveTriggerProps: HTMLProps;
+        popupProps: HTMLProps;
+    }) => unknown;
+    activeTriggerId: (state: {
+        open: boolean;
+        readonly openProp: boolean | undefined;
+        mounted: boolean;
+        transitionStatus: TransitionStatus;
+        floatingRootContext: FloatingRootContext;
+        floatingId: string | undefined;
+        triggerCount: number;
+        preventUnmountingOnClose: boolean;
+        payload: unknown;
+        activeTriggerId: string | null;
+        activeTriggerElement: Element | null;
+        openedWithoutTrigger: boolean;
+        readonly triggerIdProp: string | null | undefined;
+        popupElement: HTMLElement | null;
+        positionerElement: HTMLElement | null;
+        activeTriggerProps: HTMLProps;
+        inactiveTriggerProps: HTMLProps;
+        popupProps: HTMLProps;
+    }) => string | null;
+    activeTriggerElement: (state: {
+        open: boolean;
+        readonly openProp: boolean | undefined;
+        mounted: boolean;
+        transitionStatus: TransitionStatus;
+        floatingRootContext: FloatingRootContext;
+        floatingId: string | undefined;
+        triggerCount: number;
+        preventUnmountingOnClose: boolean;
+        payload: unknown;
+        activeTriggerId: string | null;
+        activeTriggerElement: Element | null;
+        openedWithoutTrigger: boolean;
+        readonly triggerIdProp: string | null | undefined;
+        popupElement: HTMLElement | null;
+        positionerElement: HTMLElement | null;
+        activeTriggerProps: HTMLProps;
+        inactiveTriggerProps: HTMLProps;
+        popupProps: HTMLProps;
+    }) => Element | null;
+    popupId: (state: {
+        open: boolean;
+        readonly openProp: boolean | undefined;
+        mounted: boolean;
+        transitionStatus: TransitionStatus;
+        floatingRootContext: FloatingRootContext;
+        floatingId: string | undefined;
+        triggerCount: number;
+        preventUnmountingOnClose: boolean;
+        payload: unknown;
+        activeTriggerId: string | null;
+        activeTriggerElement: Element | null;
+        openedWithoutTrigger: boolean;
+        readonly triggerIdProp: string | null | undefined;
+        popupElement: HTMLElement | null;
+        positionerElement: HTMLElement | null;
+        activeTriggerProps: HTMLProps;
+        inactiveTriggerProps: HTMLProps;
+        popupProps: HTMLProps;
+    }) => string | undefined;
+    isTriggerActive: (state: {
+        open: boolean;
+        readonly openProp: boolean | undefined;
+        mounted: boolean;
+        transitionStatus: TransitionStatus;
+        floatingRootContext: FloatingRootContext;
+        floatingId: string | undefined;
+        triggerCount: number;
+        preventUnmountingOnClose: boolean;
+        payload: unknown;
+        activeTriggerId: string | null;
+        activeTriggerElement: Element | null;
+        openedWithoutTrigger: boolean;
+        readonly triggerIdProp: string | null | undefined;
+        popupElement: HTMLElement | null;
+        positionerElement: HTMLElement | null;
+        activeTriggerProps: HTMLProps;
+        inactiveTriggerProps: HTMLProps;
+        popupProps: HTMLProps;
+    }, triggerId: string | undefined) => boolean;
+    isOpenedByTrigger: (state: {
+        open: boolean;
+        readonly openProp: boolean | undefined;
+        mounted: boolean;
+        transitionStatus: TransitionStatus;
+        floatingRootContext: FloatingRootContext;
+        floatingId: string | undefined;
+        triggerCount: number;
+        preventUnmountingOnClose: boolean;
+        payload: unknown;
+        activeTriggerId: string | null;
+        activeTriggerElement: Element | null;
+        openedWithoutTrigger: boolean;
+        readonly triggerIdProp: string | null | undefined;
+        popupElement: HTMLElement | null;
+        positionerElement: HTMLElement | null;
+        activeTriggerProps: HTMLProps;
+        inactiveTriggerProps: HTMLProps;
+        popupProps: HTMLProps;
+    }, triggerId: string | undefined) => boolean;
+    isMountedByTrigger: (state: {
+        open: boolean;
+        readonly openProp: boolean | undefined;
+        mounted: boolean;
+        transitionStatus: TransitionStatus;
+        floatingRootContext: FloatingRootContext;
+        floatingId: string | undefined;
+        triggerCount: number;
+        preventUnmountingOnClose: boolean;
+        payload: unknown;
+        activeTriggerId: string | null;
+        activeTriggerElement: Element | null;
+        openedWithoutTrigger: boolean;
+        readonly triggerIdProp: string | null | undefined;
+        popupElement: HTMLElement | null;
+        positionerElement: HTMLElement | null;
+        activeTriggerProps: HTMLProps;
+        inactiveTriggerProps: HTMLProps;
+        popupProps: HTMLProps;
+    }, triggerId: string | undefined) => boolean;
+    triggerProps: (state: {
+        open: boolean;
+        readonly openProp: boolean | undefined;
+        mounted: boolean;
+        transitionStatus: TransitionStatus;
+        floatingRootContext: FloatingRootContext;
+        floatingId: string | undefined;
+        triggerCount: number;
+        preventUnmountingOnClose: boolean;
+        payload: unknown;
+        activeTriggerId: string | null;
+        activeTriggerElement: Element | null;
+        openedWithoutTrigger: boolean;
+        readonly triggerIdProp: string | null | undefined;
+        popupElement: HTMLElement | null;
+        positionerElement: HTMLElement | null;
+        activeTriggerProps: HTMLProps;
+        inactiveTriggerProps: HTMLProps;
+        popupProps: HTMLProps;
+    }, isActive: boolean) => HTMLProps;
+    triggerPopupId: (state: {
+        open: boolean;
+        readonly openProp: boolean | undefined;
+        mounted: boolean;
+        transitionStatus: TransitionStatus;
+        floatingRootContext: FloatingRootContext;
+        floatingId: string | undefined;
+        triggerCount: number;
+        preventUnmountingOnClose: boolean;
+        payload: unknown;
+        activeTriggerId: string | null;
+        activeTriggerElement: Element | null;
+        openedWithoutTrigger: boolean;
+        readonly triggerIdProp: string | null | undefined;
+        popupElement: HTMLElement | null;
+        positionerElement: HTMLElement | null;
+        activeTriggerProps: HTMLProps;
+        inactiveTriggerProps: HTMLProps;
+        popupProps: HTMLProps;
+    }, triggerId: string | undefined) => string | undefined;
+    popupProps: (state: {
+        open: boolean;
+        readonly openProp: boolean | undefined;
+        mounted: boolean;
+        transitionStatus: TransitionStatus;
+        floatingRootContext: FloatingRootContext;
+        floatingId: string | undefined;
+        triggerCount: number;
+        preventUnmountingOnClose: boolean;
+        payload: unknown;
+        activeTriggerId: string | null;
+        activeTriggerElement: Element | null;
+        openedWithoutTrigger: boolean;
+        readonly triggerIdProp: string | null | undefined;
+        popupElement: HTMLElement | null;
+        positionerElement: HTMLElement | null;
+        activeTriggerProps: HTMLProps;
+        inactiveTriggerProps: HTMLProps;
+        popupProps: HTMLProps;
+    }) => HTMLProps;
+    popupElement: (state: {
+        open: boolean;
+        readonly openProp: boolean | undefined;
+        mounted: boolean;
+        transitionStatus: TransitionStatus;
+        floatingRootContext: FloatingRootContext;
+        floatingId: string | undefined;
+        triggerCount: number;
+        preventUnmountingOnClose: boolean;
+        payload: unknown;
+        activeTriggerId: string | null;
+        activeTriggerElement: Element | null;
+        openedWithoutTrigger: boolean;
+        readonly triggerIdProp: string | null | undefined;
+        popupElement: HTMLElement | null;
+        positionerElement: HTMLElement | null;
+        activeTriggerProps: HTMLProps;
+        inactiveTriggerProps: HTMLProps;
+        popupProps: HTMLProps;
+    }) => HTMLElement | null;
+    positionerElement: (state: {
+        open: boolean;
+        readonly openProp: boolean | undefined;
+        mounted: boolean;
+        transitionStatus: TransitionStatus;
+        floatingRootContext: FloatingRootContext;
+        floatingId: string | undefined;
+        triggerCount: number;
+        preventUnmountingOnClose: boolean;
+        payload: unknown;
+        activeTriggerId: string | null;
+        activeTriggerElement: Element | null;
+        openedWithoutTrigger: boolean;
+        readonly triggerIdProp: string | null | undefined;
+        popupElement: HTMLElement | null;
+        positionerElement: HTMLElement | null;
+        activeTriggerProps: HTMLProps;
+        inactiveTriggerProps: HTMLProps;
+        popupProps: HTMLProps;
+    }) => HTMLElement | null;
+    modal: (state: State$1<unknown>) => "trap-focus" | boolean;
+    nested: (state: State$1<unknown>) => boolean;
+    nestedOpenDialogCount: (state: State$1<unknown>) => number;
+    nestedOpenDrawerCount: (state: State$1<unknown>) => number;
+    disablePointerDismissal: (state: State$1<unknown>) => boolean;
+    openMethod: (state: State$1<unknown>) => InteractionType | null;
+    descriptionElementId: (state: State$1<unknown>) => string | undefined;
+    titleElementId: (state: State$1<unknown>) => string | undefined;
+    viewportElement: (state: State$1<unknown>) => HTMLElement | null;
+    role: (state: State$1<unknown>) => "alertdialog" | "dialog";
+};
+type DialogHandleStore<Payload> = PopupTriggerDataStore<State$1<Payload>>;
+class DialogStore<Payload> extends ReactStore<Readonly<State$1<Payload>>, Context$1, typeof selectors$2> {
+    constructor(initialState: Partial<State$1<Payload>> | undefined, floatingId: string | undefined, nested: boolean);
+    setOpen: (nextOpen: boolean, eventDetails: Omit<DialogRoot.ChangeEventDetails, "preventUnmountOnClose">) => void;
+}
+class DialogHandle<Payload> extends BasePopupHandle<DialogHandleStore<Payload>, DialogStore<Payload>> {
+    constructor();
+    open(triggerId: string | null): void;
+    openWithPayload(payload: Payload): void;
+    close(): void;
+    get isOpen(): boolean;
+}
+function createDialogHandle<Payload>(): DialogHandle<Payload>;
+const DialogRoot: <Payload>(props: DialogRoot.Props<Payload>) => React$1.JSX.Element;
+interface DialogRootState {
+}
+interface DialogRootProps<Payload = unknown> {
+    open?: boolean | undefined;
+    defaultOpen?: boolean | undefined;
+    modal?: boolean | "trap-focus" | undefined;
+    onOpenChange?: ((open: boolean, eventDetails: DialogRoot.ChangeEventDetails) => void) | undefined;
+    onOpenChangeComplete?: ((open: boolean) => void) | undefined;
+    disablePointerDismissal?: boolean | undefined;
+    actionsRef?: React$1.RefObject<DialogRoot.Actions | null> | undefined;
+    handle?: DialogHandle<Payload> | undefined;
+    children?: React$1.ReactNode | PayloadChildRenderFunction<Payload>;
+    triggerId?: string | null | undefined;
+    defaultTriggerId?: string | null | undefined;
+}
+interface DialogRootActions {
+    unmount: () => void;
+    close: () => void;
+}
+type DialogRootChangeEventReason = typeof triggerPress | typeof outsidePress | typeof escapeKey | typeof closePress | typeof focusOut | typeof imperativeAction | typeof none;
+type DialogRootChangeEventDetails = BaseUIChangeEventDetails<DialogRoot.ChangeEventReason> & {
+    preventUnmountOnClose: () => void;
+};
+namespace DialogRoot {
+    type State = DialogRootState;
+    type Props<Payload = unknown> = DialogRootProps<Payload>;
+    type Actions = DialogRootActions;
+    type ChangeEventReason = DialogRootChangeEventReason;
+    type ChangeEventDetails = DialogRootChangeEventDetails;
+}
+export function Dialog({ ...props }: DialogRoot.Props): React$1.JSX.Element;
+function DialogTrigger$1({ ...props }: DialogTrigger.Props): React$1.JSX.Element;
+function DialogPortal$1({ ...props }: DialogPortal.Props): React$1.JSX.Element;
+function DialogClose$1({ ...props }: DialogClose.Props): React$1.JSX.Element;
+export function DialogOverlay({ className, ...props }: DialogBackdrop.Props): React$1.JSX.Element;
+export function DialogContent({ className, children, showCloseButton, ...props }: DialogPopup.Props & {
+    showCloseButton?: boolean;
+}): React$1.JSX.Element;
+export function DialogHeader({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
+export function DialogFooter({ className, showCloseButton, children, ...props }: React$1.ComponentProps<"div"> & {
+    showCloseButton?: boolean;
+}): React$1.JSX.Element;
+function DialogTitle$1({ className, ...props }: DialogTitle.Props): React$1.JSX.Element;
+function DialogDescription$1({ className, ...props }: DialogDescription.Props): React$1.JSX.Element;
+const buttonVariants: (props?: ({
+    variant?: "default" | "outline" | "secondary" | "destructive" | "link" | "ghost" | null | undefined;
+    size?: "default" | "xs" | "sm" | "lg" | "icon" | "icon-xs" | "icon-sm" | "icon-lg" | null | undefined;
+} & ClassProp) | undefined) => string;
+function Button$1({ className, variant, size, ...props }: Button.Props & VariantProps<typeof buttonVariants>): React$1.JSX.Element;
+export function Pagination({ className, ...props }: React$1.ComponentProps<"nav">): React$1.JSX.Element;
+export function PaginationContent({ className, ...props }: React$1.ComponentProps<"ul">): React$1.JSX.Element;
+export function PaginationItem({ ...props }: React$1.ComponentProps<"li">): React$1.JSX.Element;
+type PaginationLinkProps = {
+    isActive?: boolean;
+} & Pick<React$1.ComponentProps<typeof Button$1>, "size"> & React$1.ComponentProps<"a">;
+export function PaginationLink({ className, isActive, size, ...props }: PaginationLinkProps): React$1.JSX.Element;
+export function PaginationPrevious({ className, text, ...props }: React$1.ComponentProps<typeof PaginationLink> & {
+    text?: string;
+}): React$1.JSX.Element;
+export function PaginationNext({ className, text, ...props }: React$1.ComponentProps<typeof PaginationLink> & {
+    text?: string;
+}): React$1.JSX.Element;
+export function PaginationEllipsis({ className, ...props }: React$1.ComponentProps<"span">): React$1.JSX.Element;
+export function Empty({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
+export function EmptyHeader({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
+const emptyMediaVariants: (props?: ({
+    variant?: "default" | "icon" | null | undefined;
+} & ClassProp) | undefined) => string;
+export function EmptyMedia({ className, variant, ...props }: React$1.ComponentProps<"div"> & VariantProps<typeof emptyMediaVariants>): React$1.JSX.Element;
+export function EmptyTitle({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
+export function EmptyDescription({ className, ...props }: React$1.ComponentProps<"p">): React$1.JSX.Element;
+export function EmptyContent({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
+export function EmptyState(props: {
+    title: string;
+    description?: string;
+    headingLevel?: 1 | 3;
+    isCompact?: boolean;
+}): React$1.JSX.Element;
+export function DropdownMenu({ ...props }: MenuRoot.Props): React$1.JSX.Element;
+export function DropdownMenuPortal({ ...props }: MenuPortal.Props): React$1.JSX.Element;
+export function DropdownMenuTrigger({ ...props }: MenuTrigger.Props): React$1.JSX.Element;
+export function DropdownMenuContent({ align, alignOffset, side, sideOffset, className, ...props }: MenuPopup.Props & Pick<MenuPositioner.Props, "align" | "alignOffset" | "side" | "sideOffset">): React$1.JSX.Element;
+export function DropdownMenuGroup({ ...props }: MenuGroup.Props): React$1.JSX.Element;
+export function DropdownMenuLabel({ className, inset, ...props }: MenuGroupLabel.Props & {
+    inset?: boolean;
+}): React$1.JSX.Element;
+export function DropdownMenuItem({ className, inset, variant, ...props }: MenuItem.Props & {
+    inset?: boolean;
+    variant?: "default" | "destructive";
+}): React$1.JSX.Element;
+export function DropdownMenuSub({ ...props }: MenuSubmenuRoot.Props): React$1.JSX.Element;
+export function DropdownMenuSubTrigger({ className, inset, children, ...props }: MenuSubmenuTrigger.Props & {
+    inset?: boolean;
+}): React$1.JSX.Element;
+export function DropdownMenuSubContent({ align, alignOffset, side, sideOffset, className, ...props }: React$1.ComponentProps<typeof DropdownMenuContent>): React$1.JSX.Element;
+export function DropdownMenuCheckboxItem({ className, children, checked, inset, ...props }: MenuCheckboxItem.Props & {
+    inset?: boolean;
+}): React$1.JSX.Element;
+export function DropdownMenuRadioGroup({ ...props }: MenuRadioGroup.Props): React$1.JSX.Element;
+export function DropdownMenuRadioItem({ className, children, inset, ...props }: MenuRadioItem.Props & {
+    inset?: boolean;
+}): React$1.JSX.Element;
+export function DropdownMenuSeparator({ className, ...props }: Separator.Props): React$1.JSX.Element;
+export function DropdownMenuShortcut({ className, ...props }: React$1.ComponentProps<"span">): React$1.JSX.Element;
+export function Table({ className, ...props }: React$1.ComponentProps<"table">): React$1.JSX.Element;
+export function TableHeader({ className, ...props }: React$1.ComponentProps<"thead">): React$1.JSX.Element;
+export function TableBody({ className, ...props }: React$1.ComponentProps<"tbody">): React$1.JSX.Element;
+export function TableFooter({ className, ...props }: React$1.ComponentProps<"tfoot">): React$1.JSX.Element;
+export function TableRow({ className, ...props }: React$1.ComponentProps<"tr">): React$1.JSX.Element;
+export function TableHead({ className, ...props }: React$1.ComponentProps<"th">): React$1.JSX.Element;
+export function TableCell({ className, ...props }: React$1.ComponentProps<"td">): React$1.JSX.Element;
+export function TableCaption({ className, ...props }: React$1.ComponentProps<"caption">): React$1.JSX.Element;
+type ColumnWidth = {
+    type: "proportional";
+    value: number;
+    minWidth?: number;
+} | {
+    type: "pixel";
+    value: number;
+};
+type TableColumn<T extends Record<string, unknown>> = {
+    key: string;
+    header?: React$1.ReactNode;
+    width?: ColumnWidth;
+    align?: "start" | "center" | "end";
+    renderCell?: (row: T) => React$1.ReactNode;
+};
+export function DataTable<T extends Record<string, unknown>>({ data, columns, hasHover, isStriped, idKey, density, verticalAlign }: {
+    data: T[];
+    columns?: TableColumn<T>[];
+    hasHover?: boolean;
+    isStriped?: boolean;
+    idKey?: keyof T | ((row: T) => string | number);
+    density?: "compact";
+    verticalAlign?: "top" | "middle" | "bottom";
+}): React$1.JSX.Element;
+export function Input({ className, type, ...props }: React$1.ComponentProps<"input">): React$1.JSX.Element;
+export function Textarea({ className, ...props }: React$1.ComponentProps<"textarea">): React$1.JSX.Element;
+function Label({ className, ...props }: React$1.ComponentProps<"label">): React$1.JSX.Element;
+export function FieldSet({ className, ...props }: React$1.ComponentProps<"fieldset">): React$1.JSX.Element;
+export function FieldLegend({ className, variant, ...props }: React$1.ComponentProps<"legend"> & {
+    variant?: "legend" | "label";
+}): React$1.JSX.Element;
+export function FieldGroup({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
+const fieldVariants: (props?: ({
+    orientation?: "horizontal" | "vertical" | "responsive" | null | undefined;
+} & ClassProp) | undefined) => string;
+export function Field({ className, orientation, ...props }: React$1.ComponentProps<"div"> & VariantProps<typeof fieldVariants>): React$1.JSX.Element;
+export function FieldContent({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
+export function FieldLabel({ className, ...props }: React$1.ComponentProps<typeof Label>): React$1.JSX.Element;
+export function FieldTitle({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
+export function FieldDescription({ className, ...props }: React$1.ComponentProps<"p">): React$1.JSX.Element;
+export function FieldSeparator({ children, className, ...props }: React$1.ComponentProps<"div"> & {
+    children?: React$1.ReactNode;
+}): React$1.JSX.Element;
+export function FieldError({ className, children, errors, ...props }: React$1.ComponentProps<"div"> & {
+    errors?: Array<{
+        message?: string;
+    } | undefined>;
+}): React$1.JSX.Element | null;
+export function InputGroup({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
+const inputGroupAddonVariants: (props?: ({
+    align?: "inline-start" | "inline-end" | "block-end" | "block-start" | null | undefined;
+} & ClassProp) | undefined) => string;
+export function InputGroupAddon({ className, align, ...props }: React$1.ComponentProps<"div"> & VariantProps<typeof inputGroupAddonVariants>): React$1.JSX.Element;
+const inputGroupButtonVariants: (props?: ({
+    size?: "xs" | "sm" | "icon-xs" | "icon-sm" | null | undefined;
+} & ClassProp) | undefined) => string;
+export function InputGroupButton({ className, type, variant, size, ...props }: Omit<React$1.ComponentProps<typeof Button$1>, "size" | "type"> & VariantProps<typeof inputGroupButtonVariants> & {
+    type?: "button" | "submit" | "reset";
+}): React$1.JSX.Element;
+export function InputGroupText({ className, ...props }: React$1.ComponentProps<"span">): React$1.JSX.Element;
+export function InputGroupInput({ className, ...props }: React$1.ComponentProps<"input">): React$1.JSX.Element;
+export function InputGroupTextarea({ className, ...props }: React$1.ComponentProps<"textarea">): React$1.JSX.Element;
+function Collapsible$1({ ...props }: Collapsible.Root.Props): React$1.JSX.Element;
+function CollapsibleTrigger$1({ ...props }: Collapsible.Trigger.Props): React$1.JSX.Element;
+export function CollapsibleContent({ ...props }: Collapsible.Panel.Props): React$1.JSX.Element;
+export function Disclosure(props: {
+    children?: React$1.ReactNode;
+    trigger: React$1.ReactNode;
+    defaultIsOpen?: boolean;
+    isOpen?: boolean;
+    isDisabled?: boolean;
+    onOpenChange?: (isOpen: boolean) => void;
+}): React$1.JSX.Element;
+function Switch$1({ className, size, ...props }: Switch.Root.Props & {
+    size?: "sm" | "default";
+}): React$1.JSX.Element;
+type Spacing = 0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10;
+type FieldProps = {
+    label: string;
+    description?: string;
+    name?: string;
+    required?: boolean;
+    disabled?: boolean;
+};
+export function SwitchField(props: FieldProps & {
+    value?: boolean;
+    defaultChecked?: boolean;
+    onChange?: (value: boolean) => void;
+}): React$1.JSX.Element;
+function Checkbox$1({ className, indeterminate, ...props }: Checkbox.Root.Props): React$1.JSX.Element;
+type StepperOrientation = "horizontal" | "vertical";
+type StepIndicators = {
+    active?: React$1.ReactNode;
+    completed?: React$1.ReactNode;
+    inactive?: React$1.ReactNode;
+    loading?: React$1.ReactNode;
+};
+interface StepperProps extends React$1.HTMLAttributes<HTMLDivElement> {
+    defaultValue?: number;
+    value?: number;
+    onValueChange?: (value: number) => void;
+    orientation?: StepperOrientation;
+    indicators?: StepIndicators;
+}
+export function Stepper({ defaultValue, value, onValueChange, orientation, className, children, indicators, ...props }: StepperProps): React$1.JSX.Element;
+interface StepperItemProps extends React$1.HTMLAttributes<HTMLDivElement> {
+    step: number;
+    completed?: boolean;
+    disabled?: boolean;
+    loading?: boolean;
+}
+export function StepperItem({ step, completed, disabled, loading, className, children, ...props }: StepperItemProps): React$1.JSX.Element;
+type StepperTriggerProps = UseRenderComponentProps<"button">;
+export function StepperTrigger({ className, children, tabIndex, render, ...props }: StepperTriggerProps): React$1.ReactElement<unknown, string | React$1.JSXElementConstructor<any>>;
+export function StepperIndicator({ children, className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
+export function StepperSeparator({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
+export function StepperTitle({ children, className, ...props }: React$1.ComponentProps<"h3">): React$1.JSX.Element;
+export function StepperDescription({ children, className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
+export function StepperNav({ children, className, ...props }: React$1.ComponentProps<"nav">): React$1.JSX.Element;
+export function StepperPanel({ children, className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
+interface StepperContentProps extends React$1.ComponentProps<"div"> {
+    value: number;
+    forceMount?: boolean;
+}
+export function StepperContent({ value, forceMount, children, className, ...props }: StepperContentProps): React$1.JSX.Element | null;
+type StepProps = {
+    step?: number;
+    label: string;
+    description?: string;
+    children?: React$1.ReactNode;
+};
+type ProgressStepperProps = {
+    children?: React$1.ReactNode;
+    activeStep?: number;
+    orientation?: "horizontal" | "vertical";
+    onStepClick?: (index: number) => void;
+};
+type WizardProps = Omit<ProgressStepperProps, "onStepClick"> & {
+    onStepClick?: (index: number) => void;
+    height?: number | string;
+    next?: (step: number) => {
+        label: string;
+        action: () => void | boolean | Promise<void | boolean>;
+    } | undefined;
+    onCancel?: () => void;
+    finalAction?: React$1.ReactNode;
+    backVariant?: "outline" | "ghost";
+};
+export function ProgressStepper(props: ProgressStepperProps): React$1.JSX.Element;
+export function Wizard(props: WizardProps): React$1.JSX.Element;
+export function Step(props: StepProps): React$1.JSX.Element;
+type ActionClickEvent = Parameters<NonNullable<React$1.ComponentProps<typeof Button$1>["onClick"]>>[0];
+function ActionControl({ children, variant, size: requestedSize, type, disabled, onClick, href, name, value, form, className, onClickCapture, onKeyDown, onKeyUp, ...props }: Omit<React$1.ComponentProps<typeof Button$1>, "onClick"> & {
+    onClick?: (event: ActionClickEvent) => void | Promise<void>;
+    href?: string;
+}): React$1.JSX.Element;
+type ButtonProps$1 = React$1.ComponentProps<typeof ActionControl>;
+export function ActionButton({ onClick, ...props }: ButtonProps$1): React$1.JSX.Element;
+export function ActionButtonGroup({ children, label, orientation, size: requestedSize, isDisabled }: {
+    children?: React$1.ReactNode;
+    label: string;
+    orientation?: "horizontal" | "vertical";
+    size?: "sm" | "default" | "lg";
+    isDisabled?: boolean;
+}): React$1.JSX.Element;
+export function FileViewer({ src, title, size }: {
+    src: string;
+    title: string;
+    size?: "sm" | "md" | "lg";
+}): React$1.JSX.Element;
+export function Card({ className, size, ...props }: React$1.ComponentProps<"div"> & {
+    size?: "default" | "sm";
+}): React$1.JSX.Element;
+export function CardHeader({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
+export function CardTitle({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
+export function CardDescription({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
+export function CardAction({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
+export function CardContent({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
+export function CardFooter({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
+type InteractiveCardProps = {
+    children?: React$1.ReactNode;
+    padding?: 0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10;
+    isClipped?: boolean;
+    variant?: "default" | "transparent" | "muted";
+    width?: number | string;
+    height?: number | string;
+    maxWidth?: number | string;
+    minHeight?: number | string;
+    inert?: boolean;
+    "aria-hidden"?: boolean | "true" | "false";
+    label?: string;
+    onClick?: (event: React$1.MouseEvent<HTMLElement>) => void;
+    href?: string;
+    target?: string;
+    isDisabled?: boolean;
+    isSelected?: boolean;
+    onChange?: (isSelected: boolean) => void;
+};
+export function InteractiveCard({ label, padding, isClipped, variant, onClick, href, target, isDisabled, isSelected, onChange, children, width, height, maxWidth, minHeight, inert, "aria-hidden": ariaHidden }: InteractiveCardProps): React$1.JSX.Element;
+export function ViewDialog(props: {
+    children?: React$1.ReactNode;
+    title?: string;
+    variant?: "standard" | "fullscreen";
+    isOpen: boolean;
+    onOpenChange: (open: boolean) => void;
+    gap?: Spacing;
+    paddingInline?: Spacing;
+}): React$1.JSX.Element;
+export const Select: typeof SelectRoot;
+function SelectGroup$1({ className, ...props }: SelectGroup.Props): React$1.JSX.Element;
+function SelectValue$1({ className, ...props }: SelectValue.Props): React$1.JSX.Element;
+function SelectTrigger$1({ className, size, children, ...props }: SelectTrigger.Props & {
+    size?: "sm" | "default";
+}): React$1.JSX.Element;
+export function SelectContent({ className, children, side, sideOffset, align, alignOffset, alignItemWithTrigger, ...props }: SelectPopup.Props & Pick<SelectPositioner.Props, "align" | "alignOffset" | "side" | "sideOffset" | "alignItemWithTrigger">): React$1.JSX.Element;
+function SelectLabel$1({ className, ...props }: SelectGroupLabel.Props): React$1.JSX.Element;
+function SelectItem$1({ className, children, ...props }: SelectItem.Props): React$1.JSX.Element;
+function SelectSeparator$1({ className, ...props }: SelectSeparator.Props): React$1.JSX.Element;
+export function SelectScrollUpButton({ className, ...props }: React$1.ComponentProps<typeof SelectScrollUpArrow>): React$1.JSX.Element;
+export function SelectScrollDownButton({ className, ...props }: React$1.ComponentProps<typeof SelectScrollDownArrow>): React$1.JSX.Element;
 export const Combobox: typeof ComboboxRoot;
 function ComboboxValue$1({ ...props }: ComboboxValue.Props): React$1.JSX.Element;
 function ComboboxTrigger$1({ className, children, ...props }: ComboboxTrigger.Props): React$1.JSX.Element;
@@ -12534,14 +13162,14 @@ export type FrontendElement = React$1.JSX.Element;
 namespace CSS$1 {
     export { AdvancedPseudos, AtRule, AtRules, DataType, Fallback, Globals, HtmlAttributes, ObsoleteProperties, ObsoletePropertiesFallback, ObsoletePropertiesHyphen, ObsoletePropertiesHyphenFallback, Properties, PropertiesFallback, PropertiesHyphen, PropertiesHyphenFallback, Property, PropertyValue, Pseudos, SimplePseudos, StandardLonghandProperties, StandardLonghandPropertiesFallback, StandardLonghandPropertiesHyphen, StandardLonghandPropertiesHyphenFallback, StandardProperties, StandardPropertiesFallback, StandardPropertiesHyphen, StandardPropertiesHyphenFallback, StandardShorthandProperties, StandardShorthandPropertiesFallback, StandardShorthandPropertiesHyphen, StandardShorthandPropertiesHyphenFallback, SvgAttributes, SvgProperties, SvgPropertiesFallback, SvgPropertiesHyphen, SvgPropertiesHyphenFallback, VendorLonghandProperties, VendorLonghandPropertiesFallback, VendorLonghandPropertiesHyphen, VendorLonghandPropertiesHyphenFallback, VendorProperties, VendorPropertiesFallback, VendorPropertiesHyphen, VendorPropertiesHyphenFallback, VendorShorthandProperties, VendorShorthandPropertiesFallback, VendorShorthandPropertiesHyphen, VendorShorthandPropertiesHyphenFallback };
 }
-namespace Collapsible {
-    export { CollapsiblePanel as Panel, CollapsibleRoot as Root, CollapsibleTrigger as Trigger };
-}
-namespace Switch {
-    export { SwitchRoot as Root, SwitchThumb as Thumb };
+namespace Avatar {
+    export { AvatarFallback as Fallback, AvatarImage as Image, AvatarRoot as Root };
 }
 namespace Checkbox {
     export { CheckboxIndicator as Indicator, CheckboxRoot as Root };
+}
+namespace Collapsible {
+    export { CollapsiblePanel as Panel, CollapsibleRoot as Root, CollapsibleTrigger as Trigger };
 }
 namespace Progress {
     export { ProgressIndicator as Indicator, ProgressLabel as Label, ProgressRoot as Root, ProgressStatus as Status, ProgressTrack as Track, ProgressValue as Value };
@@ -12549,16 +13177,25 @@ namespace Progress {
 namespace Slider {
     export { SliderControl as Control, SliderIndicator as Indicator, SliderLabel as Label, SliderRoot as Root, SliderThumb as Thumb, SliderTrack as Track, SliderValue as Value };
 }
+namespace Switch {
+    export { SwitchRoot as Root, SwitchThumb as Thumb };
+}
 namespace Tabs {
     export { TabsIndicator as Indicator, TabsList as List, TabsPanel as Panel, TabsRoot as Root, TabsTab as Tab };
 }
-export { Button$1 as Button, Button$2 as ActionButton, Checkbox$1 as Checkbox, Collapsible$1 as Collapsible, CollapsibleTrigger$1 as CollapsibleTrigger, ComboboxChip$1 as ComboboxChip, ComboboxChips$1 as ComboboxChips, ComboboxCollection$1 as ComboboxCollection, ComboboxEmpty$1 as ComboboxEmpty, ComboboxGroup$1 as ComboboxGroup, ComboboxInput$1 as ComboboxInput, ComboboxItem$1 as ComboboxItem, ComboboxLabel$1 as ComboboxLabel, ComboboxList$1 as ComboboxList, ComboboxSeparator$1 as ComboboxSeparator, ComboboxTrigger$1 as ComboboxTrigger, ComboboxValue$1 as ComboboxValue, Progress$1 as Progress, ProgressIndicator$1 as ProgressIndicator, ProgressLabel$1 as ProgressLabel, ProgressTrack$1 as ProgressTrack, ProgressValue$1 as ProgressValue, SelectGroup$1 as SelectGroup, SelectItem$1 as SelectItem, SelectLabel$1 as SelectLabel, SelectSeparator$1 as SelectSeparator, SelectTrigger$1 as SelectTrigger, SelectValue$1 as SelectValue, Slider$1 as Slider, SliderControl$1 as SliderControl, SliderThumb$1 as SliderThumb, SliderTrack$1 as SliderTrack, Switch$1 as Switch, Tabs$1 as Tabs, TabsList$1 as TabsList, };
+export { Avatar$1 as Avatar, AvatarFallback$1 as AvatarFallback, AvatarImage$1 as AvatarImage, Button$1 as Button, Checkbox$1 as Checkbox, Collapsible$1 as Collapsible, CollapsibleTrigger$1 as CollapsibleTrigger, ComboboxChip$1 as ComboboxChip, ComboboxChips$1 as ComboboxChips, ComboboxCollection$1 as ComboboxCollection, ComboboxEmpty$1 as ComboboxEmpty, ComboboxGroup$1 as ComboboxGroup, ComboboxInput$1 as ComboboxInput, ComboboxItem$1 as ComboboxItem, ComboboxLabel$1 as ComboboxLabel, ComboboxList$1 as ComboboxList, ComboboxSeparator$1 as ComboboxSeparator, ComboboxTrigger$1 as ComboboxTrigger, ComboboxValue$1 as ComboboxValue, DialogClose$1 as DialogClose, DialogDescription$1 as DialogDescription, DialogPortal$1 as DialogPortal, DialogTitle$1 as DialogTitle, DialogTrigger$1 as DialogTrigger, Progress$1 as Progress, ProgressIndicator$1 as ProgressIndicator, ProgressLabel$1 as ProgressLabel, ProgressTrack$1 as ProgressTrack, ProgressValue$1 as ProgressValue, SelectGroup$1 as SelectGroup, SelectItem$1 as SelectItem, SelectLabel$1 as SelectLabel, SelectSeparator$1 as SelectSeparator, SelectTrigger$1 as SelectTrigger, SelectValue$1 as SelectValue, Slider$1 as Slider, SliderControl$1 as SliderControl, SliderThumb$1 as SliderThumb, SliderTrack$1 as SliderTrack, Switch$1 as Switch, Tabs$1 as Tabs, TabsList$1 as TabsList, };
 }
 
 declare const ActionButton: typeof NativeFrontend.ActionButton;
+declare const ActionButtonGroup: typeof NativeFrontend.ActionButtonGroup;
+declare const Avatar: typeof NativeFrontend.Avatar;
+declare const AvatarFallback: typeof NativeFrontend.AvatarFallback;
+declare const AvatarImage: typeof NativeFrontend.AvatarImage;
 declare const Badge: typeof NativeFrontend.Badge;
 declare const Button: typeof NativeFrontend.Button;
 declare const ButtonGroup: typeof NativeFrontend.ButtonGroup;
+declare const ButtonGroupSeparator: typeof NativeFrontend.ButtonGroupSeparator;
+declare const ButtonGroupText: typeof NativeFrontend.ButtonGroupText;
 declare const Card: typeof NativeFrontend.Card;
 declare const CardAction: typeof NativeFrontend.CardAction;
 declare const CardContent: typeof NativeFrontend.CardContent;
@@ -12587,6 +13224,15 @@ declare const ComboboxTrigger: typeof NativeFrontend.ComboboxTrigger;
 declare const ComboboxValue: typeof NativeFrontend.ComboboxValue;
 declare const DataTable: typeof NativeFrontend.DataTable;
 declare const Dialog: typeof NativeFrontend.Dialog;
+declare const DialogClose: typeof NativeFrontend.DialogClose;
+declare const DialogContent: typeof NativeFrontend.DialogContent;
+declare const DialogDescription: typeof NativeFrontend.DialogDescription;
+declare const DialogFooter: typeof NativeFrontend.DialogFooter;
+declare const DialogHeader: typeof NativeFrontend.DialogHeader;
+declare const DialogOverlay: typeof NativeFrontend.DialogOverlay;
+declare const DialogPortal: typeof NativeFrontend.DialogPortal;
+declare const DialogTitle: typeof NativeFrontend.DialogTitle;
+declare const DialogTrigger: typeof NativeFrontend.DialogTrigger;
 declare const Disclosure: typeof NativeFrontend.Disclosure;
 declare const DropdownMenu: typeof NativeFrontend.DropdownMenu;
 declare const DropdownMenuCheckboxItem: typeof NativeFrontend.DropdownMenuCheckboxItem;
@@ -12629,6 +13275,13 @@ declare const InputGroupInput: typeof NativeFrontend.InputGroupInput;
 declare const InputGroupText: typeof NativeFrontend.InputGroupText;
 declare const InputGroupTextarea: typeof NativeFrontend.InputGroupTextarea;
 declare const InteractiveCard: typeof NativeFrontend.InteractiveCard;
+declare const Pagination: typeof NativeFrontend.Pagination;
+declare const PaginationContent: typeof NativeFrontend.PaginationContent;
+declare const PaginationEllipsis: typeof NativeFrontend.PaginationEllipsis;
+declare const PaginationItem: typeof NativeFrontend.PaginationItem;
+declare const PaginationLink: typeof NativeFrontend.PaginationLink;
+declare const PaginationNext: typeof NativeFrontend.PaginationNext;
+declare const PaginationPrevious: typeof NativeFrontend.PaginationPrevious;
 declare const Progress: typeof NativeFrontend.Progress;
 declare const ProgressIndicator: typeof NativeFrontend.ProgressIndicator;
 declare const ProgressLabel: typeof NativeFrontend.ProgressLabel;
@@ -12677,5 +13330,6 @@ declare const TabsContent: typeof NativeFrontend.TabsContent;
 declare const TabsList: typeof NativeFrontend.TabsList;
 declare const TabsTrigger: typeof NativeFrontend.TabsTrigger;
 declare const Textarea: typeof NativeFrontend.Textarea;
+declare const ViewDialog: typeof NativeFrontend.ViewDialog;
 declare const Wizard: typeof NativeFrontend.Wizard;
 declare const useComboboxAnchor: typeof NativeFrontend.useComboboxAnchor;

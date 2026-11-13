@@ -1,4 +1,12 @@
-import { AreaChart, BarChart, LineChart, PieChart, RadarChart, RadialChart, SankeyChart } from '@/components/ui/Chart';
+import {
+    AreaChart,
+    BarChart,
+    LineChart,
+    PieChart,
+    RadarChart,
+    RadialChart,
+    SankeyChart
+} from '@/components/custom/Chart';
 
 const charts = { AreaChart, BarChart, LineChart, PieChart, RadarChart, RadialChart };
 

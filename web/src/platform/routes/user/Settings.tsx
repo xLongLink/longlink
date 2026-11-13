@@ -1,18 +1,18 @@
 import type { z } from 'zod';
 import { useState } from 'react';
 import AppearanceSettings from './Appearance';
-import { Avatar } from '@/components/ui/Avatar';
 import { Link, useLocation } from 'react-router';
-import { Divider } from '@/components/ui/Divider';
 import { UserRound, Building2 } from 'lucide-react';
+import { Divider } from '@/components/custom/Divider';
 import { ApiBoundary } from '@/components/ApiBoundary';
 import { PageContainer } from '@/components/PageContainer';
 import OrganizationManagement from './OrganizationManagement';
-import { NativeText as Text } from '@/components/ui/NativeText';
-import { NativeTextInput } from '@/components/ui/NativeTextInput';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
-import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
+import { NativeText as Text } from '@/components/custom/NativeText';
+import { GeneratedAvatar } from '@/components/custom/GeneratedAvatar';
+import { NativeTextInput } from '@/components/custom/NativeTextInput';
 import { useUpdateUser, useAuthenticatedUser } from '@/lib/hooks/use-user';
+import { NativeHeading as Heading } from '@/components/custom/NativeHeading';
 import '@/platform/components/settings-navigation.css';
 
 /** Renders account metadata and resets drafts when the authenticated identity changes. */
@@ -53,7 +53,7 @@ function SettingsPage({ user }: { user: z.output<typeof schemas.zCurrentUser> })
     return (
         <div className="flex flex-col gap-(--spacing-8)">
             <div className="flex items-center gap-(--spacing-3)">
-                <Avatar name={name} src={user.avatar} seed={user.id} />
+                <GeneratedAvatar name={name} src={user.avatar} seed={user.id} />
                 <div className="flex flex-col gap-0">
                     <Heading level={4} accessibilityLevel={1}>
                         {name}

@@ -1,9 +1,9 @@
 import ViewLayout from './ViewLayout';
 import FormPreview from './FormPreview';
-import { Button } from '@/components/ui/Button';
-import { TextInput } from '@/components/ui/TextInput';
+import { Button } from '@/components/shadcn/button';
+import { TextInput } from '@/components/custom/TextInput';
 import { Step, Wizard } from '@/components/custom/Wizard';
-import { NumberInput } from '@/components/ui/NumberInput';
+import { NumberInput } from '@/components/custom/NumberInput';
 
 /** Documents browser-native form authoring using a local, non-networked submission preview. */
 export default function FormPage() {

@@ -1,15 +1,15 @@
-import { Icon } from '../ui/Icon';
+import { Icon } from './Icon';
+import { Heading } from './Heading';
+import type { Spacing } from './types';
 import type { ReactNode } from 'react';
-import { Heading } from '../ui/Heading';
-import type { Spacing } from '../ui/types';
 import { use, useEffect, useRef } from 'react';
 import { Button } from '@/components/shadcn/button';
 import { Dialog as BaseDialog } from '@base-ui/react/dialog';
 import { DialogContent, DialogTitle } from '@/components/shadcn/dialog';
-import { ButtonGroupContext, ControlSizeContext, DialogActivityContext } from '../ui/contexts';
+import { ButtonGroupContext, ControlSizeContext, DialogActivityContext } from './contexts';
 
 /** Custom modal frame coordinating fullscreen state with the isolated View host. */
-export function Dialog(props: {
+export function ViewDialog(props: {
     children?: ReactNode;
     /** Shows a dialog header when a title is provided. */
     title?: string;

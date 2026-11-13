@@ -3,7 +3,7 @@ import { act } from 'react';
 import { it, expect } from 'vitest';
 import userEvent from '@testing-library/user-event';
 import { renderStatic, withMounted } from '../../render';
-import { FileInput, NativeFileInput } from '@/components/ui/FileInput';
+import { FileInput, NativeFileInput } from '@/components/custom/FileInput';
 
 /** Requires the real control used by an interaction. */
 function control<T extends HTMLElement>(output: ParentNode, selector: string): T {

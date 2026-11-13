@@ -1,11 +1,11 @@
 // @vitest-environment happy-dom
 import { act, useState } from 'react';
 import { it, expect, vi } from 'vitest';
-import { Button } from '@/components/custom/Button';
 import userEvent from '@testing-library/user-event';
 import { renderStatic, withMounted } from '../../render';
 import type { TableColumn } from '@/components/custom/table';
-import { ControlSizeContext } from '@/components/ui/contexts';
+import { ActionButton } from '@/components/custom/ActionButton';
+import { ControlSizeContext } from '@/components/custom/contexts';
 import { DataTable, pixel, proportional } from '@/components/custom/DataTable';
 
 it('renders domain rows without inventing table actions', () => {
@@ -288,13 +288,13 @@ it('retains inherited and explicit control sizes without forcing compact cells t
     const user = userEvent.setup();
 
     const columns: TableColumn<{ name: string }>[] = [
-        { key: 'inherited', renderCell: (row) => <Button variant="outline">{row.name}</Button> },
+        { key: 'inherited', renderCell: (row) => <ActionButton variant="outline">{row.name}</ActionButton> },
         {
             key: 'explicit',
             renderCell: () => (
-                <Button variant="outline" size="sm">
+                <ActionButton variant="outline" size="sm">
                     Explicit size
-                </Button>
+                </ActionButton>
             )
         }
     ];

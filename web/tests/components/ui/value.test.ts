@@ -2,7 +2,7 @@ import { it, expect } from 'vitest';
 import { withMounted } from '../../render';
 // @vitest-environment happy-dom
 import { act, createElement } from 'react';
-import { useValue } from '@/components/ui/value';
+import { useValue } from '@/components/custom/value';
 
 it('reports controlled edits without changing the caller-owned value', async () => {
     // Arrange

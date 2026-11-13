@@ -3,8 +3,8 @@ import { act } from 'react';
 import { expect, it, vi } from 'vitest';
 import { withMounted } from '../../render';
 import userEvent from '@testing-library/user-event';
-import { useConfirm } from '@/components/ui/confirmation';
-import { ButtonGroupContext, ControlSizeContext } from '@/components/ui/contexts';
+import { useConfirm } from '@/components/custom/confirmation';
+import { ButtonGroupContext, ControlSizeContext } from '@/components/custom/contexts';
 
 it('keeps a destructive operation open while pending, retains failure for retry, and restores the opener after success', async () => {
     let reject!: (error: Error) => void;

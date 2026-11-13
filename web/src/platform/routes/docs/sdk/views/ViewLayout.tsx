@@ -1,16 +1,16 @@
 import { Circle } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 import { Switch } from '@/components/shadcn/switch';
-import { InteractiveCard } from '@/components/ui/Card';
 import { documentationLastUpdated } from '@/lib/documentation';
-import { NativeText as Text } from '@/components/ui/NativeText';
 import { componentDocumentation } from '@/platform/publications';
-import { NativeStack as Stack } from '@/components/ui/NativeStack';
+import { NativeText as Text } from '@/components/custom/NativeText';
 import { DocumentationArticle } from '@/components/layouts/Article';
+import { InteractiveCard } from '@/components/custom/InteractiveCard';
+import { NativeStack as Stack } from '@/components/custom/NativeStack';
 import { DataTable, proportional } from '@/components/custom/DataTable';
-import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
-import { NativeCodeBlock as CodeBlock } from '@/components/ui/NativeCodeBlock';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/Tabs';
+import { NativeHeading as Heading } from '@/components/custom/NativeHeading';
+import { NativeCodeBlock as CodeBlock } from '@/components/custom/NativeCodeBlock';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/shadcn/tabs';
 
 type ViewProperty = { name: string; type: string; description?: string };
 
@@ -120,6 +120,17 @@ export default function ViewLayout({
                 <Heading id="introduction" level={1}>
                     {component.label}
                 </Heading>
+                {!runtime && (
+                    <Text as="p" type="supporting">
+                        {component.reference ? (
+                            <a href={component.reference} className="underline underline-offset-4">
+                                {component.sourceLabel}
+                            </a>
+                        ) : (
+                            `${component.sourceLabel}: ${component.justification}`
+                        )}
+                    </Text>
+                )}
                 <CodeBlock
                     code={`longlink docs component ${name}`}
                     language="bash"

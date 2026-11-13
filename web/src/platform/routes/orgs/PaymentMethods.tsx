@@ -1,14 +1,14 @@
 import { api } from '@/lib/api';
 import { useApi } from '@/lib/hooks/use-api';
-import { Token } from '@/components/ui/Token';
-import { Divider } from '@/components/ui/Divider';
+import { Token } from '@/components/custom/Token';
+import { Divider } from '@/components/custom/Divider';
 import { ApiBoundary } from '@/components/ApiBoundary';
-import { NativeText as Text } from '@/components/ui/NativeText';
-import { NativeStack as Stack } from '@/components/ui/NativeStack';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
-import { NativeButton as Button } from '@/components/ui/NativeButton';
+import { NativeText as Text } from '@/components/custom/NativeText';
+import { NativeStack as Stack } from '@/components/custom/NativeStack';
 import { DataTable, proportional } from '@/components/custom/DataTable';
-import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
+import { NativeButton as Button } from '@/components/custom/NativeButton';
+import { NativeHeading as Heading } from '@/components/custom/NativeHeading';
 
 /** Owns card registration and saved-card reads only while Payment Methods is active. */
 export default function PaymentMethods({ base, canManage }: { base: string; canManage: boolean }) {

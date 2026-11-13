@@ -1,6 +1,6 @@
 import ViewLayout from './ViewLayout';
 import FormPreview from './FormPreview';
-import { NumberInput } from '@/components/ui/NumberInput';
+import { NumberInput } from '@/components/custom/NumberInput';
 
 /** Documents NumberInput in LongLink Views. */
 export default function NumberInputPage() {

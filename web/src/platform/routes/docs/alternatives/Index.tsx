@@ -1,5 +1,5 @@
 import { DocumentationArticle } from '@/components/layouts/Article';
-import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
+import { NativeHeading as Heading } from '@/components/custom/NativeHeading';
 
 const article = {
     title: 'Alternatives | LongLink',

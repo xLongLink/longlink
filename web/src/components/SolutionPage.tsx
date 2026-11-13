@@ -4,12 +4,12 @@ import { startCase } from 'es-toolkit/compat';
 import { JsxView } from '@/components/JsxView';
 import { PageError } from '@/components/Utils';
 import { manifestSchema } from '@/views/manifest';
-import { DeferredIcon } from '@/components/ui/Icon';
 import Platform from '@/components/layouts/Platform';
+import { DeferredIcon } from '@/components/custom/Icon';
 import { PageContainer } from '@/components/PageContainer';
 import { skipToken, useQuery } from '@tanstack/react-query';
-import { NativeLoading } from '@/components/ui/NativeLoading';
 import { matchRoutes, Navigate, useParams } from 'react-router';
+import { NativeLoading } from '@/components/custom/NativeLoading';
 import { RELATIVE_URL_ORIGIN, resolveNavigationUrl, resolveRequestUrl } from '@/lib/url';
 
 const EMPTY_VIEWS = [] as const;

@@ -1,7 +1,7 @@
 import ViewLayout from './ViewLayout';
 import FormPreview from './FormPreview';
-import { Switch } from '@/components/ui/Switch';
-import { SwitchField } from '@/components/ui/SwitchField';
+import { Switch } from '@/components/shadcn/switch';
+import { SwitchField } from '@/components/custom/SwitchField';
 
 /** Documents Switch in LongLink Views. */
 export default function SwitchPage() {

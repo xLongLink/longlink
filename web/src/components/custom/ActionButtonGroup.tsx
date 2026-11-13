@@ -1,11 +1,11 @@
-import { useGroupPress } from '../ui/press';
+import { useGroupPress } from './press';
 import { Toolbar } from '@base-ui/react/toolbar';
 import { useContext, useRef, type ReactNode } from 'react';
-import { ButtonGroupContext, ControlSizeContext } from '../ui/contexts';
+import { ButtonGroupContext, ControlSizeContext } from './contexts';
 import { ButtonGroup as ControlGroup } from '@/components/shadcn/button-group';
 
 /** Groups related actions with connected styling and a single keyboard tab stop. */
-export function ButtonGroup({
+export function ActionButtonGroup({
     children,
     label,
     orientation = 'horizontal',

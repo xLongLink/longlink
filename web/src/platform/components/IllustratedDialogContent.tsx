@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { NativeStack as Stack } from '@/components/ui/NativeStack';
+import { NativeStack as Stack } from '@/components/custom/NativeStack';
 
 export function IllustratedDialogContent({ illustration, children }: { illustration: ReactNode; children: ReactNode }) {
     // Bound the split frame to the viewport while keeping content scrolling inside the layout.

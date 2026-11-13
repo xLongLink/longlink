@@ -1,7 +1,7 @@
 import { Fragment } from 'react';
 import { Wordmark } from '@/components/Wordmark';
 import { PublicArticle } from '@/components/layouts/Article';
-import { NativeCodeBlock as CodeBlock } from '@/components/ui/NativeCodeBlock';
+import { NativeCodeBlock as CodeBlock } from '@/components/custom/NativeCodeBlock';
 
 const article = {
     description: 'LongLink logos, wordmarks, and illustrated brand assets.',

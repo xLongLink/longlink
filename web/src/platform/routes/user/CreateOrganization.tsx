@@ -1,13 +1,13 @@
 import { z } from 'zod';
 import { api } from '@/lib/api';
-import { Form } from '@/components/ui/Form';
-import { Dialog } from '@/components/ui/Dialog';
-import { TextInput } from '@/components/ui/TextInput';
+import { Form } from '@/components/custom/Form';
 import { Illustration } from '@/components/Illustration';
-import { NativeText as Text } from '@/components/ui/NativeText';
-import { NativeStack as Stack } from '@/components/ui/NativeStack';
-import { NativeButton as Button } from '@/components/ui/NativeButton';
-import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
+import { TextInput } from '@/components/custom/TextInput';
+import { ViewDialog } from '@/components/custom/ViewDialog';
+import { NativeText as Text } from '@/components/custom/NativeText';
+import { NativeStack as Stack } from '@/components/custom/NativeStack';
+import { NativeButton as Button } from '@/components/custom/NativeButton';
+import { NativeHeading as Heading } from '@/components/custom/NativeHeading';
 import { zOrganizationCreate } from '@/lib/generated/platform-api-v1/zod.gen';
 import { IllustratedDialogContent } from '@/platform/components/IllustratedDialogContent';
 
@@ -31,7 +31,7 @@ export default function CreateOrganization({
 
     // Keep the split dialog compact and within the dynamic viewport.
     return (
-        <Dialog
+        <ViewDialog
             isOpen
             paddingInline={0}
             onOpenChange={(open) => {
@@ -80,6 +80,6 @@ export default function CreateOrganization({
                     </Form>
                 </Stack>
             </IllustratedDialogContent>
-        </Dialog>
+        </ViewDialog>
     );
 }

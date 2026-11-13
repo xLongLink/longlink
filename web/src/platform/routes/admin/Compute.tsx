@@ -1,23 +1,23 @@
 import { z } from 'zod';
 import { api } from '@/lib/api';
 import { useAdminList } from './use-list';
-import { Form } from '@/components/ui/Form';
 import { Info, Search } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useApi } from '@/lib/hooks/use-api';
-import { Dialog } from '@/components/ui/Dialog';
-import { TextInput } from '@/components/ui/TextInput';
+import { Form } from '@/components/custom/Form';
 import { DeletionDialog } from '@/components/Deletion';
-import { Pagination } from '@/components/ui/Pagination';
+import { TextInput } from '@/components/custom/TextInput';
 import { Step, Wizard } from '@/components/custom/Wizard';
-import { NativeFileInput } from '@/components/ui/FileInput';
-import { NativeText as Text } from '@/components/ui/NativeText';
-import { NativeTextArea } from '@/components/ui/NativeTextArea';
-import { NativeStack as Stack } from '@/components/ui/NativeStack';
+import { ViewDialog } from '@/components/custom/ViewDialog';
+import { NativeFileInput } from '@/components/custom/FileInput';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
-import { NativeButton as Button } from '@/components/ui/NativeButton';
+import { DataPagination } from '@/components/custom/DataPagination';
+import { NativeText as Text } from '@/components/custom/NativeText';
+import { NativeTextArea } from '@/components/custom/NativeTextArea';
+import { NativeStack as Stack } from '@/components/custom/NativeStack';
 import { DataTable, proportional } from '@/components/custom/DataTable';
-import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
+import { NativeButton as Button } from '@/components/custom/NativeButton';
+import { NativeHeading as Heading } from '@/components/custom/NativeHeading';
 
 // The API also accepts raw YAML and validates its structure on the server.
 const registrationSchema = schemas.zComputeRegistryCreate.extend({
@@ -92,7 +92,7 @@ export default function Compute() {
                     ]}
                 />
                 <Stack as="footer" align="center" paddingBlock={2}>
-                    <Pagination {...pagination} totalItems={computes.total} />
+                    <DataPagination {...pagination} totalItems={computes.total} />
                 </Stack>
             </Stack>
             {dialog?.kind === 'registration' && (
@@ -109,7 +109,7 @@ export default function Compute() {
                 />
             )}
             {metadata && (
-                <Dialog
+                <ViewDialog
                     title="Compute metadata"
                     isOpen
                     onOpenChange={(open) => {
@@ -139,7 +139,7 @@ export default function Compute() {
                             />
                         </Stack>
                     </Stack>
-                </Dialog>
+                </ViewDialog>
             )}
             {dialog?.kind === 'deletion' && (
                 <DeletionDialog
@@ -223,7 +223,7 @@ function ComputeRegistration({ onSuccess, onClose }: { onSuccess: () => Promise<
 
     // Let the shared wizard own navigation, validation, and persistent fields within the creation dialog shell.
     return (
-        <Dialog
+        <ViewDialog
             isOpen
             onOpenChange={(open) => {
                 if (!open) onClose();
@@ -298,6 +298,6 @@ function ComputeRegistration({ onSuccess, onClose }: { onSuccess: () => Promise<
                     </Step>
                 </Wizard>
             </Form>
-        </Dialog>
+        </ViewDialog>
     );
 }

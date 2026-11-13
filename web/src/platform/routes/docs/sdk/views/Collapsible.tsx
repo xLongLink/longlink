@@ -1,7 +1,7 @@
 import ViewLayout from './ViewLayout';
-import { Button } from '@/components/ui/Button';
-import { NativeText as Text } from '@/components/ui/NativeText';
-import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/Collapsible';
+import { Button } from '@/components/shadcn/button';
+import { NativeText as Text } from '@/components/custom/NativeText';
+import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/shadcn/collapsible';
 
 /** Documents Collapsible in LongLink Views. */
 export default function CollapsiblePage() {

@@ -2,8 +2,8 @@
 import { act } from 'react';
 import { it, expect, vi } from 'vitest';
 import userEvent from '@testing-library/user-event';
-import { Timestamp } from '@/components/ui/Timestamp';
 import { renderStatic, withMounted } from '../../render';
+import { Timestamp } from '@/components/custom/Timestamp';
 import { formatRelativeTimestamp } from '@/lib/timestamp';
 
 it.each([

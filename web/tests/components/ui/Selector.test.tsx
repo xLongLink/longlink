@@ -2,9 +2,9 @@
 import { act, useState } from 'react';
 import { it, expect, vi } from 'vitest';
 import { withMounted } from '../../render';
-import { Selector } from '@/components/ui/Selector';
 import userEvent from '@testing-library/user-event';
-import { MultiSelector } from '@/components/ui/MultiSelector';
+import { Selector } from '@/components/custom/Selector';
+import { MultiSelector } from '@/components/custom/MultiSelector';
 
 it.each([false, true])('keeps a rejected controlled single change out of submission, search=%s', async (hasSearch) => {
     // A nullable controlled caller may decline both a selection and a clear request.

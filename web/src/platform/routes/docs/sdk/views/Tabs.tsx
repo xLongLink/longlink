@@ -1,6 +1,6 @@
 import ViewLayout from './ViewLayout';
-import { NativeText as Text } from '@/components/ui/NativeText';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/Tabs';
+import { NativeText as Text } from '@/components/custom/NativeText';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/shadcn/tabs';
 
 /** Documents native tab composition and selection. */
 export default function TabsPage() {

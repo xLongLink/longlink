@@ -9,7 +9,7 @@ import { ApiErrorContext } from '@/lib/errors';
 import userEvent from '@testing-library/user-event';
 import { ApiBoundary } from '@/components/ApiBoundary';
 import Registries from '@/platform/routes/orgs/Registries';
-import { IconRequestContext } from '@/components/ui/contexts';
+import { IconRequestContext } from '@/components/custom/contexts';
 import { zRegistryResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 import { QueryCache, QueryClient, QueryClientProvider } from '@tanstack/react-query';
 

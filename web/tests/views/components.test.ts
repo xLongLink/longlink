@@ -1,7 +1,7 @@
 import { it, expect } from 'vitest';
 import * as card from '@/components/shadcn/card';
 import * as components from '@/views/components';
-import { InteractiveCard } from '@/components/ui/Card';
+import { InteractiveCard } from '@/components/custom/InteractiveCard';
 
 it('exposes native card composition separately from LongLink surface interactions', () => {
     expect(components.Card).toBe(card.Card);

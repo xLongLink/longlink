@@ -3,8 +3,8 @@ import { hydrateRoot } from 'react-dom/client';
 // @vitest-environment happy-dom
 import { act, StrictMode, useState } from 'react';
 import { renderToString } from 'react-dom/server';
-import { EmptyState } from '@/components/ui/EmptyState';
 import { renderStatic, withMounted } from '../../render';
+import { EmptyState } from '@/components/custom/EmptyState';
 import { PageError, PageLoading } from '@/components/Utils';
 
 it('retains heading semantics and keeps the server-rendered announcement silent', () => {

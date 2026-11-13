@@ -9,8 +9,8 @@ import { ApiErrorContext } from '@/lib/errors';
 import Organization from '@/platform/layouts/Organization';
 import Layout from '@/platform/layouts/OrganizationAccess';
 import { renderPlatform, membership, user } from '../render';
-import { IconRequestContext } from '@/components/ui/contexts';
 import { AuthenticatedUserContext } from '@/lib/hooks/use-user';
+import { IconRequestContext } from '@/components/custom/contexts';
 
 it('keeps unresolved organization reads behind their loading boundary', () => {
     // Act

@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 import { it, expect } from 'vitest';
 import { renderStatic } from '../../render';
-import { IconButton } from '@/components/ui/IconButton';
+import { IconButton } from '@/components/custom/IconButton';
 
 it('keeps an accessible action name on the icon-only control', () => {
     // Act

@@ -1,14 +1,14 @@
 import { Search } from 'lucide-react';
 import { useAdminList } from './use-list';
 import { useApi } from '@/lib/hooks/use-api';
-import { Avatar } from '@/components/ui/Avatar';
-import { TextInput } from '@/components/ui/TextInput';
-import { Timestamp } from '@/components/ui/Timestamp';
-import { Pagination } from '@/components/ui/Pagination';
-import { NativeText as Text } from '@/components/ui/NativeText';
-import { NativeStack as Stack } from '@/components/ui/NativeStack';
+import { TextInput } from '@/components/custom/TextInput';
+import { Timestamp } from '@/components/custom/Timestamp';
+import { DataPagination } from '@/components/custom/DataPagination';
+import { NativeText as Text } from '@/components/custom/NativeText';
+import { GeneratedAvatar } from '@/components/custom/GeneratedAvatar';
+import { NativeStack as Stack } from '@/components/custom/NativeStack';
 import { DataTable, proportional } from '@/components/custom/DataTable';
-import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
+import { NativeHeading as Heading } from '@/components/custom/NativeHeading';
 import { zPageAdminUserSummary } from '@/lib/generated/platform-api-v1/zod.gen';
 
 /** Lists Platform users with server-side pagination. */
@@ -35,7 +35,7 @@ export default function Users() {
                             width: proportional(1),
                             renderCell: (row) => (
                                 <Stack direction="horizontal" gap={3} align="center">
-                                    <Avatar name={row.name} src={row.avatar} seed={row.id} />
+                                    <GeneratedAvatar name={row.name} src={row.avatar} seed={row.id} />
                                     <Stack align="start">
                                         <Stack direction="horizontal" gap={1} align="center">
                                             <Text>{row.name}</Text>
@@ -64,7 +64,7 @@ export default function Users() {
                     ]}
                 />
                 <Stack as="footer" align="center" paddingBlock={2}>
-                    <Pagination {...pagination} totalItems={users.total} />
+                    <DataPagination {...pagination} totalItems={users.total} />
                 </Stack>
             </Stack>
         </Stack>

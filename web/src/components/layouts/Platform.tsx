@@ -2,12 +2,12 @@ import { PanelLeft } from 'lucide-react';
 import { SidebarContext } from '@/lib/sidebar';
 import { Button } from '@base-ui/react/button';
 import { useId, useRef, useState } from 'react';
-import { Divider } from '@/components/ui/Divider';
 import Content from '@/components/layouts/Content';
+import { Divider } from '@/components/custom/Divider';
 import { useAppearance } from '@/lib/hooks/use-appearance';
 import { useMediaQuery } from '@/lib/hooks/use-media-query';
 import { Link as RouterLink, useLocation } from 'react-router';
-import { TypographyTooltip } from '@/components/ui/TypographyTooltip';
+import { TypographyTooltip } from '@/components/custom/TypographyTooltip';
 import type { NavigationTab, PlatformProps } from '@/components/layouts/types';
 
 /** Finds the longest platform tab path that matches a pathname. */

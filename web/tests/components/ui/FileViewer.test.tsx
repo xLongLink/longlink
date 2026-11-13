@@ -3,8 +3,8 @@ import { act, useState } from 'react';
 import { it, expect, vi } from 'vitest';
 import { withMounted } from '../../render';
 import userEvent from '@testing-library/user-event';
-import { FileViewer } from '@/components/ui/FileViewer';
-import { FileRequestContext } from '@/components/ui/preview';
+import { FileViewer } from '@/components/custom/FileViewer';
+import { FileRequestContext } from '@/components/custom/preview';
 
 it('sanitizes display names before requesting a scoped download', async () => {
     // Arrange

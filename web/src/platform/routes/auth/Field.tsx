@@ -1,5 +1,5 @@
 import type { ComponentPropsWithoutRef } from 'react';
-import { NativeTextInput } from '@/components/ui/NativeTextInput';
+import { NativeTextInput } from '@/components/custom/NativeTextInput';
 import { Controller, type Control, type FieldPathByValue, type FieldValues } from 'react-hook-form';
 
 type TextFieldProps<Values extends FieldValues> = Omit<

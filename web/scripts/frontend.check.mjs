@@ -1,9 +1,38 @@
 import assert from 'node:assert/strict';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { tmpdir } from 'node:os';
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import test from 'node:test';
 import ts from 'typescript';
+
+test('published component provenance matches the implementation exposed to Views', async () => {
+    const root = fileURLToPath(new URL('../', import.meta.url));
+    const entry = path.join(root, 'src/views/components.ts');
+    const config = ts.readConfigFile(path.join(root, 'tsconfig.app.json'), ts.sys.readFile);
+    const parsed = ts.parseJsonConfigFileContent(config.config, ts.sys, root);
+    const program = ts.createProgram([entry], parsed.options);
+    const checker = program.getTypeChecker();
+    const source = program.getSourceFile(entry);
+    const exports = new Map(
+        checker.getExportsOfModule(checker.getSymbolAtLocation(source)).map((symbol) => [symbol.name, symbol])
+    );
+    const catalog = JSON.parse(
+        await readFile(new URL('../../sdk/longlink/.static/jsx/components.json', import.meta.url), 'utf8')
+    );
+
+    // Resolve actual TypeScript aliases so a custom wrapper cannot masquerade as a native component.
+    for (const component of catalog.components.filter((component) => component.category !== 'Runtime')) {
+        const symbol = exports.get(component.name);
+        assert.ok(symbol, `${component.name} is documented but not exposed to Views.`);
+        const implementation = symbol.flags & ts.SymbolFlags.Alias ? checker.getAliasedSymbol(symbol) : symbol;
+        const filename = implementation.declarations?.[0]?.getSourceFile().fileName;
+        assert.ok(
+            filename?.includes(`/components/${component.source}/`),
+            `${component.name} is documented as ${component.source}, but resolves to ${filename}.`
+        );
+    }
+});
 
 test('SDK declarations support native JSX composition without installed React or Base UI types', async () => {
     const directory = await mkdtemp(path.join(tmpdir(), 'longlink-frontend-'));

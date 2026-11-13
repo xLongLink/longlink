@@ -1,5 +1,5 @@
 import { cn } from 'cn';
-import { NavigationLink } from '../ui/Link';
+import { NavigationLink } from './Link';
 import { Card as Surface } from '@/components/shadcn/card';
 import type { CSSProperties, MouseEvent, ReactNode } from 'react';
 

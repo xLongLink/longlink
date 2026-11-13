@@ -1,12 +1,12 @@
 import { Page } from '@/components/Page';
-import { Grid } from '@/components/ui/Grid';
 import * as pricing from '@/platform/pricing';
-import { Divider } from '@/components/ui/Divider';
+import { Grid } from '@/components/custom/Grid';
+import { Divider } from '@/components/custom/Divider';
 import { Database, HardDrive, UsersRound } from 'lucide-react';
-import { NativeText as Text } from '@/components/ui/NativeText';
-import { NativeStack as Stack } from '@/components/ui/NativeStack';
-import { NativeButton as Button } from '@/components/ui/NativeButton';
-import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
+import { NativeText as Text } from '@/components/custom/NativeText';
+import { NativeStack as Stack } from '@/components/custom/NativeStack';
+import { NativeButton as Button } from '@/components/custom/NativeButton';
+import { NativeHeading as Heading } from '@/components/custom/NativeHeading';
 
 /** Publishes usage pricing from generated backend defaults without introducing plans. */
 export default function Pricing() {

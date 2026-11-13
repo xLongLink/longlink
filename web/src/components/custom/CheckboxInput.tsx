@@ -1,30 +1,46 @@
-import { useId } from 'react';
-import { Switch } from './Switch';
 import { useValue } from './value';
+import { useId, useRef } from 'react';
 import type { FieldProps } from './types';
+import { Checkbox } from '../shadcn/checkbox';
 import { Field, FieldLabel } from '@/components/shadcn/field';
 
-/** Custom labeled adapter with resettable values and focusable disabled controls. */
-export function SwitchField(
-    props: FieldProps & { value?: boolean; defaultChecked?: boolean; onChange?: (value: boolean) => void }
+/** Custom labeled adapter with mixed values, reset support, and focusable disabled controls. */
+export function CheckboxInput(
+    props: FieldProps & {
+        value?: boolean | 'indeterminate';
+        defaultChecked?: boolean;
+        onChange?: (value: boolean) => void;
+    }
 ) {
-    // Keep optional local state attached to the real ancestor form for reset.
-    const { ref, value, onChange } = useValue(props.value, props.defaultChecked ?? false, props.onChange);
+    // Keep caller-owned mixed state distinct from an unchecked answer.
+    const { ref, value, onChange } = useValue<boolean | 'indeterminate'>(
+        props.value,
+        props.defaultChecked ?? false,
+        (value) => props.onChange?.(value === true)
+    );
+
     const id = useId();
     const labelId = `${id}-label`;
     const descriptionId = `${id}-description`;
+    const input = useRef<HTMLInputElement>(null);
 
-    // Disabled controls remain discoverable without contributing a value or blocking submission.
+    // A native button retains disabled-fieldset inheritance while Base UI owns checkbox semantics.
     return (
         <Field ref={ref} orientation="horizontal" data-disabled={props.disabled || undefined}>
-            <Switch
+            <Checkbox
                 className="aria-disabled:opacity-50"
                 render={<button type="button" />}
                 nativeButton
                 id={id}
                 name={props.disabled ? undefined : props.name}
-                checked={value}
-                onCheckedChange={onChange}
+                checked={value === true}
+                indeterminate={value === 'indeterminate'}
+                inputRef={input}
+                onCheckedChange={(checked) => {
+                    // Native activation clears mixed state even when a controlled caller declines the edit.
+                    if (input.current) input.current.indeterminate = value === 'indeterminate';
+                    onChange(checked);
+                }}
                 required={props.required && !props.disabled}
                 readOnly={props.disabled}
                 aria-disabled={props.disabled || undefined}

@@ -1,9 +1,9 @@
 import { it, expect } from 'vitest';
-import { Form } from '@/components/ui/Form';
 // @vitest-environment happy-dom
 import { act, useRef, useState } from 'react';
-import { FormField } from '@/components/ui/FormField';
+import { Form } from '@/components/custom/Form';
 import { renderStatic, withMounted } from '../../render';
+import { FormField } from '@/components/custom/FormField';
 
 it('serializes each authored string once and excludes disabled carriers', () => {
     // Arrange

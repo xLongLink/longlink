@@ -2,12 +2,14 @@
 /* oxlint-disable anti-slop/no-shape-in-symbol-names -- The existing public avatar prop is named shape. */
 import { it, expect } from 'vitest';
 import { act, useState } from 'react';
-import { Avatar } from '@/components/ui/Avatar';
 import { renderStatic, withMounted } from '../../render';
+import { GeneratedAvatar } from '@/components/custom/GeneratedAvatar';
 
 it('retains a caller-supplied image rather than replacing it with generated artwork', () => {
     // Act
-    const output = renderStatic(<Avatar name="Acme" kind="organization" src="https://images.example/acme.png" />);
+    const output = renderStatic(
+        <GeneratedAvatar name="Acme" kind="organization" src="https://images.example/acme.png" />
+    );
 
     // Assert
     expect(output.querySelector('img')?.getAttribute('src')).toBe('https://images.example/acme.png');
@@ -19,13 +21,13 @@ it('recovers failed URLs to stable artwork and retries a newly supplied source',
 
         return (
             <>
-                <Avatar name="Acme" seed="owner-1" src={src} />
+                <GeneratedAvatar name="Acme" seed="owner-1" src={src} />
                 <button onClick={() => setSrc('https://images.example/second.png')}>Change source</button>
             </>
         );
     }
 
-    const generated = renderStatic(<Avatar name="Renamed" seed="owner-1" />)
+    const generated = renderStatic(<GeneratedAvatar name="Renamed" seed="owner-1" />)
         .querySelector('img')
         ?.getAttribute('src');
 
@@ -43,7 +45,7 @@ it('recovers failed URLs to stable artwork and retries a newly supplied source',
 
 it('retains geometry, generated artwork choice, and named versus decorative semantics', () => {
     const organization = renderStatic(
-        <Avatar name="Acme" kind="organization" shape="square" size="lg" alt="Acme logo" />
+        <GeneratedAvatar name="Acme" kind="organization" shape="square" size="lg" alt="Acme logo" />
     );
 
     const root = organization.querySelector('[data-slot="avatar"]');
@@ -51,18 +53,18 @@ it('retains geometry, generated artwork choice, and named versus decorative sema
     expect(root?.classList.contains('size-12')).toBe(true);
     expect(root?.classList.contains('rounded-(--radius-element)')).toBe(true);
     expect(organization.querySelector('img')?.getAttribute('src')).toBe(
-        renderStatic(<Avatar name="Acme" shape="rounded" />)
+        renderStatic(<GeneratedAvatar name="Acme" shape="rounded" />)
             .querySelector('img')
             ?.getAttribute('src')
     );
-    const decorative = renderStatic(<Avatar name="  " size="sm" />).querySelector('[data-slot="avatar"]');
+    const decorative = renderStatic(<GeneratedAvatar name="  " size="sm" />).querySelector('[data-slot="avatar"]');
     expect(decorative?.getAttribute('role')).toBe('presentation');
     expect(decorative?.getAttribute('aria-hidden')).toBe('true');
     expect(decorative?.classList.contains('size-6')).toBe(true);
 });
 
 it('falls back to initials if generated artwork also fails', async () => {
-    await withMounted(<Avatar name="Jane Doe" />, async (output) => {
+    await withMounted(<GeneratedAvatar name="Jane Doe" />, async (output) => {
         await act(async () => output.querySelector('img')?.dispatchEvent(new Event('error')));
         expect(output.querySelector('img')).toBeNull();
         expect(output.querySelector('[data-slot="avatar-fallback"]')?.textContent).toBe('JD');
@@ -76,13 +78,13 @@ it('retries artwork when identity changes after a fallback failure', async () =>
 
         return (
             <>
-                <Avatar name="(👩‍💻) Doe" seed={seed} />
+                <GeneratedAvatar name="(👩‍💻) Doe" seed={seed} />
                 <button onClick={() => setSeed('second-owner')}>Change owner</button>
             </>
         );
     }
 
-    const generated = renderStatic(<Avatar seed="second-owner" />)
+    const generated = renderStatic(<GeneratedAvatar seed="second-owner" />)
         .querySelector('img')
         ?.getAttribute('src');
 

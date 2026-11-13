@@ -55,7 +55,37 @@ export default defineConfig(({ mode }) => {
                 { name: 'anti-slop', specifier: './tools/oxlint/anti-slop/index.ts' }
             ],
             plugins: ['oxc', 'typescript', 'unicorn', 'react'],
+            overrides: [
+                {
+                    files: ['src/components/shadcn/**/*', 'src/components/reui/**/*'],
+                    rules: {
+                        'no-restricted-imports': [
+                            'error',
+                            {
+                                patterns: [
+                                    {
+                                        group: ['@/components/custom/*', '../custom/*', '../../custom/*'],
+                                        message: 'Library components must not depend on LongLink custom components.'
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            ],
             rules: {
+                'no-restricted-imports': [
+                    'error',
+                    {
+                        patterns: [
+                            {
+                                group: ['@/components/ui/*', '**/components/ui/*', '../ui/*'],
+                                message:
+                                    'Import directly from components/shadcn, components/reui, or components/custom.'
+                            }
+                        ]
+                    }
+                ],
                 'oxc/no-accumulating-spread': 'error',
                 'anti-slop/no-array-filter-map': 'error',
                 'anti-slop/no-reduce-accumulator-copy': 'error',

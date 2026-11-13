@@ -2,7 +2,7 @@ import { it, expect } from 'vitest';
 // @vitest-environment happy-dom
 import { createElement } from 'react';
 import { withMounted } from '../../render';
-import { FileRequestContext, usePreview } from '@/components/ui/preview';
+import { FileRequestContext, usePreview } from '@/components/custom/preview';
 
 it('does not request host capability for an inline image', async () => {
     // Arrange

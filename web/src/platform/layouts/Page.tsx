@@ -1,7 +1,7 @@
 import { Footer } from '@/components/Footer';
 import { Navbar } from '@/components/Navbar';
 import { Outlet, useLocation } from 'react-router';
-import { NativeStack as Stack } from '@/components/ui/NativeStack';
+import { NativeStack as Stack } from '@/components/custom/NativeStack';
 
 /** Renders public page chrome around page-specific content. */
 export default function Page() {

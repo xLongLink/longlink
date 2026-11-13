@@ -1,4 +1,4 @@
-import { useAnnouncement } from '../ui/announcement';
+import { useAnnouncement } from './announcement';
 import { Empty, EmptyHeader, EmptyTitle, EmptyDescription } from '@/components/shadcn/empty';
 
 /** Adds semantic headings and scoped result announcements to the native empty-state composition. */

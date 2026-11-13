@@ -7,12 +7,12 @@ import { ApiBoundary } from '@/components/ApiBoundary';
 import { SolutionPage } from '@/components/SolutionPage';
 import NotFoundLayout from '@/components/layouts/NotFound';
 import { useParams, useOutletContext } from 'react-router';
-import { NativeText as Text } from '@/components/ui/NativeText';
-import { NativeStack as Stack } from '@/components/ui/NativeStack';
-import { NativeEmptyState } from '@/components/ui/NativeEmptyState';
-import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
-import { NativeCodeBlock as CodeBlock } from '@/components/ui/NativeCodeBlock';
+import { EmptyState } from '@/components/custom/EmptyState';
+import { NativeText as Text } from '@/components/custom/NativeText';
+import { NativeStack as Stack } from '@/components/custom/NativeStack';
+import { NativeHeading as Heading } from '@/components/custom/NativeHeading';
 import { OrganizationSwitcher } from '@/platform/components/OrganizationSwitcher';
+import { NativeCodeBlock as CodeBlock } from '@/components/custom/NativeCodeBlock';
 import { OrganizationBreadcrumb } from '@/platform/components/OrganizationBreadcrumb';
 import { zUserOrganizationMembership, zOrganizationSolutionSummary } from '@/lib/generated/platform-api-v1/zod.gen';
 
@@ -62,7 +62,7 @@ export default function OrganizationSolution() {
     if (deploymentNotice) {
         const notice = (
             <div role="alert">
-                <NativeEmptyState
+                <EmptyState
                     description={deploymentNotice.description}
                     headingLevel={1}
                     title={deploymentNotice.title}

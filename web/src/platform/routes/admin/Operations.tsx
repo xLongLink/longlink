@@ -2,14 +2,14 @@ import { useState } from 'react';
 import { useAdminList } from './use-list';
 import { Info, Search } from 'lucide-react';
 import { useApi } from '@/lib/hooks/use-api';
-import { Dialog } from '@/components/ui/Dialog';
-import { TextInput } from '@/components/ui/TextInput';
-import { Pagination } from '@/components/ui/Pagination';
-import { NativeText as Text } from '@/components/ui/NativeText';
-import { NativeStack as Stack } from '@/components/ui/NativeStack';
-import { NativeButton as Button } from '@/components/ui/NativeButton';
+import { TextInput } from '@/components/custom/TextInput';
+import { ViewDialog } from '@/components/custom/ViewDialog';
+import { DataPagination } from '@/components/custom/DataPagination';
+import { NativeText as Text } from '@/components/custom/NativeText';
+import { NativeStack as Stack } from '@/components/custom/NativeStack';
 import { DataTable, proportional } from '@/components/custom/DataTable';
-import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
+import { NativeButton as Button } from '@/components/custom/NativeButton';
+import { NativeHeading as Heading } from '@/components/custom/NativeHeading';
 import { zPageOperationResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 
 const kinds = {
@@ -95,11 +95,11 @@ export default function Operations() {
                     ]}
                 />
                 <Stack as="footer" align="center" paddingBlock={2}>
-                    <Pagination {...pagination} totalItems={operations.total} />
+                    <DataPagination {...pagination} totalItems={operations.total} />
                 </Stack>
             </Stack>
             {metadata && (
-                <Dialog
+                <ViewDialog
                     title="Operation metadata"
                     isOpen
                     onOpenChange={(open) => {
@@ -133,7 +133,7 @@ export default function Operations() {
                             </Text>
                         )}
                     </Stack>
-                </Dialog>
+                </ViewDialog>
             )}
         </Stack>
     );

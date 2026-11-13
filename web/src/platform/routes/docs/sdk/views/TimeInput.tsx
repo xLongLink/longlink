@@ -1,6 +1,6 @@
 import ViewLayout from './ViewLayout';
 import FormPreview from './FormPreview';
-import { TimeInput } from '@/components/ui/TimeInput';
+import { TimeInput } from '@/components/custom/TimeInput';
 
 /** Documents TimeInput in LongLink Views. */
 export default function TimeInputPage() {

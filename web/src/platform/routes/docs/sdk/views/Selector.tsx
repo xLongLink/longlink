@@ -1,6 +1,6 @@
 import ViewLayout from './ViewLayout';
 import FormPreview from './FormPreview';
-import { Selector } from '@/components/ui/Selector';
+import { Selector } from '@/components/custom/Selector';
 
 /** Documents Selector in LongLink Views. */
 export default function SelectorPage() {

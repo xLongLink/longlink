@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import ViewLayout from './ViewLayout';
 import { ActionMenu } from '@/components/custom/ActionMenu';
-import { NativeText as Text } from '@/components/ui/NativeText';
-import { NativeStack as Stack } from '@/components/ui/NativeStack';
+import { NativeText as Text } from '@/components/custom/NativeText';
+import { NativeStack as Stack } from '@/components/custom/NativeStack';
 
 /** Documents ActionMenu in LongLink Views. */
 export default function ActionMenuPage() {

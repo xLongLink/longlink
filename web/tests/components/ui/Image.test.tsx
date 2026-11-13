@@ -1,9 +1,9 @@
 // @vitest-environment happy-dom
 import { act, useState } from 'react';
 import { it, expect, vi } from 'vitest';
-import { Image } from '@/components/ui/Image';
+import { Image } from '@/components/custom/Image';
 import { renderStatic, withMounted } from '../../render';
-import { FileRequestContext } from '@/components/ui/preview';
+import { FileRequestContext } from '@/components/custom/preview';
 
 it('renders inline images without requiring a host capability', () => {
     // Arrange

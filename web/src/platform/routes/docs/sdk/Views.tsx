@@ -2,8 +2,6 @@ import { GridExample } from './views/Grid';
 import { IconExample } from './views/Icon';
 import { MapsExample } from './views/Maps';
 import { TextExample } from './views/Text';
-import { Form } from '@/components/ui/Form';
-import { Grid } from '@/components/ui/Grid';
 import { BadgeExample } from './views/Badge';
 import { InputExample } from './views/Input';
 import { StackExample } from './views/Stack';
@@ -13,10 +11,10 @@ import { AvatarExample } from './views/Avatar';
 import { SelectExample } from './views/Select';
 import { SliderExample } from './views/Slider';
 import { SwitchExample } from './views/Switch';
-import { Button } from '@/components/ui/Button';
+import { Form } from '@/components/custom/Form';
+import { Grid } from '@/components/custom/Grid';
 import { HeadingExample } from './views/Heading';
 import { StepperExample } from './views/Stepper';
-import { Divider } from '@/components/ui/Divider';
 import { Link as RouterLink } from 'react-router';
 import { ComboboxExample } from './views/Combobox';
 import { MoreMenuExample } from './views/MoreMenu';
@@ -24,7 +22,7 @@ import { ProgressExample } from './views/Progress';
 import { SelectorExample } from './views/Selector';
 import { TextAreaExample } from './views/TextArea';
 import { ChartExample } from './views/ChartExample';
-import { Currency } from '@/components/ui/Currency';
+import { Button } from '@/components/shadcn/button';
 import { DataTableExample } from './views/DataTable';
 import { DateInputExample } from './views/DateInput';
 import { FileInputExample } from './views/FileInput';
@@ -32,33 +30,34 @@ import { RadioListExample } from './views/RadioList';
 import { TextInputExample } from './views/TextInput';
 import { TimeInputExample } from './views/TimeInput';
 import { TimestampExample } from './views/Timestamp';
+import { Divider } from '@/components/custom/Divider';
 import { ActionMenuExample } from './views/ActionMenu';
 import { EmptyStateExample } from './views/EmptyState';
 import { FileViewerExample } from './views/FileViewer';
-import { Disclosure } from '@/components/ui/Disclosure';
+import { PaginationExample } from './views/Pagination';
+import { ViewDialogExample } from './views/ViewDialog';
+import { Currency } from '@/components/custom/Currency';
+import { ButtonGroupExample } from './views/ButtonGroup';
 import { CollapsibleExample } from './views/Collapsible';
 import { NumberInputExample } from './views/NumberInput';
 import { DropdownMenuExample } from './views/DropdownMenu';
+import { Disclosure } from '@/components/custom/Disclosure';
 import { CheckboxInputExample } from './views/CheckboxInput';
 import { MultiSelectorExample } from './views/MultiSelector';
-import { NativeText as Text } from '@/components/ui/NativeText';
+import { DataPaginationExample } from './views/DataPagination';
+import { GeneratedAvatarExample } from './views/GeneratedAvatar';
 import { componentDocumentation } from '@/platform/publications';
-import { NativeStack as Stack } from '@/components/ui/NativeStack';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/Tabs';
+import { NativeText as Text } from '@/components/custom/NativeText';
 import { DocumentationArticle } from '@/components/layouts/Article';
+import { ActionButtonGroupExample } from './views/ActionButtonGroup';
+import { InteractiveCard } from '@/components/custom/InteractiveCard';
+import { NativeStack as Stack } from '@/components/custom/NativeStack';
+import { Tabs, TabsList, TabsTrigger } from '@/components/shadcn/tabs';
 import { DataTable, proportional } from '@/components/custom/DataTable';
-import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
 import { viewHooks, documentationCategories } from '@/lib/documentation';
-import { NativeCodeBlock as CodeBlock } from '@/components/ui/NativeCodeBlock';
-import {
-    Card,
-    CardTitle,
-    CardHeader,
-    CardFooter,
-    CardContent,
-    CardDescription,
-    InteractiveCard
-} from '@/components/ui/Card';
+import { NativeHeading as Heading } from '@/components/custom/NativeHeading';
+import { NativeCodeBlock as CodeBlock } from '@/components/custom/NativeCodeBlock';
+import { Card, CardTitle, CardHeader, CardFooter, CardContent, CardDescription } from '@/components/shadcn/card';
 import '@/platform/components/settings-navigation.css';
 
 const article = {
@@ -86,6 +85,12 @@ const previews = new Map(
         SankeyChart: <ChartExample name="SankeyChart" height={160} isCompact />,
         Maps: <MapsExample height={150} />,
         Avatar: <AvatarExample />,
+        GeneratedAvatar: <GeneratedAvatarExample />,
+        ButtonGroup: <ButtonGroupExample />,
+        ActionButtonGroup: <ActionButtonGroupExample />,
+        ViewDialog: <ViewDialogExample />,
+        Pagination: <PaginationExample />,
+        DataPagination: <DataPaginationExample />,
         Badge: <BadgeExample />,
         Button: <Button>Button</Button>,
         Card: (
@@ -270,6 +275,8 @@ export default function Item({ params }) {
                                                 {component.category === 'Action' || component.category === 'Form'
                                                     ? component.label.replace(/([a-z])([A-Z])/g, '$1 $2')
                                                     : component.label}
+                                                {' · '}
+                                                {component.sourceLabel}
                                             </Text>
                                             <RouterLink
                                                 aria-label={`Open ${component.label} documentation`}

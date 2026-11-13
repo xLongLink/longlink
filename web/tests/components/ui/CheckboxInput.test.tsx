@@ -3,8 +3,8 @@ import { act } from 'react';
 import { it, expect } from 'vitest';
 import userEvent from '@testing-library/user-event';
 import { renderStatic, withMounted } from '../../render';
-import { SwitchField } from '@/components/ui/SwitchField';
-import { CheckboxInput } from '@/components/ui/CheckboxInput';
+import { SwitchField } from '@/components/custom/SwitchField';
+import { CheckboxInput } from '@/components/custom/CheckboxInput';
 
 it('maps field names and required state onto the native checkbox', () => {
     // Act

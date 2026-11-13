@@ -1,8 +1,8 @@
 // @vitest-environment happy-dom
 import { act, useState } from 'react';
 import { it, vi, expect } from 'vitest';
-import { CodeBlock } from '@/components/ui/CodeBlock';
 import { renderStatic, withMounted } from '../../render';
+import { CodeBlock } from '@/components/custom/CodeBlock';
 
 it('renders code as text rather than executable markup', () => {
     // Act

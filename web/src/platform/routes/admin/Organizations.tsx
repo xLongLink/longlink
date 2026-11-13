@@ -3,18 +3,18 @@ import { useState } from 'react';
 import { useAdminList } from './use-list';
 import { Info, Search } from 'lucide-react';
 import { useApi } from '@/lib/hooks/use-api';
-import { Badge } from '@/components/ui/Badge';
-import { Avatar } from '@/components/ui/Avatar';
-import { Dialog } from '@/components/ui/Dialog';
-import { TextInput } from '@/components/ui/TextInput';
+import { Badge } from '@/components/reui/badge';
 import { DeletionDialog } from '@/components/Deletion';
-import { Pagination } from '@/components/ui/Pagination';
-import { NativeLink as Link } from '@/components/ui/NativeLink';
-import { NativeText as Text } from '@/components/ui/NativeText';
-import { NativeStack as Stack } from '@/components/ui/NativeStack';
-import { NativeButton as Button } from '@/components/ui/NativeButton';
+import { TextInput } from '@/components/custom/TextInput';
+import { ViewDialog } from '@/components/custom/ViewDialog';
+import { DataPagination } from '@/components/custom/DataPagination';
+import { NativeLink as Link } from '@/components/custom/NativeLink';
+import { NativeText as Text } from '@/components/custom/NativeText';
+import { GeneratedAvatar } from '@/components/custom/GeneratedAvatar';
+import { NativeStack as Stack } from '@/components/custom/NativeStack';
 import { DataTable, proportional } from '@/components/custom/DataTable';
-import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
+import { NativeButton as Button } from '@/components/custom/NativeButton';
+import { NativeHeading as Heading } from '@/components/custom/NativeHeading';
 import { zPageOrganizationIdentity } from '@/lib/generated/platform-api-v1/zod.gen';
 
 /** Lists organizations and confirms administrator deletion. */
@@ -51,7 +51,7 @@ export default function Organizations() {
                             width: proportional(1),
                             renderCell: (row) => (
                                 <Stack direction="horizontal" gap={3} align="center">
-                                    <Avatar kind="organization" name={row.name} />
+                                    <GeneratedAvatar kind="organization" name={row.name} />
                                     <Stack align="start">
                                         <Stack direction="horizontal" gap={1} align="center">
                                             <Link href={`/orgs/${row.id}`}>{row.name}</Link>
@@ -88,11 +88,11 @@ export default function Organizations() {
                     ]}
                 />
                 <Stack as="footer" align="center" paddingBlock={2}>
-                    <Pagination {...pagination} totalItems={organizations.total} />
+                    <DataPagination {...pagination} totalItems={organizations.total} />
                 </Stack>
             </Stack>
             {metadata && (
-                <Dialog
+                <ViewDialog
                     title="Organization metadata"
                     isOpen
                     onOpenChange={(open) => {
@@ -116,7 +116,7 @@ export default function Organizations() {
                             />
                         </Stack>
                     </Stack>
-                </Dialog>
+                </ViewDialog>
             )}
             <DeletionDialog
                 confirmation={

@@ -65,7 +65,7 @@ export default function ProjectSettings() {
                     </MenuItem>
                 </MenuSection>
             </Menu>
-            <Dialog
+            <ViewDialog
                 variant="fullscreen"
                 title="Fullscreen settings"
                 isOpen={isFullscreenOpen}
@@ -86,7 +86,7 @@ export default function ProjectSettings() {
                     />
                     <Button onClick={() => setIsFullscreenOpen(false)}>Done</Button>
                 </Stack>
-            </Dialog>
+            </ViewDialog>
         </Stack>
     );
 }

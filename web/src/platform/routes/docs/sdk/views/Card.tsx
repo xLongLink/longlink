@@ -1,14 +1,7 @@
 import ViewLayout from './ViewLayout';
-import { NativeText as Text } from '@/components/ui/NativeText';
-import {
-    Card,
-    CardHeader,
-    CardTitle,
-    CardDescription,
-    CardContent,
-    CardFooter,
-    InteractiveCard
-} from '@/components/ui/Card';
+import { NativeText as Text } from '@/components/custom/NativeText';
+import { InteractiveCard } from '@/components/custom/InteractiveCard';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/shadcn/card';
 
 /** Documents native card composition and the custom interactive wrapper. */
 export default function CardPage() {

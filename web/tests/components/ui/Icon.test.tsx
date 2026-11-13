@@ -2,9 +2,9 @@
 import { act } from 'react';
 import * as icons from '@/lib/icons';
 import { it, expect, vi } from 'vitest';
-import { Icon } from '@/components/ui/Icon';
+import { Icon } from '@/components/custom/Icon';
 import { renderStatic, withMounted } from '../../render';
-import { IconRequestContext } from '@/components/ui/contexts';
+import { IconRequestContext } from '@/components/custom/contexts';
 
 it('renders bundled aliases without requesting an external glyph', () => {
     // Act

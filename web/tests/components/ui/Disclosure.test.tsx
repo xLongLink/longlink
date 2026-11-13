@@ -2,8 +2,8 @@
 import { act, useState } from 'react';
 import { it, expect, vi } from 'vitest';
 import userEvent from '@testing-library/user-event';
-import { Disclosure } from '@/components/ui/Disclosure';
 import { renderStatic, withMounted } from '../../render';
+import { Disclosure } from '@/components/custom/Disclosure';
 
 it('honors an authored initially open disclosure', () => {
     // Act

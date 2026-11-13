@@ -1,9 +1,9 @@
 import ViewLayout from './ViewLayout';
-import { Button } from '@/components/ui/Button';
-import { IconButton } from '@/components/ui/IconButton';
-import { ButtonGroup } from '@/components/ui/ButtonGroup';
-import { NativeStack as Stack } from '@/components/ui/NativeStack';
-import { Button as ActionButton } from '@/components/custom/Button';
+import { Button } from '@/components/shadcn/button';
+import { IconButton } from '@/components/custom/IconButton';
+import { ActionButton } from '@/components/custom/ActionButton';
+import { NativeStack as Stack } from '@/components/custom/NativeStack';
+import { ActionButtonGroup } from '@/components/custom/ActionButtonGroup';
 
 /** Documents buttons and grouped button actions in LongLink Views. */
 export default function ButtonsPage() {
@@ -70,27 +70,27 @@ export default function ButtonsPage() {
                 {
                     type: 'ReactNode',
                     description: 'ActionButton or IconButton children for coordinated keyboard navigation.',
-                    name: 'ButtonGroup.children'
+                    name: 'ActionButtonGroup.children'
                 },
                 {
                     type: 'string',
                     description: 'Accessible label for the group (aria-label).',
-                    name: 'ButtonGroup.label'
+                    name: 'ActionButtonGroup.label'
                 },
                 {
                     type: '"horizontal" | "vertical"',
                     description: 'Layout direction of the button group.',
-                    name: 'ButtonGroup.orientation'
+                    name: 'ActionButtonGroup.orientation'
                 },
                 {
                     type: '"sm" | "lg" | "default"',
                     description: 'Default size for buttons in the group. Individual buttons can override.',
-                    name: 'ButtonGroup.size'
+                    name: 'ActionButtonGroup.size'
                 },
                 {
                     type: 'boolean',
                     description: 'Whether all buttons in the group are disabled.',
-                    name: 'ButtonGroup.isDisabled'
+                    name: 'ActionButtonGroup.isDisabled'
                 }
             ]}
             example={{
@@ -130,15 +130,15 @@ export default function ButtonsPage() {
         <IconButton icon="plus" label="Add (large)" size="lg" />
       </Stack>
       <Stack direction="horizontal" gap={4} align="center" wrap="wrap">
-        <ButtonGroup label="Actions">
+        <ActionButtonGroup label="Actions">
            <ActionButton variant="outline">Save</ActionButton>
            <ActionButton variant="outline">Cancel</ActionButton>
           <IconButton icon="plus" label="Add" variant="outline" />
-        </ButtonGroup>
-        <ButtonGroup label="Vertical actions" orientation="vertical">
+        </ActionButtonGroup>
+        <ActionButtonGroup label="Vertical actions" orientation="vertical">
            <ActionButton variant="outline">Edit</ActionButton>
            <ActionButton variant="outline">Duplicate</ActionButton>
-        </ButtonGroup>
+        </ActionButtonGroup>
       </Stack>
     </Stack>
   );
@@ -184,15 +184,15 @@ export function ButtonExample() {
                 <IconButton icon="plus" label="Add (large)" size="lg" />
             </Stack>
             <Stack direction="horizontal" gap={4} align="center" wrap="wrap">
-                <ButtonGroup label="Actions">
+                <ActionButtonGroup label="Actions">
                     <ActionButton variant="outline">Save</ActionButton>
                     <ActionButton variant="outline">Cancel</ActionButton>
                     <IconButton icon="plus" label="Add" variant="outline" />
-                </ButtonGroup>
-                <ButtonGroup label="Vertical actions" orientation="vertical">
+                </ActionButtonGroup>
+                <ActionButtonGroup label="Vertical actions" orientation="vertical">
                     <ActionButton variant="outline">Edit</ActionButton>
                     <ActionButton variant="outline">Duplicate</ActionButton>
-                </ButtonGroup>
+                </ActionButtonGroup>
             </Stack>
         </Stack>
     );

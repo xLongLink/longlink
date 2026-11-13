@@ -1,12 +1,12 @@
 // @vitest-environment happy-dom
 import { expect, it, vi } from 'vitest';
 import { withMounted } from '../../render';
-import { Form } from '@/components/ui/Form';
+import { Form } from '@/components/custom/Form';
 import userEvent from '@testing-library/user-event';
-import { DateInput } from '@/components/ui/DateInput';
-import { TimeInput } from '@/components/ui/TimeInput';
 import { act, useState, type FormEvent } from 'react';
-import type { ISODateString, ISOTimeString } from '@/components/ui/temporal';
+import { DateInput } from '@/components/custom/DateInput';
+import { TimeInput } from '@/components/custom/TimeInput';
+import type { ISODateString, ISOTimeString } from '@/components/custom/temporal';
 
 /** Requires a mounted control before exercising its real DOM behavior. */
 function find<T extends Element>(root: ParentNode, selector: string) {

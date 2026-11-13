@@ -1,6 +1,6 @@
 import type { ComponentProps } from 'react';
-import { spacing } from '@/components/ui/layout';
-import type { Stack } from '@/components/ui/Stack';
+import { spacing } from '@/components/custom/layout';
+import type { Stack } from '@/components/custom/Stack';
 
 type PageContainerProps = Pick<
     ComponentProps<typeof Stack>,

@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 import { act, useState } from 'react';
 import { it, expect, vi } from 'vitest';
-import { Button } from '@/components/ui/Button';
+import { Button } from '@/components/shadcn/button';
 import userEvent from '@testing-library/user-event';
 import { renderStatic, withMounted } from '../../render';
 import { ProgressStepper, Step } from '@/components/custom/Wizard';
@@ -16,7 +16,7 @@ import {
     StepperSeparator,
     StepperTitle,
     StepperTrigger
-} from '@/components/ui/Stepper';
+} from '@/components/reui/stepper';
 
 it('supports compound controlled navigation and preserves force-mounted drafts and native part props', async () => {
     const submit = vi.fn((event: React.FormEvent) => event.preventDefault());

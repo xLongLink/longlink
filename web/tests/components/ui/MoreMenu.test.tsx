@@ -1,12 +1,12 @@
 import { it, expect } from 'vitest';
 // @vitest-environment happy-dom
 import { act, useState } from 'react';
-import { Button } from '@/components/custom/Button';
-import { MoreMenu } from '@/components/ui/MoreMenu';
 import userEvent from '@testing-library/user-event';
+import { MoreMenu } from '@/components/custom/MoreMenu';
 import { renderStatic, withMounted } from '../../render';
-import { ButtonGroup } from '@/components/ui/ButtonGroup';
-import { NativeMoreMenu } from '@/components/ui/NativeMoreMenu';
+import { ActionButton } from '@/components/custom/ActionButton';
+import { NativeMoreMenu } from '@/components/custom/NativeMoreMenu';
+import { ActionButtonGroup } from '@/components/custom/ActionButtonGroup';
 
 it('opens a row editor immediately while another menu action is still saving', async () => {
     let finishSave = () => {};
@@ -66,11 +66,11 @@ it('joins group keyboard navigation without disabling or sizing its popup action
     const user = userEvent.setup();
 
     await withMounted(
-        <ButtonGroup label="Actions" size="lg">
-            <Button variant="outline">Save</Button>
+        <ActionButtonGroup label="Actions" size="lg">
+            <ActionButton variant="outline">Save</ActionButton>
             <MoreMenu label="Unavailable" isDisabled items={[]} />
             <MoreMenu label="Order actions" items={[{ label: 'Copy order' }]} />
-        </ButtonGroup>,
+        </ActionButtonGroup>,
         async (output) => {
             const buttons = output.querySelectorAll('button');
 

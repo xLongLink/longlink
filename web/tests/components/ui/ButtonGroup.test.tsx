@@ -1,21 +1,21 @@
 // @vitest-environment happy-dom
 import { act, useState } from 'react';
 import { it, expect, vi } from 'vitest';
-import { Dialog } from '@/components/ui/Dialog';
-import { Button } from '@/components/custom/Button';
 import userEvent from '@testing-library/user-event';
-import { IconButton } from '@/components/ui/IconButton';
 import { renderStatic, withMounted } from '../../render';
-import { ButtonGroup } from '@/components/ui/ButtonGroup';
 import { ActionMenu } from '@/components/custom/ActionMenu';
-import { ControlSizeContext } from '@/components/ui/contexts';
+import { IconButton } from '@/components/custom/IconButton';
+import { ViewDialog } from '@/components/custom/ViewDialog';
+import { ActionButton } from '@/components/custom/ActionButton';
+import { ControlSizeContext } from '@/components/custom/contexts';
+import { ActionButtonGroup } from '@/components/custom/ActionButtonGroup';
 
 it('names the group while retaining its actions', () => {
     // Act
     const output = renderStatic(
-        <ButtonGroup label="Order actions">
-            <Button variant="outline">Save</Button>
-        </ButtonGroup>
+        <ActionButtonGroup label="Order actions">
+            <ActionButton variant="outline">Save</ActionButton>
+        </ActionButtonGroup>
     );
 
     // Assert
@@ -28,16 +28,16 @@ it.each(['horizontal', 'vertical'] as const)(
     async (orientation) => {
         // Keyboard users enter once, then reach links and enabled actions without activating them.
         await withMounted(
-            <ButtonGroup label="Actions" orientation={orientation}>
-                <Button variant="outline">Save</Button>
-                <Button variant="outline" disabled>
+            <ActionButtonGroup label="Actions" orientation={orientation}>
+                <ActionButton variant="outline">Save</ActionButton>
+                <ActionButton variant="outline" disabled>
                     Unavailable
-                </Button>
-                <Button variant="outline" href="https://example.com/docs">
+                </ActionButton>
+                <ActionButton variant="outline" href="https://example.com/docs">
                     Docs
-                </Button>
-                <Button variant="outline">Publish</Button>
-            </ButtonGroup>,
+                </ActionButton>
+                <ActionButton variant="outline">Publish</ActionButton>
+            </ActionButtonGroup>,
             async (output) => {
                 const controls = Array.from(output.querySelectorAll<HTMLElement>('button, a'));
                 const first = controls[0];
@@ -74,15 +74,15 @@ it('inherits generic size while allowing action and group overrides', () => {
     // Shared controls inherit their group size without a third-party sizing provider.
     const output = renderStatic(
         <ControlSizeContext value="lg">
-            <ButtonGroup label="Inherited">
-                <Button variant="outline">Large</Button>
-                <Button variant="outline" size="sm">
+            <ActionButtonGroup label="Inherited">
+                <ActionButton variant="outline">Large</ActionButton>
+                <ActionButton variant="outline" size="sm">
                     Small
-                </Button>
-            </ButtonGroup>
-            <ButtonGroup label="Override" size="default">
-                <Button variant="outline">Medium</Button>
-            </ButtonGroup>
+                </ActionButton>
+            </ActionButtonGroup>
+            <ActionButtonGroup label="Override" size="default">
+                <ActionButton variant="outline">Medium</ActionButton>
+            </ActionButtonGroup>
         </ControlSizeContext>
     );
 
@@ -101,14 +101,14 @@ it('repairs its tab stop when an action disappears and keeps disabled groups rea
         return (
             <>
                 <button onClick={() => setVisible(false)}>Remove</button>
-                <ButtonGroup label="Actions">
-                    {visible && <Button variant="outline">First</Button>}
-                    <Button variant="outline">Second</Button>
-                </ButtonGroup>
-                <ButtonGroup label="Disabled" isDisabled>
-                    <Button variant="outline">Disabled first</Button>
-                    <Button variant="outline">Disabled second</Button>
-                </ButtonGroup>
+                <ActionButtonGroup label="Actions">
+                    {visible && <ActionButton variant="outline">First</ActionButton>}
+                    <ActionButton variant="outline">Second</ActionButton>
+                </ActionButtonGroup>
+                <ActionButtonGroup label="Disabled" isDisabled>
+                    <ActionButton variant="outline">Disabled first</ActionButton>
+                    <ActionButton variant="outline">Disabled second</ActionButton>
+                </ActionButtonGroup>
             </>
         );
     }
@@ -125,11 +125,11 @@ it('roves text actions, icon actions and menu triggers without opening the menu'
     // Existing menu and action descendants must remain reachable during the incremental migration.
     const open = vi.fn();
     await withMounted(
-        <ButtonGroup label="Mixed" size="lg">
-            <Button variant="outline">Native</Button>
+        <ActionButtonGroup label="Mixed" size="lg">
+            <ActionButton variant="outline">Native</ActionButton>
             <IconButton label="Copy" icon="copy" />
             <ActionMenu button={{ label: 'More' }} items={[]} onOpenChange={open} />
-        </ButtonGroup>,
+        </ActionButtonGroup>,
         async (output) => {
             const controls = Array.from(output.querySelectorAll('button'));
             expect(controls.map((control) => control.tabIndex)).toEqual([0, -1, -1]);
@@ -149,18 +149,18 @@ it('disables all grouped actions without leaking group membership into a dialog'
     const blocked = vi.fn();
     const recover = vi.fn();
     await withMounted(
-        <ButtonGroup label="Disabled" isDisabled>
-            <Button variant="outline" onClick={blocked}>
+        <ActionButtonGroup label="Disabled" isDisabled>
+            <ActionButton variant="outline" onClick={blocked}>
                 Native
-            </Button>
+            </ActionButton>
             <IconButton label="Copy" icon="copy" onClick={blocked} />
             <ActionMenu button={{ label: 'More' }} items={[]} />
-            <Dialog isOpen title="Recovery" onOpenChange={() => {}}>
-                <Button variant="outline" onClick={recover}>
+            <ViewDialog isOpen title="Recovery" onOpenChange={() => {}}>
+                <ActionButton variant="outline" onClick={recover}>
                     Recover
-                </Button>
-            </Dialog>
-        </ButtonGroup>,
+                </ActionButton>
+            </ViewDialog>
+        </ActionButtonGroup>,
         async (output) => {
             const actions = Array.from(output.querySelectorAll<HTMLButtonElement>('[role="group"] > button'));
             expect(actions).toHaveLength(3);
@@ -188,18 +188,18 @@ it('disables all grouped actions without leaking group membership into a dialog'
 it('keeps nested groups and menu layers outside its roving order', async () => {
     // An arrow within an independent surface must never move focus to an outer action.
     await withMounted(
-        <ButtonGroup label="Outer">
-            <Button variant="outline">Outer first</Button>
-            <ButtonGroup label="Inner">
-                <Button variant="outline">Inner first</Button>
-                <Button variant="outline">Inner last</Button>
-            </ButtonGroup>
+        <ActionButtonGroup label="Outer">
+            <ActionButton variant="outline">Outer first</ActionButton>
+            <ActionButtonGroup label="Inner">
+                <ActionButton variant="outline">Inner first</ActionButton>
+                <ActionButton variant="outline">Inner last</ActionButton>
+            </ActionButtonGroup>
             <section role="menu">
                 <button>Menu first</button>
                 <button>Menu last</button>
             </section>
-            <Button variant="outline">Outer last</Button>
-        </ButtonGroup>,
+            <ActionButton variant="outline">Outer last</ActionButton>
+        </ActionButtonGroup>,
         async (output) => {
             const controls = Array.from(output.querySelectorAll('button'));
             expect(controls.map((button) => button.tabIndex)).toEqual([0, 0, -1, 0, 0, -1]);
@@ -225,15 +225,15 @@ it.each(['touch', 'pen'] as const)(
         const other = vi.fn();
         const disabled = vi.fn();
         await withMounted(
-            <ButtonGroup label="Touch actions">
-                <Button variant="outline" onClick={first}>
+            <ActionButtonGroup label="Touch actions">
+                <ActionButton variant="outline" onClick={first}>
                     Native
-                </Button>
+                </ActionButton>
                 <IconButton label="Copy" icon="copy" onClick={other} />
-                <Button variant="outline" disabled onClick={disabled}>
+                <ActionButton variant="outline" disabled onClick={disabled}>
                     Unavailable
-                </Button>
-            </ButtonGroup>,
+                </ActionButton>
+            </ActionButtonGroup>,
             async (output) => {
                 const group = output.querySelector<HTMLElement>('[role="group"]');
                 const controls = Array.from(output.querySelectorAll('button'));
@@ -327,11 +327,11 @@ it('cancels scroll flicks and second fingers without swallowing a later keyboard
 
     await withMounted(
         <section style={{ overflowY: 'auto' }}>
-            <ButtonGroup label="Scrollable actions">
-                <Button variant="outline" onClick={action}>
+            <ActionButtonGroup label="Scrollable actions">
+                <ActionButton variant="outline" onClick={action}>
                     Save
-                </Button>
-            </ButtonGroup>
+                </ActionButton>
+            </ActionButtonGroup>
         </section>,
         async (output) => {
             const scroller = output.querySelector('section');
@@ -410,11 +410,11 @@ it('cancels a pending hold when its group is disabled and permits a fresh press 
                 <button type="button" onClick={() => setDisabled((value) => !value)}>
                     Toggle
                 </button>
-                <ButtonGroup label="Actions" isDisabled={disabled}>
-                    <Button variant="outline" onClick={action}>
+                <ActionButtonGroup label="Actions" isDisabled={disabled}>
+                    <ActionButton variant="outline" onClick={action}>
                         Save
-                    </Button>
-                </ButtonGroup>
+                    </ActionButton>
+                </ActionButtonGroup>
             </section>
         );
     }
@@ -470,10 +470,10 @@ it('lets a grouped menu own its touch press without a second group activation cl
     const action = vi.fn();
 
     await withMounted(
-        <ButtonGroup label="Actions">
-            <Button variant="outline">Save</Button>
+        <ActionButtonGroup label="Actions">
+            <ActionButton variant="outline">Save</ActionButton>
             <ActionMenu button={{ label: 'More' }} items={[{ label: 'Archive', onClick: action }]} />
-        </ButtonGroup>,
+        </ActionButtonGroup>,
         async (output) => {
             const trigger = output.querySelector<HTMLButtonElement>('[aria-haspopup="menu"]');
 
@@ -525,12 +525,12 @@ it('expands touch targets without reaching through nested groups or treating a p
     const inner = vi.fn();
 
     await withMounted(
-        <ButtonGroup label="Outer">
+        <ActionButtonGroup label="Outer">
             <IconButton label="Outer action" icon="copy" onClick={outer} />
-            <ButtonGroup label="Inner">
+            <ActionButtonGroup label="Inner">
                 <IconButton label="Inner action" icon="copy" onClick={inner} />
-            </ButtonGroup>
-        </ButtonGroup>,
+            </ActionButtonGroup>
+        </ActionButtonGroup>,
         async (output) => {
             const group = output.querySelector<HTMLElement>('[aria-label="Outer"]');
             const controls = output.querySelectorAll('button');

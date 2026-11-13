@@ -8,8 +8,8 @@ import { membership, user } from '../../render';
 import { Outlet, Route, Routes } from 'react-router';
 import Settings from '@/platform/routes/orgs/Settings';
 import { renderStatic, withMounted } from '../../../render';
-import { IconRequestContext } from '@/components/ui/contexts';
 import { AuthenticatedUserContext } from '@/lib/hooks/use-user';
+import { IconRequestContext } from '@/components/custom/contexts';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { OrganizationContext } from '@/platform/layouts/Organization';
 

@@ -7,6 +7,11 @@
 @import './reset.css';
 @import './tokens.css';
 @import './accents.css';
+@import './components/custom/styles.css';
+@import './components/layouts/platform.css';
+@import './components/layouts/publication.css';
+@import './components/native-toaster.css';
+@import './views/runtime.css';
 @import './shadcn.css';
 @import './tokenscompat.css';
 @import 'tailwindcss/utilities.css' layer(utilities);

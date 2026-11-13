@@ -2,7 +2,7 @@ import { z } from 'zod';
 import world from './world.json';
 import { useState } from 'react';
 import ViewLayout from './ViewLayout';
-import { Maps } from '@/components/ui/Maps';
+import { Maps } from '@/components/custom/Maps';
 
 const geography = z.json().parse(world);
 

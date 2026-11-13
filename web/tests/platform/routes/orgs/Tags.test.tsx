@@ -6,7 +6,7 @@ import { it, expect, vi } from 'vitest';
 import { membership } from '../../render';
 import { withMounted } from '../../../render';
 import { SolutionTags } from '@/platform/routes/orgs/Tags';
-import { IconRequestContext } from '@/components/ui/contexts';
+import { IconRequestContext } from '@/components/custom/contexts';
 import { zOrganizationTagResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 
 const tags = [

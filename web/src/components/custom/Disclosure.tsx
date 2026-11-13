@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { useLayoutEffect, useRef } from 'react';
-import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/Collapsible';
+import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/shadcn/collapsible';
 
 /** Custom initially-open disclosure with persistent content and controlled-close focus recovery. */
 export function Disclosure(props: {

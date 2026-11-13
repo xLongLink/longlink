@@ -2,9 +2,9 @@
 import { it, expect } from 'vitest';
 import { act, useState } from 'react';
 import { withMounted } from '../../render';
-import { SankeyChart } from '@/components/ui/Chart';
 import userEvent from '@testing-library/user-event';
-import { sankeyDataSchema } from '@/components/ui/charts';
+import { SankeyChart } from '@/components/custom/Chart';
+import { sankeyDataSchema } from '@/components/custom/charts';
 
 it('rejects cyclic or invalid flow links but accepts converging acyclic flows', () => {
     const nodes = [{ name: 'Sales' }, { name: 'Services' }, { name: 'Revenue' }, { name: 'Profit' }];

@@ -2,9 +2,9 @@
 import { act } from 'react';
 import { it, expect } from 'vitest';
 import { withMounted } from '../../render';
-import { Form } from '@/components/ui/Form';
-import { TextInput } from '@/components/ui/TextInput';
-import { FormRequestContext } from '@/components/ui/contexts';
+import { Form } from '@/components/custom/Form';
+import { TextInput } from '@/components/custom/TextInput';
+import { FormRequestContext } from '@/components/custom/contexts';
 
 it.each([undefined, 'post', 'put', 'patch', 'delete'] as const)(
     'submits named fields using method %s',

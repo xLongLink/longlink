@@ -1,5 +1,5 @@
 import ViewLayout from './ViewLayout';
-import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/Table';
+import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '@/components/shadcn/table';
 
 /** Documents the native shadcn table family. */
 export default function TablePage() {

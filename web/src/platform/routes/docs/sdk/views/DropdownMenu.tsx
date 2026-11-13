@@ -1,6 +1,11 @@
 import ViewLayout from './ViewLayout';
-import { Button } from '@/components/ui/Button';
-import { DropdownMenu, DropdownMenuItem, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/DropdownMenu';
+import { Button } from '@/components/shadcn/button';
+import {
+    DropdownMenu,
+    DropdownMenuItem,
+    DropdownMenuContent,
+    DropdownMenuTrigger
+} from '@/components/shadcn/dropdown-menu';
 
 /** Documents native menu composition in LongLink Views. */
 export default function DropdownMenuPage() {

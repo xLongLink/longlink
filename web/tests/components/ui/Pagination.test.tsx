@@ -2,12 +2,14 @@
 import { act, useState } from 'react';
 import { it, expect, vi } from 'vitest';
 import userEvent from '@testing-library/user-event';
-import { Pagination } from '@/components/ui/Pagination';
 import { renderStatic, withMounted } from '../../render';
+import { DataPagination } from '@/components/custom/DataPagination';
 
 it('preserves the selected page in its accessible navigation state', () => {
     // Act
-    const output = renderStatic(<Pagination page={2} totalItems={75} pageSize={25} onPageChange={() => undefined} />);
+    const output = renderStatic(
+        <DataPagination page={2} totalItems={75} pageSize={25} onPageChange={() => undefined} />
+    );
 
     // Assert
     expect(output.querySelector('[aria-current="page"]')?.textContent).toContain('2');
@@ -22,7 +24,7 @@ it('navigates through a large result set without submitting its enclosing form o
 
         return (
             <form>
-                <Pagination page={page} totalItems={1000} pageSize={25} onPageChange={setPage} />
+                <DataPagination page={page} totalItems={1000} pageSize={25} onPageChange={setPage} />
             </form>
         );
     }
@@ -70,7 +72,7 @@ it('keeps middle pages reachable and clamps previous navigation after results sh
         return (
             <>
                 <button onClick={() => setTotal(20)}>Filter results</button>
-                <Pagination page={10} totalItems={total} pageSize={10} onPageChange={selected} />
+                <DataPagination page={10} totalItems={total} pageSize={10} onPageChange={selected} />
             </>
         );
     }
@@ -94,7 +96,7 @@ it.each([0, -1, Number.NaN, Number.POSITIVE_INFINITY])(
     'does not expose phantom pages for an invalid or empty total (%s)',
     (totalItems) => {
         const output = renderStatic(
-            <Pagination page={1} totalItems={totalItems} pageSize={10} onPageChange={() => undefined} />
+            <DataPagination page={1} totalItems={totalItems} pageSize={10} onPageChange={() => undefined} />
         );
 
         expect(output.querySelector('nav')).toBeNull();
@@ -108,7 +110,7 @@ it.each([0, -2, Number.NaN, Number.POSITIVE_INFINITY])(
         const user = userEvent.setup();
 
         await withMounted(
-            <Pagination page={1} totalItems={21} pageSize={pageSize} onPageChange={selected} />,
+            <DataPagination page={1} totalItems={21} pageSize={pageSize} onPageChange={selected} />,
             async (output) => {
                 const next = output.querySelector<HTMLButtonElement>('[aria-label="Go to next page"]');
 

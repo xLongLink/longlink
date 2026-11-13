@@ -1,10 +1,10 @@
 import { Link } from 'react-router';
-import { Grid } from '@/components/ui/Grid';
+import { Grid } from '@/components/custom/Grid';
 import { Code2, Lightbulb, ServerCog } from 'lucide-react';
-import { NativeText as Text } from '@/components/ui/NativeText';
-import { NativeStack as Stack } from '@/components/ui/NativeStack';
+import { NativeText as Text } from '@/components/custom/NativeText';
 import { DocumentationArticle } from '@/components/layouts/Article';
-import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
+import { NativeStack as Stack } from '@/components/custom/NativeStack';
+import { NativeHeading as Heading } from '@/components/custom/NativeHeading';
 
 const cardClassName =
     'flex min-h-60 flex-col -me-(--border-width) -mb-(--border-width) rounded-none border-(length:--border-width) border-border bg-transparent p-[calc(var(--spacing-6)-var(--border-width))] text-inherit no-underline hover:border-(--color-border-emphasized) hover:bg-(--color-overlay-hover) active:bg-(--color-overlay-pressed) focus-visible:relative focus-visible:z-1 focus-visible:outline-(length:--focus-outline-width) focus-visible:outline-(--focus-outline-color) focus-visible:outline-solid focus-visible:outline-offset-(--focus-outline-offset)';

@@ -1,7 +1,7 @@
 import { PublicArticle } from '@/components/layouts/Article';
-import { NativeText as Text } from '@/components/ui/NativeText';
-import { NativeStack as Stack } from '@/components/ui/NativeStack';
-import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
+import { NativeText as Text } from '@/components/custom/NativeText';
+import { NativeStack as Stack } from '@/components/custom/NativeStack';
+import { NativeHeading as Heading } from '@/components/custom/NativeHeading';
 
 const article = {
     description:

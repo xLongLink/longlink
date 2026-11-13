@@ -1,6 +1,6 @@
 import ViewLayout from './ViewLayout';
-import { Stack } from '@/components/ui/Stack';
-import { Token } from '@/components/ui/Token';
+import { Stack } from '@/components/custom/Stack';
+import { Token } from '@/components/custom/Token';
 
 /** Documents tags and removable selections in LongLink Views. */
 export default function TokenPage() {

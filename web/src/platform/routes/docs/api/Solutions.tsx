@@ -1,9 +1,9 @@
 import { DataTable } from '@/components/custom/DataTable';
-import { NativeText as Text } from '@/components/ui/NativeText';
-import { NativeStack as Stack } from '@/components/ui/NativeStack';
 import { ArrowUp, CheckCheck, EyeOff, Wrench } from 'lucide-react';
+import { NativeText as Text } from '@/components/custom/NativeText';
 import { DocumentationArticle } from '@/components/layouts/Article';
-import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
+import { NativeStack as Stack } from '@/components/custom/NativeStack';
+import { NativeHeading as Heading } from '@/components/custom/NativeHeading';
 
 const solutionRoles = [
     { name: 'read', access: 'View Solution data and send GET requests', icon: EyeOff },

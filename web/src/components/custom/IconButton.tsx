@@ -1,6 +1,6 @@
-import { ActionButton } from './ActionButton';
-import { ControlSizeContext } from '../ui/contexts';
-import { Icon, type StoneIconName } from '../ui/Icon';
+import { ActionControl } from './ActionControl';
+import { ControlSizeContext } from './contexts';
+import { Icon, type StoneIconName } from './Icon';
 import { useContext, type ComponentProps } from 'react';
 
 /** Runs a labeled icon action with automatic async feedback. */
@@ -10,17 +10,17 @@ export function IconButton({
 }: {
     label: string;
     icon: StoneIconName;
-    variant?: ComponentProps<typeof ActionButton>['variant'];
+    variant?: ComponentProps<typeof ActionControl>['variant'];
     size?: 'xs' | 'sm' | 'default' | 'lg';
     isDisabled?: boolean;
-    onClick?: ComponentProps<typeof ActionButton>['onClick'];
+    onClick?: ComponentProps<typeof ActionControl>['onClick'];
 }) {
     const inheritedSize = useContext(ControlSizeContext);
     const size = props.size ?? (inheritedSize === 'md' ? 'default' : inheritedSize) ?? 'default';
 
     // Match ordinary action button defaults without changing asynchronous behavior.
     return (
-        <ActionButton
+        <ActionControl
             aria-label={props.label}
             variant={props.variant}
             size={size === 'default' ? 'icon' : `icon-${size}`}
@@ -28,6 +28,6 @@ export function IconButton({
             onClick={onClick}
         >
             <Icon icon={props.icon} size={size === 'sm' ? 'sm' : size === 'lg' ? 'lg' : 'md'} />
-        </ActionButton>
+        </ActionControl>
     );
 }

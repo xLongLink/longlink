@@ -1,6 +1,6 @@
 import ViewLayout from './ViewLayout';
 import FormPreview from './FormPreview';
-import { TextInput } from '@/components/ui/TextInput';
+import { TextInput } from '@/components/custom/TextInput';
 
 /** Documents TextInput in LongLink Views. */
 export default function TextInputPage() {

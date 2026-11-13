@@ -1,17 +1,17 @@
 import { api } from '@/lib/api';
 import { useState } from 'react';
-import { Form } from '@/components/ui/Form';
-import { Dialog } from '@/components/ui/Dialog';
+import { Form } from '@/components/custom/Form';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowRight, RefreshCw } from 'lucide-react';
 import { Step, Wizard } from '@/components/custom/Wizard';
-import { CheckboxInput } from '@/components/ui/CheckboxInput';
-import { NativeText as Text } from '@/components/ui/NativeText';
-import { NativeTextInput } from '@/components/ui/NativeTextInput';
-import { NativeStack as Stack } from '@/components/ui/NativeStack';
+import { ViewDialog } from '@/components/custom/ViewDialog';
+import { CheckboxInput } from '@/components/custom/CheckboxInput';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
-import { NativeButton as Button } from '@/components/ui/NativeButton';
-import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
+import { NativeText as Text } from '@/components/custom/NativeText';
+import { NativeTextInput } from '@/components/custom/NativeTextInput';
+import { NativeStack as Stack } from '@/components/custom/NativeStack';
+import { NativeButton as Button } from '@/components/custom/NativeButton';
+import { NativeHeading as Heading } from '@/components/custom/NativeHeading';
 
 type DeploymentReviewProps = {
     item: { id: string; name: string };
@@ -81,7 +81,7 @@ export default function DeploymentReview({ item, onSuccess, onClose }: Deploymen
 
     // Share wizard navigation while retaining revision fencing and configured-secret semantics.
     return (
-        <Dialog
+        <ViewDialog
             isOpen
             onOpenChange={(open) => {
                 if (!open) onClose();
@@ -216,6 +216,6 @@ export default function DeploymentReview({ item, onSuccess, onClose }: Deploymen
                     </Wizard>
                 </Form>
             )}
-        </Dialog>
+        </ViewDialog>
     );
 }

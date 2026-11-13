@@ -1,5 +1,5 @@
 import ViewLayout from './ViewLayout';
-import { Heading } from '@/components/ui/Heading';
+import { Heading } from '@/components/custom/Heading';
 
 /** Documents Heading in LongLink Views. */
 export default function HeadingPage() {

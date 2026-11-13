@@ -1,9 +1,9 @@
 import ViewLayout from './ViewLayout';
 import { useLocation, useNavigate } from 'react-router';
-import { NativeText as Text } from '@/components/ui/NativeText';
-import { MenuNavigationContext } from '@/components/ui/contexts';
-import { NativeStack as Stack } from '@/components/ui/NativeStack';
-import { Menu, MenuSection, MenuSubSection, MenuItem } from '@/components/ui/Menu';
+import { NativeText as Text } from '@/components/custom/NativeText';
+import { MenuNavigationContext } from '@/components/custom/contexts';
+import { NativeStack as Stack } from '@/components/custom/NativeStack';
+import { Menu, MenuSection, MenuSubSection, MenuItem } from '@/components/custom/Menu';
 
 /** Documents section navigation and selected content. */
 export default function MenuPage() {

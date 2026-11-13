@@ -12,7 +12,7 @@ import {
     TableHead,
     TableHeader,
     TableRow
-} from '@/components/ui/Table';
+} from '@/components/shadcn/table';
 
 it('preserves native element props, refs, and row actions in a composed table', async () => {
     const user = userEvent.setup();

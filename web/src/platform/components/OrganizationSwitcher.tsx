@@ -2,11 +2,11 @@ import { api } from '@/lib/api';
 import { useContext, useState } from 'react';
 import { ChevronsUpDown } from 'lucide-react';
 import { SidebarContext } from '@/lib/sidebar';
-import { Avatar } from '@/components/ui/Avatar';
 import { useQuery } from '@tanstack/react-query';
 import { Link as RouterLink } from 'react-router';
 import { Button, buttonVariants } from '@/components/shadcn/button';
 import { Popover as PopoverPrimitive } from '@base-ui/react/popover';
+import { GeneratedAvatar } from '@/components/custom/GeneratedAvatar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/shadcn/popover';
 import { zUserOrganizationMembership } from '@/lib/generated/platform-api-v1/zod.gen';
 
@@ -48,7 +48,7 @@ export function OrganizationSwitcher({ organization }: { organization: Organizat
                 }
                 aria-label={name}
             >
-                <Avatar kind="organization" name={name} size="sm" />
+                <GeneratedAvatar kind="organization" name={name} size="sm" />
                 {sidebar !== 'collapsed' && (
                     <>
                         <span className="flex min-w-0 flex-1 flex-col">
@@ -97,7 +97,7 @@ export function OrganizationSwitcher({ organization }: { organization: Organizat
                                     key={item.id}
                                     onClickCapture={() => setIsOpen(false)}
                                 >
-                                    <Avatar kind="organization" name={item.name} size="sm" />
+                                    <GeneratedAvatar kind="organization" name={item.name} size="sm" />
                                     <span className="flex min-w-0 flex-1 flex-col">
                                         <span className="truncate text-sm leading-4">{item.name}</span>
                                         <span className="truncate text-xs leading-4 text-muted-foreground">

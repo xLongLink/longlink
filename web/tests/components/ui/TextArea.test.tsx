@@ -1,10 +1,10 @@
 // @vitest-environment happy-dom
 import { act } from 'react';
 import { it, expect } from 'vitest';
-import { TextArea } from '@/components/ui/TextArea';
 import userEvent from '@testing-library/user-event';
-import { TextInput } from '@/components/ui/TextInput';
+import { TextArea } from '@/components/custom/TextArea';
 import { renderStatic, withMounted } from '../../render';
+import { TextInput } from '@/components/custom/TextInput';
 
 it('retains multiline content under its native submission name', () => {
     // Act
