@@ -12,11 +12,7 @@ const nativeComposition = (
             <CardDescription>Settings</CardDescription>
         </CardHeader>
         <CardContent>
-            <Avatar>
-                <AvatarImage src="/account.png" alt="Account" />
-                <AvatarFallback>AC</AvatarFallback>
-            </Avatar>
-            <GeneratedAvatar name="Account" />
+            <Avatar name="Account" src="/account.png" />
             <Separator orientation="vertical" id="account-divider" aria-label="Account sections" />
             <Divider label={<a href="/login">Sign in</a>} />
             <ButtonGroup aria-label="Actions" orientation="vertical">
@@ -253,8 +249,6 @@ const _legacyTable = <Table data={[{ name: 'Order' }]} />;
 // @ts-expect-error Native DropdownMenu does not accept data-driven action items.
 const _legacyMenu = <DropdownMenu items={[]} />;
 
-// @ts-expect-error Native Avatar does not generate artwork from the custom name prop.
-const _customAvatarProps = <Avatar name="Account" />;
 // @ts-expect-error Native ButtonGroup does not coordinate the custom disabled group contract.
 const _customGroupProps = <ButtonGroup isDisabled />;
 // @ts-expect-error Native Dialog uses open/defaultOpen, not the host-coordinated ViewDialog contract.

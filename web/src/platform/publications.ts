@@ -82,7 +82,6 @@ export const componentDocumentation = [
     { name: 'SankeyChart', category: 'Charts', icon: ChartNoAxesCombined },
     { name: 'Maps', category: 'Others', icon: Map },
     { name: 'Avatar', category: 'Display', icon: Users },
-    { name: 'GeneratedAvatar', category: 'Display', icon: Users },
     { name: 'Badge', category: 'Display', icon: Circle },
     { name: 'Button', category: 'Action', icon: PanelTop },
     { name: 'Card', category: 'Layouts', icon: PanelTop },

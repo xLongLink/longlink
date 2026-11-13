@@ -42,7 +42,7 @@ export default function Tasks() {
                         width: proportional(1),
                         renderCell: (task) => (
                             <Stack direction="horizontal" align="center" gap={2}>
-                                <GeneratedAvatar
+                                <Avatar
                                     name={task.created_by.name}
                                     seed={task.created_by.id}
                                     src={task.created_by.avatar}

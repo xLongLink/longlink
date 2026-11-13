@@ -41,7 +41,6 @@ import { Disclosure } from '@/components/custom/disclosure';
 import { CheckboxInputExample } from './views/checkbox-input';
 import { MultiSelectorExample } from './views/multi-selector';
 import { componentDocumentation } from '@/platform/publications';
-import { GeneratedAvatarExample } from './views/generated-avatar';
 import { DocumentationArticle } from '@/components/layouts/article';
 import { ModelDirectory } from '@/components/custom/model-directory';
 import { NativeText as Text } from '@/components/custom/native-text';
@@ -88,7 +87,6 @@ const previews = new Map(
             </div>
         ),
         Avatar: <AvatarExample />,
-        GeneratedAvatar: <GeneratedAvatarExample />,
         ViewDialog: <ViewDialogExample />,
         Badge: <BadgeExample />,
         Button: <Button>Button</Button>,

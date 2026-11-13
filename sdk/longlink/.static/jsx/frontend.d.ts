@@ -4584,14 +4584,14 @@ declare function Text(props: {
 }): React.JSX.Element;
 
 /** @category Display */
-declare function GeneratedAvatar(
+declare function Avatar(
     props: {
         shape?: undefined | 'circle' | 'rounded' | 'square';
     } & {
         name?: string;
         /** Stable identity for generated avatars, independent of the display name. */
         seed?: string;
-        /** GeneratedAvatar style for a user or organization. */
+        /** Avatar style for a user or organization. */
         kind?: 'user' | 'organization';
         src?: string | null;
         alt?: string;
@@ -9700,43 +9700,6 @@ interface BadgeProps extends useRender.ComponentProps<"span"> {
     radius?: VariantProps<typeof badgeVariants>["radius"];
 }
 export function Badge({ className, variant, size, radius, render, ...props }: BadgeProps): React$1.ReactElement<unknown, string | React$1.JSXElementConstructor<any>>;
-const AvatarRoot: React$1.ForwardRefExoticComponent<Omit<AvatarRootProps, "ref"> & React$1.RefAttributes<HTMLSpanElement>>;
-type ImageLoadingStatus = "idle" | "loading" | "loaded" | "error";
-interface AvatarRootState {
-    imageLoadingStatus: ImageLoadingStatus;
-}
-interface AvatarRootProps extends BaseUIComponentProps<"span", AvatarRootState> {
-}
-namespace AvatarRoot {
-    type State = AvatarRootState;
-    type Props = AvatarRootProps;
-}
-type TransitionStatus = "starting" | "ending" | "idle" | undefined;
-const AvatarImage: React$1.ForwardRefExoticComponent<Omit<AvatarImageProps, "ref"> & React$1.RefAttributes<HTMLImageElement>>;
-interface AvatarImageState extends AvatarRootState {
-    transitionStatus: TransitionStatus;
-}
-interface AvatarImageProps extends BaseUIComponentProps<"img", AvatarImageState, React$1.ComponentPropsWithRef<"img">> {
-    onLoadingStatusChange?: ((status: ImageLoadingStatus) => void) | undefined;
-    keepMounted?: boolean | undefined;
-}
-namespace AvatarImage {
-    type State = AvatarImageState;
-    type Props = AvatarImageProps;
-}
-const AvatarFallback: React$1.ForwardRefExoticComponent<Omit<AvatarFallbackProps, "ref"> & React$1.RefAttributes<HTMLSpanElement>>;
-interface AvatarFallbackState extends AvatarRootState {
-}
-interface AvatarFallbackProps extends BaseUIComponentProps<"span", AvatarFallbackState> {
-    delay?: number | undefined;
-}
-namespace AvatarFallback {
-    type State = AvatarFallbackState;
-    type Props = AvatarFallbackProps;
-}
-function Avatar$1({ className, ...props }: Avatar.Root.Props): React$1.JSX.Element;
-function AvatarImage$1({ className, ...props }: Avatar.Image.Props): React$1.JSX.Element;
-function AvatarFallback$1({ className, ...props }: Avatar.Fallback.Props): React$1.JSX.Element;
 const Separator: React$1.ForwardRefExoticComponent<Omit<SeparatorProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
 interface SeparatorProps extends BaseUIComponentProps<"div", SeparatorState> {
     orientation?: Orientation | undefined;
@@ -9755,6 +9718,7 @@ const buttonGroupVariants: (props?: ({
 export function ButtonGroup({ className, orientation, ...props }: React$1.ComponentProps<"div"> & VariantProps<typeof buttonGroupVariants>): React$1.JSX.Element;
 export function ButtonGroupText({ className, render, ...props }: useRender.ComponentProps<"div">): React$1.ReactElement<unknown, string | React$1.JSXElementConstructor<any>>;
 export function ButtonGroupSeparator({ className, orientation, ...props }: React$1.ComponentProps<typeof Separator$1>): React$1.JSX.Element;
+type TransitionStatus = "starting" | "ending" | "idle" | undefined;
 const DialogBackdrop: React$1.ForwardRefExoticComponent<Omit<DialogBackdropProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
 interface DialogBackdropProps extends BaseUIComponentProps<"div", DialogBackdropState> {
     forceRender?: boolean | undefined;
@@ -14188,9 +14152,6 @@ export type FrontendElement = React$1.JSX.Element;
 namespace CSS$1 {
     export { AdvancedPseudos, AtRule, AtRules, DataType, Fallback, Globals, HtmlAttributes, ObsoleteProperties, ObsoletePropertiesFallback, ObsoletePropertiesHyphen, ObsoletePropertiesHyphenFallback, Properties, PropertiesFallback, PropertiesHyphen, PropertiesHyphenFallback, Property, PropertyValue, Pseudos, SimplePseudos, StandardLonghandProperties, StandardLonghandPropertiesFallback, StandardLonghandPropertiesHyphen, StandardLonghandPropertiesHyphenFallback, StandardProperties, StandardPropertiesFallback, StandardPropertiesHyphen, StandardPropertiesHyphenFallback, StandardShorthandProperties, StandardShorthandPropertiesFallback, StandardShorthandPropertiesHyphen, StandardShorthandPropertiesHyphenFallback, SvgAttributes, SvgProperties, SvgPropertiesFallback, SvgPropertiesHyphen, SvgPropertiesHyphenFallback, VendorLonghandProperties, VendorLonghandPropertiesFallback, VendorLonghandPropertiesHyphen, VendorLonghandPropertiesHyphenFallback, VendorProperties, VendorPropertiesFallback, VendorPropertiesHyphen, VendorPropertiesHyphenFallback, VendorShorthandProperties, VendorShorthandPropertiesFallback, VendorShorthandPropertiesHyphen, VendorShorthandPropertiesHyphenFallback };
 }
-namespace Avatar {
-    export { AvatarFallback as Fallback, AvatarImage as Image, AvatarRoot as Root };
-}
 namespace Checkbox {
     export { CheckboxIndicator as Indicator, CheckboxRoot as Root };
 }
@@ -14209,14 +14170,11 @@ namespace Switch {
 namespace Tabs {
     export { TabsIndicator as Indicator, TabsList as List, TabsPanel as Panel, TabsRoot as Root, TabsTab as Tab };
 }
-export { Avatar$1 as Avatar, AvatarFallback$1 as AvatarFallback, AvatarImage$1 as AvatarImage, Button$1 as Button, Checkbox$1 as Checkbox, Collapsible$1 as Collapsible, CollapsibleTrigger$1 as CollapsibleTrigger, ComboboxChip$1 as ComboboxChip, ComboboxChips$1 as ComboboxChips, ComboboxCollection$1 as ComboboxCollection, ComboboxEmpty$1 as ComboboxEmpty, ComboboxGroup$1 as ComboboxGroup, ComboboxInput$1 as ComboboxInput, ComboboxItem$1 as ComboboxItem, ComboboxLabel$1 as ComboboxLabel, ComboboxList$1 as ComboboxList, ComboboxSeparator$1 as ComboboxSeparator, ComboboxTrigger$1 as ComboboxTrigger, ComboboxValue$1 as ComboboxValue, DialogClose$1 as DialogClose, DialogDescription$1 as DialogDescription, DialogPortal$1 as DialogPortal, DialogTitle$1 as DialogTitle, DialogTrigger$1 as DialogTrigger, Image$1 as Image, Progress$1 as Progress, ProgressIndicator$1 as ProgressIndicator, ProgressLabel$1 as ProgressLabel, ProgressTrack$1 as ProgressTrack, ProgressValue$1 as ProgressValue, SelectGroup$1 as SelectGroup, SelectItem$1 as SelectItem, SelectLabel$1 as SelectLabel, SelectSeparator$1 as SelectSeparator, SelectTrigger$1 as SelectTrigger, SelectValue$1 as SelectValue, Separator$1 as Separator, Slider$1 as Slider, SliderControl$1 as SliderControl, SliderThumb$1 as SliderThumb, SliderTrack$1 as SliderTrack, Switch$1 as Switch, Tabs$1 as Tabs, TabsList$1 as TabsList, };
+export { Button$1 as Button, Checkbox$1 as Checkbox, Collapsible$1 as Collapsible, CollapsibleTrigger$1 as CollapsibleTrigger, ComboboxChip$1 as ComboboxChip, ComboboxChips$1 as ComboboxChips, ComboboxCollection$1 as ComboboxCollection, ComboboxEmpty$1 as ComboboxEmpty, ComboboxGroup$1 as ComboboxGroup, ComboboxInput$1 as ComboboxInput, ComboboxItem$1 as ComboboxItem, ComboboxLabel$1 as ComboboxLabel, ComboboxList$1 as ComboboxList, ComboboxSeparator$1 as ComboboxSeparator, ComboboxTrigger$1 as ComboboxTrigger, ComboboxValue$1 as ComboboxValue, DialogClose$1 as DialogClose, DialogDescription$1 as DialogDescription, DialogPortal$1 as DialogPortal, DialogTitle$1 as DialogTitle, DialogTrigger$1 as DialogTrigger, Image$1 as Image, Progress$1 as Progress, ProgressIndicator$1 as ProgressIndicator, ProgressLabel$1 as ProgressLabel, ProgressTrack$1 as ProgressTrack, ProgressValue$1 as ProgressValue, SelectGroup$1 as SelectGroup, SelectItem$1 as SelectItem, SelectLabel$1 as SelectLabel, SelectSeparator$1 as SelectSeparator, SelectTrigger$1 as SelectTrigger, SelectValue$1 as SelectValue, Separator$1 as Separator, Slider$1 as Slider, SliderControl$1 as SliderControl, SliderThumb$1 as SliderThumb, SliderTrack$1 as SliderTrack, Switch$1 as Switch, Tabs$1 as Tabs, TabsList$1 as TabsList, };
 }
 
 declare const ActionButton: typeof NativeFrontend.ActionButton;
 declare const ActionButtonGroup: typeof NativeFrontend.ActionButtonGroup;
-declare const Avatar: typeof NativeFrontend.Avatar;
-declare const AvatarFallback: typeof NativeFrontend.AvatarFallback;
-declare const AvatarImage: typeof NativeFrontend.AvatarImage;
 declare const Badge: typeof NativeFrontend.Badge;
 declare const Button: typeof NativeFrontend.Button;
 declare const ButtonGroup: typeof NativeFrontend.ButtonGroup;

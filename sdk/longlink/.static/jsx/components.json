@@ -413,15 +413,14 @@
             "justification": "Adapts Solution row and series data to shadcn chart primitives, with shared legends, tooltips, and validated empty or invalid data handling."
         },
         {
-            "name": "GeneratedAvatar",
+            "name": "Avatar",
             "category": "Display",
-            "guidance": "Renamed from Avatar. Existing Views that use generated artwork must use GeneratedAvatar; Avatar now exposes native shadcn composition.",
             "introduction": "Uses local Waves fallbacks for rounded organization avatars and Glyphs for users.",
             "properties": [
                 {
                     "name": "shape",
                     "type": "\"circle\" | \"square\" | \"rounded\"",
-                    "description": "GeneratedAvatar shape: circle, rounded, or square.",
+                    "description": "Avatar shape: circle, rounded, or square.",
                     "default": "circle"
                 },
                 {
@@ -437,7 +436,7 @@
                 {
                     "name": "kind",
                     "type": "\"user\" | \"organization\"",
-                    "description": "GeneratedAvatar style for a user or organization."
+                    "description": "Avatar style for a user or organization."
                 },
                 {
                     "name": "src",
@@ -452,7 +451,7 @@
                 {
                     "name": "size",
                     "type": "\"sm\" | \"lg\" | \"md\"",
-                    "description": "GeneratedAvatar size.",
+                    "description": "Avatar size.",
                     "default": "md"
                 }
             ],
@@ -3312,26 +3311,6 @@
             ],
             "source": "custom",
             "justification": "Combines LongLink icon lookup with selectable or removable tokens and scoped action controls."
-        },
-        {
-            "name": "Avatar",
-            "category": "Display",
-            "introduction": "Native shadcn Avatar composition with Base UI image and fallback props.",
-            "guidance": "Compose AvatarImage and AvatarFallback. Use GeneratedAvatar for deterministic artwork and owner-specific fallbacks.",
-            "properties": [
-                {
-                    "name": "AvatarImage.src / alt",
-                    "type": "string",
-                    "description": "Image URL and accessible description."
-                },
-                {
-                    "name": "AvatarFallback.children",
-                    "type": "ReactNode",
-                    "description": "Content shown when the image is unavailable."
-                }
-            ],
-            "source": "shadcn",
-            "reference": "https://ui.shadcn.com/docs/components/avatar"
         },
         {
             "name": "ButtonGroup",

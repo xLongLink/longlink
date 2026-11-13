@@ -22,11 +22,8 @@ export { Heading } from '@/components/custom/heading';
 /** @category Display */
 export { Text } from '@/components/custom/text';
 
-/** @category Display */
-export { Avatar, AvatarImage, AvatarFallback } from '@/components/shadcn/avatar';
-
 /** Custom generated artwork and owner-specific avatar fallbacks. @category Display */
-export { GeneratedAvatar } from '@/components/custom/generated-avatar';
+export { GeneratedAvatar as Avatar } from '@/components/custom/generated-avatar';
 
 /** @category Display */
 export { Image } from '@/components/custom/image';
