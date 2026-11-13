@@ -1,7 +1,7 @@
-import { Circle } from 'lucide-react';
 import { Card } from '@/components/shadcn/card';
 import { useState, type ReactNode } from 'react';
 import { Switch } from '@/components/shadcn/switch';
+import { Circle, ExternalLink } from 'lucide-react';
 import { documentationLastUpdated } from '@/lib/documentation';
 import { componentDocumentation } from '@/platform/publications';
 import { DocumentationArticle } from '@/components/layouts/article';
@@ -123,20 +123,29 @@ export default function ViewLayout({
     return (
         <DocumentationArticle article={article}>
             <Stack gap={5}>
-                <Heading id="introduction" level={1}>
-                    {component.label}
-                </Heading>
-                {!runtime && (
-                    <Text as="p" type="supporting">
-                        {component.reference ? (
-                            <a href={component.reference} className="underline underline-offset-4">
-                                {component.sourceLabel}
-                            </a>
-                        ) : (
-                            `${component.sourceLabel}: ${component.justification}`
-                        )}
-                    </Text>
-                )}
+                <Stack gap={0}>
+                    <Heading id="introduction" level={1}>
+                        {component.label}
+                    </Heading>
+                    {!runtime && (
+                        <Text as="p" type="supporting">
+                            {component.reference ? (
+                                <a
+                                    href={component.reference}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-1 underline underline-offset-4"
+                                >
+                                    {component.sourceLabel}
+                                    <ExternalLink className="size-3" aria-hidden="true" />
+                                    <span className="sr-only"> (opens in a new tab)</span>
+                                </a>
+                            ) : (
+                                `${component.sourceLabel}: ${component.justification}`
+                            )}
+                        </Text>
+                    )}
+                </Stack>
                 <CodeBlock code={`longlink docs component ${name}`} language="bash" wrap>
                     <CodeBlockCopyButton />
                 </CodeBlock>
