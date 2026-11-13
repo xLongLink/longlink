@@ -50,14 +50,18 @@ import { GeneratedAvatarExample } from './views/generated-avatar';
 import { DocumentationArticle } from '@/components/layouts/article';
 import { NativeText as Text } from '@/components/custom/native-text';
 import { ActionButtonGroupExample } from './views/action-button-group';
-import { InteractiveCard } from '@/components/custom/interactive-card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/shadcn/tabs';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { DataTable, proportional } from '@/components/custom/data-table';
 import { viewHooks, documentationCategories } from '@/lib/documentation';
 import { NativeHeading as Heading } from '@/components/custom/native-heading';
-import { NativeCodeBlock as CodeBlock } from '@/components/custom/native-code-block';
 import { Card, CardTitle, CardHeader, CardFooter, CardContent, CardDescription } from '@/components/shadcn/card';
+import {
+    CodeBlock,
+    CodeBlockCopyButton,
+    CodeBlockHeader,
+    CodeBlockTitle
+} from '@/components/reui/code-block/code-block';
 import '@/platform/components/settings-navigation.css';
 
 const article = {
@@ -199,9 +203,12 @@ export default function Item({ params }) {
   return <Heading>{item.name}</Heading>;
 }`}
                     language="jsx"
-                    title="items/[item].jsx"
-                    hasLanguageLabel={false}
-                />
+                >
+                    <CodeBlockHeader>
+                        <CodeBlockTitle>items/[item].jsx</CodeBlockTitle>
+                        <CodeBlockCopyButton className="ml-auto" />
+                    </CodeBlockHeader>
+                </CodeBlock>
                 <Disclosure trigger="API reference" defaultIsOpen={false}>
                     <DataTable
                         idKey="name"
@@ -247,15 +254,7 @@ export default function Item({ params }) {
                                     .filter((component) => component.category === category)
                                     .map((component) => (
                                         <Stack key={component.slug} className="relative min-w-0" gap={2}>
-                                            <InteractiveCard
-                                                aria-hidden="true"
-                                                inert
-                                                padding={component.name.endsWith('Chart') ? 0 : 3}
-                                                isClipped
-                                                variant="muted"
-                                                width="100%"
-                                                maxWidth="100%"
-                                            >
+                                            <Card aria-hidden="true" inert size="sm" className="w-full max-w-full">
                                                 {/* Constrain artwork before scaling so intrinsic control sizes cannot widen the card. */}
                                                 <div className="flex h-40 w-full min-w-0 items-center justify-center overflow-hidden">
                                                     <Stack
@@ -270,7 +269,7 @@ export default function Item({ params }) {
                                                         )}
                                                     </Stack>
                                                 </div>
-                                            </InteractiveCard>
+                                            </Card>
                                             <Text type="supporting">
                                                 {component.category === 'Action' || component.category === 'Form'
                                                     ? component.label.replace(/([a-z])([A-Z])/g, '$1 $2')

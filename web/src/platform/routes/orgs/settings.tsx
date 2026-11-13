@@ -10,13 +10,13 @@ import { useApi } from '@/lib/hooks/use-api';
 import PaymentMethods from './payment-methods';
 import { ApiBoundary } from '@/components/api';
 import { Form } from '@/components/custom/form';
-import { Divider } from '@/components/custom/divider';
 import * as permissions from '@/platform/permissions';
 import SolutionManagement from './solution-management';
 import { DeletionDialog } from '@/components/deletion';
 import { useQueryClient } from '@tanstack/react-query';
 import { Selector } from '@/components/custom/selector';
 import { Illustration } from '@/components/illustration';
+import { Separator } from '@/components/shadcn/separator';
 import { TextInput } from '@/components/custom/text-input';
 import { useAuthenticatedUser } from '@/lib/hooks/use-user';
 import { ViewDialog } from '@/components/custom/view-dialog';
@@ -188,7 +188,7 @@ function GeneralSection({
                     General
                 </Heading>
             </Stack>
-            <Divider />
+            <Separator />
             <TabsSection base={base} tags={tags} canMaintain={canMaintain} />
             {canDelete && (
                 <Stack gap={3}>
@@ -264,7 +264,7 @@ function MembersSection({ base, role }: { base: string; role: OrganizationContex
                         Members
                     </Heading>
                 </Stack>
-                <Divider />
+                <Separator />
                 <DataTable
                     data={members}
                     idKey={(row) => row.user.id}
@@ -447,7 +447,7 @@ function InvitationsSection({ base, role }: { base: string; role: OrganizationCo
                     </Heading>
                     {canMaintain && <Button label="Invite" size="sm" onClick={() => setInvitationAttempt(Symbol())} />}
                 </Stack>
-                <Divider />
+                <Separator />
                 <DataTable
                     data={invitations}
                     idKey="id"

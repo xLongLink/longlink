@@ -1,7 +1,7 @@
 import { Fragment } from 'react';
 import { Wordmark } from '@/components/wordmark';
 import { PublicArticle } from '@/components/layouts/article';
-import { NativeCodeBlock as CodeBlock } from '@/components/custom/native-code-block';
+import { CodeBlock, CodeBlockCopyButton } from '@/components/reui/code-block/code-block';
 
 const article = {
     description: 'LongLink logos, wordmarks, and illustrated brand assets.',
@@ -115,10 +115,11 @@ export default function Assets() {
                     code={`<style>
   Minimalist monochrome technical sketch matching the reference. Thin white pencil/chalk lines, slightly rough and grainy, with imperfect hand-drawn contours, sparse construction lines, and very light hatching. Simple geometric forms, strong silhouettes, lots of negative space. Fully transparent background. No color, text, gradients, shadows, photorealism, or dense detail.
 </style>`}
-                    isWrapped
+                    wrap
                     language="plaintext"
-                    width="100%"
-                />
+                >
+                    <CodeBlockCopyButton />
+                </CodeBlock>
             </section>
         </PublicArticle>
     );

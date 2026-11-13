@@ -17,7 +17,7 @@ export default function Phase({ params }) {
                 <Heading level={1}>{phase.label}</Heading>
                 <Text type="supporting">{phase.description}</Text>
             </Stack>
-            <Divider />
+            <Separator />
             <Grid columns={3} collapseBelow={768} gap={8}>
                 <GridSpan columns={2}>
                     <DataTable

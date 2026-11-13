@@ -5,7 +5,7 @@ import { NativeText as Text } from '@/components/custom/native-text';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { NativeHeading as Heading } from '@/components/custom/native-heading';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/shadcn/tabs';
-import { NativeCodeBlock as CodeBlock } from '@/components/custom/native-code-block';
+import { CodeBlock, CodeBlockCopyButton } from '@/components/reui/code-block/code-block';
 
 const article = {
     description: 'Build LongLink Solutions as standard Python and FastAPI services with the Solution SDK.',
@@ -65,16 +65,22 @@ export default function DocsArticleRoute() {
                         <TabsTrigger value="standalone">Standalone</TabsTrigger>
                     </TabsList>
                     <TabsContent value="github">
-                        <CodeBlock code="uvx --from longlink longlink init --folder . --ci github" language="bash" />
+                        <CodeBlock code="uvx --from longlink longlink init --folder . --ci github" language="bash">
+                            <CodeBlockCopyButton />
+                        </CodeBlock>
                     </TabsContent>
                     <TabsContent value="standalone">
-                        <CodeBlock code="uvx --from longlink longlink init --folder ." language="bash" />
+                        <CodeBlock code="uvx --from longlink longlink init --folder ." language="bash">
+                            <CodeBlockCopyButton />
+                        </CodeBlock>
                     </TabsContent>
                 </Tabs>
                 <Heading id="local-development" level={2}>
                     Local Development
                 </Heading>
-                <CodeBlock code={'uv sync --group dev\nuv run longlink dev'} language="bash" />
+                <CodeBlock code={'uv sync --group dev\nuv run longlink dev'} language="bash">
+                    <CodeBlockCopyButton />
+                </CodeBlock>
                 <Text as="p">
                     Open{' '}
                     <Link href="http://127.0.0.1:1707" hasUnderline isExternalLink type="inherit">

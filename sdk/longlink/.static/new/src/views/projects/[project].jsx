@@ -12,14 +12,14 @@ export default function Project({ params }) {
         <Stack gap={4} paddingInline={8} paddingBlock={2}>
             <Stack direction="horizontal" align="center" gap={2}>
                 <Stack width="var(--size-element-lg)">
-                    <Image src={`/assets/${project.photo}.jpg`} alt={`${project.name} building`} />
+                    <Image src={`/assets/${project.photo}.jpg`} alt={`${project.name} building`} ratio={16 / 9} />
                 </Stack>
                 <Stack gap={0}>
                     <Heading level={1}>{project.name}</Heading>
                     <Text type="supporting">{project.description}</Text>
                 </Stack>
             </Stack>
-            <Divider />
+            <Separator />
             <Grid columns={3} collapseBelow={768} gap={8}>
                 <GridSpan columns={2}>
                     <ProgressStepper

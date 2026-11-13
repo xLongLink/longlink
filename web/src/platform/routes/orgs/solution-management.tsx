@@ -7,12 +7,12 @@ import CreateSolution from './create-solution';
 import { ApiBoundary } from '@/components/api';
 import { OpenAI } from '@/components/svg/open-ai';
 import DeploymentReview from './deployment-review';
-import { Divider } from '@/components/custom/divider';
 import { useNotification } from '@/lib/notifications';
 import * as permissions from '@/platform/permissions';
 import { DeletionDialog } from '@/components/deletion';
 import SolutionPermissions from './solution-permissions';
 import { Illustration } from '@/components/illustration';
+import { Separator } from '@/components/shadcn/separator';
 import { ViewDialog } from '@/components/custom/view-dialog';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { NativeLink as Link } from '@/components/custom/native-link';
@@ -23,9 +23,9 @@ import { DataTable, proportional } from '@/components/custom/data-table';
 import { NativeButton as Button } from '@/components/custom/native-button';
 import type { OrganizationContext } from '@/platform/layouts/organization';
 import { NativeHeading as Heading } from '@/components/custom/native-heading';
-import { NativeCodeBlock as CodeBlock } from '@/components/custom/native-code-block';
 import { IllustratedDialogContent } from '@/platform/components/illustrated-dialog-content';
 import { ExternalLink, Logs, Plug, Plus, RefreshCw, Shield, Tags, Trash } from 'lucide-react';
+import { CodeBlock, CodeBlockContent, CodeBlockCopyButton } from '@/components/reui/code-block/code-block';
 
 type Solution = z.output<typeof schemas.zOrganizationSolutionSummary>;
 
@@ -109,7 +109,7 @@ export default function SolutionManagement({
                             </Heading>
                             {canMaintain && <Button label="New Solution" size="sm" onClick={openCreate} />}
                         </Stack>
-                        <Divider />
+                        <Separator />
                     </>
                 ) : solutions.length > 0 ? (
                     <Stack direction="horizontal" justify="between" align="center" wrap="wrap" className="min-h-12">
@@ -468,15 +468,17 @@ function SolutionLogs({ solutionId, onClose }: { solutionId: string; onClose: ()
     return (
         <Stack gap={3} height="100%">
             <div className="min-h-0 min-w-0 grow">
-                <CodeBlock
-                    code={logs.join('\n')}
-                    hasLineNumbers
-                    isWrapped
-                    size="sm"
-                    width="100%"
-                    maxHeight="100%"
-                    className="h-full"
-                />
+                <CodeBlock code={logs.join('\n')} showLineNumbers wrap className="h-full">
+                    <CodeBlockCopyButton />
+                    <div
+                        className="min-h-0 flex-1 overflow-auto"
+                        role="region"
+                        aria-label="Deployment logs"
+                        tabIndex={0}
+                    >
+                        <CodeBlockContent />
+                    </div>
+                </CodeBlock>
             </div>
             <Stack direction="horizontal" gap={2} justify="between" wrap="wrap">
                 <Button label="Close" variant="ghost" onClick={onClose} />

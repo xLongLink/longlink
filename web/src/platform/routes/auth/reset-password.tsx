@@ -5,8 +5,8 @@ import { useForm } from 'react-hook-form';
 import { AuthLayout } from './auth-layout';
 import { CircleCheck } from 'lucide-react';
 import { passwordSchema } from './validation';
-import { Divider } from '@/components/custom/divider';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { Separator } from '@/components/shadcn/separator';
 import { useFragmentToken } from '@/lib/hooks/use-fragment-token';
 import { useAnnouncement } from '@/components/custom/announcement';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
@@ -81,7 +81,7 @@ export default function ResetPassword() {
                 description="This password reset link is invalid or expired. Request a new link to continue."
             >
                 {pageMetadata}
-                <Divider />
+                <Separator />
                 <Button href="/auth/forgot-password" label="Request another reset link" variant="default" />
             </AuthLayout>
         );
@@ -90,7 +90,7 @@ export default function ResetPassword() {
     return (
         <AuthLayout title="Set a new password" description="Choose a new password for your LongLink account.">
             {pageMetadata}
-            <Divider />
+            <Separator />
             {verification?.status !== 'verified' ? (
                 <Button isLoading label="Reset password" variant="default" />
             ) : form.formState.isSubmitSuccessful ? (

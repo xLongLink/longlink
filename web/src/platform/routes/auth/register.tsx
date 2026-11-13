@@ -7,6 +7,7 @@ import { useForm, useWatch } from 'react-hook-form';
 import { Divider } from '@/components/custom/divider';
 import { useNotification } from '@/lib/notifications';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { Separator } from '@/components/shadcn/separator';
 import { emailPayloadSchema, type EmailPayload } from './validation';
 import { NativeLink as Link } from '@/components/custom/native-link';
 import { NativeText as Text } from '@/components/custom/native-text';
@@ -37,7 +38,7 @@ export default function Register() {
         >
             <title>Create Account | LongLink</title>
             <Stack gap={3}>
-                <Divider />
+                <Separator />
                 <form
                     noValidate
                     action={() =>

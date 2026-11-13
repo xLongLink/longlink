@@ -3,7 +3,12 @@ import { NativeLink as Link } from '@/components/custom/native-link';
 import { NativeText as Text } from '@/components/custom/native-text';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { NativeHeading as Heading } from '@/components/custom/native-heading';
-import { NativeCodeBlock as CodeBlock } from '@/components/custom/native-code-block';
+import {
+    CodeBlock,
+    CodeBlockCopyButton,
+    CodeBlockHeader,
+    CodeBlockTitle
+} from '@/components/reui/code-block/code-block';
 
 const article = {
     title: 'Compute | LongLink Self Hosted Documentation',
@@ -39,14 +44,15 @@ export default function Compute() {
                     code={`helm upgrade --install longlink-compute oci://ghcr.io/xlonglink/longlink \\
   --namespace longlink-system --create-namespace \\
   --values compute-values.yaml --wait=legacy --timeout 15m`}
-                />
+                >
+                    <CodeBlockCopyButton />
+                </CodeBlock>
                 <Stack as="section" gap={3}>
                     <Heading id="configuration" level={2}>
                         Configuration
                     </Heading>
                     <CodeBlock
                         language="yaml"
-                        title="compute-values.yaml"
                         code={`gateway:
   address: <gateway-ip>
 storage:
@@ -57,7 +63,12 @@ rustfs:
   storage:
     name: <storage-class-name>
     dataStorageSize: 5Gi`}
-                    />
+                    >
+                        <CodeBlockHeader>
+                            <CodeBlockTitle>compute-values.yaml</CodeBlockTitle>
+                            <CodeBlockCopyButton className="ml-auto" />
+                        </CodeBlockHeader>
+                    </CodeBlock>
                 </Stack>
                 <Stack as="section" gap={3}>
                     <Heading id="connect" level={2}>

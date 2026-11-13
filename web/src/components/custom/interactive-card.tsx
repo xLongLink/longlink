@@ -1,7 +1,7 @@
 import { cn } from 'cn';
 import { NavigationLink } from './link';
+import type { ComponentProps, MouseEvent } from 'react';
 import { Card as Surface } from '@/components/shadcn/card';
-import type { CSSProperties, MouseEvent, ReactNode } from 'react';
 
 /** Surface gestures must not steal nested controls, portal events, or text selection. */
 function isSurfaceActivation(event: MouseEvent<HTMLElement>) {
@@ -59,27 +59,7 @@ function activateLink(event: MouseEvent<HTMLElement>) {
     );
 }
 
-type InteractiveCardProps = {
-    /** Content rendered inside the card. */
-    children?: ReactNode;
-    /** Inner spacing using the theme spacing scale. */
-    padding?: 0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10;
-    /** Clips full-bleed content to the card's rounded edges. */
-    isClipped?: boolean;
-    /** Background color variant, independent of the interaction mode. */
-    variant?: 'default' | 'transparent' | 'muted';
-    /** Card width; numbers are pixels and strings are CSS sizes. */
-    width?: number | string;
-    /** Card height; numbers are pixels and strings are CSS sizes. */
-    height?: number | string;
-    /** Maximum card width. */
-    maxWidth?: number | string;
-    /** Minimum card height. */
-    minHeight?: number | string;
-    /** Makes the card and its descendants non-interactive. */
-    inert?: boolean;
-    /** Accessible by default; set true only for decorative or redundant, non-interactive content. */
-    'aria-hidden'?: boolean | 'true' | 'false';
+type InteractiveCardProps = Omit<ComponentProps<typeof Surface>, 'onClick' | 'onChange'> & {
     /** Accessible label for interactive cards; supply a descriptive label. */
     label?: string;
     /** Makes the card clickable when its surface is activated; nested controls act independently. */
@@ -99,9 +79,6 @@ type InteractiveCardProps = {
 /** Keeps native controls separate from card content, with selection taking priority over actions and links. */
 export function InteractiveCard({
     label = 'Card',
-    padding = 4,
-    isClipped = false,
-    variant = 'default',
     onClick,
     href,
     target = '_self',
@@ -109,12 +86,10 @@ export function InteractiveCard({
     isSelected = false,
     onChange,
     children,
-    width,
-    height,
-    maxWidth,
-    minHeight,
+    className,
+    onMouseUp,
     inert,
-    'aria-hidden': ariaHidden
+    ...props
 }: InteractiveCardProps) {
     const mode =
         onChange !== undefined
@@ -127,33 +102,22 @@ export function InteractiveCard({
 
     const blocked = isDisabled || inert;
 
-    const style: CSSProperties & { '--view-card-padding': string } = {
-        width,
-        height,
-        maxWidth,
-        minHeight,
-        padding: 'var(--view-card-padding)',
-        '--view-card-padding': `var(--spacing-${String(padding).replace('.', '-')})`
-    };
-
     // The surface forwards only its own gestures; native controls supply keyboard and accessibility semantics.
     return (
         <Surface
+            {...props}
             className={cn(
-                'view-card block gap-0',
-                variant === 'transparent' && 'bg-transparent ring-0',
-                variant === 'muted' && 'bg-muted ring-0'
+                mode &&
+                    'relative cursor-pointer has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-ring',
+                mode && isDisabled && 'cursor-default opacity-50',
+                mode === 'selection' && isSelected && 'outline-2 -outline-offset-2 outline-ring',
+                className
             )}
-            data-variant={variant}
             data-mode={mode}
             data-pressable-container={mode ? '' : undefined}
             data-selected={mode === 'selection' && isSelected ? '' : undefined}
             data-disabled={mode && isDisabled ? '' : undefined}
-            data-clipped={isClipped ? '' : undefined}
-            data-scrollable={height !== undefined && height !== 'auto' ? '' : undefined}
             inert={inert}
-            aria-hidden={ariaHidden}
-            style={style}
             onClick={
                 mode && !blocked
                     ? (event) => {
@@ -165,17 +129,17 @@ export function InteractiveCard({
                       }
                     : undefined
             }
-            onMouseUp={
-                mode === 'link' && !blocked
-                    ? (event) => {
-                          if (event.button === 1 && isSurfaceActivation(event)) activateLink(event);
-                      }
-                    : undefined
-            }
+            onMouseUp={(event) => {
+                onMouseUp?.(event);
+
+                if (mode === 'link' && !blocked && event.button === 1 && isSurfaceActivation(event))
+                    activateLink(event);
+            }}
         >
             {mode === 'selection' ? (
                 <input
-                    className="view-card-control"
+                    className="sr-only"
+                    data-slot="card-control"
                     type="checkbox"
                     aria-label={label}
                     aria-disabled={isDisabled || undefined}
@@ -203,7 +167,8 @@ export function InteractiveCard({
                 />
             ) : mode === 'action' ? (
                 <button
-                    className="view-card-control"
+                    className="sr-only"
+                    data-slot="card-control"
                     type="button"
                     aria-label={label}
                     aria-disabled={isDisabled || undefined}
@@ -223,7 +188,8 @@ export function InteractiveCard({
                 />
             ) : mode === 'link' ? (
                 <NavigationLink
-                    className="view-card-control"
+                    className="sr-only"
+                    data-slot="card-control"
                     href={blocked ? undefined : href}
                     target={blocked ? undefined : target}
                     role="link"

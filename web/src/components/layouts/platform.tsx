@@ -3,7 +3,7 @@ import { SidebarContext } from '@/lib/sidebar';
 import { Button } from '@base-ui/react/button';
 import { useId, useRef, useState } from 'react';
 import Content from '@/components/layouts/content';
-import { Divider } from '@/components/custom/divider';
+import { Separator } from '@/components/shadcn/separator';
 import { useAppearance } from '@/lib/hooks/use-appearance';
 import { useMediaQuery } from '@/lib/hooks/use-media-query';
 import { Link as RouterLink, useLocation } from 'react-router';
@@ -80,7 +80,7 @@ export default function Platform({
                                 </RouterLink>
                             )}
                         </section>
-                        <Divider />
+                        <Separator />
                     </header>
                     <section className="platform-sidebar-items">
                         {tabs.map((tab) => (
@@ -124,7 +124,7 @@ export default function Platform({
                     </section>
                     <footer className="platform-sidebar-footer">
                         <section className="platform-sidebar-action">
-                            <Divider />
+                            <Separator />
                             {action}
                         </section>
                     </footer>
@@ -143,7 +143,7 @@ export default function Platform({
                                 >
                                     <PanelLeft aria-hidden="true" size={16} />
                                 </Button>
-                                <Divider className="h-5" orientation="vertical" />
+                                <Separator className="h-5" orientation="vertical" />
                                 {breadcrumb ?? (
                                     <nav aria-label="Breadcrumb" className="platform-breadcrumb">
                                         <ol>

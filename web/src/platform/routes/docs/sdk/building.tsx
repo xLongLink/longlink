@@ -3,7 +3,12 @@ import { DocumentationArticle } from '@/components/layouts/article';
 import { NativeText as Text } from '@/components/custom/native-text';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { NativeHeading as Heading } from '@/components/custom/native-heading';
-import { NativeCodeBlock as CodeBlock } from '@/components/custom/native-code-block';
+import {
+    CodeBlock,
+    CodeBlockCopyButton,
+    CodeBlockHeader,
+    CodeBlockTitle
+} from '@/components/reui/code-block/code-block';
 
 const article = {
     description: 'Build and package a LongLink project for deployment.',
@@ -35,7 +40,9 @@ export default function DocsArticleRoute() {
                         becomes a consistent, self-contained artifact that can be deployed with a single click.
                     </Text>
                 </Stack>
-                <CodeBlock code="longlink build [--tag dev] [--registry localhost:15000] [--push]" language="bash" />
+                <CodeBlock code="longlink build [--tag dev] [--registry localhost:15000] [--push]" language="bash">
+                    <CodeBlockCopyButton />
+                </CodeBlock>
                 <Stack gap={2}>
                     <Heading id="metadata" level={2}>
                         Metadata
@@ -49,10 +56,13 @@ description = "Order workflow service"
 [tool.longlink]
 environments = "src.envs:Env"
 `}
-                        hasLanguageLabel={false}
                         language="toml"
-                        title="pyproject.toml"
-                    />
+                    >
+                        <CodeBlockHeader>
+                            <CodeBlockTitle>pyproject.toml</CodeBlockTitle>
+                            <CodeBlockCopyButton className="ml-auto" />
+                        </CodeBlockHeader>
+                    </CodeBlock>
                     <DataTable
                         density="compact"
                         idKey="metadata"

@@ -1,7 +1,7 @@
 import { useApi } from '@/lib/hooks/use-api';
 import { ApiBoundary } from '@/components/api';
 import { Token } from '@/components/custom/token';
-import { Divider } from '@/components/custom/divider';
+import { Separator } from '@/components/shadcn/separator';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { NativeLink as Link } from '@/components/custom/native-link';
 import { NativeText as Text } from '@/components/custom/native-text';
@@ -18,7 +18,7 @@ export default function Invoices({ base, canManage }: { base: string; canManage:
                     Invoices
                 </Heading>
             </Stack>
-            <Divider />
+            <Separator />
             {canManage ? (
                 <ApiBoundary fallback={<Text color="secondary">Loading invoices…</Text>}>
                     <InvoiceTable base={base} />

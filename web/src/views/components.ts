@@ -84,6 +84,9 @@ export { ActionMenu } from '@/components/custom/action-menu';
 export { IconButton } from '@/components/custom/icon-button';
 
 /** @category Display */
+export { Separator } from '@/components/shadcn/separator';
+
+/** Custom labeled separator composition. @category Display */
 export { Divider } from '@/components/custom/divider';
 
 /** @category Layouts */
@@ -258,7 +261,32 @@ export { proportional, pixel } from '@/components/custom/data-table';
 export { Timestamp } from '@/components/custom/timestamp';
 
 /** @category Display */
-export { CodeBlock } from '@/components/custom/code-block';
+export {
+    CodeBlock,
+    CodeBlockContent,
+    CodeBlockCopyButton,
+    CodeBlockDownloadButton,
+    CodeBlockExpandButton,
+    CodeBlockHeader,
+    CodeBlockLanguage,
+    CodeBlockLineActions,
+    CodeBlockTitle,
+    CodeBlockWrapToggle,
+    useCodeBlockConfig,
+    useCodeBlockFolding,
+    useCodeBlockSelection
+} from '@/components/reui/code-block/code-block';
+
+export type {
+    CodeBlockProps,
+    CodeBlockCopyButtonProps,
+    CodeBlockDownloadButtonProps,
+    CodeBlockFoldRegion,
+    CodeBlockLineActionsProps,
+    CodeBlockLine,
+    CodeBlockLineSpec,
+    CodeBlockThemes
+} from '@/components/reui/code-block/code-block';
 
 /** @category Display */
 export { Progress } from '@/components/shadcn/progress';

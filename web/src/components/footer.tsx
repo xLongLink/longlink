@@ -1,7 +1,7 @@
 import { Package } from 'lucide-react';
 import { Wordmark } from '@/components/wordmark';
 import { Link as RouterLink } from 'react-router';
-import { Divider } from '@/components/custom/divider';
+import { Separator } from '@/components/shadcn/separator';
 import { GitHubIcon } from '@/components/svg/git-hub-icon';
 import { LinkedInIcon } from '@/components/svg/linked-in-icon';
 
@@ -60,7 +60,7 @@ export function Footer({ maxWidth = 1000 }: { maxWidth?: number }) {
                     </nav>
                 </div>
 
-                <Divider />
+                <Separator />
 
                 <div className="flex flex-wrap items-center justify-between gap-3 max-sm:flex-col max-sm:justify-center">
                     <p className="m-0 text-[length:var(--text-supporting-size)] leading-(--text-supporting-leading) font-(--text-supporting-weight) text-muted-foreground max-sm:order-1">

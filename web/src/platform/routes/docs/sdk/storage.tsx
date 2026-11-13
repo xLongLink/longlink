@@ -3,7 +3,7 @@ import { NativeLink as Link } from '@/components/custom/native-link';
 import { NativeText as Text } from '@/components/custom/native-text';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { NativeHeading as Heading } from '@/components/custom/native-heading';
-import { NativeCodeBlock as CodeBlock } from '@/components/custom/native-code-block';
+import { CodeBlock, CodeBlockCopyButton } from '@/components/reui/code-block/code-block';
 
 const article = {
     description: 'Store and manage files in a LongLink project.',
@@ -53,7 +53,9 @@ export default function DocsArticleRoute() {
 async def write_report(ctx: Context) -> None:
     await ctx.storage.write("reports/example.txt", b"hello")`}
                     language="python"
-                />
+                >
+                    <CodeBlockCopyButton />
+                </CodeBlock>
                 <Text as="p">
                     <InlineCode>write(path, bytes)</InlineCode> creates parent directories automatically. Use{' '}
                     <InlineCode>await ctx.storage.exists(path)</InlineCode> to check for a file and{' '}
@@ -99,7 +101,9 @@ async def report(
     while chunk := await stored_file.read(1024 * 1024):
         yield chunk`}
                     language="python"
-                />
+                >
+                    <CodeBlockCopyButton />
+                </CodeBlock>
                 <Text as="p">
                     Use <InlineCode>FileViewer</InlineCode> for preview and download actions, or{' '}
                     <InlineCode>Link</InlineCode> with a <InlineCode>download</InlineCode> filename to download
@@ -109,7 +113,9 @@ async def report(
                     code={`<FileViewer src="/reports/latest" title="report.pdf" />
 <Link to="/reports/latest" download="report.pdf">Download report</Link>`}
                     language="jsx"
-                />
+                >
+                    <CodeBlockCopyButton />
+                </CodeBlock>
             </Stack>
         </DocumentationArticle>
     );

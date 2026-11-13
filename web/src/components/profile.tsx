@@ -5,8 +5,8 @@ import { Link as RouterLink } from 'react-router';
 import { adminNavigation } from '@/platform/admin';
 import { isNetworkError, isTimeoutError } from 'ky';
 import { useContext, useRef, useState } from 'react';
-import { Divider } from '@/components/custom/divider';
 import { clearAppearanceCache } from '@/lib/appearance';
+import { Separator } from '@/components/shadcn/separator';
 import { useAuthenticatedUser } from '@/lib/hooks/use-user';
 import { Button, buttonVariants } from '@/components/shadcn/button';
 import { Popover as PopoverPrimitive } from '@base-ui/react/popover';
@@ -97,7 +97,7 @@ export function ProfileMenu() {
                 aria-label={user.name}
             >
                 <section className="flex min-w-0 items-center gap-2">{identity}</section>
-                <Divider />
+                <Separator />
                 <nav aria-label="Account" className="flex flex-col gap-1">
                     <p className="text-xs font-medium text-muted-foreground">Account</p>
                     <RouterLink
@@ -130,7 +130,7 @@ export function ProfileMenu() {
                 </nav>
                 {user.administrator ? (
                     <>
-                        <Divider />
+                        <Separator />
                         <nav aria-label="Administration" className="flex flex-col gap-1">
                             <p className="text-xs font-medium text-muted-foreground">Administration</p>
                             {adminNavigation.map(({ href, icon: Icon, label }) => (
@@ -145,7 +145,7 @@ export function ProfileMenu() {
                                 </RouterLink>
                             ))}
                         </nav>
-                        <Divider />
+                        <Separator />
                     </>
                 ) : null}
                 {error && (

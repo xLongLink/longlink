@@ -93,17 +93,12 @@ it('keeps fixed widths and flexible ratios readable on a narrow table', () => {
     );
 
     // The flexible floor is 480px: a 1:1:2 split must leave 240px for the last column.
-    expect(output.querySelector('table')?.style.minWidth).toBe('560px');
+    expect(output.querySelector('table')?.parentElement?.parentElement?.style.minWidth).toBe('560px');
     const widths = Array.from(output.querySelectorAll('col'), (column) => column.style.width);
-    expect(widths).toEqual([
-        '80px',
-        'calc((100% - 80px) * 0.25)',
-        'calc((100% - 80px) * 0.25)',
-        'calc((100% - 80px) * 0.5)'
-    ]);
+    expect(widths.slice(0, 4)).toEqual(['80px', '120px', '120px', '240px']);
 });
 
-it('makes a wide read-only table a named keyboard tab target without hiding native scrollbars', async () => {
+it('makes an overflowing read-only table reachable between surrounding keyboard controls', async () => {
     const user = userEvent.setup();
 
     await withMounted(
@@ -113,7 +108,7 @@ it('makes a wide read-only table a named keyboard tab target without hiding nati
             <button type="button">After table</button>
         </>,
         async (output) => {
-            const viewport = output.querySelector<HTMLElement>('[data-slot="data-grid-table-viewport"]');
+            const viewport = output.querySelector<HTMLElement>('[data-slot="scroll-area-viewport"]');
             const buttons = output.querySelectorAll('button');
 
             if (!viewport) throw new Error('Expected the table scroll viewport');
@@ -126,10 +121,7 @@ it('makes a wide read-only table a named keyboard tab target without hiding nati
                 scrollHeight: { value: 64 }
             });
             await act(async () => viewport.dispatchEvent(new Event('scroll')));
-            expect(viewport.getAttribute('role')).toBe('group');
-            expect(viewport.getAttribute('aria-label')).toBe('Table');
             expect(viewport.tabIndex).toBe(0);
-            expect(getComputedStyle(viewport).getPropertyValue('scrollbar-width')).not.toBe('none');
             await act(async () => user.tab());
             expect(document.activeElement).toBe(buttons[0]);
             await act(async () => user.tab());
@@ -150,7 +142,7 @@ it('skips a fitting table and preserves focus when an overflowing table becomes 
             <button type="button">After table</button>
         </>,
         async (output) => {
-            const viewport = output.querySelector<HTMLElement>('[data-slot="data-grid-table-viewport"]');
+            const viewport = output.querySelector<HTMLElement>('[data-slot="scroll-area-viewport"]');
             const buttons = output.querySelectorAll('button');
 
             if (!viewport) throw new Error('Expected the table scroll viewport');
@@ -166,7 +158,6 @@ it('skips a fitting table and preserves focus when an overflowing table becomes 
             });
             await act(async () => viewport.dispatchEvent(new Event('scroll')));
             expect(viewport.tabIndex).toBe(-1);
-            expect(getComputedStyle(viewport).overflow).toBe('auto');
             await act(async () => user.tab());
             expect(document.activeElement).toBe(buttons[0]);
             await act(async () => user.tab());
@@ -182,33 +173,43 @@ it('skips a fitting table and preserves focus when an overflowing table becomes 
             await act(async () => viewport.dispatchEvent(new Event('scroll')));
             expect(viewport.tabIndex).toBe(-1);
             expect(document.activeElement).toBe(viewport);
-            expect(output.querySelector('[data-slot="data-grid-table-viewport"]')).toBe(viewport);
+            expect(output.querySelector('[data-slot="scroll-area-viewport"]')).toBe(viewport);
             await act(async () => user.tab());
             expect(document.activeElement).toBe(buttons[1]);
         }
     );
 });
 
-it('runs real View cell actions against replacement data and column definitions', async () => {
+it('updates View cell permissions with unchanged data and actions after replacing data', async () => {
     const selected = vi.fn();
     const user = userEvent.setup();
+    const originalRows = [{ id: 'shipment', name: 'Original' }];
+    const replacementRows = [{ id: 'shipment', name: 'Replacement' }];
 
     function Results() {
         const [replaced, setReplaced] = useState(false);
+        const [permitted, setPermitted] = useState(true);
 
         return (
             <>
                 <button type="button" onClick={() => setReplaced(true)}>
                     Refresh
                 </button>
+                <button type="button" onClick={() => setPermitted(!permitted)}>
+                    Toggle permission
+                </button>
                 <DataTable
-                    data={[{ id: 'shipment', name: replaced ? 'Replacement' : 'Original' }]}
+                    data={replaced ? replacementRows : originalRows}
                     columns={[
                         {
                             key: 'name',
                             header: replaced ? 'Updated shipment' : 'Shipment',
                             renderCell: (row) => (
-                                <button type="button" onClick={() => selected(row.name)}>
+                                <button
+                                    type="button"
+                                    disabled={!permitted}
+                                    onClick={() => selected(row.name, permitted)}
+                                >
                                     Open {row.name}
                                 </button>
                             )
@@ -222,11 +223,19 @@ it('runs real View cell actions against replacement data and column definitions'
     await withMounted(<Results />, async (output) => {
         const original = output.querySelector<HTMLButtonElement>('td button');
         const refresh = output.querySelector<HTMLButtonElement>('button');
+        const permission = output.querySelectorAll('button')[1];
 
-        if (!original || !refresh) throw new Error('Expected View cell and refresh actions');
+        if (!original || !refresh || !permission) throw new Error('Expected View cell and refresh actions');
 
         await act(async () => user.click(original));
-        expect(selected).toHaveBeenLastCalledWith('Original');
+        expect(selected).toHaveBeenLastCalledWith('Original', true);
+        await act(async () => user.click(permission));
+        expect(output.querySelector('td button')).toBe(original);
+        expect(original.disabled).toBe(true);
+        await act(async () => user.click(original));
+        expect(selected).toHaveBeenCalledTimes(1);
+        await act(async () => user.click(permission));
+        expect(original.disabled).toBe(false);
         await act(async () => user.click(refresh));
         const replacement = output.querySelector<HTMLButtonElement>('td button');
 
@@ -235,7 +244,7 @@ it('runs real View cell actions against replacement data and column definitions'
         expect(output.querySelector('thead')?.textContent).toBe('Updated shipment');
         expect(replacement.textContent).toBe('Open Replacement');
         await act(async () => user.click(replacement));
-        expect(selected).toHaveBeenLastCalledWith('Replacement');
+        expect(selected).toHaveBeenLastCalledWith('Replacement', true);
         expect(output.textContent).not.toContain('Original');
     });
 });

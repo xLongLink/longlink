@@ -3,7 +3,7 @@ import { NativeLink as Link } from '@/components/custom/native-link';
 import { NativeText as Text } from '@/components/custom/native-text';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { NativeHeading as Heading } from '@/components/custom/native-heading';
-import { NativeCodeBlock as CodeBlock } from '@/components/custom/native-code-block';
+import { CodeBlock, CodeBlockCopyButton } from '@/components/reui/code-block/code-block';
 
 const article = {
     description: 'Configure environments for local development and deployed LongLink services.',
@@ -61,7 +61,9 @@ class Env(Environments):
 env = Env()
 print(env.REQUIRED)`}
                     language="python"
-                />
+                >
+                    <CodeBlockCopyButton />
+                </CodeBlock>
             </Stack>
         </DocumentationArticle>
     );

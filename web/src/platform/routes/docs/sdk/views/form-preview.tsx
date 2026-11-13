@@ -3,7 +3,7 @@ import { useState, type ReactNode } from 'react';
 import { Button } from '@/components/shadcn/button';
 import { NativeText as Text } from '@/components/custom/native-text';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
-import { NativeCodeBlock as CodeBlock } from '@/components/custom/native-code-block';
+import { CodeBlock, CodeBlockCopyButton } from '@/components/reui/code-block/code-block';
 
 /** Exercises the real Form locally and displays submitted fields without sending API requests. */
 export default function FormPreview({ children, stepped = false }: { children: ReactNode; stepped?: boolean }) {
@@ -35,7 +35,6 @@ export default function FormPreview({ children, stepped = false }: { children: R
                     <Text weight="semibold">Submitted fields</Text>
                     <CodeBlock
                         language="json"
-                        hasLanguageLabel={false}
                         code={JSON.stringify(
                             submission.map(([name, value]) => [
                                 name,
@@ -50,7 +49,9 @@ export default function FormPreview({ children, stepped = false }: { children: R
                             null,
                             2
                         )}
-                    />
+                    >
+                        <CodeBlockCopyButton />
+                    </CodeBlock>
                 </Stack>
             )}
         </Stack>

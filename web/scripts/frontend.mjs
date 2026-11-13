@@ -29,6 +29,11 @@ const [bundle] = generateDtsBundle(
                     '@floating-ui/core',
                     '@floating-ui/utils',
                     'clsx',
+                    'shiki',
+                    '@shikijs/types',
+                    '@shikijs/vscode-textmate',
+                    '@types/hast',
+                    '@types/unist',
                 ],
                 allowedTypesLibraries: [],
             },
@@ -95,7 +100,11 @@ const namespace = statements
     )
     .join('\n');
 const names = [...exports].filter((name) => name !== 'FrontendElement').sort();
-const aliases = names.map((name) => `declare const ${name}: typeof NativeFrontend.${name};`).join('\n');
+// Image keeps its callable declaration above to avoid a block-scoped collision with lib.dom.
+const aliases = names
+    .filter((name) => name !== 'Image')
+    .map((name) => `declare const ${name}: typeof NativeFrontend.${name};`)
+    .join('\n');
 const output = `${retained.trimEnd()}\n\n${marker}declare namespace NativeFrontend {\n${namespace}\n}\n\n${aliases}\n`;
 
 if (process.argv.includes('--check')) {

@@ -1,6 +1,6 @@
 import './article.css';
 import { Page } from '@/components/page';
-import { Divider } from '@/components/custom/divider';
+import { Separator } from '@/components/shadcn/separator';
 import { documentationPaths } from '@/platform/publications';
 import { PathBreadcrumb } from '@/components/breadcrumb/path';
 import { useEffect, useEffectEvent, type ReactNode } from 'react';
@@ -216,7 +216,7 @@ export function ArticleFooter({
                     )}
                 </nav>
             ) : null}
-            <Divider />
+            <Separator />
             <div className="article-metadata">
                 <span>{`Last updated: ${dateFormatter.format(new Date(lastUpdated))}`}</span>
                 {editUrl ? (

@@ -3,6 +3,7 @@ import { it, expect } from 'vitest';
 import { compile } from 'tailwindcss';
 import { renderStatic } from '../../render';
 import { Divider } from '@/components/custom/divider';
+import { Separator } from '@/components/shadcn/separator';
 
 it.each([
     { orientation: 'horizontal', dimension: 'height' },
@@ -11,7 +12,7 @@ it.each([
     'gives the $orientation line visible thickness using Base UI orientation attributes',
     async ({ orientation, dimension }) => {
         // Compile the actual line classes against the attributes emitted by the installed Base UI primitive.
-        const output = renderStatic(<Divider orientation={orientation} />);
+        const output = renderStatic(<Separator orientation={orientation} />);
         const line = output.querySelector<HTMLElement>('[data-slot="separator"]');
 
         if (!line) throw new Error('Expected a divider line');

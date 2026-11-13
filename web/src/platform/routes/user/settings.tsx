@@ -4,7 +4,7 @@ import AppearanceSettings from './appearance';
 import { ApiBoundary } from '@/components/api';
 import { Link, useLocation } from 'react-router';
 import { UserRound, Building2 } from 'lucide-react';
-import { Divider } from '@/components/custom/divider';
+import { Separator } from '@/components/shadcn/separator';
 import { PageContainer } from '@/components/page-container';
 import OrganizationManagement from './organization-management';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
@@ -91,7 +91,7 @@ function SettingsPage({ user }: { user: z.output<typeof schemas.zCurrentUser> })
                                         Account
                                     </Heading>
                                 </div>
-                                <Divider />
+                                <Separator />
                                 <NativeTextInput
                                     label="Username"
                                     value={name}

@@ -1,7 +1,7 @@
 import { Page } from '@/components/page';
 import * as pricing from '@/platform/pricing';
 import { Grid } from '@/components/custom/grid';
-import { Divider } from '@/components/custom/divider';
+import { Separator } from '@/components/shadcn/separator';
 import { Database, HardDrive, UsersRound } from 'lucide-react';
 import { NativeText as Text } from '@/components/custom/native-text';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
@@ -53,7 +53,7 @@ export default function Pricing() {
                                                     {resource.resource}
                                                 </Heading>
                                             </Stack>
-                                            <Divider className="w-1/3" />
+                                            <Separator className="data-[orientation=horizontal]:w-1/3" />
                                             <Stack gap={2} align="center">
                                                 <Text as="p" justify="center" weight="semibold">
                                                     {resource.publicIncluded}
@@ -62,7 +62,7 @@ export default function Pricing() {
                                                     Included free
                                                 </Text>
                                             </Stack>
-                                            <Divider className="w-1/3" />
+                                            <Separator className="data-[orientation=horizontal]:w-1/3" />
                                             <Stack gap={2} align="center">
                                                 <Text as="p" justify="center" weight="semibold">
                                                     {resource.rate}

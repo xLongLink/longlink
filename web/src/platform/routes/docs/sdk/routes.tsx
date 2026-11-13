@@ -3,7 +3,12 @@ import { NativeLink as Link } from '@/components/custom/native-link';
 import { NativeText as Text } from '@/components/custom/native-text';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { NativeHeading as Heading } from '@/components/custom/native-heading';
-import { NativeCodeBlock as CodeBlock } from '@/components/custom/native-code-block';
+import {
+    CodeBlock,
+    CodeBlockCopyButton,
+    CodeBlockHeader,
+    CodeBlockTitle
+} from '@/components/reui/code-block/code-block';
 
 const article = {
     description: 'Define API routes in a LongLink project.',
@@ -60,8 +65,12 @@ async def current_user_name(ctx: Context) -> str:
     # Read the user supplied by LongLink for this request.
     return ctx.user.name`}
                     language="python"
-                    title="main.py"
-                />
+                >
+                    <CodeBlockHeader>
+                        <CodeBlockTitle>main.py</CodeBlockTitle>
+                        <CodeBlockCopyButton className="ml-auto" />
+                    </CodeBlockHeader>
+                </CodeBlock>
                 <Heading id="permissions" level={2}>
                     Permissions
                 </Heading>
@@ -87,7 +96,9 @@ router = APIRouter(prefix="/api/invoices")
 @router.post("/{id}/approve", roles=["admin"])
 async def approve_invoice(id: int) -> dict[str, int]:
     return {"approved": id}`}
-                />
+                >
+                    <CodeBlockCopyButton />
+                </CodeBlock>
                 <Text as="p">
                     Import <InlineCode>APIRouter</InlineCode> from <InlineCode>longlink</InlineCode> to use the{' '}
                     <InlineCode>roles</InlineCode> keyword on route decorators. It also works directly on{' '}
@@ -129,7 +140,9 @@ async def approve_invoice(id: int) -> dict[str, int]:
 
 raise HTTPException(status_code=404, detail="Project not found")`}
                     language="python"
-                />
+                >
+                    <CodeBlockCopyButton />
+                </CodeBlock>
             </Stack>
         </DocumentationArticle>
     );

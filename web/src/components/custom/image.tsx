@@ -1,54 +1,75 @@
-import { Text } from './text';
-import { useState } from 'react';
+import { cn } from 'cn';
 import { usePreview } from './preview';
-import { ImageIcon } from 'lucide-react';
+import { useState, type ComponentProps } from 'react';
+import { Skeleton } from '@/components/shadcn/skeleton';
+import { AspectRatio } from '@/components/shadcn/aspect-ratio';
 
-type ImageProps = {
+type ImageProps = Omit<ComponentProps<'img'>, 'src' | 'alt'> & {
     /** Scoped Solution image path, or an image data/blob URL. */
     src: string;
     /** Accessible description of the photo. */
     alt: string;
+    /** Optional frame ratio; omitted images retain their intrinsic proportions. */
+    ratio?: number;
+    srcSet?: never;
+    srcset?: never;
+    children?: never;
+    dangerouslySetInnerHTML?: never;
 };
 
-/** Displays a full-width, landscape photo through the isolated runtime's image capability. */
+/** Resolves images through the isolated runtime's scoped file capability. */
 export function Image(props: ImageProps) {
     // Give each source its own loading state and object-URL lifecycle.
     return <ImageContent key={props.src} {...props} />;
 }
 
 /** Owns one scoped image request and releases its blob URL when unmounted. */
-function ImageContent({ src, alt }: ImageProps) {
+function ImageContent({
+    src,
+    alt,
+    ratio,
+    className,
+    onError,
+    srcSet: _srcSet,
+    srcset: _srcset,
+    children: _children,
+    dangerouslySetInnerHTML: _html,
+    ...props
+}: ImageProps) {
     const inline = src.startsWith('data:image/') || src.startsWith('blob:');
     const preview = usePreview(src, inline);
     const [erroredUrl, setErroredUrl] = useState<string>();
 
-    // Reserve the same landscape frame for loading, errors, and the displayed photo.
-    return (
-        <div className="view-image">
-            {preview.status === 'error' || preview.status === 'unsupported' ? (
-                <Text type="supporting">Photo unavailable</Text>
-            ) : (
-                <div className="view-image-content" role="group" aria-label={alt}>
-                    {preview.status === 'loading' ? (
-                        <div className="view-image-skeleton" aria-hidden="true" />
-                    ) : erroredUrl === preview.url ? (
-                        <div className="view-image-placeholder">
-                            <ImageIcon size={24} aria-hidden="true" />
-                        </div>
-                    ) : (
-                        <>
-                            <img
-                                src={preview.url}
-                                alt={alt}
-                                role={!alt ? 'presentation' : undefined}
-                                aria-hidden={!alt || undefined}
-                                onError={() => setErroredUrl(preview.url)}
-                            />
-                            <div className="view-image-border" aria-hidden="true" />
-                        </>
-                    )}
-                </div>
-            )}
-        </div>
+    // Keep framing opt-in and prevent native source overrides from bypassing the host.
+    const content =
+        preview.status === 'loading' ? (
+            <Skeleton className={ratio === undefined ? 'h-24 w-full' : 'size-full'} aria-hidden="true" />
+        ) : preview.status !== 'ready' || erroredUrl === preview.url ? (
+            <div
+                className="flex size-full items-center justify-center text-sm text-muted-foreground"
+                role="status"
+                aria-label={alt ? `${alt}: Photo unavailable` : undefined}
+            >
+                Photo unavailable
+            </div>
+        ) : (
+            <img
+                {...props}
+                src={preview.url}
+                alt={alt}
+                className={cn(ratio === undefined ? 'h-auto max-w-full' : 'size-full object-cover', className)}
+                onError={(event) => {
+                    setErroredUrl(preview.url);
+                    onError?.(event);
+                }}
+            />
+        );
+
+    return ratio === undefined ? (
+        content
+    ) : (
+        <AspectRatio ratio={ratio} className="overflow-hidden">
+            {content}
+        </AspectRatio>
     );
 }

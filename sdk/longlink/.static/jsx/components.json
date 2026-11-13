@@ -815,7 +815,8 @@
         {
             "name": "CodeBlock",
             "category": "Display",
-            "introduction": "Displays source code using standard copy and highlighting behavior.",
+            "introduction": "Native ReUI CodeBlock composition with syntax highlighting and bounded tokenization.",
+            "guidance": "Pass code and language to the root. Compose CodeBlockHeader, CodeBlockTitle, CodeBlockLanguage, CodeBlockCopyButton, CodeBlockWrapToggle, and CodeBlockExpandButton as needed. Use showLineNumbers, highlightedLines, wrap/defaultWrap, and maxLines directly. For an external scroll viewport, compose CodeBlockContent and label the scroll container. Unknown languages and sources over 50,000 characters render as text. Copy buttons strip ReUI notation comments and expose onCopyError for recovery.",
             "properties": [
                 {
                     "name": "code",
@@ -825,63 +826,64 @@
                 {
                     "name": "language",
                     "type": "string",
-                    "description": "Language for syntax highlighting. Use \"plaintext\" to disable.",
-                    "default": "plaintext"
+                    "description": "Language for syntax highlighting. Unknown languages render as plain text."
                 },
                 {
-                    "name": "title",
-                    "type": "string",
-                    "description": "Filename or label shown in the header bar."
+                    "name": "lines",
+                    "type": "CodeBlockLine[]",
+                    "description": "Pre-highlighted lines. Bypasses client tokenization."
                 },
                 {
-                    "name": "isWrapped",
+                    "name": "highlight",
                     "type": "boolean",
-                    "description": "Wrap long lines instead of enabling horizontal scroll.",
-                    "default": false
+                    "description": "Enable syntax highlighting.",
+                    "default": true
                 },
                 {
-                    "name": "hasLineNumbers",
+                    "name": "showLineNumbers",
                     "type": "boolean",
                     "description": "Show a line number gutter.",
                     "default": false
                 },
                 {
-                    "name": "highlightLines",
-                    "type": "number[]",
-                    "description": "1-indexed line numbers to highlight."
+                    "name": "highlightedLines",
+                    "type": "number[] | string",
+                    "description": "Source lines to highlight, as line numbers or a range such as 2-4,7."
                 },
                 {
-                    "name": "hasCopyButton",
+                    "name": "wrap",
                     "type": "boolean",
-                    "description": "Show a copy-to-clipboard button.",
-                    "default": true
+                    "description": "Controlled soft wrapping."
                 },
                 {
-                    "name": "maxHeight",
-                    "type": "string | number",
-                    "description": "Max height before the block scrolls vertically."
-                },
-                {
-                    "name": "size",
-                    "type": "\"sm\" | \"md\"",
-                    "description": "Text size variant.",
-                    "default": "md"
-                },
-                {
-                    "name": "isCollapsible",
+                    "name": "defaultWrap",
                     "type": "boolean",
-                    "description": "Allows collapsing code from its header when it exceeds collapsibleThreshold.",
+                    "description": "Initial soft wrapping.",
                     "default": false
                 },
                 {
-                    "name": "collapsibleThreshold",
+                    "name": "maxLines",
                     "type": "number",
-                    "description": "Line count above which collapsible code shows a collapse toggle.",
-                    "default": 10
+                    "description": "Caps the built-in viewport height. Compose CodeBlockExpandButton to expand it."
+                },
+                {
+                    "name": "expanded",
+                    "type": "boolean",
+                    "description": "Controlled expanded state under maxLines."
+                },
+                {
+                    "name": "variant",
+                    "type": "\"default\" | \"ghost\"",
+                    "description": "Use ghost when a parent already supplies the surface.",
+                    "default": "default"
+                },
+                {
+                    "name": "children",
+                    "type": "ReactNode",
+                    "description": "Composable header, copy, wrap, expand, line actions, and optional CodeBlockContent."
                 }
             ],
-            "source": "custom",
-            "justification": "Preserves the LongLink code-string API, bounded previews, line highlighting, and collapsible source display used by documentation and Views."
+            "source": "reui"
         },
         {
             "name": "Collapsible",
@@ -1107,36 +1109,44 @@
             "justification": "Coordinates fixed and fullscreen modal frames with the isolated View host; native Dialog does not notify the host about modal activity."
         },
         {
+            "name": "Separator",
+            "category": "Display",
+            "introduction": "Native shadcn separator with Base UI props and default styling.",
+            "properties": [
+                {
+                    "name": "orientation",
+                    "type": "\"horizontal\" | \"vertical\"",
+                    "description": "Orientation of the line.",
+                    "default": "horizontal"
+                },
+                {
+                    "name": "className / style / aria-*",
+                    "type": "native element props",
+                    "description": "Native presentation and accessibility attributes."
+                }
+            ],
+            "source": "shadcn",
+            "reference": "https://ui.shadcn.com/docs/components/base/separator"
+        },
+        {
             "name": "Divider",
             "category": "Display",
-            "introduction": "Separates View content with an optional label and configurable line presentation.",
+            "introduction": "Custom labeled separator composition. Use Separator for an unlabeled line.",
             "properties": [
                 {
                     "name": "label",
                     "type": "ReactNode",
-                    "description": "Optional label centered on the divider."
-                },
-                {
-                    "name": "variant",
-                    "type": "\"subtle\" | \"strong\"",
-                    "description": "Visual weight of the divider line.",
-                    "default": "subtle"
+                    "description": "Required label centered between decorative lines."
                 },
                 {
                     "name": "orientation",
                     "type": "\"horizontal\" | \"vertical\"",
                     "description": "Orientation of the divider.",
                     "default": "horizontal"
-                },
-                {
-                    "name": "isFullBleed",
-                    "type": "boolean",
-                    "description": "Extend the divider to container edges with negative margins.",
-                    "default": false
                 }
             ],
             "source": "custom",
-            "justification": "Composes a separator with optional labels and LongLink layout spacing."
+            "justification": "Composes two decorative shadcn separators around one accessible label; native Separator represents a single line."
         },
         {
             "name": "DropdownMenu",

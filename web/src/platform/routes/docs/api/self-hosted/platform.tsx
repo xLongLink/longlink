@@ -4,7 +4,7 @@ import { NativeText as Text } from '@/components/custom/native-text';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { DataTable, proportional } from '@/components/custom/data-table';
 import { NativeHeading as Heading } from '@/components/custom/native-heading';
-import { NativeCodeBlock as CodeBlock } from '@/components/custom/native-code-block';
+import { CodeBlock, CodeBlockCopyButton } from '@/components/reui/code-block/code-block';
 
 const article = {
     title: 'Platform | LongLink Self Hosted Documentation',
@@ -33,7 +33,9 @@ export default function Platform() {
                     . Provide a separate PostgreSQL database, an SMTP server, and an HTTPS reverse proxy for public
                     access. Compute runs your Solutions and is installed separately.
                 </Text>
-                <CodeBlock language="bash" code="docker run ghcr.io/xlonglink/longlink:latest" />
+                <CodeBlock language="bash" code="docker run ghcr.io/xlonglink/longlink:latest">
+                    <CodeBlockCopyButton />
+                </CodeBlock>
                 <Stack as="section" gap={3}>
                     <Heading id="environment" level={2}>
                         Environment variables

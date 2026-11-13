@@ -2,7 +2,7 @@ import { api } from '@/lib/api';
 import { useApi } from '@/lib/hooks/use-api';
 import { ApiBoundary } from '@/components/api';
 import { Token } from '@/components/custom/token';
-import { Divider } from '@/components/custom/divider';
+import { Separator } from '@/components/shadcn/separator';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { NativeText as Text } from '@/components/custom/native-text';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
@@ -32,7 +32,7 @@ export default function PaymentMethods({ base, canManage }: { base: string; canM
                     <Button label="Add card" size="sm" variant="default" clickAction={registerCard} />
                 )}
             </Stack>
-            <Divider />
+            <Separator />
             {!usage.stripe_enabled ? (
                 <Text as="p" color="secondary">
                     Card registration is not enabled on this deployment.

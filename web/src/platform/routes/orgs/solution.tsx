@@ -12,8 +12,8 @@ import { NativeText as Text } from '@/components/custom/native-text';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { NativeHeading as Heading } from '@/components/custom/native-heading';
 import { OrganizationSwitcher } from '@/platform/components/organization-switcher';
-import { NativeCodeBlock as CodeBlock } from '@/components/custom/native-code-block';
 import { OrganizationBreadcrumb } from '@/platform/components/organization-breadcrumb';
+import { CodeBlock, CodeBlockContent, CodeBlockCopyButton } from '@/components/reui/code-block/code-block';
 import { zUserOrganizationMembership, zOrganizationSolutionSummary } from '@/lib/generated/platform-api-v1/zod.gen';
 
 /** Renders one proxy-backed organization solution after membership resolves. */
@@ -113,7 +113,12 @@ function DeploymentLogs({ solutionId }: { solutionId: string }) {
         <Stack gap={2}>
             <Heading level={1}>Solution deployment has failed</Heading>
             {logs.length ? (
-                <CodeBlock code={logs.join('\n')} hasLineNumbers maxHeight="60vh" width="100%" />
+                <CodeBlock code={logs.join('\n')} showLineNumbers>
+                    <CodeBlockCopyButton />
+                    <div className="max-h-[60vh] overflow-auto" role="region" aria-label="Deployment logs" tabIndex={0}>
+                        <CodeBlockContent />
+                    </div>
+                </CodeBlock>
             ) : (
                 <Text color="secondary">No pod logs are available for this deployment.</Text>
             )}

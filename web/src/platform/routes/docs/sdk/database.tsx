@@ -3,7 +3,7 @@ import { NativeLink as Link } from '@/components/custom/native-link';
 import { NativeText as Text } from '@/components/custom/native-text';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { NativeHeading as Heading } from '@/components/custom/native-heading';
-import { NativeCodeBlock as CodeBlock } from '@/components/custom/native-code-block';
+import { CodeBlock, CodeBlockCopyButton } from '@/components/reui/code-block/code-block';
 
 const article = {
     description: 'Use database services in a LongLink project.',
@@ -60,7 +60,9 @@ async def create_project(ctx: Context) -> None:
     ctx.database.add(Project(name="Launch"))
     await ctx.database.commit()`}
                     language="python"
-                />
+                >
+                    <CodeBlockCopyButton />
+                </CodeBlock>
                 <Heading id="users-management" level={2}>
                     Users management
                 </Heading>
@@ -109,12 +111,16 @@ async def create_project(ctx: Context, owner: User) -> Project:
 # owner_id: owner.id; owner: User relationship
 # created_id: request actor's ID; created_by: User relationship when loaded`}
                     language="python"
-                />
+                >
+                    <CodeBlockCopyButton />
+                </CodeBlock>
                 <Heading id="migrations" level={2}>
                     Migrations
                 </Heading>
                 <Text as="p">After you add or change database models, run migrations to keep the schema aligned:</Text>
-                <CodeBlock code="uv run longlink migrate" language="bash" />
+                <CodeBlock code="uv run longlink migrate" language="bash">
+                    <CodeBlockCopyButton />
+                </CodeBlock>
             </Stack>
         </DocumentationArticle>
     );

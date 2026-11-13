@@ -17,6 +17,8 @@ const nativeComposition = (
                 <AvatarFallback>AC</AvatarFallback>
             </Avatar>
             <GeneratedAvatar name="Account" />
+            <Separator orientation="vertical" id="account-divider" aria-label="Account sections" />
+            <Divider label={<a href="/login">Sign in</a>} />
             <ButtonGroup aria-label="Actions" orientation="vertical">
                 <Button>Save</Button>
                 <Button>Cancel</Button>
@@ -219,10 +221,12 @@ const nativeComposition = (
 );
 
 const _adapters = (
-    <InteractiveCard padding={4} isSelected onChange={() => {}}>
-        <ViewDialog isOpen onOpenChange={() => {}} title="Title" variant="fullscreen" gap={4} paddingInline={4}>
-            {nativeComposition}
-        </ViewDialog>
+    <InteractiveCard size="sm" className="w-full" style={{ minHeight: 100 }} isSelected onChange={() => {}}>
+        <CardContent>
+            <ViewDialog isOpen onOpenChange={() => {}} title="Title" variant="fullscreen" gap={4} paddingInline={4}>
+                {nativeComposition}
+            </ViewDialog>
+        </CardContent>
     </InteractiveCard>
 );
 
@@ -230,6 +234,10 @@ const _adapters = (
 const _badVariant = <Badge variant="not-a-variant" />;
 // @ts-expect-error Native Button no longer accepts the legacy label adapter.
 const _legacyButton = <Button label="Save" />;
+// @ts-expect-error Unlabeled lines use native Separator, not custom Divider.
+const _unlabeledDivider = <Divider />;
+// @ts-expect-error Native Separator has no LongLink full-bleed policy.
+const _legacySeparator = <Separator isFullBleed />;
 // @ts-expect-error Slider inference must preserve numeric scalar values.
 const _badSlider = <Slider defaultValue={10} onValueChange={(value) => value.map(Math.round)} />;
 // @ts-expect-error ViewDialog visibility changes require a controlled callback.

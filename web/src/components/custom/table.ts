@@ -71,13 +71,11 @@ export function tableColumns<T extends Record<string, unknown>>(
 }
 
 export function tableWidths<T extends Record<string, unknown>>(columns: TableColumn<T>[]) {
-    let pixels = 0;
     let proportions = 0;
 
-    // Fixed columns consume their pixels before flexible columns share the remainder.
+    // Flexible columns share the remaining space according to their relative weights.
     for (const column of columns) {
-        if (column.width?.type === 'pixel') pixels += column.width.value;
-        else proportions += column.width?.value ?? 1;
+        if (column.width?.type !== 'pixel') proportions += column.width?.value ?? 1;
     }
 
     let flexibleMinimum = 0;
@@ -94,13 +92,10 @@ export function tableWidths<T extends Record<string, unknown>>(columns: TableCol
     }
 
     return columns.map((column) => {
-        if (column.width?.type === 'pixel') return { width: `${column.width.value}px`, minWidth: column.width.value };
+        if (column.width?.type === 'pixel') return column.width.value;
 
         const share = proportions > 0 ? (column.width?.value ?? 1) / proportions : 0;
 
-        return {
-            width: pixels ? `calc((100% - ${pixels}px) * ${share})` : `${share * 100}%`,
-            minWidth: flexibleMinimum * share
-        };
+        return flexibleMinimum * share;
     });
 }

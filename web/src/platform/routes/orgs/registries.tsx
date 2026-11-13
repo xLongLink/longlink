@@ -4,9 +4,9 @@ import { useState } from 'react';
 import { FormDialog } from './form-dialog';
 import { useApi } from '@/lib/hooks/use-api';
 import { Form } from '@/components/custom/form';
-import { Divider } from '@/components/custom/divider';
 import { DeletionDialog } from '@/components/deletion';
 import { Illustration } from '@/components/illustration';
+import { Separator } from '@/components/shadcn/separator';
 import { TextInput } from '@/components/custom/text-input';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { NativeText as Text } from '@/components/custom/native-text';
@@ -59,7 +59,7 @@ export default function Registries({ base, canMaintain }: { base: string; canMai
                         />
                     )}
                 </Stack>
-                <Divider />
+                <Separator />
                 <DataTable
                     data={connections}
                     idKey="id"

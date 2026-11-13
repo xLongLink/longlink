@@ -1,16 +1,16 @@
 import { Circle } from 'lucide-react';
+import { Card } from '@/components/shadcn/card';
 import { useState, type ReactNode } from 'react';
 import { Switch } from '@/components/shadcn/switch';
 import { documentationLastUpdated } from '@/lib/documentation';
 import { componentDocumentation } from '@/platform/publications';
 import { DocumentationArticle } from '@/components/layouts/article';
 import { NativeText as Text } from '@/components/custom/native-text';
-import { InteractiveCard } from '@/components/custom/interactive-card';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { DataTable, proportional } from '@/components/custom/data-table';
 import { NativeHeading as Heading } from '@/components/custom/native-heading';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/shadcn/tabs';
-import { NativeCodeBlock as CodeBlock } from '@/components/custom/native-code-block';
+import { CodeBlock, CodeBlockCopyButton } from '@/components/reui/code-block/code-block';
 
 type ViewProperty = { name: string; type: string; description?: string };
 
@@ -22,7 +22,7 @@ function ExampleWindow({ example }: { example: ViewExample }) {
 
     // Bound both modes to the same window with a persistent header and scrollable body.
     return (
-        <InteractiveCard height={480} padding={0} isClipped>
+        <Card className="py-0" style={{ height: 480 }}>
             <div className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden">
                 <div className="shrink-0 border-b-(length:--border-width) border-(--color-border) bg-surface p-2">
                     <Stack direction="horizontal" justify="between" align="center" gap={3} paddingInline={2}>
@@ -52,14 +52,15 @@ function ExampleWindow({ example }: { example: ViewExample }) {
                         <CodeBlock
                             code={example.code}
                             language="jsx"
-                            hasLineNumbers
-                            hasLanguageLabel={false}
-                            className="h-full [&>[data-scroll-axis]]:flex-1"
-                        />
+                            showLineNumbers
+                            className="h-full"
+                        >
+                            <CodeBlockCopyButton />
+                        </CodeBlock>
                     )}
                 </div>
             </div>
-        </InteractiveCard>
+        </Card>
     );
 }
 
@@ -131,12 +132,9 @@ export default function ViewLayout({
                         )}
                     </Text>
                 )}
-                <CodeBlock
-                    code={`longlink docs component ${name}`}
-                    language="bash"
-                    hasLanguageLabel={false}
-                    isWrapped
-                />
+                <CodeBlock code={`longlink docs component ${name}`} language="bash" wrap>
+                    <CodeBlockCopyButton />
+                </CodeBlock>
                 {runtime ? (
                     children
                 ) : (

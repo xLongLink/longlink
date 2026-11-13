@@ -11,6 +11,7 @@ import { useCurrentUser } from '@/lib/hooks/use-user';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQueryClient } from '@tanstack/react-query';
 import { clearSessionQueries } from '@/lib/react-query';
+import { Separator } from '@/components/shadcn/separator';
 import { useFragmentToken } from '@/lib/hooks/use-fragment-token';
 import { NativeLink as Link } from '@/components/custom/native-link';
 import { NativeText as Text } from '@/components/custom/native-text';
@@ -154,7 +155,7 @@ export default function VerifyEmail() {
                         <Button label="Create account" type="submit" variant="default" />
                     </Stack>
                 </form>
-                <Divider />
+                <Separator />
                 <Text as="p" justify="center" type="supporting">
                     By continuing, you agree to our <br />
                     <Link href="/terms/" hasUnderline type="inherit">

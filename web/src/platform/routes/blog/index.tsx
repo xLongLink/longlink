@@ -1,7 +1,7 @@
 import { BookOpen } from 'lucide-react';
 import { Page } from '@/components/page';
 import { Grid } from '@/components/custom/grid';
-import { Divider } from '@/components/custom/divider';
+import { Separator } from '@/components/shadcn/separator';
 import { NativeText as Text } from '@/components/custom/native-text';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { NativeButton as Button } from '@/components/custom/native-button';
@@ -38,7 +38,7 @@ export default function Blog() {
                                             Why LongLink
                                         </Heading>
                                     </Stack>
-                                    <Divider className="my-10 w-1/3 self-center" />
+                                    <Separator className="my-10 data-[orientation=horizontal]:w-1/3 self-center" />
                                     <Text as="p" color="secondary" justify="center" textWrap="pretty">
                                         The idea behind LongLink
                                     </Text>

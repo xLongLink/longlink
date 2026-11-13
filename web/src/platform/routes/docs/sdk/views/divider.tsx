@@ -1,5 +1,6 @@
 import ViewLayout from './view-layout';
 import { Divider } from '@/components/custom/divider';
+import { Separator } from '@/components/shadcn/separator';
 
 /** Documents Divider in LongLink Views. */
 export default function DividerPage() {
@@ -8,13 +9,12 @@ export default function DividerPage() {
         <ViewLayout
             name="Divider"
             properties={[
-                { name: 'label', type: 'ReactNode', description: 'Optional label centered on the divider.' },
-                { name: 'variant', type: '"subtle" | "strong"', description: 'Visual weight of the divider line.' },
+                { name: 'label', type: 'ReactNode', description: 'Required label centered between decorative lines.' },
                 { name: 'orientation', type: '"horizontal" | "vertical"', description: 'Orientation of the divider.' },
                 {
-                    name: 'isFullBleed',
-                    type: 'boolean',
-                    description: 'Extend the divider to container edges with negative margins.'
+                    name: 'Separator',
+                    type: 'shadcn Separator props',
+                    description: 'Use the native Separator for unlabeled lines, with HTML attributes and orientation.'
                 }
             ]}
             example={{
@@ -24,8 +24,9 @@ export default function DividerPage() {
   return (
     <Stack gap={3}>
       <Text>Before</Text>
-      <Divider />
+      <Separator />
       <Text>After</Text>
+      <Divider label="or" />
     </Stack>
   );
 }`
@@ -37,5 +38,10 @@ export default function DividerPage() {
 /** Renders the page's divider example for documentation and the catalog. */
 export function DividerExample() {
     // Display the standard content separator.
-    return <Divider />;
+    return (
+        <>
+            <Separator />
+            <Divider label="or" />
+        </>
+    );
 }

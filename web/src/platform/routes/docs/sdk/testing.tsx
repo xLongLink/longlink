@@ -3,7 +3,7 @@ import { NativeLink as Link } from '@/components/custom/native-link';
 import { NativeText as Text } from '@/components/custom/native-text';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { NativeHeading as Heading } from '@/components/custom/native-heading';
-import { NativeCodeBlock as CodeBlock } from '@/components/custom/native-code-block';
+import { CodeBlock, CodeBlockCopyButton } from '@/components/reui/code-block/code-block';
 
 const article = {
     description: 'Test LongLink projects and their Views.',
@@ -39,7 +39,9 @@ export default function DocsArticleRoute() {
                         not depend on external services or local setup.
                     </Text>
                 </Stack>
-                <CodeBlock code="uv run pytest <filename>" language="bash" />
+                <CodeBlock code="uv run pytest <filename>" language="bash">
+                    <CodeBlockCopyButton />
+                </CodeBlock>
                 <Heading id="example" level={2}>
                     Example
                 </Heading>
@@ -57,7 +59,9 @@ def test_healthcheck() -> None:
 
     assert response.status_code == 200`}
                     language="python"
-                />
+                >
+                    <CodeBlockCopyButton />
+                </CodeBlock>
             </Stack>
         </DocumentationArticle>
     );

@@ -2,6 +2,7 @@
 import { act, useState } from 'react';
 import { it, expect, vi } from 'vitest';
 import userEvent from '@testing-library/user-event';
+import { CardContent } from '@/components/shadcn/card';
 import { renderStatic, withMounted } from '../../render';
 import { LinkNavigationContext } from '@/components/custom/contexts';
 import { InteractiveCard } from '@/components/custom/interactive-card';
@@ -35,8 +36,10 @@ it('gives selection priority over actions and navigation and leaves nested contr
                     setSelected(next);
                 }}
             >
-                <p>Order contents</p>
-                <button onClick={nested}>Remove</button>
+                <CardContent>
+                    <p>Order contents</p>
+                    <button onClick={nested}>Remove</button>
+                </CardContent>
             </InteractiveCard>
         );
     }
@@ -119,7 +122,7 @@ it('keeps disabled primary controls focusable without live destinations or activ
         </LinkNavigationContext>,
         async (output) => {
             const user = userEvent.setup();
-            const controls = output.querySelectorAll<HTMLElement>('.view-card-control');
+            const controls = output.querySelectorAll<HTMLElement>('[data-slot="card-control"]');
 
             for (const control of controls) {
                 control.focus();
@@ -132,7 +135,7 @@ it('keeps disabled primary controls focusable without live destinations or activ
 
             await act(async () => {
                 for (const text of output.querySelectorAll('p')) text.click();
-                output.querySelector<HTMLButtonElement>('button:not(.view-card-control)')?.click();
+                output.querySelector<HTMLButtonElement>('button:not([data-slot="card-control"])')?.click();
             });
             expect(output.querySelector('a')?.hasAttribute('href')).toBe(false);
             expect(action).not.toHaveBeenCalled();
@@ -157,7 +160,7 @@ it('routes plain surface clicks through the validated primary link without steal
         </LinkNavigationContext>,
         async (output) => {
             await act(async () => {
-                output.querySelector<HTMLAnchorElement>('a:not(.view-card-control)')?.click();
+                output.querySelector<HTMLAnchorElement>('a:not([data-slot="card-control"])')?.click();
             });
             expect(nested).toHaveBeenCalledOnce();
             expect(navigate).not.toHaveBeenCalled();
@@ -185,7 +188,7 @@ it('forwards modifier and middle gestures using the resolved destination and rej
                 </InteractiveCard>
             </LinkNavigationContext>,
             async (output) => {
-                const cards = output.querySelectorAll<HTMLElement>('.view-card');
+                const cards = output.querySelectorAll<HTMLElement>('[data-slot="card"]');
                 const anchor = cards[0]?.querySelector('a');
 
                 if (!anchor) throw new Error('Expected primary link');
@@ -258,4 +261,30 @@ it('does not activate on text selection or inert surfaces and keeps decorative a
             expect(action).toHaveBeenCalledOnce();
         }
     );
+});
+
+it('lets native mouse handlers cancel middle-button navigation from composed content', async () => {
+    const open = vi.spyOn(window, 'open').mockImplementation(() => null);
+    const mouseUp = vi.fn((event: React.MouseEvent) => event.preventDefault());
+
+    try {
+        await withMounted(
+            <InteractiveCard href="https://example.com/orders" size="sm" onMouseUp={mouseUp}>
+                <CardContent>Order</CardContent>
+            </InteractiveCard>,
+            async (output) => {
+                const content = output.querySelector('[data-slot="card-content"]');
+
+                if (!content) throw new Error('Expected composed content');
+
+                await act(async () => {
+                    content.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true, button: 1 }));
+                });
+                expect(mouseUp).toHaveBeenCalledOnce();
+                expect(open).not.toHaveBeenCalled();
+            }
+        );
+    } finally {
+        open.mockRestore();
+    }
 });

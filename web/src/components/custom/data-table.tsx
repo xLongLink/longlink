@@ -1,13 +1,36 @@
 import type { TableColumn } from './table';
 import { EmptyState } from '@/components/custom/empty-state';
-import { useTable, type ColumnDef } from '@tanstack/react-table';
 import { renderTableValue, tableColumns, tableWidths } from './table';
 import { DataGridTable } from '@/components/reui/data-grid/data-grid-table';
-import { DataGrid, dataGridFeatures, type DataGridFeatures } from '@/components/reui/data-grid/data-grid';
+import { useTable, type CellContext, type ColumnDef } from '@tanstack/react-table';
+import { DataGridScrollArea } from '@/components/reui/data-grid/data-grid-scroll-area';
+import {
+    DataGrid,
+    DataGridContainer,
+    dataGridFeatures,
+    type DataGridColumnMeta,
+    type DataGridFeatures
+} from '@/components/reui/data-grid/data-grid';
 
 export { proportional, pixel } from './table';
 
 export type { ColumnWidth } from './table';
+
+type DataTableColumnMeta<T extends Record<string, unknown>> = DataGridColumnMeta<T> & {
+    renderCell?: TableColumn<T>['renderCell'];
+};
+
+/** Keeps cell component identity stable when callers replace their column callbacks. */
+function DataTableCell<T extends Record<string, unknown>>({
+    column,
+    row,
+    getValue
+}: CellContext<DataGridFeatures, T, unknown>) {
+    // SAFETY: DataTable owns the column definitions and their renderer metadata.
+    const meta = column.columnDef.meta as DataTableColumnMeta<T>;
+
+    return meta.renderCell ? meta.renderCell(row.original) : renderTableValue(getValue());
+}
 
 /** Adapts data-driven columns and domain row identities to ReUI's DataGrid. */
 export function DataTable<T extends Record<string, unknown>>({
@@ -16,7 +39,7 @@ export function DataTable<T extends Record<string, unknown>>({
     hasHover = false,
     isStriped = false,
     idKey,
-    density = 'compact',
+    density,
     verticalAlign = 'middle'
 }: {
     data: T[];
@@ -35,18 +58,26 @@ export function DataTable<T extends Record<string, unknown>>({
         const alignment =
             column.align === 'center' ? 'text-center' : column.align === 'end' ? 'text-end' : 'text-start';
 
+        const meta: DataTableColumnMeta<T> = {
+            renderCell: column.renderCell,
+            headerClassName: alignment,
+            cellClassName: alignment
+        };
+
         return {
             id: column.key,
             accessorFn: (row) => row[column.key],
             header: () => column.header ?? column.key.charAt(0).toUpperCase() + column.key.slice(1),
-            cell: ({ row }) =>
-                column.renderCell ? column.renderCell(row.original) : renderTableValue(row.original[column.key]),
-            meta: { ...widths[index], headerClassName: alignment, cellClassName: alignment }
+            cell: DataTableCell,
+            size: widths[index],
+            minSize: widths[index],
+            meta
         };
     });
 
     const table = useTable({
         features: dataGridFeatures,
+        manualPagination: true,
         data,
         columns: definitions,
         // oxlint-disable-next-line anti-slop/no-runtime-typeof -- Native callers choose a domain key or identity callback.
@@ -69,7 +100,13 @@ export function DataTable<T extends Record<string, unknown>>({
                 bodyRow: hasHover ? 'hover:bg-muted/40' : undefined
             }}
         >
-            <DataGridTable<T> renderHeader={resolvedColumns.length > 0} />
+            <DataGridContainer>
+                <DataGridScrollArea orientation="horizontal">
+                    <div style={{ minWidth: widths.reduce((total, width) => total + width, 0) }}>
+                        <DataGridTable renderHeader={resolvedColumns.length > 0} />
+                    </div>
+                </DataGridScrollArea>
+            </DataGridContainer>
         </DataGrid>
     );
 }

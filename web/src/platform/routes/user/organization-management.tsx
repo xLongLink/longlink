@@ -4,9 +4,9 @@ import { useApiError } from '@/lib/errors';
 import { Badge } from '@/components/reui/badge';
 import { ExternalLink, Plus } from 'lucide-react';
 import { apiQueryOptions } from '@/lib/react-query';
-import { Divider } from '@/components/custom/divider';
 import CreateOrganization from './create-organization';
 import { Illustration } from '@/components/illustration';
+import { Separator } from '@/components/shadcn/separator';
 import { ViewDialog } from '@/components/custom/view-dialog';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { NativeLink as Link } from '@/components/custom/native-link';
@@ -82,7 +82,7 @@ export default function OrganizationManagement({ presentation }: { presentation:
                                 onClick={() => setSelected({ type: 'create' })}
                             />
                         </Stack>
-                        <Divider />
+                        <Separator />
                     </>
                 ) : !onboarding ? (
                     <Stack direction="horizontal" justify="between" align="center" wrap="wrap" className="min-h-12">

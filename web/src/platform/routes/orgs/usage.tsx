@@ -1,11 +1,11 @@
 import { ExternalLink } from 'lucide-react';
 import { useApi } from '@/lib/hooks/use-api';
 import { ApiBoundary } from '@/components/api';
-import { Divider } from '@/components/custom/divider';
+import { Separator } from '@/components/shadcn/separator';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { NativeText as Text } from '@/components/custom/native-text';
-import { InteractiveCard } from '@/components/custom/interactive-card';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
+import { Card, CardHeader, CardContent } from '@/components/shadcn/card';
 import { NativeButton as Button } from '@/components/custom/native-button';
 import { NativeHeading as Heading } from '@/components/custom/native-heading';
 import { Progress, ProgressLabel, ProgressValue } from '@/components/shadcn/progress';
@@ -24,72 +24,59 @@ export default function Usage({ base }: { base: string }) {
                     Usage
                 </Heading>
             </Stack>
-            <Divider />
-            <InteractiveCard padding={0} isClipped>
-                <Stack gap={0}>
-                    <Stack
-                        direction="horizontal"
-                        align="center"
-                        justify="between"
-                        gap={4}
-                        paddingInline={4}
-                        paddingBlock={2}
-                        className="bg-muted"
-                    >
-                        <Stack gap={0}>
-                            <Heading level={4} accessibilityLevel={3}>
-                                Monthly usage
-                            </Heading>
-                            <Text color="secondary">
-                                {usage.has_payment_method ? 'Provisioned capacity' : 'Free tier limits'}
-                            </Text>
-                        </Stack>
-                        <Button
-                            label="See prices"
-                            size="sm"
-                            href="/pricing/"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            endContent={<ExternalLink className="size-4" aria-hidden="true" />}
-                        />
+            <Separator />
+            <Card>
+                <CardHeader className="flex items-center justify-between border-b">
+                    <Stack gap={0}>
+                        <Heading level={4} accessibilityLevel={3}>
+                            Monthly usage
+                        </Heading>
+                        <Text color="secondary">
+                            {usage.has_payment_method ? 'Provisioned capacity' : 'Free tier limits'}
+                        </Text>
                     </Stack>
-                    <Divider />
-                    <Stack gap={4} padding={4}>
-                        <Progress value={usage.solutions} max={usage.max_solutions}>
-                            <ProgressLabel>Solutions</ProgressLabel>
-                            <ProgressValue>{() => `${usage.solutions} / ${usage.max_solutions}`}</ProgressValue>
-                        </Progress>
-                        <Progress value={usage.users} max={userScale}>
-                            <ProgressLabel>Users</ProgressLabel>
-                            <ProgressValue>{() => `${usage.users} / ${userScale}`}</ProgressValue>
-                        </Progress>
-                        {(['storage', 'database'] as const).map((resource) => (
-                            <ApiBoundary
-                                key={resource}
-                                fallback={<Text color="secondary">Loading {resource} usage…</Text>}
-                                fallbackRender={({ resetErrorBoundary }) => (
-                                    <Stack direction="horizontal" align="center" justify="between" gap={4}>
-                                        <Text color="secondary">
-                                            {resource === 'storage' ? 'File storage' : 'Database storage'} usage
-                                            unavailable.
-                                        </Text>
-                                        <Button label="Retry" onClick={resetErrorBoundary} />
-                                    </Stack>
-                                )}
-                            >
-                                <UsageMeter
-                                    base={base}
-                                    resource={resource}
-                                    included={
-                                        resource === 'storage' ? usage.free_storage_bytes : usage.free_database_bytes
-                                    }
-                                    hasPaymentMethod={usage.has_payment_method}
-                                />
-                            </ApiBoundary>
-                        ))}
-                    </Stack>
-                </Stack>
-            </InteractiveCard>
+                    <Button
+                        label="See prices"
+                        size="sm"
+                        href="/pricing/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        endContent={<ExternalLink className="size-4" aria-hidden="true" />}
+                    />
+                </CardHeader>
+                <CardContent className="flex flex-col gap-4">
+                    <Progress value={usage.solutions} max={usage.max_solutions}>
+                        <ProgressLabel>Solutions</ProgressLabel>
+                        <ProgressValue>{() => `${usage.solutions} / ${usage.max_solutions}`}</ProgressValue>
+                    </Progress>
+                    <Progress value={usage.users} max={userScale}>
+                        <ProgressLabel>Users</ProgressLabel>
+                        <ProgressValue>{() => `${usage.users} / ${userScale}`}</ProgressValue>
+                    </Progress>
+                    {(['storage', 'database'] as const).map((resource) => (
+                        <ApiBoundary
+                            key={resource}
+                            fallback={<Text color="secondary">Loading {resource} usage…</Text>}
+                            fallbackRender={({ resetErrorBoundary }) => (
+                                <Stack direction="horizontal" align="center" justify="between" gap={4}>
+                                    <Text color="secondary">
+                                        {resource === 'storage' ? 'File storage' : 'Database storage'} usage
+                                        unavailable.
+                                    </Text>
+                                    <Button label="Retry" onClick={resetErrorBoundary} />
+                                </Stack>
+                            )}
+                        >
+                            <UsageMeter
+                                base={base}
+                                resource={resource}
+                                included={resource === 'storage' ? usage.free_storage_bytes : usage.free_database_bytes}
+                                hasPaymentMethod={usage.has_payment_method}
+                            />
+                        </ApiBoundary>
+                    ))}
+                </CardContent>
+            </Card>
         </Stack>
     );
 }

@@ -9,6 +9,24 @@ export * from '../src/components/shadcn/empty';
 export { EmptyState } from '../src/components/custom/empty-state';
 export * from '../src/components/shadcn/dropdown-menu';
 export * from '../src/components/shadcn/table';
+export { Separator } from '../src/components/shadcn/separator';
+export { Divider } from '../src/components/custom/divider';
+export { Image } from '../src/components/custom/image';
+export {
+    CodeBlock,
+    CodeBlockContent,
+    CodeBlockCopyButton,
+    CodeBlockDownloadButton,
+    CodeBlockExpandButton,
+    CodeBlockHeader,
+    CodeBlockLanguage,
+    CodeBlockLineActions,
+    CodeBlockTitle,
+    CodeBlockWrapToggle,
+    useCodeBlockConfig,
+    useCodeBlockFolding,
+    useCodeBlockSelection
+} from '../src/components/reui/code-block/code-block';
 export { DataTable } from '../src/components/custom/data-table';
 export { Input } from '../src/components/shadcn/input';
 export { Textarea } from '../src/components/shadcn/textarea';

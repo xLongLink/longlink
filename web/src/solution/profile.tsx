@@ -1,5 +1,5 @@
 import { SidebarContext } from '@/lib/sidebar';
-import { Divider } from '@/components/custom/divider';
+import { Separator } from '@/components/shadcn/separator';
 import { useContext, useLayoutEffect, useState } from 'react';
 import { Button, buttonVariants } from '@/components/shadcn/button';
 import { Popover as PopoverPrimitive } from '@base-ui/react/popover';
@@ -78,7 +78,7 @@ export function DevelopmentProfile() {
                         </Button>
                     ))}
                 </section>
-                <Divider />
+                <Separator />
                 <a
                     className={buttonVariants({
                         variant: 'ghost',

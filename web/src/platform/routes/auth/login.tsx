@@ -11,6 +11,7 @@ import { Divider } from '@/components/custom/divider';
 import { useCurrentUser } from '@/lib/hooks/use-user';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { clearSessionQueries } from '@/lib/react-query';
+import { Separator } from '@/components/shadcn/separator';
 import { GoogleIcon } from '@/components/svg/google-icon';
 import { emailSchema, passwordSchema } from './validation';
 import { GitHubIcon } from '@/components/svg/git-hub-icon';
@@ -87,7 +88,7 @@ export default function Login() {
         >
             <title>Sign In | LongLink</title>
             <div className="flex flex-col gap-4">
-                <Divider />
+                <Separator />
                 <div className="flex flex-col gap-2">
                     <form
                         noValidate

@@ -3,6 +3,7 @@ import { accentColors } from '@/lib/appearance';
 import { Button } from '@/components/shadcn/button';
 import { useUpdateUser } from '@/lib/hooks/use-user';
 import { useAppearance } from '@/lib/hooks/use-appearance';
+import { Card, CardContent } from '@/components/shadcn/card';
 import { NativeText as Text } from '@/components/custom/native-text';
 import { InteractiveCard } from '@/components/custom/interactive-card';
 import { NativeHeading as Heading } from '@/components/custom/native-heading';
@@ -29,7 +30,7 @@ export default function AppearanceSettings() {
                         <InteractiveCard
                             key={value}
                             label={label}
-                            padding={2}
+                            size="sm"
                             isSelected={appearance.theme === value}
                             isDisabled={userUpdate.isPending}
                             onChange={() => {
@@ -37,7 +38,7 @@ export default function AppearanceSettings() {
                                     userUpdate.mutate({ theme: value });
                             }}
                         >
-                            <div className="flex flex-col gap-(--spacing-2)">
+                            <CardContent className="flex flex-col gap-2">
                                 <Text>{label}</Text>
                                 <img
                                     src={`/images/${image}`}
@@ -46,7 +47,7 @@ export default function AppearanceSettings() {
                                     height={1024}
                                     className="aspect-3/2 w-40 max-w-full rounded-md object-cover"
                                 />
-                            </div>
+                            </CardContent>
                         </InteractiveCard>
                     ))}
                 </div>
@@ -55,8 +56,8 @@ export default function AppearanceSettings() {
                 <Heading level={4} accessibilityLevel={3}>
                     Appearance
                 </Heading>
-                <InteractiveCard padding={3}>
-                    <div className="flex flex-col gap-(--spacing-2)" role="group" aria-label="Accent color">
+                <Card size="sm">
+                    <CardContent className="flex flex-col gap-2" role="group" aria-label="Accent color">
                         <Text>Accent color</Text>
                         <div className="flex flex-wrap gap-(--spacing-2)">
                             {accentColors.map((accent) => (
@@ -85,8 +86,8 @@ export default function AppearanceSettings() {
                                 </Button>
                             ))}
                         </div>
-                    </div>
-                </InteractiveCard>
+                    </CardContent>
+                </Card>
             </div>
             {userUpdate.isPending && (
                 <Text type="supporting" color="secondary" role="status">
