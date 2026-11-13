@@ -362,7 +362,7 @@ function DataGridColumnHeaderInner<TData extends object, TValue>({
                         ref={menuTriggerRef}
                         render={
                             <Button variant="ghost" className={headerButtonClassName} disabled={isLoading}>
-                                {icon && icon}
+                                {icon}
                                 {resolvedTitle}
                                 {sortIcon}
                             </Button>
@@ -405,7 +405,7 @@ function DataGridColumnHeaderInner<TData extends object, TValue>({
         return (
             <div className="-ms-2 flex h-full items-center">
                 <Button variant="ghost" className={headerButtonClassName} disabled={isLoading} onClick={handleSort}>
-                    {icon && icon}
+                    {icon}
                     {resolvedTitle}
                     {sortIcon}
                 </Button>
@@ -415,7 +415,7 @@ function DataGridColumnHeaderInner<TData extends object, TValue>({
 
     return (
         <div className={headerLabelClassName}>
-            {icon && icon}
+            {icon}
             {resolvedTitle}
         </div>
     );

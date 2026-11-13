@@ -1190,8 +1190,8 @@ function DataGrid<TFeatures extends TableFeatures, TData extends object>({
     const mergedProps: DataGridProps<TFeatures, TData> = {
         ...defaultProps,
         ...props,
-        tableLayout: { ...defaultProps.tableLayout, ...(props.tableLayout || {}) },
-        tableClassNames: { ...defaultProps.tableClassNames, ...(props.tableClassNames || {}) }
+        tableLayout: { ...defaultProps.tableLayout, ...props.tableLayout },
+        tableClassNames: { ...defaultProps.tableClassNames, ...props.tableClassNames }
     };
 
     // Ensure table is provided

@@ -464,7 +464,7 @@ const CodeBlockLineRow = memo(function CodeBlockLineRow({
     domIdBase,
     startLine = 1,
     onSelect,
-    foldable,
+    foldable: _foldable,
     foldRegion,
     folded,
     onToggleFold

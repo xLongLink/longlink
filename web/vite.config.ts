@@ -55,7 +55,33 @@ export default defineConfig(({ mode }) => {
                 { name: 'anti-slop', specifier: './tools/oxlint/anti-slop/index.ts' }
             ],
             plugins: ['oxc', 'typescript', 'unicorn', 'react'],
+            rules: {
+                'no-restricted-imports': [
+                    'error',
+                    {
+                        patterns: [
+                            {
+                                group: ['@/components/ui/*', '**/components/ui/*', '../ui/*'],
+                                message:
+                                    'Import directly from components/shadcn, components/reui, or components/custom.'
+                            }
+                        ]
+                    }
+                ]
+            },
             overrides: [
+                // Keep registry code upstream-compatible without applying LongLink's authoring conventions.
+                {
+                    files: ['src/components/reui/**/*'],
+                    rules: {
+                        'react/exhaustive-deps': 'warn',
+                        'typescript/no-base-to-string': 'off',
+                        'react/rules-of-hooks': 'error',
+                        'react/refs': 'off',
+                        'react/immutability': 'off',
+                        'react/set-state-in-effect': 'off'
+                    }
+                },
                 {
                     files: ['src/components/shadcn/**/*', 'src/components/reui/**/*'],
                     rules: {
@@ -71,67 +97,59 @@ export default defineConfig(({ mode }) => {
                             }
                         ]
                     }
-                }
-            ],
-            rules: {
-                'no-restricted-imports': [
-                    'error',
-                    {
-                        patterns: [
+                },
+                {
+                    files: ['**/*'],
+                    excludeFiles: ['src/components/reui/**/*'],
+                    rules: {
+                        'oxc/no-accumulating-spread': 'error',
+                        'anti-slop/no-array-filter-map': 'error',
+                        'anti-slop/no-reduce-accumulator-copy': 'error',
+                        'anti-slop/no-chained-type-assertions': 'error',
+                        'anti-slop/no-conditional-empty-object-spread': 'error',
+                        'anti-slop/no-known-value-widening': 'error',
+                        'anti-slop/no-module-mocking': 'error',
+                        'anti-slop/no-object-parameters': 'error',
+                        'anti-slop/no-reflect-apply': 'error',
+                        'anti-slop/no-reflect-get': 'error',
+                        'anti-slop/no-runtime-typeof': 'error',
+                        'anti-slop/no-shape-in-symbol-names': 'error',
+                        'anti-slop/no-unknown-parameters': 'error',
+                        'anti-slop/no-unknown-returns': 'error',
+                        'anti-slop/no-unknown-type-aliases': 'error',
+                        'anti-slop/no-unsafe-dictionary-type': 'error',
+                        'anti-slop/no-widen-then-assert': 'error',
+                        'anti-slop/require-readable-spacing': 'error',
+                        'anti-slop/require-safety-comment-for-type-assertion': 'error',
+                        'perfectionist/sort-imports': [
+                            'error',
                             {
-                                group: ['@/components/ui/*', '**/components/ui/*', '../ui/*'],
-                                message:
-                                    'Import directly from components/shadcn, components/reui, or components/custom.'
+                                fallbackSort: { type: 'alphabetical' },
+                                groups: ['import'],
+                                newlinesBetween: 0,
+                                order: 'asc',
+                                type: 'line-length'
                             }
-                        ]
+                        ],
+                        'react/no-children-prop': 'off',
+                        'react/no-did-update-set-state': 'off',
+                        'react/exhaustive-deps': 'warn',
+                        'react/only-export-components': 'off',
+                        'react/rules-of-hooks': 'error',
+                        'typescript/await-thenable': 'off',
+                        'typescript/no-base-to-string': 'off',
+                        'typescript/no-explicit-any': 'error',
+                        'typescript/no-floating-promises': 'error',
+                        'typescript/no-misused-promises': 'error',
+                        'typescript/no-non-null-assertion': 'error',
+                        'typescript/no-redundant-type-constituents': 'off',
+                        'typescript/no-unnecessary-type-assertion': 'error',
+                        'typescript/no-unsafe-assignment': 'error',
+                        'typescript/unbound-method': 'off',
+                        'react/no-array-index-key': 'error'
                     }
-                ],
-                'oxc/no-accumulating-spread': 'error',
-                'anti-slop/no-array-filter-map': 'error',
-                'anti-slop/no-reduce-accumulator-copy': 'error',
-                'anti-slop/no-chained-type-assertions': 'error',
-                'anti-slop/no-conditional-empty-object-spread': 'error',
-                'anti-slop/no-known-value-widening': 'error',
-                'anti-slop/no-module-mocking': 'error',
-                'anti-slop/no-object-parameters': 'error',
-                'anti-slop/no-reflect-apply': 'error',
-                'anti-slop/no-reflect-get': 'error',
-                'anti-slop/no-runtime-typeof': 'error',
-                'anti-slop/no-shape-in-symbol-names': 'error',
-                'anti-slop/no-unknown-parameters': 'error',
-                'anti-slop/no-unknown-returns': 'error',
-                'anti-slop/no-unknown-type-aliases': 'error',
-                'anti-slop/no-unsafe-dictionary-type': 'error',
-                'anti-slop/no-widen-then-assert': 'error',
-                'anti-slop/require-readable-spacing': 'error',
-                'anti-slop/require-safety-comment-for-type-assertion': 'error',
-                'perfectionist/sort-imports': [
-                    'error',
-                    {
-                        fallbackSort: { type: 'alphabetical' },
-                        groups: ['import'],
-                        newlinesBetween: 0,
-                        order: 'asc',
-                        type: 'line-length'
-                    }
-                ],
-                'react/no-children-prop': 'off',
-                'react/no-did-update-set-state': 'off',
-                'react/exhaustive-deps': 'warn',
-                'react/only-export-components': 'off',
-                'react/rules-of-hooks': 'error',
-                'typescript/await-thenable': 'off',
-                'typescript/no-base-to-string': 'off',
-                'typescript/no-explicit-any': 'error',
-                'typescript/no-floating-promises': 'error',
-                'typescript/no-misused-promises': 'error',
-                'typescript/no-non-null-assertion': 'error',
-                'typescript/no-redundant-type-constituents': 'off',
-                'typescript/no-unnecessary-type-assertion': 'error',
-                'typescript/no-unsafe-assignment': 'error',
-                'typescript/unbound-method': 'off',
-                'react/no-array-index-key': 'error'
-            }
+                }
+            ]
         },
 
         envPrefix: ['VITE_', 'VERSION'],

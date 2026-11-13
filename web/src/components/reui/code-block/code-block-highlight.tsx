@@ -992,6 +992,7 @@ const SGR_RE = /\x1b\[([0-9;]*)m/g;
 // eslint-disable-next-line no-control-regex
 /* Everything except SGR (the trailing `m`), which the tokenizer consumes -
    this regex once matched SGR too and silently stripped every colour. */
+// eslint-disable-next-line no-control-regex -- ANSI escape sequences contain ESC and BEL control characters.
 const OTHER_ESCAPES_RE = /\x1b(?:\[(?![0-9;]*m)[0-9;?]*[A-Za-z]|\][^\x07]*(?:\x07|\x1b\\)|[()][0-9A-B])/g;
 
 type AnsiStyle = { color?: string; colorDark?: string; bold?: boolean; italic?: boolean; underline?: boolean };

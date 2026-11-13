@@ -706,6 +706,7 @@
         },
         {
             "name": "CodeBlock",
+            "reference": "https://reui.io/docs/components/base/code-block",
             "category": "Display",
             "introduction": "Native ReUI CodeBlock composition with syntax highlighting and bounded tokenization.",
             "guidance": "Pass code and language to the root. Compose CodeBlockHeader, CodeBlockTitle, CodeBlockLanguage, CodeBlockCopyButton, CodeBlockWrapToggle, and CodeBlockExpandButton as needed. Use showLineNumbers, highlightedLines, wrap/defaultWrap, and maxLines directly. For an external scroll viewport, compose CodeBlockContent and label the scroll container. Unknown languages and sources over 50,000 characters render as text. Copy buttons strip ReUI notation comments and expose onCopyError for recovery.",
@@ -909,7 +910,7 @@
                     "default": "Select a date"
                 }
             ],
-            "source": "shadcn",
+            "source": "custom",
             "reference": "https://ui.shadcn.com/docs/components/base/date-picker",
             "justification": "Composes the shadcn InputGroup, Popover, and Calendar with ISO date values and LongLink Form integration."
         },
