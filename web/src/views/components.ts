@@ -1,41 +1,41 @@
 /** @category Layouts */
-export { Stack } from '@/components/custom/Stack';
+export { Stack } from '@/components/custom/stack';
 
 /** @category Layouts @group Stack */
-export { StackItem } from '@/components/custom/Stack';
+export { StackItem } from '@/components/custom/stack';
 
 /** @category Layouts */
-export { Grid } from '@/components/custom/Grid';
+export { Grid } from '@/components/custom/grid';
 
 /** @category Layouts @group Grid */
-export { GridSpan } from '@/components/custom/Grid';
+export { GridSpan } from '@/components/custom/grid';
 
 /** @category Layouts */
 export { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/shadcn/collapsible';
 
 /** Custom initially-open disclosure with persistent content and controlled-close focus recovery. @category Layouts */
-export { Disclosure } from '@/components/custom/Disclosure';
+export { Disclosure } from '@/components/custom/disclosure';
 
 /** @category Display */
-export { Heading } from '@/components/custom/Heading';
+export { Heading } from '@/components/custom/heading';
 
 /** @category Display */
-export { Text } from '@/components/custom/Text';
+export { Text } from '@/components/custom/text';
 
 /** @category Display */
 export { Avatar, AvatarImage, AvatarFallback } from '@/components/shadcn/avatar';
 
 /** Custom generated artwork and owner-specific avatar fallbacks. @category Display */
-export { GeneratedAvatar } from '@/components/custom/GeneratedAvatar';
+export { GeneratedAvatar } from '@/components/custom/generated-avatar';
 
 /** @category Display */
-export { Image } from '@/components/custom/Image';
+export { Image } from '@/components/custom/image';
 
 /** @category Display */
 export { Badge } from '@/components/reui/badge';
 
 /** @category Display */
-export { Token } from '@/components/custom/Token';
+export { Token } from '@/components/custom/token';
 
 /** @category Layouts */
 export { Card } from '@/components/shadcn/card';
@@ -44,19 +44,19 @@ export { Card } from '@/components/shadcn/card';
 export { CardHeader, CardTitle, CardDescription, CardAction, CardContent, CardFooter } from '@/components/shadcn/card';
 
 /** Custom surface actions, selection, navigation, and layout. @category Layouts @group Card */
-export { InteractiveCard } from '@/components/custom/InteractiveCard';
+export { InteractiveCard } from '@/components/custom/interactive-card';
 
 /** @category Action */
 export { Button } from '@/components/shadcn/button';
 
 /** Custom asynchronous actions with duplicate-activation protection and scoped navigation. @category Action */
-export { ActionButton } from '@/components/custom/ActionButton';
+export { ActionButton } from '@/components/custom/action-button';
 
 /** @category Action */
 export { ButtonGroup, ButtonGroupText, ButtonGroupSeparator } from '@/components/shadcn/button-group';
 
 /** Custom grouped actions with roving focus and inherited disabled state. @category Action */
-export { ActionButtonGroup } from '@/components/custom/ActionButtonGroup';
+export { ActionButtonGroup } from '@/components/custom/action-button-group';
 
 /** @category Action */
 export {
@@ -78,13 +78,13 @@ export {
 } from '@/components/shadcn/dropdown-menu';
 
 /** Custom data-driven actions with asynchronous recovery and scoped navigation. @category Action */
-export { ActionMenu } from '@/components/custom/ActionMenu';
+export { ActionMenu } from '@/components/custom/action-menu';
 
 /** @category Action @group Button */
-export { IconButton } from '@/components/custom/IconButton';
+export { IconButton } from '@/components/custom/icon-button';
 
 /** @category Display */
-export { Divider } from '@/components/custom/Divider';
+export { Divider } from '@/components/custom/divider';
 
 /** @category Layouts */
 export {
@@ -101,25 +101,25 @@ export {
 } from '@/components/shadcn/dialog';
 
 /** Custom modal frame coordinating fullscreen state with the isolated View host. @category Layouts */
-export { ViewDialog } from '@/components/custom/ViewDialog';
+export { ViewDialog } from '@/components/custom/view-dialog';
 
 /** Submits named themed fields and ordinary HTML inputs to a Solution API endpoint. @category Form */
-export { Form } from '@/components/custom/Form';
+export { Form } from '@/components/custom/form';
 
 /** @category Form */
-export { DateInput } from '@/components/custom/DateInput';
+export { DateInput } from '@/components/custom/date-input';
 
 /** @category Form */
-export { MultiSelector } from '@/components/custom/MultiSelector';
+export { MultiSelector } from '@/components/custom/multi-selector';
 
 /** @category Form */
-export { TimeInput } from '@/components/custom/TimeInput';
+export { TimeInput } from '@/components/custom/time-input';
 
 /** Custom form adapter with string callbacks, clear/reset, and Unicode code-point validation. @category Form */
-export { TextInput } from '@/components/custom/TextInput';
+export { TextInput } from '@/components/custom/text-input';
 
 /** Custom form adapter with string callbacks, reset, and Unicode code-point validation. @category Form */
-export { TextArea } from '@/components/custom/TextArea';
+export { TextArea } from '@/components/custom/text-area';
 
 /** @category Form */
 export { Input } from '@/components/shadcn/input';
@@ -152,10 +152,10 @@ export {
 } from '@/components/shadcn/input-group';
 
 /** @category Form */
-export { NumberInput } from '@/components/custom/NumberInput';
+export { NumberInput } from '@/components/custom/number-input';
 
 /** Custom labeled form adapter with reset and focusable disabled controls. @category Form */
-export { CheckboxInput } from '@/components/custom/CheckboxInput';
+export { CheckboxInput } from '@/components/custom/checkbox-input';
 
 /** @category Form */
 export { Checkbox } from '@/components/shadcn/checkbox';
@@ -164,19 +164,19 @@ export { Checkbox } from '@/components/shadcn/checkbox';
 export { Switch } from '@/components/shadcn/switch';
 
 /** Custom labeled form adapter with reset and focusable disabled controls. @category Form */
-export { SwitchField } from '@/components/custom/SwitchField';
+export { SwitchField } from '@/components/custom/switch-field';
 
 /** @category Form */
 export { Slider, SliderControl, SliderTrack, SliderRange, SliderThumb } from '@/components/shadcn/slider';
 
 /** Custom labeled form adapter for native Slider composition. @category Form */
-export { SliderField } from '@/components/custom/SliderField';
+export { SliderField } from '@/components/custom/slider-field';
 
 /** @category Form */
-export { FileInput } from '@/components/custom/FileInput';
+export { FileInput } from '@/components/custom/file-input';
 
 /** Custom form adapter with nullable values, clear, reset, and controlled rejection. @category Form */
-export { Selector } from '@/components/custom/Selector';
+export { Selector } from '@/components/custom/selector';
 
 /** @category Form */
 export { Select } from '@/components/shadcn/select';
@@ -217,10 +217,10 @@ export {
 } from '@/components/shadcn/combobox';
 
 /** @category Form */
-export { RadioList } from '@/components/custom/RadioList';
+export { RadioList } from '@/components/custom/radio-list';
 
 /** @category Form @group RadioList */
-export { RadioListItem } from '@/components/custom/RadioList';
+export { RadioListItem } from '@/components/custom/radio-list';
 
 /** @category Display */
 export {
@@ -235,7 +235,7 @@ export {
 } from '@/components/shadcn/table';
 
 /** Custom data-driven rows with safe formatting and ReUI rendering. @category Display */
-export { DataTable } from '@/components/custom/DataTable';
+export { DataTable } from '@/components/custom/data-table';
 
 /** @category Action */
 export {
@@ -249,16 +249,16 @@ export {
 } from '@/components/shadcn/pagination';
 
 /** Custom bounded page selection for table and gallery data. @category Action */
-export { DataPagination } from '@/components/custom/DataPagination';
+export { DataPagination } from '@/components/custom/data-pagination';
 
 /** @category Display @group Table */
-export { proportional, pixel } from '@/components/custom/DataTable';
+export { proportional, pixel } from '@/components/custom/data-table';
 
 /** @category Display */
-export { Timestamp } from '@/components/custom/Timestamp';
+export { Timestamp } from '@/components/custom/timestamp';
 
 /** @category Display */
-export { CodeBlock } from '@/components/custom/CodeBlock';
+export { CodeBlock } from '@/components/custom/code-block';
 
 /** @category Display */
 export { Progress } from '@/components/shadcn/progress';
@@ -283,13 +283,13 @@ export {
 } from '@/components/reui/stepper';
 
 /** Custom progress adapter using zero-based indices and default ReUI styling. @category Layouts */
-export { ProgressStepper } from '@/components/custom/Wizard';
+export { ProgressStepper } from '@/components/custom/wizard';
 
 /** Custom validated wizard with persistent drafts and asynchronous navigation. @category Layouts */
-export { Wizard } from '@/components/custom/Wizard';
+export { Wizard } from '@/components/custom/wizard';
 
 /** Custom panel definition for ProgressStepper and Wizard. @category Layouts @group Wizard */
-export { Step } from '@/components/custom/Wizard';
+export { Step } from '@/components/custom/wizard';
 
 /** @category Layouts */
 export { Tabs } from '@/components/shadcn/tabs';
@@ -301,28 +301,28 @@ export { TabsList, TabsTrigger, TabsContent } from '@/components/shadcn/tabs';
 export { Empty, EmptyHeader, EmptyTitle, EmptyDescription, EmptyContent, EmptyMedia } from '@/components/shadcn/empty';
 
 /** Custom semantic headings and scoped result announcements. @category Display */
-export { EmptyState } from '@/components/custom/EmptyState';
+export { EmptyState } from '@/components/custom/empty-state';
 
 /** @category Action */
-export { MoreMenu } from '@/components/custom/MoreMenu';
+export { MoreMenu } from '@/components/custom/more-menu';
 
 /** @category Layouts */
-export { Menu } from '@/components/custom/Menu';
+export { Menu } from '@/components/custom/menu';
 
 /** @category Layouts @group Menu */
-export { MenuSection, MenuItem, MenuSubSection } from '@/components/custom/Menu';
+export { MenuSection, MenuItem, MenuSubSection } from '@/components/custom/menu';
 
 /** @category Display */
-export { Icon } from '@/components/custom/Icon';
+export { Icon } from '@/components/custom/icon';
 
 /** @category Action */
-export { Link } from '@/components/custom/Link';
+export { Link } from '@/components/custom/link';
 
 /** @category Display */
-export { Currency } from '@/components/custom/Currency';
+export { Currency } from '@/components/custom/currency';
 
 /** @category Display */
-export { FileViewer } from '@/components/custom/FileViewer';
+export { FileViewer } from '@/components/custom/file-viewer';
 
 /** @category Charts */
 export {
@@ -333,7 +333,7 @@ export {
     RadarChart,
     RadialChart,
     SankeyChart
-} from '@/components/custom/Chart';
+} from '@/components/custom/chart';
 
 /** @category Others */
-export { Maps } from '@/components/custom/Maps';
+export { Maps } from '@/components/custom/maps';

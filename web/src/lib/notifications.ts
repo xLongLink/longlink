@@ -1,7 +1,7 @@
 import { toast } from 'sonner';
 import type { ExternalToast } from 'sonner';
 import { createContext, createElement, useContext } from 'react';
-import { NativeNotificationMessage } from '@/components/NativeNotificationMessage';
+import { NativeNotificationMessage } from '@/components/native-notification-message';
 
 type Notification = { kind: 'error' | 'message'; message: string };
 

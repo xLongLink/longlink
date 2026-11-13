@@ -1,0 +1,37 @@
+import ViewLayout from './view-layout';
+import { Icon } from '@/components/custom/icon';
+
+/** Documents Icon in LongLink Views. */
+export default function IconPage() {
+    // Render this component's authored examples in the shared documentation layout.
+    return (
+        <ViewLayout
+            name="Icon"
+            properties={[
+                {
+                    name: 'icon',
+                    type: 'StoneIconName',
+                    description: 'Lucide icon name or LongLink alias; prefix with lucide: to bypass aliases.'
+                },
+                {
+                    name: 'size',
+                    type: '"sm" | "lg" | "md"',
+                    description: 'Icon size; inherits the parent default or falls back to md.'
+                }
+            ]}
+            example={{
+                title: 'Icon',
+                preview: <IconExample />,
+                code: `function Example() {
+  return <Icon icon="search" size="md" />;
+}`
+            }}
+        />
+    );
+}
+
+/** Renders the page's icon example for documentation and the catalog. */
+export function IconExample() {
+    // Display the semantic information icon.
+    return <Icon icon="info" size="md" />;
+}

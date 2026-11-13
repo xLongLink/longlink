@@ -75,7 +75,7 @@ export default {
 
             // Exclude layouts and error routes from the application's valid page inventory.
             const spaPaths = routes.flatMap((route) => {
-                if (parentIds.has(route.id) || route.file.endsWith('/NotFound.tsx')) return [];
+                if (parentIds.has(route.id) || route.file.endsWith('/not-found.tsx')) return [];
 
                 // Resolve layout and prefix segments before translating parameters for FastAPI.
                 const segments = [];

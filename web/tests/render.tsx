@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import { MemoryRouter } from 'react-router';
 import { createRoot } from 'react-dom/client';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { AppearanceProvider } from '@/components/Appearance';
+import { AppearanceProvider } from '@/components/appearance';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 /** Renders a component through real theme, routing, and query providers without browser automation. */

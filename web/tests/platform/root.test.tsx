@@ -3,9 +3,9 @@ import { act } from 'react';
 import { withMounted } from '../render';
 import { it, expect, vi } from 'vitest';
 import PlatformRoot from '@/platform/root';
-import { Wordmark } from '@/components/Wordmark';
+import { Wordmark } from '@/components/wordmark';
 import { Route, Routes, useLocation } from 'react-router';
-import { NativeLink as Link } from '@/components/custom/NativeLink';
+import { NativeLink as Link } from '@/components/custom/native-link';
 
 it('uses native links for client-side navigation under the Platform root', async () => {
     // Arrange

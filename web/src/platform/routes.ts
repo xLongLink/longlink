@@ -3,108 +3,108 @@ import type { RouteConfig } from '@react-router/dev/routes';
 
 export default [
     {
-        file: './layouts/Page.tsx',
+        file: './layouts/page.tsx',
         children: [
-            { index: true, file: './routes/Index.tsx' },
-            { path: 'pricing', file: './routes/Pricing.tsx' },
-            { path: 'blog', file: './routes/blog/Index.tsx' },
-            { path: 'blog/why-longlink', file: './routes/blog/WhyLongLink.tsx' }
+            { index: true, file: './routes/index.tsx' },
+            { path: 'pricing', file: './routes/pricing.tsx' },
+            { path: 'blog', file: './routes/blog/index.tsx' },
+            { path: 'blog/why-longlink', file: './routes/blog/why-long-link.tsx' }
         ]
     },
-    { path: 'docs/introduction', file: './routes/docs/Introduction.tsx' },
+    { path: 'docs/introduction', file: './routes/docs/introduction.tsx' },
     {
-        file: './layouts/Documentation.tsx',
+        file: './layouts/documentation.tsx',
         children: [
-            { path: 'docs', index: true, file: './routes/docs/Index.tsx' },
-            { path: 'docs/sdk', index: true, file: './routes/docs/sdk/Index.tsx' },
-            { path: 'docs/sdk/building', file: './routes/docs/sdk/Building.tsx' },
-            { path: 'docs/sdk/database', file: './routes/docs/sdk/Database.tsx' },
-            { path: 'docs/sdk/environments', file: './routes/docs/sdk/Environments.tsx' },
-            { path: 'docs/sdk/routes', file: './routes/docs/sdk/Routes.tsx' },
-            { path: 'docs/sdk/storage', file: './routes/docs/sdk/Storage.tsx' },
-            { path: 'docs/sdk/testing', file: './routes/docs/sdk/Testing.tsx' },
-            { path: 'docs/sdk/views', index: true, file: './routes/docs/sdk/Views.tsx' },
+            { path: 'docs', index: true, file: './routes/docs/index.tsx' },
+            { path: 'docs/sdk', index: true, file: './routes/docs/sdk/index.tsx' },
+            { path: 'docs/sdk/building', file: './routes/docs/sdk/building.tsx' },
+            { path: 'docs/sdk/database', file: './routes/docs/sdk/database.tsx' },
+            { path: 'docs/sdk/environments', file: './routes/docs/sdk/environments.tsx' },
+            { path: 'docs/sdk/routes', file: './routes/docs/sdk/routes.tsx' },
+            { path: 'docs/sdk/storage', file: './routes/docs/sdk/storage.tsx' },
+            { path: 'docs/sdk/testing', file: './routes/docs/sdk/testing.tsx' },
+            { path: 'docs/sdk/views', index: true, file: './routes/docs/sdk/views.tsx' },
 
             // Keep component routes aligned with the published documentation catalog.
-            ...componentDocumentation.map(({ slug, label }) => ({
+            ...componentDocumentation.map(({ slug }) => ({
                 path: `docs/sdk/views/${slug}`,
-                file: `./routes/docs/sdk/views/${label}.tsx`
+                file: `./routes/docs/sdk/views/${slug}.tsx`
             })),
-            { path: 'docs/api', index: true, file: './routes/docs/api/Index.tsx' },
-            { path: 'docs/api/organizations', file: './routes/docs/api/Organizations.tsx' },
-            { path: 'docs/api/solutions', file: './routes/docs/api/Solutions.tsx' },
-            { path: 'docs/api/mcp', file: './routes/docs/api/Mcp.tsx' },
-            { path: 'docs/api/billing', file: './routes/docs/api/Billing.tsx' },
-            { path: 'docs/api/self-hosted/platform', file: './routes/docs/api/self-hosted/Platform.tsx' },
-            { path: 'docs/api/self-hosted/compute', file: './routes/docs/api/self-hosted/Compute.tsx' },
-            { path: 'docs/alternatives', file: './routes/docs/alternatives/Index.tsx' },
-            { path: 'docs/*', file: '../components/layouts/NotFound.tsx', id: 'docs-not-found' }
+            { path: 'docs/api', index: true, file: './routes/docs/api/index.tsx' },
+            { path: 'docs/api/organizations', file: './routes/docs/api/organizations.tsx' },
+            { path: 'docs/api/solutions', file: './routes/docs/api/solutions.tsx' },
+            { path: 'docs/api/mcp', file: './routes/docs/api/mcp.tsx' },
+            { path: 'docs/api/billing', file: './routes/docs/api/billing.tsx' },
+            { path: 'docs/api/self-hosted/platform', file: './routes/docs/api/self-hosted/platform.tsx' },
+            { path: 'docs/api/self-hosted/compute', file: './routes/docs/api/self-hosted/compute.tsx' },
+            { path: 'docs/alternatives', file: './routes/docs/alternatives/index.tsx' },
+            { path: 'docs/*', file: '../components/layouts/not-found.tsx', id: 'docs-not-found' }
         ]
     },
     {
-        file: './layouts/Legal.tsx',
+        file: './layouts/legal.tsx',
         children: [
-            { path: 'terms', file: './routes/legal/Terms.tsx' },
-            { path: 'impressum', file: './routes/legal/Impressum.tsx' },
-            { path: 'privacy', file: './routes/legal/Privacy.tsx' },
-            { path: 'branding/assets', file: './routes/branding/Assets.tsx' },
-            { path: 'branding/values', file: './routes/branding/Values.tsx' },
-            { path: 'branding/comunication', file: './routes/branding/Communication.tsx' }
+            { path: 'terms', file: './routes/legal/terms.tsx' },
+            { path: 'impressum', file: './routes/legal/impressum.tsx' },
+            { path: 'privacy', file: './routes/legal/privacy.tsx' },
+            { path: 'branding/assets', file: './routes/branding/assets.tsx' },
+            { path: 'branding/values', file: './routes/branding/values.tsx' },
+            { path: 'branding/comunication', file: './routes/branding/communication.tsx' }
         ]
     },
     {
-        file: './layouts/Account.tsx',
+        file: './layouts/account.tsx',
         children: [
-            { path: 'login', file: './routes/auth/Login.tsx' },
-            { path: 'auth/register', file: './routes/auth/Register.tsx' },
-            { path: 'auth/forgot-password', file: './routes/auth/ForgotPassword.tsx' },
-            { path: 'auth/reset-password', file: './routes/auth/ResetPassword.tsx' }
+            { path: 'login', file: './routes/auth/login.tsx' },
+            { path: 'auth/register', file: './routes/auth/register.tsx' },
+            { path: 'auth/forgot-password', file: './routes/auth/forgot-password.tsx' },
+            { path: 'auth/reset-password', file: './routes/auth/reset-password.tsx' }
         ]
     },
     {
-        file: './layouts/Brand.tsx',
+        file: './layouts/brand.tsx',
         children: [
-            { path: 'auth/verify-email', file: './routes/auth/VerifyEmail.tsx' },
-            { path: 'mcp/authorize', file: './routes/auth/Mcp.tsx' },
-            { path: '404', file: '../components/layouts/NotFound.tsx', id: 'not-found' },
-            { path: '*', file: '../components/layouts/NotFound.tsx' }
+            { path: 'auth/verify-email', file: './routes/auth/verify-email.tsx' },
+            { path: 'mcp/authorize', file: './routes/auth/mcp.tsx' },
+            { path: '404', file: '../components/layouts/not-found.tsx', id: 'not-found' },
+            { path: '*', file: '../components/layouts/not-found.tsx' }
         ]
     },
     {
-        file: './layouts/Authenticated.tsx',
+        file: './layouts/authenticated.tsx',
         children: [
             {
-                file: './layouts/User.tsx',
+                file: './layouts/user.tsx',
                 children: [
-                    { path: 'user/organizations', file: './routes/user/Organizations.tsx' },
-                    { path: 'user/settings', file: './routes/user/Settings.tsx' }
+                    { path: 'user/organizations', file: './routes/user/organizations.tsx' },
+                    { path: 'user/settings', file: './routes/user/settings.tsx' }
                 ]
             },
             {
-                file: './layouts/Admin.tsx',
+                file: './layouts/admin.tsx',
                 children: [
-                    { id: 'admin-users', path: 'admin/users', file: './routes/admin/Users.tsx' },
-                    { id: 'admin-solutions', path: 'admin/solutions', file: './routes/admin/Solutions.tsx' },
+                    { id: 'admin-users', path: 'admin/users', file: './routes/admin/users.tsx' },
+                    { id: 'admin-solutions', path: 'admin/solutions', file: './routes/admin/solutions.tsx' },
                     {
                         id: 'admin-organizations',
                         path: 'admin/organizations',
-                        file: './routes/admin/Organizations.tsx'
+                        file: './routes/admin/organizations.tsx'
                     },
-                    { id: 'admin-compute', path: 'admin/compute', file: './routes/admin/Compute.tsx' },
-                    { id: 'admin-operations', path: 'admin/operations', file: './routes/admin/Operations.tsx' }
+                    { id: 'admin-compute', path: 'admin/compute', file: './routes/admin/compute.tsx' },
+                    { id: 'admin-operations', path: 'admin/operations', file: './routes/admin/operations.tsx' }
                 ]
             },
             {
-                file: './layouts/OrganizationAccess.tsx',
+                file: './layouts/organization-access.tsx',
                 children: [
                     {
-                        file: './layouts/Organization.tsx',
+                        file: './layouts/organization.tsx',
                         children: [
-                            { path: 'orgs/:organization', index: true, file: './routes/orgs/Organization.tsx' },
-                            { path: 'orgs/:organization/settings', file: './routes/orgs/Settings.tsx' }
+                            { path: 'orgs/:organization', index: true, file: './routes/orgs/organization.tsx' },
+                            { path: 'orgs/:organization/settings', file: './routes/orgs/settings.tsx' }
                         ]
                     },
-                    { path: 'orgs/:organization/solutions/:solution/*', file: './routes/orgs/Solution.tsx' }
+                    { path: 'orgs/:organization/solutions/:solution/*', file: './routes/orgs/solution.tsx' }
                 ]
             }
         ]

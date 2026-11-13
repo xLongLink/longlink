@@ -8,7 +8,7 @@ import { ReportedError } from '@/lib/reported';
 import { ErrorBoundary } from 'react-error-boundary';
 import { useConfirm } from '@/components/custom/confirmation';
 import { FileRequestContext } from '@/components/custom/preview';
-import { NativeLoading } from '@/components/custom/NativeLoading';
+import { NativeLoading } from '@/components/custom/native-loading';
 import { QueryClient, QueryClientProvider, QueryErrorResetBoundary, useSuspenseQuery } from '@tanstack/react-query';
 import {
     FormRequestContext,

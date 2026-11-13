@@ -1,0 +1,6 @@
+import ChartDocumentation from './chart-documentation';
+
+/** Documents concentric radial charts in Views. */
+export default function RadialChartPage() {
+    return <ChartDocumentation name="RadialChart" />;
+}

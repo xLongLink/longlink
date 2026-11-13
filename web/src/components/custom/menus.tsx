@@ -1,7 +1,7 @@
 import { useMenuTouch } from './menu-touch';
 import { ReportedError } from '@/lib/reported';
 import { Toolbar } from '@base-ui/react/toolbar';
-import { Icon, type StoneIconName } from './Icon';
+import { Icon, type StoneIconName } from './icon';
 import { Button as Control } from '@/components/shadcn/button';
 import { ChevronDown, Ellipsis, LoaderCircle } from 'lucide-react';
 import { ButtonGroupContext, ControlSizeContext, LinkNavigationContext } from './contexts';

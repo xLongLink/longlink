@@ -1,11 +1,11 @@
 // @vitest-environment happy-dom
 import { expect, it, vi } from 'vitest';
 import { withMounted } from '../../render';
-import { Form } from '@/components/custom/Form';
+import { Form } from '@/components/custom/form';
 import userEvent from '@testing-library/user-event';
 import { act, useState, type FormEvent } from 'react';
-import { DateInput } from '@/components/custom/DateInput';
-import { TimeInput } from '@/components/custom/TimeInput';
+import { DateInput } from '@/components/custom/date-input';
+import { TimeInput } from '@/components/custom/time-input';
 import type { ISODateString, ISOTimeString } from '@/components/custom/temporal';
 
 /** Requires a mounted control before exercising its real DOM behavior. */

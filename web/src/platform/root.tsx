@@ -1,13 +1,12 @@
 import * as icons from '@/lib/icons';
 import type { ReactNode } from 'react';
-import { PageLoading } from '@/components/Utils';
-import { ApiBoundary } from '@/components/ApiBoundary';
-import { ApiProvider } from '@/components/ApiProvider';
+import { PageLoading } from '@/components/utils';
 import { appearanceBootstrap } from '@/lib/appearance';
+import { ApiBoundary, ApiProvider } from '@/components/api';
 import { AppearanceContext } from '@/lib/hooks/use-appearance';
 import { IconRequestContext } from '@/components/custom/contexts';
 import { useDocumentTheme } from '@/lib/hooks/use-document-theme';
-import { AccountAppearanceProvider } from '@/components/Appearance';
+import { AccountAppearanceProvider } from '@/components/appearance';
 import { Links, Meta, Outlet, Scripts, ScrollRestoration, useLocation } from 'react-router';
 import '@/index.css';
 

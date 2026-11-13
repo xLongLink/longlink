@@ -1,0 +1,89 @@
+import ViewLayout from './view-layout';
+import FormPreview from './form-preview';
+import { CheckboxInput } from '@/components/custom/checkbox-input';
+
+/** Documents CheckboxInput in LongLink Views. */
+export default function CheckboxInputPage() {
+    // Render this component's authored examples in the shared documentation layout.
+    return (
+        <ViewLayout
+            name="CheckboxInput"
+            properties={[
+                {
+                    name: 'label',
+                    type: 'string',
+                    description: 'Label text for the checkbox (always rendered for accessibility).'
+                },
+                { name: 'description', type: 'string', description: 'Description text displayed below the label.' },
+                {
+                    name: 'name',
+                    type: 'string',
+                    description: "Includes the themed control's value under this form submission name."
+                },
+                { name: 'required', type: 'boolean', description: 'Requires a value before native form submission.' },
+                {
+                    name: 'disabled',
+                    type: 'boolean',
+                    description: 'Prevents interaction and excludes the field from submission.'
+                },
+                {
+                    name: 'value',
+                    type: 'boolean | "indeterminate"',
+                    description: 'Whether the checkbox is checked, unchecked, or indeterminate.'
+                },
+                { name: 'defaultChecked', type: 'boolean', description: 'Initial checked state.' },
+                {
+                    name: 'onChange',
+                    type: '(value: boolean) => void',
+                    description: 'Callback fired when the checkbox state changes.'
+                },
+                {
+                    name: 'Checkbox.checked',
+                    type: 'boolean',
+                    description: 'Controlled checked state of the unwrapped shadcn checkbox.'
+                },
+                {
+                    name: 'Checkbox.onCheckedChange',
+                    type: '(checked: boolean, eventDetails) => void',
+                    description: 'Receives the next checked state and Base UI event details.'
+                },
+                {
+                    name: 'Checkbox.indeterminate',
+                    type: 'boolean',
+                    description: 'Displays a mixed state independently of the checked value.'
+                },
+                {
+                    name: 'Checkbox.disabled',
+                    type: 'boolean',
+                    description: 'Disables the native control, including keyboard focus and form submission.'
+                }
+            ]}
+            example={{
+                title: 'Approval form',
+                preview: (
+                    <FormPreview>
+                        <CheckboxInputExample />
+                    </FormPreview>
+                ),
+                code: `/** Submits approval only when the checkbox is checked. */
+export default function ApprovalForm() {
+  return (
+    <Form action="/api/example" method="post">
+      <CheckboxInput name="approved" label="Approved" defaultChecked />
+      <Stack direction="horizontal" gap={2}>
+        <Button type="submit" variant="default">Submit</Button>
+        <Button type="reset" variant="outline">Reset</Button>
+      </Stack>
+    </Form>
+  );
+}`
+            }}
+        />
+    );
+}
+
+/** Shows a named checkbox whose unchecked value is omitted from submissions. */
+export function CheckboxInputExample() {
+    // Restore the initial checked state with native form reset behavior.
+    return <CheckboxInput name="approved" label="Approved" defaultChecked />;
+}

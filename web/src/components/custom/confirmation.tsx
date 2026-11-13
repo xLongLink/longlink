@@ -1,5 +1,5 @@
 import { ReportedError } from '@/lib/reported';
-import { ConfirmationDialog } from './ConfirmationDialog';
+import { ConfirmationDialog } from './confirmation-dialog';
 import { useCallback, useRef, useState, useTransition } from 'react';
 
 export type ConfirmOptions = {

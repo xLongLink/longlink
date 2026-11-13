@@ -1,6 +1,6 @@
 import { isString } from 'es-toolkit';
 import type { ReactNode } from 'react';
-import { Icon, type StoneIconName } from './Icon';
+import { Icon, type StoneIconName } from './icon';
 
 export type SelectorOptionData = {
     value: string;

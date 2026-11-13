@@ -1,10 +1,9 @@
 import * as icons from '@/lib/icons';
 import type { ReactNode } from 'react';
-import { PageLoading } from '@/components/Utils';
-import { ApiBoundary } from '@/components/ApiBoundary';
-import { ApiProvider } from '@/components/ApiProvider';
+import { PageLoading } from '@/components/utils';
 import { appearanceBootstrap } from '@/lib/appearance';
-import { AppearanceProvider } from '@/components/Appearance';
+import { ApiBoundary, ApiProvider } from '@/components/api';
+import { AppearanceProvider } from '@/components/appearance';
 import { IconRequestContext } from '@/components/custom/contexts';
 import { Links, Meta, Outlet, Scripts, ScrollRestoration } from 'react-router';
 import '@/index.css';

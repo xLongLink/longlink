@@ -3,8 +3,8 @@ import { renderStatic } from '../render';
 import { ApiErrorContext } from '@/lib/errors';
 import { Outlet, Route, Routes } from 'react-router';
 import { AuthenticatedUserContext } from '@/lib/hooks/use-user';
-import { AccountAppearanceProvider } from '@/components/Appearance';
-import type { OrganizationContext } from '@/platform/layouts/Organization';
+import { AccountAppearanceProvider } from '@/components/appearance';
+import type { OrganizationContext } from '@/platform/layouts/organization';
 import { zCurrentUser, zUserOrganizationMembership } from '@/lib/generated/platform-api-v1/zod.gen';
 
 export const user = zCurrentUser.parse({
