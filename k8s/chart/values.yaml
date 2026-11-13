@@ -9,7 +9,7 @@ gateway:
 storage:
     image:
         repository: nginx
-        tag: 1.31.7-alpine@sha256:892bb2152464f0c5d8972593a5f5afaf8054552580b699d95f8ff4af08c2d33d
+        tag: 1.31.8-alpine@sha256:713fc2ebfd92e8217db451477182ee91944b123d2b1ee9fd5a8c6e91ca6c3a11
     resources:
         requests:
             cpu: 100m
@@ -23,7 +23,7 @@ storage:
 rustfs:
     image:
         repository: rustfs/rustfs
-        tag: 1.0.3@sha256:9ca9559533b537d10482fe923288b676ad08f92a7069d9a17327fbae3cab688b
+        tag: 1.0.5@sha256:b81d16a90ee25bd9511280127ca1471788c6e874cf0f0da759645f46b2dc1d74
     mode: standalone
     storage:
         name: block-storage

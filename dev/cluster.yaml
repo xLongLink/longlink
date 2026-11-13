@@ -3,7 +3,7 @@ kind: Simple
 metadata:
     name: compute
 servers: 1
-image: rancher/k3s:v1.34.3-k3s1@sha256:c63773f3549c09ac5f79f57ae3b057118e7de394b3ae84cd9faf68a1be872ae5
+image: rancher/k3s:v1.37.2-k3s1@sha256:21ea6e0fac4e3930c2ce8aa40ddd41a8b18cb3e9a0222c030dc005e7e88c4332
 subnet: 172.30.0.0/24
 kubeAPI:
     hostIP: 127.0.0.1
