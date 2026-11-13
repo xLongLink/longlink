@@ -6,7 +6,7 @@ metadata:
     labels:
         app.kubernetes.io/component: networking
         app.kubernetes.io/name: knative-serving
-        app.kubernetes.io/version: 1.23.0
+        app.kubernetes.io/version: 1.24.0
         knative.dev/crd-install: 'true'
     name: certificates.networking.internal.knative.dev
 spec:
@@ -185,7 +185,7 @@ metadata:
     labels:
         app.kubernetes.io/component: networking
         app.kubernetes.io/name: knative-serving
-        app.kubernetes.io/version: 1.23.0
+        app.kubernetes.io/version: 1.24.0
         knative.dev/crd-install: 'true'
     name: clusterdomainclaims.networking.internal.knative.dev
 spec:
@@ -250,7 +250,7 @@ metadata:
         helm.sh/resource-policy: keep
     labels:
         app.kubernetes.io/name: knative-serving
-        app.kubernetes.io/version: 1.23.0
+        app.kubernetes.io/version: 1.24.0
         duck.knative.dev/podspecable: 'true'
         knative.dev/crd-install: 'true'
     name: configurations.serving.knative.dev
@@ -1918,7 +1918,7 @@ metadata:
         helm.sh/resource-policy: keep
     labels:
         app.kubernetes.io/name: knative-serving
-        app.kubernetes.io/version: 1.23.0
+        app.kubernetes.io/version: 1.24.0
         knative.dev/crd-install: 'true'
     name: domainmappings.serving.knative.dev
 spec:
@@ -2121,7 +2121,7 @@ metadata:
         helm.sh/resource-policy: keep
     labels:
         app.kubernetes.io/name: knative-serving
-        app.kubernetes.io/version: 1.23.0
+        app.kubernetes.io/version: 1.24.0
         knative.dev/crd-install: 'true'
     name: images.caching.internal.knative.dev
 spec:
@@ -2272,7 +2272,7 @@ metadata:
     labels:
         app.kubernetes.io/component: networking
         app.kubernetes.io/name: knative-serving
-        app.kubernetes.io/version: 1.23.0
+        app.kubernetes.io/version: 1.24.0
         knative.dev/crd-install: 'true'
     name: ingresses.networking.internal.knative.dev
 spec:
@@ -2657,7 +2657,7 @@ metadata:
         helm.sh/resource-policy: keep
     labels:
         app.kubernetes.io/name: knative-serving
-        app.kubernetes.io/version: 1.23.0
+        app.kubernetes.io/version: 1.24.0
         knative.dev/crd-install: 'true'
     name: metrics.autoscaling.internal.knative.dev
 spec:
@@ -2793,7 +2793,7 @@ metadata:
         helm.sh/resource-policy: keep
     labels:
         app.kubernetes.io/name: knative-serving
-        app.kubernetes.io/version: 1.23.0
+        app.kubernetes.io/version: 1.24.0
         knative.dev/crd-install: 'true'
     name: podautoscalers.autoscaling.internal.knative.dev
 spec:
@@ -2986,7 +2986,7 @@ metadata:
         helm.sh/resource-policy: keep
     labels:
         app.kubernetes.io/name: knative-serving
-        app.kubernetes.io/version: 1.23.0
+        app.kubernetes.io/version: 1.24.0
         knative.dev/crd-install: 'true'
     name: revisions.serving.knative.dev
 spec:
@@ -4610,7 +4610,7 @@ metadata:
         helm.sh/resource-policy: keep
     labels:
         app.kubernetes.io/name: knative-serving
-        app.kubernetes.io/version: 1.23.0
+        app.kubernetes.io/version: 1.24.0
         duck.knative.dev/addressable: 'true'
         knative.dev/crd-install: 'true'
     name: routes.serving.knative.dev
@@ -4874,7 +4874,7 @@ metadata:
     labels:
         app.kubernetes.io/component: networking
         app.kubernetes.io/name: knative-serving
-        app.kubernetes.io/version: 1.23.0
+        app.kubernetes.io/version: 1.24.0
         knative.dev/crd-install: 'true'
     name: serverlessservices.networking.internal.knative.dev
 spec:
@@ -5085,7 +5085,7 @@ metadata:
         helm.sh/resource-policy: keep
     labels:
         app.kubernetes.io/name: knative-serving
-        app.kubernetes.io/version: 1.23.0
+        app.kubernetes.io/version: 1.24.0
         duck.knative.dev/addressable: 'true'
         duck.knative.dev/podspecable: 'true'
         knative.dev/crd-install: 'true'
