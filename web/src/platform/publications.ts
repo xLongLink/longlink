@@ -106,7 +106,6 @@ export const componentDocumentation = [
     { name: 'Image', category: 'Display', icon: Image },
     { name: 'Link', category: 'Action', icon: Globe },
     { name: 'Menu', category: 'Layouts', icon: Menu },
-    { name: 'MetadataList', category: 'Display', icon: List },
     { name: 'MoreMenu', category: 'Action', icon: Menu },
     { name: 'MultiSelector', category: 'Form', icon: CheckSquare },
     { name: 'NumberInput', category: 'Form', icon: ArrowUpDown },

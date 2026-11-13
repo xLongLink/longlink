@@ -95,12 +95,6 @@ export { RadioList } from '@/components/ui/RadioList';
 export { RadioListItem } from '@/components/ui/RadioList';
 
 /** @category Display */
-export { MetadataList } from '@/components/ui/MetadataList';
-
-/** @category Display @group MetadataList */
-export { MetadataListItem } from '@/components/ui/MetadataList';
-
-/** @category Display */
 export { Table } from '@/components/ui/Table';
 
 /** @category Action */

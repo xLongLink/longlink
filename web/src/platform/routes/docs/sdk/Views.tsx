@@ -39,7 +39,6 @@ import { NumberInputExample } from './views/NumberInput';
 import { ProgressBarExample } from './views/ProgressBar';
 import { Collapsible } from '@/components/ui/Collapsible';
 import { DropdownMenuExample } from './views/DropdownMenu';
-import { MetadataListExample } from './views/MetadataList';
 import { CheckboxInputExample } from './views/CheckboxInput';
 import { MultiSelectorExample } from './views/MultiSelector';
 import { NativeText as Text } from '@/components/ui/NativeText';
@@ -117,7 +116,6 @@ const previews = new Map(
                 <a href="#workflow">Workflow</a>
             </nav>
         ),
-        MetadataList: <MetadataListExample />,
         MoreMenu: <MoreMenuExample />,
         MultiSelector: <MultiSelectorExample />,
         NumberInput: <NumberInputExample />,

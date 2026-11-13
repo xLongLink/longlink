@@ -4942,26 +4942,6 @@ declare function RadioListItem(props: {
 }): React.JSX.Element;
 
 /** @category Display */
-declare function MetadataList(props: {
-    children?: ViewNode;
-    columns?: 'multi' | 'single' | number;
-    title?: ViewNode;
-    label?: { position: 'start' | 'top'; width?: number | string };
-    maxNumOfItems?: number;
-    orientation?: 'vertical' | 'horizontal';
-}): React.JSX.Element;
-
-/** @category Display @group MetadataList */
-declare function MetadataListItem(props: {
-    /** Value rendered beside the metadata label. */
-    children?: ViewNode;
-    /** Label identifying the metadata value. */
-    label: string;
-    /** Optional icon displayed beside the metadata label. */
-    icon?: StoneIconName;
-}): React.JSX.Element;
-
-/** @category Display */
 declare function Table<T extends Record<string, unknown>>(props: {
     data: T[];
     hasHover?: boolean;

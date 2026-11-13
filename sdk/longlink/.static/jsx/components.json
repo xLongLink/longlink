@@ -1274,62 +1274,6 @@
             ]
         },
         {
-            "name": "MetadataList",
-            "category": "Display",
-            "introduction": "Lists labeled values with optional truncation and label placement.",
-            "keywords": ["details", "record", "labeled values"],
-            "properties": [
-                {
-                    "name": "children",
-                    "type": "ReactNode",
-                    "description": "Metadata items (MetadataListItem components)."
-                },
-                {
-                    "name": "columns",
-                    "type": "number | \"multi\" | \"single\"",
-                    "description": "Column layout mode.",
-                    "default": "single"
-                },
-                {
-                    "name": "title",
-                    "type": "ReactNode",
-                    "description": "Optional title or heading above the list."
-                },
-                {
-                    "name": "label",
-                    "type": "{ position: \"start\" | \"top\"; width?: string | number; }",
-                    "description": "Label position and optional column width.",
-                    "default": "{ position: 'start' } (single-column) / { position: 'top' } (multi-column)"
-                },
-                {
-                    "name": "maxNumOfItems",
-                    "type": "number",
-                    "description": "Maximum items to show before collapsing with a show more/less toggle."
-                },
-                {
-                    "name": "orientation",
-                    "type": "\"horizontal\" | \"vertical\"",
-                    "description": "Layout orientation. Horizontal mode flows items in a row with flex-wrap.",
-                    "default": "vertical"
-                },
-                {
-                    "name": "MetadataListItem.children",
-                    "type": "ReactNode",
-                    "description": "Value rendered beside the metadata label."
-                },
-                {
-                    "name": "MetadataListItem.label",
-                    "type": "string",
-                    "description": "Label identifying the metadata value."
-                },
-                {
-                    "name": "MetadataListItem.icon",
-                    "type": "StoneIconName",
-                    "description": "Optional icon displayed beside the metadata label."
-                }
-            ]
-        },
-        {
             "name": "MoreMenu",
             "category": "Action",
             "introduction": "Opens additional actions without exposing popup geometry or presentation modes.",
