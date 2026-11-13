@@ -78,8 +78,8 @@ export const componentDocumentation = [
     { name: 'LineChart', category: 'Charts', icon: ChartLine },
     { name: 'PieChart', category: 'Charts', icon: ChartPie },
     { name: 'RadarChart', category: 'Charts', icon: ChartRadar },
-    { name: 'RadialChart', category: 'Charts', icon: ChartPie },
-    { name: 'SankeyChart', category: 'Charts', icon: ChartNoAxesCombined },
+    { name: 'RadialBarChart', category: 'Charts', icon: ChartPie },
+    { name: 'Sankey', category: 'Charts', icon: ChartNoAxesCombined },
     { name: 'Maps', category: 'Others', icon: Map },
     { name: 'Avatar', category: 'Display', icon: Users },
     { name: 'Badge', category: 'Display', icon: Badge },
@@ -134,7 +134,14 @@ export const componentDocumentation = [
     return {
         ...component,
         source: provenance.source,
-        sourceLabel: provenance.source === 'shadcn' ? 'shadcn/ui' : provenance.source === 'reui' ? 'ReUI' : 'Custom',
+        sourceLabel:
+            provenance.source === 'recharts'
+                ? 'shadcn/ui + Recharts'
+                : provenance.source === 'shadcn'
+                  ? 'shadcn/ui'
+                  : provenance.source === 'reui'
+                    ? 'ReUI'
+                    : 'Custom',
         reference: 'reference' in provenance ? provenance.reference : undefined,
         justification: 'justification' in provenance ? provenance.justification : undefined,
         label:
@@ -146,16 +153,20 @@ export const componentDocumentation = [
                     ? 'Table'
                     : component.name,
         slug:
-            component.name === 'Button'
-                ? 'buttons'
-                : component.name === 'Icon'
-                  ? 'icons'
-                  : component.name === 'DataTable'
-                    ? 'table'
-                    : component.name
-                          .replace(/([a-z])([A-Z])/g, '$1-$2')
-                          .replace(/\s+/g, '-')
-                          .toLowerCase()
+            component.name === 'RadialBarChart'
+                ? 'radial-chart'
+                : component.name === 'Sankey'
+                  ? 'sankey-chart'
+                  : component.name === 'Button'
+                    ? 'buttons'
+                    : component.name === 'Icon'
+                      ? 'icons'
+                      : component.name === 'DataTable'
+                        ? 'table'
+                        : component.name
+                              .replace(/([a-z])([A-Z])/g, '$1-$2')
+                              .replace(/\s+/g, '-')
+                              .toLowerCase()
     };
 });
 

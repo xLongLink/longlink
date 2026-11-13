@@ -34,6 +34,10 @@ const [bundle] = generateDtsBundle(
                     '@shikijs/vscode-textmate',
                     '@types/hast',
                     '@types/unist',
+                    'recharts',
+                    'victory-vendor',
+                    '@types/d3-shape',
+                    '@types/d3-path',
                 ],
                 allowedTypesLibraries: [],
             },
@@ -44,6 +48,12 @@ const [bundle] = generateDtsBundle(
 );
 const generated = ts.createSourceFile('native.d.ts', bundle, ts.ScriptTarget.Latest, true);
 const exports = new Set();
+const typeExports = new Set();
+const typeNames = new Set(
+    generated.statements
+        .filter((node) => ts.isTypeAliasDeclaration(node) || ts.isInterfaceDeclaration(node))
+        .map((node) => node.name.text)
+);
 
 // React's fallback DOM interfaces must not shadow the real DOM inside the generated namespace.
 const globals = ts.createSourceFile(
@@ -74,12 +84,18 @@ const statements = generated.statements.filter((node) => {
     if (ts.isExportDeclaration(node)) {
         if (node.moduleSpecifier) throw new Error('Frontend declarations must be self-contained.');
         if (node.exportClause && ts.isNamedExports(node.exportClause)) {
-            for (const specifier of node.exportClause.elements) exports.add(specifier.name.text);
+            for (const specifier of node.exportClause.elements) {
+                exports.add(specifier.name.text);
+                if (typeNames.has((specifier.propertyName ?? specifier.name).text)) {
+                    typeExports.add(specifier.name.text);
+                }
+            }
         }
         return Boolean(node.exportClause && ts.isNamedExports(node.exportClause) && node.exportClause.elements.length);
     }
     if (node.modifiers?.some((modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword) && node.name) {
         exports.add(node.name.text);
+        if (ts.isTypeAliasDeclaration(node) || ts.isInterfaceDeclaration(node)) typeExports.add(node.name.text);
     }
     if (
         ts.isVariableStatement(node) &&
@@ -103,7 +119,11 @@ const names = [...exports].filter((name) => name !== 'FrontendElement').sort();
 // Image and Text keep callable declarations above to avoid block-scoped collisions with lib.dom.
 const aliases = names
     .filter((name) => name !== 'Image' && name !== 'Text')
-    .map((name) => `declare const ${name}: typeof NativeFrontend.${name};`)
+    .map((name) =>
+        typeExports.has(name)
+            ? `type ${name} = NativeFrontend.${name};`
+            : `declare const ${name}: typeof NativeFrontend.${name};`
+    )
     .join('\n');
 const output = `${retained.trimEnd()}\n\n${marker}declare namespace NativeFrontend {\n${namespace}\n}\n\n${aliases}\n`;
 

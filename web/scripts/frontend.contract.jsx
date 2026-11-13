@@ -272,3 +272,37 @@ const _customGroupProps = <ButtonGroup isDisabled />;
 const _customDialogProps = <Dialog isOpen />;
 // @ts-expect-error Native Pagination is composed from anchors, not the custom data pagination contract.
 const _customPaginationProps = <Pagination page={1} totalItems={50} pageSize={10} onPageChange={() => {}} />;
+
+const _nativeCharts = (
+    <>
+        <ChartContainer
+            config={{ total: { label: 'Total', color: 'var(--chart-1)' } }}
+            style={{ height: 280 }}
+            aria-label="Revenue"
+        >
+            <AreaChart data={[{ period: 'January', total: 120 }]} accessibilityLayer>
+                <CartesianGrid vertical={false} />
+                <XAxis dataKey="period" />
+                <YAxis />
+                <Area dataKey="total" fill="var(--color-total)" stroke="var(--color-total)" />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <ChartLegend content={<ChartLegendContent />} />
+            </AreaChart>
+        </ChartContainer>
+        <ChartContainer config={{}} style={{ height: 280 }} aria-label="Revenue allocation">
+            <Sankey
+                data={{
+                    nodes: [{ name: 'Revenue' }, { name: 'Profit' }],
+                    links: [{ source: 0, target: 1, value: 40 }]
+                }}
+                node={{ fill: 'var(--chart-1)' }}
+                link={({ sourceX, targetX, sourceY, targetY }) => (
+                    <path d={`M ${sourceX},${sourceY} L ${targetX},${targetY}`} />
+                )}
+            />
+        </ChartContainer>
+    </>
+);
+
+// @ts-expect-error Charts use native marks and axes, not LongLink's category/series adapter.
+const _legacyChart = <AreaChart data={[]} categoryKey="month" series={[]} />;

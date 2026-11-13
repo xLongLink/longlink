@@ -166,112 +166,64 @@
         {
             "name": "AreaChart",
             "category": "Charts",
-            "introduction": "Shows trends as smooth filled areas with shared tooltips and a series legend.",
+            "introduction": "Native Recharts area chart. Compose Area, axes, tooltip, and legend inside a shadcn ChartContainer.",
             "properties": [
                 {
-                    "name": "label",
-                    "type": "string",
-                    "description": "Accessible chart name."
-                },
-                {
                     "name": "data",
-                    "type": "Record<string, string | number>[]",
-                    "description": "Category rows with numeric series values."
+                    "type": "object[]",
+                    "description": "Rows in your own shape. Select fields with native dataKey props on Area and axes."
                 },
                 {
-                    "name": "categoryKey",
-                    "type": "string",
-                    "description": "Row field used for category labels."
-                },
-                {
-                    "name": "series",
-                    "type": "{ key: string; label: string }[]",
-                    "description": "Numeric fields and readable series labels."
-                },
-                {
-                    "name": "height",
-                    "type": "number",
-                    "description": "Height in pixels; width follows the parent.",
-                    "default": 280
+                    "name": "children",
+                    "type": "ReactNode",
+                    "description": "Native chart marks, axes, grids, tooltip, and legend."
                 }
             ],
-            "source": "custom",
-            "justification": "Adapts Solution row and series data to shadcn chart primitives, with shared legends, tooltips, and validated empty or invalid data handling."
+            "source": "recharts",
+            "reference": "https://ui.shadcn.com/docs/components/chart"
         },
         {
             "name": "BarChart",
             "category": "Charts",
-            "introduction": "Compares values across categories using grouped bars.",
+            "introduction": "Native Recharts bar chart. Compose Bar, axes, tooltip, and legend inside a shadcn ChartContainer.",
             "properties": [
                 {
-                    "name": "label",
-                    "type": "string",
-                    "description": "Accessible chart name."
-                },
-                {
                     "name": "data",
-                    "type": "Record<string, string | number>[]",
-                    "description": "Category rows with numeric series values."
+                    "type": "object[]",
+                    "description": "Rows in your own shape. Select fields with native dataKey props on Bar and axes."
                 },
                 {
-                    "name": "categoryKey",
-                    "type": "string",
-                    "description": "Row field used for category labels."
-                },
-                {
-                    "name": "series",
-                    "type": "{ key: string; label: string }[]",
-                    "description": "Numeric fields and readable series labels."
-                },
-                {
-                    "name": "height",
-                    "type": "number",
-                    "description": "Height in pixels; width follows the parent.",
-                    "default": 280
+                    "name": "children",
+                    "type": "ReactNode",
+                    "description": "Native chart marks, axes, grids, tooltip, and legend."
                 }
             ],
-            "source": "custom",
-            "justification": "Adapts Solution row and series data to shadcn chart primitives, with shared legends, tooltips, and validated empty or invalid data handling."
+            "source": "recharts",
+            "reference": "https://ui.shadcn.com/docs/components/chart"
         },
         {
             "name": "LineChart",
             "category": "Charts",
-            "introduction": "Shows changes over time with smooth lines and shared tooltips.",
+            "introduction": "Native Recharts line chart. Compose Line, axes, tooltip, and legend inside a shadcn ChartContainer.",
             "properties": [
                 {
-                    "name": "label",
-                    "type": "string",
-                    "description": "Accessible chart name."
-                },
-                {
                     "name": "data",
-                    "type": "Record<string, string | number>[]",
-                    "description": "Category rows with numeric series values."
+                    "type": "object[]",
+                    "description": "Rows in your own shape. Select fields with native dataKey props on Line and axes."
                 },
                 {
-                    "name": "categoryKey",
-                    "type": "string",
-                    "description": "Row field used for category labels."
-                },
-                {
-                    "name": "series",
-                    "type": "{ key: string; label: string }[]",
-                    "description": "Numeric fields and readable series labels."
-                },
-                {
-                    "name": "height",
-                    "type": "number",
-                    "description": "Height in pixels; width follows the parent.",
-                    "default": 280
+                    "name": "children",
+                    "type": "ReactNode",
+                    "description": "Native chart marks, axes, grids, tooltip, and legend."
                 }
             ],
-            "source": "custom",
-            "justification": "Adapts Solution row and series data to shadcn chart primitives, with shared legends, tooltips, and validated empty or invalid data handling."
+            "source": "recharts",
+            "reference": "https://ui.shadcn.com/docs/components/chart"
         },
         {
             "name": "PieChart",
             "category": "Charts",
-            "introduction": "Displays a part-to-whole breakdown as a doughnut using nonnegative values.",
+            "introduction": "Native Recharts pie chart. Compose Pie with its own data, dataKey, and nameKey inside a shadcn ChartContainer.",
             "keywords": [
                 "doughnut",
                 "donut",
@@ -279,138 +231,74 @@
             ],
             "properties": [
                 {
-                    "name": "label",
-                    "type": "string",
-                    "description": "Accessible chart name."
-                },
-                {
-                    "name": "data",
-                    "type": "Record<string, string | number>[]",
-                    "description": "Category rows with numeric values."
-                },
-                {
-                    "name": "categoryKey",
-                    "type": "string",
-                    "description": "Row field used for category names."
-                },
-                {
-                    "name": "series",
-                    "type": "{ key: string; label: string }[]",
-                    "description": "Uses the first series only."
-                },
-                {
-                    "name": "height",
-                    "type": "number",
-                    "description": "Height in pixels; width follows the parent.",
-                    "default": 280
+                    "name": "children",
+                    "type": "ReactNode",
+                    "description": "Pie marks, tooltip, and legend. Pass row data directly to Pie."
                 }
             ],
-            "source": "custom",
-            "justification": "Adapts Solution row and series data to shadcn chart primitives, with shared legends, tooltips, and validated empty or invalid data handling."
+            "source": "recharts",
+            "reference": "https://ui.shadcn.com/docs/components/chart"
         },
         {
             "name": "RadarChart",
             "category": "Charts",
-            "introduction": "Compares series across shared dimensions on a radial grid using a common scale.",
+            "introduction": "Native Recharts radar chart. Compose Radar, polar axes, tooltip, and legend inside a shadcn ChartContainer.",
             "properties": [
                 {
-                    "name": "label",
-                    "type": "string",
-                    "description": "Accessible chart name."
-                },
-                {
                     "name": "data",
-                    "type": "Record<string, string | number>[]",
-                    "description": "Dimension rows with numeric series values."
+                    "type": "object[]",
+                    "description": "Rows in your own shape. Select fields with native dataKey props on Radar and polar axes."
                 },
                 {
-                    "name": "categoryKey",
-                    "type": "string",
-                    "description": "Row field used for dimension labels."
-                },
-                {
-                    "name": "series",
-                    "type": "{ key: string; label: string }[]",
-                    "description": "Numeric fields and readable series labels."
-                },
-                {
-                    "name": "height",
-                    "type": "number",
-                    "description": "Height in pixels; width follows the parent.",
-                    "default": 280
+                    "name": "children",
+                    "type": "ReactNode",
+                    "description": "Native chart marks, polar axes, grids, tooltip, and legend."
                 }
             ],
-            "source": "custom",
-            "justification": "Adapts Solution row and series data to shadcn chart primitives, with shared legends, tooltips, and validated empty or invalid data handling."
+            "source": "recharts",
+            "reference": "https://ui.shadcn.com/docs/components/chart"
         },
         {
-            "name": "RadialChart",
+            "name": "RadialBarChart",
             "category": "Charts",
-            "introduction": "Compares category values on concentric radial tracks with an automatically calculated common scale.",
+            "introduction": "Native Recharts radial bar chart. Compose RadialBar, polar axes, tooltip, and legend inside a shadcn ChartContainer.",
             "properties": [
                 {
-                    "name": "label",
-                    "type": "string",
-                    "description": "Accessible chart name."
-                },
-                {
                     "name": "data",
-                    "type": "Record<string, string | number>[]",
-                    "description": "Category rows with numeric values."
+                    "type": "object[]",
+                    "description": "Rows in your own shape. Select numeric fields with native dataKey props on RadialBar."
                 },
                 {
-                    "name": "categoryKey",
-                    "type": "string",
-                    "description": "Row field used for category names."
-                },
-                {
-                    "name": "series",
-                    "type": "{ key: string; label: string }[]",
-                    "description": "Uses the first series only; values are not percentage targets."
-                },
-                {
-                    "name": "height",
-                    "type": "number",
-                    "description": "Height in pixels; width follows the parent.",
-                    "default": 280
+                    "name": "children",
+                    "type": "ReactNode",
+                    "description": "Native chart marks, polar axes, grids, tooltip, and legend."
                 }
             ],
-            "source": "custom",
-            "justification": "Adapts Solution row and series data to shadcn chart primitives, with shared legends, tooltips, and validated empty or invalid data handling."
+            "source": "recharts",
+            "reference": "https://ui.shadcn.com/docs/components/chart"
         },
         {
-            "name": "SankeyChart",
+            "name": "Sankey",
             "category": "Charts",
-            "introduction": "Shows positive flows between indexed nodes in an acyclic graph. Invalid references and cycles display an error state.",
+            "introduction": "Native Recharts Sankey diagram. Supply valid acyclic nodes and links through the data prop inside a shadcn ChartContainer.",
             "keywords": [
                 "flow",
                 "sankey"
             ],
             "properties": [
                 {
-                    "name": "label",
-                    "type": "string",
-                    "description": "Accessible name of the scrollable chart region."
+                    "name": "data",
+                    "type": "{ nodes: object[]; links: object[] }",
+                    "description": "Native Sankey data. Links reference nodes by zero-based source and target indexes. Supply valid acyclic flows."
                 },
                 {
-                    "name": "nodes",
-                    "type": "{ name: string }[]",
-                    "description": "Named nodes referenced by zero-based index."
-                },
-                {
-                    "name": "links",
-                    "type": "{ source: number; target: number; value: number }[]",
-                    "description": "Positive acyclic flows referencing existing nodes; intermediate inflows and outflows should balance."
-                },
-                {
-                    "name": "height",
-                    "type": "number",
-                    "description": "Height in pixels; diagram has a minimum width of 640 pixels.",
-                    "default": 360
+                    "name": "children",
+                    "type": "ReactNode",
+                    "description": "Native tooltip and other supported Recharts children."
                 }
             ],
-            "source": "custom",
-            "justification": "Adapts Solution row and series data to shadcn chart primitives, with shared legends, tooltips, and validated empty or invalid data handling."
+            "source": "recharts",
+            "reference": "https://ui.shadcn.com/docs/components/chart"
         },
         {
             "name": "Avatar",

@@ -52,3 +52,11 @@ export { Slider, SliderControl, SliderTrack, SliderRange, SliderThumb } from '..
 export { SliderField } from '../src/components/custom/slider-field';
 export { Progress, ProgressLabel, ProgressValue, ProgressTrack, ProgressIndicator } from '../src/components/shadcn/progress';
 export type FrontendElement = JSX.Element;
+export type FrontendElementType = JSX.ElementType;
+export { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from '../src/components/shadcn/chart';
+export type { ChartConfig } from '../src/components/shadcn/chart';
+export {
+    AreaChart, Area, BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, RadarChart, Radar,
+    RadialBarChart, RadialBar, Sankey, CartesianGrid, XAxis, YAxis, PolarGrid, PolarAngleAxis,
+    PolarRadiusAxis, ResponsiveContainer, Label, LabelList, ReferenceLine, ComposedChart
+} from 'recharts';

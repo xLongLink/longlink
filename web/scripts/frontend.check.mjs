@@ -28,7 +28,9 @@ test('published component provenance matches the implementation exposed to Views
         const implementation = symbol.flags & ts.SymbolFlags.Alias ? checker.getAliasedSymbol(symbol) : symbol;
         const filename = implementation.declarations?.[0]?.getSourceFile().fileName;
         assert.ok(
-            filename?.includes(`/components/${component.source}/`),
+            component.source === 'recharts'
+                ? filename?.includes('/node_modules/recharts/')
+                : filename?.includes(`/components/${component.source}/`),
             `${component.name} is documented as ${component.source}, but resolves to ${filename}.`
         );
     }

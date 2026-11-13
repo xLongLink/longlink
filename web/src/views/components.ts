@@ -346,13 +346,42 @@ export { FileViewer } from '@/components/custom/file-viewer';
 /** @category Charts */
 export {
     AreaChart,
+    Area,
     BarChart,
+    Bar,
     LineChart,
+    Line,
     PieChart,
+    Pie,
+    Cell,
     RadarChart,
-    RadialChart,
-    SankeyChart
-} from '@/components/custom/chart';
+    Radar,
+    RadialBarChart,
+    RadialBar,
+    Sankey,
+    CartesianGrid,
+    XAxis,
+    YAxis,
+    PolarGrid,
+    PolarAngleAxis,
+    PolarRadiusAxis,
+    ResponsiveContainer,
+    Label,
+    LabelList,
+    ReferenceLine,
+    ComposedChart
+} from 'recharts';
+
+/** @category Charts */
+export {
+    ChartContainer,
+    ChartTooltip,
+    ChartTooltipContent,
+    ChartLegend,
+    ChartLegendContent
+} from '@/components/shadcn/chart';
+
+export type { ChartConfig } from '@/components/shadcn/chart';
 
 /** @category Others */
 export { Maps } from '@/components/custom/maps';

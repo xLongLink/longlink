@@ -65,6 +65,7 @@ type DropdownMenuOption =
 declare namespace React {
     namespace JSX {
         type Element = NativeFrontend.FrontendElement;
+        type ElementType = NativeFrontend.FrontendElementType | typeof Text;
         // Text shares its global name with the DOM constructor.
         type LibraryManagedAttributes<Component, Props> = Component extends typeof Text
             ? Parameters<typeof NativeFrontend.Text>[0]
@@ -4880,43 +4881,6 @@ declare function Currency(props: {
     currency: string;
     /** Locale for formatting; omitted values use the viewer's locale. */
     locale?: string;
-}): React.JSX.Element;
-
-/** Shared data contract for category and trend charts. @category Charts @group AreaChart */
-type ChartProps = {
-    label: string;
-    data: Record<string, string | number>[];
-    categoryKey: string;
-    series: { key: string; label: string }[];
-    /** Height in pixels; defaults to 280. */
-    height?: number;
-};
-
-/** Shows trends as smooth filled areas. @category Charts */
-declare function AreaChart(props: ChartProps): React.JSX.Element;
-
-/** Compares categories using grouped bars. @category Charts */
-declare function BarChart(props: ChartProps): React.JSX.Element;
-
-/** Shows trends as smooth lines. @category Charts */
-declare function LineChart(props: ChartProps): React.JSX.Element;
-
-/** Displays the first series as a doughnut. @category Charts */
-declare function PieChart(props: ChartProps): React.JSX.Element;
-
-/** Compares series across shared radial dimensions. @category Charts */
-declare function RadarChart(props: ChartProps): React.JSX.Element;
-
-/** Displays the first series as concentric radial bars. @category Charts */
-declare function RadialChart(props: ChartProps): React.JSX.Element;
-
-/** Displays a directed acyclic graph of positive flows. @category Charts */
-declare function SankeyChart(props: {
-    label: string;
-    nodes: { name: string }[];
-    links: { source: number; target: number; value: number }[];
-    /** Height in pixels; defaults to 360. */
-    height?: number;
 }): React.JSX.Element;
 
 /** Renders supplied GeoJSON or TopoJSON polygon boundaries. @category Others */
@@ -14147,7 +14111,2108 @@ function ProgressTrack$1({ className, ...props }: Progress.Track.Props): React$1
 function ProgressIndicator$1({ className, ...props }: Progress.Indicator.Props): React$1.JSX.Element;
 function ProgressLabel$1({ className, ...props }: Progress.Label.Props): React$1.JSX.Element;
 function ProgressValue$1({ className, ...props }: Progress.Value.Props): React$1.JSX.Element;
+interface DotProps {
+    className?: string;
+    cx?: number;
+    cy?: number;
+    r?: number | string;
+    clipDot?: boolean;
+}
+type Props = PresentationAttributesWithProps<DotProps, SVGCircleElement> & DotProps;
+type TextAnchor = "start" | "middle" | "end" | "inherit";
+type TextVerticalAnchor = "start" | "middle" | "end";
+type RenderableText = string | number | boolean | null | undefined;
+interface TextProps$1 {
+    scaleToFit?: boolean;
+    angle?: number;
+    textAnchor?: TextAnchor;
+    verticalAnchor?: TextVerticalAnchor;
+    style?: React$1.CSSProperties;
+    lineHeight?: number | string;
+    breakAll?: boolean;
+    children?: RenderableText;
+    maxLines?: number;
+    width?: number | string;
+}
+type Props$1 = Omit<React$1.SVGProps<SVGTextElement>, "textAnchor" | "verticalAnchor"> & TextProps$1;
+interface ZIndexable {
+    zIndex?: number;
+}
+type CartesianLabelPosition = "top" | "left" | "right" | "bottom" | "inside" | "outside" | "insideLeft" | "insideRight" | "insideTop" | "insideBottom" | "insideTopLeft" | "insideBottomLeft" | "insideTopRight" | "insideBottomRight" | "insideStart" | "insideEnd" | "end" | "center" | "centerTop" | "centerBottom" | "middle" | {
+    x?: number | string;
+    y?: number | string;
+};
+type LabelContentType = React$1.ReactElement | ((props: Props$2) => RenderableText | React$1.ReactElement);
+type PolarLabelPosition = "insideStart" | "insideEnd" | "end";
+type LabelPosition = CartesianLabelPosition | PolarLabelPosition;
+type LabelFormatter = (label: RenderableText) => RenderableText;
+interface LabelProps extends ZIndexable {
+    viewBox?: ViewBox;
+    parentViewBox?: ViewBox;
+    formatter?: LabelFormatter;
+    value?: RenderableText;
+    offset?: number;
+    position?: LabelPosition;
+    children?: RenderableText;
+    className?: string;
+    content?: LabelContentType;
+    textBreakAll?: boolean;
+    angle?: number;
+    index?: number;
+    labelRef?: React$1.RefObject<SVGTextElement> | null;
+    zIndex?: number;
+    id?: string;
+}
+type Props$2 = Omit<React$1.SVGProps<SVGTextElement>, "viewBox"> & LabelProps;
+type ImplicitLabelType = boolean | string | number | React$1.ReactElement<SVGElement> | ((props: any) => RenderableText | React$1.ReactElement) | (Props$2 & {
+    dataKey?: DataKey<any>;
+});
+function Label$1(outerProps: Props$2): React$1.JSX.Element | null;
+namespace Label$1 {
+    var displayName: string;
+}
+type TickFormatter = (value: any, index: number) => string;
+interface CustomScaleDefinition<Domain extends CategoricalDomainItem = CategoricalDomainItem> {
+    domain(): ReadonlyArray<Domain>;
+    domain(newDomain: ReadonlyArray<Domain>): this;
+    range(): ReadonlyArray<number>;
+    range(newRange: ReadonlyArray<number>): this;
+    copy(): CustomScaleDefinition<Domain>;
+    bandwidth?: () => number;
+    ticks?: (count: number | undefined) => ReadonlyArray<number>;
+    (input: Domain): number | undefined;
+    invert?(value: number): Domain | undefined;
+}
+type AxisId = string | number;
+type XAxisPadding = {
+    left?: number;
+    right?: number;
+} | "gap" | "no-gap";
+type YAxisPadding = {
+    top?: number;
+    bottom?: number;
+} | "gap" | "no-gap";
+type XAxisOrientation = "top" | "bottom";
+type YAxisOrientation = "left" | "right";
+type BaseCartesianAxis = {
+    id: AxisId;
+    scale: ScaleType | CustomScaleDefinition | CustomScaleDefinition<string> | CustomScaleDefinition<number> | CustomScaleDefinition<Date>;
+    type: EvaluatedAxisDomainType;
+    dataKey: DataKey<any> | undefined;
+    unit: string | undefined;
+    name: string | undefined;
+    allowDuplicatedCategory: boolean;
+    allowDataOverflow: boolean;
+    reversed: boolean;
+    includeHidden: boolean;
+    domain: AxisDomain | undefined;
+};
+type NiceTicksAlgorithm = "none" | "auto" | "adaptive" | "snap125";
+type TicksSettings = {
+    allowDecimals: boolean;
+    tickCount: number | undefined;
+    ticks: ReadonlyArray<AxisTick> | undefined;
+    tick: TickProp<any>;
+    niceTicks: NiceTicksAlgorithm;
+};
+type CartesianAxisSettings = BaseCartesianAxis & TicksSettings & {
+    interval: AxisInterval;
+    mirror: boolean;
+    minTickGap: number;
+    angle: number;
+    hide: boolean;
+    tickFormatter: TickFormatter | undefined;
+};
+type YAxisWidth = number | "auto";
+type ActiveLabel = string | number | undefined;
+type MouseHandlerDataParam = {
+    activeTooltipIndex: number | TooltipIndex | undefined;
+    isTooltipActive: boolean;
+    activeIndex: number | TooltipIndex | undefined;
+    activeLabel: ActiveLabel;
+    activeDataKey: DataKey<any> | undefined;
+    activeCoordinate: Coordinate | undefined;
+};
+type SyncMethod = "index" | "value" | ((ticks: ReadonlyArray<TickItem>, data: MouseHandlerDataParam) => number);
+type TooltipTrigger = "hover" | "click";
+type CategoricalChartFunc<E = React$1.SyntheticEvent> = (nextState: MouseHandlerDataParam, event: E) => void;
+interface ExternalMouseEvents {
+    onClick?: CategoricalChartFunc<React$1.MouseEvent<SVGGraphicsElement>>;
+    onMouseLeave?: CategoricalChartFunc<React$1.MouseEvent<SVGGraphicsElement>>;
+    onMouseEnter?: CategoricalChartFunc<React$1.MouseEvent<SVGGraphicsElement>>;
+    onMouseMove?: CategoricalChartFunc<React$1.MouseEvent<SVGGraphicsElement>>;
+    onMouseDown?: CategoricalChartFunc<React$1.MouseEvent<SVGGraphicsElement>>;
+    onMouseUp?: CategoricalChartFunc<React$1.MouseEvent<SVGGraphicsElement>>;
+    onContextMenu?: CategoricalChartFunc<React$1.MouseEvent<SVGGraphicsElement>>;
+    onDoubleClick?: CategoricalChartFunc<React$1.MouseEvent<SVGGraphicsElement>>;
+    onTouchStart?: CategoricalChartFunc<React$1.TouchEvent<SVGGraphicsElement>>;
+    onTouchMove?: CategoricalChartFunc<React$1.TouchEvent<SVGGraphicsElement>>;
+    onTouchEnd?: CategoricalChartFunc<React$1.TouchEvent<SVGGraphicsElement>>;
+}
+type TooltipType = "none";
+type ValueType = number | string | ReadonlyArray<number | string>;
+type NameType = number | string;
+type Formatter<TValue extends ValueType = ValueType, TName extends NameType = NameType> = (value: TValue | undefined, name: TName | undefined, item: Payload<TValue, TName>, index: number, payload: ReadonlyArray<Payload<TValue, TName>>) => [
+    React$1.ReactNode,
+    TName
+] | React$1.ReactNode;
+interface Payload<TValue extends ValueType = ValueType, TName extends NameType = NameType> extends Omit<React$1.SVGProps<SVGElement>, "name"> {
+    type?: TooltipType;
+    color?: string;
+    formatter?: Formatter<TValue, TName>;
+    name?: TName;
+    value?: TValue;
+    unit?: React$1.ReactNode;
+    fill?: string;
+    dataKey?: DataKey<any>;
+    nameKey?: DataKey<any>;
+    payload?: any;
+    chartType?: string;
+    stroke?: string;
+    strokeDasharray?: string | number;
+    strokeWidth?: number | string;
+    className?: string;
+    hide?: boolean;
+    graphicalItemId: string;
+}
+type TooltipItemSorter<TValue extends ValueType = ValueType, TName extends NameType = NameType> = "dataKey" | "value" | "name" | ((item: Payload<TValue, TName>) => number | string | undefined);
+interface Props$3<TValue extends ValueType = ValueType, TName extends NameType = NameType> {
+    separator?: string;
+    wrapperClassName?: string;
+    labelClassName?: string;
+    formatter?: Formatter<TValue, TName>;
+    contentStyle?: React$1.CSSProperties;
+    itemStyle?: React$1.CSSProperties;
+    labelStyle?: React$1.CSSProperties;
+    labelFormatter?: (label: React$1.ReactNode, payload: ReadonlyArray<Payload<TValue, TName>>) => React$1.ReactNode;
+    label?: React$1.ReactNode;
+    payload?: ReadonlyArray<Payload<TValue, TName>>;
+    itemSorter?: TooltipItemSorter<TValue, TName>;
+    accessibilityLayer?: boolean;
+}
+type ChartData<DataPointType = unknown> = ReadonlyArray<DataPointType>;
+interface Path {
+    moveTo(x: number, y: number): void;
+    closePath(): void;
+    lineTo(x: number, y: number): void;
+    quadraticCurveTo(cpx: number, cpy: number, x: number, y: number): void;
+    bezierCurveTo(cpx1: number, cpy1: number, cpx2: number, cpy2: number, x: number, y: number): void;
+    arcTo(x1: number, y1: number, x2: number, y2: number, radius: number): void;
+    arc(x: number, y: number, radius: number, startAngle: number, endAngle: number, anticlockwise?: boolean): void;
+    rect(x: number, y: number, w: number, h: number): void;
+    toString(): string;
+}
+interface CurveGeneratorLineOnly {
+    lineStart(): void;
+    lineEnd(): void;
+    point(x: number, y: number): void;
+}
+interface CurveGenerator extends CurveGeneratorLineOnly {
+    areaStart(): void;
+    areaEnd(): void;
+}
+type CurveFactory = (context: CanvasRenderingContext2D | Path) => CurveGenerator;
+type CurveType = "basis" | "basisClosed" | "basisOpen" | "bumpX" | "bumpY" | "bump" | "linear" | "linearClosed" | "natural" | "monotoneX" | "monotoneY" | "monotone" | "step" | "stepBefore" | "stepAfter" | CurveFactory;
+type BaseLineType = number | ReadonlyArray<NullableCoordinate>;
+interface CurveProps {
+    className?: string;
+    type?: CurveType;
+    layout?: LayoutType;
+    baseLine?: BaseLineType;
+    points?: ReadonlyArray<NullableCoordinate>;
+    connectNulls?: boolean;
+    path?: string;
+    pathRef?: React$1.Ref<SVGPathElement>;
+    strokeDasharray?: string | number;
+}
+type CurveMouseEventHandler = RechartsMouseEventHandler<Props$4, SVGPathElement>;
+type CurveMouseEvents = {
+    onClick?: CurveMouseEventHandler;
+    onMouseEnter?: CurveMouseEventHandler;
+    onMouseLeave?: CurveMouseEventHandler;
+    onMouseDown?: CurveMouseEventHandler;
+    onMouseUp?: CurveMouseEventHandler;
+    onMouseMove?: CurveMouseEventHandler;
+    onMouseOver?: CurveMouseEventHandler;
+    onMouseOut?: CurveMouseEventHandler;
+};
+type Props$4 = Omit<PresentationAttributesWithProps<CurveProps, SVGPathElement>, "type" | "points" | "onClick" | "onMouseEnter" | "onMouseLeave" | "onMouseDown" | "onMouseUp" | "onMouseMove" | "onMouseOver" | "onMouseOut"> & CurveMouseEvents & CurveProps;
+interface LabelListEntry<DataPointItem = any> {
+    value: unknown;
+    payload: DataPointItem;
+    fill: string | undefined;
+}
+interface CartesianLabelListEntry extends LabelListEntry, TrapezoidViewBox {
+    viewBox: TrapezoidViewBox;
+    parentViewBox?: CartesianViewBoxRequired;
+}
+interface PolarLabelListEntry extends LabelListEntry {
+    viewBox: PolarViewBoxRequired;
+    parentViewBox?: PolarViewBoxRequired;
+    clockWise?: boolean;
+}
+interface LabelListProps extends ZIndexable {
+    id?: string;
+    valueAccessor?: (entry: CartesianLabelListEntry | PolarLabelListEntry, index: number) => RenderableText;
+    clockWise?: boolean;
+    dataKey?: DataKey<any>;
+    content?: LabelContentType;
+    textBreakAll?: boolean;
+    position?: LabelPosition;
+    offset?: Props$2["offset"];
+    angle?: number;
+    formatter?: LabelFormatter;
+    zIndex?: number;
+}
+type SvgTextProps = React$1.PropsWithoutRef<React$1.SVGProps<SVGTextElement>>;
+type Props$5 = Omit<SvgTextProps, "children"> & LabelListProps;
+type ImplicitLabelListType = boolean | LabelContentType | Props$5;
+export function LabelList({ valueAccessor, ...restProps }: Props$5): React$1.JSX.Element | null;
+export namespace LabelList {
+    var displayName: string;
+}
+type ContentType = React$1.ReactElement | ((props: Props$6) => React$1.ReactNode);
+type HorizontalAlignmentType = "center" | "left" | "right";
+type VerticalAlignmentType = "top" | "bottom" | "middle";
+type Formatter$1 = (value: any, entry: LegendPayload, index: number) => React$1.ReactNode;
+interface LegendPayload {
+    value: string | undefined;
+    type?: LegendType;
+    color?: string;
+    payload?: object;
+    formatter?: Formatter$1;
+    inactive?: boolean;
+    legendIcon?: React$1.ReactElement<SVGElement>;
+    dataKey?: DataKey<any>;
+}
+interface DefaultLegendContentProps {
+    iconSize?: number;
+    iconType?: LegendType;
+    layout?: CartesianLayout;
+    align?: HorizontalAlignmentType;
+    verticalAlign?: VerticalAlignmentType;
+    inactiveColor?: string;
+    formatter?: Formatter$1;
+    onMouseEnter?: (data: LegendPayload, index: number, event: React$1.MouseEvent<HTMLElement>) => void;
+    onMouseLeave?: (data: LegendPayload, index: number, event: React$1.MouseEvent<HTMLElement>) => void;
+    onClick?: (data: LegendPayload, index: number, event: React$1.MouseEvent<HTMLElement>) => void;
+    payload?: ReadonlyArray<LegendPayload>;
+    labelStyle?: React$1.CSSProperties;
+}
+type Props$6 = DefaultLegendContentProps & Omit<PresentationAttributesAdaptChildEvent<any, React$1.ReactElement>, keyof DefaultLegendContentProps>;
+type UniqueFunc<T> = (entry: T) => unknown;
+type UniqueOption<T> = boolean | UniqueFunc<T>;
+type ElementOffset = {
+    height: number;
+    left: number;
+    top: number;
+    width: number;
+};
+type LegendItemSorter = "value" | "dataKey" | ((item: LegendPayload) => number | string);
+type Props$7 = Omit<Props$6, "payload" | "ref" | "verticalAlign"> & {
+    content?: ContentType;
+    wrapperStyle?: React$1.CSSProperties;
+    width?: number | string;
+    height?: number | string;
+    payloadUniqBy?: UniqueOption<LegendPayload>;
+    onBBoxUpdate?: (box: ElementOffset | null) => void;
+    portal?: HTMLElement | null;
+    itemSorter?: LegendItemSorter | null;
+    verticalAlign?: VerticalAlignmentType;
+};
+interface RechartsScale<Domain extends CategoricalDomainItem = CategoricalDomainItem> {
+    domain(): ReadonlyArray<Domain>;
+    range(): ReadonlyArray<number>;
+    rangeMin(): number;
+    rangeMax(): number;
+    isInRange(value: number): boolean;
+    bandwidth?: () => number;
+    ticks?: (count: number | undefined) => ReadonlyArray<number>;
+    map(input: unknown, options?: {
+        position?: BandPosition;
+    }): number | undefined;
+}
+type BandPosition = "start" | "middle" | "end";
+type AxisPropsNeededForTicksGenerator = {
+    axisType?: AxisType;
+    categoricalDomain?: ReadonlyArray<unknown>;
+    duplicateDomain?: ReadonlyArray<unknown>;
+    isCategorical?: boolean;
+    niceTicks?: ReadonlyArray<AxisTick>;
+    range?: AxisRange;
+    realScaleType?: "scaleBand" | string;
+    scale: RechartsScale | undefined;
+    tickCount?: number;
+    ticks?: ReadonlyArray<AxisTick>;
+    type?: "number" | "category";
+};
+type StackId = string | number;
+type BaseValue = number | "dataMin" | "dataMax";
+interface AreaProps<DataPointType = any, DataValueType = any> extends DataProvider<DataPointType>, Required<DataConsumer<DataPointType, DataValueType>>, ZIndexable {
+    activeDot?: ActiveDotType;
+    animationBegin?: number;
+    animationDuration?: AnimationDuration;
+    animationEasing?: AnimationTiming;
+    baseLine?: BaseLineType;
+    baseValue?: BaseValue;
+    className?: string;
+    connectNulls?: boolean;
+    dot?: DotType;
+    hide?: boolean;
+    id?: string;
+    isAnimationActive?: boolean | "auto";
+    isRange?: boolean;
+    label?: ImplicitLabelListType;
+    legendType?: LegendType;
+    name?: string | number;
+    onAnimationEnd?: () => void;
+    onAnimationStart?: () => void;
+    stackId?: StackId;
+    stroke?: string;
+    strokeWidth?: string | number;
+    tooltipType?: TooltipType$1;
+    type?: CurveType;
+    unit?: string | number;
+    xAxisId?: AxisId;
+    yAxisId?: AxisId;
+    zIndex?: number;
+}
+type AreaSvgProps = Omit<Props$4, "points" | "ref" | "layout" | "path" | "pathRef" | "baseLine" | "dangerouslySetInnerHTML">;
+type Props$8<DataPointType, ValueAxisType> = AreaSvgProps & AreaProps<DataPointType, ValueAxisType>;
+export const Area: <DataPointType = any, ValueAxisType = any>(props: Props$8<DataPointType, ValueAxisType>) => React$1.ReactElement;
+type CubicBezierTemplate = `cubic-bezier(${number},${number},${number},${number})`;
+type NamedBezier = "linear" | "ease" | "ease-in" | "ease-out" | "ease-in-out" | CubicBezierTemplate;
+type BezierEasingFunction = {
+    isStepper: false;
+    (t: number): number;
+};
+type SpringEasingFunction = {
+    isStepper: true;
+    dt: number;
+    (currX: number, destX: number, currV: number): [
+        number,
+        number
+    ];
+};
+type EasingFunction = BezierEasingFunction | SpringEasingFunction;
+type EasingInput = NamedBezier | "spring" | EasingFunction;
+type RectRadius = number | [
+    number,
+    number,
+    number,
+    number
+];
+interface RectangleProps {
+    className?: string;
+    x?: number;
+    y?: number;
+    width?: number;
+    height?: number;
+    radius?: RectRadius;
+    isAnimationActive?: boolean;
+    isUpdateAnimationActive?: boolean;
+    animationBegin?: number;
+    animationDuration?: AnimationDuration;
+    animationEasing?: EasingInput;
+    onClick?: (e: React$1.MouseEvent<SVGPathElement>) => void;
+    onMouseDown?: (e: React$1.MouseEvent<SVGPathElement>) => void;
+    onMouseUp?: (e: React$1.MouseEvent<SVGPathElement>) => void;
+    onMouseMove?: (e: React$1.MouseEvent<SVGPathElement>) => void;
+    onMouseOver?: (e: React$1.MouseEvent<SVGPathElement>) => void;
+    onMouseOut?: (e: React$1.MouseEvent<SVGPathElement>) => void;
+    onMouseEnter?: (e: React$1.MouseEvent<SVGPathElement>) => void;
+    onMouseLeave?: (e: React$1.MouseEvent<SVGPathElement>) => void;
+}
+type Props$9 = Omit<React$1.SVGProps<SVGPathElement>, "radius"> & RectangleProps;
+type BarRectangleType = {
+    x: number | null;
+    y: number | null;
+    width: number;
+    height: number;
+};
+interface BarRectangleItem extends Props$9 {
+    value: number | [
+        number,
+        number
+    ];
+    background?: BarRectangleType;
+    tooltipPosition: Coordinate;
+    readonly payload?: any;
+    parentViewBox: CartesianViewBoxRequired;
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    stackedBarStart: number;
+    originalDataIndex: number;
+}
+type BarShapeProps = BarRectangleItem & {
+    isActive: boolean;
+    index: number;
+    option?: ActiveShape<BarShapeProps, SVGPathElement> | undefined;
+};
+interface BarProps<DataPointType, ValueAxisType> extends DataConsumer<DataPointType, ValueAxisType>, ZIndexable {
+    className?: string;
+    index?: React$1.Key;
+    xAxisId?: AxisId;
+    yAxisId?: AxisId;
+    stackId?: StackId;
+    barSize?: string | number;
+    unit?: string | number;
+    name?: string | number;
+    tooltipType?: TooltipType$1;
+    legendType?: LegendType;
+    minPointSize?: MinPointSize;
+    maxBarSize?: number;
+    hide?: boolean;
+    shape?: ActiveShape<BarShapeProps, SVGPathElement>;
+    activeBar?: ActiveShape<BarShapeProps, SVGPathElement>;
+    background?: ActiveShape<BarShapeProps, SVGPathElement> & ZIndexable;
+    radius?: RectRadius;
+    onAnimationStart?: () => void;
+    onAnimationEnd?: () => void;
+    isAnimationActive?: boolean | "auto";
+    animationBegin?: number;
+    animationDuration?: AnimationDuration;
+    animationEasing?: EasingInput;
+    id?: string;
+    label?: ImplicitLabelListType;
+    zIndex?: number;
+}
+type BarMouseEvent = (data: BarRectangleItem, index: number, event: React$1.MouseEvent<SVGPathElement, MouseEvent>) => void;
+interface BarEvents {
+    onClick: BarMouseEvent;
+    onMouseEnter: BarMouseEvent;
+    onMouseLeave: BarMouseEvent;
+    onMouseMove: BarMouseEvent;
+    onMouseDown: BarMouseEvent;
+    onMouseUp: BarMouseEvent;
+    onMouseOver: BarMouseEvent;
+    onMouseOut: BarMouseEvent;
+}
+type BarSvgProps = Omit<PresentationAttributesAdaptChildEvent<BarRectangleItem, SVGPathElement>, "radius" | "name" | "ref">;
+type Props$10<DataPointType = any, ValueAxisType = any> = Partial<BarEvents> & BarProps<DataPointType, ValueAxisType> & Omit<BarSvgProps, keyof BarEvents>;
+export const Bar: <DataPointType = any, ValueAxisType = any>(props: Props$10<DataPointType, ValueAxisType>) => React$1.ReactElement;
+type MinPointSize = number | ((value: number | undefined | null, index: number) => number);
+const SVGElementPropKeys: readonly [
+    "aria-activedescendant",
+    "aria-atomic",
+    "aria-autocomplete",
+    "aria-busy",
+    "aria-checked",
+    "aria-colcount",
+    "aria-colindex",
+    "aria-colspan",
+    "aria-controls",
+    "aria-current",
+    "aria-describedby",
+    "aria-details",
+    "aria-disabled",
+    "aria-errormessage",
+    "aria-expanded",
+    "aria-flowto",
+    "aria-haspopup",
+    "aria-hidden",
+    "aria-invalid",
+    "aria-keyshortcuts",
+    "aria-label",
+    "aria-labelledby",
+    "aria-level",
+    "aria-live",
+    "aria-modal",
+    "aria-multiline",
+    "aria-multiselectable",
+    "aria-orientation",
+    "aria-owns",
+    "aria-placeholder",
+    "aria-posinset",
+    "aria-pressed",
+    "aria-readonly",
+    "aria-relevant",
+    "aria-required",
+    "aria-roledescription",
+    "aria-rowcount",
+    "aria-rowindex",
+    "aria-rowspan",
+    "aria-selected",
+    "aria-setsize",
+    "aria-sort",
+    "aria-valuemax",
+    "aria-valuemin",
+    "aria-valuenow",
+    "aria-valuetext",
+    "className",
+    "color",
+    "height",
+    "id",
+    "lang",
+    "max",
+    "media",
+    "method",
+    "min",
+    "name",
+    "style",
+    "target",
+    "width",
+    "role",
+    "tabIndex",
+    "accentHeight",
+    "accumulate",
+    "additive",
+    "alignmentBaseline",
+    "allowReorder",
+    "alphabetic",
+    "amplitude",
+    "arabicForm",
+    "ascent",
+    "attributeName",
+    "attributeType",
+    "autoReverse",
+    "azimuth",
+    "baseFrequency",
+    "baselineShift",
+    "baseProfile",
+    "bbox",
+    "begin",
+    "bias",
+    "by",
+    "calcMode",
+    "capHeight",
+    "clip",
+    "clipPath",
+    "clipPathUnits",
+    "clipRule",
+    "colorInterpolation",
+    "colorInterpolationFilters",
+    "colorProfile",
+    "colorRendering",
+    "contentScriptType",
+    "contentStyleType",
+    "cursor",
+    "cx",
+    "cy",
+    "d",
+    "decelerate",
+    "descent",
+    "diffuseConstant",
+    "direction",
+    "display",
+    "divisor",
+    "dominantBaseline",
+    "dur",
+    "dx",
+    "dy",
+    "edgeMode",
+    "elevation",
+    "enableBackground",
+    "end",
+    "exponent",
+    "externalResourcesRequired",
+    "fill",
+    "fillOpacity",
+    "fillRule",
+    "filter",
+    "filterRes",
+    "filterUnits",
+    "floodColor",
+    "floodOpacity",
+    "focusable",
+    "fontFamily",
+    "fontSize",
+    "fontSizeAdjust",
+    "fontStretch",
+    "fontStyle",
+    "fontVariant",
+    "fontWeight",
+    "format",
+    "from",
+    "fx",
+    "fy",
+    "g1",
+    "g2",
+    "glyphName",
+    "glyphOrientationHorizontal",
+    "glyphOrientationVertical",
+    "glyphRef",
+    "gradientTransform",
+    "gradientUnits",
+    "hanging",
+    "horizAdvX",
+    "horizOriginX",
+    "href",
+    "ideographic",
+    "imageRendering",
+    "in2",
+    "in",
+    "intercept",
+    "k1",
+    "k2",
+    "k3",
+    "k4",
+    "k",
+    "kernelMatrix",
+    "kernelUnitLength",
+    "kerning",
+    "keyPoints",
+    "keySplines",
+    "keyTimes",
+    "lengthAdjust",
+    "letterSpacing",
+    "lightingColor",
+    "limitingConeAngle",
+    "local",
+    "markerEnd",
+    "markerHeight",
+    "markerMid",
+    "markerStart",
+    "markerUnits",
+    "markerWidth",
+    "mask",
+    "maskContentUnits",
+    "maskUnits",
+    "mathematical",
+    "mode",
+    "numOctaves",
+    "offset",
+    "opacity",
+    "operator",
+    "order",
+    "orient",
+    "orientation",
+    "origin",
+    "overflow",
+    "overlinePosition",
+    "overlineThickness",
+    "paintOrder",
+    "panose1",
+    "pathLength",
+    "patternContentUnits",
+    "patternTransform",
+    "patternUnits",
+    "pointerEvents",
+    "pointsAtX",
+    "pointsAtY",
+    "pointsAtZ",
+    "preserveAlpha",
+    "preserveAspectRatio",
+    "primitiveUnits",
+    "r",
+    "radius",
+    "refX",
+    "refY",
+    "renderingIntent",
+    "repeatCount",
+    "repeatDur",
+    "requiredExtensions",
+    "requiredFeatures",
+    "restart",
+    "result",
+    "rotate",
+    "rx",
+    "ry",
+    "seed",
+    "shapeRendering",
+    "slope",
+    "spacing",
+    "specularConstant",
+    "specularExponent",
+    "speed",
+    "spreadMethod",
+    "startOffset",
+    "stdDeviation",
+    "stemh",
+    "stemv",
+    "stitchTiles",
+    "stopColor",
+    "stopOpacity",
+    "strikethroughPosition",
+    "strikethroughThickness",
+    "string",
+    "stroke",
+    "strokeDasharray",
+    "strokeDashoffset",
+    "strokeLinecap",
+    "strokeLinejoin",
+    "strokeMiterlimit",
+    "strokeOpacity",
+    "strokeWidth",
+    "surfaceScale",
+    "systemLanguage",
+    "tableValues",
+    "targetX",
+    "targetY",
+    "textAnchor",
+    "textDecoration",
+    "textLength",
+    "textRendering",
+    "to",
+    "transform",
+    "u1",
+    "u2",
+    "underlinePosition",
+    "underlineThickness",
+    "unicode",
+    "unicodeBidi",
+    "unicodeRange",
+    "unitsPerEm",
+    "vAlphabetic",
+    "values",
+    "vectorEffect",
+    "version",
+    "vertAdvY",
+    "vertOriginX",
+    "vertOriginY",
+    "vHanging",
+    "vIdeographic",
+    "viewTarget",
+    "visibility",
+    "vMathematical",
+    "widths",
+    "wordSpacing",
+    "writingMode",
+    "x1",
+    "x2",
+    "x",
+    "xChannelSelector",
+    "xHeight",
+    "xlinkActuate",
+    "xlinkArcrole",
+    "xlinkHref",
+    "xlinkRole",
+    "xlinkShow",
+    "xlinkTitle",
+    "xlinkType",
+    "xmlBase",
+    "xmlLang",
+    "xmlns",
+    "xmlnsXlink",
+    "xmlSpace",
+    "y1",
+    "y2",
+    "y",
+    "yChannelSelector",
+    "z",
+    "zoomAndPan",
+    "ref",
+    "key",
+    "angle"
+];
+type SVGElementPropKeysType = (typeof SVGElementPropKeys)[number];
+type DataAttributeKeyType = `data-${string}`;
+type SVGPropsNoEvents<T> = Pick<T, Extract<keyof T, SVGElementPropKeysType | DataAttributeKeyType>>;
+type WithIdRequired<T> = T & {
+    id: string;
+};
+type WithoutId<T> = Omit<T, "id">;
+type PiePresentationProps = SVGPropsNoEvents<WithoutId<React$1.SVGProps<SVGPathElement>>>;
+type TooltipPayloadEntry = Payload<ValueType, NameType>;
+type TooltipPayload = ReadonlyArray<TooltipPayloadEntry>;
+type TooltipIndex = string | null;
+type IfOverflow = "hidden" | "visible" | "discard" | "extendDomain";
+interface Overflowable {
+    ifOverflow?: IfOverflow;
+}
+type RequiredKeys<T> = {
+    [K in keyof T]-?: object extends Pick<T, K> ? never : K;
+}[keyof T];
+type OptionalKeys<T> = {
+    [K in keyof T]-?: object extends Pick<T, K> ? K : never;
+}[keyof T];
+type RequiresDefaultProps<Props, Defaults extends Partial<Props>> = Pick<Props, RequiredKeys<Props>> & Required<Pick<Props, Extract<OptionalKeys<Props>, RequiredKeys<Defaults>>>> & Pick<Props, Exclude<OptionalKeys<Props>, keyof Defaults>>;
+type ReferenceCoordinateValue = number | string;
+interface ReferenceLineProps<XValueType extends ReferenceCoordinateValue = any, YValueType extends ReferenceCoordinateValue = any> extends Overflowable, ZIndexable {
+    y?: YValueType;
+    x?: XValueType;
+    segment?: readonly [
+        {
+            x?: XValueType;
+            y?: YValueType;
+        },
+        {
+            x?: XValueType;
+            y?: YValueType;
+        }
+    ];
+    position?: BandPosition;
+    className?: number | string;
+    yAxisId?: number | string;
+    xAxisId?: number | string;
+    shape?: React$1.ReactElement<SVGElement> | ((props: any) => React$1.ReactElement<SVGElement>);
+    label?: ImplicitLabelType;
+    zIndex?: number;
+    strokeWidth?: number | string;
+}
+type Props$11<XValueType extends ReferenceCoordinateValue = any, YValueType extends ReferenceCoordinateValue = any> = Omit<React$1.SVGProps<SVGLineElement>, "viewBox"> & ReferenceLineProps<XValueType, YValueType>;
+export function ReferenceLine<XValueType extends ReferenceCoordinateValue = any, YValueType extends ReferenceCoordinateValue = any>(outsideProps: Props$11<XValueType, YValueType>): React$1.JSX.Element;
+export namespace ReferenceLine {
+    var displayName: string;
+}
+interface LineProps<DataPointType = any, DataValueType = any> extends DataProvider<DataPointType>, DataConsumer<DataPointType, DataValueType>, ZIndexable {
+    activeDot?: ActiveDotType;
+    animateNewValues?: boolean;
+    animationBegin?: number;
+    animationDuration?: AnimationDuration;
+    animationEasing?: AnimationTiming;
+    className?: string;
+    connectNulls?: boolean;
+    dot?: DotType;
+    hide?: boolean;
+    id?: string;
+    isAnimationActive?: boolean | "auto";
+    label?: ImplicitLabelListType;
+    legendType?: LegendType;
+    shape?: ActiveShape<Props$4, SVGPathElement>;
+    name?: string | number;
+    onAnimationEnd?: () => void;
+    onAnimationStart?: () => void;
+    tooltipType?: TooltipType$1;
+    type?: CurveType;
+    unit?: string | number | null;
+    xAxisId?: AxisId;
+    yAxisId?: AxisId;
+    zIndex?: number;
+    stroke?: string;
+    strokeWidth?: string | number;
+    strokeDasharray?: string | number;
+}
+type LineSvgProps = Omit<Props$4, "points" | "pathRef" | "ref" | "layout" | "baseLine">;
+type Props$12<DataPointType = any, ValueAxisType = any> = LineSvgProps & LineProps<DataPointType, ValueAxisType>;
+export const Line: {
+    <DataPointType = any, ValueAxisType = any>(props: Props$12<DataPointType, ValueAxisType>): React$1.ReactElement;
+    (props: Props$12<any, any>): React$1.ReactElement;
+};
+type GetTicksInput = {
+    angle?: number;
+    interval: CartesianAxisSettings["interval"] | undefined;
+    minTickGap: number;
+    orientation: XAxisOrientation | YAxisOrientation;
+    tick: CartesianAxisSettings["tick"];
+    tickFormatter?: CartesianAxisSettings["tickFormatter"];
+    ticks: ReadonlyArray<CartesianTickItem> | null;
+    unit?: CartesianAxisSettings["unit"];
+    viewBox: CartesianViewBoxRequired;
+};
+type GridLineTypeFunctionProps = Omit<LineItemProps, "key"> & {
+    key: LineItemProps["key"] | undefined;
+    offset: ChartOffsetInternal;
+};
+type AxisPropsForCartesianGridTicksGeneration = AxisPropsNeededForTicksGenerator & Omit<GetTicksInput, "ticks" | "viewBox">;
+type GridLineType = React$1.SVGProps<SVGLineElement> | React$1.ReactElement<SVGElement> | ((props: GridLineTypeFunctionProps) => React$1.ReactElement<SVGElement>) | boolean;
+type HorizontalCoordinatesGenerator = (props: {
+    yAxis: AxisPropsForCartesianGridTicksGeneration | undefined;
+    width: number;
+    height: number;
+    offset: ChartOffsetInternal;
+}, syncWithTicks: boolean) => number[];
+type VerticalCoordinatesGenerator = (props: {
+    xAxis: AxisPropsForCartesianGridTicksGeneration | undefined;
+    width: number;
+    height: number;
+    offset: ChartOffsetInternal;
+}, syncWithTicks: boolean) => number[];
+interface CartesianGridProps extends ZIndexable {
+    width?: number;
+    height?: number;
+    horizontalCoordinatesGenerator?: HorizontalCoordinatesGenerator;
+    verticalCoordinatesGenerator?: VerticalCoordinatesGenerator;
+    x?: number;
+    y?: number;
+    horizontal?: GridLineType;
+    vertical?: GridLineType;
+    horizontalPoints?: number[];
+    verticalPoints?: number[];
+    fill?: string;
+    fillOpacity?: number | string;
+    verticalFill?: string[];
+    horizontalFill?: string[];
+    syncWithTicks?: boolean;
+    horizontalValues?: number[] | string[];
+    verticalValues?: number[] | string[];
+    strokeDasharray?: string | number[];
+    xAxisId?: AxisId;
+    yAxisId?: AxisId;
+    zIndex?: number;
+}
+type AcceptedSvgProps = Omit<React$1.SVGProps<SVGLineElement>, "offset">;
+type Props$13 = AcceptedSvgProps & CartesianGridProps;
+type LineItemProps = Props$13 & {
+    offset: ChartOffsetInternal;
+    xAxis: undefined | AxisPropsForCartesianGridTicksGeneration;
+    yAxis: undefined | AxisPropsForCartesianGridTicksGeneration;
+    x1: number;
+    y1: number;
+    x2: number;
+    y2: number;
+    key: string;
+    index: number;
+};
+export function CartesianGrid(props: Props$13): React$1.JSX.Element | null;
+export namespace CartesianGrid {
+    var displayName: string;
+}
+type AxisRange = readonly [
+    number,
+    number
+];
+interface DotPoint {
+    readonly x: number | null;
+    readonly y: number | null;
+    readonly value?: any;
+    readonly payload?: any;
+}
+type TypedDataKey<DataPointType = any, DataValueType = unknown> = unknown extends DataPointType ? string | number | ((obj: DataPointType) => DataValueType) : string extends keyof DataPointType ? string | number | ((obj: DataPointType) => DataValueType) : {
+    [K in keyof DataPointType]: DataPointType[K] extends DataValueType ? K extends string | number ? K : never : never;
+}[keyof DataPointType] | (DataPointType extends ReadonlyArray<infer E> ? (E extends DataValueType ? `${number}` : never) : never) | ((obj: DataPointType) => DataValueType);
+type StackOffsetType = "sign" | "expand" | "none" | "wiggle" | "silhouette" | "positive";
+type CartesianLayout = "horizontal" | "vertical";
+type PolarLayout = "centric" | "radial";
+type LayoutType = CartesianLayout | PolarLayout;
+type AxisType = "xAxis" | "yAxis" | "zAxis" | "angleAxis" | "radiusAxis";
+type AxisDomainTypeInput = "number" | "category" | "auto";
+type EvaluatedAxisDomainType = "number" | "category";
+type DataKey<DataPointType, DataValueType = any> = TypedDataKey<DataPointType, DataValueType>;
+type PresentationAttributesWithProps<P, T> = React$1.AriaAttributes & DOMAttributesWithProps<P, T> & Omit<React$1.SVGProps<T>, keyof DOMAttributesWithProps<P, T>>;
+type PresentationAttributesAdaptChildEvent<P, T> = React$1.AriaAttributes & DOMAttributesAdaptChildEvent<P, T> & Omit<React$1.SVGProps<T>, keyof DOMAttributesAdaptChildEvent<P, T>>;
+type LegendType = "circle" | "cross" | "diamond" | "line" | "plainline" | "rect" | "square" | "star" | "triangle" | "wye" | "none";
+type TooltipType$1 = "none";
+type AllowInDimension = {
+    x?: boolean;
+    y?: boolean;
+};
+interface Coordinate {
+    x: number;
+    y: number;
+}
+interface NullableCoordinate {
+    x: number | null;
+    y: number | null;
+}
+type RechartsScaleType = "linear" | "pow" | "sqrt" | "log" | "symlog" | "identity" | "time" | "band" | "point" | "ordinal" | "quantile" | "quantize" | "utc" | "sequential" | "threshold";
+type ScaleType = "auto" | RechartsScaleType;
+type EventHandler<P, E extends React$1.SyntheticEvent<any>> = {
+    bivarianceHack(props: P, event: E): void;
+}["bivarianceHack"];
+type ReactEventHandler<P, T = Element> = EventHandler<P, React$1.SyntheticEvent<T>>;
+type ClipboardEventHandler<P, T = Element> = EventHandler<P, React$1.ClipboardEvent<T>>;
+type CompositionEventHandler<P, T = Element> = EventHandler<P, React$1.CompositionEvent<T>>;
+type DragEventHandler<P, T = Element> = EventHandler<P, React$1.DragEvent<T>>;
+type FocusEventHandler<P, T = Element> = EventHandler<P, React$1.FocusEvent<T>>;
+type FormEventHandler<P, T = Element> = EventHandler<P, React$1.FormEvent<T>>;
+type KeyboardEventHandler<P, T = Element> = EventHandler<P, React$1.KeyboardEvent<T>>;
+type RechartsMouseEventHandler<P, T = Element> = EventHandler<P, React$1.MouseEvent<T>>;
+type TouchEventHandler<P, T = Element> = EventHandler<P, React$1.TouchEvent<T>>;
+type PointerEventHandler<P, T = Element> = EventHandler<P, React$1.PointerEvent<T>>;
+type UIEventHandler<P, T = Element> = EventHandler<P, React$1.UIEvent<T>>;
+type WheelEventHandler<P, T = Element> = EventHandler<P, React$1.WheelEvent<T>>;
+type AnimationEventHandler<P, T = Element> = EventHandler<P, React$1.AnimationEvent<T>>;
+type TransitionEventHandler<P, T = Element> = EventHandler<P, React$1.TransitionEvent<T>>;
+interface DOMAttributesWithProps<P, T> {
+    children?: React$1.ReactNode;
+    dangerouslySetInnerHTML?: {
+        __html: string | TrustedHTML;
+    };
+    onCopy?: ClipboardEventHandler<P, T>;
+    onCopyCapture?: ClipboardEventHandler<P, T>;
+    onCut?: ClipboardEventHandler<P, T>;
+    onCutCapture?: ClipboardEventHandler<P, T>;
+    onPaste?: ClipboardEventHandler<P, T>;
+    onPasteCapture?: ClipboardEventHandler<P, T>;
+    onCompositionEnd?: CompositionEventHandler<P, T>;
+    onCompositionEndCapture?: CompositionEventHandler<P, T>;
+    onCompositionStart?: CompositionEventHandler<P, T>;
+    onCompositionStartCapture?: CompositionEventHandler<P, T>;
+    onCompositionUpdate?: CompositionEventHandler<P, T>;
+    onCompositionUpdateCapture?: CompositionEventHandler<P, T>;
+    onFocus?: FocusEventHandler<P, T>;
+    onFocusCapture?: FocusEventHandler<P, T>;
+    onBlur?: FocusEventHandler<P, T>;
+    onBlurCapture?: FocusEventHandler<P, T>;
+    onChange?: FormEventHandler<P, T>;
+    onChangeCapture?: FormEventHandler<P, T>;
+    onBeforeInput?: FormEventHandler<P, T>;
+    onBeforeInputCapture?: FormEventHandler<P, T>;
+    onInput?: FormEventHandler<P, T>;
+    onInputCapture?: FormEventHandler<P, T>;
+    onReset?: FormEventHandler<P, T>;
+    onResetCapture?: FormEventHandler<P, T>;
+    onSubmit?: FormEventHandler<P, T>;
+    onSubmitCapture?: FormEventHandler<P, T>;
+    onInvalid?: FormEventHandler<P, T>;
+    onInvalidCapture?: FormEventHandler<P, T>;
+    onLoad?: ReactEventHandler<P, T>;
+    onLoadCapture?: ReactEventHandler<P, T>;
+    onError?: ReactEventHandler<P, T>;
+    onErrorCapture?: ReactEventHandler<P, T>;
+    onKeyDown?: KeyboardEventHandler<P, T>;
+    onKeyDownCapture?: KeyboardEventHandler<P, T>;
+    onKeyPress?: KeyboardEventHandler<P, T>;
+    onKeyPressCapture?: KeyboardEventHandler<P, T>;
+    onKeyUp?: KeyboardEventHandler<P, T>;
+    onKeyUpCapture?: KeyboardEventHandler<P, T>;
+    onAbort?: ReactEventHandler<P, T>;
+    onAbortCapture?: ReactEventHandler<P, T>;
+    onCanPlay?: ReactEventHandler<P, T>;
+    onCanPlayCapture?: ReactEventHandler<P, T>;
+    onCanPlayThrough?: ReactEventHandler<P, T>;
+    onCanPlayThroughCapture?: ReactEventHandler<P, T>;
+    onDurationChange?: ReactEventHandler<P, T>;
+    onDurationChangeCapture?: ReactEventHandler<P, T>;
+    onEmptied?: ReactEventHandler<P, T>;
+    onEmptiedCapture?: ReactEventHandler<P, T>;
+    onEncrypted?: ReactEventHandler<P, T>;
+    onEncryptedCapture?: ReactEventHandler<P, T>;
+    onEnded?: ReactEventHandler<P, T>;
+    onEndedCapture?: ReactEventHandler<P, T>;
+    onLoadedData?: ReactEventHandler<P, T>;
+    onLoadedDataCapture?: ReactEventHandler<P, T>;
+    onLoadedMetadata?: ReactEventHandler<P, T>;
+    onLoadedMetadataCapture?: ReactEventHandler<P, T>;
+    onLoadStart?: ReactEventHandler<P, T>;
+    onLoadStartCapture?: ReactEventHandler<P, T>;
+    onPause?: ReactEventHandler<P, T>;
+    onPauseCapture?: ReactEventHandler<P, T>;
+    onPlay?: ReactEventHandler<P, T>;
+    onPlayCapture?: ReactEventHandler<P, T>;
+    onPlaying?: ReactEventHandler<P, T>;
+    onPlayingCapture?: ReactEventHandler<P, T>;
+    onProgress?: ReactEventHandler<P, T>;
+    onProgressCapture?: ReactEventHandler<P, T>;
+    onRateChange?: ReactEventHandler<P, T>;
+    onRateChangeCapture?: ReactEventHandler<P, T>;
+    onSeeked?: ReactEventHandler<P, T>;
+    onSeekedCapture?: ReactEventHandler<P, T>;
+    onSeeking?: ReactEventHandler<P, T>;
+    onSeekingCapture?: ReactEventHandler<P, T>;
+    onStalled?: ReactEventHandler<P, T>;
+    onStalledCapture?: ReactEventHandler<P, T>;
+    onSuspend?: ReactEventHandler<P, T>;
+    onSuspendCapture?: ReactEventHandler<P, T>;
+    onTimeUpdate?: ReactEventHandler<P, T>;
+    onTimeUpdateCapture?: ReactEventHandler<P, T>;
+    onVolumeChange?: ReactEventHandler<P, T>;
+    onVolumeChangeCapture?: ReactEventHandler<P, T>;
+    onWaiting?: ReactEventHandler<P, T>;
+    onWaitingCapture?: ReactEventHandler<P, T>;
+    onAuxClick?: RechartsMouseEventHandler<P, T>;
+    onAuxClickCapture?: RechartsMouseEventHandler<P, T>;
+    onClick?: RechartsMouseEventHandler<P, T>;
+    onClickCapture?: RechartsMouseEventHandler<P, T>;
+    onContextMenu?: RechartsMouseEventHandler<P, T>;
+    onContextMenuCapture?: RechartsMouseEventHandler<P, T>;
+    onDoubleClick?: RechartsMouseEventHandler<P, T>;
+    onDoubleClickCapture?: RechartsMouseEventHandler<P, T>;
+    onDrag?: DragEventHandler<P, T>;
+    onDragCapture?: DragEventHandler<P, T>;
+    onDragEnd?: DragEventHandler<P, T>;
+    onDragEndCapture?: DragEventHandler<P, T>;
+    onDragEnter?: DragEventHandler<P, T>;
+    onDragEnterCapture?: DragEventHandler<P, T>;
+    onDragExit?: DragEventHandler<P, T>;
+    onDragExitCapture?: DragEventHandler<P, T>;
+    onDragLeave?: DragEventHandler<P, T>;
+    onDragLeaveCapture?: DragEventHandler<P, T>;
+    onDragOver?: DragEventHandler<P, T>;
+    onDragOverCapture?: DragEventHandler<P, T>;
+    onDragStart?: DragEventHandler<P, T>;
+    onDragStartCapture?: DragEventHandler<P, T>;
+    onDrop?: DragEventHandler<P, T>;
+    onDropCapture?: DragEventHandler<P, T>;
+    onMouseDown?: RechartsMouseEventHandler<P, T>;
+    onMouseDownCapture?: RechartsMouseEventHandler<P, T>;
+    onMouseEnter?: RechartsMouseEventHandler<P, T>;
+    onMouseLeave?: RechartsMouseEventHandler<P, T>;
+    onMouseMove?: RechartsMouseEventHandler<P, T>;
+    onMouseMoveCapture?: RechartsMouseEventHandler<P, T>;
+    onMouseOut?: RechartsMouseEventHandler<P, T>;
+    onMouseOutCapture?: RechartsMouseEventHandler<P, T>;
+    onMouseOver?: RechartsMouseEventHandler<P, T>;
+    onMouseOverCapture?: RechartsMouseEventHandler<P, T>;
+    onMouseUp?: RechartsMouseEventHandler<P, T>;
+    onMouseUpCapture?: RechartsMouseEventHandler<P, T>;
+    onSelect?: ReactEventHandler<P, T>;
+    onSelectCapture?: ReactEventHandler<P, T>;
+    onTouchCancel?: TouchEventHandler<P, T>;
+    onTouchCancelCapture?: TouchEventHandler<P, T>;
+    onTouchEnd?: TouchEventHandler<P, T>;
+    onTouchEndCapture?: TouchEventHandler<P, T>;
+    onTouchMove?: TouchEventHandler<P, T>;
+    onTouchMoveCapture?: TouchEventHandler<P, T>;
+    onTouchStart?: TouchEventHandler<P, T>;
+    onTouchStartCapture?: TouchEventHandler<P, T>;
+    onPointerDown?: PointerEventHandler<P, T>;
+    onPointerDownCapture?: PointerEventHandler<P, T>;
+    onPointerMove?: PointerEventHandler<P, T>;
+    onPointerMoveCapture?: PointerEventHandler<P, T>;
+    onPointerUp?: PointerEventHandler<P, T>;
+    onPointerUpCapture?: PointerEventHandler<P, T>;
+    onPointerCancel?: PointerEventHandler<P, T>;
+    onPointerCancelCapture?: PointerEventHandler<P, T>;
+    onPointerEnter?: PointerEventHandler<P, T>;
+    onPointerEnterCapture?: PointerEventHandler<P, T>;
+    onPointerLeave?: PointerEventHandler<P, T>;
+    onPointerLeaveCapture?: PointerEventHandler<P, T>;
+    onPointerOver?: PointerEventHandler<P, T>;
+    onPointerOverCapture?: PointerEventHandler<P, T>;
+    onPointerOut?: PointerEventHandler<P, T>;
+    onPointerOutCapture?: PointerEventHandler<P, T>;
+    onGotPointerCapture?: PointerEventHandler<P, T>;
+    onGotPointerCaptureCapture?: PointerEventHandler<P, T>;
+    onLostPointerCapture?: PointerEventHandler<P, T>;
+    onLostPointerCaptureCapture?: PointerEventHandler<P, T>;
+    onScroll?: UIEventHandler<P, T>;
+    onScrollCapture?: UIEventHandler<P, T>;
+    onWheel?: WheelEventHandler<P, T>;
+    onWheelCapture?: WheelEventHandler<P, T>;
+    onAnimationStart?: AnimationEventHandler<P, T>;
+    onAnimationStartCapture?: AnimationEventHandler<P, T>;
+    onAnimationEnd?: AnimationEventHandler<P, T>;
+    onAnimationEndCapture?: AnimationEventHandler<P, T>;
+    onAnimationIteration?: AnimationEventHandler<P, T>;
+    onAnimationIterationCapture?: AnimationEventHandler<P, T>;
+    onTransitionEnd?: TransitionEventHandler<P, T>;
+    onTransitionEndCapture?: TransitionEventHandler<P, T>;
+}
+type AdaptChildEventHandler<P, E extends React$1.SyntheticEvent<any>> = {
+    bivarianceHack(data: P, index: number, event: E): void;
+}["bivarianceHack"];
+type AdaptChildReactEventHandler<P, T = Element> = AdaptChildEventHandler<P, React$1.SyntheticEvent<T>>;
+type AdaptChildClipboardEventHandler<P, T = Element> = AdaptChildEventHandler<P, React$1.ClipboardEvent<T>>;
+type AdaptChildCompositionEventHandler<P, T = Element> = AdaptChildEventHandler<P, React$1.CompositionEvent<T>>;
+type AdaptChildDragEventHandler<P, T = Element> = AdaptChildEventHandler<P, React$1.DragEvent<T>>;
+type AdaptChildFocusEventHandler<P, T = Element> = AdaptChildEventHandler<P, React$1.FocusEvent<T>>;
+type AdaptChildFormEventHandler<P, T = Element> = AdaptChildEventHandler<P, React$1.FormEvent<T>>;
+type AdaptChildKeyboardEventHandler<P, T = Element> = AdaptChildEventHandler<P, React$1.KeyboardEvent<T>>;
+type AdaptChildMouseEventHandler<P, T = Element> = AdaptChildEventHandler<P, React$1.MouseEvent<T>>;
+type AdaptChildTouchEventHandler<P, T = Element> = AdaptChildEventHandler<P, React$1.TouchEvent<T>>;
+type AdaptChildPointerEventHandler<P, T = Element> = AdaptChildEventHandler<P, React$1.PointerEvent<T>>;
+type AdaptChildUIEventHandler<P, T = Element> = AdaptChildEventHandler<P, React$1.UIEvent<T>>;
+type AdaptChildWheelEventHandler<P, T = Element> = AdaptChildEventHandler<P, React$1.WheelEvent<T>>;
+type AdaptChildAnimationEventHandler<P, T = Element> = AdaptChildEventHandler<P, React$1.AnimationEvent<T>>;
+type AdaptChildTransitionEventHandler<P, T = Element> = AdaptChildEventHandler<P, React$1.TransitionEvent<T>>;
+type DOMAttributesAdaptChildEvent<P, T> = {
+    children?: React$1.ReactNode;
+    dangerouslySetInnerHTML?: {
+        __html: string;
+    };
+    onCopy?: AdaptChildClipboardEventHandler<P, T>;
+    onCopyCapture?: AdaptChildClipboardEventHandler<P, T>;
+    onCut?: AdaptChildClipboardEventHandler<P, T>;
+    onCutCapture?: AdaptChildClipboardEventHandler<P, T>;
+    onPaste?: AdaptChildClipboardEventHandler<P, T>;
+    onPasteCapture?: AdaptChildClipboardEventHandler<P, T>;
+    onCompositionEnd?: AdaptChildCompositionEventHandler<P, T>;
+    onCompositionEndCapture?: AdaptChildCompositionEventHandler<P, T>;
+    onCompositionStart?: AdaptChildCompositionEventHandler<P, T>;
+    onCompositionStartCapture?: AdaptChildCompositionEventHandler<P, T>;
+    onCompositionUpdate?: AdaptChildCompositionEventHandler<P, T>;
+    onCompositionUpdateCapture?: AdaptChildCompositionEventHandler<P, T>;
+    onFocus?: AdaptChildFocusEventHandler<P, T>;
+    onFocusCapture?: AdaptChildFocusEventHandler<P, T>;
+    onBlur?: AdaptChildFocusEventHandler<P, T>;
+    onBlurCapture?: AdaptChildFocusEventHandler<P, T>;
+    onChange?: AdaptChildFormEventHandler<P, T>;
+    onChangeCapture?: AdaptChildFormEventHandler<P, T>;
+    onBeforeInput?: AdaptChildFormEventHandler<P, T>;
+    onBeforeInputCapture?: AdaptChildFormEventHandler<P, T>;
+    onInput?: AdaptChildFormEventHandler<P, T>;
+    onInputCapture?: AdaptChildFormEventHandler<P, T>;
+    onReset?: AdaptChildFormEventHandler<P, T>;
+    onResetCapture?: AdaptChildFormEventHandler<P, T>;
+    onSubmit?: AdaptChildFormEventHandler<P, T>;
+    onSubmitCapture?: AdaptChildFormEventHandler<P, T>;
+    onInvalid?: AdaptChildFormEventHandler<P, T>;
+    onInvalidCapture?: AdaptChildFormEventHandler<P, T>;
+    onLoad?: AdaptChildReactEventHandler<P, T>;
+    onLoadCapture?: AdaptChildReactEventHandler<P, T>;
+    onError?: AdaptChildReactEventHandler<P, T>;
+    onErrorCapture?: AdaptChildReactEventHandler<P, T>;
+    onKeyDown?: AdaptChildKeyboardEventHandler<P, T>;
+    onKeyDownCapture?: AdaptChildKeyboardEventHandler<P, T>;
+    onKeyPress?: AdaptChildKeyboardEventHandler<P, T>;
+    onKeyPressCapture?: AdaptChildKeyboardEventHandler<P, T>;
+    onKeyUp?: AdaptChildKeyboardEventHandler<P, T>;
+    onKeyUpCapture?: AdaptChildKeyboardEventHandler<P, T>;
+    onAbort?: AdaptChildReactEventHandler<P, T>;
+    onAbortCapture?: AdaptChildReactEventHandler<P, T>;
+    onCanPlay?: AdaptChildReactEventHandler<P, T>;
+    onCanPlayCapture?: AdaptChildReactEventHandler<P, T>;
+    onCanPlayThrough?: AdaptChildReactEventHandler<P, T>;
+    onCanPlayThroughCapture?: AdaptChildReactEventHandler<P, T>;
+    onDurationChange?: AdaptChildReactEventHandler<P, T>;
+    onDurationChangeCapture?: AdaptChildReactEventHandler<P, T>;
+    onEmptied?: AdaptChildReactEventHandler<P, T>;
+    onEmptiedCapture?: AdaptChildReactEventHandler<P, T>;
+    onEncrypted?: AdaptChildReactEventHandler<P, T>;
+    onEncryptedCapture?: AdaptChildReactEventHandler<P, T>;
+    onEnded?: AdaptChildReactEventHandler<P, T>;
+    onEndedCapture?: AdaptChildReactEventHandler<P, T>;
+    onLoadedData?: AdaptChildReactEventHandler<P, T>;
+    onLoadedDataCapture?: AdaptChildReactEventHandler<P, T>;
+    onLoadedMetadata?: AdaptChildReactEventHandler<P, T>;
+    onLoadedMetadataCapture?: AdaptChildReactEventHandler<P, T>;
+    onLoadStart?: AdaptChildReactEventHandler<P, T>;
+    onLoadStartCapture?: AdaptChildReactEventHandler<P, T>;
+    onPause?: AdaptChildReactEventHandler<P, T>;
+    onPauseCapture?: AdaptChildReactEventHandler<P, T>;
+    onPlay?: AdaptChildReactEventHandler<P, T>;
+    onPlayCapture?: AdaptChildReactEventHandler<P, T>;
+    onPlaying?: AdaptChildReactEventHandler<P, T>;
+    onPlayingCapture?: AdaptChildReactEventHandler<P, T>;
+    onProgress?: AdaptChildReactEventHandler<P, T>;
+    onProgressCapture?: AdaptChildReactEventHandler<P, T>;
+    onRateChange?: AdaptChildReactEventHandler<P, T>;
+    onRateChangeCapture?: AdaptChildReactEventHandler<P, T>;
+    onSeeked?: AdaptChildReactEventHandler<P, T>;
+    onSeekedCapture?: AdaptChildReactEventHandler<P, T>;
+    onSeeking?: AdaptChildReactEventHandler<P, T>;
+    onSeekingCapture?: AdaptChildReactEventHandler<P, T>;
+    onStalled?: AdaptChildReactEventHandler<P, T>;
+    onStalledCapture?: AdaptChildReactEventHandler<P, T>;
+    onSuspend?: AdaptChildReactEventHandler<P, T>;
+    onSuspendCapture?: AdaptChildReactEventHandler<P, T>;
+    onTimeUpdate?: AdaptChildReactEventHandler<P, T>;
+    onTimeUpdateCapture?: AdaptChildReactEventHandler<P, T>;
+    onVolumeChange?: AdaptChildReactEventHandler<P, T>;
+    onVolumeChangeCapture?: AdaptChildReactEventHandler<P, T>;
+    onWaiting?: AdaptChildReactEventHandler<P, T>;
+    onWaitingCapture?: AdaptChildReactEventHandler<P, T>;
+    onAuxClick?: AdaptChildMouseEventHandler<P, T>;
+    onAuxClickCapture?: AdaptChildMouseEventHandler<P, T>;
+    onClick?: AdaptChildMouseEventHandler<P, T>;
+    onClickCapture?: AdaptChildMouseEventHandler<P, T>;
+    onContextMenu?: AdaptChildMouseEventHandler<P, T>;
+    onContextMenuCapture?: AdaptChildMouseEventHandler<P, T>;
+    onDoubleClick?: AdaptChildMouseEventHandler<P, T>;
+    onDoubleClickCapture?: AdaptChildMouseEventHandler<P, T>;
+    onDrag?: AdaptChildDragEventHandler<P, T>;
+    onDragCapture?: AdaptChildDragEventHandler<P, T>;
+    onDragEnd?: AdaptChildDragEventHandler<P, T>;
+    onDragEndCapture?: AdaptChildDragEventHandler<P, T>;
+    onDragEnter?: AdaptChildDragEventHandler<P, T>;
+    onDragEnterCapture?: AdaptChildDragEventHandler<P, T>;
+    onDragExit?: AdaptChildDragEventHandler<P, T>;
+    onDragExitCapture?: AdaptChildDragEventHandler<P, T>;
+    onDragLeave?: AdaptChildDragEventHandler<P, T>;
+    onDragLeaveCapture?: AdaptChildDragEventHandler<P, T>;
+    onDragOver?: AdaptChildDragEventHandler<P, T>;
+    onDragOverCapture?: AdaptChildDragEventHandler<P, T>;
+    onDragStart?: AdaptChildDragEventHandler<P, T>;
+    onDragStartCapture?: AdaptChildDragEventHandler<P, T>;
+    onDrop?: AdaptChildDragEventHandler<P, T>;
+    onDropCapture?: AdaptChildDragEventHandler<P, T>;
+    onMouseDown?: AdaptChildMouseEventHandler<P, T>;
+    onMouseDownCapture?: AdaptChildMouseEventHandler<P, T>;
+    onMouseEnter?: AdaptChildMouseEventHandler<P, T>;
+    onMouseLeave?: AdaptChildMouseEventHandler<P, T>;
+    onMouseMove?: AdaptChildMouseEventHandler<P, T>;
+    onMouseMoveCapture?: AdaptChildMouseEventHandler<P, T>;
+    onMouseOut?: AdaptChildMouseEventHandler<P, T>;
+    onMouseOutCapture?: AdaptChildMouseEventHandler<P, T>;
+    onMouseOver?: AdaptChildMouseEventHandler<P, T>;
+    onMouseOverCapture?: AdaptChildMouseEventHandler<P, T>;
+    onMouseUp?: AdaptChildMouseEventHandler<P, T>;
+    onMouseUpCapture?: AdaptChildMouseEventHandler<P, T>;
+    onSelect?: AdaptChildReactEventHandler<P, T>;
+    onSelectCapture?: AdaptChildReactEventHandler<P, T>;
+    onTouchCancel?: AdaptChildTouchEventHandler<P, T>;
+    onTouchCancelCapture?: AdaptChildTouchEventHandler<P, T>;
+    onTouchEnd?: AdaptChildTouchEventHandler<P, T>;
+    onTouchEndCapture?: AdaptChildTouchEventHandler<P, T>;
+    onTouchMove?: AdaptChildTouchEventHandler<P, T>;
+    onTouchMoveCapture?: AdaptChildTouchEventHandler<P, T>;
+    onTouchStart?: AdaptChildTouchEventHandler<P, T>;
+    onTouchStartCapture?: AdaptChildTouchEventHandler<P, T>;
+    onPointerDown?: AdaptChildPointerEventHandler<P, T>;
+    onPointerDownCapture?: AdaptChildPointerEventHandler<P, T>;
+    onPointerMove?: AdaptChildPointerEventHandler<P, T>;
+    onPointerMoveCapture?: AdaptChildPointerEventHandler<P, T>;
+    onPointerUp?: AdaptChildPointerEventHandler<P, T>;
+    onPointerUpCapture?: AdaptChildPointerEventHandler<P, T>;
+    onPointerCancel?: AdaptChildPointerEventHandler<P, T>;
+    onPointerCancelCapture?: AdaptChildPointerEventHandler<P, T>;
+    onPointerEnter?: AdaptChildPointerEventHandler<P, T>;
+    onPointerEnterCapture?: AdaptChildPointerEventHandler<P, T>;
+    onPointerLeave?: AdaptChildPointerEventHandler<P, T>;
+    onPointerLeaveCapture?: AdaptChildPointerEventHandler<P, T>;
+    onPointerOver?: AdaptChildPointerEventHandler<P, T>;
+    onPointerOverCapture?: AdaptChildPointerEventHandler<P, T>;
+    onPointerOut?: AdaptChildPointerEventHandler<P, T>;
+    onPointerOutCapture?: AdaptChildPointerEventHandler<P, T>;
+    onGotPointerCapture?: AdaptChildPointerEventHandler<P, T>;
+    onGotPointerCaptureCapture?: AdaptChildPointerEventHandler<P, T>;
+    onLostPointerCapture?: AdaptChildPointerEventHandler<P, T>;
+    onLostPointerCaptureCapture?: AdaptChildPointerEventHandler<P, T>;
+    onScroll?: AdaptChildUIEventHandler<P, T>;
+    onScrollCapture?: AdaptChildUIEventHandler<P, T>;
+    onWheel?: AdaptChildWheelEventHandler<P, T>;
+    onWheelCapture?: AdaptChildWheelEventHandler<P, T>;
+    onAnimationStart?: AdaptChildAnimationEventHandler<P, T>;
+    onAnimationStartCapture?: AdaptChildAnimationEventHandler<P, T>;
+    onAnimationEnd?: AdaptChildAnimationEventHandler<P, T>;
+    onAnimationEndCapture?: AdaptChildAnimationEventHandler<P, T>;
+    onAnimationIteration?: AdaptChildAnimationEventHandler<P, T>;
+    onAnimationIterationCapture?: AdaptChildAnimationEventHandler<P, T>;
+    onTransitionEnd?: AdaptChildTransitionEventHandler<P, T>;
+    onTransitionEndCapture?: AdaptChildTransitionEventHandler<P, T>;
+};
+type AnimationTiming = "ease" | "ease-in" | "ease-out" | "ease-in-out" | "linear";
+type AnimationDuration = number;
+type ChartOffsetInternal = {
+    top: number;
+    bottom: number;
+    left: number;
+    right: number;
+    width: number;
+    height: number;
+    brushBottom: number;
+};
+interface GeometrySector {
+    cx: number;
+    cy: number;
+    innerRadius: number;
+    outerRadius: number;
+    startAngle: number;
+    endAngle: number;
+}
+type AxisDomainItem = string | number | ((d: number) => string | number) | "auto" | "dataMin" | "dataMax";
+type AxisDomain = ReadonlyArray<string> | ReadonlyArray<number> | Readonly<[
+    AxisDomainItem,
+    AxisDomainItem
+]> | (([dataMin, dataMax]: NumberDomain, allowDataOverflow: boolean) => NumberDomain);
+type NumberDomain = readonly [
+    min: number,
+    max: number
+];
+type CategoricalDomainItem = number | string | Date;
+type BaseTickContentProps = {
+    angle: number;
+    className?: string;
+    fill: string | undefined;
+    height?: number | string;
+    index: number;
+    name?: string;
+    stroke: string;
+    payload: CartesianTickItem;
+    textAnchor: TextAnchor;
+    tickFormatter: TickFormatter | undefined;
+    verticalAnchor: TextVerticalAnchor;
+    visibleTicksCount: number;
+    width?: number | string;
+    x: number | string;
+    y: number | string;
+};
+type XAxisTickContentProps = BaseTickContentProps & {
+    orientation: XAxisOrientation;
+    padding: XAxisPadding | undefined;
+};
+type YAxisTickContentProps = BaseTickContentProps & {
+    orientation: YAxisOrientation;
+    padding: YAxisPadding | undefined;
+};
+type TickProp<T> = Props$1 | React$1.ReactElement | ((props: T) => React$1.ReactNode) | boolean;
+interface BaseAxisProps<DataPointType, DataValueType> extends DataConsumer<DataPointType, DataValueType> {
+    type?: AxisDomainTypeInput;
+    name?: string;
+    unit?: string;
+    dataKey?: DataKey<DataPointType, DataValueType>;
+    domain?: AxisDomain;
+    scale?: ScaleType | CustomScaleDefinition | CustomScaleDefinition<string> | CustomScaleDefinition<number> | CustomScaleDefinition<Date>;
+}
+interface RenderableAxisProps<DataPointType, DataValueType> extends BaseAxisProps<DataPointType, DataValueType> {
+    angle?: number;
+    hide?: boolean;
+    tick?: TickProp<unknown>;
+    tickCount?: number;
+    axisLine?: boolean | React$1.SVGProps<SVGLineElement>;
+    tickLine?: boolean | React$1.SVGProps<SVGLineElement>;
+    tickSize?: number;
+    tickFormatter?: (value: any, index: number) => string;
+    allowDataOverflow?: boolean;
+    allowDuplicatedCategory?: boolean;
+    allowDecimals?: boolean;
+    includeHidden?: boolean;
+    range?: AxisRange;
+    label?: ImplicitLabelType;
+    className?: string;
+    reversed?: boolean;
+}
+type AxisInterval = number | "preserveStart" | "preserveEnd" | "preserveStartEnd" | "equidistantPreserveStart" | "equidistantPreserveEnd";
+type AxisTick = number | string;
+interface TickItem {
+    value: any;
+    coordinate: number;
+    index: number;
+    offset?: number;
+}
+interface CartesianTickItem extends TickItem {
+    tickCoord?: number;
+    tickSize?: number;
+    isShow?: boolean;
+}
+interface Margin {
+    top: number;
+    right: number;
+    bottom: number;
+    left: number;
+}
+interface CartesianViewBox {
+    x?: number;
+    y?: number;
+    width?: number;
+    height?: number;
+}
+type CartesianViewBoxRequired = Required<CartesianViewBox>;
+interface PolarViewBox {
+    cx?: number;
+    cy?: number;
+    innerRadius?: number;
+    outerRadius?: number;
+    startAngle?: number;
+    endAngle?: number;
+    clockWise?: boolean;
+}
+type PolarViewBoxRequired = Required<PolarViewBox>;
+type TrapezoidViewBox = {
+    x: number;
+    y: number;
+    upperWidth: number;
+    lowerWidth: number;
+    width: number;
+    height: number;
+};
+type ViewBox = CartesianViewBoxRequired | PolarViewBoxRequired;
+interface SankeyNode {
+    dx: number;
+    dy: number;
+    name: string;
+    value: any;
+    x: number;
+    y: number;
+    depth: number;
+    targetNodes: number[];
+    targetLinks: number[];
+    sourceNodes: number[];
+    sourceLinks: number[];
+}
+interface SankeyLink {
+    target: number;
+    source: number;
+    value: number;
+    sy: number;
+    dy: number;
+    ty: number;
+}
+type ActiveDotProps = Props & {
+    payload: any;
+    index: number;
+    dataKey: DataKey<any> | undefined;
+    cx: number | undefined;
+    cy: number | undefined;
+    r: number | string | undefined;
+    fill: string;
+    strokeWidth: number;
+    stroke: string;
+    value: any;
+};
+type ActiveDotType = boolean | ((props: ActiveDotProps) => React$1.ReactNode) | Partial<ActiveDotProps> | React$1.ReactElement<React$1.SVGProps<SVGElement>>;
+type DotItemDotProps = SVGPropsNoEvents<Omit<Props, "points" | "ref">> & {
+    points: ReadonlyArray<DotPoint>;
+    index: number;
+    payload: any;
+    dataKey: DataKey<any> | undefined;
+    value: any;
+};
+type DotType = boolean | ((props: DotItemDotProps) => React$1.ReactNode) | Partial<Props> | React$1.ReactElement<React$1.SVGProps<SVGElement>>;
+type ActiveShape<PropsType = Record<string, any>, ElementType = SVGElement> = React$1.ReactElement<React$1.SVGProps<ElementType>> | ((props: PropsType) => React$1.ReactElement | null | undefined) | React$1.SVGProps<ElementType> | boolean;
+interface DataProvider<DataPointType> {
+    data?: ChartData<DataPointType>;
+}
+interface DataConsumer<DataPointType, DataValueType> {
+    dataKey?: DataKey<DataPointType, DataValueType>;
+}
+interface BaseChartProps<DataPointType> extends DataProvider<DataPointType>, ExternalMouseEvents {
+    width?: number | Percent;
+    height?: number | Percent;
+    id?: string;
+    children?: React$1.ReactNode;
+    className?: string;
+    accessibilityLayer?: boolean;
+    desc?: string;
+    margin?: Partial<Margin>;
+    style?: React$1.CSSProperties;
+    syncId?: number | string;
+    syncMethod?: SyncMethod;
+    tabIndex?: number;
+    responsive?: boolean;
+}
+interface EventThrottlingProps {
+    throttleDelay?: number | "raf";
+    throttledEvents?: ReadonlyArray<keyof GlobalEventHandlersEventMap> | "all";
+}
+interface CartesianChartProps<DataPointType = unknown> extends BaseChartProps<DataPointType>, EventThrottlingProps {
+    barCategoryGap?: number | string;
+    barGap?: number | string;
+    barSize?: number | string;
+    baseValue?: BaseValue;
+    compact?: boolean;
+    dataKey?: DataKey<any>;
+    layout?: CartesianLayout;
+    maxBarSize?: number;
+    reverseStackOrder?: boolean;
+    role?: string;
+    stackOffset?: StackOffsetType;
+    title?: string;
+}
+interface PolarChartProps<DataPointType = unknown> extends BaseChartProps<DataPointType>, EventThrottlingProps {
+    barCategoryGap?: number | string;
+    barGap?: number | string;
+    barSize?: number | string;
+    cx?: number | string;
+    cy?: number | string;
+    dataKey?: DataKey<any>;
+    endAngle?: number;
+    innerRadius?: number | string;
+    layout?: PolarLayout;
+    maxBarSize?: number;
+    outerRadius?: number | string;
+    reverseStackOrder?: boolean;
+    role?: string;
+    stackOffset?: StackOffsetType;
+    startAngle?: number;
+    title?: string;
+}
+type Percent = `${number}%`;
+type CursorDefinition = boolean | React$1.ReactElement | React$1.SVGProps<SVGElement>;
+type ContentType$1<TValue extends ValueType = ValueType, TName extends NameType = NameType> = React$1.ReactElement | ((props: TooltipContentProps<TValue, TName>) => React$1.ReactNode);
+type TooltipContentProps<TValue extends ValueType = ValueType, TName extends NameType = NameType> = TooltipProps<TValue, TName> & {
+    label?: string | number;
+    payload: TooltipPayload;
+    coordinate: Coordinate | undefined;
+    active: boolean;
+    accessibilityLayer: boolean;
+    activeIndex: TooltipIndex | undefined;
+};
+type PropertiesReadFromContext = "viewBox" | "active" | "payload" | "coordinate" | "label" | "accessibilityLayer";
+type TooltipProps<TValue extends ValueType = ValueType, TName extends NameType = NameType> = Omit<Props$3<TValue, TName>, PropertiesReadFromContext> & {
+    active?: boolean;
+    allowEscapeViewBox?: AllowInDimension;
+    animationDuration?: AnimationDuration;
+    animationEasing?: AnimationTiming;
+    axisId?: AxisId;
+    content?: ContentType$1<TValue, TName>;
+    contentStyle?: React$1.CSSProperties;
+    cursor?: CursorDefinition;
+    defaultIndex?: number | TooltipIndex;
+    filterNull?: boolean;
+    formatter?: (value: TValue, name: TName, item: TooltipPayloadEntry, index: number, payload: TooltipPayload) => React$1.ReactNode | [
+        React$1.ReactNode,
+        React$1.ReactNode
+    ];
+    includeHidden?: boolean | undefined;
+    isAnimationActive?: boolean | "auto";
+    itemSorter?: TooltipItemSorter;
+    itemStyle?: React$1.CSSProperties;
+    labelFormatter?: (label: any, payload: TooltipPayload) => React$1.ReactNode;
+    labelStyle?: React$1.CSSProperties;
+    offset?: number | Coordinate;
+    payloadUniqBy?: UniqueOption<TooltipPayloadEntry>;
+    portal?: HTMLElement | null;
+    position?: Partial<Coordinate>;
+    reverseDirection?: AllowInDimension;
+    separator?: string;
+    shared?: boolean;
+    trigger?: TooltipTrigger;
+    useTranslate3d?: boolean;
+    wrapperStyle?: React$1.CSSProperties;
+};
+function Tooltip(outsideProps: TooltipProps<ValueType, NameType>): React$1.JSX.Element | null;
+interface Props$14 {
+    aspect?: number;
+    width?: Percent | number;
+    height?: Percent | number;
+    minWidth?: string | number;
+    minHeight?: string | number;
+    initialDimension?: {
+        width: number;
+        height: number;
+    };
+    maxHeight?: number;
+    children: React$1.ReactNode;
+    debounce?: number;
+    id?: string | number;
+    className?: string | number;
+    style?: Omit<React$1.CSSProperties, keyof Props$14>;
+    onResize?: (width: number, height: number) => void;
+}
+export const ResponsiveContainer: React$1.ForwardRefExoticComponent<Props$14 & React$1.RefAttributes<HTMLDivElement>>;
+interface Props$15 extends React$1.SVGProps<SVGElement> {
+    fill?: string;
+    stroke?: string;
+}
+export const Cell: React$1.FunctionComponent<Props$15>;
+interface SectorProps {
+    className?: string;
+    cx?: number;
+    cy?: number;
+    innerRadius?: number;
+    outerRadius?: number;
+    startAngle?: number;
+    endAngle?: number;
+    cornerRadius?: number;
+    forceCornerRadius?: boolean;
+    cornerIsExternal?: boolean;
+    onClick?: (e: React$1.MouseEvent<SVGPathElement>) => void;
+    onMouseDown?: (e: React$1.MouseEvent<SVGPathElement>) => void;
+    onMouseUp?: (e: React$1.MouseEvent<SVGPathElement>) => void;
+    onMouseMove?: (e: React$1.MouseEvent<SVGPathElement>) => void;
+    onMouseOver?: (e: React$1.MouseEvent<SVGPathElement>) => void;
+    onMouseOut?: (e: React$1.MouseEvent<SVGPathElement>) => void;
+    onMouseEnter?: (e: React$1.MouseEvent<SVGPathElement>) => void;
+    onMouseLeave?: (e: React$1.MouseEvent<SVGPathElement>) => void;
+}
+type Props$16 = Omit<React$1.SVGProps<SVGPathElement>, "cx" | "cy" | "dangerouslySetInnerHTML"> & Partial<SectorProps>;
+interface PolarGridProps extends ZIndexable {
+    cx?: number;
+    cy?: number;
+    innerRadius?: number;
+    outerRadius?: number;
+    polarAngles?: ReadonlyArray<number>;
+    polarRadius?: ReadonlyArray<number>;
+    gridType?: "polygon" | "circle";
+    radialLines?: boolean;
+    angleAxisId?: AxisId;
+    radiusAxisId?: AxisId;
+    zIndex?: number;
+}
+type Props$17 = React$1.SVGProps<SVGLineElement> & PolarGridProps;
+export const PolarGrid: {
+    (outsideProps: Props$17): React$1.JSX.Element | null;
+    displayName: string;
+};
+type TickOrientation = "left" | "right" | "middle";
+interface PolarRadiusAxisProps<DataPointType = any, DataValueType = any> extends Omit<RenderableAxisProps<DataPointType, DataValueType>, "axisLine" | "angle" | "type" | "tickSize" | "domain" | "scale" | "tick">, ZIndexable {
+    axisLine?: boolean | React$1.SVGProps<SVGLineElement>;
+    angle?: number;
+    type?: AxisDomainTypeInput;
+    orientation?: TickOrientation;
+    domain?: AxisDomain;
+    scale?: ScaleType | CustomScaleDefinition | CustomScaleDefinition<string> | CustomScaleDefinition<number> | CustomScaleDefinition<Date>;
+    onClick?: (data: any, index: number, e: React$1.MouseEvent) => void;
+    onMouseDown?: (data: any, index: number, e: React$1.MouseEvent) => void;
+    onMouseUp?: (data: any, index: number, e: React$1.MouseEvent) => void;
+    onMouseMove?: (data: any, index: number, e: React$1.MouseEvent) => void;
+    onMouseOver?: (data: any, index: number, e: React$1.MouseEvent) => void;
+    onMouseOut?: (data: any, index: number, e: React$1.MouseEvent) => void;
+    onMouseEnter?: (data: any, index: number, e: React$1.MouseEvent) => void;
+    onMouseLeave?: (data: any, index: number, e: React$1.MouseEvent) => void;
+    allowDecimals?: boolean;
+    niceTicks?: NiceTicksAlgorithm;
+    radiusAxisId?: string | number;
+    tick?: TickProp<BaseTickContentProps>;
+    ticks?: ReadonlyArray<TickItem>;
+    zIndex?: number;
+}
+type AxisSvgProps = Omit<PresentationAttributesAdaptChildEvent<any, SVGTextElement>, "scale" | "type">;
+type Props$18<DataPointType = any, DataValueType = any> = AxisSvgProps & PolarRadiusAxisProps<DataPointType, DataValueType>;
+export function PolarRadiusAxis<DataPointType = any, DataValueType = any>(outsideProps: Props$18<DataPointType, DataValueType>): React$1.JSX.Element;
+export namespace PolarRadiusAxis {
+    var displayName: string;
+}
+interface PolarAngleAxisProps<DataPointType = any, DataValueType = any> extends Omit<RenderableAxisProps<DataPointType, DataValueType>, "axisLine" | "tickCount" | "domain" | "scale" | "tick">, ZIndexable {
+    axisLine?: boolean | React$1.SVGProps<SVGLineElement>;
+    allowDecimals?: boolean;
+    allowDuplicatedCategory?: boolean;
+    angleAxisId?: string | number;
+    axisLineType?: "polygon" | "circle";
+    cx?: number;
+    cy?: number;
+    orientation?: "inner" | "outer";
+    domain?: AxisDomain;
+    scale?: ScaleType | CustomScaleDefinition | CustomScaleDefinition<string> | CustomScaleDefinition<number> | CustomScaleDefinition<Date>;
+    radius?: number | string;
+    tick?: TickProp<BaseTickContentProps>;
+    tickCount?: number;
+    niceTicks?: NiceTicksAlgorithm;
+    tickFormatter?: (value: any, index: number) => string;
+    tickSize?: number;
+    ticks?: ReadonlyArray<TickItem>;
+    type?: AxisDomainTypeInput;
+    zIndex?: number;
+}
+type AxisSvgProps$1 = Omit<PresentationAttributesAdaptChildEvent<TickItem, SVGTextElement>, "scale" | "type" | "dangerouslySetInnerHTML">;
+type Props$19<DataPointType = any, DataValueType = any> = AxisSvgProps$1 & PolarAngleAxisProps<DataPointType, DataValueType>;
+export function PolarAngleAxis<DataPointType = any, DataValueType = any>(outsideProps: Props$19<DataPointType, DataValueType>): React$1.ReactNode;
+export namespace PolarAngleAxis {
+    var displayName: string;
+}
+type TooltipTriggerInfo = {
+    tooltipPayload?: TooltipPayload;
+    tooltipPosition?: Coordinate;
+};
+interface PieDef {
+    cx?: number | string;
+    cy?: number | string;
+    startAngle?: number;
+    endAngle?: number;
+    paddingAngle?: number;
+    innerRadius?: number | string;
+    outerRadius?: number | string | ((dataPoint: any) => number | string);
+    cornerRadius?: number | string;
+}
+type PieLabelLine = React$1.ReactElement<SVGElement> | ((props: any) => React$1.ReactElement<SVGElement>) | React$1.SVGProps<SVGPathElement> | boolean;
+interface PieLabelExtraProps {
+    stroke: string;
+    index: number;
+    textAnchor: string;
+}
+type PieLabelRenderProps = Omit<SVGPropsNoEvents<PieSvgAttributes>, "offset"> & Omit<PieSectorDataItem, "offset"> & PieLabelExtraProps & Coordinate;
+type LabelListPropsWithPosition = Props$5 & {
+    position: Props$5["position"];
+};
+type PieLabel = boolean | LabelListPropsWithPosition | Partial<PieLabelRenderProps> | ((props: PieLabelRenderProps) => React$1.ReactNode | React$1.ReactElement<SVGElement>) | React$1.ReactElement<SVGElement>;
+type PieSectorData = GeometrySector & TooltipTriggerInfo & {
+    dataKey?: DataKey<any>;
+    midAngle?: number;
+    middleRadius?: number;
+    name?: string | number;
+    paddingAngle?: number;
+    payload?: any;
+    percent?: number;
+    value: number;
+};
+type PieSectorDataItem = PiePresentationProps & PieCoordinate & PieSectorData & {
+    cornerRadius: number | undefined;
+};
+type PieSectorShapeProps = PieSectorDataItem & {
+    isActive: boolean;
+    index: number;
+};
+type PieShape = React$1.ReactNode | ((props: PieSectorShapeProps, index: number) => React$1.ReactElement);
+interface PieEvents {
+    onClick?: (data: PieSectorDataItem, index: number, e: React$1.MouseEvent<SVGGraphicsElement>) => void;
+    onMouseDown?: (data: PieSectorDataItem, index: number, e: React$1.MouseEvent<SVGGraphicsElement>) => void;
+    onMouseUp?: (data: PieSectorDataItem, index: number, e: React$1.MouseEvent<SVGGraphicsElement>) => void;
+    onMouseMove?: (data: PieSectorDataItem, index: number, e: React$1.MouseEvent<SVGGraphicsElement>) => void;
+    onMouseOver?: (data: PieSectorDataItem, index: number, e: React$1.MouseEvent<SVGGraphicsElement>) => void;
+    onMouseOut?: (data: PieSectorDataItem, index: number, e: React$1.MouseEvent<SVGGraphicsElement>) => void;
+    onMouseEnter?: (data: PieSectorDataItem, index: number, e: React$1.MouseEvent<SVGGraphicsElement>) => void;
+    onMouseLeave?: (data: PieSectorDataItem, index: number, e: React$1.MouseEvent<SVGGraphicsElement>) => void;
+    onTouchStart?: (data: PieSectorDataItem, index: number, e: React$1.TouchEvent<SVGGraphicsElement>) => void;
+    onTouchMove?: (data: PieSectorDataItem, index: number, e: React$1.TouchEvent<SVGGraphicsElement>) => void;
+    onTouchEnd?: (data: PieSectorDataItem, index: number, e: React$1.TouchEvent<SVGGraphicsElement>) => void;
+}
+interface PieProps<DataPointType = any, DataValueType = any> extends DataProvider<DataPointType>, DataConsumer<DataPointType, DataValueType>, PieDef, PieEvents, ZIndexable {
+    activeShape?: ActiveShape<PieSectorDataItem>;
+    animationBegin?: number;
+    animationDuration?: AnimationDuration;
+    animationEasing?: AnimationTiming;
+    className?: string;
+    hide?: boolean;
+    id?: string;
+    inactiveShape?: ActiveShape<PieSectorDataItem>;
+    isAnimationActive?: boolean | "auto";
+    label?: PieLabel;
+    labelLine?: PieLabelLine;
+    legendType?: LegendType;
+    maxRadius?: number;
+    minAngle?: number;
+    nameKey?: DataKey<DataPointType, DataValueType>;
+    onAnimationEnd?: () => void;
+    onAnimationStart?: () => void;
+    rootTabIndex?: number;
+    shape?: PieShape;
+    tooltipType?: TooltipType$1;
+    zIndex?: number;
+}
+type PieSvgAttributes = Omit<PresentationAttributesAdaptChildEvent<any, SVGElement>, "ref" | keyof PieEvents>;
+type Props$20<DataPointType = any, DataValueType = any> = PieSvgAttributes & PieProps<DataPointType, DataValueType>;
+type PieCoordinate = {
+    cx: number;
+    cy: number;
+    innerRadius: number;
+    outerRadius: number;
+    maxRadius: number;
+};
+export const Pie: {
+    <DataPointType = any, DataValueType = any>(outsideProps: Props$20<DataPointType, DataValueType>): React$1.ReactElement;
+    (outsideProps: Props$20<any, any>): React$1.ReactElement;
+};
+interface RadarPoint {
+    x: number;
+    y: number;
+    cx?: number;
+    cy?: number;
+    angle: number;
+    radius?: number;
+    value?: number;
+    payload?: any;
+    name?: string | number;
+}
+interface RadarProps<DataPointType = any, DataValueType = any> extends ZIndexable, DataConsumer<DataPointType, DataValueType> {
+    activeDot?: ActiveDotType;
+    angleAxisId?: string | number;
+    animationBegin?: number;
+    animationDuration?: AnimationDuration;
+    animationEasing?: AnimationTiming;
+    baseLinePoints?: RadarPoint[];
+    className?: string;
+    connectNulls?: boolean;
+    dot?: DotType;
+    hide?: boolean;
+    isAnimationActive?: boolean | "auto";
+    isRange?: boolean;
+    label?: ImplicitLabelListType;
+    legendType?: LegendType;
+    onAnimationEnd?: () => void;
+    onAnimationStart?: () => void;
+    onMouseEnter?: (props: InternalRadarProps, e: React$1.MouseEvent<SVGPolygonElement>) => void;
+    onMouseLeave?: (props: InternalRadarProps, e: React$1.MouseEvent<SVGPolygonElement>) => void;
+    radiusAxisId?: string | number;
+    shape?: React$1.ReactElement<SVGElement> | ((props: any) => React$1.ReactElement<SVGElement>);
+    tooltipType?: TooltipType$1;
+    zIndex?: number;
+}
+type Props$21<DataPointType = any, DataValueType = any> = Omit<React$1.SVGProps<SVGGraphicsElement>, "onMouseEnter" | "onMouseLeave" | "points" | "ref"> & RadarProps<DataPointType, DataValueType>;
+type RadarComposedData = {
+    points: RadarPoint[];
+    baseLinePoints: RadarPoint[];
+    isRange: boolean;
+};
+const defaultRadarProps: {
+    readonly activeDot: true;
+    readonly angleAxisId: 0;
+    readonly animationBegin: 0;
+    readonly animationDuration: 1500;
+    readonly animationEasing: "ease";
+    readonly dot: false;
+    readonly hide: false;
+    readonly isAnimationActive: "auto";
+    readonly label: false;
+    readonly legendType: "rect";
+    readonly radiusAxisId: 0;
+    readonly zIndex: 100;
+};
+type PropsWithDefaults = RequiresDefaultProps<Props$21, typeof defaultRadarProps>;
+type InternalRadarProps = WithIdRequired<PropsWithDefaults> & RadarComposedData;
+export function Radar<DataPointType = any, DataValueType = any>(outsideProps: Props$21<DataPointType, DataValueType>): React$1.JSX.Element;
+export namespace Radar {
+    var displayName: string;
+}
+interface RadialBarSectorProps extends RadialBarDataItem {
+    index: number;
+    option: RadialBarProps["activeShape"];
+    isActive: boolean;
+}
+type RadialBarDataItem = Props$16 & PolarViewBoxRequired & TooltipTriggerInfo & {
+    value?: any;
+    payload?: any;
+    background?: Props$16;
+};
+type RadialBarBackground = boolean | (ActiveShape<Props$16> & ZIndexable);
+interface InternalRadialBarProps<DataPointType = any, DataValueType = any> extends DataConsumer<DataPointType, DataValueType>, ZIndexable {
+    activeShape?: ActiveShape<RadialBarSectorProps, SVGPathElement>;
+    angleAxisId?: AxisId;
+    animationBegin?: number;
+    animationDuration?: AnimationDuration;
+    animationEasing?: AnimationTiming;
+    background?: RadialBarBackground;
+    barSize?: number;
+    className?: string;
+    cornerIsExternal?: boolean;
+    cornerRadius?: string | number;
+    sectors: ReadonlyArray<RadialBarDataItem>;
+    forceCornerRadius?: boolean;
+    hide?: boolean;
+    isAnimationActive?: boolean | "auto";
+    label?: ImplicitLabelListType;
+    legendType?: LegendType;
+    maxBarSize?: number;
+    minPointSize?: number;
+    onAnimationEnd?: () => void;
+    onAnimationStart?: () => void;
+    onClick?: (data: RadialBarDataItem, index: number, e: React$1.MouseEvent<SVGGraphicsElement>) => void;
+    onMouseDown?: (data: RadialBarDataItem, index: number, e: React$1.MouseEvent<SVGGraphicsElement>) => void;
+    onMouseUp?: (data: RadialBarDataItem, index: number, e: React$1.MouseEvent<SVGGraphicsElement>) => void;
+    onMouseMove?: (data: RadialBarDataItem, index: number, e: React$1.MouseEvent<SVGGraphicsElement>) => void;
+    onMouseOver?: (data: RadialBarDataItem, index: number, e: React$1.MouseEvent<SVGGraphicsElement>) => void;
+    onMouseOut?: (data: RadialBarDataItem, index: number, e: React$1.MouseEvent<SVGGraphicsElement>) => void;
+    onMouseEnter?: (data: RadialBarDataItem, index: number, e: React$1.MouseEvent<SVGGraphicsElement>) => void;
+    onMouseLeave?: (data: RadialBarDataItem, index: number, e: React$1.MouseEvent<SVGGraphicsElement>) => void;
+    onTouchStart?: (data: RadialBarDataItem, index: number, e: React$1.TouchEvent<SVGGraphicsElement>) => void;
+    onTouchMove?: (data: RadialBarDataItem, index: number, e: React$1.TouchEvent<SVGGraphicsElement>) => void;
+    onTouchEnd?: (data: RadialBarDataItem, index: number, e: React$1.TouchEvent<SVGGraphicsElement>) => void;
+    radiusAxisId?: AxisId;
+    shape?: ActiveShape<RadialBarSectorProps, SVGPathElement>;
+    stackId?: string | number;
+    tooltipType?: TooltipType$1;
+    zIndex?: number;
+}
+type RadialBarProps<DataPointType = any, DataValueType = any> = Omit<PresentationAttributesAdaptChildEvent<RadialBarDataItem, SVGElement>, "ref" | keyof InternalRadialBarProps<DataPointType, DataValueType>> & Omit<InternalRadialBarProps<DataPointType, DataValueType>, "sectors">;
+export function RadialBar<DataPointType = any, DataValueType = any>(outsideProps: RadialBarProps<DataPointType, DataValueType>): React$1.JSX.Element;
+export namespace RadialBar {
+    var displayName: string;
+}
+interface XAxisProps<DataPointType = any, DataValueType = any> extends Omit<RenderableAxisProps<DataPointType, DataValueType>, "domain" | "scale" | "tick"> {
+    type?: AxisDomainTypeInput;
+    xAxisId?: string | number;
+    height?: number;
+    mirror?: boolean;
+    orientation?: XAxisOrientation;
+    domain?: AxisDomain;
+    scale?: ScaleType | CustomScaleDefinition | CustomScaleDefinition<string> | CustomScaleDefinition<number> | CustomScaleDefinition<Date>;
+    tick?: TickProp<XAxisTickContentProps>;
+    ticks?: ReadonlyArray<AxisTick>;
+    padding?: XAxisPadding;
+    minTickGap?: number;
+    interval?: AxisInterval;
+    tickMargin?: number;
+    fontSize?: number | string;
+    letterSpacing?: number | string;
+    niceTicks?: NiceTicksAlgorithm;
+}
+type Props$22<DataPointType = any, DataValueType = any> = Omit<PresentationAttributesAdaptChildEvent<TickItem, SVGTextElement>, "scale" | "ref"> & XAxisProps<DataPointType, DataValueType>;
+export const XAxis: <DataPointType = any, DataValueType = any>(props: Props$22<DataPointType, DataValueType>) => React$1.ReactElement;
+interface YAxisProps<DataPointType = any, DataValueType = any> extends Omit<RenderableAxisProps<DataPointType, DataValueType>, "axisLine" | "domain" | "scale" | "tick"> {
+    axisLine?: boolean | React$1.SVGProps<SVGLineElement>;
+    type?: AxisDomainTypeInput;
+    domain?: AxisDomain;
+    scale?: ScaleType | CustomScaleDefinition | CustomScaleDefinition<string> | CustomScaleDefinition<number> | CustomScaleDefinition<Date>;
+    yAxisId?: string | number;
+    tick?: TickProp<YAxisTickContentProps>;
+    ticks?: ReadonlyArray<AxisTick>;
+    width?: YAxisWidth;
+    mirror?: boolean;
+    orientation?: YAxisOrientation;
+    padding?: YAxisPadding;
+    minTickGap?: number;
+    interval?: AxisInterval;
+    tickMargin?: number;
+    fontSize?: number | string;
+    letterSpacing?: number | string;
+    niceTicks?: NiceTicksAlgorithm;
+}
+type Props$23<DataPointType = any, DataValueType = any> = Omit<PresentationAttributesAdaptChildEvent<TickItem, SVGTextElement>, "scale" | "ref"> & YAxisProps<DataPointType, DataValueType>;
+export const YAxis: <DataPointType = any, DataValueType = any>(props: Props$23<DataPointType, DataValueType>) => React$1.ReactElement;
+export const LineChart: <DataPointType = any>(props: CartesianChartProps<DataPointType> & {
+    ref?: React$1.Ref<SVGSVGElement>;
+}) => React$1.ReactElement;
+export const BarChart: <DataPointType = any>(props: CartesianChartProps<DataPointType> & {
+    ref?: React$1.Ref<SVGSVGElement>;
+}) => React$1.ReactElement;
+export const PieChart: <DataPointType = any>(props: PolarChartProps<DataPointType> & {
+    ref?: React$1.Ref<SVGSVGElement>;
+}) => React$1.ReactElement;
+type SankeyVerticalAlign = "justify" | "top";
+interface LinkDataItem {
+    source: number;
+    target: number;
+    value: number;
+}
+interface NodeProps extends Omit<React$1.SVGProps<SVGRectElement>, "height" | "width"> {
+    height: number;
+    width: number;
+    payload: SankeyNode;
+    index: number;
+    x: number;
+    y: number;
+}
+interface LinkProps extends React$1.SVGProps<SVGPathElement> {
+    sourceX: number;
+    targetX: number;
+    sourceY: number;
+    targetY: number;
+    sourceControlX: number;
+    targetControlX: number;
+    sourceRelativeY: number;
+    targetRelativeY: number;
+    linkWidth: number;
+    index: number;
+    payload: Omit<SankeyLink, "source" | "target"> & {
+        source: SankeyNode;
+        target: SankeyNode;
+    };
+}
+interface SankeyData {
+    nodes: any[];
+    links: LinkDataItem[];
+}
+type SankeyNodeOptions = React$1.ReactElement<React$1.SVGProps<SVGRectElement>> | ((props: NodeProps) => React$1.ReactNode) | Props$9;
+type SankeyLinkOptions = React$1.ReactElement<React$1.SVGProps<SVGPathElement>> | ((props: LinkProps) => React$1.ReactElement<React$1.SVGProps<SVGPathElement>>) | React$1.SVGProps<SVGPathElement>;
+interface SankeyProps extends EventThrottlingProps {
+    nameKey?: DataKey<any>;
+    dataKey?: DataKey<any>;
+    width?: number | Percent;
+    height?: number | Percent;
+    data: SankeyData;
+    nodePadding?: number;
+    nodeWidth?: number;
+    linkCurvature?: number;
+    iterations?: number;
+    node?: SankeyNodeOptions;
+    link?: SankeyLinkOptions;
+    style?: React$1.CSSProperties;
+    className?: string;
+    children?: React$1.ReactNode;
+    margin?: Partial<Margin>;
+    onClick?: (item: NodeProps | LinkProps, type: SankeyElementType, e: React$1.MouseEvent<SVGGraphicsElement>) => void;
+    onMouseEnter?: (item: NodeProps | LinkProps, type: SankeyElementType, e: React$1.MouseEvent<SVGGraphicsElement>) => void;
+    onMouseLeave?: (item: NodeProps | LinkProps, type: SankeyElementType, e: React$1.MouseEvent<SVGGraphicsElement>) => void;
+    sort?: boolean;
+    verticalAlign?: SankeyVerticalAlign;
+    align?: "left" | "justify";
+}
+type Props$24 = Omit<React$1.SVGProps<SVGSVGElement>, keyof SankeyProps> & SankeyProps;
+type SankeyElementType = "node" | "link";
+export function Sankey(outsideProps: Props$24): React$1.JSX.Element;
+export namespace Sankey {
+    var displayName: string;
+}
+export const RadarChart: <DataPointType = any>(props: PolarChartProps<DataPointType> & {
+    ref?: React$1.Ref<SVGSVGElement>;
+}) => React$1.ReactElement;
+export const AreaChart: <DataPointType = any>(props: CartesianChartProps<DataPointType> & {
+    ref?: React$1.Ref<SVGSVGElement>;
+}) => React$1.ReactElement;
+export const RadialBarChart: <DataPointType = any>(props: PolarChartProps<DataPointType> & {
+    ref?: React$1.Ref<SVGSVGElement>;
+}) => React$1.ReactElement;
+export const ComposedChart: <DataPointType = any>(props: CartesianChartProps<DataPointType> & {
+    ref?: React$1.Ref<SVGSVGElement>;
+}) => React$1.ReactElement;
+type TooltipNameType = number | string;
+export type ChartConfig = Record<string, {
+    label?: React$1.ReactNode;
+    icon?: React$1.ComponentType;
+} & ({
+    color?: string;
+    theme?: never;
+} | {
+    color?: never;
+    theme: Record<"light" | "dark", string>;
+})>;
+export function ChartContainer({ id, className, children, config, initialDimension, ...props }: React$1.ComponentProps<"div"> & {
+    config: ChartConfig;
+    children: React$1.ComponentProps<typeof ResponsiveContainer>["children"];
+    initialDimension?: {
+        width: number;
+        height: number;
+    };
+}): React$1.JSX.Element;
+export const ChartTooltip: typeof Tooltip;
+export function ChartTooltipContent({ active, payload, className, indicator, hideLabel, hideIndicator, label, labelFormatter, labelClassName, formatter, color, nameKey, labelKey }: React$1.ComponentProps<typeof Tooltip> & React$1.ComponentProps<"div"> & {
+    hideLabel?: boolean;
+    hideIndicator?: boolean;
+    indicator?: "line" | "dot" | "dashed";
+    nameKey?: string;
+    labelKey?: string;
+} & Omit<Props$3<ValueType, TooltipNameType>, "accessibilityLayer">): React$1.JSX.Element | null;
+export const ChartLegend: React$1.MemoExoticComponent<(outsideProps: Props$7) => React$1.ReactPortal | null>;
+export function ChartLegendContent({ className, hideIcon, payload, verticalAlign, nameKey }: React$1.ComponentProps<"div"> & {
+    hideIcon?: boolean;
+    nameKey?: string;
+} & Props$6): React$1.JSX.Element | null;
 export type FrontendElement = React$1.JSX.Element;
+export type FrontendElementType = React$1.JSX.ElementType;
 namespace CSS$1 {
     export { AdvancedPseudos, AtRule, AtRules, DataType, Fallback, Globals, HtmlAttributes, ObsoleteProperties, ObsoletePropertiesFallback, ObsoletePropertiesHyphen, ObsoletePropertiesHyphenFallback, Properties, PropertiesFallback, PropertiesHyphen, PropertiesHyphenFallback, Property, PropertyValue, Pseudos, SimplePseudos, StandardLonghandProperties, StandardLonghandPropertiesFallback, StandardLonghandPropertiesHyphen, StandardLonghandPropertiesHyphenFallback, StandardProperties, StandardPropertiesFallback, StandardPropertiesHyphen, StandardPropertiesHyphenFallback, StandardShorthandProperties, StandardShorthandPropertiesFallback, StandardShorthandPropertiesHyphen, StandardShorthandPropertiesHyphenFallback, SvgAttributes, SvgProperties, SvgPropertiesFallback, SvgPropertiesHyphen, SvgPropertiesHyphenFallback, VendorLonghandProperties, VendorLonghandPropertiesFallback, VendorLonghandPropertiesHyphen, VendorLonghandPropertiesHyphenFallback, VendorProperties, VendorPropertiesFallback, VendorPropertiesHyphen, VendorPropertiesHyphenFallback, VendorShorthandProperties, VendorShorthandPropertiesFallback, VendorShorthandPropertiesHyphen, VendorShorthandPropertiesHyphenFallback };
 }
@@ -14169,12 +16234,16 @@ namespace Switch {
 namespace Tabs {
     export { TabsIndicator as Indicator, TabsList as List, TabsPanel as Panel, TabsRoot as Root, TabsTab as Tab };
 }
-export { Button$1 as Button, Checkbox$1 as Checkbox, Collapsible$1 as Collapsible, CollapsibleTrigger$1 as CollapsibleTrigger, ComboboxChip$1 as ComboboxChip, ComboboxChips$1 as ComboboxChips, ComboboxCollection$1 as ComboboxCollection, ComboboxEmpty$1 as ComboboxEmpty, ComboboxGroup$1 as ComboboxGroup, ComboboxInput$1 as ComboboxInput, ComboboxItem$1 as ComboboxItem, ComboboxLabel$1 as ComboboxLabel, ComboboxList$1 as ComboboxList, ComboboxSeparator$1 as ComboboxSeparator, ComboboxTrigger$1 as ComboboxTrigger, ComboboxValue$1 as ComboboxValue, DialogClose$1 as DialogClose, DialogDescription$1 as DialogDescription, DialogPortal$1 as DialogPortal, DialogTitle$1 as DialogTitle, DialogTrigger$1 as DialogTrigger, Image$1 as Image, NativeText as Text, Progress$1 as Progress, ProgressIndicator$1 as ProgressIndicator, ProgressLabel$1 as ProgressLabel, ProgressTrack$1 as ProgressTrack, ProgressValue$1 as ProgressValue, SelectGroup$1 as SelectGroup, SelectItem$1 as SelectItem, SelectLabel$1 as SelectLabel, SelectSeparator$1 as SelectSeparator, SelectTrigger$1 as SelectTrigger, SelectValue$1 as SelectValue, Separator$1 as Separator, Slider$1 as Slider, SliderControl$1 as SliderControl, SliderThumb$1 as SliderThumb, SliderTrack$1 as SliderTrack, Switch$1 as Switch, Tabs$1 as Tabs, TabsList$1 as TabsList, };
+export { Button$1 as Button, Checkbox$1 as Checkbox, Collapsible$1 as Collapsible, CollapsibleTrigger$1 as CollapsibleTrigger, ComboboxChip$1 as ComboboxChip, ComboboxChips$1 as ComboboxChips, ComboboxCollection$1 as ComboboxCollection, ComboboxEmpty$1 as ComboboxEmpty, ComboboxGroup$1 as ComboboxGroup, ComboboxInput$1 as ComboboxInput, ComboboxItem$1 as ComboboxItem, ComboboxLabel$1 as ComboboxLabel, ComboboxList$1 as ComboboxList, ComboboxSeparator$1 as ComboboxSeparator, ComboboxTrigger$1 as ComboboxTrigger, ComboboxValue$1 as ComboboxValue, DialogClose$1 as DialogClose, DialogDescription$1 as DialogDescription, DialogPortal$1 as DialogPortal, DialogTitle$1 as DialogTitle, DialogTrigger$1 as DialogTrigger, Image$1 as Image, Label$1 as Label, NativeText as Text, Progress$1 as Progress, ProgressIndicator$1 as ProgressIndicator, ProgressLabel$1 as ProgressLabel, ProgressTrack$1 as ProgressTrack, ProgressValue$1 as ProgressValue, SelectGroup$1 as SelectGroup, SelectItem$1 as SelectItem, SelectLabel$1 as SelectLabel, SelectSeparator$1 as SelectSeparator, SelectTrigger$1 as SelectTrigger, SelectValue$1 as SelectValue, Separator$1 as Separator, Slider$1 as Slider, SliderControl$1 as SliderControl, SliderThumb$1 as SliderThumb, SliderTrack$1 as SliderTrack, Switch$1 as Switch, Tabs$1 as Tabs, TabsList$1 as TabsList, };
 }
 
 declare const ActionButton: typeof NativeFrontend.ActionButton;
 declare const ActionButtonGroup: typeof NativeFrontend.ActionButtonGroup;
+declare const Area: typeof NativeFrontend.Area;
+declare const AreaChart: typeof NativeFrontend.AreaChart;
 declare const Badge: typeof NativeFrontend.Badge;
+declare const Bar: typeof NativeFrontend.Bar;
+declare const BarChart: typeof NativeFrontend.BarChart;
 declare const Button: typeof NativeFrontend.Button;
 declare const ButtonGroup: typeof NativeFrontend.ButtonGroup;
 declare const ButtonGroupSeparator: typeof NativeFrontend.ButtonGroupSeparator;
@@ -14186,6 +16255,14 @@ declare const CardDescription: typeof NativeFrontend.CardDescription;
 declare const CardFooter: typeof NativeFrontend.CardFooter;
 declare const CardHeader: typeof NativeFrontend.CardHeader;
 declare const CardTitle: typeof NativeFrontend.CardTitle;
+declare const CartesianGrid: typeof NativeFrontend.CartesianGrid;
+declare const Cell: typeof NativeFrontend.Cell;
+type ChartConfig = NativeFrontend.ChartConfig;
+declare const ChartContainer: typeof NativeFrontend.ChartContainer;
+declare const ChartLegend: typeof NativeFrontend.ChartLegend;
+declare const ChartLegendContent: typeof NativeFrontend.ChartLegendContent;
+declare const ChartTooltip: typeof NativeFrontend.ChartTooltip;
+declare const ChartTooltipContent: typeof NativeFrontend.ChartTooltipContent;
 declare const Checkbox: typeof NativeFrontend.Checkbox;
 declare const CodeBlock: typeof NativeFrontend.CodeBlock;
 declare const CodeBlockContent: typeof NativeFrontend.CodeBlockContent;
@@ -14215,6 +16292,7 @@ declare const ComboboxList: typeof NativeFrontend.ComboboxList;
 declare const ComboboxSeparator: typeof NativeFrontend.ComboboxSeparator;
 declare const ComboboxTrigger: typeof NativeFrontend.ComboboxTrigger;
 declare const ComboboxValue: typeof NativeFrontend.ComboboxValue;
+declare const ComposedChart: typeof NativeFrontend.ComposedChart;
 declare const DataTable: typeof NativeFrontend.DataTable;
 declare const Dialog: typeof NativeFrontend.Dialog;
 declare const DialogClose: typeof NativeFrontend.DialogClose;
@@ -14260,6 +16338,7 @@ declare const FieldSeparator: typeof NativeFrontend.FieldSeparator;
 declare const FieldSet: typeof NativeFrontend.FieldSet;
 declare const FieldTitle: typeof NativeFrontend.FieldTitle;
 declare const FileViewer: typeof NativeFrontend.FileViewer;
+type FrontendElementType = NativeFrontend.FrontendElementType;
 declare const Input: typeof NativeFrontend.Input;
 declare const InputGroup: typeof NativeFrontend.InputGroup;
 declare const InputGroupAddon: typeof NativeFrontend.InputGroupAddon;
@@ -14268,6 +16347,10 @@ declare const InputGroupInput: typeof NativeFrontend.InputGroupInput;
 declare const InputGroupText: typeof NativeFrontend.InputGroupText;
 declare const InputGroupTextarea: typeof NativeFrontend.InputGroupTextarea;
 declare const InteractiveCard: typeof NativeFrontend.InteractiveCard;
+declare const Label: typeof NativeFrontend.Label;
+declare const LabelList: typeof NativeFrontend.LabelList;
+declare const Line: typeof NativeFrontend.Line;
+declare const LineChart: typeof NativeFrontend.LineChart;
 declare const Pagination: typeof NativeFrontend.Pagination;
 declare const PaginationContent: typeof NativeFrontend.PaginationContent;
 declare const PaginationEllipsis: typeof NativeFrontend.PaginationEllipsis;
@@ -14275,12 +16358,24 @@ declare const PaginationItem: typeof NativeFrontend.PaginationItem;
 declare const PaginationLink: typeof NativeFrontend.PaginationLink;
 declare const PaginationNext: typeof NativeFrontend.PaginationNext;
 declare const PaginationPrevious: typeof NativeFrontend.PaginationPrevious;
+declare const Pie: typeof NativeFrontend.Pie;
+declare const PieChart: typeof NativeFrontend.PieChart;
+declare const PolarAngleAxis: typeof NativeFrontend.PolarAngleAxis;
+declare const PolarGrid: typeof NativeFrontend.PolarGrid;
+declare const PolarRadiusAxis: typeof NativeFrontend.PolarRadiusAxis;
 declare const Progress: typeof NativeFrontend.Progress;
 declare const ProgressIndicator: typeof NativeFrontend.ProgressIndicator;
 declare const ProgressLabel: typeof NativeFrontend.ProgressLabel;
 declare const ProgressStepper: typeof NativeFrontend.ProgressStepper;
 declare const ProgressTrack: typeof NativeFrontend.ProgressTrack;
 declare const ProgressValue: typeof NativeFrontend.ProgressValue;
+declare const Radar: typeof NativeFrontend.Radar;
+declare const RadarChart: typeof NativeFrontend.RadarChart;
+declare const RadialBar: typeof NativeFrontend.RadialBar;
+declare const RadialBarChart: typeof NativeFrontend.RadialBarChart;
+declare const ReferenceLine: typeof NativeFrontend.ReferenceLine;
+declare const ResponsiveContainer: typeof NativeFrontend.ResponsiveContainer;
+declare const Sankey: typeof NativeFrontend.Sankey;
 declare const Select: typeof NativeFrontend.Select;
 declare const SelectContent: typeof NativeFrontend.SelectContent;
 declare const SelectGroup: typeof NativeFrontend.SelectGroup;
@@ -14326,6 +16421,8 @@ declare const TabsTrigger: typeof NativeFrontend.TabsTrigger;
 declare const Textarea: typeof NativeFrontend.Textarea;
 declare const ViewDialog: typeof NativeFrontend.ViewDialog;
 declare const Wizard: typeof NativeFrontend.Wizard;
+declare const XAxis: typeof NativeFrontend.XAxis;
+declare const YAxis: typeof NativeFrontend.YAxis;
 declare const useCodeBlockConfig: typeof NativeFrontend.useCodeBlockConfig;
 declare const useCodeBlockFolding: typeof NativeFrontend.useCodeBlockFolding;
 declare const useCodeBlockSelection: typeof NativeFrontend.useCodeBlockSelection;

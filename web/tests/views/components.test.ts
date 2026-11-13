@@ -1,6 +1,8 @@
 import { it, expect } from 'vitest';
+import * as recharts from 'recharts';
 import * as card from '@/components/shadcn/card';
 import * as components from '@/views/components';
+import * as chart from '@/components/shadcn/chart';
 import { InteractiveCard } from '@/components/custom/interactive-card';
 
 it('exposes native card composition separately from LongLink surface interactions', () => {
@@ -22,4 +24,37 @@ it('exposes the authored View API without privileged host providers', () => {
     expect(Object.hasOwn(components, 'Root')).toBe(false);
     expect(Object.hasOwn(components, 'FileRequestContext')).toBe(false);
     expect(Object.hasOwn(components, 'FormRequestContext')).toBe(false);
+});
+
+it('exposes native chart components without a LongLink data adapter', () => {
+    // Preserve the native component identities required by Recharts composition.
+    for (const name of [
+        'AreaChart',
+        'Area',
+        'BarChart',
+        'Bar',
+        'LineChart',
+        'Line',
+        'PieChart',
+        'Pie',
+        'RadarChart',
+        'Radar',
+        'RadialBarChart',
+        'RadialBar',
+        'Sankey',
+        'XAxis',
+        'YAxis'
+    ] as const) {
+        expect(components[name]).toBe(recharts[name]);
+    }
+
+    for (const name of [
+        'ChartContainer',
+        'ChartTooltip',
+        'ChartTooltipContent',
+        'ChartLegend',
+        'ChartLegendContent'
+    ] as const) {
+        expect(components[name]).toBe(chart[name]);
+    }
 });

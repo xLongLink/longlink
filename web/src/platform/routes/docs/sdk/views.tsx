@@ -77,8 +77,8 @@ const previews = new Map(
         LineChart: <ChartExample name="LineChart" height={160} isCompact />,
         PieChart: <ChartExample name="PieChart" height={160} isCompact />,
         RadarChart: <ChartExample name="RadarChart" height={160} isCompact />,
-        RadialChart: <ChartExample name="RadialChart" height={160} isCompact />,
-        SankeyChart: <ChartExample name="SankeyChart" height={160} isCompact />,
+        RadialBarChart: <ChartExample name="RadialBarChart" height={160} isCompact />,
+        Sankey: <ChartExample name="Sankey" height={160} isCompact />,
         Maps: (
             <div className="flex aspect-square w-full items-center justify-center overflow-hidden [&_svg]:h-full! [&_svg]:w-[200%] [&_svg]:max-w-none [&_svg]:shrink-0">
                 <MapsExample />

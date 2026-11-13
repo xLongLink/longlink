@@ -30,7 +30,7 @@ class Component(BaseModel):
 
     # Identity and authored guidance.
     name: str
-    source: Literal["shadcn", "reui", "custom"]
+    source: Literal["shadcn", "reui", "custom", "recharts"]
     category: str
     guidance: str = ""
     keywords: list[str] = Field(default_factory=list)
