@@ -131,7 +131,7 @@ export default function ViewLayout({
                 </Heading>
                 <Text as="p">{introduction}</Text>
                 <CodeBlock
-                    code={`longlink docs component "${name}"`}
+                    code={`longlink docs component ${name}`}
                     language="bash"
                     hasLanguageLabel={false}
                     isWrapped
