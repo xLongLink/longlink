@@ -68,9 +68,8 @@ export function ConfirmationDialog({
                             <div className="view-confirmation-actions">
                                 <Button
                                     ref={cancel}
-                                    variant="view"
-                                    data-variant="ghost"
-                                    data-size="md"
+                                    type="button"
+                                    variant="ghost"
                                     disabled={isPending}
                                     focusableWhenDisabled
                                     onClick={() => {
@@ -80,9 +79,9 @@ export function ConfirmationDialog({
                                     {options.cancelLabel ?? 'Cancel'}
                                 </Button>
                                 <Button
-                                    variant="view"
-                                    data-variant={options.actionVariant ?? 'primary'}
-                                    data-size="md"
+                                    type="button"
+                                    variant={options.actionVariant === 'destructive' ? 'destructive' : 'default'}
+                                    className="relative min-w-0"
                                     disabled={isPending}
                                     focusableWhenDisabled
                                     aria-busy={isPending || undefined}

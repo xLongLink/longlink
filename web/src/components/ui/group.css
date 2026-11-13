@@ -1,32 +1,17 @@
 @layer components {
     .view-button-group {
-        display: inline-flex;
-        align-items: stretch;
         position: relative;
-        --group-control-size: var(--size-element-md);
     }
 
-    .view-button-group[data-size='sm'] {
-        --group-control-size: var(--size-element-sm);
-    }
-
-    .view-button-group[data-size='lg'] {
-        --group-control-size: var(--size-element-lg);
-    }
-
-    .view-button-group[data-orientation='vertical'] {
-        flex-direction: column;
-    }
-
-    .view-button-group[data-group-tracking] .view-action-button:active:not([data-group-pressed]) {
-        background-image: none;
+    .view-button-group[data-group-tracking] [data-slot='button']:active:not([data-group-pressed]) {
+        transform: none;
     }
 
     @media (pointer: coarse) {
         .view-button-group::before {
             content: '';
             position: absolute;
-            inset: min(0px, calc((var(--group-control-size) - 44px) / 2));
+            inset: -8px;
         }
     }
 }

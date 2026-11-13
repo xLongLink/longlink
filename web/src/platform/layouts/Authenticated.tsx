@@ -34,9 +34,7 @@ export default function AuthenticatedLayout() {
                         </div>
                         <Button
                             type="button"
-                            variant="view"
-                            data-variant="primary"
-                            data-size="md"
+                            variant="default"
                             disabled={isFetching}
                             focusableWhenDisabled
                             aria-busy={isFetching}

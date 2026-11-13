@@ -2,6 +2,7 @@ import { useGroupPress } from './press';
 import { Toolbar } from '@base-ui/react/toolbar';
 import { useContext, useRef, type ReactNode } from 'react';
 import { ButtonGroupContext, ControlSizeContext } from './contexts';
+import { ButtonGroup as ControlGroup } from '@/components/shadcn/button-group';
 
 /** Groups related actions with connected styling and a single keyboard tab stop. */
 export function ButtonGroup({
@@ -27,6 +28,7 @@ export function ButtonGroup({
         <ButtonGroupContext value={{ orientation, isDisabled }}>
             <ControlSizeContext value={size}>
                 <Toolbar.Root
+                    render={<ControlGroup orientation={orientation} />}
                     ref={root}
                     className="view-button-group"
                     data-orientation={orientation}

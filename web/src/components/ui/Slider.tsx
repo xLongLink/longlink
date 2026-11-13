@@ -1,9 +1,10 @@
 import { useValue } from './value';
 import { FormField } from './FormField';
 import type { FieldProps } from './types';
-import { Slider as BaseSlider } from '@base-ui/react/slider';
 import { useDirection } from '@base-ui/react/direction-provider';
 import { useEffect, useEffectEvent, useId, useRef } from 'react';
+import { FieldContent, FieldDescription, FieldTitle } from '@/components/shadcn/field';
+import { Slider as SliderRoot, SliderControl, SliderTrack, SliderRange, SliderThumb } from '@/components/shadcn/slider';
 
 type SliderGesture = { pointerId: number; committed: boolean };
 
@@ -104,8 +105,8 @@ export function Slider(props: SliderProps) {
     // Keep disabled sliders discoverable; reject edits without disabling their native focus targets.
     return (
         <FormField {...props} fieldRef={ref} values={values.map(String)} serialize>
-            <BaseSlider.Root
-                className="view-slider"
+            <SliderRoot
+                className="view-slider flex min-w-0 flex-col gap-1 font-sans"
                 data-disabled={props.disabled || undefined}
                 value={normalized}
                 onValueChange={(next, details) => {
@@ -139,23 +140,22 @@ export function Slider(props: SliderProps) {
                 aria-describedby={props.description ? `${id}-description` : undefined}
                 aria-disabled={props.disabled || undefined}
             >
-                <div className="view-text-field-heading">
-                    <span id={`${id}-label`} className="view-text-field-label">
+                <FieldContent>
+                    <FieldTitle id={`${id}-label`}>
                         {props.label}
                         {props.required && (
-                            <span className="view-text-field-description">
+                            <span className="text-muted-foreground font-normal">
                                 <span aria-hidden="true"> · </span>Required
                             </span>
                         )}
-                    </span>
+                    </FieldTitle>
                     {props.description && (
-                        <span id={`${id}-description`} className="view-text-field-description">
-                            {props.description}
-                        </span>
+                        <FieldDescription id={`${id}-description`}>{props.description}</FieldDescription>
                     )}
-                </div>
-                <BaseSlider.Control
+                </FieldContent>
+                <SliderControl
                     className="view-slider-control"
+                    data-disabled={props.disabled || undefined}
                     onPointerDownCapture={(event) => {
                         if (props.disabled || event.currentTarget.closest('fieldset:disabled')) {
                             event.preventDefault();
@@ -171,65 +171,68 @@ export function Slider(props: SliderProps) {
                         };
                     }}
                 >
-                    <BaseSlider.Track className="view-slider-track">
-                        <BaseSlider.Indicator className="view-slider-indicator" />
-                        {values.map((current, index) => (
-                            <BaseSlider.Thumb
-                                key={index === 0 ? 'start' : 'end'}
-                                index={index}
-                                className="view-slider-thumb"
-                                aria-label={
-                                    Array.isArray(value) ? (index === 0 ? 'Minimum value' : 'Maximum value') : undefined
+                    <SliderTrack>
+                        <SliderRange />
+                    </SliderTrack>
+                    {values.map((current, index) => (
+                        <SliderThumb
+                            key={index === 0 ? 'start' : 'end'}
+                            index={index}
+                            className="view-slider-thumb group"
+                            aria-label={
+                                Array.isArray(value) ? (index === 0 ? 'Minimum value' : 'Maximum value') : undefined
+                            }
+                            aria-labelledby={!Array.isArray(value) ? `${id}-label` : undefined}
+                            aria-describedby={props.description ? `${id}-description` : undefined}
+                            onKeyDown={(event) => {
+                                if (props.disabled || event.currentTarget.closest('fieldset:disabled')) {
+                                    if (event.key !== 'Tab') event.preventDefault();
+
+                                    return;
                                 }
-                                aria-labelledby={!Array.isArray(value) ? `${id}-label` : undefined}
-                                aria-describedby={props.description ? `${id}-description` : undefined}
-                                onKeyDown={(event) => {
-                                    if (props.disabled || event.currentTarget.closest('fieldset:disabled')) {
-                                        if (event.key !== 'Tab') event.preventDefault();
 
-                                        return;
-                                    }
+                                if (!isRangeSlider(props) || !props.minStepsBetweenThumbs) return;
+                                const gap = props.minStepsBetweenThumbs * step;
+                                const towardMax = direction === 'rtl' ? 'ArrowLeft' : 'ArrowRight';
+                                const towardMin = direction === 'rtl' ? 'ArrowRight' : 'ArrowLeft';
+                                const increasing = [towardMax, 'ArrowUp', 'PageUp'].includes(event.key);
+                                const decreasing = [towardMin, 'ArrowDown', 'PageDown'].includes(event.key);
 
-                                    if (!isRangeSlider(props) || !props.minStepsBetweenThumbs) return;
-                                    const gap = props.minStepsBetweenThumbs * step;
-                                    const towardMax = direction === 'rtl' ? 'ArrowLeft' : 'ArrowRight';
-                                    const towardMin = direction === 'rtl' ? 'ArrowRight' : 'ArrowLeft';
-                                    const increasing = [towardMax, 'ArrowUp', 'PageUp'].includes(event.key);
-                                    const decreasing = [towardMin, 'ArrowDown', 'PageDown'].includes(event.key);
+                                if (!increasing && !decreasing) return;
+                                const increment = event.shiftKey || event.key.startsWith('Page') ? step * 10 : step;
+                                const snapped = min + Math.round((values[index] - min) / step) * step;
 
-                                    if (!increasing && !decreasing) return;
-                                    const increment = event.shiftKey || event.key.startsWith('Page') ? step * 10 : step;
-                                    const snapped = min + Math.round((values[index] - min) / step) * step;
+                                const proposed = Math.min(
+                                    max,
+                                    Math.max(min, snapped + (increasing ? increment : -increment))
+                                );
 
-                                    const proposed = Math.min(
-                                        max,
-                                        Math.max(min, snapped + (increasing ? increment : -increment))
-                                    );
+                                const boundary = index === 0 ? values[1] - gap : values[0] + gap;
 
-                                    const boundary = index === 0 ? values[1] - gap : values[0] + gap;
+                                // Only intercept increments that Base UI would reject for crossing the minimum gap.
+                                if (index === 0 ? proposed <= boundary : proposed >= boundary) return;
+                                event.preventDefault();
+                                const endpoint = Math.min(max, Math.max(min, boundary));
 
-                                    // Only intercept increments that Base UI would reject for crossing the minimum gap.
-                                    if (index === 0 ? proposed <= boundary : proposed >= boundary) return;
-                                    event.preventDefault();
-                                    const endpoint = Math.min(max, Math.max(min, boundary));
+                                if (endpoint === values[index]) return;
 
-                                    if (endpoint === values[index]) return;
+                                const next: [number, number] =
+                                    index === 0 ? [endpoint, values[1]] : [values[0], endpoint];
 
-                                    const next: [number, number] =
-                                        index === 0 ? [endpoint, values[1]] : [values[0], endpoint];
-
-                                    onChange(next);
-                                    commit(next);
-                                }}
+                                onChange(next);
+                                commit(next);
+                            }}
+                        >
+                            <span
+                                className="view-slider-value pointer-events-none absolute bottom-full left-1/2 mb-1 hidden -translate-x-1/2 whitespace-nowrap bg-foreground px-2 py-1 text-sm text-background group-hover:block group-focus-within:block group-data-dragging:block"
+                                aria-hidden="true"
                             >
-                                <span className="view-slider-value" aria-hidden="true">
-                                    {current}
-                                </span>
-                            </BaseSlider.Thumb>
-                        ))}
-                    </BaseSlider.Track>
-                </BaseSlider.Control>
-            </BaseSlider.Root>
+                                {current}
+                            </span>
+                        </SliderThumb>
+                    ))}
+                </SliderControl>
+            </SliderRoot>
         </FormField>
     );
 }

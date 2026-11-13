@@ -153,13 +153,7 @@ export default function Login() {
                                     </button>
                                 </div>
                             </div>
-                            <Button
-                                className="login-button"
-                                data-size="md"
-                                data-variant="primary"
-                                type="submit"
-                                variant="view"
-                            >
+                            <Button className="login-button" type="submit" variant="default">
                                 <LogIn aria-hidden="true" size={16} />
                                 Sign In
                             </Button>
@@ -173,9 +167,7 @@ export default function Login() {
                                     <Button
                                         key={provider.availability}
                                         className="login-button"
-                                        data-size="md"
-                                        data-variant="secondary"
-                                        variant="view"
+                                        variant="secondary"
                                         type="button"
                                         onClick={() =>
                                             window.location.assign(

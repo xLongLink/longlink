@@ -18,7 +18,7 @@ export function NativeEmptyState(props: {
             ref={root}
             className={cn(
                 'w-auto max-w-full flex-none rounded-none text-wrap',
-                props.isCompact ? 'gap-2 px-4 py-4' : 'px-6 py-8'
+                props.isCompact ? 'gap-2 px-4 py-4' : 'py-8'
             )}
         >
             <div className="native-empty-copy" data-description={props.description ? true : undefined}>

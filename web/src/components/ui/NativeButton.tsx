@@ -1,3 +1,4 @@
+import { cn } from 'cn';
 import { ApiError } from '@/lib/api';
 import { LoaderCircle } from 'lucide-react';
 import { ReportedError } from '@/lib/reported';
@@ -85,10 +86,9 @@ export function NativeButton({
         <>
             <Button
                 {...props}
-                variant="view"
-                data-variant={variant}
-                data-size={size}
-                className={className}
+                variant={variant === 'primary' ? 'default' : variant === 'secondary' ? 'outline' : variant}
+                size={size === 'md' ? 'default' : size}
+                className={cn('relative', className)}
                 style={{ ...props.style, width: width ?? props.style?.width }}
                 nativeButton={!isLink}
                 render={
@@ -125,7 +125,7 @@ export function NativeButton({
                     <span className="view-action-label">{label}</span>
                     {endContent}
                 </span>
-                {busy && <LoaderCircle aria-hidden="true" className="view-action-spinner" />}
+                {busy && <LoaderCircle aria-hidden="true" className="view-action-spinner size-3.5" />}
                 <span role="status" aria-live="polite" className="sr-only">
                     {busy ? 'Loading' : ''}
                 </span>

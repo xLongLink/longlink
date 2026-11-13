@@ -63,7 +63,7 @@ export function Tabs({ children, gap = 3, hasDivider = false, onChange, value: c
                         key={tab.props.value}
                         value={tab.props.value}
                         disabled={tab.props.isDisabled}
-                        className="min-h-(--size-element-md) flex-none px-3 text-(length:--font-size-base) text-muted-foreground data-active:font-semibold after:bg-primary group-data-[variant=line]/tabs-list:hover:bg-secondary"
+                        className="flex-none"
                     >
                         {tab.props.label}
                     </TabsTrigger>

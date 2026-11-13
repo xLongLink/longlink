@@ -1,6 +1,12 @@
 import { useState } from 'react';
 import { Button } from '@/components/shadcn/button';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import {
+    Pagination as Navigation,
+    PaginationContent,
+    PaginationEllipsis,
+    PaginationItem,
+} from '@/components/shadcn/pagination';
 
 /** Navigates pages of table or gallery items without owning their data or selection. */
 export function Pagination(props: {
@@ -43,66 +49,58 @@ export function Pagination(props: {
 
     // Native buttons change local data rather than pretending that each page has a URL.
     return (
-        <nav className="view-pagination" aria-label={props.label ?? 'Pagination'}>
-            <div className="view-pagination-controls">
-                <Button
-                    type="button"
-                    variant="view"
-                    data-variant="ghost"
-                    data-size="md"
-                    data-icon-only
-                    aria-label="Go to previous page"
-                    disabled={page <= 1}
-                    focusableWhenDisabled
-                    onClick={() => select(page - 1)}
-                >
-                    <ChevronLeft
-                        className="view-action-icon view-pagination-chevron"
-                        data-size="md"
-                        aria-hidden="true"
-                    />
-                </Button>
+        <Navigation aria-label={props.label ?? 'Pagination'}>
+            <PaginationContent className="flex-wrap">
+                <PaginationItem>
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        aria-label="Go to previous page"
+                        disabled={page <= 1}
+                        focusableWhenDisabled
+                        onClick={() => select(page - 1)}
+                    >
+                        <ChevronLeft className="rtl:rotate-180" aria-hidden="true" />
+                    </Button>
+                </PaginationItem>
                 {pages.map((item) =>
                     item !== 'before' && item !== 'after' ? (
-                        <Button
-                            key={item}
-                            type="button"
-                            variant="view"
-                            data-variant="ghost"
-                            data-size="md"
-                            aria-label={`Go to page ${item}`}
-                            aria-current={item === page ? 'page' : undefined}
-                            onClick={() => select(item)}
-                        >
-                            {item}
-                        </Button>
+                        <PaginationItem key={item}>
+                            <Button
+                                type="button"
+                                variant={item === page ? 'outline' : 'ghost'}
+                                size="icon"
+                                aria-label={`Go to page ${item}`}
+                                aria-current={item === page ? 'page' : undefined}
+                                onClick={() => select(item)}
+                            >
+                                {item}
+                            </Button>
+                        </PaginationItem>
                     ) : (
-                        <span key={item} className="view-pagination-ellipsis" aria-hidden="true">
-                            …
-                        </span>
+                        <PaginationItem key={item}>
+                            <PaginationEllipsis />
+                        </PaginationItem>
                     )
                 )}
-                <Button
-                    type="button"
-                    variant="view"
-                    data-variant="ghost"
-                    data-size="md"
-                    data-icon-only
-                    aria-label="Go to next page"
-                    disabled={page >= totalPages}
-                    focusableWhenDisabled
-                    onClick={() => select(page + 1)}
-                >
-                    <ChevronRight
-                        className="view-action-icon view-pagination-chevron"
-                        data-size="md"
-                        aria-hidden="true"
-                    />
-                </Button>
-            </div>
+                <PaginationItem>
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        aria-label="Go to next page"
+                        disabled={page >= totalPages}
+                        focusableWhenDisabled
+                        onClick={() => select(page + 1)}
+                    >
+                        <ChevronRight className="rtl:rotate-180" aria-hidden="true" />
+                    </Button>
+                </PaginationItem>
+            </PaginationContent>
             <span className="sr-only" role="status">
                 {announcement}
             </span>
-        </nav>
+        </Navigation>
     );
 }

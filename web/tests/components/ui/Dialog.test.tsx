@@ -107,7 +107,7 @@ it('traps keyboard focus, ignores backdrop presses, and restores focus after Esc
         expect(title.textContent).toBe('Edit order');
         expect(document.activeElement).toBe(title);
         expect(close.disabled).toBe(false);
-        expect(close.dataset.size).toBe('md');
+        expect(close.getAttribute('aria-disabled')).not.toBe('true');
         const backdrop = document.querySelector('.view-dialog-backdrop');
 
         if (!backdrop) throw new Error('Missing backdrop');

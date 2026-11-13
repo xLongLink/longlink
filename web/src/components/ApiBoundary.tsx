@@ -35,13 +35,7 @@ export function ApiBoundary({
                                     <CircleX aria-hidden="true" className="api-boundary-icon" />
                                     <p>Unable to load this page.</p>
                                 </div>
-                                <Button
-                                    type="button"
-                                    variant="view"
-                                    data-variant="primary"
-                                    data-size="md"
-                                    onClick={resetErrorBoundary}
-                                >
+                                <Button type="button" variant="default" onClick={resetErrorBoundary}>
                                     Retry
                                 </Button>
                             </div>

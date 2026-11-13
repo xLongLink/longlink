@@ -7,17 +7,14 @@
 @import './components/deletion.css';
 @import './components/ui/menu.css';
 @import './components/ui/navigation.css';
-@import './components/ui/pagination.css';
 @import './components/ui/metadata.css';
 @import './components/ui/image.css';
 @import './components/ui/link.css';
 @import './components/ui/card.css';
 @import './components/ui/token.css';
-@import './components/ui/radio.css';
 @import './components/ui/number.css';
 @import './components/ui/stepper.css';
 @import './components/ui/codeblock.css';
-@import './components/ui/slider.css';
 @import './components/ui/fileinput.css';
 @import './components/ui/selector.css';
 @import './components/ui/temporal.css';
@@ -87,117 +84,6 @@
         font-size: var(--text-label-size);
     }
 
-    .view-action-button {
-        position: relative;
-        display: inline-flex;
-        flex-shrink: 0;
-        align-items: center;
-        justify-content: center;
-        gap: var(--spacing-2);
-        padding: var(--spacing-2) var(--spacing-3);
-        border: 0 solid transparent;
-        border-radius: var(--radius-element);
-        background-color: transparent;
-        color: var(--foreground);
-        font-family: var(--font-family-body);
-        font-size: var(--text-label-size);
-        font-weight: var(--font-weight-medium);
-        line-height: var(--text-label-leading);
-        text-decoration: none;
-        white-space: nowrap;
-        cursor: pointer;
-        user-select: none;
-        transition: background-color var(--duration-fast) var(--ease-standard);
-    }
-
-    .view-action-button[data-size='sm'] {
-        height: max(var(--size-element-sm), 1lh);
-    }
-    .view-action-button[data-size='md'] {
-        height: max(var(--size-element-md), 1lh);
-    }
-    .view-action-button[data-size='lg'] {
-        height: max(var(--size-element-lg), 1lh);
-    }
-
-    .view-action-button[data-variant='primary'] {
-        background-color: var(--primary);
-        color: var(--primary-foreground);
-    }
-
-    .view-action-button[data-variant='secondary'] {
-        border: 1.5px solid var(--input);
-    }
-
-    .view-action-button[data-variant='destructive'] {
-        background-color: var(--destructive-muted);
-        color: var(--destructive-foreground);
-    }
-
-    .view-action-button:not([aria-disabled='true']):hover {
-        background-image: linear-gradient(var(--color-overlay-hover), var(--color-overlay-hover));
-    }
-
-    .view-action-button[data-variant='secondary']:not([aria-disabled='true']):hover {
-        background-color: var(--secondary);
-        background-image: none;
-    }
-
-    .view-action-button:not([aria-disabled='true']):is(:active, [data-group-pressed]) {
-        background-image: linear-gradient(var(--color-overlay-pressed), var(--color-overlay-pressed));
-    }
-
-    .view-action-button:focus-visible {
-        outline: var(--focus-outline-width) solid var(--ring);
-        outline-offset: var(--focus-outline-offset);
-    }
-
-    .view-action-button[aria-disabled='true']:not([aria-busy='true']) {
-        opacity: 0.4;
-        cursor: not-allowed;
-    }
-
-    .view-action-button[data-icon-only] {
-        padding: 0;
-        aspect-ratio: 1;
-    }
-
-    .view-action-button[data-icon-only][data-size='sm'] {
-        height: var(--size-element-sm);
-    }
-    .view-action-button[data-icon-only][data-size='md'] {
-        height: var(--size-element-md);
-    }
-    .view-action-button[data-icon-only][data-size='lg'] {
-        height: var(--size-element-lg);
-    }
-
-    .view-action-button[data-group-orientation='horizontal']:not(:first-child) {
-        margin-inline-start: -1.5px;
-        border-start-start-radius: 0;
-        border-end-start-radius: 0;
-    }
-
-    .view-action-button[data-group-orientation='horizontal']:not(
-            :nth-last-child(1 of :not([popover]):not(template):not(dialog))
-        ) {
-        border-start-end-radius: 0;
-        border-end-end-radius: 0;
-    }
-
-    .view-action-button[data-group-orientation='vertical']:not(:first-child) {
-        margin-top: -1.5px;
-        border-start-start-radius: 0;
-        border-start-end-radius: 0;
-    }
-
-    .view-action-button[data-group-orientation='vertical']:not(
-            :nth-last-child(1 of :not([popover]):not(template):not(dialog))
-        ) {
-        border-end-start-radius: 0;
-        border-end-end-radius: 0;
-    }
-
     .view-action-content {
         display: flex;
         flex: 1;
@@ -228,7 +114,7 @@
         height: var(--spacing-5);
     }
 
-    .view-action-button[aria-busy='true'] .view-action-content {
+    .view-action-content[aria-hidden='true'] {
         animation: view-action-hide 0s var(--duration-medium-min) forwards;
     }
 
@@ -261,10 +147,7 @@
     }
 
     @media (prefers-reduced-motion: reduce) {
-        .view-action-button {
-            transition: none;
-        }
-        .view-action-button[aria-busy='true'] .view-action-content {
+        .view-action-content[aria-hidden='true'] {
             animation-delay: 0s;
         }
         .view-action-spinner {

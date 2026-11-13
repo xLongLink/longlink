@@ -75,11 +75,12 @@ export function ActionButton({
 
     const control = (
         <Control
-            variant="view"
+            variant={variant === 'primary' ? 'default' : variant === 'secondary' ? 'outline' : variant}
+            size={iconOnly ? (size === 'md' ? 'icon' : `icon-${size}`) : size === 'md' ? 'default' : size}
+            className="relative min-w-0"
             data-variant={variant}
             data-size={size}
             data-icon-only={iconOnly || undefined}
-            data-group-orientation={group?.orientation}
             data-group-action={group ? '' : undefined}
             nativeButton={!isLink}
             render={isLink ? <a href={href} /> : undefined}
@@ -114,7 +115,7 @@ export function ActionButton({
         >
             <span className="view-action-content" aria-hidden={pending || undefined}>
                 {icon && (
-                    <span className="view-action-icon" data-size={size}>
+                    <span className="inline-flex shrink-0">
                         <Icon icon={icon} size={size} />
                     </span>
                 )}

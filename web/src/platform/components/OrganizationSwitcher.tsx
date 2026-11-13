@@ -65,13 +65,7 @@ export function OrganizationSwitcher({ organization }: { organization: Organizat
                                     <p className="profile-email" role="alert">
                                         Unable to load organizations.
                                     </p>
-                                    <Button
-                                        type="button"
-                                        onClick={() => void refetch()}
-                                        variant="view"
-                                        data-size="sm"
-                                        data-variant="ghost"
-                                    >
+                                    <Button type="button" onClick={() => void refetch()} variant="ghost" size="sm">
                                         Retry
                                     </Button>
                                 </>

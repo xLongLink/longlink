@@ -97,22 +97,16 @@ export function TimestampDetails({
                             <dd className="view-timestamp-value">
                                 <span>{fullDate}</span>
                                 <Button
-                                    variant="view"
+                                    variant="ghost"
                                     type="button"
-                                    data-size="sm"
-                                    data-icon-only
-                                    data-variant="ghost"
+                                    size="icon-sm"
                                     aria-label={copies > 0 ? 'Copied' : `Copy ${fullDate}`}
                                     title={copies > 0 ? 'Copied' : 'Copy'}
                                     onClick={() => {
                                         void copy();
                                     }}
                                 >
-                                    {copies > 0 ? (
-                                        <Check className="view-action-icon" aria-hidden="true" />
-                                    ) : (
-                                        <Copy className="view-action-icon" aria-hidden="true" />
-                                    )}
+                                    {copies > 0 ? <Check aria-hidden="true" /> : <Copy aria-hidden="true" />}
                                 </Button>
                             </dd>
                         </dl>

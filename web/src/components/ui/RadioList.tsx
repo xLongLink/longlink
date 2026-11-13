@@ -1,8 +1,9 @@
+import { cn } from 'cn';
 import { useValue } from './value';
 import type { FieldProps } from './types';
-import { Radio } from '@base-ui/react/radio';
 import { useId, type ReactNode } from 'react';
-import { RadioGroup } from '@base-ui/react/radio-group';
+import { RadioGroup, RadioGroupItem } from '@/components/shadcn/radio-group';
+import { Field, FieldContent, FieldDescription, FieldLabel, FieldTitle } from '@/components/shadcn/field';
 
 /** Selects one of a small number of labeled values. */
 export function RadioList(
@@ -25,24 +26,23 @@ export function RadioList(
 
     // Read-only disabled groups remain discoverable without becoming successful form controls.
     return (
-        <div ref={ref} className="view-radio-field" data-disabled={props.disabled || undefined}>
-            <div className="view-text-field-heading">
-                <span id={`${id}-label`} className="view-text-field-label">
+        <Field ref={ref} data-disabled={props.disabled || undefined}>
+            <FieldContent>
+                <FieldTitle id={`${id}-label`}>
                     {props.label}
                     {props.required && (
-                        <span className="view-text-field-description">
+                        <span className="text-muted-foreground font-normal">
                             <span aria-hidden="true"> · </span>Required
                         </span>
                     )}
-                </span>
-                {props.description && (
-                    <span id={`${id}-description`} className="view-text-field-description">
-                        {props.description}
-                    </span>
-                )}
-            </div>
+                </FieldTitle>
+                {props.description && <FieldDescription id={`${id}-description`}>{props.description}</FieldDescription>}
+            </FieldContent>
             <RadioGroup
-                className="view-radio-group"
+                className={cn(
+                    props.orientation === 'horizontal' && 'flex flex-row flex-wrap gap-4',
+                    props.disabled && 'opacity-50'
+                )}
                 value={value}
                 onValueChange={onChange}
                 name={props.disabled ? undefined : props.name}
@@ -55,7 +55,7 @@ export function RadioList(
             >
                 {props.children}
             </RadioGroup>
-        </div>
+        </Field>
     );
 }
 
@@ -73,29 +73,24 @@ export function RadioListItem(props: {
 
     // The entire label activates one control; helper text describes rather than names it.
     return (
-        <div className="view-radio-item" data-disabled={props.isDisabled || undefined}>
-            <Radio.Root
+        <Field orientation="horizontal" data-disabled={props.isDisabled || undefined}>
+            <RadioGroupItem
                 id={id}
-                className="view-radio"
                 render={<button type="button" />}
                 nativeButton
                 value={props.value}
                 disabled={props.isDisabled}
                 aria-labelledby={`${id}-label`}
                 aria-describedby={props.description ? `${id}-description` : undefined}
-            >
-                <Radio.Indicator className="view-radio-dot" aria-hidden="true" />
-            </Radio.Root>
-            <label htmlFor={id} className="view-text-field-heading">
-                <span id={`${id}-label`} className="view-radio-label">
-                    {props.label}
-                </span>
-                {props.description && (
-                    <span id={`${id}-description`} className="view-radio-description">
-                        {props.description}
-                    </span>
-                )}
-            </label>
-        </div>
+            />
+            <FieldLabel htmlFor={id} className="flex-1">
+                <FieldContent>
+                    <span id={`${id}-label`}>{props.label}</span>
+                    {props.description && (
+                        <FieldDescription id={`${id}-description`}>{props.description}</FieldDescription>
+                    )}
+                </FieldContent>
+            </FieldLabel>
+        </Field>
     );
 }

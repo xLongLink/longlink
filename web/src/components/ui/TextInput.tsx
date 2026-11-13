@@ -1,11 +1,10 @@
 import { X } from 'lucide-react';
 import { useValue } from './value';
 import { FormField } from './FormField';
-import { FieldLabel } from './FieldLabel';
 import type { FieldProps } from './types';
-import { Button } from '@base-ui/react/button';
-import { Input } from '@/components/shadcn/input';
 import { useId, useRef, type ReactNode } from 'react';
+import { Field, FieldContent, FieldDescription, FieldLabel } from '@/components/shadcn/field';
+import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from '@/components/shadcn/input-group';
 
 type TextInputProps = FieldProps & {
     value?: string;
@@ -42,27 +41,24 @@ export function TextInput(props: TextInputProps) {
                       : undefined
             }
         >
-            <div className="view-text-field" data-disabled={props.disabled || undefined}>
-                <FieldLabel
-                    controlId={id}
-                    label={props.label}
-                    description={props.description}
-                    required={props.required}
-                />
-                <div
-                    className="view-text-input"
-                    onClick={() => {
-                        // Icons and padding activate the editable control without moving the page.
-                        if (!props.disabled) input.current?.focus({ preventScroll: true });
-                    }}
-                >
-                    {props.startIcon && (
-                        <span className="view-text-input-icon" aria-hidden="true">
-                            {props.startIcon}
+            <Field data-disabled={props.disabled || undefined}>
+                <FieldLabel htmlFor={id}>
+                    <FieldContent>
+                        <span id={`${id}-label`} className="flex items-center gap-2">
+                            {props.label}
+                            {props.required && (
+                                <span className="text-muted-foreground font-normal">
+                                    <span aria-hidden="true"> · </span>Required
+                                </span>
+                            )}
                         </span>
-                    )}
-                    <Input
-                        variant="view"
+                        {props.description && (
+                            <FieldDescription id={descriptionId}>{props.description}</FieldDescription>
+                        )}
+                    </FieldContent>
+                </FieldLabel>
+                <InputGroup className={props.disabled ? 'opacity-50' : undefined}>
+                    <InputGroupInput
                         ref={input}
                         id={id}
                         name={props.disabled ? undefined : props.name}
@@ -96,22 +92,24 @@ export function TextInput(props: TextInputProps) {
                             }
                         }}
                     />
+                    {props.startIcon && <InputGroupAddon aria-hidden="true">{props.startIcon}</InputGroupAddon>}
                     {field.value !== '' && !props.disabled && (
-                        <Button
-                            className="view-text-input-clear"
-                            type="button"
-                            aria-label={`Clear ${props.label}`}
-                            onMouseDown={(event) => event.preventDefault()}
-                            onClick={() => {
-                                field.onChange('');
-                                input.current?.focus({ preventScroll: true });
-                            }}
-                        >
-                            <X aria-hidden="true" />
-                        </Button>
+                        <InputGroupAddon align="inline-end">
+                            <InputGroupButton
+                                size="icon-xs"
+                                aria-label={`Clear ${props.label}`}
+                                onMouseDown={(event) => event.preventDefault()}
+                                onClick={() => {
+                                    field.onChange('');
+                                    input.current?.focus({ preventScroll: true });
+                                }}
+                            >
+                                <X aria-hidden="true" />
+                            </InputGroupButton>
+                        </InputGroupAddon>
                     )}
-                </div>
-            </div>
+                </InputGroup>
+            </Field>
         </FormField>
     );
 }

@@ -1,5 +1,5 @@
 @layer components {
-    .view-action-button[data-menu-trigger] {
+    [data-slot='button'][data-menu-trigger] {
         touch-action: none;
     }
 

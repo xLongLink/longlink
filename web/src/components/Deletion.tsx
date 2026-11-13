@@ -22,16 +22,16 @@ export function DeletionDialog({
 
     // Keep the least-destructive focus target and narrow-screen action order unchanged.
     const cancelButton = (
-        <Button ref={cancel} variant="view" data-variant="ghost" data-size="md" onClick={onClose}>
+        <Button ref={cancel} type="button" variant="ghost" onClick={onClose}>
             Cancel
         </Button>
     );
 
     const deleteButton = (
         <Button
-            variant="view"
-            data-variant="destructive"
-            data-size="md"
+            type="button"
+            variant="destructive"
+            className="relative min-w-0"
             disabled={isDeleting}
             focusableWhenDisabled
             aria-busy={isDeleting || undefined}
@@ -78,14 +78,7 @@ export function DeletionDialog({
                         <AlertDialog.Title render={<div />}>
                             <Heading level={2}>{confirmation.title}</Heading>
                         </AlertDialog.Title>
-                        <Button
-                            variant="view"
-                            data-variant="ghost"
-                            data-size="md"
-                            data-icon-only
-                            aria-label="Close"
-                            onClick={onClose}
-                        >
+                        <Button type="button" variant="ghost" size="icon" aria-label="Close" onClick={onClose}>
                             <X aria-hidden="true" />
                         </Button>
                     </header>

@@ -34,29 +34,9 @@
         color: var(--color-text-primary);
     }
 
-    .login-button.view-action-button {
+    .login-button {
         width: 100%;
         max-width: 100%;
-    }
-
-    .login-button.view-action-button[data-variant='primary'] {
-        background-color: var(--color-accent);
-        color: var(--color-on-accent);
-    }
-
-    .login-button.view-action-button[data-variant='secondary'] {
-        border: 0;
-        background-color: var(--color-neutral);
-        color: var(--color-text-primary);
-    }
-
-    .login-button.view-action-button[data-variant='secondary']:not([aria-disabled='true']):hover {
-        background-color: var(--color-neutral);
-        background-image: linear-gradient(var(--color-overlay-hover), var(--color-overlay-hover));
-    }
-
-    .login-button.view-action-button[data-variant='secondary']:not([aria-disabled='true']):active {
-        background-image: linear-gradient(var(--color-overlay-pressed), var(--color-overlay-pressed));
     }
 
     .login-link {

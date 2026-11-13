@@ -143,9 +143,7 @@ export function ProfileMenu() {
                             </p>
                         )}
                         <Button
-                            variant="view"
-                            data-variant="destructive"
-                            data-size="md"
+                            variant="destructive"
                             type="button"
                             disabled={pending}
                             aria-busy={pending || undefined}

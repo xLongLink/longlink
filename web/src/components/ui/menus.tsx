@@ -97,11 +97,11 @@ export function ActionMenu({
             aria-label={iconOnly ? label : undefined}
             render={
                 <Control
-                    variant="view"
+                    variant={variant === 'primary' ? 'default' : variant === 'secondary' ? 'outline' : variant}
+                    size={iconOnly ? (size === 'md' ? 'icon' : `icon-${size}`) : size === 'md' ? 'default' : size}
                     data-variant={variant}
                     data-size={size}
                     data-icon-only={iconOnly || undefined}
-                    data-group-orientation={group?.orientation}
                     focusableWhenDisabled
                 />
             }
@@ -110,7 +110,7 @@ export function ActionMenu({
                 icon ? (
                     <Icon icon={icon} size={size} />
                 ) : (
-                    <Ellipsis className="view-action-icon" data-size={size} aria-hidden="true" />
+                    <Ellipsis aria-hidden="true" />
                 )
             ) : (
                 <>

@@ -69,15 +69,7 @@ export function Navbar({
                             <Dialog.Trigger
                                 className="public-navbar-toggle"
                                 aria-label="Open navigation"
-                                render={
-                                    <Button
-                                        variant="view"
-                                        data-variant="ghost"
-                                        data-size="md"
-                                        data-icon-only
-                                        type="button"
-                                    />
-                                }
+                                render={<Button variant="ghost" size="icon" type="button" />}
                             >
                                 <Menu aria-hidden="true" size={20} />
                             </Dialog.Trigger>
@@ -94,15 +86,7 @@ export function Navbar({
                                 <Dialog.Title className="public-navbar-title">Navigation</Dialog.Title>
                                 <Dialog.Close
                                     aria-label="Close navigation"
-                                    render={
-                                        <Button
-                                            variant="view"
-                                            data-variant="ghost"
-                                            data-size="md"
-                                            data-icon-only
-                                            type="button"
-                                        />
-                                    }
+                                    render={<Button variant="ghost" size="icon" type="button" />}
                                 >
                                     <X aria-hidden="true" size={20} />
                                 </Dialog.Close>
@@ -142,9 +126,8 @@ function PublicLinks({ mobile = false, onNavigate }: { mobile?: boolean; onNavig
                 <span className="sr-only"> (opens in a new tab)</span>
             </a>
             <Button
-                variant="view"
-                data-variant="primary"
-                data-size={mobile ? 'md' : 'sm'}
+                variant="default"
+                size={mobile ? 'default' : 'sm'}
                 nativeButton={false}
                 render={<RouterLink to="/login/" onClick={onNavigate} />}
             >

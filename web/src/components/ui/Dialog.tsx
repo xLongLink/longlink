@@ -53,15 +53,7 @@ export function Dialog(props: {
                             <div className="view-dialog-close">
                                 <BaseDialog.Close
                                     aria-label="Close dialog"
-                                    render={
-                                        <Button
-                                            variant="view"
-                                            data-variant="ghost"
-                                            data-size="md"
-                                            data-icon-only
-                                            type="button"
-                                        />
-                                    }
+                                    render={<Button variant="ghost" size="icon" type="button" />}
                                 >
                                     <Icon icon="close" size="md" />
                                 </BaseDialog.Close>
