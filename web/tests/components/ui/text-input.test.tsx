@@ -5,6 +5,30 @@ import userEvent from '@testing-library/user-event';
 import { renderStatic, withMounted } from '../../render';
 import { TextInput } from '@/components/custom/text-input';
 
+it('focuses the text input from its description without adding that description to its name', async () => {
+    const user = userEvent.setup();
+
+    await withMounted(
+        <>
+            <TextInput label="Notes" description="Internal notes" name="notes" />
+            <button type="button">Elsewhere</button>
+        </>,
+        async (output) => {
+            const control = output.querySelector('input');
+            const other = output.querySelector('button');
+
+            if (!control || !other) throw new Error('Expected the editable control');
+            const description = document.getElementById(control.getAttribute('aria-describedby') ?? '');
+
+            if (!description) throw new Error('Expected the notes description');
+            await act(async () => user.click(other));
+            await act(async () => user.click(description));
+            expect(document.activeElement).toBe(control);
+            expect(document.getElementById(control.getAttribute('aria-labelledby') ?? '')?.textContent).toBe('Notes');
+        }
+    );
+});
+
 it('preserves authored default values and submission names', () => {
     // Act
     const output = renderStatic(<TextInput label="Name" name="name" defaultValue="  Acme  " />);

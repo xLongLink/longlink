@@ -108,8 +108,7 @@ export const componentDocumentation = [
     { name: 'MultiSelector', category: 'Form', icon: CheckSquare },
     { name: 'NumberInput', category: 'Form', icon: ArrowUpDown },
     { name: 'Progress', category: 'Display', icon: Layers },
-    { name: 'RadioList', category: 'Form', icon: List },
-    { name: 'Selector', category: 'Form', icon: ChevronDown },
+    { name: 'RadioGroup', category: 'Form', icon: List },
     { name: 'Select', category: 'Form', icon: ChevronDown },
     { name: 'Combobox', category: 'Form', icon: ChevronDown },
     { name: 'Slider', category: 'Form', icon: Settings2 },
@@ -119,8 +118,7 @@ export const componentDocumentation = [
     { name: 'DataTable', category: 'Display', icon: Columns3 },
     { name: 'Tabs', category: 'Layouts', icon: PanelTop },
     { name: 'Text', category: 'Display', icon: Type },
-    { name: 'TextArea', category: 'Form', icon: FileText },
-    { name: 'TextInput', category: 'Form', icon: Type },
+    { name: 'Textarea', category: 'Form', icon: FileText },
     { name: 'TimeInput', category: 'Form', icon: Clock },
     { name: 'Timestamp', category: 'Display', icon: Calendar }
 ].map((component) => {

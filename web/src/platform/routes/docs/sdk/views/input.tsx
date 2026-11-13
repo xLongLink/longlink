@@ -59,8 +59,7 @@ export default function InputPage() {
                 {
                     name: 'Textarea',
                     type: 'component',
-                    description:
-                        'Native textarea props, including rows, defaultValue, disabled, and DOM change events. Distinct from the custom TextArea adapter.'
+                    description: 'Native textarea props, including rows, defaultValue, disabled, and DOM change events.'
                 }
             ]}
             example={{

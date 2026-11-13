@@ -152,7 +152,7 @@ type ISODateString = `${number}${number}${number}${number}-${number}${number}-${
 /** @category Form @group TimeInput */
 type ISOTimeString = string & { readonly __brand: 'ISOTimeString' };
 
-/** @category Form @group Selector */
+/** @category Form @group MultiSelector */
 type SelectorOptionData = {
     value: string;
     label?: string;
@@ -161,7 +161,7 @@ type SelectorOptionData = {
     disabled?: boolean;
 };
 
-/** @category Form @group Selector */
+/** @category Form @group MultiSelector */
 type SelectorOptionType =
     | string
     | SelectorOptionData
@@ -4666,36 +4666,6 @@ declare function TimeInput(
 ): React.JSX.Element;
 
 /** @category Form */
-declare function TextInput(
-    props: FieldProps & {
-        value?: string;
-        defaultValue?: string;
-        onChange?: (value: string) => void;
-        placeholder?: string;
-        /** Maximum Unicode code points, matching Python string length. Validates without truncating input. */
-        maxLength?: number;
-        type?: 'text' | 'password' | 'email';
-        autoComplete?: string;
-        startIcon?: ViewNode;
-        onEnter?: () => void;
-    }
-): React.JSX.Element;
-
-/** @category Form */
-declare function TextArea(
-    props: FieldProps & {
-        value?: string;
-        defaultValue?: string;
-        onChange?: (value: string) => void;
-        placeholder?: string;
-        rows?: number;
-        /** Maximum Unicode code points, matching Python string length. Validates without truncating input. */
-        maxLength?: number;
-        autoComplete?: string;
-    }
-): React.JSX.Element;
-
-/** @category Form */
 declare function NumberInput(
     props: FieldProps & {
         value?: number | null;
@@ -4733,40 +4703,6 @@ declare function FileInput(
         mode?: 'input' | 'dropzone';
     }
 ): React.JSX.Element;
-
-/** @category Form */
-declare function Selector(
-    props: FieldProps & {
-        options: SelectorOptionType[];
-        value?: string | null;
-        defaultValue?: string;
-        onChange?: (value: string | null) => void;
-        hasSearch?: boolean;
-        placeholder?: string;
-    }
-): React.JSX.Element;
-
-/** @category Form */
-declare function RadioList(
-    props: FieldProps & {
-        children?: ViewNode;
-        value?: string;
-        defaultValue?: string;
-        onChange?: (value: string) => void;
-        orientation?: 'vertical' | 'horizontal';
-    }
-): React.JSX.Element;
-
-/** @category Form @group RadioList */
-declare function RadioListItem(props: {
-    /** Visible label identifying this choice. */
-    label: string;
-    /** Value passed to the surrounding RadioList when selected. */
-    value: string;
-    /** Optional helper text explaining the choice. */
-    description?: string;
-    isDisabled?: boolean;
-}): React.JSX.Element;
 
 /** @category Action */
 declare function DataPagination(props: {
@@ -11690,6 +11626,68 @@ namespace ProgressLabel {
     type State = ProgressLabelState;
     type Props = ProgressLabelProps;
 }
+const RadioRoot: {
+    <Value>(props: RadioRoot.Props<Value>): React$1.JSX.Element;
+};
+interface RadioRootState extends FieldRootState {
+    checked: boolean;
+    disabled: boolean;
+    readOnly: boolean;
+    required: boolean;
+    touched: boolean;
+    dirty: boolean;
+    valid: boolean | null;
+    filled: boolean;
+    focused: boolean;
+}
+interface RadioRootProps<Value = any> extends NonNativeButtonProps, Omit<BaseUIComponentProps<"span", RadioRootState>, "value"> {
+    value: Value;
+    disabled?: boolean | undefined;
+    required?: boolean | undefined;
+    readOnly?: boolean | undefined;
+    inputRef?: React$1.Ref<HTMLInputElement> | undefined;
+}
+namespace RadioRoot {
+    type State = RadioRootState;
+    type Props<TValue = any> = RadioRootProps<TValue>;
+}
+const RadioIndicator: React$1.ForwardRefExoticComponent<Omit<RadioIndicatorProps, "ref"> & React$1.RefAttributes<HTMLSpanElement>>;
+interface RadioIndicatorProps extends BaseUIComponentProps<"span", RadioIndicatorState> {
+    keepMounted?: boolean | undefined;
+}
+interface RadioIndicatorState extends RadioRootState {
+    transitionStatus: TransitionStatus;
+}
+namespace RadioIndicator {
+    type Props = RadioIndicatorProps;
+    type State = RadioIndicatorState;
+}
+const RadioGroup: {
+    <Value>(props: RadioGroup.Props<Value>): React$1.JSX.Element;
+};
+interface RadioGroupState extends FieldRootState {
+    readOnly: boolean;
+    required: boolean;
+}
+interface RadioGroupProps<Value = any> extends Omit<BaseUIComponentProps<"div", RadioGroupState>, "value"> {
+    disabled?: boolean | undefined;
+    readOnly?: boolean | undefined;
+    required?: boolean | undefined;
+    name?: string | undefined;
+    form?: string | undefined;
+    value?: Value | undefined;
+    defaultValue?: Value | undefined;
+    onValueChange?: ((value: Value, eventDetails: RadioGroup.ChangeEventDetails) => void) | undefined;
+    inputRef?: React$1.Ref<HTMLInputElement> | undefined;
+}
+type RadioGroupChangeEventReason = typeof none;
+type RadioGroupChangeEventDetails = BaseUIChangeEventDetails<RadioGroup.ChangeEventReason>;
+namespace RadioGroup {
+    type State = RadioGroupState;
+    type Props<TValue = any> = RadioGroupProps<TValue>;
+    type ChangeEventReason = RadioGroupChangeEventReason;
+    type ChangeEventDetails = RadioGroupChangeEventDetails;
+}
 function SelectRoot<Value, Multiple extends boolean | undefined = false>(props: SelectRoot.Props<Value, Multiple>): React$1.JSX.Element;
 type SelectInputValue<Value, Multiple extends boolean | undefined> = Multiple extends true ? readonly Value[] : Value;
 type SelectOutputValue<Value, Multiple extends boolean | undefined> = Multiple extends true ? Value[] : Value;
@@ -13890,6 +13888,8 @@ export function SwitchField(props: FieldProps & {
     onChange?: (value: boolean) => void;
 }): React$1.JSX.Element;
 function Checkbox$1({ className, indeterminate, ...props }: Checkbox.Root.Props): React$1.JSX.Element;
+function RadioGroup$1({ className, ...props }: RadioGroup.Props): React$1.JSX.Element;
+export function RadioGroupItem({ className, ...props }: Radio.Root.Props): React$1.JSX.Element;
 type StepperOrientation = "horizontal" | "vertical";
 type StepIndicators = {
     active?: React$1.ReactNode;
@@ -16159,6 +16159,9 @@ namespace Checkbox {
 namespace Progress {
     export { ProgressIndicator as Indicator, ProgressLabel as Label, ProgressRoot as Root, ProgressStatus as Status, ProgressTrack as Track, ProgressValue as Value };
 }
+namespace Radio {
+    export { RadioIndicator as Indicator, RadioRoot as Root };
+}
 namespace Slider {
     export { SliderControl as Control, SliderIndicator as Indicator, SliderLabel as Label, SliderRoot as Root, SliderThumb as Thumb, SliderTrack as Track, SliderValue as Value };
 }
@@ -16168,7 +16171,7 @@ namespace Switch {
 namespace Tabs {
     export { TabsIndicator as Indicator, TabsList as List, TabsPanel as Panel, TabsRoot as Root, TabsTab as Tab };
 }
-export { Button$1 as Button, Checkbox$1 as Checkbox, ComboboxChip$1 as ComboboxChip, ComboboxChips$1 as ComboboxChips, ComboboxCollection$1 as ComboboxCollection, ComboboxEmpty$1 as ComboboxEmpty, ComboboxGroup$1 as ComboboxGroup, ComboboxInput$1 as ComboboxInput, ComboboxItem$1 as ComboboxItem, ComboboxLabel$1 as ComboboxLabel, ComboboxList$1 as ComboboxList, ComboboxSeparator$1 as ComboboxSeparator, ComboboxTrigger$1 as ComboboxTrigger, ComboboxValue$1 as ComboboxValue, DialogClose$1 as DialogClose, DialogDescription$1 as DialogDescription, DialogPortal$1 as DialogPortal, DialogTitle$1 as DialogTitle, DialogTrigger$1 as DialogTrigger, Image$1 as Image, Label$1 as Label, NativeText as Text, Progress$1 as Progress, ProgressIndicator$1 as ProgressIndicator, ProgressLabel$1 as ProgressLabel, ProgressTrack$1 as ProgressTrack, ProgressValue$1 as ProgressValue, SelectGroup$1 as SelectGroup, SelectItem$1 as SelectItem, SelectLabel$1 as SelectLabel, SelectSeparator$1 as SelectSeparator, SelectTrigger$1 as SelectTrigger, SelectValue$1 as SelectValue, Separator$1 as Separator, Slider$1 as Slider, SliderControl$1 as SliderControl, SliderThumb$1 as SliderThumb, SliderTrack$1 as SliderTrack, Switch$1 as Switch, Tabs$1 as Tabs, TabsList$1 as TabsList, };
+export { Button$1 as Button, Checkbox$1 as Checkbox, ComboboxChip$1 as ComboboxChip, ComboboxChips$1 as ComboboxChips, ComboboxCollection$1 as ComboboxCollection, ComboboxEmpty$1 as ComboboxEmpty, ComboboxGroup$1 as ComboboxGroup, ComboboxInput$1 as ComboboxInput, ComboboxItem$1 as ComboboxItem, ComboboxLabel$1 as ComboboxLabel, ComboboxList$1 as ComboboxList, ComboboxSeparator$1 as ComboboxSeparator, ComboboxTrigger$1 as ComboboxTrigger, ComboboxValue$1 as ComboboxValue, DialogClose$1 as DialogClose, DialogDescription$1 as DialogDescription, DialogPortal$1 as DialogPortal, DialogTitle$1 as DialogTitle, DialogTrigger$1 as DialogTrigger, Image$1 as Image, Label$1 as Label, NativeText as Text, Progress$1 as Progress, ProgressIndicator$1 as ProgressIndicator, ProgressLabel$1 as ProgressLabel, ProgressTrack$1 as ProgressTrack, ProgressValue$1 as ProgressValue, RadioGroup$1 as RadioGroup, SelectGroup$1 as SelectGroup, SelectItem$1 as SelectItem, SelectLabel$1 as SelectLabel, SelectSeparator$1 as SelectSeparator, SelectTrigger$1 as SelectTrigger, SelectValue$1 as SelectValue, Separator$1 as Separator, Slider$1 as Slider, SliderControl$1 as SliderControl, SliderThumb$1 as SliderThumb, SliderTrack$1 as SliderTrack, Switch$1 as Switch, Tabs$1 as Tabs, TabsList$1 as TabsList, };
 }
 
 declare const ActionButton: typeof NativeFrontend.ActionButton;
@@ -16304,6 +16307,8 @@ declare const Radar: typeof NativeFrontend.Radar;
 declare const RadarChart: typeof NativeFrontend.RadarChart;
 declare const RadialBar: typeof NativeFrontend.RadialBar;
 declare const RadialBarChart: typeof NativeFrontend.RadialBarChart;
+declare const RadioGroup: typeof NativeFrontend.RadioGroup;
+declare const RadioGroupItem: typeof NativeFrontend.RadioGroupItem;
 declare const ReferenceLine: typeof NativeFrontend.ReferenceLine;
 declare const ResponsiveContainer: typeof NativeFrontend.ResponsiveContainer;
 declare const Sankey: typeof NativeFrontend.Sankey;

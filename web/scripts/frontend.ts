@@ -35,6 +35,7 @@ export { Disclosure } from '../src/components/custom/disclosure';
 export { Switch } from '../src/components/shadcn/switch';
 export { SwitchField } from '../src/components/custom/switch-field';
 export { Checkbox } from '../src/components/shadcn/checkbox';
+export { RadioGroup, RadioGroupItem } from '../src/components/shadcn/radio-group';
 export { Stepper, StepperNav, StepperItem, StepperTrigger, StepperIndicator, StepperSeparator, StepperTitle, StepperDescription, StepperPanel, StepperContent } from '../src/components/reui/stepper';
 export { ProgressStepper, Wizard, Step } from '../src/components/custom/wizard';
 export { Button } from '../src/components/shadcn/button';

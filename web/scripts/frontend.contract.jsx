@@ -83,6 +83,19 @@ const nativeComposition = (
                 size="sm"
             />
             <SwitchField label="Notifications" defaultChecked />
+            <RadioGroup
+                name="plan"
+                value={selected}
+                onValueChange={(value, details) => {
+                    setSelected(value);
+                    details.cancel();
+                }}
+            >
+                <Field orientation="horizontal">
+                    <RadioGroupItem id="native-plan" value="one" />
+                    <FieldLabel htmlFor="native-plan">Solo</FieldLabel>
+                </Field>
+            </RadioGroup>
             <Checkbox
                 indeterminate
                 onCheckedChange={(checked, details) => {

@@ -4,7 +4,7 @@
             "name": "Input",
             "category": "Form",
             "introduction": "Native shadcn Input with HTML input attributes and DOM change events.",
-            "guidance": "Compose with Field, FieldLabel, FieldDescription, and FieldError. Use InputGroup, InputGroupInput, InputGroupTextarea, InputGroupAddon, InputGroupButton, and InputGroupText for addons. TextInput is a custom adapter, not the native Input API.",
+            "guidance": "Compose with Field, FieldLabel, FieldDescription, and FieldError. Use InputGroup, InputGroupInput, InputGroupTextarea, InputGroupAddon, InputGroupButton, and InputGroupText for addons.",
             "properties": [
                 {
                     "name": "name / type / required / disabled / readOnly / maxLength",
@@ -38,7 +38,7 @@
         {
             "name": "Textarea",
             "category": "Form",
-            "introduction": "Native shadcn Textarea with HTML textarea attributes and DOM change events. Distinct from the custom TextArea adapter.",
+            "introduction": "Native shadcn Textarea with HTML textarea attributes and DOM change events.",
             "properties": [
                 {
                     "name": "name / rows / required / disabled / readOnly / maxLength",
@@ -1804,90 +1804,66 @@
             "reference": "https://ui.shadcn.com/docs/components/progress"
         },
         {
-            "name": "RadioList",
+            "name": "RadioGroup",
             "category": "Form",
-            "introduction": "Selects one of a small number of labeled values.",
+            "introduction": "Selects one value using the native shadcn radio group composition.",
+            "guidance": "Compose RadioGroupItem with Field and FieldLabel. Use onValueChange for selection changes and disabled for native disabled behavior.",
             "properties": [
-                {
-                    "name": "label",
-                    "type": "string",
-                    "description": "Label text for the radio group (always rendered for accessibility)."
-                },
-                {
-                    "name": "description",
-                    "type": "string",
-                    "description": "Description text displayed below the label."
-                },
                 {
                     "name": "name",
                     "type": "string",
-                    "description": "Includes the themed control's value under this form submission name."
+                    "description": "Form submission name."
                 },
                 {
                     "name": "required",
                     "type": "boolean",
-                    "description": "Requires a value before native form submission."
+                    "description": "Requires a selection before form submission."
                 },
                 {
                     "name": "disabled",
                     "type": "boolean",
-                    "description": "Prevents interaction and excludes the field from submission."
-                },
-                {
-                    "name": "children",
-                    "type": "ReactNode",
-                    "description": "RadioListItem elements."
+                    "description": "Disables all options, including keyboard focus and form submission."
                 },
                 {
                     "name": "value",
                     "type": "string",
-                    "description": "The currently selected value."
+                    "description": "Controlled selected value."
                 },
                 {
                     "name": "defaultValue",
                     "type": "string",
-                    "description": "Initial value."
+                    "description": "Initial uncontrolled selected value."
                 },
                 {
-                    "name": "onChange",
-                    "type": "(value: string) => void",
-                    "description": "Callback fired when the selected value changes."
+                    "name": "onValueChange",
+                    "type": "(value: string, eventDetails) => void",
+                    "description": "Called with the next selected value and Base UI event details."
                 },
                 {
-                    "name": "orientation",
-                    "type": "\"horizontal\" | \"vertical\"",
-                    "description": "Layout direction of the radio items.",
-                    "default": "vertical"
-                },
-                {
-                    "name": "RadioListItem.label",
+                    "name": "RadioGroupItem.value",
                     "type": "string",
-                    "description": "Visible label identifying this choice."
+                    "description": "Value submitted for this option."
                 },
                 {
-                    "name": "RadioListItem.value",
+                    "name": "RadioGroupItem.id",
                     "type": "string",
-                    "description": "Value passed to the surrounding RadioList when selected."
+                    "description": "Connects the option to its label."
                 },
                 {
-                    "name": "RadioListItem.description",
-                    "type": "string",
-                    "description": "Optional helper text explaining the choice."
-                },
-                {
-                    "name": "RadioListItem.isDisabled",
+                    "name": "RadioGroupItem.disabled",
                     "type": "boolean",
+                    "description": "Disables this option.",
                     "default": false
                 }
             ],
-            "source": "custom",
-            "justification": "Connects labeled radio options to LongLink Form values, validation, and reset."
+            "source": "shadcn",
+            "reference": "https://ui.shadcn.com/docs/components/base/radio-group"
         },
         {
             "name": "Select",
             "category": "Form",
             "introduction": "Native select composition with single or multiple selection.",
-            "guidance": "Compose SelectTrigger, SelectValue, SelectContent, and SelectItem. SelectGroup, SelectLabel, SelectSeparator, SelectScrollUpButton, and SelectScrollDownButton are also exported. Selector remains the custom form adapter.",
+            "guidance": "Compose SelectTrigger, SelectValue, SelectContent, and SelectItem. SelectGroup, SelectLabel, SelectSeparator, SelectScrollUpButton, and SelectScrollDownButton are also exported.",
             "properties": [
                 {
                     "name": "items",
@@ -1962,78 +1938,6 @@
             ],
             "source": "shadcn",
             "reference": "https://ui.shadcn.com/docs/components/combobox"
-        },
-        {
-            "name": "Selector",
-            "category": "Form",
-            "introduction": "Selects one value without custom option rendering or popup geometry.",
-            "keywords": [
-                "select",
-                "dropdown",
-                "choice",
-                "filter"
-            ],
-            "properties": [
-                {
-                    "name": "label",
-                    "type": "string",
-                    "description": "Label text for accessibility."
-                },
-                {
-                    "name": "description",
-                    "type": "string",
-                    "description": "Helper text displayed below the label."
-                },
-                {
-                    "name": "name",
-                    "type": "string",
-                    "description": "Includes the themed control's value under this form submission name."
-                },
-                {
-                    "name": "required",
-                    "type": "boolean",
-                    "description": "Requires a value before native form submission."
-                },
-                {
-                    "name": "disabled",
-                    "type": "boolean",
-                    "description": "Prevents interaction and excludes the field from submission."
-                },
-                {
-                    "name": "options",
-                    "type": "SelectorOptionType[]",
-                    "description": "Selectable options, dividers, or titled sections."
-                },
-                {
-                    "name": "defaultValue",
-                    "type": "string",
-                    "description": "Initial value."
-                },
-                {
-                    "name": "hasSearch",
-                    "type": "boolean",
-                    "description": "Shows a search field for filtering options.",
-                    "default": false
-                },
-                {
-                    "name": "placeholder",
-                    "type": "string",
-                    "description": "Placeholder text shown when no value is selected.",
-                    "default": "Select..."
-                },
-                {
-                    "name": "value",
-                    "type": "string | null",
-                    "description": "Currently selected value."
-                },
-                {
-                    "name": "onChange",
-                    "type": "(value: string | null) => void",
-                    "description": "Callback fired when the selection changes."
-                }
-            ],
-            "source": "custom",
-            "justification": "Connects nullable selection values, clearing, controlled rejection, and reset to LongLink Form."
         },
         {
             "name": "Slider",
@@ -2765,164 +2669,6 @@
             "justification": "Preserves semantic LongLink typography, controlled truncation, and overflow tooltip behavior."
         },
         {
-            "name": "TextArea",
-            "category": "Form",
-            "introduction": "Custom LongLink form adapter with string callbacks, reset, and Unicode code-point validation. Use Textarea with Field for native shadcn composition.",
-            "properties": [
-                {
-                    "name": "label",
-                    "type": "string",
-                    "description": "Label text for the textarea. Always rendered for accessibility."
-                },
-                {
-                    "name": "description",
-                    "type": "string",
-                    "description": "Helper text displayed between the label and textarea."
-                },
-                {
-                    "name": "name",
-                    "type": "string",
-                    "description": "Includes the themed control's value under this form submission name."
-                },
-                {
-                    "name": "required",
-                    "type": "boolean",
-                    "description": "Requires a value before native form submission."
-                },
-                {
-                    "name": "disabled",
-                    "type": "boolean",
-                    "description": "Prevents interaction and excludes the field from submission."
-                },
-                {
-                    "name": "value",
-                    "type": "string",
-                    "description": "Current value of the textarea."
-                },
-                {
-                    "name": "defaultValue",
-                    "type": "string",
-                    "description": "Initial value."
-                },
-                {
-                    "name": "onChange",
-                    "type": "(value: string) => void",
-                    "description": "Callback fired when the textarea value changes."
-                },
-                {
-                    "name": "placeholder",
-                    "type": "string",
-                    "description": "Placeholder text shown when the textarea is empty."
-                },
-                {
-                    "name": "rows",
-                    "type": "number",
-                    "description": "Number of visible text rows.",
-                    "default": 3
-                },
-                {
-                    "name": "maxLength",
-                    "type": "number",
-                    "description": "Maximum Unicode code points, matching Python string length. Validates without truncating input."
-                },
-                {
-                    "name": "autoComplete",
-                    "type": "string",
-                    "description": "Native autocomplete hint."
-                }
-            ],
-            "source": "custom",
-            "justification": "Connects string callbacks, Unicode code-point validation, and reset to LongLink Form."
-        },
-        {
-            "name": "TextInput",
-            "category": "Form",
-            "introduction": "Custom LongLink form adapter with string callbacks, clear/reset, and Unicode code-point validation. Use Input with Field and InputGroup for native shadcn composition.",
-            "keywords": [
-                "search",
-                "filter",
-                "text field",
-                "string",
-                "input"
-            ],
-            "guidance": "Use Input for native DOM events and props. Choose TextInput only when its custom form validation and clear/reset behavior are needed.",
-            "properties": [
-                {
-                    "name": "label",
-                    "type": "string",
-                    "description": "Label text for the input: always rendered for accessibility."
-                },
-                {
-                    "name": "description",
-                    "type": "string",
-                    "description": "Description text displayed between the label and input."
-                },
-                {
-                    "name": "name",
-                    "type": "string",
-                    "description": "Includes the themed control's value under this form submission name."
-                },
-                {
-                    "name": "required",
-                    "type": "boolean",
-                    "description": "Requires a value before native form submission."
-                },
-                {
-                    "name": "disabled",
-                    "type": "boolean",
-                    "description": "Prevents interaction and excludes the field from submission."
-                },
-                {
-                    "name": "value",
-                    "type": "string",
-                    "description": "Current value of the input."
-                },
-                {
-                    "name": "defaultValue",
-                    "type": "string",
-                    "description": "Initial value."
-                },
-                {
-                    "name": "onChange",
-                    "type": "(value: string) => void",
-                    "description": "Callback fired when the input value changes."
-                },
-                {
-                    "name": "placeholder",
-                    "type": "string",
-                    "description": "Placeholder text shown when the input is empty."
-                },
-                {
-                    "name": "maxLength",
-                    "type": "number",
-                    "description": "Maximum Unicode code points, matching Python string length. Validates without truncating input."
-                },
-                {
-                    "name": "type",
-                    "type": "\"text\" | \"password\" | \"email\"",
-                    "description": "The HTML input type.",
-                    "default": "text"
-                },
-                {
-                    "name": "autoComplete",
-                    "type": "string",
-                    "description": "Native autocomplete hint."
-                },
-                {
-                    "name": "startIcon",
-                    "type": "ReactNode",
-                    "description": "Icon displayed at the start of the input."
-                },
-                {
-                    "name": "onEnter",
-                    "type": "() => void",
-                    "description": "Runs on Enter, except when confirming an IME composition."
-                }
-            ],
-            "source": "custom",
-            "justification": "Connects string callbacks, Unicode code-point validation, clearing, and reset to LongLink Form."
-        },
-        {
             "name": "TimeInput",
             "category": "Form",
             "introduction": "Selects a constrained time using the standard picker.",
@@ -3185,7 +2931,7 @@
             ],
             "components": [
                 "Table",
-                "TextInput",
+                "Input",
                 "Hooks",
                 "Empty"
             ],
@@ -3207,8 +2953,8 @@
             ],
             "components": [
                 "Form",
-                "TextInput",
-                "Selector",
+                "Input",
+                "Select",
                 "Functions"
             ],
             "steps": [

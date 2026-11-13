@@ -86,7 +86,10 @@ export default function Tasks() {
             <ViewDialog title="Add task" isOpen={isOpen} onOpenChange={setIsOpen}>
                 {isOpen && (
                     <Form action="/api/tasks" onSuccess={() => setIsOpen(false)}>
-                        <TextInput name="title" label="Title" maxLength={255} required />
+                        <Field>
+                            <FieldLabel htmlFor="task-title">Title</FieldLabel>
+                            <Input id="task-title" name="title" maxLength={255} required />
+                        </Field>
                         <FileInput name="attachment" label="Attachment" maxSize={10485760} required />
                         <Stack direction="horizontal" justify="end" gap={2}>
                             <Button onClick={() => setIsOpen(false)}>Cancel</Button>

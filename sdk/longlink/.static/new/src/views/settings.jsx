@@ -22,13 +22,32 @@ export default function ProjectSettings() {
                         <Stack gap={4} maxWidth={640}>
                             <Heading level={2}>General</Heading>
                             <Button onClick={() => setIsFullscreenOpen(true)}>Open fullscreen settings</Button>
-                            <TextInput label="Company name" value={company} onChange={setCompany} />
-                            <Selector
-                                label="Default currency"
-                                value={currency}
-                                onChange={setCurrency}
-                                options={['CHF', 'EUR', 'USD']}
-                            />
+                            <Field>
+                                <FieldLabel htmlFor="company-name">Company name</FieldLabel>
+                                <Input
+                                    id="company-name"
+                                    value={company}
+                                    onChange={(event) => setCompany(event.currentTarget.value)}
+                                />
+                            </Field>
+                            <Field>
+                                <FieldLabel htmlFor="default-currency">Default currency</FieldLabel>
+                                <Select
+                                    value={currency}
+                                    onValueChange={(value) => {
+                                        if (value !== null) setCurrency(value);
+                                    }}
+                                >
+                                    <SelectTrigger id="default-currency">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="CHF">CHF</SelectItem>
+                                        <SelectItem value="EUR">EUR</SelectItem>
+                                        <SelectItem value="USD">USD</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </Field>
                         </Stack>
                     </MenuItem>
                     <MenuItem label="Approvals">
@@ -72,13 +91,32 @@ export default function ProjectSettings() {
                 onOpenChange={setIsFullscreenOpen}
             >
                 <Stack gap={4}>
-                    <TextInput label="Company name" value={company} onChange={setCompany} />
-                    <Selector
-                        label="Default currency"
-                        value={currency}
-                        onChange={setCurrency}
-                        options={['CHF', 'EUR', 'USD']}
-                    />
+                    <Field>
+                        <FieldLabel htmlFor="fullscreen-company-name">Company name</FieldLabel>
+                        <Input
+                            id="fullscreen-company-name"
+                            value={company}
+                            onChange={(event) => setCompany(event.currentTarget.value)}
+                        />
+                    </Field>
+                    <Field>
+                        <FieldLabel htmlFor="fullscreen-default-currency">Default currency</FieldLabel>
+                        <Select
+                            value={currency}
+                            onValueChange={(value) => {
+                                if (value !== null) setCurrency(value);
+                            }}
+                        >
+                            <SelectTrigger id="fullscreen-default-currency">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="CHF">CHF</SelectItem>
+                                <SelectItem value="EUR">EUR</SelectItem>
+                                <SelectItem value="USD">USD</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </Field>
                     <SwitchField
                         label="Require project approval"
                         value={approvalRequired}

@@ -22,7 +22,7 @@ export default function SelectPage() {
                 {
                     name: 'onValueChange',
                     type: '(value, eventDetails) => void',
-                    description: 'Native Base UI change callback, not Selector onChange.'
+                    description: 'Called with the selected value and Base UI event details.'
                 },
                 { name: 'multiple', type: 'boolean', description: 'Enables multiple selection.' },
                 {

@@ -16,19 +16,17 @@ import { StepperExample } from './views/stepper';
 import { Link as RouterLink } from 'react-router';
 import { ComboboxExample } from './views/combobox';
 import { ProgressExample } from './views/progress';
-import { SelectorExample } from './views/selector';
-import { TextAreaExample } from './views/text-area';
+import { TextareaExample } from './views/textarea';
 import { Button } from '@/components/shadcn/button';
 import { ChartExample } from './views/chart-example';
 import { TimestampExample } from './views/timestamp';
 import { DateInputExample } from './views/date-input';
 import { FileInputExample } from './views/file-input';
-import { RadioListExample } from './views/radio-list';
-import { TextInputExample } from './views/text-input';
 import { TimeInputExample } from './views/time-input';
 import { Divider } from '@/components/custom/divider';
 import { ActionMenuExample } from './views/action-menu';
 import { FileViewerExample } from './views/file-viewer';
+import { RadioGroupExample } from './views/radio-group';
 import { ViewDialogExample } from './views/view-dialog';
 import { Currency } from '@/components/custom/currency';
 import { NumberInputExample } from './views/number-input';
@@ -133,11 +131,14 @@ const previews = new Map(
                 <a href="#workflow">Workflow</a>
             </nav>
         ),
-        MultiSelector: <MultiSelectorExample />,
+        MultiSelector: (
+            <div className="w-full">
+                <MultiSelectorExample />
+            </div>
+        ),
         NumberInput: <NumberInputExample />,
         Progress: <ProgressExample />,
-        RadioList: <RadioListExample />,
-        Selector: <SelectorExample />,
+        RadioGroup: <RadioGroupExample />,
         Select: <SelectExample />,
         Combobox: <ComboboxExample />,
         Slider: <SliderExample />,
@@ -155,8 +156,7 @@ const previews = new Map(
             </Tabs>
         ),
         Text: <TextExample />,
-        TextArea: <TextAreaExample />,
-        TextInput: <TextInputExample />,
+        Textarea: <TextareaExample />,
         TimeInput: <TimeInputExample />,
         Timestamp: <TimestampExample />
     })
@@ -246,7 +246,12 @@ export default function Item({ params }) {
                                                         className={`min-w-0 [&>*]:min-w-0 [&>*]:max-w-full ${component.name.endsWith('Chart') || component.name === 'Maps' ? '' : 'scale-90'}`}
                                                         width="100%"
                                                         maxWidth="100%"
-                                                        align={component.category === 'Form' ? 'stretch' : 'center'}
+                                                        align={
+                                                            component.category === 'Form' &&
+                                                            !['Checkbox', 'RadioGroup', 'Switch'].includes(component.name)
+                                                                ? 'stretch'
+                                                                : 'center'
+                                                        }
                                                         gap={0}
                                                     >
                                                         {previews.get(component.name) ?? (

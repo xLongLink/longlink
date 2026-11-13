@@ -109,12 +109,6 @@ export { MultiSelector } from '@/components/custom/multi-selector';
 /** @category Form */
 export { TimeInput } from '@/components/custom/time-input';
 
-/** Custom form adapter with string callbacks, clear/reset, and Unicode code-point validation. @category Form */
-export { TextInput } from '@/components/custom/text-input';
-
-/** Custom form adapter with string callbacks, reset, and Unicode code-point validation. @category Form */
-export { TextArea } from '@/components/custom/text-area';
-
 /** @category Form */
 export { Input } from '@/components/shadcn/input';
 
@@ -169,9 +163,6 @@ export { SliderField } from '@/components/custom/slider-field';
 /** @category Form */
 export { FileInput } from '@/components/custom/file-input';
 
-/** Custom form adapter with nullable values, clear, reset, and controlled rejection. @category Form */
-export { Selector } from '@/components/custom/selector';
-
 /** @category Form */
 export { Select } from '@/components/shadcn/select';
 
@@ -211,10 +202,10 @@ export {
 } from '@/components/shadcn/combobox';
 
 /** @category Form */
-export { RadioList } from '@/components/custom/radio-list';
+export { RadioGroup } from '@/components/shadcn/radio-group';
 
-/** @category Form @group RadioList */
-export { RadioListItem } from '@/components/custom/radio-list';
+/** @category Form @group RadioGroup */
+export { RadioGroupItem } from '@/components/shadcn/radio-group';
 
 /** @category Display */
 export {
