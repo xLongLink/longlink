@@ -1,5 +1,5 @@
 // @vitest-environment happy-dom
-import { act } from 'react';
+import { act, useState } from 'react';
 import { it, expect, vi } from 'vitest';
 import { withMounted } from '../../render';
 import { Form } from '@/components/ui/Form';
@@ -7,6 +7,61 @@ import { Button } from '@/components/ui/Button';
 import userEvent from '@testing-library/user-event';
 import { TextInput } from '@/components/ui/TextInput';
 import { Step, Stepper } from '@/components/ui/Stepper';
+
+/** Lets the owner accept navigation independently of the wizard's request. */
+function ControlledWizard({ onStepClick }: { onStepClick: (index: number) => void }) {
+    const [activeStep, setActiveStep] = useState(1);
+
+    return (
+        <>
+            <button type="button" onClick={() => setActiveStep(0)}>
+                Select draft
+            </button>
+            <button type="button" onClick={() => setActiveStep(1)}>
+                Select review
+            </button>
+            <Stepper variant="wizard" activeStep={activeStep} onStepClick={onStepClick}>
+                <Step label="Draft">
+                    <input name="draft" defaultValue="Retained" />
+                </Step>
+                <Step label="Review">
+                    <input name="review" />
+                </Step>
+            </Stepper>
+        </>
+    );
+}
+
+it('leaves controlled selection with its owner and preserves drafts when the owner changes it', async () => {
+    const onStepClick = vi.fn();
+    const user = userEvent.setup();
+
+    await withMounted(<ControlledWizard onStepClick={onStepClick} />, async (output) => {
+        const panels = output.querySelectorAll('fieldset');
+        const draft = output.querySelector<HTMLInputElement>('input[name="draft"]');
+        const buttons = Array.from(output.querySelectorAll('button'));
+        const back = buttons.find((button) => button.textContent === 'Back');
+        const selectDraft = buttons.find((button) => button.textContent === 'Select draft');
+        const selectReview = buttons.find((button) => button.textContent === 'Select review');
+
+        if (!draft || !back || !selectDraft || !selectReview) throw new Error('Expected controlled wizard controls');
+
+        expect(panels[0].hidden).toBe(true);
+        expect(panels[1].hidden).toBe(false);
+        await act(async () => user.click(selectDraft));
+        await act(async () => user.clear(draft));
+        await act(async () => user.type(draft, 'Unsaved details'));
+        await act(async () => user.click(selectReview));
+        await act(async () => user.click(back));
+        expect(onStepClick).toHaveBeenCalledExactlyOnceWith(0);
+        expect(panels[1].hidden).toBe(false);
+        await act(async () => user.click(selectDraft));
+        expect(panels[0].hidden).toBe(false);
+        expect(document.activeElement).toBe(panels[0]);
+        expect(output.querySelector('input[name="draft"]')).toBe(draft);
+        expect(draft.value).toBe('Unsaved details');
+    });
+});
 
 it('preserves step drafts through navigation, final validation, submission, and reset', async () => {
     // Arrange

@@ -1,7 +1,9 @@
+import { cn } from 'cn';
 import { NativeText } from './NativeText';
 import { ArrowUpRight } from 'lucide-react';
 import type { TextProps } from './typography';
 import type { ComponentPropsWithRef } from 'react';
+import { buttonVariants } from '@/components/shadcn/button';
 import { Link as RouterLink, useInRouterContext } from 'react-router';
 
 type NativeAnchorProps = Omit<ComponentPropsWithRef<'a'>, 'download'> & { download?: string | boolean };
@@ -30,7 +32,7 @@ export function NativeLink({
     download,
     children,
     type = 'body',
-    color = 'accent',
+    color = 'inherit',
     weight,
     size,
     hasUnderline = false,
@@ -55,7 +57,12 @@ export function NativeLink({
         target: linkTarget,
         rel,
         download,
-        className: `view-link${hasUnderline ? ' underline' : ''}${className ? ` ${className}` : ''}`,
+        className: cn(
+            buttonVariants({ variant: 'link', size: null }),
+            'align-baseline whitespace-normal aria-disabled:pointer-events-none aria-disabled:opacity-50',
+            hasUnderline && 'underline',
+            className
+        ),
     };
 
     return (

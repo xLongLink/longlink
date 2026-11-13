@@ -58,7 +58,10 @@ export function NativeTable<T extends Record<string, unknown>>({
             recordCount={data.length}
             emptyMessage={<EmptyState title="No data" isCompact />}
             tableLayout={{ dense: density === 'compact', stripped: isStriped, rowBorder: true, headerBorder: true }}
-            tableClassNames={{ base: `view-table-vertical-${verticalAlign}${hasHover ? ' view-table-hover' : ''}` }}
+            tableClassNames={{
+                base: `view-table-vertical-${verticalAlign}`,
+                bodyRow: hasHover ? 'hover:bg-muted/40' : undefined,
+            }}
         >
             <DataGridTable<T> renderHeader={resolvedColumns.length > 0} />
         </DataGrid>

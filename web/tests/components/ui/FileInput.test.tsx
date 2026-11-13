@@ -279,7 +279,7 @@ it.each([false, true])('forwards description clicks to the guarded picker when d
                 .find((id) => id.endsWith('-required'));
 
             expect(output.querySelector(`[id="${requiredId}"]`)?.textContent).toBe('Required');
-            expect(output.querySelector('label')?.textContent).toContain('Attachment · Required');
+            expect(output.querySelector('label')?.textContent).toContain('Required');
         }
     );
 });

@@ -1,3 +1,4 @@
+import { cn } from 'cn';
 import c from 'shiki/langs/c.mjs';
 import go from 'shiki/langs/go.mjs';
 import cpp from 'shiki/langs/cpp.mjs';
@@ -23,13 +24,16 @@ import kotlin from 'shiki/langs/kotlin.mjs';
 import python from 'shiki/langs/python.mjs';
 import graphql from 'shiki/langs/graphql.mjs';
 import markdown from 'shiki/langs/markdown.mjs';
+import { Button } from '@/components/shadcn/button';
 import dockerfile from 'shiki/langs/dockerfile.mjs';
 import javascript from 'shiki/langs/javascript.mjs';
 import powershell from 'shiki/langs/powershell.mjs';
 import typescript from 'shiki/langs/typescript.mjs';
 import objectiveC from 'shiki/langs/objective-c.mjs';
 import shellscript from 'shiki/langs/shellscript.mjs';
+import githubDark from 'shiki/themes/github-dark.mjs';
 import { createHighlighterCoreSync } from 'shiki/core';
+import githubLight from 'shiki/themes/github-light.mjs';
 import { Check, Copy, X, ChevronRight } from 'lucide-react';
 import { createJavaScriptRegexEngine } from 'shiki/engine/javascript';
 import { useId, useRef, useMemo, useState, useEffect, type CSSProperties } from 'react';
@@ -69,33 +73,7 @@ const highlighter = createHighlighterCoreSync({
         ...objectiveC,
         ...shellscript,
     ],
-    themes: [
-        {
-            name: 'view',
-            settings: [
-                {
-                    settings: {
-                        foreground: 'var(--color-syntax-variable)',
-                        background: 'var(--color-syntax-background)',
-                    },
-                },
-                ...Object.entries({
-                    keyword: 'keyword, storage',
-                    string: 'string',
-                    comment: 'comment',
-                    number: 'constant.numeric',
-                    function: 'entity.name.function, support.function',
-                    type: 'entity.name.type, support.type, support.class',
-                    constant: 'constant.language, variable.other.constant',
-                    tag: 'entity.name.tag',
-                    attribute: 'entity.other.attribute-name',
-                    property: 'variable.other.property, support.type.property-name',
-                    punctuation: 'punctuation',
-                    operator: 'keyword.operator',
-                }).map(([token, scope]) => ({ scope, settings: { foreground: `var(--color-syntax-${token})` } })),
-            ],
-        },
-    ],
+    themes: [githubLight, githubDark],
 });
 
 const languages = new Set(highlighter.getLoadedLanguages());
@@ -138,7 +116,10 @@ export function NativeCodeBlock(props: {
         if (props.code.length > 50_000 || !languages.has(syntaxLanguage)) return undefined;
 
         try {
-            return highlighter.codeToTokens(props.code, { lang: syntaxLanguage, theme: 'view' }).tokens;
+            return highlighter.codeToTokens(props.code, {
+                lang: syntaxLanguage,
+                themes: { light: 'github-light', dark: 'github-dark' },
+            }).tokens;
         } catch {
             return undefined;
         }
@@ -218,8 +199,10 @@ export function NativeCodeBlock(props: {
 
     const copyButton =
         props.hasCopyButton !== false ? (
-            <button
+            <Button
                 type="button"
+                variant="ghost"
+                size={showHeader ? 'icon-sm' : 'icon'}
                 className="view-code-copy"
                 aria-label={copyLabel}
                 title={copyState === 'failed' ? copyLabel : 'Copy code'}
@@ -228,7 +211,7 @@ export function NativeCodeBlock(props: {
                 }}
             >
                 <CopyIcon aria-hidden="true" />
-            </button>
+            </Button>
         ) : null;
 
     const heading = (
@@ -240,9 +223,8 @@ export function NativeCodeBlock(props: {
                     data-expanded={!collapsed || undefined}
                 />
             )}
-            {props.title}
-            {props.title && label ? ' — ' : ''}
-            {label}
+            {props.title && <span className="view-code-filename">{props.title}</span>}
+            {label && <span className="view-code-language">{label}</span>}
         </span>
     );
 
@@ -253,8 +235,8 @@ export function NativeCodeBlock(props: {
 
     // Keep hidden code mounted so toggling does not discard content or its scroll position.
     return (
-        <pre
-            className={`view-code-block${props.className ? ` ${props.className}` : ''}`}
+        <div
+            className={cn('view-code-block', props.className)}
             style={style}
             data-size={props.size ?? 'md'}
             data-container={props.container ?? 'card'}
@@ -306,11 +288,19 @@ export function NativeCodeBlock(props: {
                             >
                                 <span className="view-code-line-content">
                                     {tokens?.[index]?.length
-                                        ? tokens[index].map((token) => (
-                                              <span key={token.offset} style={{ color: token.color }}>
-                                                  {token.content}
-                                              </span>
-                                          ))
+                                        ? tokens[index].map((token) => {
+                                              const style: CSSProperties &
+                                                  Record<`--cb-${string}`, string | undefined> = {
+                                                  '--cb-c': token.color,
+                                                  '--cb-cd': token.htmlStyle?.['--shiki-dark'] ?? token.color,
+                                              };
+
+                                              return (
+                                                  <span key={token.offset} style={style}>
+                                                      {token.content}
+                                                  </span>
+                                              );
+                                          })
                                         : line || '\u200b'}
                                 </span>
                             </span>
@@ -322,6 +312,6 @@ export function NativeCodeBlock(props: {
             <span className="sr-only" role={copyState === 'failed' ? 'alert' : 'status'}>
                 {copyState === 'idle' ? '' : copyLabel}
             </span>
-        </pre>
+        </div>
     );
 }

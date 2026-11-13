@@ -1,3 +1,4 @@
+import { cn } from 'cn';
 import { z } from 'zod';
 import { api } from '@/lib/api';
 import { useState } from 'react';
@@ -7,6 +8,7 @@ import { Dialog } from '@/components/ui/Dialog';
 import { TextInput } from '@/components/ui/TextInput';
 import { Step, Stepper } from '@/components/ui/Stepper';
 import { Illustration } from '@/components/Illustration';
+import { buttonVariants } from '@/components/shadcn/button';
 import { NativeText as Text } from '@/components/ui/NativeText';
 import { NativeStack as Stack } from '@/components/ui/NativeStack';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
@@ -111,7 +113,10 @@ export default function CreateSolution({
                                 />
                                 <button
                                     type="button"
-                                    className="view-link absolute top-0 right-0 underline"
+                                    className={cn(
+                                        buttonVariants({ variant: 'link', size: null }),
+                                        'absolute top-0 right-0 underline'
+                                    )}
                                     onClick={() => setImage('ghcr.io/xlonglink/sample:latest')}
                                 >
                                     <Text size="base" color="secondary">

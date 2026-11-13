@@ -1,12 +1,12 @@
 @layer components {
-    .view-text-field,
+    .view-text-field:not([data-slot='field']),
     .view-text-field-heading {
         display: flex;
         flex-direction: column;
         min-width: 0;
     }
 
-    .view-text-field {
+    .view-text-field:not([data-slot='field']) {
         width: 100%;
         gap: var(--spacing-1);
         font-family: var(--font-family-body);

@@ -1,12 +1,11 @@
 import { useValue } from './value';
 import { FormField } from './FormField';
-import { FieldLabel } from './FieldLabel';
 import type { FieldProps } from './types';
 import { Button } from '@/components/shadcn/button';
-import { FieldDescription, FieldError } from '@/components/shadcn/field';
 import { useEffect, useId, useRef, useState, type DragEvent } from 'react';
 import { InputGroup, InputGroupButton } from '@/components/shadcn/input-group';
 import { CircleAlert, CircleCheck, TriangleAlert, Upload, X } from 'lucide-react';
+import { Field, FieldContent, FieldDescription, FieldError, FieldLabel } from '@/components/shadcn/field';
 
 type FileInputProps = FieldProps & {
     value?: File | File[] | null;
@@ -171,13 +170,28 @@ export function NativeFileInput({
             values={files}
             serialize
         >
-            <div
+            <Field
                 className="view-text-field view-file-field"
                 data-disabled={disabled || undefined}
                 data-mode={mode}
                 data-status={statusType}
             >
-                <FieldLabel controlId={id} label={label} description={description} required={required} />
+                <FieldContent>
+                    <FieldLabel htmlFor={id} id={`${id}-label`}>
+                        {label}
+                        {required && <span className="text-muted-foreground">Required</span>}
+                    </FieldLabel>
+                    {description && (
+                        <FieldDescription
+                            id={`${id}-description`}
+                            onClick={(event) => {
+                                if (event.target === event.currentTarget) trigger.current?.click();
+                            }}
+                        >
+                            <label htmlFor={id}>{description}</label>
+                        </FieldDescription>
+                    )}
+                </FieldContent>
                 <InputGroup
                     className="view-file-input"
                     data-mode={mode}
@@ -284,7 +298,7 @@ export function NativeFileInput({
                 <span className="view-file-native" role="status">
                     {!message && fileNames ? `Selected: ${fileNames}` : ''}
                 </span>
-            </div>
+            </Field>
         </FormField>
     );
 }

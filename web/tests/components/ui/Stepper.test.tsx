@@ -2,6 +2,7 @@
 import { act } from 'react';
 import { it, expect, vi } from 'vitest';
 import { Button } from '@/components/ui/Button';
+import userEvent from '@testing-library/user-event';
 import { Stepper, Step } from '@/components/ui/Stepper';
 import { renderStatic, withMounted } from '../../render';
 
@@ -90,6 +91,7 @@ it('keeps steps inert without onStepClick while their actions remain focusable',
 it('activates authored progress indices without submitting the owning form', async () => {
     const onStepClick = vi.fn();
     const onSubmit = vi.fn();
+    const user = userEvent.setup();
 
     await withMounted(
         <form onSubmit={onSubmit}>
@@ -114,6 +116,14 @@ it('activates authored progress indices without submitting the owning form', asy
             await act(async () => prepare?.click());
             await act(async () => finish?.click());
             expect(onStepClick.mock.calls).toEqual([[3], [2]]);
+
+            // Keyboard navigation keeps activation separate from focus and preserves public indices.
+            prepare?.focus();
+            await act(async () => user.keyboard('{ArrowRight}'));
+            expect(document.activeElement?.textContent).toContain('Review');
+            expect(onStepClick).toHaveBeenCalledTimes(2);
+            await act(async () => user.keyboard('{End}{Enter}'));
+            expect(onStepClick.mock.calls.at(-1)).toEqual([2]);
             expect(onSubmit).not.toHaveBeenCalled();
         }
     );

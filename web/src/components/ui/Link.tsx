@@ -1,9 +1,11 @@
+import { cn } from 'cn';
 import { Text } from './Text';
 import { useDownload } from './preview';
-import { LoaderCircle } from 'lucide-react';
 import { ReportedError } from '@/lib/reported';
 import { resolveNavigationUrl } from '@/lib/url';
 import { LinkNavigationContext } from './contexts';
+import { Spinner } from '@/components/shadcn/spinner';
+import { buttonVariants } from '@/components/shadcn/button';
 import { useContext, useRef, useTransition, type ComponentPropsWithRef, type MouseEvent, type ReactNode } from 'react';
 
 /** Preserves native link gestures while routing ordinary internal clicks through the host. */
@@ -134,8 +136,8 @@ export function Link({
     const content = (
         <Text color="inherit">
             {isPending && (
-                <span role="status" aria-label="Loading" className="view-link-loading">
-                    <LoaderCircle aria-hidden="true" className="view-link-spinner" />
+                <span role="status" aria-label="Loading" className="inline-flex align-middle">
+                    <Spinner aria-hidden="true" className="motion-reduce:animate-none" />
                 </span>
             )}
             {children}
@@ -143,7 +145,10 @@ export function Link({
     );
 
     const interaction = {
-        className: 'view-link',
+        className: cn(
+            buttonVariants({ variant: 'link', size: null }),
+            'align-baseline whitespace-normal aria-disabled:pointer-events-none aria-disabled:opacity-50'
+        ),
         'aria-disabled': blocked || undefined,
         'aria-busy': isPending || undefined,
         onClick: activate,

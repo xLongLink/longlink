@@ -3,7 +3,17 @@ import { Button } from './Button';
 import { flushSync } from 'react-dom';
 import { ReportedError } from '@/lib/reported';
 import { FormValidationContext } from './contexts';
-import { CircleCheck, CircleDot, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Check, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Button as NavigationButton } from '@/components/shadcn/button';
+import {
+    Stepper as ReuiStepper,
+    StepperDescription,
+    StepperIndicator,
+    StepperItem,
+    StepperSeparator,
+    StepperTitle,
+    StepperTrigger,
+} from '@/components/reui/stepper';
 import {
     Children,
     cloneElement,
@@ -12,6 +22,7 @@ import {
     useContext,
     useEffect,
     useEffectEvent,
+    useId,
     useRef,
     useState,
     type ReactElement,
@@ -105,21 +116,31 @@ function Progress({ children, activeStep = 0, orientation = 'horizontal', onStep
 
     return (
         <ProgressContext value={{ activeStep, compact: collapsed, onStepClick }}>
-            <div className="view-stepper" data-orientation={orientation}>
+            <ReuiStepper
+                value={activeStep + 1}
+                onValueChange={(value) => onStepClick?.(value - 1)}
+                orientation={orientation}
+                indicators={{ completed: <Check aria-hidden="true" className="size-3.5" /> }}
+                role="group"
+                aria-orientation={undefined}
+                className="view-stepper"
+            >
                 <ol ref={listRef} className="view-stepper-list" aria-label="Progress">
                     {children}
                 </ol>
                 {collapsed && (
                     <div className="view-stepper-summary">
                         {onStepClick && (
-                            <button
+                            <NavigationButton
                                 type="button"
+                                variant="ghost"
+                                size="icon"
                                 aria-label="Previous step"
                                 disabled={previous === undefined}
                                 onClick={() => previous !== undefined && onStepClick(previous)}
                             >
                                 <ChevronLeft aria-hidden="true" size={16} />
-                            </button>
+                            </NavigationButton>
                         )}
                         <div className="view-stepper-summary-body" aria-hidden="true">
                             <span>{current?.props.label}</span>
@@ -128,18 +149,20 @@ function Progress({ children, activeStep = 0, orientation = 'horizontal', onStep
                             )}
                         </div>
                         {onStepClick && (
-                            <button
+                            <NavigationButton
                                 type="button"
+                                variant="ghost"
+                                size="icon"
                                 aria-label="Next step"
                                 disabled={next === undefined}
                                 onClick={() => next !== undefined && onStepClick(next)}
                             >
                                 <ChevronRight aria-hidden="true" size={16} />
-                            </button>
+                            </NavigationButton>
                         )}
                     </div>
                 )}
-            </div>
+            </ReuiStepper>
         </ProgressContext>
     );
 }
@@ -333,57 +356,48 @@ function Wizard(props: StepperProps) {
 /** Defines progress metadata and, in wizard mode, one persistent content panel. */
 export function Step(props: StepProps) {
     const { activeStep, compact, onStepClick } = useContext(ProgressContext);
+    const id = useId();
     const index = props.step ?? 0;
     const state = index < activeStep ? 'completed' : index === activeStep ? 'active' : 'upcoming';
 
     const label = (
         <>
-            <span className="view-step-heading">
-                <span className="view-step-indicator" aria-hidden="true">
-                    {state === 'completed' ? (
-                        <CircleCheck size={16} />
-                    ) : state === 'active' ? (
-                        <CircleDot size={16} />
-                    ) : (
-                        index + 1
-                    )}
-                </span>
-                <span className="view-step-label">{props.label}</span>
+            <span aria-hidden="true">
+                <StepperIndicator>{index + 1}</StepperIndicator>
             </span>
-            {props.description && <span className="view-step-description">{props.description}</span>}
+            <span className={compact ? 'sr-only' : 'flex min-w-0 flex-col gap-1'}>
+                <StepperTitle className="break-words">{props.label}</StepperTitle>
+                {props.description && <StepperDescription>{props.description}</StepperDescription>}
+                {state === 'completed' && <span className="sr-only">completed</span>}
+            </span>
         </>
     );
 
     return (
         <li className="view-step" data-state={state} aria-current={state === 'active' ? 'step' : undefined}>
-            <span className="view-step-track" aria-hidden="true" />
-            <div className="view-step-body">
-                {compact ? (
-                    <span className="sr-only">
-                        {props.label}
-                        {state === 'completed' && ', completed'}
-                    </span>
+            <StepperItem step={index + 1} className="relative min-w-0 flex-col items-stretch justify-start gap-2">
+                {onStepClick && !compact ? (
+                    <StepperTrigger
+                        id={id}
+                        type="button"
+                        role="button"
+                        aria-selected={undefined}
+                        aria-controls={undefined}
+                        tabIndex={0}
+                        className="view-step-target"
+                    >
+                        {label}
+                    </StepperTrigger>
                 ) : (
-                    <>
-                        {onStepClick ? (
-                            <button type="button" className="view-step-target" onClick={() => onStepClick(index)}>
-                                {label}
-                                {state === 'completed' && <span className="sr-only">completed</span>}
-                            </button>
-                        ) : (
-                            <div className="view-step-target">
-                                {label}
-                                {state === 'completed' && <span className="sr-only">completed</span>}
-                            </div>
-                        )}
-                    </>
+                    <div className="view-step-target">{label}</div>
                 )}
                 {props.children && (
                     <div className="view-step-content" hidden={compact}>
                         {props.children}
                     </div>
                 )}
-            </div>
+                <StepperSeparator className="view-step-separator group-data-[state=completed]/step:bg-primary" />
+            </StepperItem>
         </li>
     );
 }

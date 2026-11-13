@@ -15,7 +15,7 @@ it('renders code as text rather than executable markup', () => {
 
 it('copies exact source including final newlines, independently of collapse and line numbers', async () => {
     // Clipboard contents must not include presentation-only labels, gutters, or empty-line placeholders.
-    const code = 'first\n\n<script>not executable</script>\n';
+    const code = 'first // [!code highlight]\n\n<script>not executable</script>\n';
     await withMounted(
         <CodeBlock
             code={code}
@@ -24,6 +24,7 @@ it('copies exact source including final newlines, independently of collapse and 
             highlightLines={[3]}
             isCollapsible
             collapsibleThreshold={3}
+            maxHeight={120}
         />,
         async (output) => {
             const toggle = output.querySelector<HTMLButtonElement>('[aria-expanded]');
@@ -31,11 +32,16 @@ it('copies exact source including final newlines, independently of collapse and 
             const source = output.querySelector('code');
 
             if (!toggle || !copy || !source) throw new Error('Expected code controls');
-            const viewport = output.querySelector(`[id="${toggle.getAttribute('aria-controls')}"]`);
+            const viewport = output.querySelector<HTMLElement>(`[id="${toggle.getAttribute('aria-controls')}"]`);
+
+            if (!viewport) throw new Error('Expected code viewport');
+            viewport.scrollTop = 40;
+            viewport.scrollLeft = 20;
+            expect(viewport.style.maxHeight).toBe('120px');
 
             await act(async () => toggle.click());
             expect(toggle.getAttribute('aria-expanded')).toBe('false');
-            expect(viewport?.hasAttribute('hidden')).toBe(true);
+            expect(viewport.hasAttribute('hidden')).toBe(true);
             expect(output.querySelector('code')).toBe(source);
             await act(async () => copy.click());
             expect(await navigator.clipboard.readText()).toBe(code);
@@ -44,7 +50,9 @@ it('copies exact source including final newlines, independently of collapse and 
             expect(output.querySelector('[role="status"]')?.textContent).toBe('Copied');
 
             await act(async () => toggle.click());
-            expect(viewport?.hasAttribute('hidden')).toBe(false);
+            expect(viewport.hasAttribute('hidden')).toBe(false);
+            expect(viewport.scrollTop).toBe(40);
+            expect(viewport.scrollLeft).toBe(20);
             expect(output.querySelector('code')).toBe(source);
             expect(source.textContent).toContain('<script>not executable</script>');
             expect(output.querySelectorAll('[data-line]').length).toBe(3);

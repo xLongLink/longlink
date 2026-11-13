@@ -29,39 +29,14 @@
         outline: var(--focus-outline-width) solid var(--focus-outline-color);
         outline-offset: calc(-1 * var(--focus-outline-width));
     }
+}
 
-    .view-table {
-        width: 100%;
-        border-collapse: separate;
-        border-spacing: 0;
-        color: var(--foreground);
-        font-family: var(--font-family-body);
-        font-size: var(--text-body-size);
-        line-height: var(--text-body-leading);
-    }
-
-    .view-table th,
-    .view-table td {
-        box-sizing: border-box;
-        padding: var(--spacing-1) var(--spacing-2);
-        vertical-align: middle;
-    }
-
-    .view-table th {
-        overflow: hidden;
-        color: var(--muted-foreground);
-        font-size: var(--text-label-size);
-        font-weight: var(--font-weight-semibold);
-        line-height: var(--text-label-leading);
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-
-    .view-table tr > :first-child {
+@layer utilities {
+    .view-table[data-dense] tr > :first-child {
         padding-inline-start: max(var(--container-padding-inline-start, var(--spacing-2)), var(--spacing-2));
     }
 
-    .view-table tr > :last-child {
+    .view-table[data-dense] tr > :last-child {
         padding-inline-end: max(var(--container-padding-inline-end, var(--spacing-2)), var(--spacing-2));
     }
 
@@ -70,25 +45,6 @@
         overflow: hidden;
         overflow-wrap: break-word;
         word-break: break-word;
-    }
-
-    .view-table [data-slot='data-grid-table-empty'] {
-        padding: 0;
-    }
-
-    .view-table[data-header-border] th,
-    .view-table[data-row-border] tbody tr:not(:last-child) td {
-        border-bottom: var(--border-width) solid var(--border);
-    }
-
-    .view-table[data-striped] tbody tr:nth-child(even) {
-        background: var(--muted);
-    }
-
-    @media (hover: hover) {
-        .view-table.view-table-hover tbody tr:hover {
-            background: var(--color-overlay-hover);
-        }
     }
 
     .view-table .view-table-align-start {

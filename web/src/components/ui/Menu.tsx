@@ -1,8 +1,10 @@
+import { cn } from 'cn';
 import { spacing } from './layout';
 import type { Spacing } from './types';
 import { ChevronDown } from 'lucide-react';
 import { MenuNavigationContext } from './contexts';
 import { Icon, type StoneIconName } from '@/components/ui/Icon';
+import { Button, buttonVariants } from '@/components/shadcn/button';
 import { Children, isValidElement, useContext, type ReactElement, type ReactNode } from 'react';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/shadcn/collapsible';
 
@@ -94,7 +96,10 @@ export function Menu({
         // Preserve normal link semantics while routing ordinary clicks through the runtime API.
         return (
             <a
-                className="view-section-nav-link"
+                className={cn(
+                    buttonVariants({ variant: 'ghost' }),
+                    'view-section-nav-link w-full justify-start text-start aria-[current=page]:bg-muted'
+                )}
                 href={`#${id}`}
                 aria-current={item === activeItem ? 'page' : undefined}
                 key={id}
@@ -129,7 +134,12 @@ export function Menu({
                         className="view-section-nav-section"
                         key={section.props.title}
                     >
-                        <div className={`view-section-nav-heading${section.props.isHeaderHidden ? ' sr-only' : ''}`}>
+                        <div
+                            className={cn(
+                                'truncate pb-1 pe-2 text-xs font-medium text-muted-foreground',
+                                section.props.isHeaderHidden && 'sr-only'
+                            )}
+                        >
                             {section.props.title}
                         </div>
                         <div className="view-section-nav-items">
@@ -139,10 +149,21 @@ export function Menu({
 
                                     return (
                                         <Collapsible defaultOpen={false} key={label}>
-                                            <CollapsibleTrigger type="button" className="view-section-nav-link">
+                                            <CollapsibleTrigger
+                                                type="button"
+                                                render={
+                                                    <Button
+                                                        variant="ghost"
+                                                        className="view-section-nav-link w-full justify-start text-start"
+                                                    />
+                                                }
+                                            >
                                                 {icon && <Icon icon={icon} size="sm" />}
                                                 <span className="view-section-nav-label">{label}</span>
-                                                <ChevronDown className="view-section-nav-chevron" aria-hidden="true" />
+                                                <ChevronDown
+                                                    className="view-section-nav-chevron size-4 shrink-0"
+                                                    aria-hidden="true"
+                                                />
                                             </CollapsibleTrigger>
                                             <CollapsibleContent
                                                 keepMounted

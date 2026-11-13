@@ -29,7 +29,10 @@ export function DataGridTable<TData extends object>({ renderHeader = true }: { r
                         data-striped={tableLayout?.stripped || undefined}
                         data-row-border={tableLayout?.rowBorder || undefined}
                         data-header-border={tableLayout?.headerBorder || undefined}
-                        className={cn('view-table', tableClassNames?.base)}
+                        className={cn(
+                            'view-table w-full border-separate border-spacing-0 text-left align-middle text-sm font-normal text-foreground rtl:text-right',
+                            tableClassNames?.base
+                        )}
                         style={{ minWidth, tableLayout: tableLayout?.width ?? 'fixed' }}
                     >
                         <colgroup>
@@ -43,13 +46,23 @@ export function DataGridTable<TData extends object>({ renderHeader = true }: { r
                         {renderHeader && (
                             <thead className={tableClassNames?.header}>
                                 {table.getHeaderGroups().map((headerGroup) => (
-                                    <tr key={headerGroup.id} className={tableClassNames?.headerRow}>
+                                    <tr
+                                        key={headerGroup.id}
+                                        className={cn(
+                                            tableLayout?.headerBorder && '[&>th]:border-b',
+                                            tableClassNames?.headerRow
+                                        )}
+                                    >
                                         {headerGroup.headers.map((header) => (
                                             <th
                                                 key={header.id}
                                                 scope="col"
                                                 colSpan={header.colSpan}
-                                                className={header.column.columnDef.meta?.headerClassName}
+                                                className={cn(
+                                                    'truncate text-left align-middle font-medium text-foreground rtl:text-right',
+                                                    tableLayout?.dense ? 'h-8 px-2' : 'h-10 px-3',
+                                                    header.column.columnDef.meta?.headerClassName
+                                                )}
                                             >
                                                 {header.isPlaceholder
                                                     ? null
@@ -66,9 +79,24 @@ export function DataGridTable<TData extends object>({ renderHeader = true }: { r
                         <tbody data-slot="data-grid-table-body" className={tableClassNames?.body}>
                             {rows.length ? (
                                 rows.map((row) => (
-                                    <tr key={row.id} data-row-id={row.id} className={tableClassNames?.bodyRow}>
+                                    <tr
+                                        key={row.id}
+                                        data-row-id={row.id}
+                                        className={cn(
+                                            tableLayout?.rowBorder && '[&:not(:last-child)>td]:border-b',
+                                            tableLayout?.stripped && 'even:bg-muted/90',
+                                            tableClassNames?.bodyRow
+                                        )}
+                                    >
                                         {row.getVisibleCells().map((cell) => (
-                                            <td key={cell.id} className={cell.column.columnDef.meta?.cellClassName}>
+                                            <td
+                                                key={cell.id}
+                                                className={cn(
+                                                    'align-middle',
+                                                    tableLayout?.dense ? 'px-2 py-1.5' : 'px-3 py-2',
+                                                    cell.column.columnDef.meta?.cellClassName
+                                                )}
+                                            >
                                                 {renderGridContent(cell.column.columnDef.cell, cell.getContext())}
                                             </td>
                                         ))}
@@ -76,7 +104,11 @@ export function DataGridTable<TData extends object>({ renderHeader = true }: { r
                                 ))
                             ) : (
                                 <tr>
-                                    <td colSpan={Math.max(columns.length, 1)} data-slot="data-grid-table-empty">
+                                    <td
+                                        colSpan={Math.max(columns.length, 1)}
+                                        data-slot="data-grid-table-empty"
+                                        className="p-0"
+                                    >
                                         {emptyMessage}
                                     </td>
                                 </tr>

@@ -1,8 +1,4 @@
 @layer components {
-    .view-dialog-layer {
-        position: relative;
-    }
-
     .view-dialog {
         overscroll-behavior: contain;
         text-align: start;

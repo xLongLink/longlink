@@ -1,11 +1,11 @@
 import { useValue } from './value';
 import { flushSync } from 'react-dom';
 import { FormField } from './FormField';
-import { FieldLabel } from './FieldLabel';
 import type { FieldProps } from './types';
 import { Button } from '@/components/shadcn/button';
 import { CalendarDays, Clock, X } from 'lucide-react';
 import { useEffect, useEffectEvent, useId, useRef, useState, type ReactNode } from 'react';
+import { Field, FieldContent, FieldDescription, FieldLabel } from '@/components/shadcn/field';
 import { Popover, PopoverContent, PopoverTitle, PopoverTrigger } from '@/components/shadcn/popover';
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from '@/components/shadcn/input-group';
 
@@ -122,13 +122,23 @@ export function TemporalField<T extends string>(
             serialize
             error={error}
         >
-            <div className="view-text-field" data-disabled={props.disabled || undefined}>
-                <FieldLabel
-                    controlId={id}
-                    label={props.label}
-                    description={props.description}
-                    required={props.required}
-                />
+            <Field className="view-text-field" data-disabled={props.disabled || undefined}>
+                <FieldContent>
+                    <FieldLabel htmlFor={id} id={`${id}-label`}>
+                        {props.label}
+                        {props.required && <span className="text-muted-foreground">Required</span>}
+                    </FieldLabel>
+                    {props.description && (
+                        <FieldDescription
+                            id={`${id}-description`}
+                            onClick={(event) => {
+                                if (event.target === event.currentTarget) input.current?.focus();
+                            }}
+                        >
+                            <label htmlFor={id}>{props.description}</label>
+                        </FieldDescription>
+                    )}
+                </FieldContent>
                 <Popover
                     open={open}
                     onOpenChange={(next, details) => {
@@ -271,7 +281,7 @@ export function TemporalField<T extends string>(
                         {validValue && field.value ? props.format(field.value) : ''}
                     </span>
                 )}
-            </div>
+            </Field>
         </FormField>
     );
 }

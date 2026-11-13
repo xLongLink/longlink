@@ -39,7 +39,7 @@ function AlertDialogContent({
     size?: 'default' | 'sm';
 }) {
     return (
-        <AlertDialogPortal className="view-dialog-layer">
+        <AlertDialogPortal>
             <AlertDialogOverlay />
             <AlertDialogPrimitive.Popup
                 data-slot="alert-dialog-content"
