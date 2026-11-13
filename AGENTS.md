@@ -85,6 +85,15 @@
 - For brand logos, you CAN use custom SVG components with official brand colors.
 - DO keep each page simple and standalone.
 
+## UI / LongLink components
+
+LongLink expose components so that the `.jsx` views can use them directly
+
+- DO ALIGN the LongLink Views components with the reui or shadcn
+- ANY custon component shall be placed in a `custom` folder
+- for reui check https://reui.io/llms.txt
+- for shadcn/ui check https://ui.shadcn.com/llms.txt 
+
 ## Commit Message Structure
 
 DO use Conventional Commits for commit messages: type, optional scope in parentheses, a colon, a space, and a short imperative description.

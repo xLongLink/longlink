@@ -27,14 +27,17 @@ def test_docs_command_lists_documented_component_categories(capsys: pytest.Captu
 def test_docs_command_resolves_a_component_name_case_insensitively(capsys: pytest.CaptureFixture[str]) -> None:
     """Show component documentation from a lower-case component name."""
 
+    # Arrange
+    main(["docs", "component", "Button"])
+    canonical = capsys.readouterr().out
+
     # Act
     main(["docs", "component", "button"])
 
     # Assert
     output = capsys.readouterr().out
+    assert output == canonical
     assert "Button [Action]" in output
-    assert "- label (string):\n  Visible button text and accessible label." in output
-    assert '- variant ("ghost" | "primary" | "secondary" | "destructive"):\n  Visual style variant.' in output
     assert "undefined" not in output
     assert "onClick" in output
     assert "Example" not in output
