@@ -14,9 +14,9 @@ import { NativeText as Text } from '@/components/ui/NativeText';
 import { NativeStack as Stack } from '@/components/ui/NativeStack';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { NativeButton as Button } from '@/components/ui/NativeButton';
+import { DataTable, proportional } from '@/components/custom/DataTable';
 import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
 import { useQueryClient, useSuspenseQueries } from '@tanstack/react-query';
-import { NativeTable as Table, proportional } from '@/components/ui/NativeTable';
 
 const membershipsQuery = apiQueryOptions('/api/v1/me/organizations', schemas.zUserOrganizationMembership.array());
 
@@ -126,7 +126,7 @@ export default function OrganizationManagement({ presentation }: { presentation:
                         </Stack>
                     </Stack>
                 ) : (
-                    <Table
+                    <DataTable
                         data={rows}
                         idKey={(row) => (row.kind === 'invitation' ? row.id : row.organization.id)}
                         hasHover

@@ -29,7 +29,7 @@ import {
     DropdownMenuTrigger,
 } from '@/components/shadcn/dropdown-menu';
 
-export type DropdownMenuItemData = {
+export type ActionMenuItemData = {
     id?: string;
     label: ReactNode;
     icon?: StoneIconName;
@@ -42,15 +42,15 @@ export type DropdownMenuItemData = {
     target?: '_blank' | '_self';
     rel?: string;
     onClick?: (event: MouseEvent) => void | Promise<void>;
-    items?: DropdownMenuOption[];
+    items?: ActionMenuOption[];
 };
 
-export type DropdownMenuOption =
-    | DropdownMenuItemData
+export type ActionMenuOption =
+    | ActionMenuItemData
     | { type: 'divider' }
-    | { type: 'section'; id?: string; title?: string; items: DropdownMenuItemData[] };
+    | { type: 'section'; id?: string; title?: string; items: ActionMenuItemData[] };
 
-export type NativeMenuItem = Omit<DropdownMenuItemData, 'icon' | 'items'> & {
+export type NativeMenuItem = Omit<ActionMenuItemData, 'icon' | 'items'> & {
     icon?: StoneIconName | ReactElement;
     items?: NativeMenuOption[];
 };
@@ -61,7 +61,7 @@ export type NativeMenuOption =
     | { type: 'section'; id?: string; title?: string; items: NativeMenuItem[] };
 
 /** Shares menu behavior without exposing primitive props to isolated Views. */
-export function ActionMenu({
+export function MenuControl({
     items,
     label,
     variant = 'secondary',

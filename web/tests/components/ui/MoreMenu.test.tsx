@@ -1,7 +1,7 @@
 import { it, expect } from 'vitest';
 // @vitest-environment happy-dom
 import { act, useState } from 'react';
-import { Button } from '@/components/ui/Button';
+import { Button } from '@/components/custom/Button';
 import { MoreMenu } from '@/components/ui/MoreMenu';
 import userEvent from '@testing-library/user-event';
 import { renderStatic, withMounted } from '../../render';

@@ -8,8 +8,8 @@ import { Pagination } from '@/components/ui/Pagination';
 import { NativeText as Text } from '@/components/ui/NativeText';
 import { NativeStack as Stack } from '@/components/ui/NativeStack';
 import { NativeButton as Button } from '@/components/ui/NativeButton';
+import { DataTable, proportional } from '@/components/custom/DataTable';
 import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
-import { NativeTable as Table, proportional } from '@/components/ui/NativeTable';
 import { zPageOperationResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 
 const kinds = {
@@ -44,7 +44,7 @@ export default function Operations() {
                 startIcon={<Search />}
             />
             <Stack gap={1}>
-                <Table
+                <DataTable
                     data={operations.items}
                     idKey="id"
                     hasHover

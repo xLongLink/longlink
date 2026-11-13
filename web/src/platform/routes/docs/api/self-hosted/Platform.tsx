@@ -2,9 +2,9 @@ import { NativeLink as Link } from '@/components/ui/NativeLink';
 import { NativeText as Text } from '@/components/ui/NativeText';
 import { NativeStack as Stack } from '@/components/ui/NativeStack';
 import { DocumentationArticle } from '@/components/layouts/Article';
+import { DataTable, proportional } from '@/components/custom/DataTable';
 import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
 import { NativeCodeBlock as CodeBlock } from '@/components/ui/NativeCodeBlock';
-import { NativeTable as Table, proportional } from '@/components/ui/NativeTable';
 
 const article = {
     title: 'Platform | LongLink Self Hosted Documentation',
@@ -46,7 +46,7 @@ export default function Platform() {
                         </Link>{' '}
                         for their settings.
                     </Text>
-                    <Table
+                    <DataTable
                         density="compact"
                         hasHover={false}
                         isStriped={false}

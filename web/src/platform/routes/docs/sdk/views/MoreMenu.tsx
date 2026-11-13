@@ -13,9 +13,9 @@ export default function MoreMenuPage() {
             properties={[
                 {
                     name: 'items',
-                    type: 'DropdownMenuOption[]',
+                    type: 'ActionMenuOption[]',
                     description:
-                        'Menu items: data array of actions, dividers, and sections. Same type as DropdownMenu items prop.',
+                        'Menu items: data array of actions, dividers, and sections. Same type as ActionMenu items.',
                 },
                 {
                     name: 'label',

@@ -384,6 +384,58 @@ it('exposes native Progress composition inside the isolated View runtime', async
     }
 });
 
+it('uses composed menu actions to transition authored table results to empty and back', async () => {
+    const runtime = await initializeRuntime(`export default function View() {
+        const [present, setPresent] = useState(true);
+        const [open, setOpen] = useState(false);
+        return <>
+            <DropdownMenu open={open} onOpenChange={setOpen}>
+                <DropdownMenuTrigger>Order actions</DropdownMenuTrigger>
+                <DropdownMenuContent>
+                    <DropdownMenuItem onClick={() => setPresent(false)}>Remove order</DropdownMenuItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
+            {present ? <Table aria-label="Orders">
+                <TableCaption>Open orders</TableCaption>
+                <TableHeader><TableRow><TableHead scope="col">Reference</TableHead></TableRow></TableHeader>
+                <TableBody><TableRow><TableCell>PO-871</TableCell></TableRow></TableBody>
+            </Table> : <Empty aria-label="Order results">
+                <EmptyHeader>
+                    <EmptyTitle>No orders</EmptyTitle>
+                    <EmptyDescription>The order was removed.</EmptyDescription>
+                </EmptyHeader>
+                <EmptyContent><button type="button" onClick={() => setPresent(true)}>Restore order</button></EmptyContent>
+            </Empty>}
+        </>;
+    }`);
+
+    try {
+        await vi.waitFor(() => expect(runtime.mount.querySelector('tbody')?.textContent).toBe('PO-871'));
+        const trigger = runtime.mount.querySelector('button');
+
+        if (!trigger) throw new Error('Expected authored menu trigger');
+        const user = userEvent.setup();
+        await user.click(trigger);
+        await vi.waitFor(() => expect(document.querySelector('[role="menuitem"]')?.textContent).toBe('Remove order'));
+        const remove = document.querySelector('[role="menuitem"]');
+
+        if (!remove) throw new Error('Expected authored menu item');
+        await user.click(remove);
+        await vi.waitFor(() => expect(runtime.mount.querySelector('table')).toBeNull());
+        expect(runtime.mount.querySelector('[data-slot="empty-title"]')?.textContent).toBe('No orders');
+        expect(runtime.mount.textContent).not.toContain('PO-871');
+        await vi.waitFor(() => expect(trigger.getAttribute('aria-expanded')).toBe('false'));
+        const restore = runtime.mount.querySelector('[data-slot="empty-content"] button');
+
+        if (!restore) throw new Error('Expected authored recovery action');
+        await user.click(restore);
+        await vi.waitFor(() => expect(runtime.mount.querySelector('tbody')?.textContent).toBe('PO-871'));
+        expect(runtime.mount.querySelector('[data-slot="empty"]')).toBeNull();
+    } finally {
+        runtime.close();
+    }
+});
+
 it('submits native Select and Combobox compositions exported to authored JSX as selected form values', async () => {
     // Missing public exports or accidental adapter semantics must not break authored native form controls.
     const runtime = await initializeRuntime(`export default function View() {

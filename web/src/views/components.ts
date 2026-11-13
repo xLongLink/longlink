@@ -46,11 +46,33 @@ export { InteractiveCard } from '@/components/ui/Card';
 /** @category Action */
 export { Button } from '@/components/ui/Button';
 
+/** Custom asynchronous actions with duplicate-activation protection and scoped navigation. @category Action */
+export { Button as ActionButton } from '@/components/custom/Button';
+
 /** @category Action */
 export { ButtonGroup } from '@/components/ui/ButtonGroup';
 
 /** @category Action */
-export { DropdownMenu } from '@/components/ui/DropdownMenu';
+export {
+    DropdownMenu,
+    DropdownMenuPortal,
+    DropdownMenuTrigger,
+    DropdownMenuContent,
+    DropdownMenuGroup,
+    DropdownMenuLabel,
+    DropdownMenuItem,
+    DropdownMenuCheckboxItem,
+    DropdownMenuRadioGroup,
+    DropdownMenuRadioItem,
+    DropdownMenuSeparator,
+    DropdownMenuShortcut,
+    DropdownMenuSub,
+    DropdownMenuSubTrigger,
+    DropdownMenuSubContent,
+} from '@/components/ui/DropdownMenu';
+
+/** Custom data-driven actions with asynchronous recovery and scoped navigation. @category Action */
+export { ActionMenu } from '@/components/custom/ActionMenu';
 
 /** @category Action @group Button */
 export { IconButton } from '@/components/ui/IconButton';
@@ -178,13 +200,25 @@ export { RadioList } from '@/components/ui/RadioList';
 export { RadioListItem } from '@/components/ui/RadioList';
 
 /** @category Display */
-export { Table } from '@/components/ui/Table';
+export {
+    Table,
+    TableHeader,
+    TableBody,
+    TableFooter,
+    TableRow,
+    TableHead,
+    TableCell,
+    TableCaption,
+} from '@/components/ui/Table';
+
+/** Custom data-driven rows with safe formatting and ReUI rendering. @category Display */
+export { DataTable } from '@/components/custom/DataTable';
 
 /** @category Action */
 export { Pagination } from '@/components/ui/Pagination';
 
 /** @category Display @group Table */
-export { proportional, pixel } from '@/components/ui/Table';
+export { proportional, pixel } from '@/components/custom/DataTable';
 
 /** @category Display */
 export { Timestamp } from '@/components/ui/Timestamp';
@@ -214,14 +248,14 @@ export {
     StepperContent,
 } from '@/components/ui/Stepper';
 
-/** Custom responsive progress adapter using zero-based indices. @category Layouts */
-export { ProgressStepper } from '@/components/ui/Stepper';
+/** Custom progress adapter using zero-based indices and default ReUI styling. @category Layouts */
+export { ProgressStepper } from '@/components/custom/Wizard';
 
 /** Custom validated wizard with persistent drafts and asynchronous navigation. @category Layouts */
-export { Wizard } from '@/components/ui/Stepper';
+export { Wizard } from '@/components/custom/Wizard';
 
 /** Custom panel definition for ProgressStepper and Wizard. @category Layouts @group Wizard */
-export { Step } from '@/components/ui/Stepper';
+export { Step } from '@/components/custom/Wizard';
 
 /** @category Layouts */
 export { Tabs } from '@/components/ui/Tabs';
@@ -230,7 +264,10 @@ export { Tabs } from '@/components/ui/Tabs';
 export { TabsList, TabsTrigger, TabsContent } from '@/components/ui/Tabs';
 
 /** @category Display */
-export { EmptyState } from '@/components/ui/EmptyState';
+export { Empty, EmptyHeader, EmptyTitle, EmptyDescription, EmptyContent, EmptyMedia } from '@/components/shadcn/empty';
+
+/** Custom semantic headings and scoped result announcements. @category Display */
+export { EmptyState } from '@/components/custom/EmptyState';
 
 /** @category Action */
 export { MoreMenu } from '@/components/ui/MoreMenu';

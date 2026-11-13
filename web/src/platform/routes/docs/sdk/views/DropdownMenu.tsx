@@ -1,36 +1,20 @@
-import { useState } from 'react';
 import ViewLayout from './ViewLayout';
-import { DropdownMenu } from '@/components/ui/DropdownMenu';
-import { NativeText as Text } from '@/components/ui/NativeText';
-import { NativeStack as Stack } from '@/components/ui/NativeStack';
+import { Button } from '@/components/ui/Button';
+import { DropdownMenu, DropdownMenuItem, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/DropdownMenu';
 
-/** Documents DropdownMenu in LongLink Views. */
+/** Documents native menu composition in LongLink Views. */
 export default function DropdownMenuPage() {
-    // Render this component's authored examples in the shared documentation layout.
     return (
         <ViewLayout
             name="DropdownMenu"
             properties={[
-                {
-                    name: 'button',
-                    type: '{ label: string; variant?: "ghost" | "primary" | "secondary" | "destructive"; size?: "sm" | "lg" | "md"; isDisabled?: boolean; }',
-                    description:
-                        'Props for the trigger button (Button props except onClick). Mutually exclusive with `trigger`.',
-                },
-                {
-                    name: 'items',
-                    type: 'DropdownMenuOption[]',
-                    description: 'Menu actions, links, dividers, and sections.',
-                },
-                {
-                    name: 'isMenuOpen',
-                    type: 'boolean',
-                    description: 'Controlled menu open state.',
-                },
+                { name: 'children', type: 'ReactNode', description: 'Trigger, content, and menu items.' },
+                { name: 'open', type: 'boolean', description: 'Controlled open state.' },
+                { name: 'defaultOpen', type: 'boolean', description: 'Initial uncontrolled open state.' },
                 {
                     name: 'onOpenChange',
-                    type: '(isOpen: boolean) => void',
-                    description: 'Callback fired when the open state changes.',
+                    type: '(open: boolean, eventDetails: Menu.Root.ChangeEventDetails) => void',
+                    description: 'Called when the menu requests an open-state change.',
                 },
             ]}
             example={{
@@ -38,10 +22,12 @@ export default function DropdownMenuPage() {
                 preview: <DropdownMenuExample />,
                 code: `function Example() {
   return (
-    <DropdownMenu
-      button={{ label: 'Actions' }}
-      items={[{ id: 'edit', label: 'Edit', onClick: () => navigate('/edit') }]}
-    />
+    <DropdownMenu>
+      <DropdownMenuTrigger render={<Button variant="outline" />}>Actions</DropdownMenuTrigger>
+      <DropdownMenuContent>
+        <DropdownMenuItem onClick={() => navigate('/edit')}>Edit</DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }`,
             }}
@@ -49,21 +35,15 @@ export default function DropdownMenuPage() {
     );
 }
 
-/** Demonstrates menu actions with feedback confined to the example. */
+/** Demonstrates a composed trigger and menu content. */
 export function DropdownMenuExample() {
-    const [action, setAction] = useState('');
-
-    // Report simulated actions without changing the clipboard.
     return (
-        <Stack gap={2}>
-            <DropdownMenu
-                button={{ label: 'Edit', size: 'sm' }}
-                items={[
-                    { label: 'Copy', onClick: () => setAction('Copied') },
-                    { label: 'Paste', onClick: () => setAction('Pasted') },
-                ]}
-            />
-            {action && <Text role="status">{action}</Text>}
-        </Stack>
+        <DropdownMenu>
+            <DropdownMenuTrigger render={<Button variant="outline" size="sm" />}>Actions</DropdownMenuTrigger>
+            <DropdownMenuContent>
+                <DropdownMenuItem>Copy</DropdownMenuItem>
+                <DropdownMenuItem>Paste</DropdownMenuItem>
+            </DropdownMenuContent>
+        </DropdownMenu>
     );
 }

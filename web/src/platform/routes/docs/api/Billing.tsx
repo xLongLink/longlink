@@ -3,8 +3,8 @@ import { NativeLink as Link } from '@/components/ui/NativeLink';
 import { NativeText as Text } from '@/components/ui/NativeText';
 import { NativeStack as Stack } from '@/components/ui/NativeStack';
 import { DocumentationArticle } from '@/components/layouts/Article';
+import { DataTable, proportional } from '@/components/custom/DataTable';
 import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
-import { NativeTable as Table, proportional } from '@/components/ui/NativeTable';
 
 const article = {
     title: 'Billing | LongLink Platform Documentation',
@@ -30,7 +30,7 @@ export default function Billing() {
                     Manage usage, payment methods, and invoices in Organization Settings → Billing. You only pay for
                     usage above the free amounts below.
                 </Text>
-                <Table
+                <DataTable
                     data={pricing.resources}
                     idKey="id"
                     density="compact"

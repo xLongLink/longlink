@@ -11,8 +11,8 @@ import { NativeText as Text } from '@/components/ui/NativeText';
 import { NativeStack as Stack } from '@/components/ui/NativeStack';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { NativeButton as Button } from '@/components/ui/NativeButton';
+import { DataTable, proportional } from '@/components/custom/DataTable';
 import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
-import { NativeTable as Table, proportional } from '@/components/ui/NativeTable';
 import { useMutation, useQueryClient, useSuspenseQueries } from '@tanstack/react-query';
 
 /** Assigns SDK-defined Solution roles without changing organization roles. */
@@ -110,7 +110,7 @@ function MemberPermissions({
 
     return (
         <Stack gap={4}>
-            <Table
+            <DataTable
                 data={rows}
                 idKey="id"
                 density="compact"

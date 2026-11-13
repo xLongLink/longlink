@@ -13,8 +13,8 @@ import { NativeLink as Link } from '@/components/ui/NativeLink';
 import { NativeText as Text } from '@/components/ui/NativeText';
 import { NativeStack as Stack } from '@/components/ui/NativeStack';
 import { NativeButton as Button } from '@/components/ui/NativeButton';
+import { DataTable, proportional } from '@/components/custom/DataTable';
 import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
-import { NativeTable as Table, proportional } from '@/components/ui/NativeTable';
 import { zPageOrganizationIdentity } from '@/lib/generated/platform-api-v1/zod.gen';
 
 /** Lists organizations and confirms administrator deletion. */
@@ -39,7 +39,7 @@ export default function Organizations() {
             <Heading level={1}>Organizations</Heading>
             <TextInput label="Search organizations" placeholder="Search by name" {...search} startIcon={<Search />} />
             <Stack gap={1}>
-                <Table
+                <DataTable
                     data={organizations.items}
                     idKey="id"
                     hasHover

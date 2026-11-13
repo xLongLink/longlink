@@ -8,16 +8,16 @@ import { useApi } from '@/lib/hooks/use-api';
 import { Dialog } from '@/components/ui/Dialog';
 import { TextInput } from '@/components/ui/TextInput';
 import { DeletionDialog } from '@/components/Deletion';
-import { Step, Wizard } from '@/components/ui/Stepper';
 import { Pagination } from '@/components/ui/Pagination';
+import { Step, Wizard } from '@/components/custom/Wizard';
 import { NativeFileInput } from '@/components/ui/FileInput';
 import { NativeText as Text } from '@/components/ui/NativeText';
 import { NativeTextArea } from '@/components/ui/NativeTextArea';
 import { NativeStack as Stack } from '@/components/ui/NativeStack';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { NativeButton as Button } from '@/components/ui/NativeButton';
+import { DataTable, proportional } from '@/components/custom/DataTable';
 import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
-import { NativeTable as Table, proportional } from '@/components/ui/NativeTable';
 
 // The API also accepts raw YAML and validates its structure on the server.
 const registrationSchema = schemas.zComputeRegistryCreate.extend({
@@ -57,7 +57,7 @@ export default function Compute() {
                 startIcon={<Search />}
             />
             <Stack gap={1}>
-                <Table
+                <DataTable
                     data={computes.items}
                     idKey="id"
                     hasHover

@@ -55,6 +55,51 @@ const nativeComposition = (
                 <CollapsibleContent keepMounted>Draft</CollapsibleContent>
             </Collapsible>
             <Disclosure trigger="Persistent details" />
+            <DropdownMenu
+                open={selected === 'menu'}
+                onOpenChange={(open, details) => {
+                    details.cancel();
+                    setSelected(open ? 'menu' : 'one');
+                }}
+            >
+                <DropdownMenuTrigger>Actions</DropdownMenuTrigger>
+                <DropdownMenuContent>
+                    <DropdownMenuCheckboxItem
+                        checked
+                        onCheckedChange={(checked, details) => {
+                            checked.valueOf();
+                            details.cancel();
+                        }}
+                    >
+                        Notifications
+                    </DropdownMenuCheckboxItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
+            <ActionMenu items={[{ label: 'Save', onClick: () => {} }]} />
+            <ActionButton href="/orders" onClick={async (event) => event.preventDefault()}>
+                Save order
+            </ActionButton>
+            <Table aria-label="Orders">
+                <TableCaption>Open orders</TableCaption>
+                <TableHeader>
+                    <TableRow>
+                        <TableHead scope="col">Reference</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    <TableRow onClick={(event) => event.currentTarget.focus()}>
+                        <TableCell colSpan={2}>PO-871</TableCell>
+                    </TableRow>
+                </TableBody>
+            </Table>
+            <DataTable data={[{ reference: 'PO-871' }]} />
+            <Empty aria-label="Search results">
+                <EmptyHeader>
+                    <EmptyTitle>No matching orders</EmptyTitle>
+                    <EmptyDescription>Change the search filters.</EmptyDescription>
+                </EmptyHeader>
+            </Empty>
+            <EmptyState title="No matching orders" isCompact />
             <Stepper defaultValue={1} onValueChange={(step) => step.toFixed()}>
                 <StepperNav>
                     <StepperItem step={1}>
@@ -163,3 +208,8 @@ const _legacyGroupSize = <ButtonGroup label="Actions" size="md" />;
 
 // @ts-expect-error IconButton uses native Button variants.
 const _legacyIconVariant = <IconButton icon="check" label="Approve" variant="primary" />;
+
+// @ts-expect-error Native Table accepts HTML composition, not the data adapter contract.
+const _legacyTable = <Table data={[{ name: 'Order' }]} />;
+// @ts-expect-error Native DropdownMenu does not accept data-driven action items.
+const _legacyMenu = <DropdownMenu items={[]} />;

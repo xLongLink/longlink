@@ -1,7 +1,7 @@
 import { it, expect, vi } from 'vitest';
 import { Form } from '@/components/ui/Form';
 import { ReportedError } from '@/lib/reported';
-import { Button } from '@/components/ui/Button';
+import { Button } from '@/components/custom/Button';
 import userEvent from '@testing-library/user-event';
 import { ErrorBoundary } from 'react-error-boundary';
 import { IconButton } from '@/components/ui/IconButton';
@@ -10,6 +10,7 @@ import { act, createRef, type MouseEvent } from 'react';
 import { renderStatic, withMounted } from '../../render';
 import { ButtonGroup } from '@/components/ui/ButtonGroup';
 import { LinkNavigationContext } from '@/components/ui/contexts';
+import { Button as StandardButton } from '@/components/ui/Button';
 import { Dialog, DialogTrigger } from '@/components/shadcn/dialog';
 
 it('composes a dialog trigger with native props, merged click handlers, and both refs', async () => {
@@ -24,7 +25,15 @@ it('composes a dialog trigger with native props, merged click handlers, and both
             <DialogTrigger
                 ref={triggerRef}
                 onClick={trigger}
-                render={<Button ref={buttonRef} variant="outline" size="xs" onClick={action} title="Open settings" />}
+                render={
+                    <StandardButton
+                        ref={buttonRef}
+                        variant="outline"
+                        size="xs"
+                        onClick={action}
+                        title="Open settings"
+                    />
+                }
             >
                 <strong>Settings</strong>
             </DialogTrigger>
@@ -270,28 +279,31 @@ it('keeps a native link outside the scoped host and honors click cancellation', 
     );
 });
 
-it('recovers from an already reported request failure without replacing the View', async () => {
-    // Reported failures already have user-facing feedback and must leave a retryable action mounted.
-    const action = vi.fn(async () => {
-        throw new ReportedError('Already reported');
-    });
+it.each([new ReportedError('Already reported'), new DOMException('Canceled', 'AbortError')])(
+    'recovers from a reported or canceled request without replacing the View: %s',
+    async (failure) => {
+        // Reported failures already have user-facing feedback and must leave a retryable action mounted.
+        const action = vi.fn(async () => {
+            throw failure;
+        });
 
-    await withMounted(
-        <ErrorBoundary fallback={<p role="alert">View failed</p>}>
-            <Button onClick={action}>Retry</Button>
-        </ErrorBoundary>,
-        async (output) => {
-            const control = output.querySelector('button');
+        await withMounted(
+            <ErrorBoundary fallback={<p role="alert">View failed</p>}>
+                <Button onClick={action}>Retry</Button>
+            </ErrorBoundary>,
+            async (output) => {
+                const control = output.querySelector('button');
 
-            if (!control) throw new Error('Expected retry control');
-            await act(async () => control.click());
-            expect(output.querySelector('[role="alert"]')).toBeNull();
-            expect(control.hasAttribute('aria-busy')).toBe(false);
-            await act(async () => control.click());
-            expect(action).toHaveBeenCalledTimes(2);
-        }
-    );
-});
+                if (!control) throw new Error('Expected retry control');
+                await act(async () => control.click());
+                expect(output.querySelector('[role="alert"]')).toBeNull();
+                expect(control.hasAttribute('aria-busy')).toBe(false);
+                await act(async () => control.click());
+                expect(action).toHaveBeenCalledTimes(2);
+            }
+        );
+    }
+);
 
 it('still exposes unexpected action failures to the View error boundary', async () => {
     // Migration must not silently swallow a failure that no notification owner has handled.

@@ -1,13 +1,13 @@
 // @vitest-environment happy-dom
 import { act, useState } from 'react';
 import { it, expect, vi } from 'vitest';
-import { Button } from '@/components/ui/Button';
 import { Dialog } from '@/components/ui/Dialog';
+import { Button } from '@/components/custom/Button';
 import userEvent from '@testing-library/user-event';
 import { IconButton } from '@/components/ui/IconButton';
 import { renderStatic, withMounted } from '../../render';
 import { ButtonGroup } from '@/components/ui/ButtonGroup';
-import { DropdownMenu } from '@/components/ui/DropdownMenu';
+import { ActionMenu } from '@/components/custom/ActionMenu';
 import { ControlSizeContext } from '@/components/ui/contexts';
 
 it('names the group while retaining its actions', () => {
@@ -128,7 +128,7 @@ it('roves text actions, icon actions and menu triggers without opening the menu'
         <ButtonGroup label="Mixed" size="lg">
             <Button variant="outline">Native</Button>
             <IconButton label="Copy" icon="copy" />
-            <DropdownMenu button={{ label: 'More' }} items={[]} onOpenChange={open} />
+            <ActionMenu button={{ label: 'More' }} items={[]} onOpenChange={open} />
         </ButtonGroup>,
         async (output) => {
             const controls = Array.from(output.querySelectorAll('button'));
@@ -154,7 +154,7 @@ it('disables all grouped actions without leaking group membership into a dialog'
                 Native
             </Button>
             <IconButton label="Copy" icon="copy" onClick={blocked} />
-            <DropdownMenu button={{ label: 'More' }} items={[]} />
+            <ActionMenu button={{ label: 'More' }} items={[]} />
             <Dialog isOpen title="Recovery" onOpenChange={() => {}}>
                 <Button variant="outline" onClick={recover}>
                     Recover
@@ -472,7 +472,7 @@ it('lets a grouped menu own its touch press without a second group activation cl
     await withMounted(
         <ButtonGroup label="Actions">
             <Button variant="outline">Save</Button>
-            <DropdownMenu button={{ label: 'More' }} items={[{ label: 'Archive', onClick: action }]} />
+            <ActionMenu button={{ label: 'More' }} items={[{ label: 'Archive', onClick: action }]} />
         </ButtonGroup>,
         async (output) => {
             const trigger = output.querySelector<HTMLButtonElement>('[aria-haspopup="menu"]');

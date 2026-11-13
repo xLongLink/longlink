@@ -4,8 +4,8 @@ import { it, expect, vi } from 'vitest';
 import { withMounted } from '../../render';
 import { Dialog } from '@/components/ui/Dialog';
 import userEvent from '@testing-library/user-event';
-import { DropdownMenu } from '@/components/ui/DropdownMenu';
 import { ButtonGroupContext, ControlSizeContext, DialogActivityContext } from '@/components/ui/contexts';
+import { DropdownMenu, DropdownMenuItem, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/DropdownMenu';
 
 it('dismisses the custom Dialog without submitting its form', async () => {
     // Arrange
@@ -155,7 +155,12 @@ it('keeps a portaled menu operable inside the modal and dismisses the innermost 
 
         return (
             <Dialog title="Actions" isOpen={open} onOpenChange={setOpen}>
-                <DropdownMenu button={{ label: 'More' }} items={[{ label: 'Archive', onClick: action }]} />
+                <DropdownMenu>
+                    <DropdownMenuTrigger>More</DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                        <DropdownMenuItem onClick={action}>Archive</DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
             </Dialog>
         );
     }

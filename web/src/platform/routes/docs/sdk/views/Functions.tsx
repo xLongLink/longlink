@@ -1,8 +1,8 @@
 import ViewLayout from './ViewLayout';
 import { NativeText as Text } from '@/components/ui/NativeText';
 import { NativeStack as Stack } from '@/components/ui/NativeStack';
+import { DataTable, proportional } from '@/components/custom/DataTable';
 import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
-import { NativeTable as Table, proportional } from '@/components/ui/NativeTable';
 
 // Describe the runtime bindings exposed to Views.
 const functions = [
@@ -26,7 +26,7 @@ export default function FunctionsPage() {
             <Heading id="functions" level={2}>
                 Functions
             </Heading>
-            <Table
+            <DataTable
                 data={functions}
                 idKey="name"
                 density="compact"

@@ -2,16 +2,16 @@ import { api } from '@/lib/api';
 import { useState } from 'react';
 import { Form } from '@/components/ui/Form';
 import { Dialog } from '@/components/ui/Dialog';
-import '@/platform/components/dialogcontent.css';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowRight, RefreshCw } from 'lucide-react';
-import { Step, Wizard } from '@/components/ui/Stepper';
+import { Step, Wizard } from '@/components/custom/Wizard';
 import { CheckboxInput } from '@/components/ui/CheckboxInput';
 import { NativeText as Text } from '@/components/ui/NativeText';
 import { NativeTextInput } from '@/components/ui/NativeTextInput';
 import { NativeStack as Stack } from '@/components/ui/NativeStack';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { NativeButton as Button } from '@/components/ui/NativeButton';
+import '@/platform/components/dialogcontent.css';
 import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
 
 type DeploymentReviewProps = {

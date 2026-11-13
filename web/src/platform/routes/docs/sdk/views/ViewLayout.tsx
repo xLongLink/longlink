@@ -7,11 +7,11 @@ import { NativeText as Text } from '@/components/ui/NativeText';
 import { componentDocumentation } from '@/platform/publications';
 import { NativeStack as Stack } from '@/components/ui/NativeStack';
 import { DocumentationArticle } from '@/components/layouts/Article';
+import { DataTable, proportional } from '@/components/custom/DataTable';
 import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
 import { NativeCodeBlock as CodeBlock } from '@/components/ui/NativeCodeBlock';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/Tabs';
 import './viewlayout.css';
-import { NativeTable as Table, proportional } from '@/components/ui/NativeTable';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/Tabs';
 
 type ViewProperty = { name: string; type: string; description?: string };
 
@@ -144,7 +144,7 @@ export default function ViewLayout({
                         </TabsContent>
                         <TabsContent value="properties" className="flex flex-col gap-5">
                             {[...groups].map(([name, properties]) => (
-                                <Table
+                                <DataTable
                                     key={name}
                                     data={properties}
                                     density="compact"

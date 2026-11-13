@@ -16,8 +16,8 @@ import { NativeStack as Stack } from '@/components/ui/NativeStack';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { NativeButton as Button } from '@/components/ui/NativeButton';
+import { DataTable, proportional } from '@/components/custom/DataTable';
 import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
-import { NativeTable as Table, proportional } from '@/components/ui/NativeTable';
 
 type Tag = z.output<typeof schemas.zOrganizationTagResponse>;
 
@@ -51,7 +51,7 @@ export default function TabsSection({ base, tags, canMaintain }: { base: string;
                     </Heading>
                     {canMaintain && <Button label="New tab" size="sm" onClick={() => setAction({ kind: 'create' })} />}
                 </Stack>
-                <Table
+                <DataTable
                     data={tags}
                     idKey="id"
                     density="compact"

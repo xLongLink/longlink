@@ -6,7 +6,7 @@ import { Form } from '@/components/ui/Form';
 import { Button } from '@/components/ui/Button';
 import userEvent from '@testing-library/user-event';
 import { TextInput } from '@/components/ui/TextInput';
-import { Step, Wizard } from '@/components/ui/Stepper';
+import { Step, Wizard } from '@/components/custom/Wizard';
 
 /** Lets the owner accept navigation independently of the wizard's request. */
 function ControlledWizard({ onStepClick }: { onStepClick: (index: number) => void }) {
@@ -205,16 +205,20 @@ it('guards pending actions, announces failure, and permits retry without losing 
             expect(panels[0].disabled).toBe(true);
             expect(panels[1].hidden).toBe(true);
             expect(
-                Array.from(output.querySelectorAll('button'))
-                    .find((button) => button.textContent === 'Cancel')
-                    ?.getAttribute('aria-disabled')
-            ).toBe('true');
+                Array.from(output.querySelectorAll('button')).find((button) => button.textContent === 'Cancel')
+                    ?.disabled
+            ).toBe(true);
 
             // A rejected action releases the guard and leaves a visible, announced recovery path.
             await act(async () => rejectAction(new Error('Review unavailable')));
             expect(output.querySelector('[aria-live="assertive"]')?.textContent).toBe('Review unavailable');
             expect(panels[0].disabled).toBe(false);
             expect(draft.value).toBe('Retained');
+            action.mockRejectedValueOnce(new DOMException('Canceled', 'AbortError'));
+            await act(async () => check.click());
+            expect(output.querySelector('[aria-live="assertive"]')?.textContent).toBe('');
+            expect(panels[0].hidden).toBe(false);
+            expect(panels[0].disabled).toBe(false);
             action.mockImplementation(async () => false);
             await act(async () => check.click());
             expect(panels[0].hidden).toBe(false);
@@ -239,4 +243,59 @@ it('guards pending actions, announces failure, and permits retry without losing 
             expect(cancel).toHaveBeenCalledOnce();
         }
     );
+});
+
+it('ignores completion from before a reset without advancing or unlocking a newer action', async () => {
+    // Reset invalidates in-flight navigation; an old result must not affect the fresh draft.
+    let finishOld: () => void = () => {};
+
+    let finishCurrent: () => void = () => {};
+
+    const oldAction = new Promise<void>((resolve) => {
+        finishOld = resolve;
+    });
+
+    const currentAction = new Promise<void>((resolve) => {
+        finishCurrent = resolve;
+    });
+
+    const action = vi.fn().mockReturnValueOnce(oldAction).mockReturnValueOnce(currentAction);
+
+    try {
+        await withMounted(
+            <form>
+                <Wizard next={() => ({ label: 'Check', action })}>
+                    <Step label="Draft">
+                        <input name="draft" defaultValue="Original" />
+                    </Step>
+                    <Step label="Review">Review</Step>
+                </Wizard>
+            </form>,
+            async (output) => {
+                const form = output.querySelector('form');
+                const panels = output.querySelectorAll('fieldset');
+
+                const check = Array.from(output.querySelectorAll('button')).find(
+                    (button) => button.textContent === 'Check'
+                );
+
+                if (!form || !check) throw new Error('Expected resettable wizard');
+
+                await act(async () => check.click());
+                await act(async () => form.reset());
+                expect(panels[0].disabled).toBe(false);
+                await act(async () => check.click());
+                expect(action).toHaveBeenCalledTimes(2);
+                await act(async () => finishOld());
+                expect(panels[0].hidden).toBe(false);
+                expect(panels[0].disabled).toBe(true);
+                await act(async () => finishCurrent());
+                expect(panels[1].hidden).toBe(false);
+                expect(panels[1].disabled).toBe(false);
+            }
+        );
+    } finally {
+        finishOld();
+        finishCurrent();
+    }
 });

@@ -7,9 +7,9 @@ import { Timestamp } from '@/components/ui/Timestamp';
 import { Pagination } from '@/components/ui/Pagination';
 import { NativeText as Text } from '@/components/ui/NativeText';
 import { NativeStack as Stack } from '@/components/ui/NativeStack';
+import { DataTable, proportional } from '@/components/custom/DataTable';
 import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
 import { zPageAdminUserSummary } from '@/lib/generated/platform-api-v1/zod.gen';
-import { NativeTable as Table, proportional } from '@/components/ui/NativeTable';
 
 /** Lists Platform users with server-side pagination. */
 export default function Users() {
@@ -23,7 +23,7 @@ export default function Users() {
             <Heading level={1}>Users</Heading>
             <TextInput label="Search users" placeholder="Search by name or email" {...search} startIcon={<Search />} />
             <Stack gap={1}>
-                <Table
+                <DataTable
                     data={users.items}
                     idKey="id"
                     hasHover

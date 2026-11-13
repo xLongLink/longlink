@@ -1,6 +1,6 @@
+import { DataTable } from '@/components/custom/DataTable';
 import { NativeText as Text } from '@/components/ui/NativeText';
 import { NativeStack as Stack } from '@/components/ui/NativeStack';
-import { NativeTable as Table } from '@/components/ui/NativeTable';
 import { ArrowUp, CheckCheck, EyeOff, Wrench } from 'lucide-react';
 import { DocumentationArticle } from '@/components/layouts/Article';
 import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
@@ -43,7 +43,7 @@ export default function Solutions() {
                 </Text>
                 <Stack as="aside" className="border-s border-accent ps-4" gap={0}>
                     <Text weight="semibold">User permissions</Text>
-                    <Table
+                    <DataTable
                         data={solutionRoles}
                         idKey="name"
                         density="compact"

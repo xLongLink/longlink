@@ -2,7 +2,7 @@ import ViewLayout from './ViewLayout';
 import FormPreview from './FormPreview';
 import { Button } from '@/components/ui/Button';
 import { TextInput } from '@/components/ui/TextInput';
-import { Step, Wizard } from '@/components/ui/Stepper';
+import { Step, Wizard } from '@/components/custom/Wizard';
 import { NumberInput } from '@/components/ui/NumberInput';
 
 /** Documents browser-native form authoring using a local, non-networked submission preview. */

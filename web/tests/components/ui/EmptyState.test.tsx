@@ -12,7 +12,6 @@ it('retains heading semantics and keeps the server-rendered announcement silent'
     const output = renderStatic(<EmptyState title="No matching orders" isCompact />);
 
     expect(output.querySelector('h3')?.textContent).toBe('No matching orders');
-    expect(output.querySelector('h3')?.hasAttribute('data-compact')).toBe(true);
     expect(output.querySelector('[role="status"]')?.textContent).toBe('');
 });
 

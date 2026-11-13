@@ -1,6 +1,6 @@
-import { FieldLabel } from './FieldLabel';
 import { Input } from '@/components/shadcn/input';
 import { useId, type ComponentProps } from 'react';
+import { Field, FieldContent, FieldDescription, FieldError, FieldLabel } from '@/components/shadcn/field';
 
 /** Edits trusted Platform fields without joining the isolated View form protocol. */
 export function NativeTextInput({
@@ -26,10 +26,24 @@ export function NativeTextInput({
         .join(' ');
 
     return (
-        <div className="flex w-full min-w-0 flex-col gap-1">
-            <div className={labelHidden ? 'sr-only' : undefined}>
-                <FieldLabel controlId={id} label={label} description={description} required={required} />
-            </div>
+        <Field
+            className="min-w-0"
+            data-disabled={props.disabled || undefined}
+            data-invalid={error ? true : props['aria-invalid']}
+        >
+            <FieldLabel htmlFor={id} className={labelHidden ? 'sr-only' : undefined}>
+                <FieldContent>
+                    <span id={`${id}-label`} className="flex items-center gap-2">
+                        {label}
+                        {required && (
+                            <span className="text-muted-foreground font-normal">
+                                <span aria-hidden="true"> · </span>Required
+                            </span>
+                        )}
+                    </span>
+                    {description && <FieldDescription id={`${id}-description`}>{description}</FieldDescription>}
+                </FieldContent>
+            </FieldLabel>
             <Input
                 {...props}
                 id={id}
@@ -39,11 +53,7 @@ export function NativeTextInput({
                 aria-describedby={describedBy || undefined}
                 aria-invalid={error ? true : props['aria-invalid']}
             />
-            {error && (
-                <p id={`${id}-error`} className="text-sm text-destructive" role="alert">
-                    {error}
-                </p>
-            )}
-        </div>
+            {error && <FieldError id={`${id}-error`}>{error}</FieldError>}
+        </Field>
     );
 }

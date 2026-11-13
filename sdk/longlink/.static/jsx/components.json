@@ -422,9 +422,9 @@
         {
             "name": "Button",
             "category": "Action",
-            "introduction": "Native shadcn styling and props with LongLink awaited actions, duplicate-click prevention, reported-error recovery, and scoped href navigation.",
+            "introduction": "Native shadcn Button with Base UI props and default styling.",
             "keywords": ["action", "approve", "reject", "save", "submit"],
-            "guidance": "Return the asynchronous operation from onClick so automatic loading and duplicate-click prevention cover the request.",
+            "guidance": "Use ActionButton for automatic asynchronous loading, duplicate-click prevention, or scoped navigation.",
             "properties": [
                 {
                     "name": "children",
@@ -477,18 +477,31 @@
                 {
                     "name": "focusableWhenDisabled",
                     "type": "boolean",
-                    "description": "Keeps disabled actions focusable. Set false for native disabled focus behavior.",
-                    "default": true
+                    "description": "Allows disabled buttons to remain focusable when explicitly enabled.",
+                    "default": false
+                },
+                {
+                    "name": "onClick",
+                    "type": "(event: React.MouseEvent<HTMLButtonElement>) => void",
+                    "description": "Native button event handler."
+                }
+            ]
+        },
+        {
+            "name": "ActionButton",
+            "category": "Action",
+            "introduction": "Custom asynchronous action adapter using shadcn Button styling.",
+            "guidance": "Use for awaited actions, duplicate-activation protection, reported-error recovery, and scoped navigation. Use Button for the standard shadcn API.",
+            "properties": [
+                {
+                    "name": "onClick",
+                    "type": "(event) => void | Promise<void>",
+                    "description": "Awaited action with loading feedback and duplicate-activation protection."
                 },
                 {
                     "name": "href",
                     "type": "string",
-                    "description": "Solution-relative destination or HTTP(S) URL to open in a new tab."
-                },
-                {
-                    "name": "onClick",
-                    "type": "(event: ViewMouseEvent) => void | Promise<void>",
-                    "description": "Runs an action with automatic loading and duplicate-click prevention."
+                    "description": "Scoped Solution destination."
                 }
             ]
         },
@@ -500,7 +513,7 @@
                 {
                     "name": "children",
                     "type": "ReactNode",
-                    "description": "Button or IconButton children."
+                    "description": "ActionButton or IconButton children for coordinated keyboard navigation."
                 },
                 {
                     "name": "label",
@@ -987,12 +1000,35 @@
         {
             "name": "DropdownMenu",
             "category": "Action",
-            "introduction": "Opens an action menu using standard adaptive presentation and placement.",
+            "introduction": "Native shadcn DropdownMenu composition with Base UI props.",
+            "guidance": "Compose DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, checkbox and radio items, groups, separators, and submenus. Use ActionMenu for the custom data-driven action adapter.",
+            "properties": [
+                {
+                    "name": "open / defaultOpen",
+                    "type": "boolean",
+                    "description": "Controlled or initial uncontrolled visibility."
+                },
+                {
+                    "name": "onOpenChange",
+                    "type": "(open, details) => void",
+                    "description": "Native visibility callback with cancellable event details."
+                },
+                {
+                    "name": "children",
+                    "type": "ReactNode",
+                    "description": "Native compound menu parts with their documented props."
+                }
+            ]
+        },
+        {
+            "name": "ActionMenu",
+            "category": "Action",
+            "introduction": "Custom data-driven action menu with async-action protection and scoped navigation.",
             "properties": [
                 {
                     "name": "button",
                     "type": "{ label: string; variant?: \"ghost\" | \"primary\" | \"secondary\" | \"destructive\"; size?: \"sm\" | \"lg\" | \"md\"; isDisabled?: boolean; }",
-                    "description": "Props for the trigger button (Button props except onClick). Mutually exclusive with `trigger`.",
+                    "description": "Custom trigger label, variant, size, and disabled state.",
                     "default": {
                         "label": "Menu",
                         "variant": "secondary",
@@ -1018,15 +1054,44 @@
             ]
         },
         {
+            "name": "Empty",
+            "category": "Display",
+            "introduction": "Native shadcn empty-state composition with HTML div props.",
+            "guidance": "Compose EmptyHeader, EmptyTitle, EmptyDescription, EmptyContent, and EmptyMedia. Use EmptyState only for custom semantic headings and scoped result announcements.",
+            "properties": [
+                {
+                    "name": "children",
+                    "type": "ReactNode",
+                    "description": "Native empty-state parts."
+                },
+                {
+                    "name": "className",
+                    "type": "string",
+                    "description": "Standard HTML props are forwarded to the root div."
+                }
+            ]
+        },
+        {
             "name": "EmptyState",
             "category": "Display",
-            "introduction": "Describes an empty View region without custom decorative slots.",
+            "introduction": "Custom adapter adding semantic headings and scoped result announcements to native Empty styling.",
             "keywords": ["empty list", "no results", "missing data"],
             "properties": [
                 {
                     "name": "title",
                     "type": "string",
                     "description": "Primary message rendered as an <h3> heading inside the empty state."
+                },
+                {
+                    "name": "description",
+                    "type": "string",
+                    "description": "Optional descriptive text included in changed-result announcements."
+                },
+                {
+                    "name": "headingLevel",
+                    "type": "1 | 3",
+                    "description": "Semantic heading level.",
+                    "default": 3
                 },
                 {
                     "name": "isCompact",
@@ -2268,7 +2333,7 @@
         {
             "name": "ProgressStepper",
             "category": "Layouts",
-            "introduction": "Custom responsive progress adapter with compact labels and zero-based indices.",
+            "introduction": "Custom zero-based progress adapter using the default ReUI stepper styling.",
             "properties": [
                 { "name": "activeStep", "type": "number", "description": "Zero-based active index." },
                 { "name": "onStepClick", "type": "(index: number) => void", "description": "Enables step navigation." },
@@ -2418,7 +2483,20 @@
         {
             "name": "Table",
             "category": "Display",
-            "introduction": "Displays data-driven rows without plugins or a second children-based table contract.",
+            "introduction": "Native shadcn table composition with HTML table, row, and cell props.",
+            "guidance": "Compose TableHeader, TableBody, TableFooter, TableRow, TableHead, TableCell, and TableCaption. Use DataTable for the custom data-driven adapter.",
+            "properties": [
+                {
+                    "name": "children",
+                    "type": "ReactNode",
+                    "description": "Native table parts with standard HTML attributes and events."
+                }
+            ]
+        },
+        {
+            "name": "DataTable",
+            "category": "Display",
+            "introduction": "Custom data-driven row adapter over ReUI DataGrid with automatic safe value formatting.",
             "keywords": ["records", "rows", "columns", "data table", "list", "queue", "sorting"],
             "guidance": "Present dense records as rows. Keep selection and query state explicit; do not wrap each row in a Card.",
             "properties": [

@@ -6,8 +6,8 @@ import { NativeLink as Link } from '@/components/ui/NativeLink';
 import { NativeText as Text } from '@/components/ui/NativeText';
 import { NativeStack as Stack } from '@/components/ui/NativeStack';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
+import { DataTable, proportional } from '@/components/custom/DataTable';
 import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
-import { NativeTable as Table, proportional } from '@/components/ui/NativeTable';
 
 /** Keeps private invoice reads scoped to the active owner-only settings section. */
 export default function Invoices({ base, canManage }: { base: string; canManage: boolean }) {
@@ -37,7 +37,7 @@ function InvoiceTable({ base }: { base: string }) {
     const [invoices] = useApi(`${base}/invoices`, schemas.zPaymentInvoice.array());
 
     return (
-        <Table
+        <DataTable
             data={invoices}
             idKey="id"
             density="compact"

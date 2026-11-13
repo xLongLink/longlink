@@ -1,4 +1,4 @@
-import { ActionMenu, type NativeMenuOption } from './menus';
+import { MenuControl, type NativeMenuOption } from './menus';
 
 /** Preserves Platform row geometry and native icons without expanding the isolated View API. */
 export function NativeMoreMenu({
@@ -15,7 +15,7 @@ export function NativeMoreMenu({
     isDisabled?: boolean;
 }) {
     return (
-        <ActionMenu
+        <MenuControl
             items={items}
             label={label}
             size={size}

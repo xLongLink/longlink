@@ -1,10 +1,10 @@
-import { ActionMenu } from './menus';
+import { MenuControl } from './menus';
 import type { StoneIconName } from './Icon';
-import type { DropdownMenuOption } from './menus';
+import type { ActionMenuOption } from './menus';
 
 /** Opens additional actions without exposing popup geometry or presentation modes. */
 export function MoreMenu(props: {
-    items: DropdownMenuOption[];
+    items: ActionMenuOption[];
     label?: string;
     icon?: StoneIconName;
     isDisabled?: boolean;
@@ -12,7 +12,7 @@ export function MoreMenu(props: {
 }) {
     // Keep the overflow trigger accessible and enabled without caller configuration.
     return (
-        <ActionMenu
+        <MenuControl
             items={props.items}
             icon={props.icon}
             label={props.label ?? 'More options'}

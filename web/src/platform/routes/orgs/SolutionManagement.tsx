@@ -20,10 +20,10 @@ import { NativeText as Text } from '@/components/ui/NativeText';
 import { NativeStack as Stack } from '@/components/ui/NativeStack';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { NativeButton as Button } from '@/components/ui/NativeButton';
+import { DataTable, proportional } from '@/components/custom/DataTable';
 import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
 import type { OrganizationContext } from '@/platform/layouts/Organization';
 import { NativeCodeBlock as CodeBlock } from '@/components/ui/NativeCodeBlock';
-import { NativeTable as Table, proportional } from '@/components/ui/NativeTable';
 import { IllustratedDialogContent } from '@/platform/components/IllustratedDialogContent';
 import { ExternalLink, Logs, Plug, Plus, RefreshCw, Shield, Tags, Trash } from 'lucide-react';
 
@@ -163,7 +163,7 @@ export default function SolutionManagement({
                         No Solutions in this category.
                     </Text>
                 ) : (
-                    <Table
+                    <DataTable
                         data={visibleSolutions}
                         idKey="id"
                         hasHover

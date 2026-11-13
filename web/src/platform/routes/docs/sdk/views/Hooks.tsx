@@ -2,8 +2,8 @@ import ViewLayout from './ViewLayout';
 import { viewHooks } from '@/lib/documentation';
 import { NativeText as Text } from '@/components/ui/NativeText';
 import { NativeStack as Stack } from '@/components/ui/NativeStack';
+import { DataTable, proportional } from '@/components/custom/DataTable';
 import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
-import { NativeTable as Table, proportional } from '@/components/ui/NativeTable';
 
 /** Documents the hooks exposed by the View runtime. */
 export default function HooksPage() {
@@ -13,7 +13,7 @@ export default function HooksPage() {
             <Heading id="hooks" level={2}>
                 Hooks
             </Heading>
-            <Table
+            <DataTable
                 data={viewHooks}
                 idKey="name"
                 density="compact"

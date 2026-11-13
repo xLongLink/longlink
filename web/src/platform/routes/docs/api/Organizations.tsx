@@ -1,6 +1,6 @@
+import { DataTable } from '@/components/custom/DataTable';
 import { NativeText as Text } from '@/components/ui/NativeText';
 import { NativeStack as Stack } from '@/components/ui/NativeStack';
-import { NativeTable as Table } from '@/components/ui/NativeTable';
 import { DocumentationArticle } from '@/components/layouts/Article';
 import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
 import { ArrowUp, CheckCheck, CheckCircle, EyeOff, Wrench } from 'lucide-react';
@@ -47,7 +47,7 @@ export default function Organizations() {
                 </Text>
                 <Stack as="aside" className="border-s border-accent ps-4" gap={0}>
                     <Text weight="semibold">User permissions</Text>
-                    <Table
+                    <DataTable
                         data={organizationRoles}
                         idKey="name"
                         density="compact"

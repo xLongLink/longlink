@@ -20,7 +20,7 @@ export default function Phase({ params }) {
             <Divider />
             <Grid columns={3} collapseBelow={768} gap={8}>
                 <GridSpan columns={2}>
-                    <Table
+                    <DataTable
                         data={phase.documents}
                         columns={[
                             {

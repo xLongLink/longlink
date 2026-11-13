@@ -1,6 +1,6 @@
+import { DataTable } from '@/components/custom/DataTable';
 import { NativeText as Text } from '@/components/ui/NativeText';
 import { NativeStack as Stack } from '@/components/ui/NativeStack';
-import { NativeTable as Table } from '@/components/ui/NativeTable';
 import { DocumentationArticle } from '@/components/layouts/Article';
 import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
 import { NativeCodeBlock as CodeBlock } from '@/components/ui/NativeCodeBlock';
@@ -53,7 +53,7 @@ environments = "src.envs:Env"
                         language="toml"
                         title="pyproject.toml"
                     />
-                    <Table
+                    <DataTable
                         density="compact"
                         idKey="metadata"
                         data={[

@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/Button';
 import { IconButton } from '@/components/ui/IconButton';
 import { ButtonGroup } from '@/components/ui/ButtonGroup';
 import { NativeStack as Stack } from '@/components/ui/NativeStack';
+import { Button as ActionButton } from '@/components/custom/Button';
 
 /** Documents buttons and grouped button actions in LongLink Views. */
 export default function ButtonsPage() {
@@ -54,18 +55,23 @@ export default function ButtonsPage() {
                 {
                     name: 'focusableWhenDisabled',
                     type: 'boolean',
-                    description: 'Defaults to true in LongLink; false removes disabled buttons from keyboard focus.',
+                    description: 'Allows disabled buttons to remain focusable when explicitly enabled.',
                 },
                 {
-                    name: 'href',
+                    name: 'ActionButton.href',
                     type: 'string',
-                    description: 'Solution-relative destination or HTTP(S) URL to open in a new tab.',
+                    description: 'Scoped destination for the custom asynchronous action button.',
                 },
                 {
                     name: 'onClick',
-                    type: '(event: ViewMouseEvent) => void | Promise<void>',
+                    type: '(event: React.MouseEvent<HTMLButtonElement>) => void',
+                    description: 'Native shadcn button event handler.',
+                },
+                {
+                    name: 'ActionButton.onClick',
+                    type: '(event) => void | Promise<void>',
                     description:
-                        'Unlike shadcn Button, awaits async handlers with loading feedback and duplicate-activation protection.',
+                        'Custom adapter that awaits actions with loading feedback and duplicate-activation protection.',
                 },
                 {
                     name: 'IconButton.label',
@@ -99,7 +105,7 @@ export default function ButtonsPage() {
                 },
                 {
                     type: 'ReactNode',
-                    description: 'Button or IconButton children.',
+                    description: 'ActionButton or IconButton children for coordinated keyboard navigation.',
                     name: 'ButtonGroup.children',
                 },
                 {
@@ -161,13 +167,13 @@ export default function ButtonsPage() {
       </Stack>
       <Stack direction="horizontal" gap={4} align="center" wrap="wrap">
         <ButtonGroup label="Actions">
-          <Button variant="outline">Save</Button>
-          <Button variant="outline">Cancel</Button>
+           <ActionButton variant="outline">Save</ActionButton>
+           <ActionButton variant="outline">Cancel</ActionButton>
           <IconButton icon="plus" label="Add" variant="outline" />
         </ButtonGroup>
         <ButtonGroup label="Vertical actions" orientation="vertical">
-          <Button variant="outline">Edit</Button>
-          <Button variant="outline">Duplicate</Button>
+           <ActionButton variant="outline">Edit</ActionButton>
+           <ActionButton variant="outline">Duplicate</ActionButton>
         </ButtonGroup>
       </Stack>
     </Stack>
@@ -215,13 +221,13 @@ export function ButtonExample() {
             </Stack>
             <Stack direction="horizontal" gap={4} align="center" wrap="wrap">
                 <ButtonGroup label="Actions">
-                    <Button variant="outline">Save</Button>
-                    <Button variant="outline">Cancel</Button>
+                    <ActionButton variant="outline">Save</ActionButton>
+                    <ActionButton variant="outline">Cancel</ActionButton>
                     <IconButton icon="plus" label="Add" variant="outline" />
                 </ButtonGroup>
                 <ButtonGroup label="Vertical actions" orientation="vertical">
-                    <Button variant="outline">Edit</Button>
-                    <Button variant="outline">Duplicate</Button>
+                    <ActionButton variant="outline">Edit</ActionButton>
+                    <ActionButton variant="outline">Duplicate</ActionButton>
                 </ButtonGroup>
             </Stack>
         </Stack>

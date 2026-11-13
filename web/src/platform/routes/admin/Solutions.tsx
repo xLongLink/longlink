@@ -12,9 +12,9 @@ import { NativeLink as Link } from '@/components/ui/NativeLink';
 import { NativeText as Text } from '@/components/ui/NativeText';
 import { NativeStack as Stack } from '@/components/ui/NativeStack';
 import { NativeButton as Button } from '@/components/ui/NativeButton';
+import { DataTable, proportional } from '@/components/custom/DataTable';
 import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
 import { zPageSolutionResponse } from '@/lib/generated/platform-api-v1/zod.gen';
-import { NativeTable as Table, proportional } from '@/components/ui/NativeTable';
 
 /** Lists Solutions and manages administrator metadata and deletion dialogs. */
 export default function Solutions() {
@@ -42,7 +42,7 @@ export default function Solutions() {
                 startIcon={<Search />}
             />
             <Stack gap={1}>
-                <Table
+                <DataTable
                     data={solutions.items}
                     idKey="id"
                     hasHover

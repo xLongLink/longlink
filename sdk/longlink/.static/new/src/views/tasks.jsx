@@ -13,7 +13,7 @@ export default function Tasks() {
                     Add task
                 </Button>
             </Stack>
-            <Table
+            <DataTable
                 data={tasks}
                 hasHover
                 columns={[
@@ -58,7 +58,7 @@ export default function Tasks() {
                 ]}
             />
             <Heading level={2}>Example attachments</Heading>
-            <Table
+            <DataTable
                 data={[
                     { format: 'PNG', filename: 'example.png', preview: 'Inline image' },
                     { format: 'JPEG', filename: 'garden.jpg', preview: 'Inline image' },

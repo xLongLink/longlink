@@ -7,7 +7,7 @@ import {
     BreadcrumbLink,
     BreadcrumbList,
     BreadcrumbPage,
-    BreadcrumbSeparator,
+    BreadcrumbSeparator
 } from '@/components/shadcn/breadcrumb';
 
 /** Renders a supporting breadcrumb trail for trusted Platform pages. */
@@ -23,7 +23,7 @@ export function Breadcrumbs({ children, className }: { children: ReactNode; clas
 export function BreadcrumbItem({
     children,
     href,
-    isCurrent = false,
+    isCurrent = false
 }: {
     children: ReactNode;
     href?: string;

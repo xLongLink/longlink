@@ -1,63 +1,59 @@
 import ViewLayout from './ViewLayout';
-import { Table } from '@/components/ui/Table';
+import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/Table';
 
-/** Documents Table in LongLink Views. */
+/** Documents the native shadcn table family. */
 export default function TablePage() {
-    // Render this component's authored examples in the shared documentation layout.
     return (
         <ViewLayout
             name="Table"
             properties={[
                 {
-                    name: 'data',
-                    type: 'T[]',
-                    description: 'Data objects displayed as rows.',
-                },
-                {
-                    name: 'hasHover',
-                    type: 'boolean',
-                    description: 'Applies a hover highlight background to rows on pointer devices.',
-                },
-                {
-                    name: 'isStriped',
-                    type: 'boolean',
-                    description: 'Applies a background wash to even-numbered rows.',
-                },
-                {
-                    name: 'columns',
-                    type: '{ key: string; header?: ReactNode; width?: ColumnWidth; align?: "start" | "center" | "end"; renderCell?: ((row: T) => ReactNode); }[]',
-                    description: 'Columns with custom cells and proportional() or pixel() widths.',
+                    name: 'children',
+                    type: 'ReactNode',
+                    description:
+                        'Compose TableCaption, TableHeader, TableBody, TableFooter, TableRow, TableHead, and TableCell. Each accepts its native HTML element props.',
                 },
             ]}
             example={{
                 title: 'Table',
                 preview: <TableExample />,
-                code: `function Example() {
-  return (
-    <Table
-      data={[{ id: '1', name: 'Order', status: 'Open' }]}
-      columns={[
-        { key: 'name', header: 'Name', width: proportional(2) },
-        { key: 'status', header: 'Status', width: proportional(1) },
-      ]}
-    />
-  );
-}`,
+                code: `<Table aria-label="Orders">
+  <TableCaption>Current orders</TableCaption>
+  <TableHeader>
+    <TableRow>
+      <TableHead scope="col">Item</TableHead>
+      <TableHead scope="col">Status</TableHead>
+    </TableRow>
+  </TableHeader>
+  <TableBody>
+    <TableRow>
+      <TableCell>Order</TableCell>
+      <TableCell>Open</TableCell>
+    </TableRow>
+  </TableBody>
+</Table>`,
             }}
         />
     );
 }
 
-/** Renders the page's table example for documentation and the catalog. */
+/** Renders a composed native table. */
 export function TableExample() {
-    // Display the sample order in compact, edge-to-edge rows.
     return (
-        <Table
-            data={[{ item: 'Order', status: 'Open' }]}
-            columns={[
-                { key: 'item', header: 'Item' },
-                { key: 'status', header: 'Status' },
-            ]}
-        />
+        <Table aria-label="Orders">
+            <TableCaption>Current orders</TableCaption>
+            <TableHeader>
+                <TableRow>
+                    <TableHead scope="col">Item</TableHead>
+                    <TableHead scope="col">Status</TableHead>
+                </TableRow>
+            </TableHeader>
+            <TableBody>
+                <TableRow>
+                    <TableCell>Order</TableCell>
+                    <TableCell>Open</TableCell>
+                </TableRow>
+            </TableBody>
+        </Table>
     );
 }

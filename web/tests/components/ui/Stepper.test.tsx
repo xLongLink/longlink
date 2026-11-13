@@ -4,9 +4,8 @@ import { it, expect, vi } from 'vitest';
 import { Button } from '@/components/ui/Button';
 import userEvent from '@testing-library/user-event';
 import { renderStatic, withMounted } from '../../render';
+import { ProgressStepper, Step } from '@/components/custom/Wizard';
 import {
-    ProgressStepper,
-    Step,
     Stepper,
     StepperContent,
     StepperDescription,
@@ -116,7 +115,7 @@ it('renders step actions inside their own step without nesting them in the step 
         </ProgressStepper>,
         async (output) => {
             // Assert
-            const steps = output.querySelectorAll('li');
+            const steps = output.querySelectorAll('[data-slot="stepper-item"]');
             expect(steps[0].textContent).toContain('Download');
             expect(steps[0].textContent).not.toContain('Approve');
             expect(steps[1].textContent).toContain('Approve');
@@ -190,7 +189,7 @@ it('activates authored progress indices without submitting the owning form', asy
             const current = output.querySelector('[aria-current="step"]');
 
             const prepare = Array.from(output.querySelectorAll('button')).find((button) =>
-                button.textContent?.startsWith('Prepare')
+                button.textContent?.includes('Prepare')
             );
 
             const finish = Array.from(output.querySelectorAll('button')).find((button) =>

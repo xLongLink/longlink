@@ -1,8 +1,8 @@
 import { Text } from './Text';
 import { Stack } from './Stack';
-import { Button } from './Button';
 import { useId, useState } from 'react';
 import { useDownload, usePreview } from './preview';
+import { Button } from '@/components/custom/Button';
 import { Spinner } from '@/components/shadcn/spinner';
 
 /** Previews images, PDFs, and plain text on demand and downloads attachments through the scoped host capability. */

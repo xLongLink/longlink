@@ -46,24 +46,4 @@
         overflow-wrap: break-word;
         word-break: break-word;
     }
-
-    .view-table .view-table-align-start {
-        text-align: start;
-    }
-
-    .view-table .view-table-align-center {
-        text-align: center;
-    }
-
-    .view-table .view-table-align-end {
-        text-align: end;
-    }
-
-    .view-table-vertical-top td {
-        vertical-align: top;
-    }
-
-    .view-table-vertical-bottom td {
-        vertical-align: bottom;
-    }
 }

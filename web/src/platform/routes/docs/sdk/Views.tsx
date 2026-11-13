@@ -25,12 +25,14 @@ import { SelectorExample } from './views/Selector';
 import { TextAreaExample } from './views/TextArea';
 import { ChartExample } from './views/ChartExample';
 import { Currency } from '@/components/ui/Currency';
+import { DataTableExample } from './views/DataTable';
 import { DateInputExample } from './views/DateInput';
 import { FileInputExample } from './views/FileInput';
 import { RadioListExample } from './views/RadioList';
 import { TextInputExample } from './views/TextInput';
 import { TimeInputExample } from './views/TimeInput';
 import { TimestampExample } from './views/Timestamp';
+import { ActionMenuExample } from './views/ActionMenu';
 import { EmptyStateExample } from './views/EmptyState';
 import { FileViewerExample } from './views/FileViewer';
 import { Disclosure } from '@/components/ui/Disclosure';
@@ -44,10 +46,10 @@ import { componentDocumentation } from '@/platform/publications';
 import { NativeStack as Stack } from '@/components/ui/NativeStack';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/Tabs';
 import { DocumentationArticle } from '@/components/layouts/Article';
+import { DataTable, proportional } from '@/components/custom/DataTable';
 import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
 import { viewHooks, documentationCategories } from '@/lib/documentation';
 import { NativeCodeBlock as CodeBlock } from '@/components/ui/NativeCodeBlock';
-import { NativeTable as Table, proportional } from '@/components/ui/NativeTable';
 import {
     Card,
     CardTitle,
@@ -115,6 +117,7 @@ const previews = new Map(
         ),
         Divider: <Divider label="or" />,
         DropdownMenu: <DropdownMenuExample />,
+        ActionMenu: <ActionMenuExample />,
         EmptyState: <EmptyStateExample />,
         FileInput: <FileInputExample />,
         FileViewer: <FileViewerExample />,
@@ -155,6 +158,7 @@ const previews = new Map(
         Stepper: <StepperExample orientation="vertical" />,
         Switch: <SwitchExample />,
         Table: <TableExample />,
+        DataTable: <DataTableExample />,
         Token: <TokenExample />,
         // Keep the thumbnail focused on the tab strip rather than its panel content.
         Tabs: (
@@ -198,7 +202,7 @@ export default function Item({ params }) {
                     hasLanguageLabel={false}
                 />
                 <Disclosure trigger="API reference" defaultIsOpen={false}>
-                    <Table
+                    <DataTable
                         idKey="name"
                         density="compact"
                         verticalAlign="top"

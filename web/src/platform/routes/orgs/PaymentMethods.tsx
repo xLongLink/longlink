@@ -7,8 +7,8 @@ import { NativeText as Text } from '@/components/ui/NativeText';
 import { NativeStack as Stack } from '@/components/ui/NativeStack';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { NativeButton as Button } from '@/components/ui/NativeButton';
+import { DataTable, proportional } from '@/components/custom/DataTable';
 import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
-import { NativeTable as Table, proportional } from '@/components/ui/NativeTable';
 
 /** Owns card registration and saved-card reads only while Payment Methods is active. */
 export default function PaymentMethods({ base, canManage }: { base: string; canManage: boolean }) {
@@ -55,7 +55,7 @@ function RegisteredCards({ base }: { base: string }) {
     const [cards] = useApi(`${base}/cards`, schemas.zPaymentCard.array());
 
     return (
-        <Table
+        <DataTable
             data={cards}
             idKey="id"
             density="compact"

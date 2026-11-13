@@ -12,8 +12,8 @@ import { NativeText as Text } from '@/components/ui/NativeText';
 import { NativeStack as Stack } from '@/components/ui/NativeStack';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { NativeButton as Button } from '@/components/ui/NativeButton';
+import { DataTable, proportional } from '@/components/custom/DataTable';
 import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
-import { NativeTable as Table, proportional } from '@/components/ui/NativeTable';
 
 type Registry = z.output<typeof schemas.zRegistryResponse>;
 
@@ -60,7 +60,7 @@ export default function Registries({ base, canMaintain }: { base: string; canMai
                     )}
                 </Stack>
                 <Divider />
-                <Table
+                <DataTable
                     data={connections}
                     idKey="id"
                     density="compact"
