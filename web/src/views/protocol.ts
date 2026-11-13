@@ -113,6 +113,23 @@ export const iconDataSchema = z.object({
 });
 
 export const commandSchema = z.discriminatedUnion('type', [
+    z
+        .object({
+            type: z.literal('file-viewer'),
+            id: z.number().int().nonnegative(),
+            path: z.string().min(1),
+            title: z.string().min(1).max(256),
+            bounds: z
+                .object({
+                    top: z.number().finite().min(-1_000_000).max(1_000_000),
+                    left: z.number().finite().min(-1_000_000).max(1_000_000),
+                    width: z.number().finite().nonnegative().max(1_000_000),
+                    height: z.number().finite().nonnegative().max(1_000_000)
+                })
+                .strict()
+                .nullable()
+        })
+        .strict(),
     requestSchema,
     // Only bounded dimensions cross the sandbox boundary; the host owns page scrolling.
     z.object({ type: z.literal('resize'), height: z.number().int().min(1).max(1_000_000) }).strict(),
@@ -130,6 +147,8 @@ export const commandSchema = z.discriminatedUnion('type', [
 ]);
 
 export type RequestCommand = z.output<typeof requestSchema>;
+
+export type FileViewerCommand = Extract<z.output<typeof commandSchema>, { type: 'file-viewer' }>;
 
 export type DownloadCommand = z.output<typeof downloadSchema>;
 

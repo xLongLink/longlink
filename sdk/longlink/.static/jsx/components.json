@@ -1311,7 +1311,7 @@
         {
             "name": "FileViewer",
             "category": "Display",
-            "introduction": "Loads and downloads Solution attachments through the scoped runtime without exposing host credentials.",
+            "introduction": "Displays images, PDFs, text, audio, and video inline using browser-native media controls.",
             "properties": [
                 {
                     "name": "src",
@@ -1321,16 +1321,11 @@
                 {
                     "name": "title",
                     "type": "string",
-                    "description": "Attachment name used for accessible action labels and the downloaded filename."
-                },
-                {
-                    "name": "size",
-                    "type": "\"sm\" | \"lg\" | \"md\"",
-                    "description": "Preview and download action size; inherits sizing when omitted."
+                    "description": "Accessible name for the embedded file."
                 }
             ],
             "source": "custom",
-            "justification": "Loads and downloads Solution attachments through the scoped runtime without exposing host credentials."
+            "justification": "Loads scoped attachment bytes and renders supported media inline without exposing host credentials or weakening the Solution sandbox."
         },
         {
             "name": "Form",

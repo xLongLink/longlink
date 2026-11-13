@@ -1,79 +1,65 @@
-import { Text } from './text';
-import { Stack } from './stack';
-import { useId, useState } from 'react';
-import { useDownload, usePreview } from './preview';
+import { NativeFile } from './native-file';
+import { FileRequestContext } from './preview';
+import { FileViewerContext } from './file-context';
 import { Spinner } from '@/components/shadcn/spinner';
-import { ActionButton } from '@/components/custom/action-button';
+import { useContext, useEffect, useRef, useState } from 'react';
 
-/** Previews images, PDFs, and plain text on demand and downloads attachments through the scoped host capability. */
+/** Displays supported attachments immediately using native browser media controls. */
 export function FileViewer({
     src,
-    title,
-    size
+    title
 }: {
     /** Scoped Solution operation path returning the file to preview. */
     src: string;
-    /** Attachment name used for accessible action labels and the downloaded filename. */
+    /** Accessible name for the embedded file. */
     title: string;
-    /** Size of preview and download actions; use sm in compact tables. Omitted values retain inherited sizing. */
-    size?: 'sm' | 'md' | 'lg';
 }) {
-    const [open, setOpen] = useState(false);
-    const attachment = useDownload();
-
-    // Each opened attachment owns a fresh preview and its blob URL.
-    return (
-        <Stack gap={2}>
-            <Stack direction="horizontal" gap={2} wrap="wrap">
-                <ActionButton variant="ghost" size={size === 'md' ? 'default' : size} onClick={() => setOpen(!open)}>
-                    {title}
-                </ActionButton>
-                <ActionButton
-                    variant="ghost"
-                    size={size === 'md' ? 'default' : size}
-                    onClick={async () => {
-                        await attachment.download(src, title);
-                    }}
-                >{`Download ${title}`}</ActionButton>
-            </Stack>
-            {attachment.error && (
-                <span role="alert">
-                    <Text>{attachment.error}</Text>
-                </span>
-            )}
-            {open && <FilePreview key={src} src={src} title={title} onOpened={() => setOpen(false)} />}
-        </Stack>
-    );
+    // Give replacement files independent requests and object-URL lifetimes.
+    return <FileContent key={`${src}\0${title}`} src={src} title={title} />;
 }
 
-/** Releases image resources locally while the host owns document previews. */
-function FilePreview({ src, title, onOpened }: { src: string; title: string; onOpened: () => void }) {
-    const preview = usePreview(src, false, title, onOpened);
-    const labelId = useId();
+/** Reserves a host-owned document slot or loads a trusted native-page example. */
+function FileContent({ src, title }: { src: string; title: string }) {
+    const element = useRef<HTMLDivElement>(null);
+    const mount = useContext(FileViewerContext);
+    const request = useContext(FileRequestContext)?.preview;
+    const [preview, setPreview] = useState<Blob | Error>();
 
-    // Render only the current mounted attempt's loading, error, or image state.
-    return preview.status === 'unsupported' ? (
-        <span role="status">
-            <Text>No preview is available. Use Download to save this file.</Text>
-        </span>
-    ) : preview.status === 'error' ? (
-        <span role="status">
-            <Text>{preview.cause instanceof Error ? preview.cause.message : 'Preview failed'}</Text>
-        </span>
-    ) : preview.status === 'ready' ? (
-        <img src={preview.url} alt={title} className="max-h-full max-w-full rounded-lg object-contain" />
-    ) : (
-        <div className="inline-flex flex-col items-center gap-2">
-            <Spinner
-                role="progressbar"
-                aria-hidden={false}
-                aria-label={undefined}
-                aria-labelledby={labelId}
-                className="motion-reduce:animate-none"
-            />
-            <span id={labelId}>
-                <Text weight="bold">Loading attachment</Text>
-            </span>
+    // The host renders native plugins without weakening the Solution sandbox.
+    useEffect(() => {
+        if (mount && element.current) return mount(element.current, src, title);
+        const controller = new AbortController();
+
+        /** Ignore responses from replaced or unmounted file requests. */
+        async function load() {
+            try {
+                const body = await request?.(src);
+
+                if (!(body instanceof Blob)) throw new Error('File preview unavailable');
+
+                if (!controller.signal.aborted) setPreview(body);
+            } catch (cause) {
+                if (!controller.signal.aborted)
+                    setPreview(cause instanceof Error ? cause : new Error('File preview failed'));
+            }
+        }
+
+        void load();
+
+        return () => controller.abort();
+    }, [mount, request, src, title]);
+
+    // Keep one bounded viewer region with no custom View or Download buttons.
+    return (
+        <div ref={element} className="flex h-96 w-full min-w-0 items-center justify-center" aria-label={title}>
+            {!mount &&
+                (preview instanceof Blob ? (
+                    <NativeFile body={preview} title={title} />
+                ) : preview instanceof Error ? (
+                    <span role="status">{preview.message}</span>
+                ) : (
+                    <Spinner role="progressbar" aria-label={`Loading ${title}`} />
+                ))}
         </div>
     );
 }

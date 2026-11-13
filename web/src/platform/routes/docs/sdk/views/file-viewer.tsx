@@ -3,7 +3,7 @@ import ViewLayout from './view-layout';
 import { FileViewer } from '@/components/custom/file-viewer';
 import { FileRequestContext } from '@/components/custom/preview';
 
-/** Documents file previews and attachment downloads through the scoped Solution API. */
+/** Documents inline file previews through the scoped Solution API. */
 export default function FileViewerPage() {
     // Render file preview guidance and an authored example.
     return (
@@ -15,56 +15,47 @@ export default function FileViewerPage() {
                     type: 'string',
                     description: 'Scoped Solution operation path returning the file to preview.'
                 },
-                {
-                    name: 'title',
-                    type: 'string',
-                    description: 'Attachment name used for accessible action labels and the downloaded filename.'
-                },
-                {
-                    name: 'size',
-                    type: '"sm" | "lg" | "md"',
-                    description: 'Preview and download action size; inherits sizing when omitted.'
-                }
+                { name: 'title', type: 'string', description: 'Accessible name for the embedded file.' }
             ]}
             example={{
                 title: 'FileViewer',
                 preview: <FileViewerExample />,
                 code: `function Example() {
-  return <FileViewer src="/api/items/123/image" title="invoice.png" />;
+  return <FileViewer src="/api/reports/latest" title="report.pdf" />;
 }`
             }}
         />
     );
 }
 
-/** Supplies a public sample image without making requests to a Solution API. */
-async function requestPreviewImage() {
+/** Supplies a public sample PDF without making requests to a Solution API. */
+async function requestPreviewFile() {
     // Use a fixed documentation asset rather than a user-supplied endpoint.
-    const response = await fetch('/images/introducing-longlink.png');
+    const response = await fetch('/files/sample.pdf');
 
-    if (!response.ok) throw new Error('Could not load the preview image');
+    if (!response.ok) throw new Error('Could not load the preview PDF');
 
     return response.blob();
 }
 
-/** Demonstrates the real attachment lifecycle using a public sample image. */
+/** Demonstrates the real attachment lifecycle using a public sample PDF. */
 export function FileViewerExample() {
     // Scope the sample request capability to this example.
     return (
         <FileRequestContext
             value={{
-                preview: requestPreviewImage,
+                preview: requestPreviewFile,
                 download: async (_path, filename) => {
                     // The native example can only download this fixed public documentation asset.
                     await host.download(
                         '/',
-                        { type: 'download', id: 0, path: '/images/introducing-longlink.png', filename },
+                        { type: 'download', id: 0, path: '/files/sample.pdf', filename },
                         new AbortController().signal
                     );
                 }
             }}
         >
-            <FileViewer src="/api/items/123/image" title="invoice.png" />
+            <FileViewer src="/api/reports/latest" title="report.pdf" />
         </FileRequestContext>
     );
 }

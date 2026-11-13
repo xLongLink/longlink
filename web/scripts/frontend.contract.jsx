@@ -173,7 +173,7 @@ const nativeComposition = (
                     }}
                 />
             </ActionButtonGroup>
-            <FileViewer src="/attachment" title="Attachment" size="md" />
+            <FileViewer src="/attachment" title="Attachment" />
             <Tabs value={selected} onValueChange={(value) => setSelected(String(value))}>
                 <TabsList variant="line">
                     <TabsTrigger value="one">One</TabsTrigger>

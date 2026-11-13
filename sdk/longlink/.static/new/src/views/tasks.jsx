@@ -28,7 +28,6 @@ export default function Tasks() {
                                     <FileViewer
                                         src={`/api/tasks/${task.id}/attachment`}
                                         title={task.attachment}
-                                        size="sm"
                                     />
                                 ) : (
                                     <Text color="secondary">No attachment</Text>
@@ -79,7 +78,7 @@ export default function Tasks() {
                         header: 'File',
                         width: proportional(2),
                         renderCell: (file) => (
-                            <FileViewer src={`/assets/${file.filename}`} title={file.filename} size="sm" />
+                            <FileViewer src={`/assets/${file.filename}`} title={file.filename} />
                         ),
                     },
                 ]}

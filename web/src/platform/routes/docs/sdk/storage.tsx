@@ -105,7 +105,7 @@ async def report(
                     <CodeBlockCopyButton />
                 </CodeBlock>
                 <Text as="p">
-                    Use <InlineCode>FileViewer</InlineCode> for preview and download actions, or{' '}
+                    Use <InlineCode>FileViewer</InlineCode> for inline file previews, or{' '}
                     <InlineCode>Link</InlineCode> with a <InlineCode>download</InlineCode> filename to download
                     directly. No backend download headers or separate endpoint are required.
                 </Text>

@@ -9,6 +9,7 @@ import { ErrorBoundary } from 'react-error-boundary';
 import { useConfirm } from '@/components/custom/confirmation';
 import { FileRequestContext } from '@/components/custom/preview';
 import { NativeLoading } from '@/components/custom/native-loading';
+import { FileViewerContext } from '@/components/custom/file-context';
 import { QueryClient, QueryClientProvider, QueryErrorResetBoundary, useSuspenseQuery } from '@tanstack/react-query';
 import {
     FormRequestContext,
@@ -228,6 +229,34 @@ function initialize(event: MessageEvent<unknown>): void {
     // Supply file previews and downloads without exposing the general request API to file components.
     const fileRequests = { preview: requestPreview, download };
 
+    /** Tracks an inline slot while native document rendering remains host-owned. */
+    function mountFileViewer(element: HTMLElement, path: string, title: string): () => void {
+        const id = sequence++;
+        let animation: number;
+        let previous = '';
+
+        /** Transfer geometry only when layout or visibility changes. */
+        function measure() {
+            const rect = element.getBoundingClientRect();
+            const bounds = { top: rect.top, left: rect.left, width: rect.width, height: rect.height };
+            const serialized = JSON.stringify(bounds);
+
+            if (serialized !== previous) {
+                previous = serialized;
+                port.postMessage({ type: 'file-viewer', id, path, title: title.slice(0, 256), bounds });
+            }
+
+            animation = requestAnimationFrame(measure);
+        }
+
+        measure();
+
+        return () => {
+            cancelAnimationFrame(animation);
+            port.postMessage({ type: 'file-viewer', id, path, title: title.slice(0, 256), bounds: null });
+        };
+    }
+
     /** Requests scoped Solution navigation or opens an HTTP(S) URL in a new tab during user activation. */
     function navigate(path: string, newTab = false): void {
         port.postMessage({ type: 'navigate', path, newTab });
@@ -409,11 +438,13 @@ function initialize(event: MessageEvent<unknown>): void {
                                         >
                                             <MenuNavigationProvider>
                                                 <FileRequestContext value={fileRequests}>
-                                                    <DialogActivityContext value={modalActivity}>
-                                                        <FormRequestContext value={request}>
-                                                            <View params={params} />
-                                                        </FormRequestContext>
-                                                    </DialogActivityContext>
+                                                    <FileViewerContext value={mountFileViewer}>
+                                                        <DialogActivityContext value={modalActivity}>
+                                                            <FormRequestContext value={request}>
+                                                                <View params={params} />
+                                                            </FormRequestContext>
+                                                        </DialogActivityContext>
+                                                    </FileViewerContext>
                                                 </FileRequestContext>
                                             </MenuNavigationProvider>
                                         </LinkNavigationContext>

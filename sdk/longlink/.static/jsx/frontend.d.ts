@@ -14064,10 +14064,9 @@ export function ActionButtonGroup({ children, label, orientation, size: requeste
     size?: "sm" | "default" | "lg";
     isDisabled?: boolean;
 }): React$1.JSX.Element;
-export function FileViewer({ src, title, size }: {
+export function FileViewer({ src, title }: {
     src: string;
     title: string;
-    size?: "sm" | "md" | "lg";
 }): React$1.JSX.Element;
 export function Card({ className, size, ...props }: React$1.ComponentProps<"div"> & {
     size?: "default" | "sm";
