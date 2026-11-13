@@ -72,13 +72,13 @@ const article = {
 // Reuse page-owned examples as inert catalog artwork, without a shared preview implementation.
 const previews = new Map(
     Object.entries({
-        AreaChart: <ChartExample name="AreaChart" height={150} />,
-        BarChart: <ChartExample name="BarChart" height={150} />,
-        LineChart: <ChartExample name="LineChart" height={150} />,
-        PieChart: <ChartExample name="PieChart" height={150} />,
-        RadarChart: <ChartExample name="RadarChart" height={150} />,
-        RadialChart: <ChartExample name="RadialChart" height={150} />,
-        SankeyChart: <ChartExample name="SankeyChart" height={150} />,
+        AreaChart: <ChartExample name="AreaChart" height={160} isCompact />,
+        BarChart: <ChartExample name="BarChart" height={160} isCompact />,
+        LineChart: <ChartExample name="LineChart" height={160} isCompact />,
+        PieChart: <ChartExample name="PieChart" height={160} isCompact />,
+        RadarChart: <ChartExample name="RadarChart" height={160} isCompact />,
+        RadialChart: <ChartExample name="RadialChart" height={160} isCompact />,
+        SankeyChart: <ChartExample name="SankeyChart" height={160} isCompact />,
         Maps: <MapsExample height={150} />,
         Avatar: <AvatarExample />,
         Badge: <BadgeExample />,
@@ -217,7 +217,8 @@ export default function Item({ params }) {
                                             <Card
                                                 aria-hidden="true"
                                                 inert
-                                                padding={3}
+                                                padding={component.name.endsWith('Chart') ? 0 : 3}
+                                                isClipped
                                                 variant="muted"
                                                 width="100%"
                                                 maxWidth="100%"
@@ -225,7 +226,7 @@ export default function Item({ params }) {
                                                 {/* Constrain artwork before scaling so intrinsic control sizes cannot widen the card. */}
                                                 <div className="flex h-40 w-full min-w-0 items-center justify-center overflow-hidden">
                                                     <Stack
-                                                        className="min-w-0 scale-90 [&>*]:min-w-0 [&>*]:max-w-full"
+                                                        className={`min-w-0 [&>*]:min-w-0 [&>*]:max-w-full ${component.name.endsWith('Chart') ? '' : 'scale-90'}`}
                                                         width="100%"
                                                         maxWidth="100%"
                                                         align={component.category === 'Form' ? 'stretch' : 'center'}

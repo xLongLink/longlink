@@ -62,21 +62,29 @@ function SeriesChart({ kind, ...props }: ChartProps & { kind: 'area' | 'bar' | '
             style={{ height: props.height ?? 280 }}
             aria-label={props.label}
         >
-            <Plot data={data} accessibilityLayer margin={{ top: 12, right: 16, bottom: 4, left: 0 }}>
+            <Plot
+                data={data}
+                accessibilityLayer
+                margin={
+                    props.isCompact
+                        ? { top: 16, right: 0, bottom: kind === 'radar' ? 16 : 0, left: 0 }
+                        : { top: 12, right: 16, bottom: 4, left: 0 }
+                }
+            >
                 {kind === 'radar' ? (
                     <>
                         <PolarGrid />
-                        <PolarAngleAxis dataKey="category" />
+                        <PolarAngleAxis dataKey="category" tick={!props.isCompact} />
                     </>
-                ) : (
+                ) : !props.isCompact ? (
                     <>
                         <CartesianGrid vertical={false} />
                         <XAxis dataKey="category" axisLine={false} tickLine={false} tickMargin={8} minTickGap={24} />
                         <YAxis axisLine={false} tickLine={false} width={48} />
                     </>
-                )}
-                <ChartTooltip content={<ChartTooltipContent />} />
-                <Legend />
+                ) : null}
+                {!props.isCompact && <ChartTooltip content={<ChartTooltipContent />} />}
+                {!props.isCompact && <Legend />}
                 {props.series.map((series, index) => {
                     const key = `series${index}`;
                     const color = `var(--color-${key})`;
@@ -187,16 +195,22 @@ function CircularChart({ kind, ...props }: ChartProps & { kind: 'pie' | 'radial'
             style={{ height: props.height ?? 280 }}
             aria-label={props.label}
         >
-            <Plot data={data} innerRadius="35%" outerRadius="90%" accessibilityLayer>
-                <ChartTooltip content={<ChartTooltipContent nameKey="name" />} />
-                <Legend />
+            <Plot
+                data={data}
+                innerRadius="35%"
+                outerRadius={props.isCompact ? '100%' : '90%'}
+                margin={props.isCompact ? { top: 16, right: 0, bottom: 16, left: 0 } : undefined}
+                accessibilityLayer
+            >
+                {!props.isCompact && <ChartTooltip content={<ChartTooltipContent nameKey="name" />} />}
+                {!props.isCompact && <Legend />}
                 {kind === 'pie' ? (
                     <Pie
                         data={data}
                         dataKey="value"
                         nameKey="name"
                         innerRadius="60%"
-                        outerRadius="85%"
+                        outerRadius={props.isCompact ? '100%' : '85%'}
                         paddingAngle={3}
                         isAnimationActive={false}
                     >
@@ -238,32 +252,38 @@ export function SankeyChart(props: SankeyChartProps) {
         >
             <ChartContainer
                 config={{ value: { label: 'Value', color: 'var(--chart-1)' } }}
-                className="min-w-[640px] aspect-auto"
+                className={props.isCompact ? 'w-full min-w-0 aspect-auto' : 'min-w-[640px] aspect-auto'}
                 style={{ height: props.height ?? 360 }}
             >
                 <Sankey
                     data={parsed.data}
                     nodeWidth={10}
                     nodePadding={28}
-                    margin={{ top: 20, right: 100, bottom: 20, left: 100 }}
+                    margin={
+                        props.isCompact
+                            ? { top: 16, right: 0, bottom: 16, left: 0 }
+                            : { top: 20, right: 100, bottom: 20, left: 100 }
+                    }
                     node={({ x, y, width, height, payload, index }) => (
                         <g>
                             <rect x={x} y={y} width={width} height={height} fill="var(--chart-1)" />
-                            <text
-                                x={index === 0 ? x - 8 : x + width + 8}
-                                y={y + height / 2}
-                                textAnchor={index === 0 ? 'end' : 'start'}
-                                dominantBaseline="middle"
-                                fill="var(--foreground)"
-                            >
-                                {props.nodes[index]?.name}
-                                <title>{`${props.nodes[index]?.name}: ${payload.value}`}</title>
-                            </text>
+                            {!props.isCompact && (
+                                <text
+                                    x={index === 0 ? x - 8 : x + width + 8}
+                                    y={y + height / 2}
+                                    textAnchor={index === 0 ? 'end' : 'start'}
+                                    dominantBaseline="middle"
+                                    fill="var(--foreground)"
+                                >
+                                    {props.nodes[index]?.name}
+                                    <title>{`${props.nodes[index]?.name}: ${payload.value}`}</title>
+                                </text>
+                            )}
                         </g>
                     )}
                     link={{ stroke: 'var(--chart-1)', strokeOpacity: 0.25 }}
                 >
-                    <ChartTooltip content={<ChartTooltipContent />} />
+                    {!props.isCompact && <ChartTooltip content={<ChartTooltipContent />} />}
                 </Sankey>
             </ChartContainer>
         </div>

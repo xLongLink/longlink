@@ -11,6 +11,7 @@ export type ChartProps = {
     categoryKey: string;
     series: ChartSeries[];
     height?: number;
+    isCompact?: boolean;
 };
 
 export type SankeyChartProps = {
@@ -18,6 +19,7 @@ export type SankeyChartProps = {
     nodes: { name: string }[];
     links: { source: number; target: number; value: number }[];
     height?: number;
+    isCompact?: boolean;
 };
 
 export const sankeyDataSchema = z
