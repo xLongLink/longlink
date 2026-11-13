@@ -39,6 +39,11 @@
     .publication-sidebar-content {
         flex: 1;
         overflow: auto;
+        scrollbar-width: none;
+    }
+
+    .publication-sidebar-content::-webkit-scrollbar {
+        display: none;
     }
 
     .publication-main {
