@@ -1,4 +1,4 @@
-import '@/components/ui/inlinecode.css';
+import { InlineCode } from '@/components/shadcn/inline-code';
 import { NativeLink as Link } from '@/components/ui/NativeLink';
 import { NativeText as Text } from '@/components/ui/NativeText';
 import { NativeStack as Stack } from '@/components/ui/NativeStack';
@@ -32,8 +32,8 @@ export default function DocsArticleRoute() {
                         SQLModel
                     </Link>{' '}
                     models. The database session and connection are already available through{' '}
-                    <code className="inline-code">ctx.database</code>, so you can work directly with your data without
-                    additional setup.
+                    <InlineCode>ctx.database</InlineCode>, so you can work directly with your data without additional
+                    setup.
                 </Text>
                 <Stack as="aside" className="border-s border-accent ps-4" gap={0}>
                     <Text weight="semibold">Why?</Text>
@@ -66,24 +66,23 @@ async def create_project(ctx: Context) -> None:
                     Users management
                 </Heading>
                 <Text as="p">
-                    Each Solution owns a <code className="inline-code">users</code> table with each known user&apos;s
-                    ID, name, email, avatar, and profile update timestamp. Authenticated requests refresh the requesting
+                    Each Solution owns a <InlineCode>users</InlineCode> table with each known user&apos;s ID, name,
+                    email, avatar, and profile update timestamp. Authenticated requests refresh the requesting
                     user&apos;s profile before your route runs. Profiles remain at their last-seen values until the user
-                    returns; this table is not an organization membership directory. Use{' '}
-                    <code className="inline-code">Audit</code> for automatic attribution or
-                    <code className="inline-code">UserRelationship()</code> to add a named user relationship.
+                    returns; this table is not an organization membership directory. Use <InlineCode>Audit</InlineCode>{' '}
+                    for automatic attribution or
+                    <InlineCode>UserRelationship()</InlineCode> to add a named user relationship.
                 </Text>
                 <Text as="p">
-                    <code className="inline-code">Audit</code> adds creation, update, and deletion timestamps; matching
-                    Platform user IDs; and relationships to local users. Use it only for tables that need this history.
+                    <InlineCode>Audit</InlineCode> adds creation, update, and deletion timestamps; matching Platform
+                    user IDs; and relationships to local users. Use it only for tables that need this history.
                 </Text>
                 <Text as="p">
-                    <code className="inline-code">UserRelationship()</code> gives{' '}
-                    <code className="inline-code">owner</code> its own required foreign key to the local user table. Use{' '}
-                    <code className="inline-code">Model</code> instead of <code className="inline-code">Audit</code> if
-                    you do not need audit history. Annotate a relationship as{' '}
-                    <code className="inline-code">User | None</code> for an optional role, such as an invoice approver;
-                    its generated foreign key defaults to null.
+                    <InlineCode>UserRelationship()</InlineCode> gives <InlineCode>owner</InlineCode> its own required
+                    foreign key to the local user table. Use <InlineCode>Model</InlineCode> instead of{' '}
+                    <InlineCode>Audit</InlineCode> if you do not need audit history. Annotate a relationship as{' '}
+                    <InlineCode>User | None</InlineCode> for an optional role, such as an invoice approver; its
+                    generated foreign key defaults to null.
                 </Text>
                 <CodeBlock
                     code={`from uuid import UUID, uuid4

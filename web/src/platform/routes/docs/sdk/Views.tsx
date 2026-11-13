@@ -1,4 +1,3 @@
-import '@/components/ui/inlinecode.css';
 import { GridExample } from './views/Grid';
 import { IconExample } from './views/Icon';
 import { LinkExample } from './views/Link';
@@ -41,6 +40,7 @@ import { ProgressBarExample } from './views/ProgressBar';
 import { Collapsible } from '@/components/ui/Collapsible';
 import { DropdownMenuExample } from './views/DropdownMenu';
 import { CheckboxInputExample } from './views/CheckboxInput';
+import { InlineCode } from '@/components/shadcn/inline-code';
 import { MultiSelectorExample } from './views/MultiSelector';
 import { NativeText as Text } from '@/components/ui/NativeText';
 import { componentDocumentation } from '@/platform/publications';
@@ -194,7 +194,7 @@ export default function Item({ params }) {
                                 width: proportional(1),
                                 renderCell: (api) => (
                                     <Stack gap={0}>
-                                        <code className="inline-code self-start">{api.name}</code>
+                                        <InlineCode className="self-start">{api.name}</InlineCode>
                                         <Text type="supporting">{api.description}</Text>
                                     </Stack>
                                 ),
@@ -233,7 +233,7 @@ export default function Item({ params }) {
                                                         gap={0}
                                                     >
                                                         {previews.get(component.name) ?? (
-                                                            <code className="inline-code">{`<${component.name} />`}</code>
+                                                            <InlineCode>{`<${component.name} />`}</InlineCode>
                                                         )}
                                                     </Stack>
                                                 </div>

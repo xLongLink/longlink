@@ -33,7 +33,6 @@ export function createNotifications(toasterId: string) {
 
     const publish = ({ kind, message }: Notification) => {
         const options: ExternalToast = {
-            icon: null,
             toasterId,
             onDismiss: ({ id }) => notifications.delete(id),
             onAutoClose: ({ id }) => notifications.delete(id),

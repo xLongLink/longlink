@@ -118,7 +118,33 @@ it('dismisses with Escape and restores focus so keyboard users can reopen naviga
     });
 });
 
-it('leaves modified link gestures to the browser while closing the drawer synchronously', async () => {
+it('keeps keyboard focus in mobile navigation until its close button is activated', async () => {
+    const user = userEvent.setup();
+    await withMounted(<Navbar />, async (output) => {
+        const open = output.querySelector<HTMLButtonElement>('button[aria-label="Open navigation"]');
+
+        if (!open) throw new Error('Expected navigation toggle');
+        await act(async () => user.click(open));
+        const dialog = document.querySelector<HTMLElement>('[role="dialog"]');
+
+        if (!dialog) throw new Error('Expected mobile navigation');
+        const close = dialog.querySelector<HTMLButtonElement>('[data-slot="sheet-close"]');
+
+        if (!close) throw new Error('Expected navigation close button');
+        await vi.waitFor(() => expect(dialog.contains(document.activeElement)).toBe(true));
+
+        for (let index = 0; index < 8; index++) {
+            await act(async () => user.tab());
+            expect(dialog.contains(document.activeElement)).toBe(true);
+        }
+
+        await act(async () => user.click(close));
+        await vi.waitFor(() => expect(document.querySelector('[role="dialog"]')).toBeNull());
+        await vi.waitFor(() => expect(document.activeElement).toBe(open));
+    });
+});
+
+it.each(['/docs/', '/login/'])('leaves modified %s gestures to the browser while closing the drawer', async (href) => {
     await withMounted(
         <>
             <Navbar />
@@ -132,9 +158,10 @@ it('leaves modified link gestures to the browser while closing the drawer synchr
 
             if (!open) throw new Error('Expected navigation toggle');
             await act(async () => open.click());
-            const link = document.querySelector<HTMLAnchorElement>('[role="dialog"] a[href="/docs/"]');
+            const link = document.querySelector<HTMLAnchorElement>(`[role="dialog"] a[href="${href}"]`);
 
             if (!link) throw new Error('Expected documentation link');
+            expect(link.getAttribute('role')).toBeNull();
             const gesture = new MouseEvent('click', { bubbles: true, cancelable: true, ctrlKey: true });
 
             await act(async () => {
@@ -156,7 +183,7 @@ it('dismisses on an outside press without leaving the drawer stuck open', async 
 
         if (!open) throw new Error('Expected navigation toggle');
         await act(async () => user.click(open));
-        const backdrop = document.querySelector<HTMLElement>('.public-navbar-backdrop');
+        const backdrop = document.querySelector<HTMLElement>('[data-slot="sheet-overlay"]');
 
         if (!backdrop) throw new Error('Expected navigation backdrop');
 

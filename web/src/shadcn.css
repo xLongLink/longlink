@@ -13,17 +13,13 @@
 @import './components/ui/fileinput.css';
 @import './components/ui/selector.css';
 @import './components/ui/temporal.css';
-@import './components/ui/fileviewer.css';
 @import './components/layouts/content.css';
-@import './components/profile.css';
-@import './components/identity.css';
 @import './components/layouts/platform.css';
 @import './components/layouts/publication.css';
 @import './components/ui/table.css';
 @import './components/utils.css';
 @import './components/apiboundary.css';
 @import './components/native-toaster.css';
-@import './components/breadcrumb/breadcrumb.css';
 @import './components/brand.css';
 @import './components/footer.css';
 @import './components/navbar.css';

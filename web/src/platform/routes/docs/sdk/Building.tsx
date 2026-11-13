@@ -1,4 +1,4 @@
-import '@/components/ui/inlinecode.css';
+import { InlineCode } from '@/components/shadcn/inline-code';
 import { NativeText as Text } from '@/components/ui/NativeText';
 import { NativeStack as Stack } from '@/components/ui/NativeStack';
 import { NativeTable as Table } from '@/components/ui/NativeTable';
@@ -65,12 +65,12 @@ environments = "src.envs:Env"
                             {
                                 key: 'metadata',
                                 header: 'Metadata',
-                                renderCell: (row) => <code className="inline-code">{row.metadata}</code>,
+                                renderCell: (row) => <InlineCode>{row.metadata}</InlineCode>,
                             },
                             {
                                 key: 'label',
                                 header: 'Image label',
-                                renderCell: (row) => <code className="inline-code">{row.label}</code>,
+                                renderCell: (row) => <InlineCode>{row.label}</InlineCode>,
                             },
                         ]}
                     />

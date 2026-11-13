@@ -1,4 +1,4 @@
-import '@/components/ui/inlinecode.css';
+import { InlineCode } from '@/components/shadcn/inline-code';
 import { NativeLink as Link } from '@/components/ui/NativeLink';
 import { NativeText as Text } from '@/components/ui/NativeText';
 import { NativeStack as Stack } from '@/components/ui/NativeStack';
@@ -26,8 +26,7 @@ export default function DocsArticleRoute() {
                     Storage
                 </Heading>
                 <Text as="p">
-                    Use <code className="inline-code">ctx.storage</code> to read and write files asynchronously through
-                    a normalized{' '}
+                    Use <InlineCode>ctx.storage</InlineCode> to read and write files asynchronously through a normalized{' '}
                     <Link href="https://github.com/fsspec/filesystem_spec" hasUnderline isExternalLink type="inherit">
                         fsspec
                     </Link>{' '}
@@ -57,21 +56,19 @@ async def write_report(ctx: Context) -> None:
                     language="python"
                 />
                 <Text as="p">
-                    <code className="inline-code">write(path, bytes)</code> creates parent directories automatically.
-                    Use <code className="inline-code">await ctx.storage.exists(path)</code> to check for a file and{' '}
-                    <code className="inline-code">await ctx.storage.remove(path)</code> to delete it. Removing a missing
-                    file is safe. <code className="inline-code">open(path)</code> returns a read-only binary file
-                    context.
+                    <InlineCode>write(path, bytes)</InlineCode> creates parent directories automatically. Use{' '}
+                    <InlineCode>await ctx.storage.exists(path)</InlineCode> to check for a file and{' '}
+                    <InlineCode>await ctx.storage.remove(path)</InlineCode> to delete it. Removing a missing file is
+                    safe. <InlineCode>open(path)</InlineCode> returns a read-only binary file context.
                 </Text>
                 <Heading id="file-responses" level={2}>
                     Previews and downloads
                 </Heading>
                 <Text as="p">
-                    Yield file chunks from a route with{' '}
-                    <code className="inline-code">response_class=StreamingResponse</code>. Set the content type for
-                    previews; the frontend decides whether to preview or download the same URL. A request-scoped
-                    dependency opens the file before streaming starts and closes it when the response finishes. Missing
-                    stored files automatically return HTTP 404 without exposing storage paths.
+                    Yield file chunks from a route with <InlineCode>response_class=StreamingResponse</InlineCode>. Set
+                    the content type for previews; the frontend decides whether to preview or download the same URL. A
+                    request-scoped dependency opens the file before streaming starts and closes it when the response
+                    finishes. Missing stored files automatically return HTTP 404 without exposing storage paths.
                 </Text>
                 <CodeBlock
                     code={`from collections.abc import AsyncIterator
@@ -105,9 +102,9 @@ async def report(
                     language="python"
                 />
                 <Text as="p">
-                    Use <code className="inline-code">FileViewer</code> for preview and download actions, or{' '}
-                    <code className="inline-code">Link</code> with a <code className="inline-code">download</code>{' '}
-                    filename to download directly. No backend download headers or separate endpoint are required.
+                    Use <InlineCode>FileViewer</InlineCode> for preview and download actions, or{' '}
+                    <InlineCode>Link</InlineCode> with a <InlineCode>download</InlineCode> filename to download
+                    directly. No backend download headers or separate endpoint are required.
                 </Text>
                 <CodeBlock
                     code={`<FileViewer src="/reports/latest" title="report.pdf" />

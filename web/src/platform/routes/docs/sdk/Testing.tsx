@@ -1,4 +1,4 @@
-import '@/components/ui/inlinecode.css';
+import { InlineCode } from '@/components/shadcn/inline-code';
 import { NativeLink as Link } from '@/components/ui/NativeLink';
 import { NativeText as Text } from '@/components/ui/NativeText';
 import { NativeStack as Stack } from '@/components/ui/NativeStack';
@@ -29,8 +29,8 @@ export default function DocsArticleRoute() {
                     <Link href="https://docs.pytest.org/en/stable/" hasUnderline isExternalLink type="inherit">
                         pytest
                     </Link>{' '}
-                    workflows. Use <code className="inline-code">TestClient</code> to run the application with isolated
-                    in-memory services, without configuring a separate test environment.
+                    workflows. Use <InlineCode>TestClient</InlineCode> to run the application with isolated in-memory
+                    services, without configuring a separate test environment.
                 </Text>
                 <Stack as="aside" className="border-s border-accent ps-4" gap={0}>
                     <Text weight="semibold">Why?</Text>

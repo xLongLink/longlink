@@ -1,4 +1,4 @@
-import '@/components/ui/inlinecode.css';
+import { InlineCode } from '@/components/shadcn/inline-code';
 import { NativeLink as Link } from '@/components/ui/NativeLink';
 import { NativeText as Text } from '@/components/ui/NativeText';
 import { NativeStack as Stack } from '@/components/ui/NativeStack';
@@ -161,7 +161,7 @@ export default function Platform() {
                                     <Stack gap={0}>
                                         <Stack direction="horizontal" align="center" gap={2} wrap="wrap">
                                             <Text>{environment.name}</Text>
-                                            <code className="inline-code text-sm">{environment.type}</code>
+                                            <InlineCode>{environment.type}</InlineCode>
                                         </Stack>
                                         <Text type="supporting">{environment.description}</Text>
                                     </Stack>

@@ -2,8 +2,8 @@ import { Text } from './Text';
 import { Stack } from './Stack';
 import { Button } from './Button';
 import { useId, useState } from 'react';
-import { LoaderCircle } from 'lucide-react';
 import { useDownload, usePreview } from './preview';
+import { Spinner } from '@/components/shadcn/spinner';
 
 /** Previews images, PDFs, and plain text on demand and downloads attachments through the scoped host capability. */
 export function FileViewer({
@@ -62,8 +62,14 @@ function FilePreview({ src, title, onOpened }: { src: string; title: string; onO
     ) : preview.status === 'ready' ? (
         <img src={preview.url} alt={title} className="max-h-full max-w-full rounded-lg object-contain" />
     ) : (
-        <div className="view-file-loading">
-            <LoaderCircle role="progressbar" aria-hidden={false} aria-labelledby={labelId} />
+        <div className="inline-flex flex-col items-center gap-2">
+            <Spinner
+                role="progressbar"
+                aria-hidden={false}
+                aria-label={undefined}
+                aria-labelledby={labelId}
+                className="motion-reduce:animate-none"
+            />
             <span id={labelId}>
                 <Text weight="bold">Loading attachment</Text>
             </span>

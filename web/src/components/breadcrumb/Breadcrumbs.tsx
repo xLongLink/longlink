@@ -1,12 +1,21 @@
+import { cn } from 'cn';
 import type { ReactNode } from 'react';
 import { Link as RouterLink } from 'react-router';
+import {
+    Breadcrumb,
+    BreadcrumbItem as BreadcrumbEntry,
+    BreadcrumbLink,
+    BreadcrumbList,
+    BreadcrumbPage,
+    BreadcrumbSeparator,
+} from '@/components/shadcn/breadcrumb';
 
 /** Renders a supporting breadcrumb trail for trusted Platform pages. */
 export function Breadcrumbs({ children, className }: { children: ReactNode; className?: string }) {
     return (
-        <nav aria-label="Breadcrumb" className={`native-breadcrumb${className ? ` ${className}` : ''}`}>
-            <ol>{children}</ol>
-        </nav>
+        <Breadcrumb aria-label="Breadcrumb" className={cn('min-w-0 overflow-hidden', className)}>
+            <BreadcrumbList>{children}</BreadcrumbList>
+        </Breadcrumb>
     );
 }
 
@@ -21,19 +30,19 @@ export function BreadcrumbItem({
     isCurrent?: boolean;
 }) {
     return (
-        <li className="native-breadcrumb-item">
-            <span aria-hidden="true" className="native-breadcrumb-separator">
-                &gt;
-            </span>
-            {href !== undefined && !isCurrent ? (
-                <RouterLink to={href} className="native-breadcrumb-label">
-                    {children}
-                </RouterLink>
-            ) : (
-                <span className="native-breadcrumb-label" aria-current={isCurrent ? 'page' : undefined}>
-                    {children}
-                </span>
-            )}
-        </li>
+        <>
+            <BreadcrumbSeparator className="first:hidden" />
+            <BreadcrumbEntry className="min-w-0 max-w-full">
+                {href !== undefined && !isCurrent ? (
+                    <BreadcrumbLink render={<RouterLink to={href} />} className="min-w-0 truncate">
+                        {children}
+                    </BreadcrumbLink>
+                ) : isCurrent ? (
+                    <BreadcrumbPage className="min-w-0 truncate">{children}</BreadcrumbPage>
+                ) : (
+                    <span className="min-w-0 truncate">{children}</span>
+                )}
+            </BreadcrumbEntry>
+        </>
     );
 }

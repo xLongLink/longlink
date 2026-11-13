@@ -1,12 +1,13 @@
 import { api } from '@/lib/api';
 import { useContext, useState } from 'react';
+import { ChevronsUpDown } from 'lucide-react';
 import { SidebarContext } from '@/lib/sidebar';
 import { Avatar } from '@/components/ui/Avatar';
-import { Popover } from '@base-ui/react/popover';
 import { useQuery } from '@tanstack/react-query';
 import { Link as RouterLink } from 'react-router';
-import { Button } from '@/components/shadcn/button';
-import { Check, ChevronsUpDown } from 'lucide-react';
+import { Button, buttonVariants } from '@/components/shadcn/button';
+import { Popover as PopoverPrimitive } from '@base-ui/react/popover';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/shadcn/popover';
 import { zUserOrganizationMembership } from '@/lib/generated/platform-api-v1/zod.gen';
 
 export type OrganizationIdentity = {
@@ -38,68 +39,87 @@ export function OrganizationSwitcher({ organization }: { organization: Organizat
         'Organization';
 
     return (
-        <Popover.Root open={isOpen} onOpenChange={setIsOpen} modal="trap-focus">
-            <Popover.Trigger
+        <Popover open={isOpen} onOpenChange={setIsOpen} modal="trap-focus">
+            <PopoverTrigger
                 type="button"
+                render={
+                    <Button
+                        variant="ghost"
+                        size={sidebar !== 'collapsed' ? 'lg' : 'icon-lg'}
+                        className={sidebar !== 'collapsed' ? 'w-full min-w-0 justify-start text-start' : undefined}
+                    />
+                }
                 aria-label={name}
-                className="profile-trigger"
-                data-expanded={sidebar !== 'collapsed' || undefined}
             >
-                <Avatar kind="organization" name={name} />
+                <Avatar kind="organization" name={name} size="sm" />
                 {sidebar !== 'collapsed' && (
                     <>
-                        <span className="profile-identity-text">
-                            <span className="profile-name">{name}</span>
-                            <span className="profile-email">Organization</span>
+                        <span className="flex min-w-0 flex-1 flex-col">
+                            <span className="truncate text-sm leading-4">{name}</span>
+                            <span className="truncate text-xs leading-4 text-muted-foreground">Organization</span>
                         </span>
                         <ChevronsUpDown aria-hidden="true" className="text-muted-foreground" size={16} />
                     </>
                 )}
-            </Popover.Trigger>
-            <Popover.Portal>
-                <Popover.Positioner className="profile-positioner" side="bottom" align="start" sideOffset={4}>
-                    <Popover.Popup className="profile-popup" aria-label="Switch organization">
-                        <section className="organization-options">
-                            {error ? (
-                                <>
-                                    <p className="profile-email" role="alert">
-                                        Unable to load organizations.
-                                    </p>
-                                    <Button type="button" onClick={() => void refetch()} variant="ghost" size="sm">
-                                        Retry
-                                    </Button>
-                                </>
-                            ) : isPending ? (
-                                <p className="profile-email" role="status">
-                                    Loading organizations…
-                                </p>
-                            ) : memberships.length === 0 ? (
-                                <p className="profile-email">No organizations available.</p>
-                            ) : (
-                                <nav className="profile-links" aria-label="Organizations">
-                                    {memberships.map(({ organization: item }) => (
-                                        <RouterLink
-                                            className="profile-link identity-option"
-                                            to={`/orgs/${item.id}`}
-                                            aria-current={item.id === organization.id ? 'page' : undefined}
-                                            key={item.id}
-                                            onClickCapture={() => setIsOpen(false)}
-                                        >
-                                            <Avatar kind="organization" name={item.name} />
-                                            <span className="profile-identity-text">
-                                                <span className="profile-name">{item.name}</span>
-                                                <span className="profile-email">Organization</span>
-                                            </span>
-                                            {item.id === organization.id && <Check aria-hidden="true" size={16} />}
-                                        </RouterLink>
-                                    ))}
-                                </nav>
-                            )}
-                        </section>
-                        <Popover.Close className="sr-only focus:not-sr-only">Close organization switcher</Popover.Close>
-                    </Popover.Popup>
-                </Popover.Positioner>
-            </Popover.Portal>
-        </Popover.Root>
+            </PopoverTrigger>
+            <PopoverContent
+                side="bottom"
+                align="start"
+                sideOffset={4}
+                className="max-h-(--available-height) max-w-(--available-width) overflow-y-auto"
+                aria-label="Switch organization"
+            >
+                <section className="flex flex-col gap-2">
+                    {error ? (
+                        <>
+                            <p className="text-xs text-muted-foreground" role="alert">
+                                Unable to load organizations.
+                            </p>
+                            <Button type="button" onClick={() => void refetch()} variant="ghost" size="sm">
+                                Retry
+                            </Button>
+                        </>
+                    ) : isPending ? (
+                        <p className="text-xs text-muted-foreground" role="status">
+                            Loading organizations…
+                        </p>
+                    ) : memberships.length === 0 ? (
+                        <p className="text-xs text-muted-foreground">No organizations available.</p>
+                    ) : (
+                        <nav className="flex flex-col gap-1" aria-label="Organizations">
+                            {memberships.map(({ organization: item }) => (
+                                <RouterLink
+                                    className={buttonVariants({
+                                        variant: 'ghost',
+                                        size: 'lg',
+                                        className:
+                                            'w-full min-w-0 justify-start text-start font-normal aria-current:bg-muted dark:aria-current:bg-muted/50',
+                                    })}
+                                    to={`/orgs/${item.id}`}
+                                    aria-current={item.id === organization.id ? 'page' : undefined}
+                                    key={item.id}
+                                    onClickCapture={() => setIsOpen(false)}
+                                >
+                                    <Avatar kind="organization" name={item.name} size="sm" />
+                                    <span className="flex min-w-0 flex-1 flex-col">
+                                        <span className="truncate text-sm leading-4">{item.name}</span>
+                                        <span className="truncate text-xs leading-4 text-muted-foreground">
+                                            Organization
+                                        </span>
+                                    </span>
+                                </RouterLink>
+                            ))}
+                        </nav>
+                    )}
+                </section>
+                <PopoverPrimitive.Close
+                    type="button"
+                    render={<Button variant="ghost" />}
+                    className="sr-only focus:not-sr-only"
+                >
+                    Close organization switcher
+                </PopoverPrimitive.Close>
+            </PopoverContent>
+        </Popover>
     );
 }

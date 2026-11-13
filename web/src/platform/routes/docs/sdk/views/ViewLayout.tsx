@@ -1,9 +1,9 @@
 import { Circle } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Tabs, Tab } from '@/components/ui/Tabs';
-import '@/components/ui/inlinecode.css';
 import { useState, type ReactNode } from 'react';
 import { Switch } from '@/components/shadcn/switch';
+import { InlineCode } from '@/components/shadcn/inline-code';
 import { documentationLastUpdated } from '@/lib/documentation';
 import { NativeText as Text } from '@/components/ui/NativeText';
 import { componentDocumentation } from '@/platform/publications';
@@ -159,7 +159,7 @@ export default function ViewLayout({
                                                 <Stack gap={0}>
                                                     <Stack direction="horizontal" align="center" gap={2}>
                                                         <Text>{property.name}</Text>
-                                                        <code className="inline-code text-sm">{property.type}</code>
+                                                        <InlineCode>{property.type}</InlineCode>
                                                     </Stack>
                                                     <Text type="supporting">{property.description}</Text>
                                                 </Stack>

@@ -17,6 +17,63 @@ import { act, StrictMode, useEffect, useRef, useState } from 'react';
 
 const orderSchema = z.object({ name: z.string() });
 
+it('keeps pending feedback and its dismissal when document appearance and direction change', async () => {
+    const html = document.documentElement;
+    const initialTheme = html.getAttribute('data-theme');
+    const initialDirection = html.getAttribute('dir');
+
+    function Failure() {
+        const reportError = useApiError();
+
+        useEffect(() => {
+            reportError(new ApiError('Update rejected', 403));
+        }, [reportError]);
+
+        return null;
+    }
+
+    try {
+        html.dataset.theme = 'light';
+        html.dir = 'ltr';
+
+        await withMounted(
+            <ApiProvider>
+                <Failure />
+            </ApiProvider>,
+            async () => {
+                await vi.waitFor(() =>
+                    expect(document.querySelector('[data-sonner-toast]')?.textContent).toContain('Update rejected')
+                );
+                const notification = document.querySelector('[data-sonner-toast]');
+                const toaster = document.querySelector('[data-sonner-toaster]');
+
+                for (const theme of ['dark', 'light', 'system']) {
+                    await act(async () => {
+                        html.dataset.theme = theme;
+                        html.dir = theme === 'dark' ? 'rtl' : 'ltr';
+                    });
+                    await vi.waitFor(() => {
+                        expect(toaster?.getAttribute('data-sonner-theme')).toBe(theme === 'dark' ? 'dark' : 'light');
+                        expect(toaster?.getAttribute('dir')).toBe(theme === 'dark' ? 'rtl' : 'ltr');
+                        expect(document.querySelector('[data-sonner-toast]')).toBe(notification);
+                    });
+                }
+
+                await act(async () =>
+                    notification?.querySelector<HTMLButtonElement>('[aria-label="Dismiss notification"]')?.click()
+                );
+                await vi.waitFor(() => expect(document.querySelector('[data-sonner-toast]')).toBeNull());
+            }
+        );
+    } finally {
+        if (initialTheme === null) html.removeAttribute('data-theme');
+        else html.setAttribute('data-theme', initialTheme);
+
+        if (initialDirection === null) html.removeAttribute('dir');
+        else html.setAttribute('dir', initialDirection);
+    }
+});
+
 it('keeps initial direct-error feedback through the document StrictMode effect replay', async () => {
     const failure = new ApiError('Initial write rejected', 403);
     const output = document.createElement('section');
@@ -235,7 +292,7 @@ it('reports one failed GET shared by observers, supports dismissal, and recovers
             ]);
         });
         expect(transport).toHaveBeenCalledTimes(1);
-        expect(document.querySelector('[data-sonner-toast][data-type="error"] [data-icon]')).toBeNull();
+        expect(document.querySelector('[data-sonner-toast][data-type="error"] [data-icon] svg')).not.toBeNull();
         expect(document.querySelector('[aria-live="assertive"]')?.textContent).toContain('Orders unavailable');
 
         // Act

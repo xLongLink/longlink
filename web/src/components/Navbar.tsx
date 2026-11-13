@@ -1,10 +1,11 @@
+import { cn } from 'cn';
 import type { ReactNode } from 'react';
 import { useEffect, useState } from 'react';
-import { Dialog } from '@base-ui/react/dialog';
 import { Wordmark } from '@/components/Wordmark';
+import { ExternalLink, Menu } from 'lucide-react';
 import { Link as RouterLink } from 'react-router';
-import { Button } from '@/components/shadcn/button';
-import { ExternalLink, Menu, X } from 'lucide-react';
+import { Button, buttonVariants } from '@/components/shadcn/button';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/shadcn/sheet';
 
 const publicLinks = [
     { href: '/blog/', label: 'Blog' },
@@ -50,14 +51,20 @@ export function Navbar({
 
     return (
         <header
-            className={
+            className={cn(
+                'public-navbar border-b',
                 expandOnTop
-                    ? `public-navbar sticky top-0 z-30 border-b ${scrolled ? 'border-border bg-background/50 backdrop-blur-sm' : 'border-transparent bg-transparent'}`
-                    : 'public-navbar border-b border-border bg-background'
-            }
+                    ? [
+                          'sticky top-0 z-30',
+                          scrolled
+                              ? 'border-border bg-background/50 backdrop-blur-sm'
+                              : 'border-transparent bg-transparent',
+                      ]
+                    : 'border-border bg-background'
+            )}
         >
             <div className="public-navbar-content" style={{ maxWidth: expandOnTop && !scrolled ? '100%' : maxWidth }}>
-                <Dialog.Root open={menuOpen} onOpenChange={setMenuOpen}>
+                <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
                     <nav className="public-navbar-bar" aria-label="Main navigation">
                         <RouterLink to="/" aria-label="LongLink home" className="public-navbar-home">
                             <Wordmark size="heading" />
@@ -66,39 +73,29 @@ export function Navbar({
                             <div className="public-navbar-desktop">
                                 <PublicLinks />
                             </div>
-                            <Dialog.Trigger
+                            <SheetTrigger
                                 className="public-navbar-toggle"
                                 aria-label="Open navigation"
                                 render={<Button variant="ghost" size="icon" type="button" />}
                             >
                                 <Menu aria-hidden="true" size={20} />
-                            </Dialog.Trigger>
+                            </SheetTrigger>
                         </div>
                     </nav>
-                    <Dialog.Portal className="public-navbar-layer">
-                        <Dialog.Backdrop className="public-navbar-backdrop" />
-                        <Dialog.Popup
-                            className="public-navbar-drawer"
-                            aria-label="Main navigation"
-                            finalFocus={() => !window.matchMedia('(min-width: 640px)').matches}
-                        >
-                            <div className="public-navbar-drawer-header">
-                                <Dialog.Title className="public-navbar-title">Navigation</Dialog.Title>
-                                <Dialog.Close
-                                    aria-label="Close navigation"
-                                    render={<Button variant="ghost" size="icon" type="button" />}
-                                >
-                                    <X aria-hidden="true" size={20} />
-                                </Dialog.Close>
-                            </div>
-                            <div className="public-navbar-drawer-content">
-                                <nav aria-label="Public pages" className="public-navbar-mobile">
-                                    <PublicLinks mobile onNavigate={() => setMenuOpen(false)} />
-                                </nav>
-                            </div>
-                        </Dialog.Popup>
-                    </Dialog.Portal>
-                </Dialog.Root>
+                    <SheetContent
+                        className="min-h-0"
+                        finalFocus={() => !window.matchMedia('(min-width: 640px)').matches}
+                    >
+                        <SheetHeader className="shrink-0 pr-12">
+                            <SheetTitle>Navigation</SheetTitle>
+                        </SheetHeader>
+                        <div className="min-h-0 flex-1 overflow-auto overscroll-contain p-4">
+                            <nav aria-label="Public pages" className="flex flex-col gap-4">
+                                <PublicLinks mobile onNavigate={() => setMenuOpen(false)} />
+                            </nav>
+                        </div>
+                    </SheetContent>
+                </Sheet>
                 {navigation}
             </div>
         </header>
@@ -125,14 +122,13 @@ function PublicLinks({ mobile = false, onNavigate }: { mobile?: boolean; onNavig
                 <ExternalLink aria-hidden="true" />
                 <span className="sr-only"> (opens in a new tab)</span>
             </a>
-            <Button
-                variant="default"
-                size={mobile ? 'default' : 'sm'}
-                nativeButton={false}
-                render={<RouterLink to="/login/" onClick={onNavigate} />}
+            <RouterLink
+                className={buttonVariants({ size: mobile ? 'default' : 'sm' })}
+                to="/login/"
+                onClick={onNavigate}
             >
                 Sign In
-            </Button>
+            </RouterLink>
         </>
     );
 }
