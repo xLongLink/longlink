@@ -153,3 +153,6 @@ export { Currency } from '@/components/ui/Currency';
 
 /** @category Display */
 export { FileViewer } from '@/components/ui/FileViewer';
+
+/** @category Charts */
+export { AreaChart, BarChart, LineChart, PieChart, RadarChart, RadialChart, SankeyChart } from '@/components/ui/Chart';

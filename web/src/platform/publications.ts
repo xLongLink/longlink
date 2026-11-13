@@ -1,6 +1,12 @@
 import { documentationCategories } from '../lib/documentation';
 import {
     AppWindow,
+    ChartArea,
+    ChartColumn,
+    ChartLine,
+    ChartPie,
+    ChartRadar,
+    ChartNoAxesCombined,
     ArrowUpDown,
     BookOpen,
     Building2,
@@ -69,6 +75,13 @@ export const legalPaths = legalPages.map((page) => page.path);
 
 // Derive route identity from the website's published component pages.
 export const componentDocumentation = [
+    { name: 'AreaChart', category: 'Charts', icon: ChartArea },
+    { name: 'BarChart', category: 'Charts', icon: ChartColumn },
+    { name: 'LineChart', category: 'Charts', icon: ChartLine },
+    { name: 'PieChart', category: 'Charts', icon: ChartPie },
+    { name: 'RadarChart', category: 'Charts', icon: ChartRadar },
+    { name: 'RadialChart', category: 'Charts', icon: ChartPie },
+    { name: 'SankeyChart', category: 'Charts', icon: ChartNoAxesCombined },
     { name: 'Avatar', category: 'Display', icon: Users },
     { name: 'Badge', category: 'Display', icon: Circle },
     { name: 'Button', category: 'Action', icon: PanelTop },
@@ -169,6 +182,7 @@ export const documentationNavigation: Array<{ path: string; label: string; secti
                     { label: 'Action', category: 'Action', anchor: '#action', icon: Waypoints },
                     { label: 'Display', category: 'Display', anchor: '#display', icon: Image },
                     { label: 'Form', category: 'Form', anchor: '#form', icon: FileText },
+                    { label: 'Charts', category: 'Charts', anchor: '#charts', icon: ChartArea },
                 ].map(({ label, category, anchor, icon }) => ({
                     path: `/docs/sdk/views${anchor}`,
                     label,

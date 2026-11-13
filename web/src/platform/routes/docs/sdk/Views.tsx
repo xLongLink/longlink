@@ -23,6 +23,7 @@ import { Link as RouterLink } from 'react-router';
 import { MoreMenuExample } from './views/MoreMenu';
 import { SelectorExample } from './views/Selector';
 import { TextAreaExample } from './views/TextArea';
+import { ChartExample } from './views/ChartExample';
 import { Currency } from '@/components/ui/Currency';
 import { DateInputExample } from './views/DateInput';
 import { FileInputExample } from './views/FileInput';
@@ -71,6 +72,13 @@ const article = {
 // Reuse page-owned examples as inert catalog artwork, without a shared preview implementation.
 const previews = new Map(
     Object.entries({
+        AreaChart: <ChartExample name="AreaChart" height={150} />,
+        BarChart: <ChartExample name="BarChart" height={150} />,
+        LineChart: <ChartExample name="LineChart" height={150} />,
+        PieChart: <ChartExample name="PieChart" height={150} />,
+        RadarChart: <ChartExample name="RadarChart" height={150} />,
+        RadialChart: <ChartExample name="RadialChart" height={150} />,
+        SankeyChart: <ChartExample name="SankeyChart" height={150} />,
         Avatar: <AvatarExample />,
         Badge: <BadgeExample />,
         Button: <ButtonExample />,

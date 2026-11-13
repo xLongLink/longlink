@@ -1,7 +1,7 @@
 // Authored metadata shared by the documentation pages.
 export const documentationLastUpdated = '2026-10-02';
 
-export const documentationCategories: string[] = ['Runtime', 'Action', 'Display', 'Form', 'Layouts'];
+export const documentationCategories: string[] = ['Runtime', 'Action', 'Display', 'Form', 'Charts', 'Layouts'];
 
 // Describe the runtime bindings exposed to Views.
 export const viewHooks = [

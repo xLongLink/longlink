@@ -5183,3 +5183,40 @@ declare function FileViewer(props: {
     /** Preview and download action size; inherits sizing when omitted. */
     size?: 'sm' | 'md' | 'lg';
 }): React.JSX.Element;
+
+/** Shared data contract for category and trend charts. @category Charts @group AreaChart */
+type ChartProps = {
+    label: string;
+    data: Record<string, string | number>[];
+    categoryKey: string;
+    series: { key: string; label: string }[];
+    /** Height in pixels; defaults to 280. */
+    height?: number;
+};
+
+/** Shows trends as smooth filled areas. @category Charts */
+declare function AreaChart(props: ChartProps): React.JSX.Element;
+
+/** Compares categories using grouped bars. @category Charts */
+declare function BarChart(props: ChartProps): React.JSX.Element;
+
+/** Shows trends as smooth lines. @category Charts */
+declare function LineChart(props: ChartProps): React.JSX.Element;
+
+/** Displays the first series as a doughnut. @category Charts */
+declare function PieChart(props: ChartProps): React.JSX.Element;
+
+/** Compares series across shared radial dimensions. @category Charts */
+declare function RadarChart(props: ChartProps): React.JSX.Element;
+
+/** Displays the first series as concentric radial bars. @category Charts */
+declare function RadialChart(props: ChartProps): React.JSX.Element;
+
+/** Displays a directed acyclic graph of positive flows. @category Charts */
+declare function SankeyChart(props: {
+    label: string;
+    nodes: { name: string }[];
+    links: { source: number; target: number; value: number }[];
+    /** Height in pixels; defaults to 360. */
+    height?: number;
+}): React.JSX.Element;
