@@ -1,19 +1,18 @@
 import { Circle } from 'lucide-react';
-import { Card } from '@/components/astryx/Card';
-import { Code } from '@/components/astryx/Code';
-import { Link } from '@/components/astryx/Link';
-import { Text } from '@/components/astryx/Text';
+import { Card } from '@/components/ui/Card';
+import { Switch } from '@base-ui/react/switch';
+import '@/components/ui/inlinecode.css';
+import { Tabs, Tab } from '@/components/ui/Tabs';
 import { useState, type ReactNode } from 'react';
-import { Stack } from '@/components/astryx/Stack';
-import { Switch } from '@/components/astryx/Switch';
-import { Heading } from '@/components/astryx/Heading';
-import { CodeBlock } from '@/components/astryx/CodeBlock';
-import { Blockquote } from '@/components/astryx/Blockquote';
 import { documentationLastUpdated } from '@/lib/documentation';
-import { Table, proportional } from '@/components/astryx/Table';
+import { NativeText as Text } from '@/components/ui/NativeText';
 import { componentDocumentation } from '@/platform/publications';
+import { NativeStack as Stack } from '@/components/ui/NativeStack';
 import { DocumentationArticle } from '@/components/layouts/Article';
-import { Layout, LayoutContent, LayoutHeader } from '@/components/astryx/Layout';
+import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
+import { NativeCodeBlock as CodeBlock } from '@/components/ui/NativeCodeBlock';
+import './viewlayout.css';
+import { NativeTable as Table, proportional } from '@/components/ui/NativeTable';
 
 type ViewProperty = { name: string; type: string; description?: string };
 
@@ -25,38 +24,45 @@ function ExampleWindow({ example }: { example: ViewExample }) {
 
     // Bound both modes to the same window with a persistent header and scrollable body.
     return (
-        <Card height={480} padding={0}>
-            <Layout
-                padding={4}
-                header={
-                    <LayoutHeader hasDivider padding={2} className="bg-surface">
-                        <Stack direction="horizontal" hAlign="between" vAlign="center" gap={3} paddingInline={2}>
-                            <Stack direction="horizontal" gap={2} aria-hidden="true" className="shrink-0">
-                                <Circle size={12} fill="currentColor" className="text-(--color-window-close)" />
-                                <Circle size={12} fill="currentColor" className="text-(--color-window-minimize)" />
-                                <Circle size={12} fill="currentColor" className="text-(--color-window-maximize)" />
-                            </Stack>
-                            <Switch label="Show code" isLabelHidden value={showCode} onChange={setShowCode} size="sm" />
+        <Card height={480} padding={0} isClipped>
+            <div className="documentation-example-window">
+                <div className="documentation-example-toolbar bg-surface">
+                    <Stack direction="horizontal" justify="between" align="center" gap={3} paddingInline={2}>
+                        <Stack direction="horizontal" gap={2} aria-hidden="true" className="shrink-0">
+                            <Circle size={12} fill="currentColor" className="text-(--color-window-close)" />
+                            <Circle size={12} fill="currentColor" className="text-(--color-window-minimize)" />
+                            <Circle size={12} fill="currentColor" className="text-(--color-window-maximize)" />
                         </Stack>
-                    </LayoutHeader>
-                }
-                content={
-                    <LayoutContent className="pt-6" isScrollable={!showCode}>
-                        <Stack className={showCode ? 'hidden' : undefined} aria-label={`${example.title} preview`}>
-                            {example.preview}
-                        </Stack>
-                        {showCode && (
-                            <CodeBlock
-                                code={example.code}
-                                language="jsx"
-                                hasLineNumbers
-                                hasLanguageLabel={false}
-                                className="h-full [&>[data-scroll-axis]]:flex-1"
-                            />
-                        )}
-                    </LayoutContent>
-                }
-            />
+                        <span className="view-boolean-field w-auto">
+                            <Switch.Root
+                                className="view-switch"
+                                data-size="sm"
+                                aria-label="Show code"
+                                checked={showCode}
+                                onCheckedChange={setShowCode}
+                                render={<button type="button" />}
+                                nativeButton
+                            >
+                                <Switch.Thumb className="view-switch-thumb" />
+                            </Switch.Root>
+                        </span>
+                    </Stack>
+                </div>
+                <div className="documentation-example-body" data-code={showCode || undefined}>
+                    <Stack className={showCode ? 'hidden' : undefined} aria-label={`${example.title} preview`}>
+                        {example.preview}
+                    </Stack>
+                    {showCode && (
+                        <CodeBlock
+                            code={example.code}
+                            language="jsx"
+                            hasLineNumbers
+                            hasLanguageLabel={false}
+                            className="h-full [&>[data-scroll-axis]]:flex-1"
+                        />
+                    )}
+                </div>
+            </div>
         </Card>
     );
 }
@@ -66,7 +72,6 @@ export default function ViewLayout({
     name,
     introduction,
     properties = [],
-    isLongLinkSpecific = false,
     example,
     children,
     toc,
@@ -74,7 +79,6 @@ export default function ViewLayout({
     name: string;
     introduction: string;
     properties?: ViewProperty[];
-    isLongLinkSpecific?: boolean;
     example?: ViewExample;
     children?: ReactNode;
     toc?: { id: string; label: string; level: number }[];
@@ -85,7 +89,7 @@ export default function ViewLayout({
     if (!component) throw new Error(`Missing View documentation: ${name}`);
     const runtime = component.category === 'Runtime';
 
-    // Prepare property tables below the example.
+    // Prepare property tables for the reference tab.
     const groups = new Map<string, ViewProperty[]>();
 
     if (!runtime) {
@@ -114,33 +118,18 @@ export default function ViewLayout({
         title: `${component.label} | LongLink Documentation`,
         toc: [
             { id: 'introduction', label: 'Introduction', level: 1 },
-            ...(toc ??
-                (runtime
-                    ? [{ id: 'reference', label: 'Reference', level: 2 }]
-                    : [
-                          { id: 'component-examples', label: 'Example', level: 2 },
-                          { id: 'component-properties', label: 'Properties', level: 2 },
-                      ])),
+            ...(toc ?? (runtime ? [{ id: 'reference', label: 'Reference', level: 2 }] : [])),
         ],
     };
 
-    // Render one example followed by the property reference in the same article.
+    // Render the example first and keep the property reference in a separate tab.
     return (
         <DocumentationArticle article={article}>
             <Stack gap={5}>
                 <Heading id="introduction" level={1}>
                     {component.label}
                 </Heading>
-                <Blockquote className="border-s-(--color-text-orange) text-(--color-text-orange)">
-                    <Stack gap={0}>
-                        <Text type="inherit">Beta notice: This page is being built.</Text>
-                        <Link color="inherit" href={article.editUrl} hasUnderline isExternalLink type="inherit">
-                            Edit on GitHub
-                        </Link>
-                    </Stack>
-                </Blockquote>
                 <Text as="p">{introduction}</Text>
-                {isLongLinkSpecific && !runtime && <Text as="p">This is a LongLink-specific component.</Text>}
                 <CodeBlock
                     code={`longlink docs component "${name}"`}
                     language="bash"
@@ -150,21 +139,15 @@ export default function ViewLayout({
                 {runtime ? (
                     children
                 ) : (
-                    <Stack gap={5}>
-                        <Stack as="section" gap={5} aria-labelledby="component-examples">
-                            <Heading id="component-examples" level={2}>
-                                Example
-                            </Heading>
+                    <Tabs key={name} gap={5} hasDivider>
+                        <Tab value="example" label="Example">
                             {example ? (
                                 <ExampleWindow key={name} example={example} />
                             ) : (
                                 <Text as="p">No standalone example is available for this component.</Text>
                             )}
-                        </Stack>
-                        <Stack as="section" gap={5} aria-labelledby="component-properties">
-                            <Heading id="component-properties" level={2}>
-                                Properties
-                            </Heading>
+                        </Tab>
+                        <Tab value="properties" label="Properties">
                             {[...groups].map(([name, properties]) => (
                                 <Table
                                     key={name}
@@ -181,7 +164,7 @@ export default function ViewLayout({
                                                 <Stack gap={0}>
                                                     <Stack direction="horizontal" align="center" gap={2}>
                                                         <Text>{property.name}</Text>
-                                                        <Code className="text-sm">{property.type}</Code>
+                                                        <code className="inline-code text-sm">{property.type}</code>
                                                     </Stack>
                                                     <Text type="supporting">{property.description}</Text>
                                                 </Stack>
@@ -190,8 +173,8 @@ export default function ViewLayout({
                                     ]}
                                 />
                             ))}
-                        </Stack>
-                    </Stack>
+                        </Tab>
+                    </Tabs>
                 )}
             </Stack>
         </DocumentationArticle>

@@ -1,0 +1,382 @@
+@layer components {
+    .view-picker-control {
+        box-sizing: border-box;
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-2);
+        min-height: var(--size-element-md);
+        padding-inline: var(--spacing-3);
+        border: var(--border-width) solid var(--input);
+        border-radius: var(--radius-element);
+        background: var(--color-background-surface);
+        color: var(--foreground);
+        font-family: var(--font-family-body);
+        font-size: var(--text-label-size);
+        line-height: max(
+            min(var(--spacing-5), max(var(--size-element-md) - 2 * var(--border-width), 1.5em)),
+            20px,
+            1rem
+        );
+        transition:
+            border-color var(--duration-fast) var(--ease-standard),
+            box-shadow var(--duration-fast) var(--ease-standard);
+    }
+
+    .view-picker-trigger {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--spacing-2);
+        flex: 1;
+        min-width: 0;
+        align-self: stretch;
+        padding: 0;
+        margin: 0;
+        border: 0;
+        outline: none;
+        background: transparent;
+        color: inherit;
+        font: inherit;
+        text-align: start;
+        cursor: pointer;
+    }
+
+    .view-picker[data-multiple] .view-picker-control {
+        height: var(--size-element-md);
+    }
+
+    .view-picker-value {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-2);
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+    }
+
+    .view-picker-value > span:not(.view-picker-badges) {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .view-picker-value[data-placeholder] {
+        color: var(--muted-foreground);
+    }
+
+    .view-picker-chevron,
+    .view-picker-value > svg,
+    .view-picker-option-icon > svg,
+    .view-picker-mark > svg,
+    .view-picker-search-field > svg {
+        width: var(--spacing-4);
+        height: var(--spacing-4);
+        flex-shrink: 0;
+        color: var(--color-icon-secondary);
+    }
+
+    .view-picker-chevron {
+        transition: transform var(--duration-fast) var(--ease-standard);
+    }
+
+    .view-picker-trigger[data-popup-open] .view-picker-chevron {
+        transform: rotate(180deg);
+    }
+
+    .view-picker-clear,
+    .view-picker-search-clear {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        width: var(--spacing-5);
+        height: var(--spacing-5);
+        padding: 0;
+        border: 0;
+        border-radius: var(--radius-element);
+        background: transparent;
+        color: var(--muted-foreground);
+        cursor: pointer;
+    }
+
+    .view-picker-clear > svg,
+    .view-picker-search-clear > svg {
+        width: var(--spacing-4);
+        height: var(--spacing-4);
+    }
+
+    .view-picker-clear:hover,
+    .view-picker-search-clear:hover {
+        background: var(--color-overlay-hover);
+    }
+
+    .view-picker-control:focus-within {
+        border-color: var(--ring);
+        box-shadow: inset 0 0 0 var(--spacing-0-5) var(--color-accent-muted);
+    }
+
+    .view-picker-clear:focus-visible,
+    .view-picker-search-clear:focus-visible {
+        outline: var(--focus-outline-width) solid var(--ring);
+        outline-offset: var(--focus-outline-offset);
+    }
+
+    .view-picker[data-disabled] .view-picker-control {
+        opacity: 0.5;
+    }
+
+    .view-picker[data-disabled] .view-picker-trigger {
+        cursor: default;
+    }
+
+    .view-picker-positioner {
+        z-index: 100;
+        outline: none;
+    }
+
+    .view-picker-popup {
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        min-width: var(--anchor-width);
+        max-width: var(--available-width);
+        max-height: var(--available-height);
+        overflow: hidden;
+        border: 0;
+        border-radius: var(--radius-container);
+        background: var(--color-background-popover);
+        box-shadow: var(--shadow-low);
+        color: var(--foreground);
+        font-family: var(--font-family-body);
+        font-size: var(--text-label-size);
+        line-height: var(--text-label-leading);
+        outline: none;
+    }
+
+    .view-picker-list {
+        box-sizing: border-box;
+        min-height: 0;
+        max-height: min(300px, var(--available-height));
+        overflow-y: auto;
+        padding-block: var(--spacing-1);
+        padding-inline: calc(var(--spacing-1) + var(--border-width));
+        outline: none;
+        overscroll-behavior: contain;
+    }
+
+    .view-picker-popup[data-multiple] .view-picker-list {
+        padding-inline: var(--spacing-1);
+    }
+
+    .view-picker-popup[data-multiple] .view-picker-search {
+        padding-inline: var(--spacing-1);
+    }
+
+    .view-picker-option {
+        box-sizing: border-box;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--spacing-2);
+        width: 100%;
+        padding-block: var(--spacing-1-5);
+        padding-inline: var(--spacing-2);
+        border: 0;
+        border-radius: var(--radius-element);
+        background: transparent;
+        color: var(--color-text-primary);
+        font: inherit;
+        text-align: start;
+        cursor: pointer;
+        outline: none;
+    }
+
+    .view-picker-option[data-selected] {
+        font-weight: var(--font-weight-medium);
+    }
+
+    .view-picker-option[data-highlighted] {
+        background: var(--color-overlay-hover);
+        outline: var(--focus-outline-width) solid var(--ring);
+        outline-offset: calc(-1 * var(--focus-outline-width));
+    }
+
+    .view-picker-option[data-disabled] {
+        opacity: 0.5;
+        cursor: default;
+    }
+
+    .view-picker-option-content {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-2);
+        flex: 1;
+        min-width: 0;
+    }
+
+    .view-picker-option-icon,
+    .view-picker-mark {
+        display: inline-flex;
+        flex-shrink: 0;
+    }
+
+    .view-picker-option-copy {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+    }
+
+    .view-picker-option-copy > :first-child {
+        font-weight: var(--font-weight-medium);
+    }
+
+    .view-picker-option-description {
+        color: var(--muted-foreground);
+        font-size: var(--text-supporting-size);
+        line-height: var(--text-supporting-leading);
+        font-weight: var(--font-weight-normal);
+    }
+
+    .view-picker-check {
+        box-sizing: border-box;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        width: var(--spacing-6);
+        height: var(--spacing-6);
+        border: var(--border-width) solid var(--color-border-emphasized);
+        border-radius: var(--radius-inner);
+        background: var(--color-background-surface);
+        color: var(--color-on-accent);
+    }
+
+    .view-picker-check[data-checked] {
+        background: var(--color-accent);
+        border-color: var(--color-accent);
+    }
+
+    .view-picker-check > svg {
+        width: calc(var(--spacing-7) / 2);
+        height: calc(var(--spacing-7) / 2);
+        stroke-width: 3;
+    }
+
+    .view-picker-select-all {
+        padding-block: var(--spacing-1);
+    }
+
+    .view-picker-group-label {
+        padding-block: var(--spacing-1);
+        padding-inline: var(--spacing-2);
+        color: var(--muted-foreground);
+        font-size: var(--text-supporting-size);
+        line-height: var(--text-supporting-leading);
+    }
+
+    .view-picker-divider {
+        height: var(--border-width);
+        margin-block: var(--spacing-1);
+        background: var(--color-border);
+    }
+
+    .view-picker-empty {
+        padding: var(--spacing-3);
+        text-align: center;
+        color: var(--muted-foreground);
+    }
+
+    .view-picker-search {
+        flex-shrink: 0;
+        padding-block: var(--spacing-1);
+        padding-inline: calc(var(--spacing-1) + var(--border-width));
+        border-bottom: var(--border-width) solid var(--color-border);
+    }
+
+    .view-picker-search-field {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-2);
+        padding-block: var(--spacing-1-5);
+        padding-inline: var(--spacing-2);
+        border-radius: var(--radius-element);
+    }
+
+    .view-picker-search-field:has(input:focus-visible) {
+        box-shadow: inset 0 0 0 var(--spacing-0-5) var(--ring);
+    }
+
+    .view-picker-search-input {
+        flex: 1;
+        min-width: 0;
+        border: 0;
+        outline: none;
+        padding: 0;
+        background: transparent;
+        font: inherit;
+        color: inherit;
+    }
+
+    .view-picker-search-input::placeholder {
+        color: var(--muted-foreground);
+        opacity: 1;
+    }
+
+    .view-picker-badges {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: var(--spacing-1);
+    }
+
+    .view-picker-badge {
+        display: inline-flex;
+        align-items: center;
+        min-width: 0;
+        max-width: 100%;
+        height: var(--spacing-5);
+        min-height: 1lh;
+        padding-inline: var(--spacing-2);
+        border-radius: var(--radius-full);
+        background: var(--color-neutral);
+        color: var(--color-text-primary);
+        font-size: var(--text-supporting-size);
+        line-height: var(--text-supporting-leading);
+        font-weight: var(--font-weight-medium);
+    }
+
+    .view-picker-overflow {
+        color: var(--muted-foreground);
+        font-weight: var(--font-weight-medium);
+    }
+
+    .view-picker-hidden-label {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap;
+    }
+
+    @media (hover: hover) {
+        .view-picker:not([data-disabled]) .view-picker-control:hover:not(:focus-within) {
+            box-shadow: inset 0 0 0 var(--spacing-0-5) color-mix(in srgb, var(--input) 30%, transparent);
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .view-picker-control,
+        .view-picker-chevron {
+            transition: none;
+        }
+    }
+
+    @media (forced-colors: active) {
+        .view-picker-control:focus-within,
+        .view-picker-check[data-checked] {
+            border-color: Highlight;
+        }
+    }
+}

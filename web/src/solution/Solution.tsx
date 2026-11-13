@@ -1,7 +1,7 @@
-import { Link } from '@/components/astryx/Link';
 import { DevelopmentProfile } from '@/solution/Profile';
 import { SolutionPage } from '@/components/SolutionPage';
 import { PathBreadcrumb } from '@/components/breadcrumb/Path';
+import { NativeLink as Link } from '@/components/ui/NativeLink';
 
 /** Replaces the root SPA fallback metadata after the Solution route hydrates. */
 export const meta = () => [];
@@ -11,7 +11,7 @@ export default function Solution() {
     return (
         <SolutionPage
             action={
-                <Link as="a" href="https://www.longlink.dev/docs/" isExternalLink isStandalone>
+                <Link href="https://www.longlink.dev/docs/" isExternalLink>
                     Documentation
                 </Link>
             }

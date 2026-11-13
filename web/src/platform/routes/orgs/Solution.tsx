@@ -1,18 +1,17 @@
 import { z } from 'zod';
 import { useApi } from '@/lib/hooks/use-api';
-import { Text } from '@/components/astryx/Text';
-import { Stack } from '@/components/astryx/Stack';
 import { ProfileMenu } from '@/components/Profile';
-import { Center } from '@/components/astryx/Center';
 import Platform from '@/components/layouts/Platform';
-import { Heading } from '@/components/astryx/Heading';
 import * as permissions from '@/platform/permissions';
 import { ApiBoundary } from '@/components/ApiBoundary';
 import { SolutionPage } from '@/components/SolutionPage';
-import { CodeBlock } from '@/components/astryx/CodeBlock';
 import NotFoundLayout from '@/components/layouts/NotFound';
 import { useParams, useOutletContext } from 'react-router';
-import { EmptyState } from '@/components/astryx/EmptyState';
+import { NativeText as Text } from '@/components/ui/NativeText';
+import { NativeStack as Stack } from '@/components/ui/NativeStack';
+import { NativeEmptyState } from '@/components/ui/NativeEmptyState';
+import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
+import { NativeCodeBlock as CodeBlock } from '@/components/ui/NativeCodeBlock';
 import { OrganizationSwitcher } from '@/platform/components/OrganizationSwitcher';
 import { OrganizationBreadcrumb } from '@/platform/components/OrganizationBreadcrumb';
 import { zUserOrganizationMembership, zOrganizationSolutionSummary } from '@/lib/generated/platform-api-v1/zod.gen';
@@ -65,22 +64,20 @@ export default function OrganizationSolution() {
     // Show pod logs for accessible failed deployments and the notice otherwise.
     if (deploymentNotice) {
         const notice = (
-            <EmptyState
-                description={deploymentNotice.description}
-                headingLevel={1}
-                role="alert"
-                title={deploymentNotice.title}
-            />
+            <div role="alert">
+                <NativeEmptyState
+                    description={deploymentNotice.description}
+                    headingLevel={1}
+                    title={deploymentNotice.title}
+                />
+            </div>
         );
 
         return (
             <Platform action={action} breadcrumb={breadcrumb} tabs={[]}>
                 <title>{`${solutionAccess.name} | LongLink`}</title>
-                <Center
-                    axis={solutionAccess.status === 'failed' ? 'horizontal' : 'both'}
-                    minHeight="calc(100vh - 14rem)"
-                    padding={6}
-                    width="100%"
+                <div
+                    className={`flex min-h-[calc(100vh-14rem)] w-full justify-center p-6 ${solutionAccess.status === 'failed' ? 'items-stretch' : 'items-center'}`}
                 >
                     <Stack gap={6} maxWidth={1200} width="100%">
                         {solutionAccess.status === 'failed' && canMaintain ? (
@@ -94,7 +91,7 @@ export default function OrganizationSolution() {
                             notice
                         )}
                     </Stack>
-                </Center>
+                </div>
             </Platform>
         );
     }

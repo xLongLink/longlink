@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { Footer } from '@/components/Footer';
 import { Navbar } from '@/components/Navbar';
 import { Outlet, useLocation } from 'react-router';
-import { Stack, StackItem } from '@/components/astryx/Stack';
+import { NativeStack as Stack } from '@/components/ui/NativeStack';
 
 /** Renders public page chrome around page-specific content. */
 export default function Page() {
@@ -33,9 +33,9 @@ export default function Page() {
     return (
         <Stack ref={pageRef} className={isHome ? 'bg-black text-white' : undefined} minHeight="100vh">
             <Navbar expandOnTop={isHome} />
-            <StackItem size="fill">
+            <div className="min-h-0 min-w-0 grow">
                 <Outlet />
-            </StackItem>
+            </div>
             <Footer />
         </Stack>
     );

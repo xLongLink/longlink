@@ -1,10 +1,9 @@
-import { Link } from '@/components/astryx/Link';
-import { Text } from '@/components/astryx/Text';
-import { Stack } from '@/components/astryx/Stack';
 import { legalPaths } from '@/platform/publications';
-import { Heading } from '@/components/astryx/Heading';
-import { List, ListItem } from '@/components/astryx/List';
 import { PublicArticle } from '@/components/layouts/Article';
+import { NativeLink as Link } from '@/components/ui/NativeLink';
+import { NativeText as Text } from '@/components/ui/NativeText';
+import { NativeStack as Stack } from '@/components/ui/NativeStack';
+import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
 
 const article = {
     description: 'Read the LongLink privacy policy.',
@@ -62,7 +61,7 @@ export default function Privacy() {
     return (
         <PublicArticle article={article} paths={legalPaths}>
             <Stack
-                className="[--font-family-heading:var(--font-family-handwritten)] [&_.astryx-heading]:tracking-wide [&_.astryx-heading]:uppercase"
+                className="[--font-family-heading:var(--font-family-handwritten)] [&_.native-heading]:tracking-wide [&_.native-heading]:uppercase"
                 gap={5}
             >
                 <Heading id="privacy-policy" level={1}>
@@ -121,85 +120,64 @@ export default function Privacy() {
                     <Text as="p">
                         Depending on how you use the Service, we may process the following categories of personal data:
                     </Text>
-                    <List listStyle="disc">
-                        <ListItem
-                            label={
-                                <Text>
-                                    Account and identity data: name, email address, optional avatar, account
-                                    identifiers, roles, and sign-in information.
-                                </Text>
-                            }
-                        />
-                        <ListItem
-                            label={
-                                <Text>
-                                    Authentication data: password hashes, signed session and email-verification tokens,
-                                    password-reset tokens, and OAuth sign-in data. We do not store plaintext passwords.
-                                </Text>
-                            }
-                        />
-                        <ListItem
-                            label={
-                                <Text>
-                                    Organization and access data: organization details, memberships, roles, invitations,
-                                    infrastructure assignments, and audit records.
-                                </Text>
-                            }
-                        />
-                        <ListItem
-                            label={
-                                <Text>
-                                    Solution and deployment data: names, images, versions, configuration, environment
-                                    values, deployment status, errors, and runtime information needed to operate
-                                    Solutions.
-                                </Text>
-                            }
-                        />
-                        <ListItem
-                            label={
-                                <Text>
-                                    Connected infrastructure data: provider settings, endpoints, credentials, resource
-                                    identifiers, usage information, and audit records for compute, databases, and
-                                    storage.
-                                </Text>
-                            }
-                        />
-                        <ListItem
-                            label={
-                                <Text>
-                                    Connection and log data: IP addresses, request and session details, timestamps,
-                                    errors, security events, and operational or runtime logs.
-                                </Text>
-                            }
-                        />
-                        <ListItem
-                            label={
-                                <Text>
-                                    Commercial data: billing contacts, invoices, payment status, and accounting records
-                                    when we provide a paid service. We do not process full payment-card details in the
-                                    platform; a payment or banking provider handles those if a separate payment flow is
-                                    used.
-                                </Text>
-                            }
-                        />
-                        <ListItem
-                            label={
-                                <Text>
-                                    Communications: messages, attachments, and contact details when you reach out to us
-                                    for support, security reports, or other enquiries.
-                                </Text>
-                            }
-                        />
-                        <ListItem
-                            label={
-                                <Text>
-                                    Customer Content: data processed by Solutions, connected databases, storage, and
-                                    runtime services. We do not routinely inspect it, but authorized personnel may
-                                    access it for support, security, abuse investigations, or legal requirements.
-                                </Text>
-                            }
-                        />
-                    </List>
+                    <ul className="m-0 flex list-disc flex-col gap-0.5 ps-8 [&>li]:pe-2 [&>li]:py-2">
+                        <li>
+                            <Text>
+                                Account and identity data: name, email address, optional avatar, account identifiers,
+                                roles, and sign-in information.
+                            </Text>
+                        </li>
+                        <li>
+                            <Text>
+                                Authentication data: password hashes, signed session and email-verification tokens,
+                                password-reset tokens, and OAuth sign-in data. We do not store plaintext passwords.
+                            </Text>
+                        </li>
+                        <li>
+                            <Text>
+                                Organization and access data: organization details, memberships, roles, invitations,
+                                infrastructure assignments, and audit records.
+                            </Text>
+                        </li>
+                        <li>
+                            <Text>
+                                Solution and deployment data: names, images, versions, configuration, environment
+                                values, deployment status, errors, and runtime information needed to operate Solutions.
+                            </Text>
+                        </li>
+                        <li>
+                            <Text>
+                                Connected infrastructure data: provider settings, endpoints, credentials, resource
+                                identifiers, usage information, and audit records for compute, databases, and storage.
+                            </Text>
+                        </li>
+                        <li>
+                            <Text>
+                                Connection and log data: IP addresses, request and session details, timestamps, errors,
+                                security events, and operational or runtime logs.
+                            </Text>
+                        </li>
+                        <li>
+                            <Text>
+                                Commercial data: billing contacts, invoices, payment status, and accounting records when
+                                we provide a paid service. We do not process full payment-card details in the platform;
+                                a payment or banking provider handles those if a separate payment flow is used.
+                            </Text>
+                        </li>
+                        <li>
+                            <Text>
+                                Communications: messages, attachments, and contact details when you reach out to us for
+                                support, security reports, or other enquiries.
+                            </Text>
+                        </li>
+                        <li>
+                            <Text>
+                                Customer Content: data processed by Solutions, connected databases, storage, and runtime
+                                services. We do not routinely inspect it, but authorized personnel may access it for
+                                support, security, abuse investigations, or legal requirements.
+                            </Text>
+                        </li>
+                    </ul>
                     <Text as="p">
                         We receive data from you, organizations that invite or administer you, identity providers,
                         connected infrastructure, and your use of the Service.
@@ -239,56 +217,44 @@ export default function Privacy() {
                         5. Service providers and other recipients
                     </Heading>
                     <Text as="p">We disclose only the data reasonably needed for the recipient's role:</Text>
-                    <List listStyle="disc">
-                        <ListItem
-                            label={
-                                <Text>
-                                    Infrastructure providers and connected registries receive the configuration,
-                                    secrets, and request data needed to host and operate Solutions.
-                                </Text>
-                            }
-                        />
-                        <ListItem
-                            label={
-                                <Text>
-                                    Email providers receive contact details and message content to deliver invitations,
-                                    account notices, and support messages.
-                                </Text>
-                            }
-                        />
-                        <ListItem
-                            label={
-                                <Text>
-                                    Logging and monitoring providers receive operational data needed for reliability and
-                                    security.
-                                </Text>
-                            }
-                        />
-                        <ListItem
-                            label={
-                                <Text>
-                                    Payment, banking, or accounting providers receive billing data if you use a paid
-                                    service or separate payment flow.
-                                </Text>
-                            }
-                        />
-                        <ListItem
-                            label={
-                                <Text>
-                                    Advisers and authorities receive data where needed for legal, accounting, security,
-                                    or regulatory purposes.
-                                </Text>
-                            }
-                        />
-                        <ListItem
-                            label={
-                                <Text>
-                                    A prospective buyer or successor may receive data in a business transaction, subject
-                                    to appropriate safeguards.
-                                </Text>
-                            }
-                        />
-                    </List>
+                    <ul className="m-0 flex list-disc flex-col gap-0.5 ps-8 [&>li]:pe-2 [&>li]:py-2">
+                        <li>
+                            <Text>
+                                Infrastructure providers and connected registries receive the configuration, secrets,
+                                and request data needed to host and operate Solutions.
+                            </Text>
+                        </li>
+                        <li>
+                            <Text>
+                                Email providers receive contact details and message content to deliver invitations,
+                                account notices, and support messages.
+                            </Text>
+                        </li>
+                        <li>
+                            <Text>
+                                Logging and monitoring providers receive operational data needed for reliability and
+                                security.
+                            </Text>
+                        </li>
+                        <li>
+                            <Text>
+                                Payment, banking, or accounting providers receive billing data if you use a paid service
+                                or separate payment flow.
+                            </Text>
+                        </li>
+                        <li>
+                            <Text>
+                                Advisers and authorities receive data where needed for legal, accounting, security, or
+                                regulatory purposes.
+                            </Text>
+                        </li>
+                        <li>
+                            <Text>
+                                A prospective buyer or successor may receive data in a business transaction, subject to
+                                appropriate safeguards.
+                            </Text>
+                        </li>
+                    </ul>
                     <Text as="p">
                         Some providers also act as independent controllers for their own legal and security purposes.
                         Their privacy policies govern that processing.
@@ -339,66 +305,50 @@ export default function Privacy() {
                         We keep data for as long as needed to provide the Service or meet legal and security
                         obligations:
                     </Text>
-                    <List listStyle="disc">
-                        <ListItem
-                            label={
-                                <Text>
-                                    account, membership, and invitation data are generally kept while the account or
-                                    organization is active, then deleted or anonymized when no longer needed;
-                                </Text>
-                            }
-                        />
-                        <ListItem
-                            label={
-                                <Text>
-                                    Solution, infrastructure, operation, and audit records are kept while needed to
-                                    operate or secure the Service, and longer for investigations, disputes, or legal
-                                    duties;
-                                </Text>
-                            }
-                        />
-                        <ListItem
-                            label={
-                                <Text>
-                                    access, runtime, and security logs are generally kept for up to 12 months, longer
-                                    when needed for an incident, dispute, or legal claim;
-                                </Text>
-                            }
-                        />
-                        <ListItem
-                            label={
-                                <Text>
-                                    support and security communications are generally kept for up to three years after
-                                    resolution;
-                                </Text>
-                            }
-                        />
-                        <ListItem
-                            label={
-                                <Text>
-                                    invoices and accounting records, where applicable, are generally kept for 10 years
-                                    under Swiss record-keeping requirements;
-                                </Text>
-                            }
-                        />
-                        <ListItem
-                            label={
-                                <Text>
-                                    infrastructure credentials are kept while the related resource is configured, then
-                                    deleted or rotated when no longer needed; and
-                                </Text>
-                            }
-                        />
-                        <ListItem
-                            label={
-                                <Text>
-                                    Customer Content may be erased without a recovery period when a Solution,
-                                    organization, or connected resource is deleted. Export data and keep independent
-                                    backups.
-                                </Text>
-                            }
-                        />
-                    </List>
+                    <ul className="m-0 flex list-disc flex-col gap-0.5 ps-8 [&>li]:pe-2 [&>li]:py-2">
+                        <li>
+                            <Text>
+                                account, membership, and invitation data are generally kept while the account or
+                                organization is active, then deleted or anonymized when no longer needed;
+                            </Text>
+                        </li>
+                        <li>
+                            <Text>
+                                Solution, infrastructure, operation, and audit records are kept while needed to operate
+                                or secure the Service, and longer for investigations, disputes, or legal duties;
+                            </Text>
+                        </li>
+                        <li>
+                            <Text>
+                                access, runtime, and security logs are generally kept for up to 12 months, longer when
+                                needed for an incident, dispute, or legal claim;
+                            </Text>
+                        </li>
+                        <li>
+                            <Text>
+                                support and security communications are generally kept for up to three years after
+                                resolution;
+                            </Text>
+                        </li>
+                        <li>
+                            <Text>
+                                invoices and accounting records, where applicable, are generally kept for 10 years under
+                                Swiss record-keeping requirements;
+                            </Text>
+                        </li>
+                        <li>
+                            <Text>
+                                infrastructure credentials are kept while the related resource is configured, then
+                                deleted or rotated when no longer needed; and
+                            </Text>
+                        </li>
+                        <li>
+                            <Text>
+                                Customer Content may be erased without a recovery period when a Solution, organization,
+                                or connected resource is deleted. Export data and keep independent backups.
+                            </Text>
+                        </li>
+                    </ul>
                     <Text as="p">
                         Data may remain temporarily in protected backups or with providers subject to their own
                         retention obligations. We delete, anonymize, or isolate it when no longer needed until backups

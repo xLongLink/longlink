@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { useLocation } from 'react-router';
 import { buildBreadcrumbs } from '@/components/breadcrumb/text';
-import { BreadcrumbItem, Breadcrumbs } from '@/components/astryx/Breadcrumbs';
+import { Breadcrumbs, BreadcrumbItem } from '@/components/breadcrumb/Breadcrumbs';
 
 /** Renders breadcrumb items derived from the current URL path. */
 export function PathBreadcrumb({
@@ -17,7 +17,7 @@ export function PathBreadcrumb({
     const items = buildBreadcrumbs(pathname, labels);
 
     return (
-        <Breadcrumbs className={className} separator=">" variant="supporting">
+        <Breadcrumbs className={className}>
             {root}
             {items.map(({ label, href }, index) => {
                 const isLast = index === items.length - 1;

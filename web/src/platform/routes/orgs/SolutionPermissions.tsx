@@ -2,17 +2,17 @@ import { z } from 'zod';
 import { api } from '@/lib/api';
 import { useState } from 'react';
 import { useApiError } from '@/lib/errors';
-import { Text } from '@/components/astryx/Text';
 import { Avatar } from '@/components/ui/Avatar';
-import { Stack } from '@/components/astryx/Stack';
-import { Button } from '@/components/astryx/Button';
+import { Picker } from '@/components/ui/Picker';
 import { apiQueryOptions } from '@/lib/react-query';
-import { Heading } from '@/components/astryx/Heading';
 import { ApiBoundary } from '@/components/ApiBoundary';
-import { Selector } from '@/components/astryx/Selector';
 import { Ban, Eye, Pencil, Shield } from 'lucide-react';
-import { Table, proportional } from '@/components/astryx/Table';
+import { NativeText as Text } from '@/components/ui/NativeText';
+import { NativeStack as Stack } from '@/components/ui/NativeStack';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
+import { NativeButton as Button } from '@/components/ui/NativeButton';
+import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
+import { NativeTable as Table, proportional } from '@/components/ui/NativeTable';
 import { useMutation, useQueryClient, useSuspenseQueries } from '@tanstack/react-query';
 
 /** Assigns SDK-defined Solution roles without changing organization roles. */
@@ -134,20 +134,20 @@ function MemberPermissions({
                         header: 'Role',
                         width: proportional(1),
                         renderCell: (member) => (
-                            <Selector
+                            <Picker
                                 label={`Role for ${member.name}`}
-                                isLabelHidden
-                                isDisabled={save.isPending}
+                                labelHidden
+                                disabled={save.isPending}
                                 value={member.role}
                                 options={[
-                                    { value: '', label: 'No access', icon: Ban },
+                                    { value: '', label: 'No access', icon: <Ban /> },
                                     ...settings.roles.map((value) => ({
                                         value,
                                         label: value,
-                                        icon: value === 'read' ? Eye : value === 'write' ? Pencil : Shield,
+                                        icon: value === 'read' ? <Eye /> : value === 'write' ? <Pencil /> : <Shield />,
                                     })),
                                 ]}
-                                onChange={(role) => setRoles((current) => ({ ...current, [member.id]: role }))}
+                                onChange={(role) => setRoles((current) => ({ ...current, [member.id]: role ?? '' }))}
                             />
                         ),
                     },

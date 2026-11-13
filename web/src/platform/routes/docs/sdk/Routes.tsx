@@ -1,10 +1,10 @@
-import { Code } from '@/components/astryx/Code';
-import { Link } from '@/components/astryx/Link';
-import { Text } from '@/components/astryx/Text';
-import { Stack } from '@/components/astryx/Stack';
-import { Heading } from '@/components/astryx/Heading';
-import { CodeBlock } from '@/components/astryx/CodeBlock';
+import '@/components/ui/inlinecode.css';
+import { NativeLink as Link } from '@/components/ui/NativeLink';
+import { NativeText as Text } from '@/components/ui/NativeText';
+import { NativeStack as Stack } from '@/components/ui/NativeStack';
 import { DocumentationArticle } from '@/components/layouts/Article';
+import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
+import { NativeCodeBlock as CodeBlock } from '@/components/ui/NativeCodeBlock';
 
 const article = {
     description: 'Define API routes in a LongLink project.',
@@ -33,7 +33,8 @@ export default function DocsArticleRoute() {
                         FastAPI routes
                     </Link>
                     . LongLink provides the current user and common services such as the database and storage through{' '}
-                    <Code>Context</Code>, so you can use them directly without additional configuration.
+                    <code className="inline-code">Context</code>, so you can use them directly without additional
+                    configuration.
                 </Text>
                 <Stack as="aside" className="border-s border-accent ps-4" gap={0}>
                     <Text weight="semibold">Why?</Text>
@@ -90,12 +91,13 @@ async def approve_invoice(id: int) -> dict[str, int]:
     return {"approved": id}`}
                 />
                 <Text as="p">
-                    Import <Code>APIRouter</Code> from <Code>longlink</Code> to use the <Code>roles</Code> keyword on
-                    route decorators. It also works directly on <Code>LongLink</Code> applications. Explicit roles
-                    replace method defaults; pass role names as a list, or an empty list for no role defaults. Role
-                    names are lowercase identifiers, and Solution admin is not a Platform administrator or an automatic
-                    bypass. Endpoints excluded from OpenAPI are still protected. Custom mounts are not supported for
-                    business operations.
+                    Import <code className="inline-code">APIRouter</code> from{' '}
+                    <code className="inline-code">longlink</code> to use the <code className="inline-code">roles</code>{' '}
+                    keyword on route decorators. It also works directly on <code className="inline-code">LongLink</code>{' '}
+                    applications. Explicit roles replace method defaults; pass role names as a list, or an empty list
+                    for no role defaults. Role names are lowercase identifiers, and Solution admin is not a Platform
+                    administrator or an automatic bypass. Endpoints excluded from OpenAPI are still protected. Custom
+                    mounts are not supported for business operations.
                 </Text>
                 <Text as="p">
                     Build and deploy the image, then open Permissions in the Solution actions under organization
@@ -120,9 +122,10 @@ async def approve_invoice(id: int) -> dict[str, int]:
                     Exceptions
                 </Heading>
                 <Text as="p">
-                    Invalid input returns <Code>422</Code>. Unhandled exceptions return a generic <Code>500</Code>{' '}
-                    response without exposing the original message. Raise <Code>HTTPException</Code> to return a status
-                    code and a public error message:
+                    Invalid input returns <code className="inline-code">422</code>. Unhandled exceptions return a
+                    generic <code className="inline-code">500</code> response without exposing the original message.
+                    Raise <code className="inline-code">HTTPException</code> to return a status code and a public error
+                    message:
                 </Text>
                 <CodeBlock
                     code={`from fastapi import HTTPException

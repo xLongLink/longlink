@@ -5,19 +5,19 @@ import { Form } from '@/components/ui/Form';
 import { Info, Search } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useApi } from '@/lib/hooks/use-api';
-import { Text } from '@/components/astryx/Text';
 import { Dialog } from '@/components/ui/Dialog';
-import { Stack } from '@/components/astryx/Stack';
-import { Button } from '@/components/astryx/Button';
-import { Heading } from '@/components/astryx/Heading';
 import { TextInput } from '@/components/ui/TextInput';
 import { DeletionDialog } from '@/components/Deletion';
-import { TextArea } from '@/components/astryx/TextArea';
+import { Pagination } from '@/components/ui/Pagination';
 import { Step, Stepper } from '@/components/ui/Stepper';
-import { FileInput } from '@/components/astryx/FileInput';
-import { Pagination } from '@/components/astryx/Pagination';
-import { Table, proportional } from '@/components/astryx/Table';
+import { NativeFileInput } from '@/components/ui/FileInput';
+import { NativeText as Text } from '@/components/ui/NativeText';
+import { NativeTextArea } from '@/components/ui/NativeTextArea';
+import { NativeStack as Stack } from '@/components/ui/NativeStack';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
+import { NativeButton as Button } from '@/components/ui/NativeButton';
+import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
+import { NativeTable as Table, proportional } from '@/components/ui/NativeTable';
 
 // The API also accepts raw YAML and validates its structure on the server.
 const registrationSchema = schemas.zComputeRegistryCreate.extend({
@@ -92,7 +92,7 @@ export default function Compute() {
                     ]}
                 />
                 <Stack as="footer" align="center" paddingBlock={2}>
-                    <Pagination {...pagination} totalItems={computes.total} variant="pages" />
+                    <Pagination {...pagination} totalItems={computes.total} />
                 </Stack>
             </Stack>
             {dialog?.kind === 'registration' && (
@@ -262,7 +262,7 @@ function ComputeRegistration({ onSuccess, onClose }: { onSuccess: () => Promise<
                                 Connect your cluster
                             </Heading>
                             <Stack gap={3}>
-                                <FileInput
+                                <NativeFileInput
                                     label="Kubeconfig file"
                                     accept=".yaml,.yml"
                                     value={file}
@@ -279,15 +279,15 @@ function ComputeRegistration({ onSuccess, onClose }: { onSuccess: () => Promise<
                                         setKubeconfig('');
                                     }}
                                 />
-                                <TextArea
+                                <NativeTextArea
                                     label="Kubeconfig"
                                     rows={8}
                                     value={kubeconfig}
                                     placeholder="Paste the Compute kubeconfig"
-                                    isRequired
-                                    isDisabled={fileRead.kind === 'reading'}
-                                    isLoading={fileRead.kind === 'reading'}
-                                    hasSpellCheck={false}
+                                    required
+                                    disabled={fileRead.kind === 'reading'}
+                                    loading={fileRead.kind === 'reading'}
+                                    spellCheck={false}
                                     onChange={setKubeconfig}
                                 />
                             </Stack>

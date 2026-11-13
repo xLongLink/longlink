@@ -1,0 +1,10 @@
+@layer components {
+    .solution-page-loading {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: calc(100vh - 14rem);
+        min-width: 0;
+        width: 100%;
+    }
+}

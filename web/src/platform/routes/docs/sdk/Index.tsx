@@ -1,11 +1,11 @@
 import { MoveRight } from 'lucide-react';
-import { Link } from '@/components/astryx/Link';
-import { Text } from '@/components/astryx/Text';
 import { Tabs, Tab } from '@/components/ui/Tabs';
-import { Stack } from '@/components/astryx/Stack';
-import { Heading } from '@/components/astryx/Heading';
-import { CodeBlock } from '@/components/astryx/CodeBlock';
+import { NativeLink as Link } from '@/components/ui/NativeLink';
+import { NativeText as Text } from '@/components/ui/NativeText';
+import { NativeStack as Stack } from '@/components/ui/NativeStack';
 import { DocumentationArticle } from '@/components/layouts/Article';
+import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
+import { NativeCodeBlock as CodeBlock } from '@/components/ui/NativeCodeBlock';
 
 const article = {
     description: 'Build LongLink Solutions as standard Python and FastAPI services with the Solution SDK.',
@@ -35,9 +35,9 @@ export default function DocsArticleRoute() {
                     className="[--font-family-body:var(--font-family-handwritten)] [--font-family-heading:var(--font-family-handwritten)]"
                     direction="horizontal"
                     gap={6}
-                    hAlign="center"
+                    justify="center"
                     paddingBlock={6}
-                    vAlign="center"
+                    align="center"
                     width="100%"
                 >
                     <Text className="text-sm sm:text-xl md:text-2xl" hasCapsize type="display-3" weight="semibold">

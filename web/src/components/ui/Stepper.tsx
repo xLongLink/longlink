@@ -1,15 +1,13 @@
 import { Icon } from './Icon';
 import { Button } from './Button';
+import { flushSync } from 'react-dom';
 import { ReportedError } from '@/lib/reported';
-import { Stack } from '@/components/astryx/Stack';
 import { FormValidationContext } from './contexts';
-import { Banner } from '@/components/astryx/Banner';
-import { useAnnounce } from '@astryxdesign/core/hooks';
-import { Layout, LayoutHeader, LayoutContent } from '@/components/astryx/Layout';
-import { Stepper as AstryxStepper, Step as AstryxStep } from '@/components/astryx/Stepper';
+import { CircleCheck, CircleDot, ChevronLeft, ChevronRight } from 'lucide-react';
 import {
     Children,
     cloneElement,
+    createContext,
     isValidElement,
     useContext,
     useEffect,
@@ -19,6 +17,12 @@ import {
     type ReactElement,
     type ReactNode,
 } from 'react';
+
+const ProgressContext = createContext<{
+    activeStep: number;
+    compact: boolean;
+    onStepClick?: StepperProps['onStepClick'];
+}>({ activeStep: 0, compact: false });
 
 type StepProps = {
     /** Zero-based progress index; defaults to child order inside Stepper. */
@@ -52,7 +56,7 @@ export function Stepper({ variant = 'progress', ...props }: StepperProps) {
     if (variant === 'wizard') return <Wizard {...props} />;
 
     return (
-        <AstryxStepper
+        <Progress
             activeStep={props.activeStep ?? 0}
             orientation={props.orientation ?? 'horizontal'}
             onStepClick={props.onStepClick}
@@ -62,16 +66,89 @@ export function Stepper({ variant = 'progress', ...props }: StepperProps) {
                     ? cloneElement(child, { step: child.props.step ?? index })
                     : child
             )}
-        </AstryxStepper>
+        </Progress>
+    );
+}
+
+/** Collapses horizontal labels only when each step has less than its original 112px allocation. */
+function Progress({ children, activeStep = 0, orientation = 'horizontal', onStepClick }: StepperProps) {
+    const listRef = useRef<HTMLOListElement>(null);
+    const [compact, setCompact] = useState(false);
+
+    // Observe the actual list constraint rather than the viewport or an ancestor.
+    useEffect(() => {
+        const list = listRef.current;
+
+        if (!list || orientation !== 'horizontal') return;
+
+        const observer = new ResizeObserver(() => {
+            const count = list.children.length;
+            setCompact(list.clientWidth > 0 && list.clientWidth < count * 112);
+        });
+
+        observer.observe(list);
+
+        return () => observer.disconnect();
+    }, [orientation]);
+
+    const collapsed = orientation === 'horizontal' && compact;
+
+    const steps = Children.toArray(children).filter(
+        (child): child is ReactElement<StepProps> => isValidElement<StepProps>(child) && child.type === Step
+    );
+
+    steps.sort((left, right) => (left.props.step ?? 0) - (right.props.step ?? 0));
+
+    const current = steps.find((child) => child.props.step === activeStep);
+    const previous = [...steps].reverse().find((child) => (child.props.step ?? 0) < activeStep)?.props.step;
+    const next = steps.find((child) => (child.props.step ?? 0) > activeStep)?.props.step;
+
+    return (
+        <ProgressContext value={{ activeStep, compact: collapsed, onStepClick }}>
+            <div className="view-stepper" data-orientation={orientation}>
+                <ol ref={listRef} className="view-stepper-list" aria-label="Progress">
+                    {children}
+                </ol>
+                {collapsed && (
+                    <div className="view-stepper-summary">
+                        {onStepClick && (
+                            <button
+                                type="button"
+                                aria-label="Previous step"
+                                disabled={previous === undefined}
+                                onClick={() => previous !== undefined && onStepClick(previous)}
+                            >
+                                <ChevronLeft aria-hidden="true" size={16} />
+                            </button>
+                        )}
+                        <div className="view-stepper-summary-body" aria-hidden="true">
+                            <span>{current?.props.label}</span>
+                            {current?.props.description && (
+                                <span className="view-step-description">{current.props.description}</span>
+                            )}
+                        </div>
+                        {onStepClick && (
+                            <button
+                                type="button"
+                                aria-label="Next step"
+                                disabled={next === undefined}
+                                onClick={() => next !== undefined && onStepClick(next)}
+                            >
+                                <ChevronRight aria-hidden="true" size={16} />
+                            </button>
+                        )}
+                    </div>
+                )}
+            </div>
+        </ProgressContext>
     );
 }
 
 /** Keeps wizard drafts mounted and delegates field validation to an enclosing Form. */
 function Wizard(props: StepperProps) {
-    const rootRef = useRef<HTMLElement>(null);
+    const rootRef = useRef<HTMLDivElement>(null);
     const pending = useRef(false);
     const validate = useContext(FormValidationContext);
-    const announce = useAnnounce();
     const [selection, setSelection] = useState(0);
     const [advancing, setAdvancing] = useState(false);
     const [error, setError] = useState<string>();
@@ -106,8 +183,12 @@ function Wizard(props: StepperProps) {
 
         if (!panel || (validate && !validate(panel))) return;
         pending.current = true;
-        setAdvancing(true);
-        setError(undefined);
+
+        // Button actions run in a transition; lock drafts before the domain action can suspend it.
+        flushSync(() => {
+            setAdvancing(true);
+            setError(undefined);
+        });
 
         // Keep asynchronous domain checks separate from final Form submission.
         try {
@@ -119,7 +200,6 @@ function Wizard(props: StepperProps) {
             const message = failure instanceof Error ? failure.message : 'Could not continue';
 
             setError(message);
-            announce(message, 'assertive');
         } finally {
             pending.current = false;
             setAdvancing(false);
@@ -171,24 +251,15 @@ function Wizard(props: StepperProps) {
 
     // Progress never renders panel children a second time.
     const progress = (
-        <AstryxStepper
-            activeStep={activeStep}
-            orientation={props.orientation ?? 'horizontal'}
-            horizontalOptions={{ minimumStepWidth: 112, collapsedVariant: 'withLabel' }}
-        >
+        <Stepper activeStep={activeStep} orientation={props.orientation ?? 'horizontal'}>
             {steps.map((child, index) => (
-                <AstryxStep
-                    key={child.key}
-                    step={index}
-                    label={child.props.label}
-                    description={child.props.description}
-                />
+                <Step key={child.key} step={index} label={child.props.label} description={child.props.description} />
             ))}
-        </AstryxStepper>
+        </Stepper>
     );
 
     const content = (
-        <Stack gap={4}>
+        <div className="view-wizard-content">
             {steps.map((child, index) => (
                 <fieldset
                     key={child.key}
@@ -199,11 +270,11 @@ function Wizard(props: StepperProps) {
                     aria-label={child.props.label}
                     tabIndex={-1}
                 >
-                    <Stack gap={3}>{child.props.children}</Stack>
+                    <div className="view-wizard-fields">{child.props.children}</div>
                 </fieldset>
             ))}
-            <Stack direction="horizontal" justify="between" align="center" gap={2}>
-                <Stack direction="horizontal" gap={2}>
+            <div className="view-wizard-controls">
+                <div className="view-wizard-back">
                     {props.onCancel && (
                         <Button label="Cancel" variant="ghost" disabled={advancing} onClick={props.onCancel} />
                     )}
@@ -215,49 +286,104 @@ function Wizard(props: StepperProps) {
                             onClick={() => select(activeStep - 1)}
                         />
                     )}
-                </Stack>
+                </div>
                 {activeStep < steps.length - 1 ? (
                     <Button label={next?.label ?? 'Next'} variant="primary" onClick={advance} disabled={advancing} />
                 ) : (
                     props.finalAction
                 )}
-            </Stack>
-            {error && <Banner status="error" title={error} icon={<Icon icon="error" size="md" />} />}
-        </Stack>
+            </div>
+            <div className="view-wizard-announcement" aria-live="assertive" aria-atomic="true">
+                {error && (
+                    <div className="view-wizard-error">
+                        <Icon icon="error" size="md" />
+                        <span>{error}</span>
+                    </div>
+                )}
+            </div>
+        </div>
     );
 
     // Reuse the same persistent panels in inline and bounded wizard frames.
     return (
-        <Stack ref={rootRef} height={props.height} gap={0} data-stepper-wizard="">
+        <div
+            ref={rootRef}
+            style={{ height: props.height }}
+            className="view-wizard"
+            data-bounded={props.height !== undefined || undefined}
+            data-stepper-wizard=""
+        >
             {props.height === undefined ? (
-                <Stack gap={4}>
+                <div className="view-wizard-content">
                     {progress}
                     {content}
-                </Stack>
+                </div>
             ) : (
-                <Layout
-                    padding={0}
-                    header={
-                        <LayoutHeader hasDivider={false}>
-                            <Stack paddingInline={8} paddingBlock={4}>
-                                {progress}
-                            </Stack>
-                        </LayoutHeader>
-                    }
-                    content={
-                        <LayoutContent padding={8}>
-                            <Stack minHeight="100%" justify="center" width="100%" maxWidth={640} className="mx-auto">
-                                {content}
-                            </Stack>
-                        </LayoutContent>
-                    }
-                />
+                <>
+                    <div className="view-wizard-header">{progress}</div>
+                    <div className="view-wizard-scroll">
+                        <div className="view-wizard-body">{content}</div>
+                    </div>
+                </>
             )}
-        </Stack>
+        </div>
     );
 }
 
 /** Defines progress metadata and, in wizard mode, one persistent content panel. */
 export function Step(props: StepProps) {
-    return <AstryxStep {...props} step={props.step ?? 0} />;
+    const { activeStep, compact, onStepClick } = useContext(ProgressContext);
+    const index = props.step ?? 0;
+    const state = index < activeStep ? 'completed' : index === activeStep ? 'active' : 'upcoming';
+
+    const label = (
+        <>
+            <span className="view-step-heading">
+                <span className="view-step-indicator" aria-hidden="true">
+                    {state === 'completed' ? (
+                        <CircleCheck size={16} />
+                    ) : state === 'active' ? (
+                        <CircleDot size={16} />
+                    ) : (
+                        index + 1
+                    )}
+                </span>
+                <span className="view-step-label">{props.label}</span>
+            </span>
+            {props.description && <span className="view-step-description">{props.description}</span>}
+        </>
+    );
+
+    return (
+        <li className="view-step" data-state={state} aria-current={state === 'active' ? 'step' : undefined}>
+            <span className="view-step-track" aria-hidden="true" />
+            <div className="view-step-body">
+                {compact ? (
+                    <span className="sr-only">
+                        {props.label}
+                        {state === 'completed' && ', completed'}
+                    </span>
+                ) : (
+                    <>
+                        {onStepClick ? (
+                            <button type="button" className="view-step-target" onClick={() => onStepClick(index)}>
+                                {label}
+                                {state === 'completed' && <span className="sr-only">completed</span>}
+                            </button>
+                        ) : (
+                            <div className="view-step-target">
+                                {label}
+                                {state === 'completed' && <span className="sr-only">completed</span>}
+                            </div>
+                        )}
+                    </>
+                )}
+                {props.children && (
+                    <div className="view-step-content" hidden={compact}>
+                        {props.children}
+                    </div>
+                )}
+            </div>
+        </li>
+    );
 }

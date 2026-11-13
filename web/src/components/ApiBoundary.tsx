@@ -1,10 +1,9 @@
+import { CircleX } from 'lucide-react';
 import { useApiError } from '@/lib/errors';
 import { useLocation } from 'react-router';
 import { PageLoading } from '@/components/Utils';
 import { Suspense, type ReactNode } from 'react';
-import { Stack } from '@/components/astryx/Stack';
-import { Banner } from '@/components/astryx/Banner';
-import { Button } from '@/components/astryx/Button';
+import { Button } from '@/components/shadcn/button';
 import { QueryErrorResetBoundary } from '@tanstack/react-query';
 import { ErrorBoundary, type FallbackProps } from 'react-error-boundary';
 
@@ -31,10 +30,21 @@ export function ApiBoundary({
                     fallbackRender={
                         fallbackRender ??
                         (({ resetErrorBoundary }) => (
-                            <Stack gap={4} padding={6} align="center">
-                                <Banner status="error" title="Unable to load this page." />
-                                <Button label="Retry" variant="primary" onClick={resetErrorBoundary} />
-                            </Stack>
+                            <div className="api-boundary-error">
+                                <div role="status" className="api-boundary-banner">
+                                    <CircleX aria-hidden="true" className="api-boundary-icon" />
+                                    <p>Unable to load this page.</p>
+                                </div>
+                                <Button
+                                    type="button"
+                                    variant="view"
+                                    data-variant="primary"
+                                    data-size="md"
+                                    onClick={resetErrorBoundary}
+                                >
+                                    Retry
+                                </Button>
+                            </div>
                         ))
                     }
                 >

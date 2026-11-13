@@ -36,7 +36,7 @@ type AvatarProps = {
 
 /** Uses local Waves fallbacks for rounded organization avatars and Glyphs for users. */
 export function Avatar({ kind, src, name, seed, ...props }: AvatarProps) {
-    // Native pages identify the owner; existing Views may still supply Astryx's geometry prop.
+    // Native pages identify the owner; existing Views may still supply the geometry prop.
     props.shape = kind === 'organization' ? 'rounded' : (props.shape ?? 'circle');
 
     // Prefer stable identities while preserving the artwork selected by the effective geometry.

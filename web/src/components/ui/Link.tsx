@@ -1,10 +1,9 @@
+import { Text } from './Text';
 import { useDownload } from './preview';
+import { LoaderCircle } from 'lucide-react';
 import { ReportedError } from '@/lib/reported';
-import { Text } from '@/components/astryx/Text';
 import { resolveNavigationUrl } from '@/lib/url';
 import { LinkNavigationContext } from './contexts';
-import { Spinner } from '@/components/astryx/Spinner';
-import { Link as AstryxLink } from '@/components/astryx/Link';
 import { useContext, useRef, useTransition, type ComponentPropsWithRef, type MouseEvent, type ReactNode } from 'react';
 
 /** Preserves native link gestures while routing ordinary internal clicks through the host. */
@@ -83,50 +82,92 @@ export function Link({
     const attachment = useDownload();
     const actionInFlight = useRef(false);
     const [isPending, startTransition] = useTransition();
+    const blocked = disabled || isPending;
 
-    // Download links use the host capability instead of navigating inside the sandbox.
+    // Keep synchronous state updates urgent; only a returned promise enters a transition.
+    function activate(event: MouseEvent<HTMLAnchorElement | HTMLButtonElement>) {
+        if (blocked || actionInFlight.current) {
+            event.preventDefault();
+            event.stopPropagation();
+
+            return;
+        }
+
+        // Download links use the scoped host capability instead of native navigation.
+        if (download !== undefined && to !== undefined) event.preventDefault();
+
+        if (!onClick && download === undefined) return;
+        actionInFlight.current = true;
+
+        try {
+            const result = onClick?.(event);
+
+            if (!result && (download === undefined || to === undefined)) {
+                actionInFlight.current = false;
+
+                return;
+            }
+
+            startTransition(async () => {
+                try {
+                    await result;
+
+                    if (download !== undefined && to !== undefined) await attachment.download(to, download);
+                } catch (error) {
+                    // Already-reported request failures must not replace the View.
+                    if (!(error instanceof ReportedError)) throw error;
+                } finally {
+                    actionInFlight.current = false;
+                }
+            });
+        } catch (error) {
+            actionInFlight.current = false;
+
+            if (!(error instanceof ReportedError)) {
+                startTransition(async () => {
+                    throw error;
+                });
+            }
+        }
+    }
+
+    const content = (
+        <Text color="inherit">
+            {isPending && (
+                <span role="status" aria-label="Loading" className="view-link-loading">
+                    <LoaderCircle aria-hidden="true" className="view-link-spinner" />
+                </span>
+            )}
+            {children}
+        </Text>
+    );
+
+    const interaction = {
+        className: 'view-link',
+        'aria-disabled': blocked || undefined,
+        'aria-busy': isPending || undefined,
+        onClick: activate,
+        onKeyDown: (event: React.KeyboardEvent<HTMLAnchorElement | HTMLButtonElement>) => {
+            if (blocked && (event.key === 'Enter' || event.key === ' ')) event.preventDefault();
+        },
+    };
+
     return (
         <>
-            <AstryxLink
-                as={NavigationLink}
-                href={to}
-                download={download}
-                isDisabled={disabled || isPending}
-                aria-busy={isPending || undefined}
-                onClick={(event) => {
-                    // Block same-tick activations before React renders the pending state.
-                    if (disabled || actionInFlight.current) {
-                        event.preventDefault();
-                        event.stopPropagation();
-
-                        return;
-                    }
-
-                    // Keep download navigation inside the scoped host capability.
-                    if (download !== undefined && to !== undefined) event.preventDefault();
-
-                    if (!onClick && download === undefined) return;
-                    actionInFlight.current = true;
-                    startTransition(async () => {
-                        try {
-                            await onClick?.(event);
-
-                            if (download !== undefined && to !== undefined) {
-                                await attachment.download(to, download);
-                            }
-                        } catch (error) {
-                            // Avoid replacing the View after a request failure was already reported.
-                            if (!(error instanceof ReportedError)) throw error;
-                        } finally {
-                            actionInFlight.current = false;
-                        }
-                    });
-                }}
-            >
-                {isPending && <Spinner size="sm" label="Loading" />}
-                {children}
-            </AstryxLink>
-            {attachment.error && <Text role="alert">{attachment.error}</Text>}
+            {to === undefined || blocked ? (
+                <button {...interaction} type="button">
+                    {content}
+                </button>
+            ) : (
+                <NavigationLink {...interaction} href={to} download={download}>
+                    {content}
+                </NavigationLink>
+            )}
+            {attachment.error && (
+                <span role="alert">
+                    <Text>{attachment.error}</Text>
+                </span>
+            )}
         </>
     );
 }

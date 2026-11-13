@@ -1,10 +1,83 @@
-import { useValue } from './value';
-import { FormField } from './FormField';
+import { useState } from 'react';
+import { Picker } from './Picker';
 import type { FieldProps } from './types';
-import { compareTime } from '@astryxdesign/core/utils';
-import { TimeInput as AstryxTimeInput, type ISOTimeString } from '@/components/astryx/TimeInput';
+import { TemporalField } from './TemporalField';
+import { displayTime, readTime, timeSeconds, timeFromSeconds, type ISOTimeString } from './temporal';
 
-/** Selects a constrained time using the standard picker. */
+/** Selects a precise time with keyboard-operable hour, minute and optional second controls. */
+function TimePicker({
+    value,
+    seconds,
+    hourFormat,
+    select,
+}: {
+    value?: ISOTimeString;
+    seconds: boolean;
+    hourFormat: '12h' | '24h';
+    select: (value: ISOTimeString) => void;
+}) {
+    const [fallback] = useState(() => {
+        const now = new Date();
+
+        return [now.getHours(), now.getMinutes(), now.getSeconds()].join(':');
+    });
+
+    const parts = (value ?? fallback).split(':');
+    const hour = Number(parts[0]);
+
+    // Reuse the trusted themed picker without giving display parts submission names.
+    return (
+        <div className="view-time-picker">
+            {['Hour', 'Minute', ...(seconds ? ['Second'] : [])].map((label, index) => (
+                <Picker
+                    key={label}
+                    label={label}
+                    value={
+                        index === 0 && hourFormat === '12h'
+                            ? String(hour % 12 || 12)
+                            : String(Number(parts[index] ?? 0))
+                    }
+                    onChange={(value) => {
+                        if (value === null) return;
+                        const next = [...parts];
+                        const number = Number(value);
+                        next[index] = String(
+                            index === 0 && hourFormat === '12h' ? (number % 12) + (hour >= 12 ? 12 : 0) : number
+                        ).padStart(2, '0');
+                        const candidate = readTime(next.join(':'), seconds);
+
+                        if (candidate) select(candidate);
+                    }}
+                    options={Array.from(
+                        { length: index === 0 ? (hourFormat === '12h' ? 12 : 24) : 60 },
+                        (_, number) => {
+                            const option = index === 0 && hourFormat === '12h' ? number + 1 : number;
+
+                            return { value: String(option), label: String(option).padStart(2, '0') };
+                        }
+                    )}
+                />
+            ))}
+            {hourFormat === '12h' && (
+                <Picker
+                    label="Period"
+                    value={hour >= 12 ? 'PM' : 'AM'}
+                    onChange={(value) => {
+                        if (value === null) return;
+                        const next = [...parts];
+                        next[0] = String((hour % 12) + (value === 'PM' ? 12 : 0)).padStart(2, '0');
+                        const candidate = readTime(next.join(':'), seconds);
+
+                        if (candidate) select(candidate);
+                    }}
+                    options={['AM', 'PM']}
+                />
+            )}
+        </div>
+    );
+}
+
+/** Edits canonical times with inclusive second-aware bounds and minute arrow-key increments. */
 export function TimeInput(
     props: FieldProps & {
         value?: ISOTimeString;
@@ -18,45 +91,60 @@ export function TimeInput(
         placeholder?: string;
     }
 ) {
-    // Keep editing and reset state behind Astryx's themed time picker.
-    const { name, defaultValue, ...control } = props;
-    const field = useValue(props.value, defaultValue, props.onChange, Object.hasOwn(props, 'value'));
+    const seconds = props.hasSeconds ?? false;
+    const hourFormat = props.hourFormat ?? '12h';
+    const min = props.min ? timeSeconds(props.min) : 0;
+    const max = props.max ? timeSeconds(props.max) : 86399;
 
-    // Default to minute precision while keeping the selected time controlled by the Solution.
+    const accepts = (value: ISOTimeString) => {
+        const totalSeconds = timeSeconds(value);
+
+        return totalSeconds >= min && totalSeconds <= max;
+    };
+
     return (
-        <FormField
-            {...control}
-            name={name}
-            fieldRef={field.ref}
-            values={[field.value ?? '']}
-            serialize
-            error={
-                field.value &&
-                ((props.min && compareTime(field.value, props.min) < 0) ||
-                    (props.max && compareTime(field.value, props.max) > 0))
-                    ? 'Choose a time within the allowed range.'
-                    : undefined
-            }
-        >
-            {/* Only the canonical ISO carrier owns the submission name, not the formatted display input. */}
-            <AstryxTimeInput
-                {...control}
-                width="100%"
-                value={field.value}
-                onChange={field.onChange}
-                presentation="adaptive-bottom-sheet"
-                placeholder={props.placeholder ?? 'Select a time'}
-                hasSeconds={props.hasSeconds ?? false}
-                hasClear
-                size="md"
-                hourFormat={props.hourFormat ?? '12h'}
-                increment={props.increment ?? 1}
-                isLabelHidden={false}
-                isRequired={props.required ?? false}
-                isDisabled={props.disabled ?? false}
-                changeAction={undefined}
-                isLoading={false}
-            />
-        </FormField>
+        <TemporalField
+            label={props.label}
+            description={props.description}
+            name={props.name}
+            required={props.required}
+            disabled={props.disabled}
+            value={props.value}
+            defaultValue={props.defaultValue}
+            onChange={props.onChange}
+            controlled={Object.hasOwn(props, 'value')}
+            kind="time"
+            placeholder={props.placeholder ?? 'Select a time'}
+            parse={(text) => readTime(text, seconds)}
+            format={(value) => displayTime(value, seconds, hourFormat)}
+            accepts={accepts}
+            step={(value, direction) => {
+                const increment = props.increment ?? 1;
+
+                if (!Number.isInteger(increment)) return null;
+                const now = new Date();
+
+                const current = value
+                    ? timeSeconds(value)
+                    : now.getHours() * 3600 + now.getMinutes() * 60 + (seconds ? now.getSeconds() : 0);
+
+                const next = (((current + direction * increment * 60) % 86400) + 86400) % 86400;
+
+                return timeFromSeconds(next, seconds);
+            }}
+            picker={(value, select) => (
+                <TimePicker
+                    value={value}
+                    seconds={seconds}
+                    hourFormat={hourFormat}
+                    select={(candidate) => {
+                        const total = Math.min(max, Math.max(min, timeSeconds(candidate)));
+                        const next = timeFromSeconds(total, seconds);
+
+                        if (next) select(next, false);
+                    }}
+                />
+            )}
+        />
     );
 }

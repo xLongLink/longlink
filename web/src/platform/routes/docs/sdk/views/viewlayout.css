@@ -1,0 +1,28 @@
+@layer components {
+    .documentation-example-window {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        min-width: 0;
+        min-height: 0;
+        overflow: hidden;
+    }
+
+    .documentation-example-toolbar {
+        flex-shrink: 0;
+        border-bottom: var(--border-width) solid var(--color-border);
+        padding: var(--spacing-2);
+    }
+
+    .documentation-example-body {
+        flex: 1;
+        min-width: 0;
+        min-height: 0;
+        overflow: auto;
+        padding: var(--spacing-6) var(--spacing-4) var(--spacing-4);
+    }
+
+    .documentation-example-body[data-code] {
+        overflow: hidden;
+    }
+}

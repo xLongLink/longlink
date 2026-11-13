@@ -2,13 +2,12 @@
 import { it, expect } from 'vitest';
 import { renderStatic } from '../../render';
 import { TimeInput } from '@/components/ui/TimeInput';
-import { createISOTimeString } from '@astryxdesign/core/utils';
+import type { ISOTimeString } from '@/components/ui/temporal';
 
 it('serializes one canonical time rather than picker display fields', () => {
     // Act
-    const output = renderStatic(
-        <TimeInput label="Start time" name="start" defaultValue={createISOTimeString('09:30') ?? undefined} />
-    );
+    // SAFETY: The fixture is a canonical 24-hour ISO time literal.
+    const output = renderStatic(<TimeInput label="Start time" name="start" defaultValue={'09:30' as ISOTimeString} />);
 
     // Assert
     expect(output.querySelector('input[name="start"]')?.getAttribute('value')).toBe('09:30');

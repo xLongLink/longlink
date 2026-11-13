@@ -1,0 +1,208 @@
+@layer components {
+    .view-temporal-trigger {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        width: var(--spacing-5);
+        height: var(--spacing-5);
+        padding: 0;
+        border: 0;
+        border-radius: var(--radius-element);
+        background: transparent;
+        color: var(--muted-foreground);
+        cursor: pointer;
+    }
+
+    .view-temporal-trigger > svg {
+        width: var(--spacing-4);
+        height: var(--spacing-4);
+    }
+
+    .view-temporal-trigger:hover:not([aria-disabled='true']) {
+        background: var(--secondary);
+    }
+
+    .view-temporal-positioner {
+        z-index: 100;
+    }
+
+    .view-temporal-popup {
+        box-sizing: border-box;
+        max-width: calc(100vw - var(--spacing-4));
+        max-height: var(--available-height);
+        overflow: auto;
+        padding: var(--spacing-3);
+        border: var(--border-width) solid var(--color-border);
+        border-radius: var(--radius-container);
+        background: var(--color-background-surface);
+        color: var(--foreground);
+        font-family: var(--font-family-body);
+        font-size: var(--text-body-size);
+        box-shadow: var(--shadow-med);
+    }
+
+    .view-temporal-title {
+        margin: 0 0 var(--spacing-2);
+        font-size: var(--text-label-size);
+        font-weight: var(--font-weight-medium);
+    }
+
+    .view-temporal-close {
+        width: 100%;
+        margin-top: var(--spacing-2);
+        padding: var(--spacing-2);
+        border: var(--border-width) solid var(--input);
+        border-radius: var(--radius-element);
+        background: var(--secondary);
+        color: var(--foreground);
+        font: inherit;
+        cursor: pointer;
+    }
+
+    .view-temporal-popup button:focus-visible,
+    .view-temporal-trigger:focus-visible {
+        outline: var(--focus-outline-width) solid var(--ring);
+        outline-offset: var(--focus-outline-offset);
+    }
+
+    .view-date-calendar {
+        position: relative;
+        width: max-content;
+    }
+
+    .view-date-calendar .rdp-nav {
+        position: absolute;
+        inset-inline-end: 0;
+        top: 0;
+        display: flex;
+        gap: var(--spacing-1);
+    }
+
+    .view-date-calendar .rdp-month_caption {
+        display: flex;
+        align-items: center;
+        height: var(--spacing-8);
+        padding-inline-end: calc(var(--spacing-8) * 2);
+        font-weight: var(--font-weight-medium);
+    }
+
+    .view-date-calendar .rdp-month_grid {
+        border-collapse: collapse;
+    }
+
+    .view-date-calendar .rdp-weekday {
+        padding-block: var(--spacing-2);
+        color: var(--muted-foreground);
+        font-size: var(--text-supporting-size);
+        font-weight: var(--font-weight-normal);
+    }
+
+    .view-date-calendar .rdp-day {
+        padding: var(--spacing-0-5);
+        text-align: center;
+    }
+
+    .view-date-calendar :is(.rdp-day_button, .rdp-button_previous, .rdp-button_next) {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: var(--spacing-8);
+        height: var(--spacing-8);
+        padding: 0;
+        border: 0;
+        border-radius: var(--radius-element);
+        background: transparent;
+        color: inherit;
+        font: inherit;
+        cursor: pointer;
+    }
+
+    .view-date-calendar .rdp-chevron {
+        width: var(--spacing-4);
+        height: var(--spacing-4);
+    }
+
+    .view-date-calendar button:hover:not(:disabled, [aria-disabled='true']) {
+        background: var(--secondary);
+    }
+
+    .view-date-calendar .rdp-selected .rdp-day_button {
+        background: var(--color-accent);
+        color: var(--color-on-accent);
+    }
+
+    .view-date-calendar .rdp-outside {
+        color: var(--muted-foreground);
+    }
+
+    .view-date-calendar button:disabled,
+    .view-date-calendar button[aria-disabled='true'] {
+        color: var(--color-text-disabled);
+        cursor: default;
+    }
+
+    .view-date-calendar .rdp-today:not(.rdp-selected) .rdp-day_button {
+        box-shadow: inset 0 0 0 var(--border-width) var(--input);
+    }
+
+    .view-time-picker {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--spacing-2);
+        max-width: calc(var(--spacing-8) * 10);
+    }
+
+    .view-time-picker > .view-text-field {
+        flex: 1;
+        width: auto;
+        min-width: calc(var(--spacing-8) * 2);
+    }
+
+    @media (pointer: coarse) {
+        .view-temporal-backdrop {
+            position: fixed;
+            inset: 0;
+            z-index: 100;
+            background: var(--color-overlay);
+        }
+
+        .view-temporal-positioner {
+            position: fixed !important;
+            inset: auto 0 0 !important;
+            transform: none !important;
+            display: flex;
+            justify-content: center;
+        }
+
+        .view-temporal-popup {
+            width: 100%;
+            max-width: none;
+            max-height: 85dvh;
+            padding: var(--spacing-4);
+            padding-bottom: max(var(--spacing-4), env(safe-area-inset-bottom));
+            border-end-start-radius: 0;
+            border-end-end-radius: 0;
+        }
+
+        .view-date-calendar,
+        .view-time-picker {
+            margin-inline: auto;
+        }
+
+        .view-date-calendar :is(.rdp-day_button, .rdp-button_previous, .rdp-button_next) {
+            width: var(--spacing-10);
+            height: var(--spacing-10);
+        }
+
+        .view-date-calendar {
+            width: 100%;
+            max-width: calc(var(--spacing-10) * 7 + var(--spacing-1) * 7);
+        }
+
+        .view-date-calendar .rdp-month_grid,
+        .view-date-calendar .rdp-day_button {
+            width: 100%;
+        }
+    }
+}

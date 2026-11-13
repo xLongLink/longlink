@@ -4983,7 +4983,7 @@ declare function Pagination(props: {
     onPageChange: (page: number) => void;
     totalItems: number;
     pageSize: number;
-    /** Accessible navigation label; defaults to Astryx's localized Pagination label. */
+    /** Accessible navigation label; defaults to Pagination. */
     label?: string;
 }): React.JSX.Element;
 

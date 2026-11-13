@@ -1,18 +1,18 @@
 import { api } from '@/lib/api';
 import { useState } from 'react';
 import { Form } from '@/components/ui/Form';
-import { Text } from '@/components/astryx/Text';
 import { Dialog } from '@/components/ui/Dialog';
 import { useQuery } from '@tanstack/react-query';
-import { Button } from '@/components/astryx/Button';
 import { ArrowRight, RefreshCw } from 'lucide-react';
-import { Heading } from '@/components/astryx/Heading';
 import { Step, Stepper } from '@/components/ui/Stepper';
-import { TextInput } from '@/components/astryx/TextInput';
-import { Stack, StackItem } from '@/components/astryx/Stack';
-import { CheckboxInput } from '@/components/astryx/CheckboxInput';
-import { Layout, LayoutContent } from '@/components/astryx/Layout';
+import { CheckboxInput } from '@/components/ui/CheckboxInput';
+import { NativeText as Text } from '@/components/ui/NativeText';
+import { NativeTextInput } from '@/components/ui/NativeTextInput';
+import { NativeStack as Stack } from '@/components/ui/NativeStack';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
+import { NativeButton as Button } from '@/components/ui/NativeButton';
+import '@/platform/components/dialogcontent.css';
+import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
 
 type DeploymentReviewProps = {
     item: { id: string; name: string };
@@ -92,25 +92,20 @@ export default function DeploymentReview({ item, onSuccess, onClose }: Deploymen
             }}
         >
             {!candidate ? (
-                <Stack height="min(560px, calc(100dvh - var(--spacing-10) * 4))">
-                    <Layout
-                        padding={0}
-                        content={
-                            <LayoutContent padding={8}>
-                                <Stack gap={4} align="center" justify="center" minHeight="100%">
-                                    <Heading level={2}>Update {item.name}</Heading>
-                                    <Text as="p" role="status">
-                                        {isPending ? 'Checking for updates…' : 'Could not check for updates.'}
-                                    </Text>
-                                    <Stack direction="horizontal" gap={2}>
-                                        <Button label="Cancel" variant="ghost" onClick={onClose} />
-                                        {!isPending && <Button label="Retry" onClick={() => void refetch()} />}
-                                    </Stack>
-                                </Stack>
-                            </LayoutContent>
-                        }
-                    />
-                </Stack>
+                <div className="platform-dialog-frame">
+                    <div className="platform-dialog-scroll">
+                        <Stack gap={4} align="center" justify="center" minHeight="100%">
+                            <Heading level={2}>Update {item.name}</Heading>
+                            <Text as="p" role="status">
+                                {isPending ? 'Checking for updates…' : 'Could not check for updates.'}
+                            </Text>
+                            <Stack direction="horizontal" gap={2}>
+                                <Button label="Cancel" variant="ghost" onClick={onClose} />
+                                {!isPending && <Button label="Retry" onClick={() => void refetch()} />}
+                            </Stack>
+                        </Stack>
+                    </div>
+                </div>
             ) : (
                 <Form action={updateSolution} submitDisabled={missingRequired || !hasChanges}>
                     <Stepper
@@ -135,7 +130,7 @@ export default function DeploymentReview({ item, onSuccess, onClose }: Deploymen
                                     </Heading>
                                 </Stack>
                                 <Stack direction="horizontal" gap={4} align="center">
-                                    <StackItem size="fill">
+                                    <div className="min-h-0 min-w-0 grow">
                                         <Stack padding={3} className="rounded-lg bg-muted">
                                             <Text
                                                 type="code"
@@ -147,15 +142,15 @@ export default function DeploymentReview({ item, onSuccess, onClose }: Deploymen
                                                 {candidate.current_version || imageDigest(candidate.current_image)}
                                             </Text>
                                         </Stack>
-                                    </StackItem>
+                                    </div>
                                     <ArrowRight className="size-5 shrink-0 text-muted-foreground" aria-hidden="true" />
-                                    <StackItem size="fill">
+                                    <div className="min-h-0 min-w-0 grow">
                                         <Stack padding={3} className="rounded-lg bg-muted">
                                             <Text type="code" justify="center" display="block" className="break-all">
                                                 {candidate.metadata.version || imageDigest(candidate.metadata.image)}
                                             </Text>
                                         </Stack>
-                                    </StackItem>
+                                    </div>
                                 </Stack>
                             </Stack>
                         </Step>
@@ -180,14 +175,13 @@ export default function DeploymentReview({ item, onSuccess, onClose }: Deploymen
                                     // Configured secrets remain hidden; blank untouched inputs preserve them.
                                     return (
                                         <Stack key={environment.name} gap={2}>
-                                            <TextInput
+                                            <NativeTextInput
                                                 label={environment.name}
-                                                labelTooltip={environment.description ?? undefined}
+                                                description={environment.description ?? undefined}
                                                 type="password"
                                                 value={draft?.value ?? ''}
-                                                isDisabled={isRemoved}
-                                                isOptional={!environment.required}
-                                                isRequired={environment.required && (!configured || isRemoved)}
+                                                disabled={isRemoved}
+                                                required={environment.required && (!configured || isRemoved)}
                                                 placeholder={
                                                     isRemoved
                                                         ? 'Will be removed'
@@ -195,15 +189,17 @@ export default function DeploymentReview({ item, onSuccess, onClose }: Deploymen
                                                           ? 'Configured: preserve existing value'
                                                           : environment.description || 'Enter value'
                                                 }
-                                                onChange={(value) =>
+                                                onChange={(event) => {
+                                                    const value = event.target.value;
+
                                                     setEnvs((current) => ({
                                                         ...current,
                                                         [environment.name]: {
                                                             ...current[environment.name],
                                                             value,
                                                         },
-                                                    }))
-                                                }
+                                                    }));
+                                                }}
                                             />
                                             {configured && !environment.required && (
                                                 <CheckboxInput

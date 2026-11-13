@@ -4,16 +4,16 @@ import { useState } from 'react';
 import { FormDialog } from './FormDialog';
 import { Form } from '@/components/ui/Form';
 import { useApi } from '@/lib/hooks/use-api';
-import { Text } from '@/components/astryx/Text';
-import { Stack } from '@/components/astryx/Stack';
 import { Divider } from '@/components/ui/Divider';
-import { Button } from '@/components/astryx/Button';
-import { Heading } from '@/components/astryx/Heading';
 import { TextInput } from '@/components/ui/TextInput';
 import { DeletionDialog } from '@/components/Deletion';
 import { Illustration } from '@/components/Illustration';
-import { Table, proportional } from '@/components/astryx/Table';
+import { NativeText as Text } from '@/components/ui/NativeText';
+import { NativeStack as Stack } from '@/components/ui/NativeStack';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
+import { NativeButton as Button } from '@/components/ui/NativeButton';
+import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
+import { NativeTable as Table, proportional } from '@/components/ui/NativeTable';
 
 type Registry = z.output<typeof schemas.zRegistryResponse>;
 
@@ -144,7 +144,7 @@ function RegistryForm({
             <Form action={save}>
                 <Stack gap={3}>
                     <Text as="p">GitHub Container Registry (ghcr.io)</Text>
-                    <Stack className="[&_.astryx-field-label_.astryx-icon]:ml-auto">
+                    <Stack>
                         <TextInput
                             label="Personal access token (classic)"
                             description="Requires the read:packages scope."

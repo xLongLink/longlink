@@ -7,11 +7,8 @@ import { renderStatic } from '../render';
 import { useApi } from '@/lib/hooks/use-api';
 import { createRoot } from 'react-dom/client';
 import { ApiErrorContext } from '@/lib/errors';
-import { Theme } from '@astryxdesign/core/theme';
-import { stoneTheme } from '@/lib/generated/stone.js';
 import { ApiBoundary } from '@/components/ApiBoundary';
 import { Link, Route, Routes, MemoryRouter } from 'react-router';
-import { LayerProvider } from '@/components/astryx/LayerProvider';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 it('uses the caller-selected loading fallback for suspended reads', () => {
@@ -35,7 +32,7 @@ it('uses the caller-selected loading fallback for suspended reads', () => {
     expect(output.textContent).toBe('Loading orders');
 });
 
-it('recovers a failed read when navigating within the same API boundary without retrying', async () => {
+it.each(['retry', 'navigation'] as const)('recovers a failed validated read through %s', async (recovery) => {
     // Arrange
     const schema = z.object({ name: z.string() });
     const errors: unknown[] = [];
@@ -63,21 +60,17 @@ it('recovers a failed read when navigating within the same API boundary without 
         flushSync(() => {
             root.render(
                 <MemoryRouter initialEntries={['/failed']}>
-                    <Theme theme={stoneTheme} mode="dark">
-                        <LayerProvider>
-                            <QueryClientProvider client={client}>
-                                <ApiErrorContext value={(error) => errors.push(error)}>
-                                    <Link to="/healthy">Healthy orders</Link>
-                                    <ApiBoundary>
-                                        <Routes>
-                                            <Route path="/failed" element={<Orders path="/api/orders/failed" />} />
-                                            <Route path="/healthy" element={<Orders path="/api/orders/healthy" />} />
-                                        </Routes>
-                                    </ApiBoundary>
-                                </ApiErrorContext>
-                            </QueryClientProvider>
-                        </LayerProvider>
-                    </Theme>
+                    <QueryClientProvider client={client}>
+                        <ApiErrorContext value={(error) => errors.push(error)}>
+                            <Link to="/healthy">Healthy orders</Link>
+                            <ApiBoundary>
+                                <Routes>
+                                    <Route path="/failed" element={<Orders path="/api/orders/failed" />} />
+                                    <Route path="/healthy" element={<Orders path="/api/orders/healthy" />} />
+                                </Routes>
+                            </ApiBoundary>
+                        </ApiErrorContext>
+                    </QueryClientProvider>
                 </MemoryRouter>
             );
         });
@@ -91,9 +84,15 @@ it('recovers a failed read when navigating within the same API boundary without 
         expect(transport).toHaveBeenCalledTimes(1);
 
         // Act
-        const link = output.querySelector('a');
-        expect(link?.getAttribute('href')).toBe('/healthy');
-        link?.click();
+        if (recovery === 'retry') {
+            const retry = output.querySelector('button');
+            expect(retry?.type).toBe('button');
+            retry?.click();
+        } else {
+            const link = output.querySelector('a');
+            expect(link?.getAttribute('href')).toBe('/healthy');
+            link?.click();
+        }
 
         // Assert
         await vi.waitFor(() => expect(output.querySelector('p')?.textContent).toBe('Healthy orders'));
@@ -101,8 +100,12 @@ it('recovers a failed read when navigating within the same API boundary without 
         expect(output.querySelector('button')).toBeNull();
         expect(transport.mock.calls.map(([input]) => (input instanceof Request ? input.url : String(input)))).toEqual([
             'http://localhost/api/orders/failed',
-            'http://localhost/api/orders/healthy',
+            `http://localhost/api/orders/${recovery === 'retry' ? 'failed' : 'healthy'}`,
         ]);
+        expect(client.getQueryData(['api', `/api/orders/${recovery === 'retry' ? 'failed' : 'healthy'}`])).toEqual({
+            name: 'Healthy orders',
+        });
+        expect(errors).toHaveLength(1);
     } finally {
         root.unmount();
         client.clear();

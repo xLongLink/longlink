@@ -1,13 +1,13 @@
 import { useApi } from '@/lib/hooks/use-api';
-import { Link } from '@/components/astryx/Link';
-import { Text } from '@/components/astryx/Text';
-import { Stack } from '@/components/astryx/Stack';
-import { Token } from '@/components/astryx/Token';
+import { Token } from '@/components/ui/Token';
 import { Divider } from '@/components/ui/Divider';
-import { Heading } from '@/components/astryx/Heading';
 import { ApiBoundary } from '@/components/ApiBoundary';
-import { Table, proportional } from '@/components/astryx/Table';
+import { NativeLink as Link } from '@/components/ui/NativeLink';
+import { NativeText as Text } from '@/components/ui/NativeText';
+import { NativeStack as Stack } from '@/components/ui/NativeStack';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
+import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
+import { NativeTable as Table, proportional } from '@/components/ui/NativeTable';
 
 /** Keeps private invoice reads scoped to the active owner-only settings section. */
 export default function Invoices({ base, canManage }: { base: string; canManage: boolean }) {

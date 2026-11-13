@@ -1,14 +1,14 @@
+import { Card } from '@/components/ui/Card';
 import { ExternalLink } from 'lucide-react';
 import { useApi } from '@/lib/hooks/use-api';
-import { Card } from '@/components/astryx/Card';
-import { Text } from '@/components/astryx/Text';
-import { Stack } from '@/components/astryx/Stack';
 import { Divider } from '@/components/ui/Divider';
-import { Button } from '@/components/astryx/Button';
-import { Heading } from '@/components/astryx/Heading';
 import { ApiBoundary } from '@/components/ApiBoundary';
 import { ProgressBar } from '@/components/ui/ProgressBar';
+import { NativeText as Text } from '@/components/ui/NativeText';
+import { NativeStack as Stack } from '@/components/ui/NativeStack';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
+import { NativeButton as Button } from '@/components/ui/NativeButton';
+import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
 
 /** Shows the Organization's usage against free allowances or card-enabled capacity. */
 export default function Usage({ base }: { base: string }) {
@@ -25,7 +25,7 @@ export default function Usage({ base }: { base: string }) {
                 </Heading>
             </Stack>
             <Divider />
-            <Card padding={0} className="overflow-hidden">
+            <Card padding={0} isClipped>
                 <Stack gap={0}>
                     <Stack
                         direction="horizontal"

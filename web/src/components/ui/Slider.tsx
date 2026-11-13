@@ -1,6 +1,11 @@
 import { useValue } from './value';
+import { FormField } from './FormField';
 import type { FieldProps } from './types';
-import { Slider as AstryxSlider } from '@/components/astryx/Slider';
+import { Slider as BaseSlider } from '@base-ui/react/slider';
+import { useDirection } from '@base-ui/react/direction-provider';
+import { useEffect, useEffectEvent, useId, useRef } from 'react';
+
+type SliderGesture = { pointerId: number; committed: boolean };
 
 type SliderProps = FieldProps & {
     min?: number;
@@ -43,30 +48,188 @@ export function Slider(props: SliderProps) {
         }
     );
 
-    // Use a percentage-scale slider unless the Solution supplies its own range.
+    const id = useId();
+    const direction = useDirection();
+    const gesture = useRef<SliderGesture | null>(null);
+    const min = props.min ?? 0;
+    const max = props.max ?? 100;
+    const step = props.step ?? 1;
+
+    const values = (Array.isArray(value) ? value : [value])
+        .map((current) => Math.min(Math.max(current, min), max))
+        .sort((first, second) => first - second);
+
+    const normalized: number | [number, number] = Array.isArray(value) ? [values[0], values[1]] : values[0];
+
+    // Pointer completion reads the accepted render, while keyboard commits may report a proposed edit.
+    function commit(next: number | [number, number] = normalized) {
+        if (props.disabled || ref.current?.closest('fieldset:disabled')) return;
+
+        if (isRangeSlider(props)) {
+            if (Array.isArray(next)) props.onChangeEnd?.(next);
+        } else if (!Array.isArray(next)) props.onChangeEnd?.(next);
+    }
+
+    // Base UI omits commits for unchanged gestures; finish those once after its release handler.
+    const completeGesture = useEffectEvent((active: SliderGesture) => {
+        if (gesture.current !== active) return;
+        gesture.current = null;
+
+        if (!active.committed) commit();
+    });
+
+    // An interrupted or unmounted control must not retain document listeners or pending completion callbacks.
+    useEffect(() => {
+        const document = ref.current?.ownerDocument;
+
+        if (!document) return;
+
+        const finish = (release: PointerEvent) => {
+            const active = gesture.current;
+
+            if (!active || release.pointerId !== active.pointerId) return;
+            queueMicrotask(() => completeGesture(active));
+        };
+
+        document.addEventListener('pointerup', finish);
+        document.addEventListener('pointercancel', finish);
+
+        return () => {
+            document.removeEventListener('pointerup', finish);
+            document.removeEventListener('pointercancel', finish);
+            gesture.current = null;
+        };
+    }, [ref]);
+
+    // Keep disabled sliders discoverable; reject edits without disabling their native focus targets.
     return (
-        <AstryxSlider
-            {...props}
-            width="100%"
-            ref={ref}
-            {...(Array.isArray(value)
-                ? {
-                      value,
-                      onChange,
-                      onChangeEnd: isRangeSlider(props) ? props.onChangeEnd : undefined,
-                  }
-                : {
-                      value,
-                      onChange,
-                      onChangeEnd: !isRangeSlider(props) ? props.onChangeEnd : undefined,
-                  })}
-            htmlName={props.name}
-            min={props.min ?? 0}
-            max={props.max ?? 100}
-            step={props.step ?? 1}
-            isLabelHidden={false}
-            isRequired={props.required ?? false}
-            isDisabled={props.disabled ?? false}
-        />
+        <FormField {...props} fieldRef={ref} values={values.map(String)} serialize>
+            <BaseSlider.Root
+                className="view-slider"
+                data-disabled={props.disabled || undefined}
+                value={normalized}
+                onValueChange={(next, details) => {
+                    if (props.disabled || ref.current?.closest('fieldset:disabled')) {
+                        details.cancel();
+
+                        return;
+                    }
+
+                    onChange(next);
+                }}
+                onValueCommitted={(next, details) => {
+                    if (details.reason === 'drag' || details.reason === 'track-press') {
+                        if (gesture.current) gesture.current.committed = true;
+
+                        commit();
+
+                        return;
+                    }
+
+                    commit(next);
+                }}
+                min={min}
+                max={max}
+                step={step}
+                largeStep={step * 10}
+                minStepsBetweenValues={isRangeSlider(props) ? props.minStepsBetweenThumbs : undefined}
+                thumbCollisionBehavior="none"
+                thumbAlignment="edge"
+                aria-labelledby={`${id}-label`}
+                aria-describedby={props.description ? `${id}-description` : undefined}
+                aria-disabled={props.disabled || undefined}
+            >
+                <div className="view-text-field-heading">
+                    <span id={`${id}-label`} className="view-text-field-label">
+                        {props.label}
+                        {props.required && (
+                            <span className="view-text-field-description">
+                                <span aria-hidden="true"> · </span>Required
+                            </span>
+                        )}
+                    </span>
+                    {props.description && (
+                        <span id={`${id}-description`} className="view-text-field-description">
+                            {props.description}
+                        </span>
+                    )}
+                </div>
+                <BaseSlider.Control
+                    className="view-slider-control"
+                    onPointerDownCapture={(event) => {
+                        if (props.disabled || event.currentTarget.closest('fieldset:disabled')) {
+                            event.preventDefault();
+                            event.stopPropagation();
+
+                            return;
+                        }
+
+                        if (event.button !== 0 || gesture.current) return;
+                        gesture.current = {
+                            pointerId: event.pointerId,
+                            committed: false,
+                        };
+                    }}
+                >
+                    <BaseSlider.Track className="view-slider-track">
+                        <BaseSlider.Indicator className="view-slider-indicator" />
+                        {values.map((current, index) => (
+                            <BaseSlider.Thumb
+                                key={index === 0 ? 'start' : 'end'}
+                                index={index}
+                                className="view-slider-thumb"
+                                aria-label={
+                                    Array.isArray(value) ? (index === 0 ? 'Minimum value' : 'Maximum value') : undefined
+                                }
+                                aria-labelledby={!Array.isArray(value) ? `${id}-label` : undefined}
+                                aria-describedby={props.description ? `${id}-description` : undefined}
+                                onKeyDown={(event) => {
+                                    if (props.disabled || event.currentTarget.closest('fieldset:disabled')) {
+                                        if (event.key !== 'Tab') event.preventDefault();
+
+                                        return;
+                                    }
+
+                                    if (!isRangeSlider(props) || !props.minStepsBetweenThumbs) return;
+                                    const gap = props.minStepsBetweenThumbs * step;
+                                    const towardMax = direction === 'rtl' ? 'ArrowLeft' : 'ArrowRight';
+                                    const towardMin = direction === 'rtl' ? 'ArrowRight' : 'ArrowLeft';
+                                    const increasing = [towardMax, 'ArrowUp', 'PageUp'].includes(event.key);
+                                    const decreasing = [towardMin, 'ArrowDown', 'PageDown'].includes(event.key);
+
+                                    if (!increasing && !decreasing) return;
+                                    const increment = event.shiftKey || event.key.startsWith('Page') ? step * 10 : step;
+                                    const snapped = min + Math.round((values[index] - min) / step) * step;
+
+                                    const proposed = Math.min(
+                                        max,
+                                        Math.max(min, snapped + (increasing ? increment : -increment))
+                                    );
+
+                                    const boundary = index === 0 ? values[1] - gap : values[0] + gap;
+
+                                    // Only intercept increments that Base UI would reject for crossing the minimum gap.
+                                    if (index === 0 ? proposed <= boundary : proposed >= boundary) return;
+                                    event.preventDefault();
+                                    const endpoint = Math.min(max, Math.max(min, boundary));
+
+                                    if (endpoint === values[index]) return;
+
+                                    const next: [number, number] =
+                                        index === 0 ? [endpoint, values[1]] : [values[0], endpoint];
+
+                                    onChange(next);
+                                    commit(next);
+                                }}
+                            >
+                                <span className="view-slider-value" aria-hidden="true">
+                                    {current}
+                                </span>
+                            </BaseSlider.Thumb>
+                        ))}
+                    </BaseSlider.Track>
+                </BaseSlider.Control>
+            </BaseSlider.Root>
+        </FormField>
     );
 }

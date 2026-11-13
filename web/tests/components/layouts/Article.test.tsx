@@ -1,7 +1,6 @@
 // @vitest-environment happy-dom
 import { it, expect, vi } from 'vitest';
 import { act, type ReactNode } from 'react';
-import { LinkProvider } from '@/components/astryx/Link';
 import { renderStatic, withMounted } from '../../render';
 import { ArticleFooter } from '@/components/layouts/Article';
 import { Link as RouterLink, useLocation } from 'react-router';
@@ -11,12 +10,12 @@ function ArticleNavigation({ children }: { children?: ReactNode }) {
     const { pathname } = useLocation();
 
     return (
-        <LinkProvider component={RouterLink}>
+        <>
             <output aria-label="Current article">{pathname}</output>
             <ArticleFooter lastUpdated="2026-10-16" paths={['/docs/first', '/docs/middle', '/docs/last']} />
             {children}
             <RouterLink to="/outside/">Leave collection</RouterLink>
-        </LinkProvider>
+        </>
     );
 }
 
@@ -259,4 +258,34 @@ it('releases the document shortcut listener when the footer unmounts', async () 
 
     // Assert
     expect(event.defaultPrevented).toBe(false);
+});
+
+it('keeps modified collection links native while ordinary clicks use the router', async () => {
+    await withMounted(
+        <ArticleNavigation />,
+        async (output) => {
+            const next = output.querySelector<HTMLAnchorElement>('a[aria-keyshortcuts="ArrowRight"]');
+            const event = new MouseEvent('click', { bubbles: true, cancelable: true, metaKey: true });
+            await act(async () => next?.dispatchEvent(event));
+
+            expect(event.defaultPrevented).toBe(false);
+            expect(output.querySelector('output')?.textContent).toBe('/docs/middle/');
+
+            await act(async () => next?.click());
+            await vi.waitFor(() => expect(output.querySelector('output')?.textContent).toBe('/docs/last/'));
+        },
+        '/docs/middle/'
+    );
+});
+
+it('renders UTC modification dates and only offers an external source link when supplied', () => {
+    const withoutEdit = renderStatic(<ArticleFooter lastUpdated="2026-10-16T23:30:00-03:00" />);
+    expect(withoutEdit.textContent).toContain('17 Oct 2026');
+    expect(withoutEdit.querySelector('a')).toBeNull();
+
+    const withEdit = renderStatic(<ArticleFooter lastUpdated="2026-10-16" editUrl="https://example.com/source" />);
+    const edit = withEdit.querySelector('a');
+    expect(edit?.getAttribute('href')).toBe('https://example.com/source');
+    expect(edit?.getAttribute('target')).toBe('_blank');
+    expect(edit?.getAttribute('rel')).toBe('noopener noreferrer');
 });

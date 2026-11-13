@@ -1,11 +1,11 @@
-import { Grid } from '@/components/astryx/Grid';
-import { Icon } from '@/components/astryx/Icon';
-import { Text } from '@/components/astryx/Text';
-import { Stack } from '@/components/astryx/Stack';
-import { Heading } from '@/components/astryx/Heading';
+import './index.css';
+import { Link } from 'react-router';
+import { Grid } from '@/components/ui/Grid';
 import { Code2, Lightbulb, ServerCog } from 'lucide-react';
-import { ClickableCard } from '@/components/astryx/ClickableCard';
+import { NativeText as Text } from '@/components/ui/NativeText';
+import { NativeStack as Stack } from '@/components/ui/NativeStack';
 import { DocumentationArticle } from '@/components/layouts/Article';
+import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
 
 const article = {
     title: 'Documentation | LongLink',
@@ -36,14 +36,9 @@ export default function DocsIndex() {
                         Start here
                     </Heading>
                     <Grid columns={{ minWidth: 200, max: 3, repeat: 'fit' }} gap={0}>
-                        <ClickableCard
-                            className="-mb-px -mr-px min-h-60 rounded-none bg-transparent"
-                            href="/docs/introduction/"
-                            label="Explore LongLink"
-                            padding={6}
-                        >
-                            <Stack gap={6} height="100%" justify="between">
-                                <Icon color="tertiary" icon={Lightbulb} size="lg" />
+                        <Link className="documentation-card" to="/docs/introduction/" aria-label="Explore LongLink">
+                            <Stack className="flex-1" gap={6} justify="between">
+                                <Lightbulb aria-hidden="true" className="text-(--color-icon-secondary)" size={24} />
                                 <Stack gap={3}>
                                     <Text weight="bold">Explore LongLink</Text>
                                     <Text as="p" color="secondary" textWrap="pretty">
@@ -51,15 +46,10 @@ export default function DocsIndex() {
                                     </Text>
                                 </Stack>
                             </Stack>
-                        </ClickableCard>
-                        <ClickableCard
-                            className="-mb-px -mr-px min-h-60 rounded-none bg-transparent"
-                            href="/docs/sdk/"
-                            label="Build a Solution"
-                            padding={6}
-                        >
-                            <Stack gap={6} height="100%" justify="between">
-                                <Icon color="tertiary" icon={Code2} size="lg" />
+                        </Link>
+                        <Link className="documentation-card" to="/docs/sdk/" aria-label="Build a Solution">
+                            <Stack className="flex-1" gap={6} justify="between">
+                                <Code2 aria-hidden="true" className="text-(--color-icon-secondary)" size={24} />
                                 <Stack gap={3}>
                                     <Text weight="bold">Build a Solution</Text>
                                     <Text as="p" color="secondary" textWrap="pretty">
@@ -67,15 +57,10 @@ export default function DocsIndex() {
                                     </Text>
                                 </Stack>
                             </Stack>
-                        </ClickableCard>
-                        <ClickableCard
-                            className="-mb-px -mr-px min-h-60 rounded-none bg-transparent"
-                            href="/docs/api/"
-                            label="Explore the Platform"
-                            padding={6}
-                        >
-                            <Stack gap={6} height="100%" justify="between">
-                                <Icon color="tertiary" icon={ServerCog} size="lg" />
+                        </Link>
+                        <Link className="documentation-card" to="/docs/api/" aria-label="Explore the Platform">
+                            <Stack className="flex-1" gap={6} justify="between">
+                                <ServerCog aria-hidden="true" className="text-(--color-icon-secondary)" size={24} />
                                 <Stack gap={3}>
                                     <Text weight="bold">Explore the Platform</Text>
                                     <Text as="p" color="secondary" textWrap="pretty">
@@ -83,7 +68,7 @@ export default function DocsIndex() {
                                     </Text>
                                 </Stack>
                             </Stack>
-                        </ClickableCard>
+                        </Link>
                     </Grid>
                 </Stack>
             </Stack>

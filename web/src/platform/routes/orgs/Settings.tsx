@@ -9,31 +9,30 @@ import { useApiError } from '@/lib/errors';
 import { Form } from '@/components/ui/Form';
 import { useApi } from '@/lib/hooks/use-api';
 import PaymentMethods from './PaymentMethods';
-import { Text } from '@/components/astryx/Text';
 import { Avatar } from '@/components/ui/Avatar';
 import { Dialog } from '@/components/ui/Dialog';
-import { Stack } from '@/components/astryx/Stack';
 import { Divider } from '@/components/ui/Divider';
-import { Button } from '@/components/astryx/Button';
 import { Selector } from '@/components/ui/Selector';
 import SolutionManagement from './SolutionManagement';
-import { Heading } from '@/components/astryx/Heading';
 import { TextInput } from '@/components/ui/TextInput';
 import * as permissions from '@/platform/permissions';
 import { ApiBoundary } from '@/components/ApiBoundary';
 import { DeletionDialog } from '@/components/Deletion';
 import { useQueryClient } from '@tanstack/react-query';
-import { MoreMenu } from '@/components/astryx/MoreMenu';
 import { Illustration } from '@/components/Illustration';
 import { useAuthenticatedUser } from '@/lib/hooks/use-user';
-import { Table, proportional } from '@/components/astryx/Table';
-import { Layout, LayoutPanel } from '@/components/astryx/Layout';
+import { NativeMoreMenu } from '@/components/ui/NativeMoreMenu';
+import { NativeText as Text } from '@/components/ui/NativeText';
+import { NativeStack as Stack } from '@/components/ui/NativeStack';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { Boxes, Building2, CreditCard, Users } from 'lucide-react';
-import { useLocation, useNavigate, useOutletContext } from 'react-router';
+import '../settings.css';
+import { NativeButton as Button } from '@/components/ui/NativeButton';
+import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
 import type { OrganizationContext } from '@/platform/layouts/Organization';
-import { Dialog as AstryxDialog, DialogHeader } from '@/components/astryx/Dialog';
-import { SideNav, SideNavItem, SideNavSection } from '@/components/astryx/SideNav';
+import { Link, useLocation, useNavigate, useOutletContext } from 'react-router';
+import { NativeTable as Table, proportional } from '@/components/ui/NativeTable';
+import '@/platform/components/settings-navigation.css';
 import { IllustratedDialogContent } from '@/platform/components/IllustratedDialogContent';
 
 const organizationSections = [
@@ -80,72 +79,62 @@ export default function OrganizationSettings() {
                     <Text type="supporting">Organization</Text>
                 </Stack>
             </Stack>
-            <Layout
-                height="auto"
-                start={
-                    <LayoutPanel
-                        isScrollable={false}
-                        label="Settings navigation"
-                        padding={0}
-                        role="navigation"
-                        width={260}
+            <div className="platform-settings-layout">
+                <nav aria-label="Settings sections" className="settings-navigation">
+                    <details open>
+                        <summary>
+                            <Building2 className="size-4" aria-hidden="true" />
+                            Organization
+                        </summary>
+                        {organizationSections.map((item) => (
+                            <Link
+                                to={`${location.pathname}${location.search}#${item.id}`}
+                                aria-current={section === item.id ? 'location' : undefined}
+                                key={item.id}
+                            >
+                                {item.label}
+                            </Link>
+                        ))}
+                    </details>
+                    <details open>
+                        <summary>
+                            <CreditCard className="size-4" aria-hidden="true" />
+                            Billing
+                        </summary>
+                        {billingSections.map((item) => (
+                            <Link
+                                to={`${location.pathname}${location.search}#${item.id}`}
+                                aria-current={section === item.id ? 'location' : undefined}
+                                key={item.id}
+                            >
+                                {item.label}
+                            </Link>
+                        ))}
+                    </details>
+                    <details open>
+                        <summary>
+                            <Users className="size-4" aria-hidden="true" />
+                            People
+                        </summary>
+                        {peopleSections.map((item) => (
+                            <Link
+                                to={`${location.pathname}${location.search}#${item.id}`}
+                                aria-current={section === item.id ? 'location' : undefined}
+                                key={item.id}
+                            >
+                                {item.label}
+                            </Link>
+                        ))}
+                    </details>
+                    <Link
+                        to={`${location.pathname}${location.search}#solutions`}
+                        aria-current={section === 'solutions' ? 'location' : undefined}
                     >
-                        <SideNav className="h-auto w-full pr-4 [&>div:first-child]:pt-0 [&_.astryx-side-nav-section>div:first-child]:pt-0 [&_.astryx-side-nav-section>div:first-child]:pl-0">
-                            <SideNavSection title="Settings" isHeaderHidden className="pt-0">
-                                <SideNavItem
-                                    collapsible={{ defaultIsCollapsed: false }}
-                                    icon={<Building2 className="size-4" aria-hidden="true" />}
-                                    label="Organization"
-                                >
-                                    {organizationSections.map((item) => (
-                                        <SideNavItem
-                                            href={`${location.pathname}${location.search}#${item.id}`}
-                                            isSelected={section === item.id}
-                                            key={item.id}
-                                            label={item.label}
-                                        />
-                                    ))}
-                                </SideNavItem>
-                                <SideNavItem
-                                    collapsible={{ defaultIsCollapsed: false }}
-                                    icon={<CreditCard className="size-4" aria-hidden="true" />}
-                                    label="Billing"
-                                >
-                                    {billingSections.map((item) => (
-                                        <SideNavItem
-                                            href={`${location.pathname}${location.search}#${item.id}`}
-                                            isSelected={section === item.id}
-                                            key={item.id}
-                                            label={item.label}
-                                        />
-                                    ))}
-                                </SideNavItem>
-                                <SideNavItem
-                                    collapsible={{ defaultIsCollapsed: false }}
-                                    icon={<Users className="size-4" aria-hidden="true" />}
-                                    label="People"
-                                >
-                                    {peopleSections.map((item) => (
-                                        <SideNavItem
-                                            href={`${location.pathname}${location.search}#${item.id}`}
-                                            isSelected={section === item.id}
-                                            key={item.id}
-                                            label={item.label}
-                                        />
-                                    ))}
-                                </SideNavItem>
-                                <SideNavItem
-                                    href={`${location.pathname}${location.search}#solutions`}
-                                    icon={<Boxes className="size-4" aria-hidden="true" />}
-                                    isSelected={section === 'solutions'}
-                                    label="Solutions"
-                                />
-                            </SideNavSection>
-                        </SideNav>
-                    </LayoutPanel>
-                }
-            >
-                <Stack gap={3}>
+                        <Boxes className="size-4" aria-hidden="true" />
+                        Solutions
+                    </Link>
+                </nav>
+                <Stack gap={3} className="min-w-0">
                     <ApiBoundary key={section}>
                         {section === 'usage' ? (
                             <Usage base={base} />
@@ -172,7 +161,7 @@ export default function OrganizationSettings() {
                         )}
                     </ApiBoundary>
                 </Stack>
-            </Layout>
+            </div>
         </Stack>
     );
 }
@@ -309,7 +298,7 @@ function MembersSection({ base, role }: { base: string; role: OrganizationContex
                                       width: proportional(0.5),
                                       renderCell: (row: z.output<typeof schemas.zOrganizationMemberAccessResponse>) =>
                                           row.role === 'owner' && !canManageOwners ? null : (
-                                              <MoreMenu
+                                              <NativeMoreMenu
                                                   alignment="end"
                                                   items={[
                                                       ...['read', 'write', 'maintain', 'admin'].flatMap((role) =>
@@ -346,17 +335,13 @@ function MembersSection({ base, role }: { base: string; role: OrganizationContex
                 />
             </Stack>
             {canManageSelectedMember && member && (
-                <AstryxDialog
+                <Dialog
                     isOpen
-                    purpose="form"
+                    title={member.action.kind === 'remove' ? 'Remove member' : 'Change role'}
                     onOpenChange={(open) => {
                         if (!open) setMember(null);
                     }}
                 >
-                    <DialogHeader
-                        title={member.action.kind === 'remove' ? 'Remove member' : 'Change role'}
-                        onOpenChange={() => setMember(null)}
-                    />
                     <Stack gap={3}>
                         <Text color="secondary">
                             {member.action.kind === 'remove'
@@ -409,7 +394,7 @@ function MembersSection({ base, role }: { base: string; role: OrganizationContex
                             />
                         </Stack>
                     </Stack>
-                </AstryxDialog>
+                </Dialog>
             )}
         </>
     );

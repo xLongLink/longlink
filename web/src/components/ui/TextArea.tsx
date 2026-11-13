@@ -1,7 +1,7 @@
 import { useValue } from './value';
 import { FormField } from './FormField';
 import type { FieldProps } from './types';
-import { TextArea as AstryxTextArea } from '@/components/astryx/TextArea';
+import { NativeTextArea } from './NativeTextArea';
 
 type TextAreaProps = FieldProps & {
     value?: string;
@@ -16,11 +16,11 @@ type TextAreaProps = FieldProps & {
 
 /** Edits themed multi-line text with native form serialization. Required fields cannot be blank. */
 export function TextArea(props: TextAreaProps) {
-    // Keep optional editing state local while retaining the actual themed textarea.
-    const { defaultValue, maxLength, ...control } = props;
-    const field = useValue(props.value, defaultValue ?? '', props.onChange);
+    // Keep optional editing state local while retaining native form reset behavior.
+    const { maxLength } = props;
+    const field = useValue(props.value, props.defaultValue ?? '', props.onChange);
 
-    // Validate Python-compatible lengths without Astryx's grapheme counter or native UTF-16 limits.
+    // Validate Python-compatible lengths without truncating the submitted value.
     return (
         <FormField
             {...props}
@@ -34,21 +34,17 @@ export function TextArea(props: TextAreaProps) {
                       : undefined
             }
         >
-            <AstryxTextArea
-                {...control}
-                width="100%"
+            <NativeTextArea
+                label={props.label}
+                description={props.description}
+                name={props.name}
+                required={props.required}
+                disabled={props.disabled}
                 value={field.value}
                 onChange={field.onChange}
-                htmlName={props.name}
-                rows={props.rows ?? 3}
-                isReadOnly={false}
-                hasSpellCheck
-                hasAutoFocus={false}
-                isLabelHidden={false}
-                isRequired={props.required ?? false}
-                isDisabled={props.disabled ?? false}
-                changeAction={undefined}
-                isLoading={false}
+                placeholder={props.placeholder}
+                rows={props.rows}
+                autoComplete={props.autoComplete}
             />
         </FormField>
     );

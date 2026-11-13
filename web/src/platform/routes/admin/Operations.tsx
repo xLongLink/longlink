@@ -2,14 +2,14 @@ import { useState } from 'react';
 import { useAdminList } from './use-list';
 import { Info, Search } from 'lucide-react';
 import { useApi } from '@/lib/hooks/use-api';
-import { Text } from '@/components/astryx/Text';
 import { Dialog } from '@/components/ui/Dialog';
-import { Stack } from '@/components/astryx/Stack';
-import { Button } from '@/components/astryx/Button';
-import { Heading } from '@/components/astryx/Heading';
 import { TextInput } from '@/components/ui/TextInput';
-import { Pagination } from '@/components/astryx/Pagination';
-import { Table, proportional } from '@/components/astryx/Table';
+import { Pagination } from '@/components/ui/Pagination';
+import { NativeText as Text } from '@/components/ui/NativeText';
+import { NativeStack as Stack } from '@/components/ui/NativeStack';
+import { NativeButton as Button } from '@/components/ui/NativeButton';
+import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
+import { NativeTable as Table, proportional } from '@/components/ui/NativeTable';
 import { zPageOperationResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 
 const kinds = {
@@ -95,7 +95,7 @@ export default function Operations() {
                     ]}
                 />
                 <Stack as="footer" align="center" paddingBlock={2}>
-                    <Pagination {...pagination} totalItems={operations.total} variant="pages" />
+                    <Pagination {...pagination} totalItems={operations.total} />
                 </Stack>
             </Stack>
             {metadata && (

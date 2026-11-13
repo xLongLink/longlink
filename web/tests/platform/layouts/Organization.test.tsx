@@ -5,8 +5,7 @@ import { withMounted } from '../../render';
 import { membership, user } from '../render';
 import { ApiErrorContext } from '@/lib/errors';
 import Layout from '@/platform/layouts/Organization';
-import { LinkProvider } from '@/components/astryx/Link';
-import { Link, Outlet, Route, Routes } from 'react-router';
+import { Outlet, Route, Routes } from 'react-router';
 import { AuthenticatedUserContext } from '@/lib/hooks/use-user';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { zOrganizationTagResponse } from '@/lib/generated/platform-api-v1/zod.gen';
@@ -34,13 +33,11 @@ it('selects the query category and updates it when following organization links'
             <QueryClientProvider client={client}>
                 <ApiErrorContext value={() => undefined}>
                     <AuthenticatedUserContext value={user}>
-                        <LinkProvider component={Link}>
-                            <Routes>
-                                <Route element={<Outlet context={membership} />}>
-                                    <Route path="/orgs/:organization" element={<Layout />} />
-                                </Route>
-                            </Routes>
-                        </LinkProvider>
+                        <Routes>
+                            <Route element={<Outlet context={membership} />}>
+                                <Route path="/orgs/:organization" element={<Layout />} />
+                            </Route>
+                        </Routes>
                     </AuthenticatedUserContext>
                 </ApiErrorContext>
             </QueryClientProvider>,

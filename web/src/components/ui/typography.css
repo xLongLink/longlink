@@ -7,7 +7,42 @@
         font-weight: var(--view-text-weight, var(--text-body-weight));
         line-height: var(--view-text-leading, var(--text-body-leading));
         font-family: var(--font-family-body);
-        overflow-wrap: var(--_astryx-text-overflow-wrap, break-word);
+        overflow-wrap: break-word;
+    }
+
+    .view-text.native-heading {
+        font-family: var(--font-family-heading);
+        overflow-wrap: break-word;
+    }
+    .native-heading[data-type='body'][data-level='1'] {
+        --view-text-size: var(--text-heading-1-size);
+        --view-text-weight: var(--text-heading-1-weight);
+        --view-text-leading: var(--text-heading-1-leading);
+    }
+    .native-heading[data-type='body'][data-level='2'] {
+        --view-text-size: var(--text-heading-2-size);
+        --view-text-weight: var(--text-heading-2-weight);
+        --view-text-leading: var(--text-heading-2-leading);
+    }
+    .native-heading[data-type='body'][data-level='3'] {
+        --view-text-size: var(--text-heading-3-size);
+        --view-text-weight: var(--text-heading-3-weight);
+        --view-text-leading: var(--text-heading-3-leading);
+    }
+    .native-heading[data-type='body'][data-level='4'] {
+        --view-text-size: var(--text-heading-4-size);
+        --view-text-weight: var(--text-heading-4-weight);
+        --view-text-leading: var(--text-heading-4-leading);
+    }
+    .native-heading[data-type='body'][data-level='5'] {
+        --view-text-size: var(--text-heading-5-size);
+        --view-text-weight: var(--text-heading-5-weight);
+        --view-text-leading: var(--text-heading-5-leading);
+    }
+    .native-heading[data-type='body'][data-level='6'] {
+        --view-text-size: var(--text-heading-6-size);
+        --view-text-weight: var(--text-heading-6-weight);
+        --view-text-leading: var(--text-heading-6-leading);
     }
 
     .view-text[data-type='large'] {

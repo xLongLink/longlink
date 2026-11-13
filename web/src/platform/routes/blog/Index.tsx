@@ -1,13 +1,12 @@
+import './blog.css';
 import { BookOpen } from 'lucide-react';
 import { Page } from '@/components/Page';
-import { Card } from '@/components/astryx/Card';
-import { Grid } from '@/components/astryx/Grid';
-import { Text } from '@/components/astryx/Text';
-import { Stack } from '@/components/astryx/Stack';
+import { Grid } from '@/components/ui/Grid';
 import { Divider } from '@/components/ui/Divider';
-import { Button } from '@/components/astryx/Button';
-import { Heading } from '@/components/astryx/Heading';
-import { Section } from '@/components/astryx/Section';
+import { NativeText as Text } from '@/components/ui/NativeText';
+import { NativeStack as Stack } from '@/components/ui/NativeStack';
+import { NativeButton as Button } from '@/components/ui/NativeButton';
+import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
 
 /** Lists articles about LongLink and building process-specific applications. */
 export default function Blog() {
@@ -15,9 +14,9 @@ export default function Blog() {
     return (
         <Page description="Ideas behind LongLink and building process-specific applications." title="Blog | LongLink">
             <main>
-                <Section variant="transparent" padding={6}>
+                <section className="p-6">
                     <Stack className="mx-auto" maxWidth={1000} width="100%" gap={10} align="center">
-                        <Stack className="text-center" gap={3} hAlign="center" width="100%">
+                        <Stack className="text-center" gap={3} align="center" width="100%">
                             <Heading
                                 className="font-(family-name:--font-family-handwritten) tracking-wide uppercase"
                                 justify="center"
@@ -32,7 +31,7 @@ export default function Blog() {
                             </Text>
                         </Stack>
                         <Grid columns={{ minWidth: 280, max: 3, repeat: 'fit' }} gap={4} width="100%">
-                            <Card className="rounded-none bg-transparent">
+                            <div className="blog-card">
                                 <Stack className="min-h-80" gap={0} paddingBlock={8} align="center">
                                     <Stack gap={2} align="center">
                                         <BookOpen aria-hidden="true" className="text-primary" size={20} />
@@ -48,12 +47,12 @@ export default function Blog() {
                                         <Button href="/blog/why-longlink/" label="Read article" variant="primary" />
                                     </Stack>
                                 </Stack>
-                            </Card>
-                            <Card aria-hidden="true" className="min-h-80 rounded-none bg-transparent" />
-                            <Card aria-hidden="true" className="min-h-80 rounded-none bg-transparent" />
+                            </div>
+                            <div aria-hidden="true" className="blog-card min-h-80" />
+                            <div aria-hidden="true" className="blog-card min-h-80" />
                         </Grid>
                     </Stack>
-                </Section>
+                </section>
             </main>
         </Page>
     );

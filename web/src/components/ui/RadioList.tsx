@@ -1,7 +1,8 @@
 import { useValue } from './value';
-import type { ReactNode } from 'react';
 import type { FieldProps } from './types';
-import { RadioList as AstryxRadioList, RadioListItem as AstryxRadioListItem } from '@/components/astryx/RadioList';
+import { Radio } from '@base-ui/react/radio';
+import { useId, type ReactNode } from 'react';
+import { RadioGroup } from '@base-ui/react/radio-group';
 
 /** Selects one of a small number of labeled values. */
 export function RadioList(
@@ -13,27 +14,48 @@ export function RadioList(
         orientation?: 'vertical' | 'horizontal';
     }
 ) {
-    // The library's native radio inputs already provide grouping and required-field validation.
-    const field = useValue(
+    // Keep local resets and caller-owned empty values separate.
+    const { ref, value, onChange } = useValue(
         'value' in props ? (props.value ?? '') : undefined,
         props.defaultValue ?? '',
         props.onChange
     );
 
-    // Keep radio choices vertical, visible, and enabled by default.
+    const id = useId();
+
+    // Read-only disabled groups remain discoverable without becoming successful form controls.
     return (
-        <AstryxRadioList
-            {...props}
-            width="100%"
-            {...field}
-            htmlName={props.name}
-            children={props.children}
-            orientation={props.orientation ?? 'vertical'}
-            size="md"
-            isLabelHidden={false}
-            isRequired={props.required ?? false}
-            isDisabled={props.disabled ?? false}
-        />
+        <div ref={ref} className="view-radio-field" data-disabled={props.disabled || undefined}>
+            <div className="view-text-field-heading">
+                <span id={`${id}-label`} className="view-text-field-label">
+                    {props.label}
+                    {props.required && (
+                        <span className="view-text-field-description">
+                            <span aria-hidden="true"> · </span>Required
+                        </span>
+                    )}
+                </span>
+                {props.description && (
+                    <span id={`${id}-description`} className="view-text-field-description">
+                        {props.description}
+                    </span>
+                )}
+            </div>
+            <RadioGroup
+                className="view-radio-group"
+                value={value}
+                onValueChange={onChange}
+                name={props.disabled ? undefined : props.name}
+                required={props.required && !props.disabled}
+                readOnly={props.disabled}
+                aria-disabled={props.disabled || undefined}
+                aria-labelledby={`${id}-label`}
+                aria-describedby={props.description ? `${id}-description` : undefined}
+                aria-orientation={props.orientation ?? 'vertical'}
+            >
+                {props.children}
+            </RadioGroup>
+        </div>
     );
 }
 
@@ -47,6 +69,33 @@ export function RadioListItem(props: {
     description?: string;
     isDisabled?: boolean;
 }) {
-    // Individual options remain selectable unless disabled.
-    return <AstryxRadioListItem {...props} isDisabled={props.isDisabled ?? false} />;
+    const id = useId();
+
+    // The entire label activates one control; helper text describes rather than names it.
+    return (
+        <div className="view-radio-item" data-disabled={props.isDisabled || undefined}>
+            <Radio.Root
+                id={id}
+                className="view-radio"
+                render={<button type="button" />}
+                nativeButton
+                value={props.value}
+                disabled={props.isDisabled}
+                aria-labelledby={`${id}-label`}
+                aria-describedby={props.description ? `${id}-description` : undefined}
+            >
+                <Radio.Indicator className="view-radio-dot" aria-hidden="true" />
+            </Radio.Root>
+            <label htmlFor={id} className="view-text-field-heading">
+                <span id={`${id}-label`} className="view-radio-label">
+                    {props.label}
+                </span>
+                {props.description && (
+                    <span id={`${id}-description`} className="view-radio-description">
+                        {props.description}
+                    </span>
+                )}
+            </label>
+        </div>
+    );
 }

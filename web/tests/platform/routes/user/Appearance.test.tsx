@@ -9,7 +9,7 @@ import userEvent from '@testing-library/user-event';
 import Appearance from '@/platform/routes/user/Appearance';
 import { AccountAppearanceProvider } from '@/components/Appearance';
 
-it('saves an accent by keyboard without submitting a form or allowing duplicate writes', async () => {
+it('saves appearance by keyboard without submitting a form or allowing duplicate writes', async () => {
     // Keep the profile write pending while the real account observer previews the new accent.
     const requests: Request[] = [];
     const errors: unknown[] = [];
@@ -32,7 +32,7 @@ it('saves an accent by keyboard without submitting a form or allowing duplicate 
         if (request.method !== 'PATCH') throw new Error(`Unexpected method: ${request.method}`);
         requests.push(request);
 
-        return response;
+        return (await response).clone();
     });
 
     try {
@@ -69,6 +69,16 @@ it('saves an accent by keyboard without submitting a form or allowing duplicate 
                 expect(await requests[0]?.clone().json()).toEqual({ accent: 'blue' });
                 expect(blue.getAttribute('aria-pressed')).toBe('true');
                 expect(document.documentElement.dataset.accent).toBe('blue');
+
+                const dark = output.querySelector<HTMLInputElement>('input[aria-label="Dark"]');
+
+                if (!dark) throw new Error('Expected the dark theme selection');
+                await act(async () => {
+                    dark.focus();
+                    await keyboard.keyboard('{Enter} ');
+                    dark.click();
+                });
+                expect(dark.getAttribute('aria-disabled')).toBe('true');
                 await act(async () => blue.click());
                 expect(requests).toHaveLength(1);
                 expect(submitted).not.toHaveBeenCalled();
@@ -84,6 +94,18 @@ it('saves an accent by keyboard without submitting a form or allowing duplicate 
                 expect(green?.getAttribute('aria-pressed')).toBe('true');
                 expect(blue.getAttribute('aria-pressed')).toBe('false');
                 expect(document.documentElement.dataset.accent).toBe('green');
+
+                // The theme card submits its preference, then accepts the server's canonical selection.
+                await act(async () => {
+                    dark.focus();
+                    await keyboard.keyboard('{Enter}');
+                });
+                await vi.waitFor(() => expect(requests).toHaveLength(2));
+                expect(await requests[1]?.clone().json()).toEqual({ theme: 'dark' });
+                await vi.waitFor(() => expect(dark.getAttribute('aria-disabled')).toBeNull());
+                expect(dark.checked).toBe(false);
+                expect(output.querySelector<HTMLInputElement>('input[aria-label="System"]')?.checked).toBe(true);
+                expect(submitted).not.toHaveBeenCalled();
                 expect(errors).toEqual([]);
             },
             '/user/settings'

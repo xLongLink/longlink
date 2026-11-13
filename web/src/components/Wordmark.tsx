@@ -1,6 +1,5 @@
-import { Text } from '@/components/astryx/Text';
-import { Stack } from '@/components/astryx/Stack';
-import { useTheme } from '@astryxdesign/core/theme';
+import { useAppearance } from '@/lib/hooks/use-appearance';
+import { useMediaQuery } from '@/lib/hooks/use-media-query';
 
 const wordmarkSizeClasses = {
     default: ' text-base',
@@ -12,31 +11,34 @@ const wordmarkSizeClasses = {
 /** Renders the shared LongLink welcome title used by authentication screens. */
 export function Welcome() {
     return (
-        <Text display="block" justify="center" textWrap="nowrap" type="inherit">
+        <span className="brand-welcome">
             Welcome to <Wordmark size="inherit" />
-        </Text>
+        </span>
     );
 }
 
 /** Renders the hand-drawn LongLink wordmark in the surrounding theme and text size. */
-export function Wordmark({ size = 'default' }: { size?: 'default' | 'full' | 'heading' | 'inherit' }) {
-    // Match the image to the nearest theme, including light-mode brand previews.
-    const { mode } = useTheme();
+export function Wordmark({
+    size = 'default',
+    mode,
+}: {
+    size?: 'default' | 'full' | 'heading' | 'inherit';
+    mode?: 'light' | 'dark';
+}) {
+    const { appearance } = useAppearance();
+    const prefersDark = useMediaQuery('(prefers-color-scheme: dark)');
+    const resolvedMode = mode ?? (appearance.theme === 'system' ? (prefersDark ? 'dark' : 'light') : appearance.theme);
 
     // Size the tightly cropped asset relative to the existing wordmark typography.
     return (
-        <Stack
-            as="span"
-            className={`inline-flex align-middle leading-none${wordmarkSizeClasses[size]}`}
-            direction="horizontal"
-        >
+        <span className={`inline-flex align-middle leading-none${wordmarkSizeClasses[size]}`}>
             <img
                 alt="LongLink"
                 className={size === 'full' ? 'block h-auto w-full' : 'block h-lh w-auto max-w-none'}
                 height={286}
-                src={`/images/longlink-wordmark-${mode}.png`}
+                src={`/images/longlink-wordmark-${resolvedMode}.png`}
                 width={1781}
             />
-        </Stack>
+        </span>
     );
 }

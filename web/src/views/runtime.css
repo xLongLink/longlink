@@ -1,0 +1,87 @@
+@layer components {
+    .view-runtime-content {
+        --container-padding-inline-start: 0px;
+        --container-padding-inline-end: 0px;
+        --container-padding-block-start: 0px;
+        --container-padding-block-end: 0px;
+        min-width: 0;
+        min-height: 100%;
+        padding: 0;
+    }
+
+    .view-runtime-loading {
+        display: grid;
+        place-items: center;
+        width: 100%;
+        min-height: 100dvh;
+    }
+
+    .view-runtime-error {
+        display: flex;
+        align-items: flex-start;
+        flex-wrap: wrap;
+        column-gap: var(--spacing-2);
+        row-gap: var(--spacing-3);
+        padding: var(--spacing-3) var(--spacing-4);
+        border-radius: var(--radius-container);
+        background-color: var(--destructive-muted);
+        color: var(--destructive-foreground);
+    }
+
+    .view-runtime-error-icon {
+        flex-shrink: 0;
+        width: var(--spacing-5);
+        height: var(--spacing-5);
+    }
+
+    .view-runtime-diagnostic {
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+        gap: 0;
+        min-width: 0;
+        overflow-wrap: anywhere;
+    }
+
+    .view-runtime-diagnostic[data-retry] {
+        flex-basis: 8rem;
+    }
+
+    .view-runtime-diagnostic h2 {
+        margin: 0;
+        font-family: inherit;
+        font-size: var(--text-label-size);
+        font-weight: var(--font-weight-semibold);
+        line-height: var(--text-label-leading);
+        color: inherit;
+    }
+
+    .view-runtime-diagnostic p {
+        margin: 0;
+        font-family: inherit;
+        font-size: var(--text-supporting-size);
+        font-weight: var(--font-weight-normal);
+        line-height: var(--text-supporting-leading);
+        color: inherit;
+    }
+
+    .view-runtime-error-actions {
+        display: flex;
+        flex-shrink: 0;
+        align-items: center;
+        justify-content: flex-end;
+        flex-wrap: wrap;
+        gap: var(--spacing-2);
+        max-width: 100%;
+        margin-block: calc(-1 * (var(--spacing-3) - var(--spacing-2)));
+        margin-inline-start: auto;
+        color: var(--foreground);
+    }
+
+    @media (forced-colors: active) {
+        .view-runtime-error {
+            outline: 1px solid CanvasText;
+            outline-offset: -1px;
+        }
+    }
+}

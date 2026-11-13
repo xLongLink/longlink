@@ -1,0 +1,192 @@
+@layer components {
+    .view-code-block {
+        box-sizing: border-box;
+        position: relative;
+        isolation: isolate;
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        margin: 0;
+        overflow: hidden;
+        border: var(--border-width) solid var(--color-border);
+        border-radius: var(--radius-element);
+        background: var(--color-syntax-background);
+    }
+    .view-code-block[data-container='section'] {
+        --color-syntax-background: transparent;
+        border: 0;
+        border-radius: 0;
+    }
+    .view-code-block[data-corner] {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        grid-template-rows: minmax(0, 1fr);
+    }
+    .view-code-block[data-fit-content] {
+        min-width: min(100%, 400px);
+        max-width: 100%;
+    }
+    .view-code-header {
+        position: sticky;
+        top: 0;
+        z-index: 1;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: var(--spacing-2) var(--spacing-4);
+        background: var(--color-syntax-background);
+    }
+    .view-code-block[data-numbered] .view-code-header {
+        border-bottom: var(--border-width) solid var(--color-border);
+    }
+    .view-code-title {
+        display: flex;
+        align-items: center;
+        margin: 0;
+        font: var(--font-weight-medium) var(--text-supporting-size) / var(--text-supporting-leading)
+            var(--font-family-code);
+        color: var(--color-syntax-comment);
+    }
+    .view-code-disclosure {
+        display: flex;
+        flex: 1;
+        align-items: center;
+        min-width: 0;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        color: inherit;
+        font: inherit;
+        text-align: start;
+        cursor: pointer;
+        user-select: none;
+    }
+    .view-code-chevron {
+        flex-shrink: 0;
+        width: calc(var(--spacing) * 3.5);
+        height: calc(var(--spacing) * 3.5);
+        margin-inline-end: var(--spacing-1);
+    }
+    .view-code-chevron[data-expanded] {
+        transform: rotate(90deg);
+    }
+    .view-code-chevron:not([data-expanded]):dir(rtl) {
+        transform: rotate(180deg);
+    }
+    .view-code-viewport {
+        min-height: 0;
+        overflow: auto;
+    }
+    .view-code-viewport[hidden] {
+        display: none;
+    }
+    .view-code-content {
+        display: flex;
+        min-width: fit-content;
+    }
+    .view-code-block[data-header]:not([data-numbered]) .view-code-content {
+        margin-block-start: calc(-1 * var(--spacing-2));
+    }
+    .view-code-block code {
+        display: block;
+        flex: 1;
+        min-width: max-content;
+        padding: var(--spacing-3) var(--spacing-4);
+        margin: 0;
+        color: var(--color-syntax-variable);
+        font-family: var(--font-family-code);
+        font-size: var(--text-code-size);
+        line-height: var(--text-code-leading);
+        tab-size: 2;
+        white-space: pre;
+        word-break: normal;
+        overflow-wrap: normal;
+    }
+    .view-code-block[data-size='sm'] code {
+        font-size: var(--text-supporting-size);
+    }
+    .view-code-block[data-wrapped] code {
+        min-width: auto;
+        white-space: pre-wrap;
+        word-break: break-all;
+        overflow-wrap: break-word;
+    }
+    .view-code-line {
+        display: block;
+        line-height: var(--text-code-leading);
+    }
+    .view-code-line-content {
+        min-width: 0;
+    }
+    .view-code-block[data-numbered] code {
+        position: relative;
+    }
+    .view-code-block[data-numbered] code::after {
+        content: '';
+        position: absolute;
+        inset-block: 0;
+        inset-inline-start: calc(var(--spacing-4) + var(--view-code-gutter) + var(--spacing-3));
+        border-inline-start: var(--border-width) solid var(--color-border);
+        pointer-events: none;
+    }
+    .view-code-block[data-numbered] .view-code-line {
+        display: grid;
+        grid-template-columns: var(--view-code-gutter) minmax(0, 1fr);
+        column-gap: calc(var(--spacing-3) + var(--border-width) + var(--spacing-4));
+    }
+    .view-code-block[data-numbered] .view-code-line::before {
+        content: attr(data-line);
+        align-self: start;
+        text-align: end;
+        color: var(--color-syntax-punctuation);
+        user-select: none;
+    }
+    .view-code-line[data-highlighted] {
+        margin-inline: calc(-1 * var(--spacing-4));
+        padding-inline: var(--spacing-4);
+        background: var(--color-accent-muted);
+    }
+    .view-code-copy {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        width: var(--size-element-sm);
+        height: var(--size-element-sm);
+        padding: 0;
+        border: 0;
+        border-radius: var(--radius-element);
+        background: transparent;
+        color: var(--color-syntax-comment);
+        cursor: pointer;
+    }
+    .view-code-copy:hover {
+        background: var(--color-overlay-hover);
+    }
+    .view-code-copy:active {
+        background: var(--color-overlay-pressed);
+    }
+    .view-code-copy svg {
+        width: var(--spacing-4);
+        height: var(--spacing-4);
+    }
+    .view-code-copy:focus-visible,
+    .view-code-disclosure:focus-visible,
+    .view-code-viewport:focus-visible {
+        outline: var(--focus-outline-width) solid var(--focus-outline-color);
+        outline-offset: var(--focus-outline-offset);
+    }
+    .view-code-viewport:focus-visible {
+        outline-offset: calc(-1 * var(--focus-outline-width));
+    }
+    .view-code-corner {
+        display: flex;
+        align-items: center;
+        align-self: start;
+        margin-inline: var(--spacing-2);
+        block-size: calc(2 * var(--spacing-3) + var(--text-code-size) * var(--text-code-leading));
+    }
+    .view-code-block[data-size='sm'] .view-code-corner {
+        block-size: calc(2 * var(--spacing-3) + var(--text-supporting-size) * var(--text-code-leading));
+    }
+}

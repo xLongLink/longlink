@@ -1,11 +1,9 @@
-import { Link } from '@/components/astryx/Link';
-import { Text } from '@/components/astryx/Text';
-import { Stack } from '@/components/astryx/Stack';
-import { Heading } from '@/components/astryx/Heading';
-import { Blockquote } from '@/components/astryx/Blockquote';
+import { NativeText as Text } from '@/components/ui/NativeText';
+import { NativeStack as Stack } from '@/components/ui/NativeStack';
+import { NativeTable as Table } from '@/components/ui/NativeTable';
 import { ArrowUp, CheckCheck, EyeOff, Wrench } from 'lucide-react';
 import { DocumentationArticle } from '@/components/layouts/Article';
-import { Table, TableBody, TableCell, TableHeader, TableHeaderCell, TableRow } from '@/components/astryx/Table';
+import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
 
 const solutionRoles = [
     { name: 'read', access: 'View Solution data and send GET requests', icon: EyeOff },
@@ -37,14 +35,6 @@ export default function Solutions() {
                 <Heading id="solutions" level={1}>
                     Solutions
                 </Heading>
-                <Blockquote className="border-s-(--color-text-orange) text-(--color-text-orange)">
-                    <Stack gap={0}>
-                        <Text type="inherit">Beta notice: This page is being built.</Text>
-                        <Link color="inherit" href={article.editUrl} hasUnderline isExternalLink type="inherit">
-                            Edit on GitHub
-                        </Link>
-                    </Stack>
-                </Blockquote>
                 <Text as="p">
                     Solutions belong to an organization and run as separate services. The Platform manages their
                     deployment and operation. Each Solution gets its own schema in the organization’s PostgreSQL
@@ -53,30 +43,28 @@ export default function Solutions() {
                 </Text>
                 <Stack as="aside" className="border-s border-accent ps-4" gap={0}>
                     <Text weight="semibold">User permissions</Text>
-                    <Table density="compact">
-                        <TableHeader>
-                            <TableRow>
-                                <TableHeaderCell>Roles</TableHeaderCell>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {solutionRoles.map(({ access, icon: RoleIcon, name }) => (
-                                <TableRow key={name}>
-                                    <TableCell>
-                                        <Stack gap={0}>
-                                            <Stack direction="horizontal" gap={2} align="center">
-                                                <RoleIcon aria-hidden="true" className="text-primary" size={16} />
-                                                <Text className="capitalize" weight="semibold">
-                                                    {name}
-                                                </Text>
-                                            </Stack>
-                                            <Text type="supporting">{access}</Text>
+                    <Table
+                        data={solutionRoles}
+                        idKey="name"
+                        density="compact"
+                        columns={[
+                            {
+                                key: 'name',
+                                header: 'Roles',
+                                renderCell: ({ access, icon: RoleIcon, name }) => (
+                                    <Stack gap={0}>
+                                        <Stack direction="horizontal" gap={2} align="center">
+                                            <RoleIcon aria-hidden="true" className="text-primary" size={16} />
+                                            <Text className="capitalize" weight="semibold">
+                                                {name}
+                                            </Text>
                                         </Stack>
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
+                                        <Text type="supporting">{access}</Text>
+                                    </Stack>
+                                ),
+                            },
+                        ]}
+                    />
                 </Stack>
             </Stack>
         </DocumentationArticle>

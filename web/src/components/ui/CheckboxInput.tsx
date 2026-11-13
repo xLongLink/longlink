@@ -1,6 +1,9 @@
 import { useValue } from './value';
+import { useId, useRef } from 'react';
+import { FieldLabel } from './FieldLabel';
 import type { FieldProps } from './types';
-import { CheckboxInput as AstryxCheckboxInput } from '@/components/astryx/CheckboxInput';
+import { Check, Minus } from 'lucide-react';
+import { Checkbox } from '@base-ui/react/checkbox';
 
 /** Edits a boolean or indeterminate field. */
 export function CheckboxInput(
@@ -10,27 +13,46 @@ export function CheckboxInput(
         onChange?: (value: boolean) => void;
     }
 ) {
-    // Astryx's underlying checkbox retains omission semantics and native validation.
-    const { defaultChecked, ...control } = props;
-
-    const field = useValue<boolean | 'indeterminate', HTMLInputElement>(props.value, defaultChecked ?? false, (value) =>
-        props.onChange?.(value === true)
+    // Keep caller-owned mixed state distinct from an unchecked answer.
+    const { ref, value, onChange } = useValue<boolean | 'indeterminate'>(
+        props.value,
+        props.defaultChecked ?? false,
+        (value) => props.onChange?.(value === true)
     );
 
-    // Keep the field visible, enabled, and editable unless explicitly configured otherwise.
+    const id = useId();
+    const labelId = `${id}-label`;
+    const descriptionId = `${id}-description`;
+    const input = useRef<HTMLInputElement>(null);
+
+    // A native button retains disabled-fieldset inheritance while Base UI owns checkbox semantics.
     return (
-        <AstryxCheckboxInput
-            {...control}
-            width="100%"
-            {...field}
-            htmlName={props.name}
-            size="md"
-            isReadOnly={false}
-            isLabelHidden={false}
-            isRequired={props.required ?? false}
-            isDisabled={props.disabled ?? false}
-            changeAction={undefined}
-            isLoading={false}
-        />
+        <div ref={ref} className="view-boolean-field" data-disabled={props.disabled || undefined}>
+            <Checkbox.Root
+                className="view-checkbox"
+                render={<button type="button" />}
+                nativeButton
+                id={id}
+                name={props.disabled ? undefined : props.name}
+                checked={value === true}
+                indeterminate={value === 'indeterminate'}
+                inputRef={input}
+                onCheckedChange={(checked) => {
+                    // Native activation clears mixed state even when a controlled caller declines the edit.
+                    if (input.current) input.current.indeterminate = value === 'indeterminate';
+                    onChange(checked);
+                }}
+                required={props.required && !props.disabled}
+                readOnly={props.disabled}
+                aria-disabled={props.disabled || undefined}
+                aria-labelledby={labelId}
+                aria-describedby={props.description ? descriptionId : undefined}
+            >
+                <Checkbox.Indicator className="view-checkbox-indicator" aria-hidden="true">
+                    {value === 'indeterminate' ? <Minus /> : <Check />}
+                </Checkbox.Indicator>
+            </Checkbox.Root>
+            <FieldLabel controlId={id} label={props.label} description={props.description} required={props.required} />
+        </div>
     );
 }

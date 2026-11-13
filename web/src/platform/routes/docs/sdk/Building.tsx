@@ -1,10 +1,10 @@
-import { Code } from '@/components/astryx/Code';
-import { Text } from '@/components/astryx/Text';
-import { Stack } from '@/components/astryx/Stack';
-import { Heading } from '@/components/astryx/Heading';
-import { CodeBlock } from '@/components/astryx/CodeBlock';
+import '@/components/ui/inlinecode.css';
+import { NativeText as Text } from '@/components/ui/NativeText';
+import { NativeStack as Stack } from '@/components/ui/NativeStack';
+import { NativeTable as Table } from '@/components/ui/NativeTable';
 import { DocumentationArticle } from '@/components/layouts/Article';
-import { Table, TableBody, TableCell, TableHeader, TableHeaderCell, TableRow } from '@/components/astryx/Table';
+import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
+import { NativeCodeBlock as CodeBlock } from '@/components/ui/NativeCodeBlock';
 
 const article = {
     description: 'Build and package a LongLink project for deployment.',
@@ -54,32 +54,26 @@ environments = "src.envs:Env"
                         language="toml"
                         title="pyproject.toml"
                     />
-                    <Table density="compact">
-                        <TableHeader>
-                            <TableRow>
-                                <TableHeaderCell>Metadata</TableHeaderCell>
-                                <TableHeaderCell>Image label</TableHeaderCell>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            <TableRow>
-                                <TableCell>
-                                    <Code>description</Code>
-                                </TableCell>
-                                <TableCell>
-                                    <Code>org.opencontainers.image.description</Code>
-                                </TableCell>
-                            </TableRow>
-                            <TableRow>
-                                <TableCell>
-                                    <Code>environments</Code>
-                                </TableCell>
-                                <TableCell>
-                                    <Code>dev.longlink.environments</Code>
-                                </TableCell>
-                            </TableRow>
-                        </TableBody>
-                    </Table>
+                    <Table
+                        density="compact"
+                        idKey="metadata"
+                        data={[
+                            { metadata: 'description', label: 'org.opencontainers.image.description' },
+                            { metadata: 'environments', label: 'dev.longlink.environments' },
+                        ]}
+                        columns={[
+                            {
+                                key: 'metadata',
+                                header: 'Metadata',
+                                renderCell: (row) => <code className="inline-code">{row.metadata}</code>,
+                            },
+                            {
+                                key: 'label',
+                                header: 'Image label',
+                                renderCell: (row) => <code className="inline-code">{row.label}</code>,
+                            },
+                        ]}
+                    />
                 </Stack>
             </Stack>
         </DocumentationArticle>

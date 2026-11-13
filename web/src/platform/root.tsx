@@ -1,15 +1,12 @@
 import * as icons from '@/lib/icons';
 import type { ReactNode } from 'react';
 import { PageLoading } from '@/components/Utils';
-import { Theme } from '@astryxdesign/core/theme';
-import { Link as RouterLink } from 'react-router';
-import { stoneTheme } from '@/lib/generated/stone.js';
 import { ApiBoundary } from '@/components/ApiBoundary';
 import { ApiProvider } from '@/components/ApiProvider';
 import { appearanceBootstrap } from '@/lib/appearance';
-import { LinkProvider } from '@/components/astryx/Link';
 import { IconRequestContext } from '@/components/ui/contexts';
-import { LayerProvider } from '@/components/astryx/LayerProvider';
+import { AppearanceContext } from '@/lib/hooks/use-appearance';
+import { useDocumentTheme } from '@/lib/hooks/use-document-theme';
 import { AccountAppearanceProvider } from '@/components/Appearance';
 import { Links, Meta, Outlet, Scripts, ScrollRestoration, useLocation } from 'react-router';
 import '@/index.css';
@@ -27,32 +24,27 @@ export function HydrateFallback() {
 export default function PlatformRoot() {
     const { pathname } = useLocation();
     const isHome = pathname === '/';
+    useDocumentTheme(isHome ? 'dark' : undefined);
 
     // The public landing page has no account queries or personal appearance synchronization.
     const content = (
-        <LinkProvider component={RouterLink}>
-            <LayerProvider toast={{ position: 'bottomEnd' }}>
-                <IconRequestContext value={icons.load}>
-                    {isHome ? (
-                        <Outlet />
-                    ) : (
-                        <ApiProvider>
-                            <AccountAppearanceProvider>
-                                <ApiBoundary>
-                                    <Outlet />
-                                </ApiBoundary>
-                            </AccountAppearanceProvider>
-                        </ApiProvider>
-                    )}
-                </IconRequestContext>
-            </LayerProvider>
-        </LinkProvider>
+        <IconRequestContext value={icons.load}>
+            {isHome ? (
+                <Outlet />
+            ) : (
+                <ApiProvider>
+                    <AccountAppearanceProvider>
+                        <ApiBoundary>
+                            <Outlet />
+                        </ApiBoundary>
+                    </AccountAppearanceProvider>
+                </ApiProvider>
+            )}
+        </IconRequestContext>
     );
 
     return isHome ? (
-        <Theme theme={stoneTheme} mode="dark">
-            {content}
-        </Theme>
+        <AppearanceContext value={{ appearance: { theme: 'dark', accent: 'neutral' } }}>{content}</AppearanceContext>
     ) : (
         content
     );
@@ -71,7 +63,7 @@ export function Layout({ children }: { children: ReactNode }) {
                     ? '[scrollbar-gutter:auto]'
                     : undefined
             }
-            data-astryx-theme="stone"
+            data-theme-scope="stone"
             data-theme={isHome ? 'dark' : undefined}
             suppressHydrationWarning
         >

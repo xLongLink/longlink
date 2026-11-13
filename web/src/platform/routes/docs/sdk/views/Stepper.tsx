@@ -1,7 +1,7 @@
 import ViewLayout from './ViewLayout';
 import { Stack } from '@/components/ui/Stack';
-import { Text } from '@/components/astryx/Text';
 import { Step, Stepper } from '@/components/ui/Stepper';
+import { NativeText as Text } from '@/components/ui/NativeText';
 
 /** Documents Stepper in LongLink Views. */
 export default function StepperPage() {
@@ -9,7 +9,6 @@ export default function StepperPage() {
     return (
         <ViewLayout
             name="Stepper"
-            isLongLinkSpecific
             introduction="Displays progress by default. Set variant to wizard to show one persistent Step panel at a time with Next/Back navigation. Inside Form, Next validates the current panel and shared fields; only an explicit submit Button in the last Step submits all fields. Outside Form, wizard navigation works independently without submitting data. Set height to pin progress above centered, scrollable panels."
             properties={[
                 {

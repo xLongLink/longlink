@@ -23,11 +23,17 @@ it.each([401, 503])(
     async (status) => {
         // Arrange a valid session before a cross-tab refresh fails.
         let failure: number | undefined;
+        let recovery: Promise<Response> | undefined;
+        let requests = 0;
 
         const transport = vi.spyOn(globalThis, 'fetch').mockImplementation(async (input, options) => {
             const request = input instanceof Request ? input : new Request(input, options);
 
             if (new URL(request.url).pathname !== '/api/v1/me') throw new Error(`Unexpected request: ${request.url}`);
+
+            requests += 1;
+
+            if (recovery) return await recovery;
 
             return failure
                 ? Response.json({ detail: 'Identity unavailable' }, { status: failure })
@@ -79,12 +85,36 @@ it.each([401, 503])(
 
                         if (!retry) throw new Error('Expected account recovery');
 
-                        // Retry the same observer without returning to the sign-in form.
+                        // Keep duplicate retries from restarting a pending identity request.
+                        const previousRequests = requests;
+                        let completeRecovery: ((response: Response) => void) | undefined;
+                        recovery = new Promise<Response>((resolve) => {
+                            completeRecovery = resolve;
+                        });
+
                         await act(async () => {
                             failure = undefined;
                             retry.click();
+                            retry.click();
+                        });
+                        await vi.waitFor(async () => {
+                            await act(async () => {});
+                            expect(requests).toBe(previousRequests + 1);
+                            expect(retry.getAttribute('aria-busy')).toBe('true');
+                        });
+                        expect(output.textContent).not.toContain('Private organizations');
+                        expect(output.textContent).not.toContain('Sign in again');
+
+                        // Retry the same observer without returning to the sign-in form.
+                        const resolveRecovery = completeRecovery;
+
+                        if (!resolveRecovery) throw new Error('Expected pending account recovery');
+
+                        await act(async () => {
+                            resolveRecovery(Response.json(user));
                             await vi.waitFor(() => expect(output.textContent).toContain('Private organizations'));
                         });
+                        expect(requests).toBe(previousRequests + 1);
                     }
                 },
                 '/user/organizations'

@@ -1,16 +1,12 @@
 import { api } from '@/lib/api';
 import { useContext, useState } from 'react';
 import { SidebarContext } from '@/lib/sidebar';
-import { Item } from '@/components/astryx/Item';
-import { Text } from '@/components/astryx/Text';
 import { Avatar } from '@/components/ui/Avatar';
+import { Popover } from '@base-ui/react/popover';
 import { useQuery } from '@tanstack/react-query';
-import { Stack } from '@/components/astryx/Stack';
-import { Button } from '@/components/astryx/Button';
+import { Link as RouterLink } from 'react-router';
+import { Button } from '@/components/shadcn/button';
 import { Check, ChevronsUpDown } from 'lucide-react';
-import { Popover } from '@/components/astryx/Popover';
-import { List, ListItem } from '@/components/astryx/List';
-import { IconButton } from '@/components/astryx/IconButton';
 import { zUserOrganizationMembership } from '@/lib/generated/platform-api-v1/zod.gen';
 
 export type OrganizationIdentity = {
@@ -42,64 +38,74 @@ export function OrganizationSwitcher({ organization }: { organization: Organizat
         'Organization';
 
     return (
-        <Popover
-            className="w-full"
-            isOpen={isOpen}
-            label="Switch organization"
-            onOpenChange={setIsOpen}
-            width={280}
-            content={
-                <Stack className="max-h-80 overflow-y-auto" gap={2}>
-                    {error ? (
-                        <>
-                            <Text color="secondary">Unable to load organizations.</Text>
-                            <Button label="Retry" onClick={() => void refetch()} size="sm" variant="ghost" />
-                        </>
-                    ) : isPending ? (
-                        <Text color="secondary" role="status">
-                            Loading organizations…
-                        </Text>
-                    ) : memberships.length === 0 ? (
-                        <Text color="secondary">No organizations available.</Text>
-                    ) : (
-                        <List density="compact" aria-label="Organizations">
-                            {memberships.map(({ organization: item }) => (
-                                <ListItem
-                                    description="Organization"
-                                    endContent={
-                                        item.id === organization.id ? <Check aria-hidden="true" size={16} /> : undefined
-                                    }
-                                    href={`/orgs/${item.id}`}
-                                    isSelected={item.id === organization.id}
-                                    key={item.id}
-                                    label={item.name}
-                                    onClickCapture={() => setIsOpen(false)}
-                                    startContent={<Avatar kind="organization" name={item.name} />}
-                                />
-                            ))}
-                        </List>
-                    )}
-                </Stack>
-            }
-        >
-            {sidebar === 'collapsed' ? (
-                <IconButton icon={<Avatar kind="organization" name={name} />} label={name} variant="ghost" />
-            ) : (
-                (trigger) => (
-                    <Item
-                        {...trigger}
-                        as="button"
-                        role="button"
-                        className="w-full rounded-lg px-2 py-1.5 text-left"
-                        description="Organization"
-                        descriptionLines={1}
-                        endContent={<ChevronsUpDown aria-hidden="true" className="text-muted-foreground" size={16} />}
-                        label={name}
-                        labelLines={1}
-                        startContent={<Avatar kind="organization" name={name} />}
-                    />
-                )
-            )}
-        </Popover>
+        <Popover.Root open={isOpen} onOpenChange={setIsOpen} modal="trap-focus">
+            <Popover.Trigger
+                type="button"
+                aria-label={name}
+                className="profile-trigger"
+                data-expanded={sidebar !== 'collapsed' || undefined}
+            >
+                <Avatar kind="organization" name={name} />
+                {sidebar !== 'collapsed' && (
+                    <>
+                        <span className="profile-identity-text">
+                            <span className="profile-name">{name}</span>
+                            <span className="profile-email">Organization</span>
+                        </span>
+                        <ChevronsUpDown aria-hidden="true" className="text-muted-foreground" size={16} />
+                    </>
+                )}
+            </Popover.Trigger>
+            <Popover.Portal>
+                <Popover.Positioner className="profile-positioner" side="bottom" align="start" sideOffset={4}>
+                    <Popover.Popup className="profile-popup" aria-label="Switch organization">
+                        <section className="organization-options">
+                            {error ? (
+                                <>
+                                    <p className="profile-email" role="alert">
+                                        Unable to load organizations.
+                                    </p>
+                                    <Button
+                                        type="button"
+                                        onClick={() => void refetch()}
+                                        variant="view"
+                                        data-size="sm"
+                                        data-variant="ghost"
+                                    >
+                                        Retry
+                                    </Button>
+                                </>
+                            ) : isPending ? (
+                                <p className="profile-email" role="status">
+                                    Loading organizations…
+                                </p>
+                            ) : memberships.length === 0 ? (
+                                <p className="profile-email">No organizations available.</p>
+                            ) : (
+                                <nav className="profile-links" aria-label="Organizations">
+                                    {memberships.map(({ organization: item }) => (
+                                        <RouterLink
+                                            className="profile-link identity-option"
+                                            to={`/orgs/${item.id}`}
+                                            aria-current={item.id === organization.id ? 'page' : undefined}
+                                            key={item.id}
+                                            onClickCapture={() => setIsOpen(false)}
+                                        >
+                                            <Avatar kind="organization" name={item.name} />
+                                            <span className="profile-identity-text">
+                                                <span className="profile-name">{item.name}</span>
+                                                <span className="profile-email">Organization</span>
+                                            </span>
+                                            {item.id === organization.id && <Check aria-hidden="true" size={16} />}
+                                        </RouterLink>
+                                    ))}
+                                </nav>
+                            )}
+                        </section>
+                        <Popover.Close className="sr-only focus:not-sr-only">Close organization switcher</Popover.Close>
+                    </Popover.Popup>
+                </Popover.Positioner>
+            </Popover.Portal>
+        </Popover.Root>
     );
 }

@@ -11,7 +11,6 @@ export default function FormPage() {
     return (
         <ViewLayout
             name="Form"
-            isLongLinkSpecific
             properties={[
                 {
                     name: 'children',

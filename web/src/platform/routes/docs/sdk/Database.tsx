@@ -1,10 +1,10 @@
-import { Code } from '@/components/astryx/Code';
-import { Link } from '@/components/astryx/Link';
-import { Text } from '@/components/astryx/Text';
-import { Stack } from '@/components/astryx/Stack';
-import { Heading } from '@/components/astryx/Heading';
-import { CodeBlock } from '@/components/astryx/CodeBlock';
+import '@/components/ui/inlinecode.css';
+import { NativeLink as Link } from '@/components/ui/NativeLink';
+import { NativeText as Text } from '@/components/ui/NativeText';
+import { NativeStack as Stack } from '@/components/ui/NativeStack';
 import { DocumentationArticle } from '@/components/layouts/Article';
+import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
+import { NativeCodeBlock as CodeBlock } from '@/components/ui/NativeCodeBlock';
 
 const article = {
     description: 'Use database services in a LongLink project.',
@@ -31,8 +31,9 @@ export default function DocsArticleRoute() {
                     <Link href="https://sqlmodel.tiangolo.com/" hasUnderline isExternalLink type="inherit">
                         SQLModel
                     </Link>{' '}
-                    models. The database session and connection are already available through <Code>ctx.database</Code>,
-                    so you can work directly with your data without additional setup.
+                    models. The database session and connection are already available through{' '}
+                    <code className="inline-code">ctx.database</code>, so you can work directly with your data without
+                    additional setup.
                 </Text>
                 <Stack as="aside" className="border-s border-accent ps-4" gap={0}>
                     <Text weight="semibold">Why?</Text>
@@ -65,21 +66,24 @@ async def create_project(ctx: Context) -> None:
                     Users management
                 </Heading>
                 <Text as="p">
-                    Each Solution owns a <Code>users</Code> table with each known user&apos;s ID, name, email, avatar,
-                    and profile update timestamp. Authenticated requests refresh the requesting user&apos;s profile
-                    before your route runs. Profiles remain at their last-seen values until the user returns; this table
-                    is not an organization membership directory. Use <Code>Audit</Code> for automatic attribution or
-                    <Code>UserRelationship()</Code> to add a named user relationship.
+                    Each Solution owns a <code className="inline-code">users</code> table with each known user&apos;s
+                    ID, name, email, avatar, and profile update timestamp. Authenticated requests refresh the requesting
+                    user&apos;s profile before your route runs. Profiles remain at their last-seen values until the user
+                    returns; this table is not an organization membership directory. Use{' '}
+                    <code className="inline-code">Audit</code> for automatic attribution or
+                    <code className="inline-code">UserRelationship()</code> to add a named user relationship.
                 </Text>
                 <Text as="p">
-                    <Code>Audit</Code> adds creation, update, and deletion timestamps; matching Platform user IDs; and
-                    relationships to local users. Use it only for tables that need this history.
+                    <code className="inline-code">Audit</code> adds creation, update, and deletion timestamps; matching
+                    Platform user IDs; and relationships to local users. Use it only for tables that need this history.
                 </Text>
                 <Text as="p">
-                    <Code>UserRelationship()</Code> gives <Code>owner</Code> its own required foreign key to the local
-                    user table. Use <Code>Model</Code> instead of <Code>Audit</Code> if you do not need audit history.
-                    Annotate a relationship as <Code>User | None</Code> for an optional role, such as an invoice
-                    approver; its generated foreign key defaults to null.
+                    <code className="inline-code">UserRelationship()</code> gives{' '}
+                    <code className="inline-code">owner</code> its own required foreign key to the local user table. Use{' '}
+                    <code className="inline-code">Model</code> instead of <code className="inline-code">Audit</code> if
+                    you do not need audit history. Annotate a relationship as{' '}
+                    <code className="inline-code">User | None</code> for an optional role, such as an invoice approver;
+                    its generated foreign key defaults to null.
                 </Text>
                 <CodeBlock
                     code={`from uuid import UUID, uuid4

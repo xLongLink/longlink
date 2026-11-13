@@ -4,17 +4,17 @@ import { useAdminList } from './use-list';
 import { Info, Search } from 'lucide-react';
 import { useApi } from '@/lib/hooks/use-api';
 import { Badge } from '@/components/ui/Badge';
-import { Link } from '@/components/astryx/Link';
-import { Text } from '@/components/astryx/Text';
 import { Avatar } from '@/components/ui/Avatar';
 import { Dialog } from '@/components/ui/Dialog';
-import { Stack } from '@/components/astryx/Stack';
-import { Button } from '@/components/astryx/Button';
-import { Heading } from '@/components/astryx/Heading';
 import { TextInput } from '@/components/ui/TextInput';
 import { DeletionDialog } from '@/components/Deletion';
-import { Pagination } from '@/components/astryx/Pagination';
-import { Table, proportional } from '@/components/astryx/Table';
+import { Pagination } from '@/components/ui/Pagination';
+import { NativeLink as Link } from '@/components/ui/NativeLink';
+import { NativeText as Text } from '@/components/ui/NativeText';
+import { NativeStack as Stack } from '@/components/ui/NativeStack';
+import { NativeButton as Button } from '@/components/ui/NativeButton';
+import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
+import { NativeTable as Table, proportional } from '@/components/ui/NativeTable';
 import { zPageOrganizationIdentity } from '@/lib/generated/platform-api-v1/zod.gen';
 
 /** Lists organizations and confirms administrator deletion. */
@@ -85,7 +85,7 @@ export default function Organizations() {
                     ]}
                 />
                 <Stack as="footer" align="center" paddingBlock={2}>
-                    <Pagination {...pagination} totalItems={organizations.total} variant="pages" />
+                    <Pagination {...pagination} totalItems={organizations.total} />
                 </Stack>
             </Stack>
             {metadata && (

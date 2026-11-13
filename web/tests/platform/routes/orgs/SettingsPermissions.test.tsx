@@ -5,13 +5,12 @@ import { it, expect } from 'vitest';
 import * as icons from '@/lib/icons';
 import { ApiErrorContext } from '@/lib/errors';
 import { membership, user } from '../../render';
+import { Outlet, Route, Routes } from 'react-router';
 import Settings from '@/platform/routes/orgs/Settings';
-import { LinkProvider } from '@/components/astryx/Link';
 import { renderStatic, withMounted } from '../../../render';
 import { IconRequestContext } from '@/components/ui/contexts';
 import { AuthenticatedUserContext } from '@/lib/hooks/use-user';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Link as RouterLink, Outlet, Route, Routes } from 'react-router';
 import type { OrganizationContext } from '@/platform/layouts/Organization';
 
 const base = `/api/v1/organizations/${membership.organization.id}`;
@@ -39,13 +38,11 @@ function settingsFor(role: OrganizationContext['role']) {
         >
             <AuthenticatedUserContext value={caller}>
                 <IconRequestContext value={icons.load}>
-                    <LinkProvider component={RouterLink}>
-                        <Routes>
-                            <Route element={<Outlet context={access} />}>
-                                <Route path="/orgs/:organization/settings" element={<Settings />} />
-                            </Route>
-                        </Routes>
-                    </LinkProvider>
+                    <Routes>
+                        <Route element={<Outlet context={access} />}>
+                            <Route path="/orgs/:organization/settings" element={<Settings />} />
+                        </Route>
+                    </Routes>
                 </IconRequestContext>
             </AuthenticatedUserContext>
         </ApiErrorContext>

@@ -1,17 +1,50 @@
 @import './components/ui/input.css';
+@import './components/ui/fields.css';
 @import './components/ui/group.css';
 @import './components/ui/typography.css';
 @import './components/ui/layout.css';
 @import './components/ui/dialog.css';
+@import './components/deletion.css';
 @import './components/ui/menu.css';
+@import './components/ui/navigation.css';
+@import './components/ui/pagination.css';
+@import './components/ui/metadata.css';
+@import './components/ui/image.css';
+@import './components/ui/link.css';
+@import './components/ui/card.css';
+@import './components/ui/token.css';
+@import './components/ui/radio.css';
+@import './components/ui/number.css';
+@import './components/ui/stepper.css';
+@import './components/ui/codeblock.css';
+@import './components/ui/slider.css';
+@import './components/ui/fileinput.css';
+@import './components/ui/selector.css';
+@import './components/ui/temporal.css';
+@import './components/ui/fileviewer.css';
+@import './components/layouts/content.css';
+@import './components/profile.css';
+@import './components/identity.css';
+@import './components/layouts/platform.css';
+@import './components/layouts/publication.css';
+@import './components/ui/table.css';
+@import './components/utils.css';
+@import './components/apiboundary.css';
+@import './components/native-toaster.css';
+@import './components/breadcrumb/breadcrumb.css';
+@import './components/brand.css';
+@import './components/footer.css';
+@import './components/navbar.css';
+@import './components/solution.css';
+@import './views/runtime.css';
 
 @custom-variant dark {
-    &:where([data-theme='dark'], [data-theme='dark'] *) {
+    @scope ([data-theme='dark']) to ([data-theme]) {
         @slot;
     }
 
     @media (prefers-color-scheme: dark) {
-        &:where(html:not([data-theme]), html:not([data-theme]) *) {
+        @scope (html:not([data-theme]), [data-theme='system']) to ([data-theme]) {
             @slot;
         }
     }
@@ -287,7 +320,7 @@
     @media (pointer: coarse) {
         .longlink-progress-fill:not([data-indeterminate]) {
             transform: translateX(calc(max(var(--progress-fill, 0%), 16px) - 100% + var(--progress-flip, 0) * 0.01px));
-            transition-duration: calc(var(--progress-move, 0ms) * var(--_astryx-motion-tempo, 1));
+            transition-duration: var(--progress-move, 0ms);
             transition-timing-function: linear;
         }
 
@@ -478,7 +511,7 @@
 
 @layer application-theme {
     :root,
-    [data-astryx-theme='stone'] {
+    [data-theme-scope='stone'] {
         color-scheme: light dark;
         --radius: 0.625rem;
         --background: light-dark(#f3f3f5, #111015);
@@ -523,5 +556,9 @@
 
     [data-theme='dark'] {
         color-scheme: dark;
+    }
+
+    [data-theme='system'] {
+        color-scheme: light dark;
     }
 }

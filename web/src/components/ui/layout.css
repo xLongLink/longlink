@@ -1,8 +1,18 @@
 @layer components {
     .view-stack,
-    .view-form-field {
+    .view-form-field,
+    .platform-page-container {
         display: flex;
         flex-direction: column;
+    }
+
+    .platform-page-container {
+        --container-padding-block-end: var(--spacing-2);
+        --container-padding-block-start: 0px;
+        --container-padding-inline-end: 0px;
+        --container-padding-inline-start: 0px;
+        width: 100%;
+        margin-inline: auto;
     }
 
     .view-form-field {

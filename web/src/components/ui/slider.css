@@ -1,0 +1,129 @@
+@layer components {
+    .view-slider {
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-1);
+        width: 100%;
+        min-width: 0;
+        font-family: var(--font-family-body);
+    }
+
+    .view-slider > .view-text-field-heading .view-text-field-label,
+    .view-slider > .view-text-field-heading .view-text-field-description {
+        color: var(--color-text-secondary);
+        cursor: default;
+    }
+
+    .view-slider-control {
+        position: relative;
+        display: flex;
+        align-items: center;
+        width: 100%;
+        height: var(--spacing-5);
+        touch-action: pan-y;
+        user-select: none;
+        cursor: pointer;
+    }
+
+    .view-slider-track {
+        position: relative;
+        width: 100%;
+        height: var(--spacing-1);
+        border-radius: var(--radius-full);
+        background: var(--color-track);
+    }
+
+    .view-slider-indicator {
+        border-radius: inherit;
+        background: var(--color-accent);
+    }
+
+    .view-slider-thumb {
+        top: 50%;
+        width: var(--spacing-5);
+        height: var(--spacing-5);
+        border-radius: var(--radius-full);
+        background: var(--color-accent);
+        cursor: grab;
+        transition: background-color var(--duration-fast) var(--ease-standard);
+    }
+
+    .view-slider-thumb:has(input:focus-visible) {
+        outline: var(--focus-outline-width) var(--focus-outline-style) var(--focus-outline-color);
+        outline-offset: var(--focus-outline-offset);
+    }
+
+    .view-slider-value {
+        position: absolute;
+        bottom: calc(100% + var(--spacing-1));
+        left: 50%;
+        transform: translateX(-50%);
+        padding: var(--spacing-1) var(--spacing-2);
+        border-radius: var(--radius-container);
+        background: var(--color-text-primary);
+        color: var(--color-background-surface);
+        font-size: var(--text-body-size);
+        line-height: var(--text-body-leading);
+        box-shadow: var(--shadow-med);
+        white-space: nowrap;
+        pointer-events: none;
+        visibility: hidden;
+    }
+
+    .view-slider-thumb:is(:hover, :focus-within, [data-dragging]) > .view-slider-value {
+        visibility: visible;
+    }
+
+    .view-slider[data-disabled] .view-slider-control {
+        opacity: 0.5;
+        cursor: default;
+    }
+
+    .view-slider[data-disabled] .view-slider-thumb {
+        background: var(--color-background-muted);
+        cursor: default;
+    }
+
+    .view-slider[data-disabled] > .view-text-field-heading .view-text-field-label {
+        color: var(--color-text-disabled);
+    }
+
+    @media (hover: hover) and (forced-colors: none) {
+        .view-slider:not([data-disabled]) .view-slider-thumb:hover {
+            background: color-mix(in srgb, var(--color-accent), var(--color-tint-hover) 15%);
+        }
+    }
+
+    @media (forced-colors: none) {
+        .view-slider:not([data-disabled]) .view-slider-thumb[data-dragging] {
+            background-image: linear-gradient(var(--color-overlay-pressed), var(--color-overlay-pressed));
+        }
+    }
+
+    @media (pointer: coarse) {
+        .view-slider-control {
+            min-height: var(--spacing-6);
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .view-slider-thumb {
+            transition: none;
+        }
+    }
+
+    @media (forced-colors: active) {
+        .view-slider-track {
+            background: GrayText;
+        }
+
+        .view-slider-indicator,
+        .view-slider-thumb {
+            background: Highlight;
+        }
+
+        .view-slider[data-disabled] .view-slider-thumb {
+            background: GrayText;
+        }
+    }
+}

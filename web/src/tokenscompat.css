@@ -1,0 +1,28 @@
+@layer application-theme {
+    :root,
+    [data-theme-scope='stone'] {
+        --color-background-body: var(--background);
+        --color-background-surface: var(--surface);
+        --color-background-card: var(--card);
+        --color-background-popover: var(--popover);
+        --color-background-muted: var(--muted);
+        --color-background-inverted: var(--invert);
+        --color-text-primary: var(--foreground);
+        --color-text-secondary: var(--muted-foreground);
+        --color-text-accent: var(--accent-text, var(--primary));
+        --color-icon-primary: var(--foreground);
+        --color-icon-secondary: var(--muted-foreground);
+        --color-icon-accent: var(--primary);
+        --color-accent: var(--primary);
+        --color-accent-muted: var(--accent);
+        --color-on-accent: var(--primary-foreground);
+        --color-border: var(--border);
+        --color-border-emphasized: var(--input);
+        --color-info: var(--info);
+        --color-success: var(--success);
+        --color-warning: var(--warning);
+        --color-error: var(--destructive);
+        --radius-element: calc(var(--radius) - 2px);
+        --radius-container: calc(var(--radius) + 2px);
+    }
+}

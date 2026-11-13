@@ -1,13 +1,13 @@
 import { z } from 'zod';
 import { api } from '@/lib/api';
 import { Form } from '@/components/ui/Form';
-import { Text } from '@/components/astryx/Text';
 import { Dialog } from '@/components/ui/Dialog';
-import { Stack } from '@/components/astryx/Stack';
-import { Button } from '@/components/astryx/Button';
-import { Heading } from '@/components/astryx/Heading';
 import { TextInput } from '@/components/ui/TextInput';
 import { Illustration } from '@/components/Illustration';
+import { NativeText as Text } from '@/components/ui/NativeText';
+import { NativeStack as Stack } from '@/components/ui/NativeStack';
+import { NativeButton as Button } from '@/components/ui/NativeButton';
+import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
 import { zOrganizationCreate } from '@/lib/generated/platform-api-v1/zod.gen';
 import { IllustratedDialogContent } from '@/platform/components/IllustratedDialogContent';
 

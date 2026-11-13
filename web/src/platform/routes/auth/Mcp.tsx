@@ -1,12 +1,12 @@
 import { api } from '@/lib/api';
 import { AuthLayout } from './AuthLayout';
 import { Form } from '@/components/ui/Form';
-import { Text } from '@/components/astryx/Text';
 import { useQuery } from '@tanstack/react-query';
-import { Stack } from '@/components/astryx/Stack';
-import { Button } from '@/components/astryx/Button';
 import { useCurrentUser } from '@/lib/hooks/use-user';
 import { Navigate, useSearchParams } from 'react-router';
+import { NativeText as Text } from '@/components/ui/NativeText';
+import { NativeStack as Stack } from '@/components/ui/NativeStack';
+import { NativeButton as Button } from '@/components/ui/NativeButton';
 import { zConsent, zAuthorizationRedirect } from '@/lib/generated/platform-api-v1/zod.gen';
 
 /** Reuses browser login before asking for explicit, resource-specific MCP access. */

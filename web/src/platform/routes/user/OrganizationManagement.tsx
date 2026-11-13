@@ -2,21 +2,21 @@ import { api } from '@/lib/api';
 import { useState } from 'react';
 import { useApiError } from '@/lib/errors';
 import { Badge } from '@/components/ui/Badge';
-import { Link } from '@/components/astryx/Link';
-import { Text } from '@/components/astryx/Text';
 import { Avatar } from '@/components/ui/Avatar';
-import { Stack } from '@/components/astryx/Stack';
+import { Dialog } from '@/components/ui/Dialog';
 import { Divider } from '@/components/ui/Divider';
 import { ExternalLink, Plus } from 'lucide-react';
-import { Button } from '@/components/astryx/Button';
 import { apiQueryOptions } from '@/lib/react-query';
 import CreateOrganization from './CreateOrganization';
-import { Heading } from '@/components/astryx/Heading';
 import { Illustration } from '@/components/Illustration';
-import { Table, proportional } from '@/components/astryx/Table';
-import { Dialog, DialogHeader } from '@/components/astryx/Dialog';
+import { NativeLink as Link } from '@/components/ui/NativeLink';
+import { NativeText as Text } from '@/components/ui/NativeText';
+import { NativeStack as Stack } from '@/components/ui/NativeStack';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
+import { NativeButton as Button } from '@/components/ui/NativeButton';
+import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
 import { useQueryClient, useSuspenseQueries } from '@tanstack/react-query';
+import { NativeTable as Table, proportional } from '@/components/ui/NativeTable';
 
 const membershipsQuery = apiQueryOptions('/api/v1/me/organizations', schemas.zUserOrganizationMembership.array());
 
@@ -218,15 +218,11 @@ export default function OrganizationManagement({ presentation }: { presentation:
             {selected && selected.type !== 'create' && (
                 <Dialog
                     isOpen
-                    purpose="form"
+                    title={selected.type === 'accept' ? 'Accept invitation' : 'Decline invitation'}
                     onOpenChange={(open) => {
                         if (!open) closeSelected();
                     }}
                 >
-                    <DialogHeader
-                        title={selected.type === 'accept' ? 'Accept invitation' : 'Decline invitation'}
-                        onOpenChange={closeSelected}
-                    />
                     <Stack gap={3}>
                         <Text color="secondary">
                             {selected.type === 'accept'

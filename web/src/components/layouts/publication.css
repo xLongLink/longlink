@@ -1,0 +1,168 @@
+@layer components {
+    .publication {
+        display: flex;
+        flex-direction: column;
+        min-height: 100dvh;
+    }
+
+    .publication-shell {
+        position: relative;
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+        width: 100%;
+        max-width: 1320px;
+        min-height: 100dvh;
+        margin-inline: auto;
+        overflow: clip;
+        background: var(--background);
+    }
+
+    .publication-body {
+        display: flex;
+        flex: 1;
+        min-height: 0;
+        min-width: 0;
+    }
+
+    .publication-sidebar {
+        position: sticky;
+        top: 0;
+        display: flex;
+        flex: none;
+        flex-direction: column;
+        height: 100dvh;
+        overflow: clip;
+        background: inherit;
+    }
+
+    .publication-sidebar-content {
+        flex: 1;
+        overflow: auto;
+    }
+
+    .publication-main {
+        flex: 1;
+        min-height: 0;
+        min-width: 0;
+        overflow: clip;
+        outline: none;
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    .publication-mobile-bar {
+        position: sticky;
+        top: 0;
+        z-index: 1;
+        display: flex;
+        align-items: center;
+        height: var(--spacing-12);
+        padding-inline: var(--spacing-2);
+        padding-top: env(safe-area-inset-top, 0px);
+        background: var(--background);
+    }
+
+    .publication-nav-toggle {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: none;
+        width: var(--size-element-md);
+        height: var(--size-element-md);
+        padding: 0;
+        border: 0;
+        border-radius: var(--radius-element);
+        background: transparent;
+        color: var(--foreground);
+        cursor: pointer;
+    }
+
+    .publication-nav-backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 50;
+        background: var(--color-overlay);
+    }
+
+    .publication-nav-dialog {
+        position: fixed;
+        inset-block: 0;
+        inset-inline-start: 0;
+        z-index: 50;
+        display: flex;
+        flex-direction: column;
+        width: 320px;
+        max-width: 85vw;
+        min-height: 0;
+        overflow: hidden;
+        border-inline-end: 1px solid var(--border);
+        background: var(--surface);
+        color: var(--foreground);
+        outline: none;
+        padding-top: env(safe-area-inset-top, 0px);
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    .publication-nav-dialog[hidden],
+    .publication-nav-backdrop[hidden] {
+        display: none;
+    }
+
+    .publication-nav-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex: none;
+        gap: var(--spacing-2);
+        padding: var(--spacing-2) var(--spacing-4);
+    }
+
+    .publication-nav-header h2 {
+        margin: 0;
+        font-size: var(--text-body-size);
+        font-weight: var(--font-weight-semibold);
+    }
+
+    .publication-nav-content {
+        flex: 1;
+        min-height: 0;
+        overflow: auto;
+    }
+
+    .publication-nav-content > nav {
+        width: 100%;
+    }
+
+    .publication-skip-link {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        margin: -1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap;
+    }
+
+    .publication-skip-link:focus {
+        position: fixed;
+        top: var(--spacing-2);
+        inset-inline-start: var(--spacing-2);
+        z-index: 9999;
+        width: auto;
+        height: auto;
+        margin: 0;
+        padding: var(--spacing-2) var(--spacing-4);
+        overflow: visible;
+        clip-path: none;
+        background: var(--surface);
+        color: var(--primary);
+        text-decoration: none;
+        font-weight: var(--font-weight-semibold);
+    }
+
+    .publication-skip-link:focus-visible,
+    .publication-nav-toggle:focus-visible {
+        outline: var(--focus-outline-width) solid var(--ring);
+        outline-offset: var(--focus-outline-offset);
+    }
+}

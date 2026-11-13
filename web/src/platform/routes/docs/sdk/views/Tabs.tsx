@@ -1,6 +1,6 @@
 import ViewLayout from './ViewLayout';
-import { Text } from '@/components/astryx/Text';
 import { Tabs, Tab } from '@/components/ui/Tabs';
+import { NativeText as Text } from '@/components/ui/NativeText';
 
 /** Documents tab selection and panel content. */
 export default function TabsPage() {
@@ -8,7 +8,6 @@ export default function TabsPage() {
     return (
         <ViewLayout
             name="Tabs"
-            isLongLinkSpecific
             properties={[
                 {
                     name: 'children',

@@ -47,10 +47,6 @@ updates:
               patterns:
                   - 'react-router'
                   - '@react-router/dev'
-          astryx:
-              patterns:
-                  - '@astryxdesign/core'
-                  - '@astryxdesign/cli'
           tailwind:
               patterns:
                   - 'tailwindcss'

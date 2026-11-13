@@ -1,0 +1,21 @@
+@layer components {
+    .view-file-loading {
+        display: inline-flex;
+        flex-direction: column;
+        align-items: center;
+        gap: var(--spacing-2);
+    }
+
+    .view-file-loading > svg {
+        width: var(--spacing-5);
+        height: var(--spacing-5);
+        color: var(--primary);
+        animation: view-action-spin 1s linear infinite;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .view-file-loading > svg {
+            animation: none;
+        }
+    }
+}

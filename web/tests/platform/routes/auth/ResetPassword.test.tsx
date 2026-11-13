@@ -55,6 +55,15 @@ it.each([204, 400])('handles password reset submission status %s after valid adm
                 </ApiBoundary>
             </ApiErrorContext>,
             async (output) => {
+                const announcements: string[] = [];
+
+                const observer = new MutationObserver(() => {
+                    const text = output.querySelector('.native-auth-banner [role="status"]')?.textContent;
+
+                    if (text && announcements.at(-1) !== text) announcements.push(text);
+                });
+
+                observer.observe(output, { childList: true, subtree: true, characterData: true });
                 await act(async () => {
                     await vi.waitFor(() => expect(output.querySelector('input[type="password"]')).not.toBeNull());
                 });
@@ -85,6 +94,19 @@ it.each([204, 400])('handles password reset submission status %s after valid adm
                 expect(output.textContent?.includes('Your password has been reset.')).toBe(status === 204);
                 expect(output.querySelector('a[href="/login"]') !== null).toBe(status === 204);
                 expect(errors).toEqual([]);
+
+                if (status === 204) {
+                    await vi.waitFor(() =>
+                        expect(announcements).toEqual(['Your password has been reset. You can now sign in.'])
+                    );
+                    expect(
+                        output.querySelectorAll('.native-auth-banner [role="status"], .native-auth-banner [aria-live]')
+                    ).toHaveLength(1);
+                } else {
+                    expect(announcements).toEqual([]);
+                }
+
+                observer.disconnect();
             },
             '/auth/reset-password'
         );

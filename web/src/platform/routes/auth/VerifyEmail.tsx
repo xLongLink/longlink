@@ -5,17 +5,17 @@ import { api, ApiError } from '@/lib/api';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router';
 import { passwordSchema } from './validation';
-import { Link } from '@/components/astryx/Link';
-import { Text } from '@/components/astryx/Text';
 import { Welcome } from '@/components/Wordmark';
-import { Stack } from '@/components/astryx/Stack';
 import { Divider } from '@/components/ui/Divider';
-import { Button } from '@/components/astryx/Button';
 import { useCurrentUser } from '@/lib/hooks/use-user';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQueryClient } from '@tanstack/react-query';
 import { clearSessionQueries } from '@/lib/react-query';
+import { NativeLink as Link } from '@/components/ui/NativeLink';
+import { NativeText as Text } from '@/components/ui/NativeText';
 import { useFragmentToken } from '@/lib/hooks/use-fragment-token';
+import { NativeStack as Stack } from '@/components/ui/NativeStack';
+import { NativeButton as Button } from '@/components/ui/NativeButton';
 import { zEmailPayload } from '@/lib/generated/platform-api-v1/zod.gen';
 import { useVerification, type VerificationRequest } from '@/lib/hooks/use-verification';
 
@@ -144,25 +144,17 @@ export default function VerifyEmail() {
         <AuthLayout title={<Welcome />} description={<Divider label="Email verified. Complete your profile." />}>
             {pageMetadata}
             <Stack gap={4}>
-                <form action={() => form.handleSubmit(handleComplete)()}>
+                <form noValidate action={() => form.handleSubmit(handleComplete)()}>
                     <Stack gap={3}>
                         <TextField
                             control={form.control}
                             name="name"
                             autoComplete="name"
-                            hasAutoFocus
-                            isRequired
+                            autoFocus
+                            required
                             label="Name"
-                            width="100%"
                         />
-                        <TextField
-                            control={form.control}
-                            name="password"
-                            isRequired
-                            label="Password"
-                            width="100%"
-                            type="password"
-                        />
+                        <TextField control={form.control} name="password" required label="Password" type="password" />
                         <Button label="Create account" type="submit" variant="primary" />
                     </Stack>
                 </form>

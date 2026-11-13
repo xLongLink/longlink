@@ -155,7 +155,7 @@ it.each([
                     await act(async () => actionButton?.click());
 
                     const confirm = Array.from(
-                        document.querySelectorAll<HTMLButtonElement>('dialog[open] button')
+                        document.querySelectorAll<HTMLButtonElement>('[role="dialog"] button')
                     ).find((button) => button.textContent === action);
 
                     expect(confirm).toBeDefined();

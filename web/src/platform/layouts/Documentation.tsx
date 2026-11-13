@@ -1,9 +1,12 @@
 import { useLocation } from 'react-router';
-import { Stack } from '@/components/astryx/Stack';
-import { Tab, TabList } from '@/components/astryx/TabList';
 import Publication from '@/components/layouts/Publication';
-import { SideNav, SideNavItem, SideNavSection } from '@/components/astryx/SideNav';
 import { documentationIntroduction, documentationNavigation } from '@/platform/publications';
+import {
+    PublicationNavigation,
+    PublicationNavigationItem,
+    PublicationNavigationSection,
+    PublicationSectionLinks,
+} from './PublicationNavigation';
 
 /** Renders documentation with section navigation, article, and outline columns. */
 export default function Documentation() {
@@ -19,42 +22,22 @@ export default function Documentation() {
 
     return (
         <Publication
-            navigation={
-                <TabList aria-label="Documentation sections" value={activeGroup.path} onChange={() => undefined}>
-                    {documentationNavigation.map((group) => (
-                        <Tab key={group.path} href={`${group.path}/`} label={group.label} value={group.path} />
-                    ))}
-                </TabList>
-            }
+            navigation={<PublicationSectionLinks groups={documentationNavigation} activePath={activeGroup.path} />}
             sideNav={
-                <SideNav aria-label="Documentation navigation">
-                    <Stack paddingInline={4} paddingBlock={6}>
-                        {sections.map((section) => (
-                            <SideNavSection key={section.title} title={section.title}>
-                                {section.pages.map((page) => (
-                                    <SideNavItem
-                                        key={page.path}
-                                        href={page.children?.length ? undefined : `${page.path}/`}
-                                        icon={page.children?.length ? undefined : <page.icon aria-hidden size={16} />}
-                                        isSelected={`${pagePath}${hash}` === page.path}
-                                        label={page.label}
-                                        collapsible={page.children?.length ? { defaultIsCollapsed: true } : false}
-                                    >
-                                        {page.children?.map((child) => (
-                                            <SideNavItem
-                                                key={child.path}
-                                                href={`${child.path}/`}
-                                                icon={<child.icon aria-hidden size={16} />}
-                                                isSelected={pagePath === child.path}
-                                                label={child.label}
-                                            />
-                                        ))}
-                                    </SideNavItem>
-                                ))}
-                            </SideNavSection>
-                        ))}
-                    </Stack>
-                </SideNav>
+                <PublicationNavigation label="Documentation navigation">
+                    {sections.map((section) => (
+                        <PublicationNavigationSection key={section.title} title={section.title}>
+                            {section.pages.map((page) => (
+                                <PublicationNavigationItem
+                                    key={page.path}
+                                    page={page}
+                                    pagePath={pagePath}
+                                    hash={hash}
+                                />
+                            ))}
+                        </PublicationNavigationSection>
+                    ))}
+                </PublicationNavigation>
             }
         />
     );

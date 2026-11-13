@@ -1,10 +1,9 @@
-import { Text } from '@/components/astryx/Text';
-import { Stack } from '@/components/astryx/Stack';
-import { Button } from '@/components/astryx/Button';
-import { useId, useRef, useTransition } from 'react';
-import { useMediaQuery } from '@astryxdesign/core/hooks';
-import { Dialog, DialogHeader } from '@/components/astryx/Dialog';
-import { Layout, LayoutContent, LayoutFooter } from '@/components/astryx/Layout';
+import { Text } from '@/components/ui/Text';
+import { useRef, useTransition } from 'react';
+import { X, LoaderCircle } from 'lucide-react';
+import { Heading } from '@/components/ui/Heading';
+import { Button } from '@/components/shadcn/button';
+import { AlertDialog } from '@base-ui/react/alert-dialog';
 
 /** Tracks deletion for its mounted lifetime; callers own the resource, mounting, and success-only closure. */
 export function DeletionDialog({
@@ -17,20 +16,26 @@ export function DeletionDialog({
     // Preserve pending state across dismissal for callers that keep this component mounted.
     const [isDeleting, startDeletion] = useTransition();
     const deletionInFlight = useRef(false);
-    const descriptionId = useId();
-    const isSmallScreen = useMediaQuery('(max-width: 640px)');
+    const cancel = useRef<HTMLButtonElement>(null);
 
     if (!confirmation) return null;
 
     // Keep the least-destructive focus target and narrow-screen action order unchanged.
-    const cancelButton = <Button key="cancel" label="Cancel" variant="ghost" data-autofocus onClick={onClose} />;
+    const cancelButton = (
+        <Button ref={cancel} variant="view" data-variant="ghost" data-size="md" onClick={onClose}>
+            Cancel
+        </Button>
+    );
 
     const deleteButton = (
         <Button
-            key="delete"
-            label="Delete"
-            variant="destructive"
-            isLoading={isDeleting}
+            variant="view"
+            data-variant="destructive"
+            data-size="md"
+            disabled={isDeleting}
+            focusableWhenDisabled
+            aria-busy={isDeleting || undefined}
+            aria-label={isDeleting ? 'Delete' : undefined}
             onClick={() => {
                 // Deduplicate same-tick clicks before the transition's pending state renders.
                 if (deletionInFlight.current) return;
@@ -45,43 +50,57 @@ export function DeletionDialog({
                     }
                 });
             }}
-        />
+        >
+            <span className="view-action-content" aria-hidden={isDeleting || undefined}>
+                <span className="view-action-label">Delete</span>
+            </span>
+            {isDeleting && <LoaderCircle aria-hidden="true" className="view-action-spinner" />}
+        </Button>
     );
 
     // Preserve alert semantics and cancellation focus while adding explicit header dismissal.
     return (
-        <Dialog
-            isOpen
-            purpose="form"
-            role="alertdialog"
-            aria-describedby={descriptionId}
+        <AlertDialog.Root
+            open
             onOpenChange={(open) => {
                 if (!open) onClose();
             }}
         >
-            <Layout
-                header={<DialogHeader title={confirmation.title} onOpenChange={onClose} />}
-                content={
-                    <LayoutContent>
-                        <Text color="secondary" id={descriptionId}>
-                            {confirmation.description}
-                        </Text>
-                    </LayoutContent>
-                }
-                footer={
-                    <LayoutFooter>
-                        <Stack
-                            direction={isSmallScreen ? 'vertical' : 'horizontal'}
-                            gap={2}
-                            align={isSmallScreen ? 'stretch' : undefined}
-                            justify="end"
-                            wrap={isSmallScreen ? 'nowrap' : 'wrap'}
+            <AlertDialog.Portal className="view-dialog-layer">
+                <AlertDialog.Backdrop className="view-dialog-backdrop" />
+                <AlertDialog.Popup
+                    className="view-dialog view-confirmation deletion-dialog"
+                    initialFocus={cancel}
+                    aria-busy={isDeleting || undefined}
+                    onClick={(event) => event.stopPropagation()}
+                >
+                    <header className="deletion-header">
+                        <AlertDialog.Title render={<div />}>
+                            <Heading level={2}>{confirmation.title}</Heading>
+                        </AlertDialog.Title>
+                        <Button
+                            variant="view"
+                            data-variant="ghost"
+                            data-size="md"
+                            data-icon-only
+                            aria-label="Close"
+                            onClick={onClose}
                         >
-                            {isSmallScreen ? [deleteButton, cancelButton] : [cancelButton, deleteButton]}
-                        </Stack>
-                    </LayoutFooter>
-                }
-            />
-        </Dialog>
+                            <X aria-hidden="true" />
+                        </Button>
+                    </header>
+                    <AlertDialog.Description className="deletion-description" render={<div />}>
+                        <Text color="secondary">{confirmation.description}</Text>
+                    </AlertDialog.Description>
+                    <footer className="view-confirmation-actions">
+                        {cancelButton}
+                        {deleteButton}
+                        <span role="status" className="sr-only">
+                            {isDeleting ? 'Loading' : ''}
+                        </span>
+                    </footer>
+                </AlertDialog.Popup>
+            </AlertDialog.Portal>
+        </AlertDialog.Root>
     );
 }

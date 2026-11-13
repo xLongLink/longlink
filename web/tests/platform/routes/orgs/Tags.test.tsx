@@ -56,9 +56,14 @@ it.each(['unchanged', 'changed', 'cleared', 'cancel'] as const)('submits only ex
             </IconRequestContext>,
             async () => {
                 const dialog = document.querySelector('[role="dialog"]');
-                const picker = dialog?.querySelector<HTMLButtonElement>('button[aria-haspopup="listbox"]');
 
-                if (!dialog || !picker) throw new Error('Expected the tag editor');
+                const label = Array.from(dialog?.querySelectorAll('label') ?? []).find(
+                    (label) => label.textContent?.trim() === 'Tags'
+                );
+
+                const picker = label?.htmlFor ? document.getElementById(label.htmlFor) : null;
+
+                if (!dialog || !(picker instanceof HTMLButtonElement)) throw new Error('Expected the tag editor');
 
                 expect(picker.textContent).toContain('Purchases');
 

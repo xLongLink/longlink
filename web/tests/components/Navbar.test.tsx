@@ -2,13 +2,29 @@
 import { act } from 'react';
 import { withMounted } from '../render';
 import { Navbar } from '@/components/Navbar';
-import { LinkProvider } from '@/components/astryx/Link';
+import userEvent from '@testing-library/user-event';
+import { Route, Routes, useNavigate } from 'react-router';
 import { it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { Link as RouterLink, Route, Routes } from 'react-router';
 
 const initialWidth = window.innerWidth;
 
 const initialScroll = { left: window.scrollX, top: window.scrollY };
+
+/** Exposes real history traversal without replacing router navigation. */
+function Back() {
+    const navigate = useNavigate();
+
+    return (
+        <button
+            type="button"
+            onClick={() => {
+                void navigate(-1);
+            }}
+        >
+            Back
+        </button>
+    );
+}
 
 beforeEach(() => {
     window.innerWidth = 390;
@@ -29,14 +45,14 @@ it('opens the mobile drawer and exposes its expanded state', async () => {
         if (!open) throw new Error('Expected the navigation toggle');
 
         expect(open.getAttribute('aria-expanded')).toBe('false');
-        expect(document.querySelector('dialog[open]')).toBeNull();
+        expect(document.querySelector('[role="dialog"]')).toBeNull();
 
         // Act
         await act(async () => open.click());
 
         // Assert
         expect(open.getAttribute('aria-expanded')).toBe('true');
-        expect(document.querySelector('dialog[open] nav[aria-label="Public pages"]')).not.toBeNull();
+        expect(document.querySelector('[role="dialog"] nav[aria-label="Public pages"]')).not.toBeNull();
     });
 });
 
@@ -46,13 +62,14 @@ it.each([
 ])('closes the drawer when $label navigates to $href', async ({ href, label }) => {
     // Arrange
     await withMounted(
-        <LinkProvider component={RouterLink}>
+        <>
             <Navbar />
+            <Back />
             <Routes>
-                <Route path="/" element={null} />
+                <Route path="/" element={<h1>Home</h1>} />
                 <Route path={href} element={<h1>{label}</h1>} />
             </Routes>
-        </LinkProvider>,
+        </>,
         async (output) => {
             const open = output.querySelector<HTMLButtonElement>('button[aria-label="Open navigation"]');
 
@@ -61,7 +78,7 @@ it.each([
             await act(async () => open.click());
             expect(open.getAttribute('aria-expanded')).toBe('true');
 
-            const link = document.querySelector<HTMLAnchorElement>(`dialog[open] a[href="${href}"]`);
+            const link = document.querySelector<HTMLAnchorElement>(`[role="dialog"] a[href="${href}"]`);
 
             if (!link) throw new Error(`Expected the mobile ${label} link`);
 
@@ -71,9 +88,85 @@ it.each([
             // Assert
             expect(output.querySelector('h1')?.textContent).toBe(label);
             expect(open.getAttribute('aria-expanded')).toBe('false');
-            await vi.waitFor(() => expect(document.querySelector('dialog[open]')).toBeNull());
+            await vi.waitFor(() => expect(document.querySelector('[role="dialog"]')).toBeNull());
+
+            // Assert history was pushed rather than replacing the page or entry.
+            const back = Array.from(output.querySelectorAll('button')).find((button) => button.textContent === 'Back');
+
+            if (!back) throw new Error('Expected history control');
+            await act(async () => back.click());
+            expect(output.querySelector('h1')?.textContent).toBe('Home');
+            expect(open.getAttribute('aria-expanded')).toBe('false');
         }
     );
+});
+
+it('dismisses with Escape and restores focus so keyboard users can reopen navigation', async () => {
+    const user = userEvent.setup();
+    await withMounted(<Navbar />, async (output) => {
+        const open = output.querySelector<HTMLButtonElement>('button[aria-label="Open navigation"]');
+
+        if (!open) throw new Error('Expected navigation toggle');
+        await act(async () => user.click(open));
+        expect(document.querySelector('[role="dialog"]')).not.toBeNull();
+
+        await act(async () => user.keyboard('{Escape}'));
+        await vi.waitFor(() => expect(document.querySelector('[role="dialog"]')).toBeNull());
+        await vi.waitFor(() => expect(document.activeElement).toBe(open));
+        await act(async () => user.keyboard('{Enter}'));
+        expect(open.getAttribute('aria-expanded')).toBe('true');
+    });
+});
+
+it('leaves modified link gestures to the browser while closing the drawer synchronously', async () => {
+    await withMounted(
+        <>
+            <Navbar />
+            <Routes>
+                <Route path="/" element={<h1>Home</h1>} />
+                <Route path="/docs/" element={<h1>Docs</h1>} />
+            </Routes>
+        </>,
+        async (output) => {
+            const open = output.querySelector<HTMLButtonElement>('button[aria-label="Open navigation"]');
+
+            if (!open) throw new Error('Expected navigation toggle');
+            await act(async () => open.click());
+            const link = document.querySelector<HTMLAnchorElement>('[role="dialog"] a[href="/docs/"]');
+
+            if (!link) throw new Error('Expected documentation link');
+            const gesture = new MouseEvent('click', { bubbles: true, cancelable: true, ctrlKey: true });
+
+            await act(async () => {
+                link.dispatchEvent(gesture);
+            });
+
+            expect(gesture.defaultPrevented).toBe(false);
+            expect(output.querySelector('h1')?.textContent).toBe('Home');
+            expect(open.getAttribute('aria-expanded')).toBe('false');
+            await vi.waitFor(() => expect(document.querySelector('[role="dialog"]')).toBeNull());
+        }
+    );
+});
+
+it('dismisses on an outside press without leaving the drawer stuck open', async () => {
+    const user = userEvent.setup();
+    await withMounted(<Navbar />, async (output) => {
+        const open = output.querySelector<HTMLButtonElement>('button[aria-label="Open navigation"]');
+
+        if (!open) throw new Error('Expected navigation toggle');
+        await act(async () => user.click(open));
+        const backdrop = document.querySelector<HTMLElement>('.public-navbar-backdrop');
+
+        if (!backdrop) throw new Error('Expected navigation backdrop');
+
+        await act(async () => user.click(backdrop));
+
+        expect(open.getAttribute('aria-expanded')).toBe('false');
+        await vi.waitFor(() => expect(document.querySelector('[role="dialog"]')).toBeNull());
+        await act(async () => user.click(open));
+        expect(document.querySelector('[role="dialog"]')).not.toBeNull();
+    });
 });
 
 it('closes the mobile drawer at the desktop breakpoint and keeps it closed on return', async () => {
@@ -100,7 +193,7 @@ it('closes the mobile drawer at the desktop breakpoint and keeps it closed on re
 
         // Assert
         expect(open.getAttribute('aria-expanded')).toBe('false');
-        await vi.waitFor(() => expect(document.querySelector('dialog[open]')).toBeNull());
+        await vi.waitFor(() => expect(document.querySelector('[role="dialog"]')).toBeNull());
 
         await act(async () => {
             window.innerWidth = 390;

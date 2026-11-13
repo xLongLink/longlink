@@ -3,19 +3,19 @@ import { TextField } from './Field';
 import { Mail } from 'lucide-react';
 import { AuthLayout } from './AuthLayout';
 import { useSearchParams } from 'react-router';
-import { Link } from '@/components/astryx/Link';
-import { Text } from '@/components/astryx/Text';
-import { Stack } from '@/components/astryx/Stack';
 import { Divider } from '@/components/ui/Divider';
-import { Button } from '@/components/astryx/Button';
 import { useForm, useWatch } from 'react-hook-form';
-import { useToast } from '@/components/astryx/Toast';
+import { useNotification } from '@/lib/notifications';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { NativeLink as Link } from '@/components/ui/NativeLink';
+import { NativeText as Text } from '@/components/ui/NativeText';
+import { NativeStack as Stack } from '@/components/ui/NativeStack';
 import { emailPayloadSchema, type EmailPayload } from './validation';
+import { NativeButton as Button } from '@/components/ui/NativeButton';
 
 /** Starts stateless account registration with an email verification link. */
 export default function Register() {
-    const showToast = useToast();
+    const showNotification = useNotification();
     const [searchParams] = useSearchParams();
 
     const form = useForm<EmailPayload>({
@@ -39,11 +39,12 @@ export default function Register() {
             <Stack gap={3}>
                 <Divider />
                 <form
+                    noValidate
                     action={() =>
                         form.handleSubmit(async (payload) => {
                             // Notify the user only after the email request succeeds.
                             await api('/api/v1/auth/register', { json: payload, method: 'POST' });
-                            showToast({ body: 'Check your inbox for the registration link.' });
+                            showNotification('Check your inbox for the registration link.');
                         })()
                     }
                 >
@@ -52,10 +53,9 @@ export default function Register() {
                             control={form.control}
                             name="email"
                             autoComplete="email"
-                            isRequired
+                            required
                             label="Email"
                             type="email"
-                            width="100%"
                         />
                         <Button
                             icon={<Mail aria-hidden="true" size={16} />}

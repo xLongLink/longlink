@@ -1,4 +1,4 @@
-@layer astryx-theme {
+@layer theme-tokens {
     html[data-accent='red'],
     [data-accent-swatch='red'] {
         --accent-fill: light-dark(#b91c1c, #f87171);
@@ -135,9 +135,9 @@
         --brand-foreground: light-dark(#ffffff, #4c0519);
     }
 
-    @scope (html[data-accent]:not([data-accent='neutral'])) to ([data-astryx-theme]:not(html) [data-astryx-theme]) {
+    @scope (html[data-accent]:not([data-accent='neutral'])) to ([data-theme-scope]:not(html) [data-theme-scope]) {
         :scope[data-accent],
-        [data-astryx-theme='stone']:not(html) {
+        [data-theme-scope='stone']:not(html) {
             --color-accent: var(--accent-fill);
             --color-accent-muted: var(--accent-muted);
             --color-text-accent: var(--accent-text);

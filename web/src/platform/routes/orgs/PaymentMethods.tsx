@@ -1,14 +1,14 @@
 import { api } from '@/lib/api';
 import { useApi } from '@/lib/hooks/use-api';
-import { Text } from '@/components/astryx/Text';
-import { Stack } from '@/components/astryx/Stack';
-import { Token } from '@/components/astryx/Token';
+import { Token } from '@/components/ui/Token';
 import { Divider } from '@/components/ui/Divider';
-import { Button } from '@/components/astryx/Button';
-import { Heading } from '@/components/astryx/Heading';
 import { ApiBoundary } from '@/components/ApiBoundary';
-import { Table, proportional } from '@/components/astryx/Table';
+import { NativeText as Text } from '@/components/ui/NativeText';
+import { NativeStack as Stack } from '@/components/ui/NativeStack';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
+import { NativeButton as Button } from '@/components/ui/NativeButton';
+import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
+import { NativeTable as Table, proportional } from '@/components/ui/NativeTable';
 
 /** Owns card registration and saved-card reads only while Payment Methods is active. */
 export default function PaymentMethods({ base, canManage }: { base: string; canManage: boolean }) {

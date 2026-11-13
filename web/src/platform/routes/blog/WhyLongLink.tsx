@@ -1,8 +1,7 @@
-import { Card } from '@/components/astryx/Card';
-import { Text } from '@/components/astryx/Text';
-import { Stack } from '@/components/astryx/Stack';
-import { Heading } from '@/components/astryx/Heading';
 import { PublicArticle } from '@/components/layouts/Article';
+import { NativeText as Text } from '@/components/ui/NativeText';
+import { NativeStack as Stack } from '@/components/ui/NativeStack';
+import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
 
 const article = {
     description:
@@ -18,7 +17,7 @@ export default function WhyLongLink() {
     return (
         <PublicArticle article={article}>
             <Stack
-                className="[--text-body-leading:var(--leading-relaxed)] [--text-body-size:var(--font-size-lg)] [--font-family-heading:var(--font-family-handwritten)] [&_.astryx-heading]:uppercase"
+                className="[--text-body-leading:var(--leading-relaxed)] [--text-body-size:var(--font-size-lg)] [--font-family-heading:var(--font-family-handwritten)] [&_.native-heading]:uppercase"
                 gap={5}
             >
                 <Heading id="why-longlink" level={1} textWrap="balance">
@@ -49,11 +48,7 @@ export default function WhyLongLink() {
                         <Text as="p" textWrap="pretty">
                             LongLink provides everything else needed to build, run, and manage those Solutions.
                         </Text>
-                        <Card
-                            className="relative overflow-hidden [--font-family-body:var(--font-family-handwritten)] [--font-family-heading:var(--font-family-handwritten)]"
-                            padding={0}
-                            variant="transparent"
-                        >
+                        <div className="relative min-w-0 overflow-hidden rounded-(--radius-container) bg-transparent [--font-family-body:var(--font-family-handwritten)] [--font-family-heading:var(--font-family-handwritten)]">
                             <img
                                 alt="Core application logic surrounded by services and deployment infrastructure"
                                 className="aspect-video w-full object-contain"
@@ -77,7 +72,7 @@ export default function WhyLongLink() {
                             >
                                 Deployment
                             </Text>
-                        </Card>
+                        </div>
                     </Stack>
                 </Stack>
             </Stack>

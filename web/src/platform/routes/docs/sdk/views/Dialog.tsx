@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import ViewLayout from './ViewLayout';
-import { Text } from '@/components/astryx/Text';
 import { Button } from '@/components/ui/Button';
 import { Dialog } from '@/components/ui/Dialog';
-import { Stack } from '@/components/astryx/Stack';
+import { NativeText as Text } from '@/components/ui/NativeText';
+import { NativeStack as Stack } from '@/components/ui/NativeStack';
 
 /** Documents Dialog in LongLink Views. */
 export default function DialogPage() {
@@ -11,7 +11,6 @@ export default function DialogPage() {
     return (
         <ViewLayout
             name="Dialog"
-            isLongLinkSpecific
             properties={[
                 {
                     name: 'children',

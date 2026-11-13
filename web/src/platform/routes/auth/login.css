@@ -1,0 +1,85 @@
+@layer components {
+    .login-sections,
+    .login-controls,
+    .login-field {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .login-sections {
+        gap: var(--spacing-4);
+    }
+
+    .login-controls {
+        gap: var(--spacing-2);
+    }
+
+    .login-field {
+        gap: var(--spacing-1);
+    }
+
+    .login-password-heading {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .login-password-control {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .login-password-control > .native-auth-password-toggle {
+        color: var(--color-text-primary);
+    }
+
+    .login-button.view-action-button {
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .login-button.view-action-button[data-variant='primary'] {
+        background-color: var(--color-accent);
+        color: var(--color-on-accent);
+    }
+
+    .login-button.view-action-button[data-variant='secondary'] {
+        border: 0;
+        background-color: var(--color-neutral);
+        color: var(--color-text-primary);
+    }
+
+    .login-button.view-action-button[data-variant='secondary']:not([aria-disabled='true']):hover {
+        background-color: var(--color-neutral);
+        background-image: linear-gradient(var(--color-overlay-hover), var(--color-overlay-hover));
+    }
+
+    .login-button.view-action-button[data-variant='secondary']:not([aria-disabled='true']):active {
+        background-image: linear-gradient(var(--color-overlay-pressed), var(--color-overlay-pressed));
+    }
+
+    .login-link {
+        color: var(--color-text-accent);
+        text-decoration: none;
+    }
+
+    .login-link:hover {
+        text-decoration: underline;
+    }
+
+    .login-link:focus-visible {
+        outline: var(--focus-outline-width) solid var(--focus-outline-color);
+        outline-offset: var(--focus-outline-offset);
+    }
+
+    .login-recovery-link {
+        font-size: var(--text-supporting-size);
+        font-weight: var(--text-supporting-weight);
+        line-height: var(--text-supporting-leading);
+    }
+
+    .login-register-link {
+        font-weight: var(--font-weight-medium);
+    }
+}

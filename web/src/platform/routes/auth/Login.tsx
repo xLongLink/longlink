@@ -1,15 +1,13 @@
 import { z } from 'zod';
+import './login.css';
 import { TextField } from './Field';
 import { AuthLayout } from './AuthLayout';
 import { api, ApiError } from '@/lib/api';
 import { useApiError } from '@/lib/errors';
 import { useEffect, useState } from 'react';
-import { Link } from '@/components/astryx/Link';
-import { Text } from '@/components/astryx/Text';
-import { Stack } from '@/components/astryx/Stack';
 import { Divider } from '@/components/ui/Divider';
 import { Eye, EyeOff, LogIn } from 'lucide-react';
-import { Button } from '@/components/astryx/Button';
+import { Button } from '@/components/shadcn/button';
 import { useForm, useWatch } from 'react-hook-form';
 import { useCurrentUser } from '@/lib/hooks/use-user';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -17,9 +15,9 @@ import { clearSessionQueries } from '@/lib/react-query';
 import { GitHubIcon } from '@/components/svg/GitHubIcon';
 import { GoogleIcon } from '@/components/svg/GoogleIcon';
 import { emailSchema, passwordSchema } from './validation';
-import { IconButton } from '@/components/astryx/IconButton';
+import { NativeText as Text } from '@/components/ui/NativeText';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Navigate, useNavigate, useSearchParams } from 'react-router';
+import { Link, Navigate, useNavigate, useSearchParams } from 'react-router';
 import { zOAuthAvailability } from '@/lib/generated/platform-api-v1/zod.gen';
 
 const loginSchema = z.object({
@@ -92,10 +90,11 @@ export default function Login() {
             description={null}
         >
             <title>Sign In | LongLink</title>
-            <Stack gap={4}>
+            <div className="login-sections">
                 <Divider />
-                <Stack gap={2}>
+                <div className="login-controls">
                     <form
+                        noValidate
                         action={() =>
                             form.handleSubmit(async (payload) => {
                                 // Keep failed submissions in the form instead of the page error boundary.
@@ -114,92 +113,96 @@ export default function Login() {
                             })()
                         }
                     >
-                        <Stack gap={2}>
-                            <Stack gap={1}>
+                        <div className="login-controls">
+                            <div className="login-field">
                                 <Text type="label">Email</Text>
-                                <TextField
-                                    control={form.control}
-                                    name="email"
-                                    isLabelHidden
-                                    label="Email"
-                                    type="email"
-                                    width="100%"
-                                />
-                            </Stack>
-                            <Stack gap={1}>
-                                <Stack direction="horizontal" hAlign="between" vAlign="center">
+                                <TextField control={form.control} name="email" labelHidden label="Email" type="email" />
+                            </div>
+                            <div className="login-field">
+                                <div className="login-password-heading">
                                     <Text type="label">Password</Text>
-                                    <Link href="/auth/forgot-password" type="supporting">
+                                    <Link to="/auth/forgot-password" className="login-link login-recovery-link">
                                         Forgot password?
                                     </Link>
-                                </Stack>
-                                <Stack className="relative">
+                                </div>
+                                <div className="login-password-control">
                                     <TextField
                                         control={form.control}
                                         name="password"
-                                        controlClassName="pr-10"
-                                        isLabelHidden
-                                        isRequired
+                                        className="pr-10"
+                                        labelHidden
+                                        required
                                         label="Password"
                                         type={isPasswordVisible ? 'text' : 'password'}
-                                        width="100%"
                                     />
-                                    <IconButton
-                                        className="absolute right-0 top-0"
-                                        icon={isPasswordVisible ? <EyeOff /> : <Eye />}
-                                        label={isPasswordVisible ? 'Hide password' : 'Show password'}
+                                    <button
+                                        className="native-auth-password-toggle"
+                                        aria-label={isPasswordVisible ? 'Hide password' : 'Show password'}
                                         onClick={() => {
                                             // Toggle visibility without changing the password value.
                                             setIsPasswordVisible((visible) => !visible);
                                         }}
-                                        tooltip={isPasswordVisible ? 'Hide password' : 'Show password'}
+                                        title={isPasswordVisible ? 'Hide password' : 'Show password'}
                                         type="button"
-                                        variant="ghost"
-                                    />
-                                </Stack>
-                            </Stack>
+                                    >
+                                        {isPasswordVisible ? (
+                                            <EyeOff aria-hidden="true" size={16} />
+                                        ) : (
+                                            <Eye aria-hidden="true" size={16} />
+                                        )}
+                                    </button>
+                                </div>
+                            </div>
                             <Button
-                                icon={<LogIn aria-hidden="true" size={16} />}
-                                label="Sign In"
+                                className="login-button"
+                                data-size="md"
+                                data-variant="primary"
                                 type="submit"
-                                variant="primary"
-                                width="100%"
-                            />
-                        </Stack>
+                                variant="view"
+                            >
+                                <LogIn aria-hidden="true" size={16} />
+                                Sign In
+                            </Button>
+                        </div>
                     </form>
                     {availableOAuthProviders.length > 0 ? (
-                        <Stack gap={2}>
+                        <div className="login-controls">
                             <Divider label="or" />
-                            <Stack gap={2}>
+                            <div className="login-controls">
                                 {availableOAuthProviders.map((provider) => (
                                     <Button
                                         key={provider.availability}
-                                        icon={<provider.icon aria-hidden="true" className="size-4 shrink-0" />}
-                                        label={provider.label}
+                                        className="login-button"
+                                        data-size="md"
+                                        data-variant="secondary"
+                                        variant="view"
+                                        type="button"
                                         onClick={() =>
                                             window.location.assign(
                                                 `${provider.path}?${new URLSearchParams({ return_to: destination })}`
                                             )
                                         }
-                                        width="100%"
-                                    />
+                                    >
+                                        <provider.icon aria-hidden="true" className="size-4 shrink-0" />
+                                        {provider.label}
+                                    </Button>
                                 ))}
-                            </Stack>
-                        </Stack>
+                            </div>
+                        </div>
                     ) : null}
-                </Stack>
+                </div>
 
                 <Divider
                     label={
                         <>
                             New to LongLink?{' '}
-                            <Link href={`/auth/register${registerSearch}`} type="inherit" weight="medium">
+                            <Link to={`/auth/register${registerSearch}`} className="login-link login-register-link">
                                 Create account
                             </Link>
                         </>
                     }
                 />
-            </Stack>
+            </div>
         </AuthLayout>
     );
 }

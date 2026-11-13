@@ -1,9 +1,9 @@
 import ViewLayout from './ViewLayout';
-import { Text } from '@/components/astryx/Text';
 import { viewHooks } from '@/lib/documentation';
-import { Stack } from '@/components/astryx/Stack';
-import { Heading } from '@/components/astryx/Heading';
-import { Table, proportional } from '@/components/astryx/Table';
+import { NativeText as Text } from '@/components/ui/NativeText';
+import { NativeStack as Stack } from '@/components/ui/NativeStack';
+import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
+import { NativeTable as Table, proportional } from '@/components/ui/NativeTable';
 
 /** Documents the hooks exposed by the View runtime. */
 export default function HooksPage() {

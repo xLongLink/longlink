@@ -1,6 +1,8 @@
+import { useId } from 'react';
 import { useValue } from './value';
+import { FieldLabel } from './FieldLabel';
 import type { FieldProps } from './types';
-import { Switch as AstryxSwitch } from '@/components/astryx/Switch';
+import { Switch as BaseSwitch } from '@base-ui/react/switch';
 
 /** Edits an on/off setting using one controlled change handler. */
 export function Switch(
@@ -10,23 +12,32 @@ export function Switch(
         onChange?: (value: boolean) => void;
     }
 ) {
-    // Use the themed switch's real checkbox rather than substituting an unstyled control.
-    const { defaultChecked, ...control } = props;
-    const field = useValue<boolean, HTMLInputElement>(props.value, defaultChecked ?? false, props.onChange);
+    // Keep optional local state attached to the real ancestor form for reset.
+    const { ref, value, onChange } = useValue(props.value, props.defaultChecked ?? false, props.onChange);
+    const id = useId();
+    const labelId = `${id}-label`;
+    const descriptionId = `${id}-description`;
 
-    // Keep a visible, enabled switch without replacing its controlled value.
+    // Disabled controls remain discoverable without contributing a value or blocking submission.
     return (
-        <AstryxSwitch
-            {...control}
-            width="100%"
-            {...field}
-            htmlName={props.name}
-            size="md"
-            isLabelHidden={false}
-            isRequired={props.required ?? false}
-            isDisabled={props.disabled ?? false}
-            changeAction={undefined}
-            isLoading={false}
-        />
+        <div ref={ref} className="view-boolean-field" data-disabled={props.disabled || undefined}>
+            <BaseSwitch.Root
+                className="view-switch"
+                render={<button type="button" />}
+                nativeButton
+                id={id}
+                name={props.disabled ? undefined : props.name}
+                checked={value}
+                onCheckedChange={onChange}
+                required={props.required && !props.disabled}
+                readOnly={props.disabled}
+                aria-disabled={props.disabled || undefined}
+                aria-labelledby={labelId}
+                aria-describedby={props.description ? descriptionId : undefined}
+            >
+                <BaseSwitch.Thumb className="view-switch-thumb" />
+            </BaseSwitch.Root>
+            <FieldLabel controlId={id} label={props.label} description={props.description} required={props.required} />
+        </div>
     );
 }

@@ -1,6 +1,7 @@
 import { X } from 'lucide-react';
 import { useValue } from './value';
 import { FormField } from './FormField';
+import { FieldLabel } from './FieldLabel';
 import type { FieldProps } from './types';
 import { Button } from '@base-ui/react/button';
 import { Input } from '@/components/shadcn/input';
@@ -42,17 +43,12 @@ export function TextInput(props: TextInputProps) {
             }
         >
             <div className="view-text-field" data-disabled={props.disabled || undefined}>
-                <div className="view-text-field-heading">
-                    <label htmlFor={id} className="view-text-field-label">
-                        {props.label}
-                        {props.required && <span className="view-text-field-description"> · Required</span>}
-                    </label>
-                    {props.description && (
-                        <span id={descriptionId} className="view-text-field-description">
-                            {props.description}
-                        </span>
-                    )}
-                </div>
+                <FieldLabel
+                    controlId={id}
+                    label={props.label}
+                    description={props.description}
+                    required={props.required}
+                />
                 <div
                     className="view-text-input"
                     onClick={() => {
@@ -80,6 +76,7 @@ export function TextInput(props: TextInputProps) {
                         aria-disabled={props.disabled || undefined}
                         readOnly={props.disabled || undefined}
                         aria-required={props.required || undefined}
+                        aria-labelledby={`${id}-label`}
                         aria-describedby={props.description ? descriptionId : undefined}
                         onKeyDown={(event) => {
                             // Disabled fields remain discoverable but cannot submit through Enter.

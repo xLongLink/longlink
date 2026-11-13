@@ -1,6 +1,6 @@
 import { useParams } from 'react-router';
 import { buildBreadcrumbs } from '@/components/breadcrumb/text';
-import { BreadcrumbItem, Breadcrumbs } from '@/components/astryx/Breadcrumbs';
+import { Breadcrumbs, BreadcrumbItem } from '@/components/breadcrumb/Breadcrumbs';
 import type { OrganizationIdentity } from '@/platform/components/OrganizationSwitcher';
 
 /** Renders resolved organization identity for the actual navigation layout. */
@@ -19,7 +19,7 @@ export function OrganizationBreadcrumb({
     const items = solutionName !== undefined && solution ? buildBreadcrumbs(path) : [];
 
     return (
-        <Breadcrumbs separator=">" variant="supporting">
+        <Breadcrumbs>
             <BreadcrumbItem href={`/orgs/${organization.id}`} isCurrent={solutionName === undefined}>
                 {name}
             </BreadcrumbItem>

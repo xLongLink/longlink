@@ -1,6 +1,6 @@
 import ViewLayout from './ViewLayout';
-import { Text } from '@/components/astryx/Text';
 import { Collapsible } from '@/components/ui/Collapsible';
+import { NativeText as Text } from '@/components/ui/NativeText';
 
 /** Documents Collapsible in LongLink Views. */
 export default function CollapsiblePage() {

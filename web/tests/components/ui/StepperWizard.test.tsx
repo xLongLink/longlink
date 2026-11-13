@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 import { act } from 'react';
-import { it, expect } from 'vitest';
+import { it, expect, vi } from 'vitest';
 import { withMounted } from '../../render';
 import { Form } from '@/components/ui/Form';
 import { Button } from '@/components/ui/Button';
@@ -93,6 +93,90 @@ it('preserves step drafts through navigation, final validation, submission, and 
             expect(customer.closest('fieldset')?.hidden).toBe(false);
             expect(customer.value).toBe('');
             expect(notes.value).toBe('');
+        }
+    );
+});
+
+it('guards pending actions, announces failure, and permits retry without losing drafts', async () => {
+    // Keep the domain action pending while duplicate submit events arrive.
+    let rejectAction: (error: Error) => void = () => {};
+
+    const action = vi.fn(
+        () =>
+            new Promise<void | boolean>((_resolve, reject) => {
+                rejectAction = reject;
+            })
+    );
+
+    const cancel = vi.fn();
+    await withMounted(
+        <form>
+            <Stepper
+                variant="wizard"
+                height={400}
+                onCancel={cancel}
+                next={() => ({ label: 'Check', action })}
+                finalAction={<Button type="submit" label="Finish" />}
+            >
+                <Step label="Draft">
+                    <input name="draft" defaultValue="Retained" />
+                </Step>
+                <Step label="Review">
+                    <input name="review" />
+                </Step>
+            </Stepper>
+        </form>,
+        async (output) => {
+            const form = output.querySelector('form');
+            const panels = output.querySelectorAll('fieldset');
+            const draft = output.querySelector<HTMLInputElement>('input[name="draft"]');
+
+            const check = Array.from(output.querySelectorAll('button')).find(
+                (button) => button.textContent === 'Check'
+            );
+
+            if (!form || !draft || !check) throw new Error('Expected wizard controls');
+
+            await act(async () => check.click());
+            await act(async () => {
+                form.dispatchEvent(new SubmitEvent('submit', { bubbles: true, cancelable: true }));
+            });
+            expect(action).toHaveBeenCalledOnce();
+            expect(panels[0].disabled).toBe(true);
+            expect(panels[1].hidden).toBe(true);
+            expect(
+                Array.from(output.querySelectorAll('button'))
+                    .find((button) => button.textContent === 'Cancel')
+                    ?.getAttribute('aria-disabled')
+            ).toBe('true');
+
+            // A rejected action releases the guard and leaves a visible, announced recovery path.
+            await act(async () => rejectAction(new Error('Review unavailable')));
+            expect(output.querySelector('[aria-live="assertive"]')?.textContent).toBe('Review unavailable');
+            expect(panels[0].disabled).toBe(false);
+            expect(draft.value).toBe('Retained');
+            action.mockImplementation(async () => false);
+            await act(async () => check.click());
+            expect(panels[0].hidden).toBe(false);
+            expect(panels[0].disabled).toBe(false);
+            action.mockImplementation(async () => {});
+            await act(async () => check.click());
+            expect(panels[1].hidden).toBe(false);
+            expect(document.activeElement).toBe(panels[1]);
+            expect(output.querySelector('[aria-live="assertive"]')?.textContent).toBe('');
+            expect(output.textContent).toContain('Finish');
+
+            // Back keeps the same mounted draft, and Cancel remains the caller's action.
+            const back = Array.from(output.querySelectorAll('button')).find((button) => button.textContent === 'Back');
+            await act(async () => back?.click());
+            expect(panels[0].hidden).toBe(false);
+            expect(output.querySelector('input[name="draft"]')).toBe(draft);
+            await act(async () =>
+                Array.from(output.querySelectorAll('button'))
+                    .find((button) => button.textContent === 'Cancel')
+                    ?.click()
+            );
+            expect(cancel).toHaveBeenCalledOnce();
         }
     );
 });

@@ -1,0 +1,14 @@
+@layer components {
+    .inline-code {
+        font-family: var(--font-family-code);
+        font-size: var(--text-code-size);
+        line-height: inherit;
+        color: var(--color-text-primary);
+        background-color: var(--color-background-muted);
+        padding-inline: var(--spacing-1);
+        padding-block: var(--spacing-0);
+        border-radius: var(--radius-inner);
+        overflow-wrap: break-word;
+        word-break: break-word;
+    }
+}

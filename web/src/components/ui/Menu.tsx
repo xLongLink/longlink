@@ -1,15 +1,10 @@
+import { spacing } from './layout';
 import type { Spacing } from './types';
-import { Stack } from '@/components/astryx/Stack';
+import { ChevronDown } from 'lucide-react';
 import { MenuNavigationContext } from './contexts';
-import { useMediaQuery } from '@astryxdesign/core/hooks';
 import { Icon, type StoneIconName } from '@/components/ui/Icon';
-import { Layout, LayoutPanel } from '@/components/astryx/Layout';
 import { Children, isValidElement, useContext, type ReactElement, type ReactNode } from 'react';
-import {
-    SideNav as AstryxSideNav,
-    SideNavItem as AstryxSideNavItem,
-    SideNavSection as AstryxSideNavSection,
-} from '@/components/astryx/SideNav';
+import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/shadcn/collapsible';
 
 type MenuSectionProps = {
     /** MenuItem elements or nested MenuSubSection groups. */
@@ -57,7 +52,6 @@ export function Menu({
     gap?: Spacing;
 }) {
     const navigation = useContext(MenuNavigationContext);
-    const narrow = useMediaQuery('(max-width: 768px)');
 
     // Require the runtime-owned navigation API, not a React Router provider.
     if (navigation === null) throw new Error('Menu requires MenuNavigationContext');
@@ -99,12 +93,11 @@ export function Menu({
 
         // Preserve normal link semantics while routing ordinary clicks through the runtime API.
         return (
-            <AstryxSideNavItem
+            <a
+                className="view-section-nav-link"
                 href={`#${id}`}
-                icon={item.props.icon ? <Icon icon={item.props.icon} size="sm" /> : undefined}
-                isSelected={item === activeItem}
+                aria-current={item === activeItem ? 'page' : undefined}
                 key={id}
-                label={item.props.label}
                 onClick={(event) => {
                     if (
                         event.defaultPrevented ||
@@ -118,63 +111,61 @@ export function Menu({
                     event.preventDefault();
                     select(id);
                 }}
-            />
+            >
+                {item.props.icon && <Icon icon={item.props.icon} size="sm" />}
+                <span className="view-section-nav-label">{item.props.label}</span>
+            </a>
         );
     }
 
-    // Move navigation above content on narrow View viewports instead of squeezing both into a fixed rail.
-    const navigationPanel = (
-        <LayoutPanel
-            isScrollable={false}
-            label="Settings navigation"
-            padding={0}
-            role="navigation"
-            width={narrow ? '100%' : 260}
-        >
-            <AstryxSideNav
-                className={`h-auto w-full ${narrow ? '' : 'pr-4'} [&>div:first-child]:pt-0 [&_.astryx-side-nav-section>div:first-child]:pt-0 [&_.astryx-side-nav-section>div:first-child]:pl-0`}
-            >
+    // CSS changes the rail's position without remounting its disclosures or the active content.
+    return (
+        <div className="view-section-menu">
+            <nav className="view-section-nav" aria-label="Settings navigation">
                 {sections.map(({ entries, section }) => (
-                    <AstryxSideNavSection
-                        title={section.props.title}
-                        isHeaderHidden={section.props.isHeaderHidden}
-                        className="pt-0"
+                    <div
+                        role="group"
+                        aria-label={section.props.title}
+                        className="view-section-nav-section"
                         key={section.props.title}
                     >
-                        {entries.map((entry) => {
-                            if (entry.kind === 'subsection') {
-                                const { icon, label } = entry.group.props;
+                        <div className={`view-section-nav-heading${section.props.isHeaderHidden ? ' sr-only' : ''}`}>
+                            {section.props.title}
+                        </div>
+                        <div className="view-section-nav-items">
+                            {entries.map((entry) => {
+                                if (entry.kind === 'subsection') {
+                                    const { icon, label } = entry.group.props;
 
-                                return (
-                                    <AstryxSideNavItem
-                                        collapsible={{ defaultIsCollapsed: true }}
-                                        icon={icon ? <Icon icon={icon} size="sm" /> : undefined}
-                                        key={label}
-                                        label={label}
-                                    >
-                                        {entry.items.map(renderItem)}
-                                    </AstryxSideNavItem>
-                                );
-                            }
+                                    return (
+                                        <Collapsible defaultOpen={false} key={label}>
+                                            <CollapsibleTrigger type="button" className="view-section-nav-link">
+                                                {icon && <Icon icon={icon} size="sm" />}
+                                                <span className="view-section-nav-label">{label}</span>
+                                                <ChevronDown className="view-section-nav-chevron" aria-hidden="true" />
+                                            </CollapsibleTrigger>
+                                            <CollapsibleContent
+                                                keepMounted
+                                                role="group"
+                                                aria-label={label}
+                                                className="view-section-nav-nested"
+                                            >
+                                                {entry.items.map(renderItem)}
+                                            </CollapsibleContent>
+                                        </Collapsible>
+                                    );
+                                }
 
-                            return renderItem(entry.item);
-                        })}
-                    </AstryxSideNavSection>
+                                return renderItem(entry.item);
+                            })}
+                        </div>
+                    </div>
                 ))}
-            </AstryxSideNav>
-        </LayoutPanel>
-    );
-
-    // Keep the content in the same slot so resizing does not reset its local draft state.
-    return (
-        <Layout
-            height="auto"
-            padding={0}
-            header={narrow ? navigationPanel : undefined}
-            start={narrow ? undefined : navigationPanel}
-        >
-            <Stack gap={gap}>{activeItem?.props.children}</Stack>
-        </Layout>
+            </nav>
+            <div className="view-section-menu-content" style={{ gap: spacing(gap) }}>
+                {activeItem?.props.children}
+            </div>
+        </div>
     );
 }
 

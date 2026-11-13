@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import ViewLayout from './ViewLayout';
-import { Text } from '@/components/astryx/Text';
 import { Button } from '@/components/ui/Button';
-import { Stack } from '@/components/astryx/Stack';
+import { NativeText as Text } from '@/components/ui/NativeText';
+import { NativeStack as Stack } from '@/components/ui/NativeStack';
 
 /** Documents buttons and grouped button actions in LongLink Views. */
 export default function ButtonsPage() {
@@ -10,7 +10,6 @@ export default function ButtonsPage() {
     return (
         <ViewLayout
             name="Button"
-            isLongLinkSpecific
             properties={[
                 {
                     name: 'label',

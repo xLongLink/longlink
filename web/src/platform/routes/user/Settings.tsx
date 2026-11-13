@@ -1,21 +1,20 @@
 import type { z } from 'zod';
 import { useState } from 'react';
-import { useLocation } from 'react-router';
 import AppearanceSettings from './Appearance';
-import { Text } from '@/components/astryx/Text';
 import { Avatar } from '@/components/ui/Avatar';
-import { Stack } from '@/components/astryx/Stack';
+import { Link, useLocation } from 'react-router';
 import { Divider } from '@/components/ui/Divider';
 import { UserRound, Building2 } from 'lucide-react';
-import { Heading } from '@/components/astryx/Heading';
 import { ApiBoundary } from '@/components/ApiBoundary';
-import { TextInput } from '@/components/astryx/TextInput';
 import { PageContainer } from '@/components/PageContainer';
 import OrganizationManagement from './OrganizationManagement';
-import { Layout, LayoutPanel } from '@/components/astryx/Layout';
+import { NativeText as Text } from '@/components/ui/NativeText';
+import { NativeTextInput } from '@/components/ui/NativeTextInput';
+import '../settings.css';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
+import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
 import { useUpdateUser, useAuthenticatedUser } from '@/lib/hooks/use-user';
-import { SideNav, SideNavItem, SideNavSection } from '@/components/astryx/SideNav';
+import '@/platform/components/settings-navigation.css';
 
 /** Renders account metadata and resets drafts when the authenticated identity changes. */
 export default function Settings() {
@@ -47,79 +46,67 @@ function SettingsPage({ user }: { user: z.output<typeof schemas.zCurrentUser> })
             const updatedUser = await userUpdate.mutateAsync({ name: name.trim() });
             setName(updatedUser.name);
         } catch {
-            setName(user.name);
+            // The mutation reports the error; keep the draft available for retry.
         }
     }
 
     // Keep account editing independent of organization loading and failures.
     return (
-        <Stack gap={8}>
-            <Stack direction="horizontal" gap={3} align="center">
+        <div className="flex flex-col gap-(--spacing-8)">
+            <div className="flex items-center gap-(--spacing-3)">
                 <Avatar name={name} src={user.avatar} seed={user.id} />
-                <Stack gap={0}>
+                <div className="flex flex-col gap-0">
                     <Heading level={4} accessibilityLevel={1}>
                         {name}
                     </Heading>
                     <Text type="supporting">{user.email}</Text>
-                </Stack>
-            </Stack>
-            <Layout
-                height="auto"
-                start={
-                    <LayoutPanel
-                        isScrollable={false}
-                        label="Settings navigation"
-                        padding={0}
-                        role="navigation"
-                        width={260}
+                </div>
+            </div>
+            <div className="platform-settings-layout">
+                <nav aria-label="Settings sections" className="settings-navigation">
+                    <Link
+                        to={`${location.pathname}${location.search}#account`}
+                        aria-current={section === 'account' ? 'location' : undefined}
                     >
-                        <SideNav className="h-auto w-full pr-4 [&>div:first-child]:pt-0 [&_.astryx-side-nav-section>div:first-child]:pt-0 [&_.astryx-side-nav-section>div:first-child]:pl-0">
-                            <SideNavSection title="Settings" isHeaderHidden className="pt-0">
-                                <SideNavItem
-                                    href={`${location.pathname}${location.search}#account`}
-                                    icon={<UserRound className="size-4" aria-hidden="true" />}
-                                    isSelected={section === 'account'}
-                                    label="Account"
-                                />
-                                <SideNavItem
-                                    href={`${location.pathname}${location.search}#organizations`}
-                                    icon={<Building2 className="size-4" aria-hidden="true" />}
-                                    isSelected={section === 'organizations'}
-                                    label="Organizations"
-                                />
-                            </SideNavSection>
-                        </SideNav>
-                    </LayoutPanel>
-                }
-            >
-                <Stack gap={3}>
+                        <UserRound className="size-4" aria-hidden="true" />
+                        Account
+                    </Link>
+                    <Link
+                        to={`${location.pathname}${location.search}#organizations`}
+                        aria-current={section === 'organizations' ? 'location' : undefined}
+                    >
+                        <Building2 className="size-4" aria-hidden="true" />
+                        Organizations
+                    </Link>
+                </nav>
+                <div className="flex min-w-0 flex-col gap-(--spacing-3)">
                     {section === 'organizations' ? (
                         <ApiBoundary>
                             <OrganizationManagement presentation="settings" />
                         </ApiBoundary>
                     ) : (
-                        <Stack gap={8}>
-                            <Stack gap={4}>
-                                <Stack justify="end" minHeight="var(--size-element-md)">
+                        <div className="flex flex-col gap-(--spacing-8)">
+                            <div className="flex flex-col gap-(--spacing-4)">
+                                <div className="flex min-h-(--size-element-md) flex-col justify-end">
                                     <Heading level={2} hasCapsize>
                                         Account
                                     </Heading>
-                                </Stack>
+                                </div>
                                 <Divider />
-                                <TextInput
+                                <NativeTextInput
                                     label="Username"
                                     value={name}
-                                    isRequired
-                                    isReadOnly={userUpdate.isPending}
-                                    onChange={setName}
+                                    required
+                                    readOnly={userUpdate.isPending}
+                                    onChange={(event) => setName(event.target.value)}
                                     onBlur={() => void saveAccount()}
                                 />
-                            </Stack>
+                            </div>
                             <AppearanceSettings />
-                        </Stack>
+                        </div>
                     )}
-                </Stack>
-            </Layout>
-        </Stack>
+                </div>
+            </div>
+        </div>
     );
 }

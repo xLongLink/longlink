@@ -10,7 +10,7 @@ export function ViewBackdrop({ bounds, depth }: { bounds: DOMRectReadOnly; depth
     const clipPath = `polygon(evenodd, 0 0, 100% 0, 100% 100%, 0 100%, 0 0, ${left}px ${top}px, ${left}px ${bottom}px, ${right}px ${bottom}px, ${right}px ${top}px, ${left}px ${top}px, 0 0)`;
     const layers = [];
 
-    // Match Astryx's native tint, blur, and nesting while leaving host navigation and native modal input intact.
+    // Preserve the modal tint, blur, and nesting without blocking host navigation or native modal input.
     for (let level = 1; level <= depth; level += 1) {
         layers.push(
             <div

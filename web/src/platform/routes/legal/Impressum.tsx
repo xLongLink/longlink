@@ -1,9 +1,9 @@
-import { Link } from '@/components/astryx/Link';
-import { Text } from '@/components/astryx/Text';
-import { Stack } from '@/components/astryx/Stack';
 import { legalPaths } from '@/platform/publications';
-import { Heading } from '@/components/astryx/Heading';
 import { PublicArticle } from '@/components/layouts/Article';
+import { NativeLink as Link } from '@/components/ui/NativeLink';
+import { NativeText as Text } from '@/components/ui/NativeText';
+import { NativeStack as Stack } from '@/components/ui/NativeStack';
+import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
 
 const article = {
     description: 'Read the LongLink legal notice and company information.',
@@ -23,7 +23,7 @@ export default function Impressum() {
     return (
         <PublicArticle article={article} paths={legalPaths}>
             <Stack
-                className="[--font-family-heading:var(--font-family-handwritten)] [&_.astryx-heading]:tracking-wide [&_.astryx-heading]:uppercase"
+                className="[--font-family-heading:var(--font-family-handwritten)] [&_.native-heading]:tracking-wide [&_.native-heading]:uppercase"
                 gap={5}
             >
                 <Heading id="impressum" level={1}>

@@ -18,7 +18,11 @@ export function apiQueryOptions<Schema extends StandardSchemaV1>(path: string, s
 }
 
 /** Creates an isolated query cache for one browser or prerendered document. */
-export function createQueryRuntime(notify: (message: string) => void, platformSession: boolean) {
+export function createQueryRuntime(
+    notify: (message: string) => void,
+    platformSession: boolean,
+    resetNotifications?: () => void
+) {
     let client: QueryClient;
     const notifyError = createErrorReporter(notify);
     const failedQueries = new WeakMap<object, string>();
@@ -111,6 +115,9 @@ export function createQueryRuntime(notify: (message: string) => void, platformSe
             const nextUserId = user.success ? user.data.id : null;
 
             const changedAccount = userId !== null && nextUserId !== null && userId !== nextUserId;
+
+            // Drop previous-account feedback on identity replacement or logout, without changing session policy.
+            if (userId !== null && userId !== nextUserId) resetNotifications?.();
             userId = nextUserId;
 
             if (changedAccount) void clearSessionQueries(client, true).catch(notifyError);

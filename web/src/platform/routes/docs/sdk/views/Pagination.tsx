@@ -8,7 +8,6 @@ export default function PaginationPage() {
     return (
         <ViewLayout
             name="Pagination"
-            isLongLinkSpecific
             properties={[
                 {
                     name: 'page',
@@ -34,7 +33,7 @@ export default function PaginationPage() {
                 {
                     name: 'label',
                     type: 'string',
-                    description: "Accessible navigation label; defaults to Astryx's localized Pagination label.",
+                    description: 'Accessible navigation label; defaults to Pagination.',
                 },
             ]}
             introduction="Pagination supplies page controls, bounds, and accessible navigation for tables or galleries. Pages start at 1. The Solution owns page state and data fetching; pass the total item count and page size returned or used by your API."

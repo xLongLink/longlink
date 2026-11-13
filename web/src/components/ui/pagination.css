@@ -1,0 +1,38 @@
+@layer components {
+    .view-pagination,
+    .view-pagination-controls {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+
+    .view-pagination {
+        justify-content: space-between;
+        gap: var(--spacing-4);
+    }
+
+    .view-pagination-controls {
+        min-width: 0;
+        gap: var(--spacing-2);
+    }
+
+    .view-pagination [aria-current='page'] {
+        background-color: var(--color-neutral);
+        font-weight: var(--font-weight-medium);
+    }
+
+    .view-pagination-ellipsis {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: var(--spacing-4);
+        min-height: var(--size-element-md);
+        color: var(--muted-foreground);
+        font-size: var(--text-label-size);
+        user-select: none;
+    }
+
+    .view-pagination-chevron:dir(rtl) {
+        transform: scaleX(-1);
+    }
+}

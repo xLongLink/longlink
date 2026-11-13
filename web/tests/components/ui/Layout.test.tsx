@@ -1,9 +1,87 @@
 // @vitest-environment happy-dom
-import { act } from 'react';
 import { it, expect } from 'vitest';
-import { withMounted } from '../../render';
+import { act, useState } from 'react';
+import Content from '@/components/layouts/Content';
+import userEvent from '@testing-library/user-event';
 import { Grid, GridSpan } from '@/components/ui/Grid';
+import { renderStatic, withMounted } from '../../render';
 import { Stack, StackItem } from '@/components/ui/Stack';
+import { PageContainer } from '@/components/PageContainer';
+
+it('keeps Platform pages free of View spacing defaults and honors zero inline padding', () => {
+    // Platform pages must not inherit the View Stack's implicit gap or lose their full-height sizing chain.
+    const output = renderStatic(
+        <>
+            <PageContainer>Default page</PageContainer>
+            <PageContainer height="100%" minHeight={0} maxWidth={720} gap={8} padding={2} paddingInline={0}>
+                Sized page
+            </PageContainer>
+        </>
+    );
+
+    const [plain, sized] = output.querySelectorAll<HTMLElement>('.platform-page-container');
+
+    if (!plain || !sized) throw new Error('Expected page containers');
+    expect(plain.style.gap).toBe('');
+    expect(plain.style.paddingInline).toBe('');
+    expect(plain.style.paddingBlock).toBe('');
+    expect(sized.style.height).toBe('100%');
+    expect(Number.parseFloat(sized.style.minHeight)).toBe(0);
+    expect(sized.style.maxWidth).toBe('720px');
+    expect(sized.style.gap).toBe('var(--spacing-8)');
+    expect(sized.style.paddingInline).toBe('var(--spacing-0)');
+    expect(sized.style.paddingBlock).toBe('var(--spacing-2)');
+});
+
+it('retains an unsaved content draft when its toolbar is removed and restored', async () => {
+    const user = userEvent.setup();
+    const submissions: FormDataEntryValue[] = [];
+
+    function Page() {
+        const [toolbar, setToolbar] = useState(true);
+
+        return (
+            <>
+                <button type="button" onClick={() => setToolbar((value) => !value)}>
+                    Toggle toolbar
+                </button>
+                <Content toolbar={toolbar ? <button type="button">Toolbar action</button> : undefined}>
+                    <form
+                        onSubmit={(event) => {
+                            event.preventDefault();
+                            const value = new FormData(event.currentTarget).get('draft');
+
+                            if (value !== null) submissions.push(value);
+                        }}
+                    >
+                        <input aria-label="Draft" name="draft" />
+                        <button type="submit">Save draft</button>
+                    </form>
+                </Content>
+            </>
+        );
+    }
+
+    await withMounted(<Page />, async (output) => {
+        const input = output.querySelector<HTMLInputElement>('input');
+        const toggle = output.querySelector('button');
+
+        if (!input || !toggle) throw new Error('Expected draft and toolbar controls');
+        await act(async () => user.type(input, 'Retained draft'));
+
+        for (let index = 0; index < 2; index++) {
+            await act(async () => user.click(toggle));
+            expect(output.querySelector('input')).toBe(input);
+            expect(input.value).toBe('Retained draft');
+        }
+
+        const submit = output.querySelector<HTMLButtonElement>('button[type="submit"]');
+
+        if (!submit) throw new Error('Expected draft submission');
+        await act(async () => user.click(submit));
+        expect(submissions).toEqual(['Retained draft']);
+    });
+});
 
 it('collapses spanning children on viewport changes without collapsing nested independent grids', async () => {
     const originalWidth = window.innerWidth;

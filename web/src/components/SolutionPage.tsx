@@ -4,12 +4,11 @@ import { startCase } from 'es-toolkit/compat';
 import { JsxView } from '@/components/JsxView';
 import { PageError } from '@/components/Utils';
 import { manifestSchema } from '@/views/manifest';
-import { Center } from '@/components/astryx/Center';
 import { DeferredIcon } from '@/components/ui/Icon';
 import Platform from '@/components/layouts/Platform';
-import { Spinner } from '@/components/astryx/Spinner';
 import { PageContainer } from '@/components/PageContainer';
 import { skipToken, useQuery } from '@tanstack/react-query';
+import { NativeLoading } from '@/components/ui/NativeLoading';
 import { matchRoutes, Navigate, useParams } from 'react-router';
 import { RELATIVE_URL_ORIGIN, resolveNavigationUrl, resolveRequestUrl } from '@/lib/url';
 
@@ -169,9 +168,9 @@ export function SolutionPage({
         content = <PageError description="The view could not be loaded." title="Unable to load this view" />;
     } else {
         content = (
-            <Center minHeight="calc(100vh - 14rem)" width="100%">
-                <Spinner label="Loading" />
-            </Center>
+            <div className="solution-page-loading">
+                <NativeLoading label="Loading" />
+            </div>
         );
     }
 

@@ -1,0 +1,247 @@
+@layer components {
+    .platform-shell {
+        display: flex;
+        position: relative;
+        min-height: 100dvh;
+        overflow: clip;
+        background: var(--background);
+    }
+
+    .platform-sidebar {
+        position: sticky;
+        top: var(--_app-shell-header-height, 0px);
+        display: flex;
+        flex: 0 0 260px;
+        flex-direction: column;
+        width: 260px;
+        height: calc(100dvh - var(--_app-shell-header-height, 0px));
+        min-height: 0;
+        overflow: hidden;
+        background: inherit;
+    }
+
+    .platform-shell[data-collapsed] .platform-sidebar {
+        flex-basis: var(--spacing-12);
+        width: var(--spacing-12);
+    }
+
+    .platform-sidebar-header {
+        display: flex;
+        flex: none;
+        flex-direction: column;
+        gap: var(--spacing-3);
+        padding: var(--spacing-2);
+    }
+
+    .platform-sidebar-brand {
+        display: flex;
+        flex: none;
+        flex-direction: column;
+        justify-content: center;
+        height: calc(var(--spacing-7) * 2);
+        width: 100%;
+    }
+
+    .platform-home {
+        display: flex;
+        width: 100%;
+        padding: var(--spacing-1-5) var(--spacing-6);
+        color: inherit;
+        text-decoration: none;
+    }
+
+    .platform-wordmark {
+        display: block;
+        width: 100%;
+        height: auto;
+    }
+
+    .platform-shell[data-collapsed] .platform-home {
+        justify-content: center;
+        padding-inline: 0;
+    }
+
+    .platform-logo {
+        width: var(--spacing-8);
+        height: var(--spacing-8);
+        object-fit: contain;
+    }
+
+    .platform-sidebar-items {
+        flex: 1;
+        min-height: 0;
+        padding: var(--spacing-1) var(--spacing-2);
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+
+    .platform-sidebar-link {
+        box-sizing: border-box;
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-2);
+        min-height: var(--size-element-md);
+        width: 100%;
+        padding-inline: var(--spacing-2);
+        border-radius: var(--radius-element);
+        color: var(--muted-foreground);
+        font-size: var(--text-label-size);
+        line-height: var(--text-label-leading);
+        text-decoration: none;
+    }
+
+    .platform-sidebar-link[aria-current] {
+        background: var(--secondary);
+        color: var(--foreground);
+        font-weight: var(--font-weight-medium);
+    }
+
+    .platform-sidebar-link[hidden] {
+        display: none;
+    }
+
+    .platform-sidebar-icon {
+        display: flex;
+        flex: none;
+        align-items: center;
+        justify-content: center;
+        width: var(--spacing-4);
+        height: var(--spacing-4);
+    }
+
+    .platform-sidebar-icon svg {
+        width: 100%;
+        height: 100%;
+    }
+
+    .platform-sidebar-label {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .platform-shell[data-collapsed] .platform-sidebar-link {
+        justify-content: center;
+        width: var(--size-element-md);
+        height: var(--size-element-md);
+        padding-inline: 0;
+    }
+
+    .platform-shell[data-collapsed] .platform-sidebar-label {
+        display: none;
+    }
+
+    .platform-sidebar-footer {
+        flex: none;
+        padding: var(--spacing-1) var(--spacing-2) var(--spacing-2);
+    }
+
+    .platform-shell[data-collapsed] .platform-sidebar-footer {
+        display: flex;
+        justify-content: center;
+        padding-top: 0;
+    }
+
+    .platform-shell[data-collapsed] .platform-sidebar-action {
+        flex: none;
+    }
+
+    .platform-sidebar-action {
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-3);
+        padding: var(--spacing-1);
+    }
+
+    .platform-main {
+        flex: 1;
+        min-width: 0;
+        outline: none;
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    .platform-toolbar {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-3);
+        height: var(--platform-toolbar-height);
+        padding: var(--spacing-3);
+    }
+
+    .platform-sidebar-toggle {
+        display: inline-flex;
+        flex: none;
+        align-items: center;
+        justify-content: center;
+        width: var(--size-element-md);
+        height: var(--size-element-md);
+        padding: 0;
+        border: 0;
+        border-radius: var(--radius-element);
+        background: transparent;
+        color: var(--foreground);
+        cursor: pointer;
+    }
+
+    .platform-breadcrumb ol {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        font-size: var(--text-body-size);
+        line-height: var(--text-body-leading);
+        font-weight: var(--font-weight-semibold);
+    }
+
+    .platform-skip-link {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        margin: -1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap;
+    }
+
+    .platform-skip-link:focus {
+        position: fixed;
+        top: var(--spacing-2);
+        inset-inline-start: var(--spacing-2);
+        z-index: 9999;
+        width: auto;
+        height: auto;
+        margin: 0;
+        padding: var(--spacing-2) var(--spacing-4);
+        overflow: visible;
+        clip-path: none;
+        background: var(--surface);
+        color: var(--foreground);
+    }
+
+    .platform-sidebar-link:focus-visible,
+    .platform-home:focus-visible,
+    .platform-sidebar-toggle:focus-visible,
+    .platform-skip-link:focus-visible {
+        outline: var(--focus-outline-width) solid var(--ring);
+        outline-offset: var(--focus-outline-offset);
+    }
+
+    @media (hover: hover) {
+        .platform-sidebar-link:not([aria-current]):hover,
+        .platform-sidebar-toggle:hover {
+            background-image: linear-gradient(var(--color-overlay-hover), var(--color-overlay-hover));
+        }
+    }
+
+    .platform-sidebar-link:not([aria-current]):active,
+    .platform-sidebar-toggle:active {
+        background-image: linear-gradient(var(--color-overlay-pressed), var(--color-overlay-pressed));
+    }
+
+    @media (forced-colors: active) {
+        .platform-sidebar-link[aria-current] {
+            background: Highlight;
+            color: HighlightText;
+        }
+    }
+}

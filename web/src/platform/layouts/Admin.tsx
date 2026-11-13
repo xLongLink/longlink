@@ -5,7 +5,7 @@ import Platform from '@/components/layouts/Platform';
 import NotFoundLayout from '@/components/layouts/NotFound';
 import { PageContainer } from '@/components/PageContainer';
 import { useAuthenticatedUser } from '@/lib/hooks/use-user';
-import { BreadcrumbItem, Breadcrumbs } from '@/components/astryx/Breadcrumbs';
+import { Breadcrumbs, BreadcrumbItem } from '@/components/breadcrumb/Breadcrumbs';
 
 /** Renders authorized administration within the shared application layouts. */
 export default function Admin() {
@@ -21,7 +21,7 @@ export default function Admin() {
             action={<ProfileMenu />}
             homeHref="/user/organizations"
             breadcrumb={
-                <Breadcrumbs separator=">" variant="supporting">
+                <Breadcrumbs>
                     <BreadcrumbItem isCurrent>Admin</BreadcrumbItem>
                 </Breadcrumbs>
             }

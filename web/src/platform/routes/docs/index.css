@@ -1,0 +1,33 @@
+@layer components {
+    .documentation-card {
+        display: flex;
+        flex-direction: column;
+        min-height: calc(var(--spacing) * 60);
+        margin-block-end: calc(-1 * var(--border-width));
+        margin-inline-end: calc(-1 * var(--border-width));
+        padding: calc(var(--spacing-6) - var(--border-width));
+        border: var(--border-width) solid var(--border);
+        border-radius: 0;
+        background: transparent;
+        color: inherit;
+        text-decoration: none;
+    }
+
+    .documentation-card:focus-visible {
+        position: relative;
+        z-index: 1;
+        outline: var(--focus-outline-width) solid var(--focus-outline-color);
+        outline-offset: var(--focus-outline-offset);
+    }
+
+    @media (hover: hover) {
+        .documentation-card:hover {
+            border-color: var(--color-border-emphasized);
+            background: var(--color-overlay-hover);
+        }
+    }
+
+    .documentation-card:active {
+        background: var(--color-overlay-pressed);
+    }
+}

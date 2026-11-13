@@ -1,9 +1,6 @@
-import { Link } from '@/components/astryx/Link';
-import { Text } from '@/components/astryx/Text';
-import { Stack } from '@/components/astryx/Stack';
-import { Heading } from '@/components/astryx/Heading';
-import { Blockquote } from '@/components/astryx/Blockquote';
+import { NativeStack as Stack } from '@/components/ui/NativeStack';
 import { DocumentationArticle } from '@/components/layouts/Article';
+import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
 
 const article = {
     title: 'MCP | LongLink Platform Documentation',
@@ -21,14 +18,6 @@ export default function Mcp() {
                 <Heading id="mcp" level={1}>
                     MCP
                 </Heading>
-                <Blockquote className="border-s-(--color-text-orange) text-(--color-text-orange)">
-                    <Stack gap={0}>
-                        <Text type="inherit">Beta notice: This page is being built.</Text>
-                        <Link color="inherit" href={article.editUrl} hasUnderline isExternalLink type="inherit">
-                            Edit on GitHub
-                        </Link>
-                    </Stack>
-                </Blockquote>
             </Stack>
         </DocumentationArticle>
     );

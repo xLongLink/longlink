@@ -1,14 +1,8 @@
+import './assets.css';
 import { Fragment } from 'react';
-import { Link } from '@/components/astryx/Link';
-import { Text } from '@/components/astryx/Text';
 import { Wordmark } from '@/components/Wordmark';
-import { Theme } from '@astryxdesign/core/theme';
-import { Stack } from '@/components/astryx/Stack';
-import { Heading } from '@/components/astryx/Heading';
-import { stoneTheme } from '@/lib/generated/stone.js';
-import { CodeBlock } from '@/components/astryx/CodeBlock';
 import { PublicArticle } from '@/components/layouts/Article';
-import { AspectRatio } from '@/components/astryx/AspectRatio';
+import { NativeCodeBlock as CodeBlock } from '@/components/ui/NativeCodeBlock';
 
 const article = {
     description: 'LongLink logos, wordmarks, and illustrated brand assets.',
@@ -28,79 +22,66 @@ export default function Assets() {
     // Keep the article shell: 260px navigation, 720px prose, 224px outline, and 320px logo previews.
     return (
         <PublicArticle article={article}>
-            <Stack gap={4}>
-                <Heading id="brand-assets" level={1}>
-                    Brand assets
-                </Heading>
-                <Heading id="logo" level={2}>
-                    Logo
-                </Heading>
-                <Stack direction="horizontal" gap={4} wrap="wrap">
+            <section className="brand-assets-section">
+                <h1 id="brand-assets">Brand assets</h1>
+                <h2 id="logo">Logo</h2>
+                <div className="brand-assets-previews">
                     {(['light', 'dark'] as const).map((mode) => (
-                        <Stack as="figure" gap={2} key={mode} maxWidth={320} width="100%">
-                            <Theme mode={mode} theme={stoneTheme}>
-                                <Stack className="bg-surface" width="100%">
-                                    <AspectRatio fit="contain" ratio={1}>
-                                        <img
-                                            src={`/longlink-logo-${mode}.png`}
-                                            alt={`${mode === 'light' ? 'Dark' : 'White'} LongLink logo with a transparent background`}
-                                        />
-                                    </AspectRatio>
-                                </Stack>
-                            </Theme>
-                            <Text as="p" type="supporting">
+                        <figure className="brand-assets-figure" key={mode}>
+                            <div className="brand-assets-preview" data-theme-scope="stone" data-theme={mode}>
+                                <img
+                                    className="brand-assets-logo"
+                                    src={`/longlink-logo-${mode}.png`}
+                                    alt={`${mode === 'light' ? 'Dark' : 'White'} LongLink logo with a transparent background`}
+                                />
+                            </div>
+                            <figcaption>
                                 {mode === 'light' ? 'Light mode' : 'Dark mode'}
                                 {(['svg', 'png', 'ico'] as const).map((format) => (
                                     <Fragment key={format}>
                                         {' · '}
-                                        <Link
-                                            color="inherit"
+                                        <a
                                             download={`longlink-logo-${mode}.${format}`}
                                             href={`/longlink-logo-${mode}.${format}`}
-                                            tooltip={`Download ${mode}-mode logo (${format.toUpperCase()})`}
-                                            type="inherit"
+                                            title={`Download ${mode}-mode logo (${format.toUpperCase()})`}
                                         >
                                             {format.toUpperCase()}
-                                        </Link>
+                                        </a>
                                     </Fragment>
                                 ))}
-                            </Text>
-                        </Stack>
+                            </figcaption>
+                        </figure>
                     ))}
-                </Stack>
-            </Stack>
-            <Stack gap={4}>
-                <Heading id="wordmark" level={2}>
-                    Wordmark
-                </Heading>
-                <Stack direction="horizontal" gap={4} wrap="wrap">
+                </div>
+            </section>
+            <section className="brand-assets-section">
+                <h2 id="wordmark">Wordmark</h2>
+                <div className="brand-assets-previews">
                     {(['light', 'dark'] as const).map((mode) => (
-                        <Stack as="figure" gap={2} key={mode} maxWidth={320} width="100%">
-                            <Theme mode={mode} theme={stoneTheme}>
-                                <Stack className="bg-surface" hAlign="center" padding={8} width="100%">
-                                    <Wordmark size="heading" />
-                                </Stack>
-                            </Theme>
-                            <Text as="p" type="supporting">
+                        <figure className="brand-assets-figure" key={mode}>
+                            <div
+                                className="brand-assets-preview brand-assets-wordmark"
+                                data-theme-scope="stone"
+                                data-theme={mode}
+                            >
+                                <Wordmark size="heading" mode={mode} />
+                            </div>
+                            <figcaption>
                                 {mode === 'light' ? 'Light mode' : 'Dark mode'} ·{' '}
-                                <Link
-                                    color="inherit"
+                                <a
                                     download={`longlink-wordmark-${mode}.png`}
                                     href={`/images/longlink-wordmark-${mode}.png`}
-                                    tooltip={`Download ${mode}-mode LongLink wordmark (PNG)`}
-                                    type="inherit"
+                                    title={`Download ${mode}-mode LongLink wordmark (PNG)`}
                                 >
                                     PNG
-                                </Link>
-                            </Text>
-                        </Stack>
+                                </a>
+                            </figcaption>
+                        </figure>
                     ))}
-                </Stack>
-            </Stack>
-            <Stack gap={4}>
-                <Heading id="images" level={2}>
-                    Images
-                </Heading>
+                </div>
+            </section>
+            <section className="brand-assets-section">
+                <h2 id="images">Images</h2>
                 <CodeBlock
                     code={`<style>
   Minimalist monochrome technical sketch matching the reference. Thin white pencil/chalk lines, slightly rough and grainy, with imperfect hand-drawn contours, sparse construction lines, and very light hatching. Simple geometric forms, strong silhouettes, lots of negative space. Fully transparent background. No color, text, gradients, shadows, photorealism, or dense detail.
@@ -109,7 +90,7 @@ export default function Assets() {
                     language="plaintext"
                     width="100%"
                 />
-            </Stack>
+            </section>
         </PublicArticle>
     );
 }

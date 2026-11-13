@@ -1,6 +1,6 @@
 import ViewLayout from './ViewLayout';
 import { Grid } from '@/components/ui/Grid';
-import { Stack } from '@/components/astryx/Stack';
+import { NativeStack as Stack } from '@/components/ui/NativeStack';
 
 /** Documents Grid in LongLink Views. */
 export default function GridPage() {
@@ -8,7 +8,6 @@ export default function GridPage() {
     return (
         <ViewLayout
             name="Grid"
-            isLongLinkSpecific
             properties={[
                 {
                     name: 'children',

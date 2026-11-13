@@ -1,12 +1,11 @@
+import { Picker } from './Picker';
 import { useValue } from './value';
 import type { ReactNode } from 'react';
 import { FormField } from './FormField';
 import type { FieldProps } from './types';
-import { SelectorOption } from '@/components/astryx/Selector';
 import { selectorOptions, type SelectorOptionType } from './options';
-import { MultiSelector as AstryxMultiSelector } from '@/components/astryx/MultiSelector';
 
-/** Selects multiple values using standard option and selected-value rendering. */
+/** Selects multiple values while preserving repeated native form entries. */
 export function MultiSelector(
     props: FieldProps & {
         options: SelectorOptionType[];
@@ -20,38 +19,26 @@ export function MultiSelector(
         hasSearch?: boolean;
     }
 ) {
-    // Astryx's hidden carriers already preserve repeated names and the themed option picker.
-    const { defaultValue, ...control } = props;
-    const field = useValue(props.value, defaultValue ?? [], props.onChange);
+    // The View wrapper owns reset and serialization; the primitive owns interaction.
+    const field = useValue(props.value, props.defaultValue ?? [], props.onChange);
 
-    // Enable clearing while keeping search and select-all controls opt-in.
     return (
-        <FormField {...props} fieldRef={field.ref} values={field.value}>
-            <AstryxMultiSelector
-                {...control}
+        <FormField {...props} fieldRef={field.ref} values={field.value} serialize>
+            <Picker
+                label={props.label}
+                description={props.description}
+                required={props.required}
+                disabled={props.disabled}
+                placeholder={props.placeholder}
+                emptyText={props.emptyText}
+                hasSearch={props.hasSearch}
+                hasSelectAll={props.hasSelectAll}
+                triggerDisplay={props.triggerDisplay}
+                multiple
                 options={selectorOptions(props.options)}
-                renderOption={(option) => (
-                    <SelectorOption
-                        label={option.label ?? option.value}
-                        icon={option.icon}
-                        description={option.description}
-                    />
-                )}
-                width="100%"
                 value={field.value}
                 onChange={field.onChange}
-                htmlName={props.name}
-                placeholder={props.placeholder ?? 'Select...'}
-                hasSelectAll={props.hasSelectAll ?? false}
-                hasSearch={props.hasSearch ?? false}
                 hasClear
-                size="md"
-                isReadOnly={false}
-                isLabelHidden={false}
-                isRequired={props.required ?? false}
-                isDisabled={props.disabled ?? false}
-                changeAction={undefined}
-                isLoading={false}
             />
         </FormField>
     );

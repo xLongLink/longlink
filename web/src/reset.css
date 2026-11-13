@@ -1,0 +1,101 @@
+@layer reset {
+    :where(body) {
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+
+    :where(button, [role='button']) {
+        cursor: pointer;
+    }
+
+    :where(:disabled, [aria-disabled='true']) {
+        cursor: default;
+    }
+
+    :where(button, [type='button'], [type='reset'], [type='submit']) {
+        background-image: none;
+    }
+
+    :where([type='search'])::-webkit-search-cancel-button {
+        -webkit-appearance: none;
+    }
+
+    :where(dialog) {
+        outline: none;
+    }
+
+    :where(input, textarea)::placeholder {
+        color: var(--color-text-secondary, light-dark(#4e606f, #aaafb5));
+    }
+}
+
+@layer theme-tokens {
+    @scope ([data-theme-scope='stone']) to ([data-theme-scope]) {
+        :where(h1, h2, h3, h4, h5, h6) {
+            font-family: var(--font-family-heading);
+            color: var(--color-text-primary);
+        }
+
+        :where(h1) {
+            font-size: var(--text-heading-1-size);
+            font-weight: var(--text-heading-1-weight);
+            line-height: var(--text-heading-1-leading);
+        }
+
+        :where(h2) {
+            font-size: var(--text-heading-2-size);
+            font-weight: var(--text-heading-2-weight);
+            line-height: var(--text-heading-2-leading);
+        }
+
+        :where(h3) {
+            font-size: var(--text-heading-3-size);
+            font-weight: var(--text-heading-3-weight);
+            line-height: var(--text-heading-3-leading);
+        }
+
+        :where(h4) {
+            font-size: var(--text-heading-4-size);
+            font-weight: var(--text-heading-4-weight);
+            line-height: var(--text-heading-4-leading);
+        }
+
+        :where(h5) {
+            font-size: var(--text-heading-5-size);
+            font-weight: var(--text-heading-5-weight);
+            line-height: var(--text-heading-5-leading);
+        }
+
+        :where(h6) {
+            font-size: var(--text-heading-6-size);
+            font-weight: var(--text-heading-6-weight);
+            line-height: var(--text-heading-6-leading);
+        }
+
+        :where(p) {
+            font-family: var(--font-family-body);
+            font-size: var(--text-body-size);
+            font-weight: var(--text-body-weight);
+            line-height: var(--text-body-leading);
+            color: var(--color-text-primary);
+        }
+
+        :where(small) {
+            font-size: var(--text-supporting-size);
+            font-weight: var(--text-supporting-weight);
+            line-height: var(--text-supporting-leading);
+            color: var(--color-text-secondary);
+        }
+
+        :where(code, pre) {
+            font-family: var(--font-family-code);
+            font-size: var(--text-code-size);
+            line-height: var(--text-code-leading);
+        }
+
+        :where(hr) {
+            border: none;
+            border-top: 1px solid var(--color-border);
+        }
+    }
+}

@@ -1,17 +1,16 @@
 import { ApiError } from '@/lib/api';
+import { CircleX } from 'lucide-react';
 import type { ReactNode } from 'react';
+import '@/platform/layouts/auth.css';
 import Brand from '@/platform/layouts/Brand';
 import { Navigate, Outlet } from 'react-router';
 import { PageLoading } from '@/components/Utils';
-import { Stack } from '@/components/astryx/Stack';
-import { Banner } from '@/components/astryx/Banner';
-import { Button } from '@/components/astryx/Button';
-import { Center } from '@/components/astryx/Center';
+import { Button } from '@/components/shadcn/button';
 import { AuthenticatedUserContext, useCurrentUser } from '@/lib/hooks/use-user';
 
 /** Guards all nested Platform routes behind the shared authentication UI. */
 export default function AuthenticatedLayout() {
-    const { data: user, isLoading, error, refetch } = useCurrentUser();
+    const { data: user, isLoading, isFetching, error, refetch } = useCurrentUser();
     let content: ReactNode;
 
     // Wait for profile loading before deciding access.
@@ -27,12 +26,26 @@ export default function AuthenticatedLayout() {
         return (
             <Brand>
                 <title>Unable to Load Account | LongLink</title>
-                <Center minHeight="calc(100dvh - var(--_app-shell-header-height, 0px) - var(--spacing-4))" width="100%">
-                    <Stack gap={4} align="center">
-                        <Banner status="error" title="Unable to load your account." />
-                        <Button label="Retry" onClick={() => void refetch()} variant="primary" />
-                    </Stack>
-                </Center>
+                <div className="native-auth-center">
+                    <div className="native-auth-recovery">
+                        <div role="status" className="native-auth-banner">
+                            <CircleX aria-hidden="true" className="native-auth-error-icon" />
+                            <p>Unable to load your account.</p>
+                        </div>
+                        <Button
+                            type="button"
+                            variant="view"
+                            data-variant="primary"
+                            data-size="md"
+                            disabled={isFetching}
+                            focusableWhenDisabled
+                            aria-busy={isFetching}
+                            onClick={() => void refetch({ cancelRefetch: false })}
+                        >
+                            Retry
+                        </Button>
+                    </div>
+                </div>
             </Brand>
         );
     } else if (!user) {

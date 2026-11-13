@@ -1,8 +1,11 @@
 import { useLocation } from 'react-router';
-import { Stack } from '@/components/astryx/Stack';
 import Publication from '@/components/layouts/Publication';
 import { legalPages, brandingPages } from '@/platform/publications';
-import { SideNav, SideNavItem, SideNavSection } from '@/components/astryx/SideNav';
+import {
+    PublicationNavigation,
+    PublicationNavigationItem,
+    PublicationNavigationSection,
+} from './PublicationNavigation';
 
 /** Renders legal and branding pages with the public article layout. */
 export default function Legal() {
@@ -11,34 +14,25 @@ export default function Legal() {
 
     return (
         <Publication
-            className="min-h-0! [&_:has(>.astryx-app-shell-sidenav)]:h-fit! [&_:has(>.astryx-app-shell-sidenav)]:max-h-dvh"
+            className="min-h-0! [&_.publication-sidebar]:h-fit! [&_.publication-sidebar]:max-h-dvh"
             sideNav={
-                <SideNav aria-label="Legal and branding navigation">
-                    <Stack paddingInline={4} paddingBlock={6}>
-                        <SideNavSection title="Legal">
-                            {legalPages.map((page) => (
-                                <SideNavItem
-                                    key={page.path}
-                                    href={`${page.path}/`}
-                                    icon={<page.icon aria-hidden size={16} />}
-                                    isSelected={pagePath === page.path}
-                                    label={page.label}
-                                />
-                            ))}
-                        </SideNavSection>
-                        <SideNavSection title="Branding">
-                            {brandingPages.map((page) => (
-                                <SideNavItem
-                                    key={page.path}
-                                    href={page.path}
-                                    icon={<page.icon aria-hidden size={16} />}
-                                    isSelected={pagePath === page.path}
-                                    label={page.label}
-                                />
-                            ))}
-                        </SideNavSection>
-                    </Stack>
-                </SideNav>
+                <PublicationNavigation label="Legal and branding navigation">
+                    <PublicationNavigationSection title="Legal">
+                        {legalPages.map((page) => (
+                            <PublicationNavigationItem key={page.path} page={page} pagePath={pagePath} />
+                        ))}
+                    </PublicationNavigationSection>
+                    <PublicationNavigationSection title="Branding">
+                        {brandingPages.map((page) => (
+                            <PublicationNavigationItem
+                                key={page.path}
+                                page={page}
+                                pagePath={pagePath}
+                                trailingSlash={false}
+                            />
+                        ))}
+                    </PublicationNavigationSection>
+                </PublicationNavigation>
             }
         />
     );

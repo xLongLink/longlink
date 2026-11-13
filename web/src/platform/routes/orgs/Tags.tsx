@@ -5,19 +5,19 @@ import * as tabs from '@/platform/tabs';
 import { FormDialog } from './FormDialog';
 import { useApiError } from '@/lib/errors';
 import { Form } from '@/components/ui/Form';
-import { Text } from '@/components/astryx/Text';
-import { Stack } from '@/components/astryx/Stack';
-import { Button } from '@/components/astryx/Button';
 import { Selector } from '@/components/ui/Selector';
-import { Heading } from '@/components/astryx/Heading';
 import { TextInput } from '@/components/ui/TextInput';
 import { DeletionDialog } from '@/components/Deletion';
-import { MoreMenu } from '@/components/astryx/MoreMenu';
 import { MultiSelector } from '@/components/ui/MultiSelector';
-import { Table, proportional } from '@/components/astryx/Table';
+import { NativeMoreMenu } from '@/components/ui/NativeMoreMenu';
+import { NativeText as Text } from '@/components/ui/NativeText';
 import { ArrowDown, ArrowUp, Pencil, Trash } from 'lucide-react';
+import { NativeStack as Stack } from '@/components/ui/NativeStack';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { NativeButton as Button } from '@/components/ui/NativeButton';
+import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
+import { NativeTable as Table, proportional } from '@/components/ui/NativeTable';
 
 type Tag = z.output<typeof schemas.zOrganizationTagResponse>;
 
@@ -78,7 +78,7 @@ export default function TabsSection({ base, tags, canMaintain }: { base: string;
                                       header: 'Actions',
                                       align: 'end' as const,
                                       renderCell: (tag: Tag) => (
-                                          <MoreMenu
+                                          <NativeMoreMenu
                                               label={`Actions for ${tag.name}`}
                                               size="sm"
                                               alignment="end"

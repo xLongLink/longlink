@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { Dialog } from '@/components/ui/Dialog';
-import { Stack } from '@/components/astryx/Stack';
+import { NativeStack as Stack } from '@/components/ui/NativeStack';
 
 /** Frames single-step organization forms in a centered, scrolling dialog column. */
 export function FormDialog({ children, gap, onClose }: { children: ReactNode; gap: 6 | 8; onClose: () => void }) {

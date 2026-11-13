@@ -1,4 +1,4 @@
-import { CodeBlock as AstryxCodeBlock } from '@/components/astryx/CodeBlock';
+import { NativeCodeBlock } from './NativeCodeBlock';
 
 /** Displays source code using standard copy and highlighting behavior. */
 export function CodeBlock(props: {
@@ -15,5 +15,5 @@ export function CodeBlock(props: {
     collapsibleThreshold?: number;
 }) {
     // Render plain, unwrapped text unless a language or wrapping is requested.
-    return <AstryxCodeBlock {...props} language={props.language ?? 'plaintext'} isWrapped={props.isWrapped ?? false} />;
+    return <NativeCodeBlock {...props} language={props.language ?? 'plaintext'} isWrapped={props.isWrapped ?? false} />;
 }

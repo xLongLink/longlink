@@ -124,7 +124,7 @@ describe('DeploymentReview', () => {
         await act(async () => user.type(input('NEW_SECRET'), 'new-fixture-value'));
         expect(button('Update solution').getAttribute('aria-disabled')).toBeNull();
         await act(async () => user.type(input('OPTIONAL_SECRET'), 'replacement-fixture-value'));
-        await act(async () => input('Remove OPTIONAL_SECRET').click());
+        await act(async () => user.click(label('Remove OPTIONAL_SECRET')));
         await act(async () => button('Update solution').click());
 
         // Assert
@@ -150,8 +150,8 @@ describe('DeploymentReview', () => {
         await act(async () => user.type(input('OPTIONAL_SECRET'), 'replacement-fixture-value'));
 
         // Act
-        await act(async () => input('Remove OPTIONAL_SECRET').click());
-        await act(async () => input('Remove OPTIONAL_SECRET').click());
+        await act(async () => user.click(label('Remove OPTIONAL_SECRET')));
+        await act(async () => user.click(label('Remove OPTIONAL_SECRET')));
         await act(async () => button('Update solution').click());
 
         // Assert
@@ -219,7 +219,7 @@ describe('DeploymentReview', () => {
         return submissions;
     }
 
-    /** Finds a secret or removal control through its visible label. */
+    /** Finds a secret input through its visible label. */
     function input(label: string): HTMLInputElement {
         const found = [...document.querySelectorAll('label')].find((item) => item.textContent?.startsWith(label));
         const control = found?.htmlFor ? document.getElementById(found.htmlFor) : found?.querySelector('input');
@@ -227,6 +227,15 @@ describe('DeploymentReview', () => {
         if (!(control instanceof HTMLInputElement)) throw new Error(`Input not found: ${label}`);
 
         return control;
+    }
+
+    /** Finds the removal label without depending on its underlying checkbox element. */
+    function label(text: string) {
+        const found = [...document.querySelectorAll('label')].find((item) => item.textContent?.startsWith(text));
+
+        if (!found) throw new Error(`Label not found: ${text}`);
+
+        return found;
     }
 
     /** Find the named native action without replacing UI components. */

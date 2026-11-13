@@ -69,7 +69,6 @@ it.each([
 });
 
 it('exposes copyable full-date details on keyboard focus without becoming a button or tooltip', async () => {
-    // The public wrapper never enabled Astryx’s opt-in live updates.
     const date = new Date(Date.now() - 120_000);
 
     const fullOptions: Intl.DateTimeFormatOptions = {

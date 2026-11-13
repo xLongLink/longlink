@@ -86,3 +86,35 @@ it('keeps steps inert without onStepClick while their actions remain focusable',
         }
     );
 });
+
+it('activates authored progress indices without submitting the owning form', async () => {
+    const onStepClick = vi.fn();
+    const onSubmit = vi.fn();
+
+    await withMounted(
+        <form onSubmit={onSubmit}>
+            <Stepper activeStep={4} onStepClick={onStepClick}>
+                <Step step={3} label="Prepare" />
+                <Step step={4} label="Review" />
+                <Step label="Finish" />
+            </Stepper>
+        </form>,
+        async (output) => {
+            const current = output.querySelector('[aria-current="step"]');
+
+            const prepare = Array.from(output.querySelectorAll('button')).find((button) =>
+                button.textContent?.startsWith('Prepare')
+            );
+
+            const finish = Array.from(output.querySelectorAll('button')).find((button) =>
+                button.textContent?.includes('Finish')
+            );
+
+            expect(current?.textContent).toContain('Review');
+            await act(async () => prepare?.click());
+            await act(async () => finish?.click());
+            expect(onStepClick.mock.calls).toEqual([[3], [2]]);
+            expect(onSubmit).not.toHaveBeenCalled();
+        }
+    );
+});

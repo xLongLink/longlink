@@ -1,21 +1,20 @@
 import { Page } from '@/components/Page';
-import { Grid } from '@/components/astryx/Grid';
-import { Link } from '@/components/astryx/Link';
-import { Text } from '@/components/astryx/Text';
+import { Grid } from '@/components/ui/Grid';
 import { ArrowRight, Mail } from 'lucide-react';
 import { Docker } from '@/components/svg/Docker';
 import { Python } from '@/components/svg/Python';
-import { Stack } from '@/components/astryx/Stack';
 import { Fastapi } from '@/components/svg/Fastapi';
-import { Button } from '@/components/astryx/Button';
 import { Foundation } from '@/components/Foundation';
-import { Heading } from '@/components/astryx/Heading';
-import { Section } from '@/components/astryx/Section';
 import { ReactDark } from '@/components/svg/ReactDark';
 import { Kubernetes } from '@/components/svg/Kubernetes';
 import { Postgresql } from '@/components/svg/Postgresql';
 import { Typescript } from '@/components/svg/Typescript';
 import { Tailwindcss } from '@/components/svg/Tailwindcss';
+import { NativeLink as Link } from '@/components/ui/NativeLink';
+import { NativeText as Text } from '@/components/ui/NativeText';
+import { NativeStack as Stack } from '@/components/ui/NativeStack';
+import { NativeButton as Button } from '@/components/ui/NativeButton';
+import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
 
 const homeDescription =
     'LongLink is the open-source foundation for building, deploying, and operating dedicated business software in Python.';
@@ -36,11 +35,7 @@ export default function Home() {
     return (
         <Page description={homeDescription} title="LongLink | Build and Operate business solutions">
             <Stack as="main">
-                <Section
-                    className="relative isolate -mt-(--public-navigation-height) flex flex-col overflow-hidden"
-                    padding={0}
-                    variant="transparent"
-                >
+                <section className="relative isolate -mt-(--public-navigation-height) flex flex-col overflow-hidden">
                     <img
                         alt=""
                         className="absolute inset-0 size-full -scale-x-100 bg-black object-cover"
@@ -51,11 +46,11 @@ export default function Home() {
                     />
                     <Stack
                         className="relative flex-1 bg-linear-to-t from-black via-black/50 to-transparent p-6 sm:p-10"
-                        hAlign="start"
+                        align="start"
                         justify="end"
                         minHeight="100svh"
                     >
-                        <Stack className="max-w-xl text-left" gap={6} hAlign="start">
+                        <Stack className="max-w-xl text-left" gap={6} align="start">
                             <Heading
                                 className="text-4xl tracking-tight text-white sm:text-6xl"
                                 justify="start"
@@ -75,7 +70,6 @@ export default function Home() {
                             <Text as="p" className="text-white/80" type="supporting">
                                 Currently in testing Beta.{' '}
                                 <Link
-                                    as="a"
                                     color="inherit"
                                     href="https://github.com/xLongLink/longlink"
                                     hasUnderline
@@ -87,10 +81,10 @@ export default function Home() {
                             </Text>
                         </Stack>
                     </Stack>
-                </Section>
+                </section>
                 <Foundation />
-                <Section paddingInline={6} paddingBlock={10} variant="transparent">
-                    <Stack className="mx-auto" maxWidth={1200} gap={8} hAlign="center">
+                <section className="px-6 py-10">
+                    <Stack className="mx-auto" maxWidth={1200} gap={8} align="center">
                         <img
                             alt="An architectural drawing of an orderly library with connected workspaces and sweeping staircases."
                             className="aspect-2/1 w-full object-cover sm:aspect-5/2"
@@ -111,59 +105,61 @@ export default function Home() {
                             We create the tools you need to organize and validate your data, documents, and processes.
                         </Text>
                     </Stack>
-                </Section>
-                <Section className="py-16 sm:py-24" paddingInline={6} variant="transparent">
-                    <Stack
-                        className="relative mx-auto py-32 text-center sm:py-40"
-                        gap={6}
-                        hAlign="center"
-                        maxWidth={1000}
-                        width="100%"
-                    >
-                        {technologies.map((technology) => (
-                            <technology.logo
-                                key={technology.name}
-                                aria-label={technology.name}
-                                role="img"
-                                className={`absolute size-10 opacity-80 motion-safe:technology-float sm:size-14 ${technology.position}`}
-                                height={56}
-                                width={56}
-                            />
-                        ))}
-                        <Text aria-hidden="true" className="text-xl leading-none">
-                            🇨🇭
-                        </Text>
-                        <Stack gap={0} hAlign="center">
-                            <Heading
-                                className="font-(family-name:--font-family-handwritten) tracking-wide uppercase"
-                                level={2}
-                                textWrap="balance"
-                                justify="center"
-                            >
-                                Made in Switzerland
-                            </Heading>
-                            <Text as="p" color="secondary" textWrap="balance">
-                                Using open-source technologies
+                </section>
+                <section className="py-16 sm:py-24">
+                    <div className="px-6 py-3">
+                        <Stack
+                            className="relative mx-auto py-32 text-center sm:py-40"
+                            gap={6}
+                            align="center"
+                            maxWidth={1000}
+                            width="100%"
+                        >
+                            {technologies.map((technology) => (
+                                <technology.logo
+                                    key={technology.name}
+                                    aria-label={technology.name}
+                                    role="img"
+                                    className={`absolute size-10 opacity-80 motion-safe:technology-float sm:size-14 ${technology.position}`}
+                                    height={56}
+                                    width={56}
+                                />
+                            ))}
+                            <Text aria-hidden="true" className="text-xl leading-none">
+                                🇨🇭
                             </Text>
+                            <Stack gap={0} align="center">
+                                <Heading
+                                    className="font-(family-name:--font-family-handwritten) tracking-wide uppercase"
+                                    level={2}
+                                    textWrap="balance"
+                                    justify="center"
+                                >
+                                    Made in Switzerland
+                                </Heading>
+                                <Text as="p" color="secondary" textWrap="balance">
+                                    Using open-source technologies
+                                </Text>
+                            </Stack>
+                            <Grid columns={2} gap={3}>
+                                <Button
+                                    className="w-full"
+                                    endContent={<Mail aria-hidden="true" size={16} />}
+                                    href="mailto:info@longlink.dev"
+                                    label="Contact Us"
+                                    variant="secondary"
+                                />
+                                <Button
+                                    className="w-full"
+                                    endContent={<ArrowRight aria-hidden="true" size={16} />}
+                                    href="/login/"
+                                    label="Get Started"
+                                    variant="primary"
+                                />
+                            </Grid>
                         </Stack>
-                        <Grid columns={2} gap={3}>
-                            <Button
-                                className="w-full"
-                                endContent={<Mail aria-hidden="true" size={16} />}
-                                href="mailto:info@longlink.dev"
-                                label="Contact Us"
-                                variant="secondary"
-                            />
-                            <Button
-                                className="w-full"
-                                endContent={<ArrowRight aria-hidden="true" size={16} />}
-                                href="/login/"
-                                label="Get Started"
-                                variant="primary"
-                            />
-                        </Grid>
-                    </Stack>
-                </Section>
+                    </div>
+                </section>
             </Stack>
         </Page>
     );

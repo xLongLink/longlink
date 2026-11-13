@@ -1,10 +1,25 @@
-import { useValue } from './value';
-import { FormField } from './FormField';
 import type { FieldProps } from './types';
-import type { ISODateString } from '@/components/astryx/Calendar';
-import { DateInput as AstryxDateInput } from '@/components/astryx/DateInput';
+import { format, parseISO } from 'date-fns';
+import { TemporalField } from './TemporalField';
+import { DayPicker, type ChevronProps } from 'react-day-picker';
+import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp } from 'lucide-react';
+import { displayDate, readDate, validDate, type ISODateString } from './temporal';
 
-/** Selects a constrained date with standard month and week presentation. */
+/** Uses the application's icon family for the maintained calendar renderer. */
+function CalendarChevron({ orientation, className }: ChevronProps) {
+    const Icon =
+        orientation === 'left'
+            ? ChevronLeft
+            : orientation === 'right'
+              ? ChevronRight
+              : orientation === 'up'
+                ? ChevronUp
+                : ChevronDown;
+
+    return <Icon className={className} aria-hidden="true" />;
+}
+
+/** Selects or types a real calendar date using inclusive bounds and additional constraints. */
 export function DateInput(
     props: FieldProps & {
         value?: ISODateString;
@@ -12,47 +27,64 @@ export function DateInput(
         onChange?: (value: ISODateString | undefined) => void;
         min?: ISODateString;
         max?: ISODateString;
-        /** Additional constraints applied to the themed calendar picker. */
         dateConstraints?: readonly ((date: Date) => boolean)[];
         placeholder?: string;
     }
 ) {
-    // Keep optional draft state inside the themed picker and synchronize native form resets.
-    const { name, defaultValue, ...control } = props;
-    const field = useValue(props.value, defaultValue, props.onChange, Object.hasOwn(props, 'value'));
+    // Every entry path, including caller values, uses the same calendar constraints.
+    const validBounds = (!props.min || validDate(props.min)) && (!props.max || validDate(props.max));
 
-    // Start with an editable date field without inventing a selected date or constraints.
+    const accepts = (value: string): value is ISODateString =>
+        validBounds &&
+        validDate(value) &&
+        (!props.min || value >= props.min) &&
+        (!props.max || value <= props.max) &&
+        (props.dateConstraints?.every((constraint) => constraint(parseISO(value))) ?? true);
+
     return (
-        <FormField
-            {...control}
-            name={name}
-            fieldRef={field.ref}
-            values={[field.value ?? '']}
-            serialize
-            error={
-                field.value && ((props.min && field.value < props.min) || (props.max && field.value > props.max))
-                    ? 'Choose a date within the allowed range.'
-                    : undefined
-            }
-        >
-            {/* Only the canonical ISO carrier owns the submission name, not the formatted display input. */}
-            <AstryxDateInput
-                {...control}
-                width="100%"
-                value={field.value}
-                onChange={field.onChange}
-                presentation="adaptive-bottom-sheet"
-                placeholder={props.placeholder ?? 'Select a date'}
-                hasClear
-                size="md"
-                isLabelHidden={false}
-                isRequired={props.required ?? false}
-                isDisabled={props.disabled ?? false}
-                numberOfMonths={1}
-                weekStartsOn="sun"
-                changeAction={undefined}
-                isLoading={false}
-            />
-        </FormField>
+        <TemporalField
+            label={props.label}
+            description={props.description}
+            name={props.name}
+            required={props.required}
+            disabled={props.disabled}
+            value={props.value}
+            defaultValue={props.defaultValue}
+            onChange={props.onChange}
+            controlled={Object.hasOwn(props, 'value')}
+            kind="date"
+            placeholder={props.placeholder ?? 'Select a date'}
+            parse={readDate}
+            isComplete={(text) => /(?:^\d{4}-\d{1,2}-\d{1,2}|\b\d{4})\s*$/.test(text)}
+            format={displayDate}
+            accepts={accepts}
+            picker={(value, select) => (
+                <DayPicker
+                    className="view-date-calendar"
+                    mode="single"
+                    selected={value ? parseISO(value) : undefined}
+                    startMonth={props.min && validDate(props.min) ? parseISO(props.min) : undefined}
+                    endMonth={props.max && validDate(props.max) ? parseISO(props.max) : undefined}
+                    defaultMonth={
+                        value ? parseISO(value) : props.min && validDate(props.min) ? parseISO(props.min) : undefined
+                    }
+                    weekStartsOn={0}
+                    autoFocus
+                    showOutsideDays
+                    components={{ Chevron: CalendarChevron }}
+                    disabled={(date) => {
+                        const value = format(date, 'yyyy-MM-dd');
+
+                        return !accepts(value);
+                    }}
+                    onSelect={(date) => {
+                        if (!date) return;
+                        const value = format(date, 'yyyy-MM-dd');
+
+                        if (accepts(value)) select(value);
+                    }}
+                />
+            )}
+        />
     );
 }

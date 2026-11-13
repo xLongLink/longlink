@@ -1,22 +1,16 @@
-import { Menu } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useEffect, useState } from 'react';
-import { Link } from '@/components/astryx/Link';
+import { Dialog } from '@base-ui/react/dialog';
 import { Wordmark } from '@/components/Wordmark';
-import { Stack } from '@/components/astryx/Stack';
-import { Button } from '@/components/astryx/Button';
-import { TopNav } from '@/components/astryx/TopNav';
-import { MobileNav } from '@/components/astryx/MobileNav';
+import { Link as RouterLink } from 'react-router';
+import { Button } from '@/components/shadcn/button';
+import { ExternalLink, Menu, X } from 'lucide-react';
 
-const publicNavigation = {
-    links: [
-        { href: '/blog/', label: 'Blog', isExternalLink: false },
-        { href: '/docs/', label: 'Documentation', isExternalLink: false },
-        { href: '/pricing/', label: 'Pricing', isExternalLink: false },
-        { href: 'https://github.com/xLongLink/longlink', label: 'GitHub', isExternalLink: true },
-    ],
-    signIn: { href: '/login/', label: 'Sign In' },
-};
+const publicLinks = [
+    { href: '/blog/', label: 'Blog' },
+    { href: '/docs/', label: 'Documentation' },
+    { href: '/pricing/', label: 'Pricing' },
+];
 
 /** Renders public navigation at the page's content width. */
 export function Navbar({
@@ -47,7 +41,6 @@ export function Navbar({
     // Expand the landing navigation only while the page is at the top.
     useEffect(() => {
         if (!expandOnTop) return;
-
         const onScroll = () => setScrolled(window.scrollY > 0);
         onScroll();
         window.addEventListener('scroll', onScroll, { passive: true });
@@ -56,79 +49,107 @@ export function Navbar({
     }, [expandOnTop]);
 
     return (
-        <Stack
-            as="header"
+        <header
             className={
                 expandOnTop
-                    ? `sticky top-0 z-30 border-b ${scrolled ? 'border-border bg-background/50 backdrop-blur-sm' : 'border-transparent bg-transparent'}`
-                    : 'border-b border-border bg-background'
+                    ? `public-navbar sticky top-0 z-30 border-b ${scrolled ? 'border-border bg-background/50 backdrop-blur-sm' : 'border-transparent bg-transparent'}`
+                    : 'public-navbar border-b border-border bg-background'
             }
-            paddingInline={6}
         >
-            <Stack
-                className="mx-auto transition-[max-width] duration-300 ease-out motion-reduce:transition-none"
-                maxWidth={expandOnTop && !scrolled ? '100%' : maxWidth}
-                width="100%"
-            >
-                <TopNav
-                    className="py-3"
-                    heading={
-                        <Link href="/" label="LongLink home" color="inherit">
+            <div className="public-navbar-content" style={{ maxWidth: expandOnTop && !scrolled ? '100%' : maxWidth }}>
+                <Dialog.Root open={menuOpen} onOpenChange={setMenuOpen}>
+                    <nav className="public-navbar-bar" aria-label="Main navigation">
+                        <RouterLink to="/" aria-label="LongLink home" className="public-navbar-home">
                             <Wordmark size="heading" />
-                        </Link>
-                    }
-                    label="Main navigation"
-                    endContent={
-                        <>
-                            <Stack className="hidden sm:flex" direction="horizontal" gap={6} vAlign="center">
-                                {publicNavigation.links.map((link) => (
-                                    <Link
-                                        key={link.href}
-                                        as={link.isExternalLink ? 'a' : undefined}
-                                        color="secondary"
-                                        href={link.href}
-                                        isExternalLink={link.isExternalLink}
-                                        isStandalone
-                                        weight="medium"
-                                    >
-                                        {link.label}
-                                    </Link>
-                                ))}
-                                <Button {...publicNavigation.signIn} size="sm" variant="primary" />
-                            </Stack>
-                            <Button
-                                className="sm:hidden"
-                                icon={<Menu aria-hidden="true" size={20} />}
-                                isIconOnly
-                                label="Open navigation"
-                                variant="ghost"
-                                aria-haspopup="dialog"
-                                aria-expanded={menuOpen}
-                                onClick={() => setMenuOpen(true)}
-                            />
-                        </>
-                    }
-                />
-                {navigation}
-            </Stack>
-            <MobileNav isOpen={menuOpen} onOpenChange={setMenuOpen} header="Navigation" label="Main navigation">
-                <Stack as="nav" aria-label="Public pages" gap={4} padding={4}>
-                    {publicNavigation.links.map((link) => (
-                        <Link
-                            key={link.href}
-                            as={link.isExternalLink ? 'a' : undefined}
-                            href={link.href}
-                            color="inherit"
-                            isExternalLink={link.isExternalLink}
-                            isStandalone
-                            onClick={() => setMenuOpen(false)}
+                        </RouterLink>
+                        <div className="public-navbar-actions">
+                            <div className="public-navbar-desktop">
+                                <PublicLinks />
+                            </div>
+                            <Dialog.Trigger
+                                className="public-navbar-toggle"
+                                aria-label="Open navigation"
+                                render={
+                                    <Button
+                                        variant="view"
+                                        data-variant="ghost"
+                                        data-size="md"
+                                        data-icon-only
+                                        type="button"
+                                    />
+                                }
+                            >
+                                <Menu aria-hidden="true" size={20} />
+                            </Dialog.Trigger>
+                        </div>
+                    </nav>
+                    <Dialog.Portal className="public-navbar-layer">
+                        <Dialog.Backdrop className="public-navbar-backdrop" />
+                        <Dialog.Popup
+                            className="public-navbar-drawer"
+                            aria-label="Main navigation"
+                            finalFocus={() => !window.matchMedia('(min-width: 640px)').matches}
                         >
-                            {link.label}
-                        </Link>
-                    ))}
-                    <Button {...publicNavigation.signIn} variant="primary" onClick={() => setMenuOpen(false)} />
-                </Stack>
-            </MobileNav>
-        </Stack>
+                            <div className="public-navbar-drawer-header">
+                                <Dialog.Title className="public-navbar-title">Navigation</Dialog.Title>
+                                <Dialog.Close
+                                    aria-label="Close navigation"
+                                    render={
+                                        <Button
+                                            variant="view"
+                                            data-variant="ghost"
+                                            data-size="md"
+                                            data-icon-only
+                                            type="button"
+                                        />
+                                    }
+                                >
+                                    <X aria-hidden="true" size={20} />
+                                </Dialog.Close>
+                            </div>
+                            <div className="public-navbar-drawer-content">
+                                <nav aria-label="Public pages" className="public-navbar-mobile">
+                                    <PublicLinks mobile onNavigate={() => setMenuOpen(false)} />
+                                </nav>
+                            </div>
+                        </Dialog.Popup>
+                    </Dialog.Portal>
+                </Dialog.Root>
+                {navigation}
+            </div>
+        </header>
+    );
+}
+
+/** Keeps public destinations and native link gestures identical in both navigation regions. */
+function PublicLinks({ mobile = false, onNavigate }: { mobile?: boolean; onNavigate?: () => void }) {
+    return (
+        <>
+            {publicLinks.map((link) => (
+                <RouterLink key={link.href} className="public-navbar-link" to={link.href} onClick={onNavigate}>
+                    {link.label}
+                </RouterLink>
+            ))}
+            <a
+                className="public-navbar-link"
+                href="https://github.com/xLongLink/longlink"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={onNavigate}
+            >
+                GitHub
+                <ExternalLink aria-hidden="true" />
+                <span className="sr-only"> (opens in a new tab)</span>
+            </a>
+            <Button
+                variant="view"
+                data-variant="primary"
+                data-size={mobile ? 'md' : 'sm'}
+                nativeButton={false}
+                render={<RouterLink to="/login/" onClick={onNavigate} />}
+            >
+                Sign In
+            </Button>
+        </>
     );
 }

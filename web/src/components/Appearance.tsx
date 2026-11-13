@@ -1,11 +1,10 @@
 import type { z } from 'zod';
 import type { ReactNode } from 'react';
 import { api, ApiError } from '@/lib/api';
-import { Theme } from '@astryxdesign/core/theme';
-import { stoneTheme } from '@/lib/generated/stone.js';
 import { CurrentUserContext } from '@/lib/hooks/use-user';
 import { AppearanceContext } from '@/lib/hooks/use-appearance';
 import { useQuery, useIsMutating } from '@tanstack/react-query';
+import { useDocumentTheme } from '@/lib/hooks/use-document-theme';
 import { zCurrentUser } from '@/lib/generated/platform-api-v1/zod.gen';
 import { useEffect, useLayoutEffect, useMemo, useSyncExternalStore } from 'react';
 import { appearanceSchema, clearAppearanceCache, defaultAppearance, type Appearance } from '@/lib/appearance';
@@ -48,23 +47,20 @@ export function AppearanceProvider({ children, preference }: { children: ReactNo
     }, [cache]);
 
     const appearance = preference ?? cached;
+    useDocumentTheme(appearance.theme);
 
     // Switching the personal accent requires only an attribute change, before paint.
     useLayoutEffect(() => {
+        const previous = document.documentElement.getAttribute('data-accent');
         document.documentElement.dataset.accent = appearance.accent;
 
         return () => {
-            delete document.documentElement.dataset.accent;
+            if (previous === null) delete document.documentElement.dataset.accent;
+            else document.documentElement.setAttribute('data-accent', previous);
         };
     }, [appearance.accent]);
 
-    return (
-        <AppearanceContext value={{ appearance }}>
-            <Theme theme={stoneTheme} mode={appearance.theme}>
-                {children}
-            </Theme>
-        </AppearanceContext>
-    );
+    return <AppearanceContext value={{ appearance }}>{children}</AppearanceContext>;
 }
 
 /** Owns account identity and synchronizes preferences across focus and session changes. */

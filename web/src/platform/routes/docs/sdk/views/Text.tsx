@@ -7,9 +7,7 @@ export default function TextPage() {
     return (
         <ViewLayout
             name="Text"
-            introduction={
-                "Displays View text with Astryx's semantic typography, alignment, wrapping, and truncation controls."
-            }
+            introduction={'Displays View text with semantic typography, alignment, wrapping, and truncation controls.'}
             properties={[
                 {
                     name: 'children',

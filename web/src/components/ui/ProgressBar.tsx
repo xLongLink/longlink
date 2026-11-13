@@ -180,7 +180,7 @@ function ProgressMark({
                 <Tooltip.Trigger
                     id={triggerId}
                     ref={(element: HTMLElement | null) => {
-                        tooltipContainer.current = element?.closest<HTMLElement>('[data-astryx-theme]') ?? null;
+                        tooltipContainer.current = element?.closest<HTMLElement>('[data-theme-scope]') ?? null;
                     }}
                     render={<span role="img" tabIndex={0} />}
                     aria-label={label}

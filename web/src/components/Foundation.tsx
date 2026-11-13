@@ -1,8 +1,5 @@
+import './foundation.css';
 import { useEffect, useRef } from 'react';
-import { Text } from '@/components/astryx/Text';
-import { Stack } from '@/components/astryx/Stack';
-import { Heading } from '@/components/astryx/Heading';
-import { Section } from '@/components/astryx/Section';
 import { industryGroups, sharedUseCaseGroups } from '@/lib/industries';
 
 const industries = industryGroups.flatMap((group) => group.industries);
@@ -38,42 +35,35 @@ function MovingRow({ items, label, reverse = false }: { items: readonly string[]
     }, []);
 
     return (
-        <Stack className="overflow-hidden mask-x-from-80% mask-x-to-100% motion-reduce:overflow-x-auto">
-            <Stack className={reverse ? 'foundation-scroll-reverse' : 'foundation-scroll'}>
-                <Stack
+        <div className="flex flex-col overflow-hidden mask-x-from-80% mask-x-to-100% motion-reduce:overflow-x-auto">
+            <div className={reverse ? 'foundation-scroll-reverse' : 'foundation-scroll'}>
+                <div
                     ref={trackRef}
-                    className={reverse ? 'foundation-track foundation-track-reverse' : 'foundation-track'}
-                    direction="horizontal"
+                    className={`flex ${reverse ? 'foundation-track foundation-track-reverse' : 'foundation-track'}`}
                 >
                     {copies.map((copy) => (
-                        <Stack
+                        <ul
                             key={copy}
-                            as="ul"
                             aria-label={copy === 0 ? label : undefined}
                             aria-hidden={copy !== 0 || undefined}
-                            className={`min-w-screen shrink-0 ${copy !== 0 ? 'motion-reduce:hidden' : ''}`}
-                            direction="horizontal"
-                            gap={10}
-                            paddingInline={5}
-                            vAlign="center"
-                            hAlign="around"
+                            className={`flex min-w-screen shrink-0 items-center justify-around gap-10 px-5 ${copy !== 0 ? 'motion-reduce:hidden' : ''}`}
                         >
                             {items.map((item) => (
                                 <li key={item} className="shrink-0 text-xl whitespace-nowrap text-white/60 sm:text-3xl">
                                     {item}
                                 </li>
                             ))}
-                        </Stack>
+                        </ul>
                     ))}
-                </Stack>
-            </Stack>
-        </Stack>
+                </div>
+            </div>
+        </div>
     );
 }
 
 /** Connects industries and use cases around one extensible Platform foundation. */
 export function Foundation() {
-    const sectionRef = useRef<HTMLDivElement>(null);
+    const sectionRef = useRef<HTMLElement>(null);
 
     // Add scroll movement only while the section is visible and motion is enabled.
     useEffect(() => {
@@ -107,6 +97,7 @@ export function Foundation() {
         };
 
         const observer = new IntersectionObserver(([entry]) => {
+            // oxlint-disable-next-line react/immutability -- Effect-local visibility; oxc-project/oxc#28401.
             visible = entry.isIntersecting;
             section.dataset.paused = String(!visible);
             schedule();
@@ -127,47 +118,35 @@ export function Foundation() {
     }, []);
 
     return (
-        <Section
+        <section
             ref={sectionRef}
             aria-labelledby="foundation-heading"
             aria-describedby="foundation-motion-description"
-            className="overflow-hidden py-20 sm:py-32"
+            className="foundation overflow-hidden py-20 sm:py-32"
             data-paused="true"
             tabIndex={0}
-            padding={0}
-            variant="transparent"
         >
-            <Stack gap={10}>
-                <Text id="foundation-motion-description" className="sr-only">
+            <div className="flex flex-col gap-10">
+                <p id="foundation-motion-description" className="sr-only">
                     Automatic motion pauses while this section has keyboard focus.
-                </Text>
+                </p>
                 <MovingRow items={industryNames} label="Industries" />
-                <Stack
-                    className="mx-auto text-center"
-                    gap={5}
-                    hAlign="center"
-                    maxWidth={1000}
-                    paddingInline={6}
-                    paddingBlock={10}
-                >
-                    <Heading
+                <div className="foundation-copy mx-auto flex flex-col items-center gap-5 px-6 py-10 text-center">
+                    <h2
                         id="foundation-heading"
-                        className="text-3xl tracking-tight sm:text-5xl"
-                        level={2}
-                        justify="center"
-                        textWrap="balance"
+                        className="foundation-heading text-center text-3xl tracking-tight text-balance sm:text-5xl"
                     >
                         One foundation.
                         <br />
                         Every way you work.
-                    </Heading>
-                    <Text as="p" className="max-w-xl" color="secondary" textWrap="pretty" type="large">
+                    </h2>
+                    <p className="foundation-description max-w-xl text-pretty">
                         Start with one process. Build the next. LongLink gives your team a foundation for dedicated
                         business software, across industries and wherever your work takes you.
-                    </Text>
-                </Stack>
+                    </p>
+                </div>
                 <MovingRow items={useCases} label="Use cases" reverse />
-            </Stack>
-        </Section>
+            </div>
+        </section>
     );
 }

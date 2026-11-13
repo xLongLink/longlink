@@ -66,7 +66,7 @@ it('updates formatted visible and accessible text while keeping marks independen
         expect(output.querySelector(`#${progress?.getAttribute('aria-labelledby')}`)?.textContent).toBe('Storage');
         await act(async () => userEvent.tab());
         expect(document.querySelector('[role="tooltip"]')?.textContent).toBe('Target');
-        expect(output.querySelector('[data-astryx-theme] [role="tooltip"]')?.textContent).toBe('Target');
+        expect(output.querySelector('[data-theme-scope] [role="tooltip"]')?.textContent).toBe('Target');
         await act(async () => output.querySelector('button')?.click());
         expect(progress?.getAttribute('aria-valuenow')).toBe('40');
         expect(progress?.getAttribute('aria-valuetext')).toBe('40 of 50 GB');
@@ -94,6 +94,27 @@ it('omits numeric claims, value labels, and target marks while indeterminate', (
     expect(output.querySelector('header')?.textContent).toBe('Loading');
     expect(output.querySelector('[aria-label="Target"]')).toBeNull();
     expect(output.querySelector('[data-slot="progress-indicator"]')?.hasAttribute('data-indeterminate')).toBe(true);
+});
+
+it('keeps a preview tooltip inside its nearest native mode scope', async () => {
+    await withMounted(
+        <div data-theme-scope="stone" data-theme="light">
+            <ProgressBar label="Preview" value={25} marks={[{ value: 25, label: 'Preview target' }]} />
+        </div>,
+        async (output) => {
+            const preview = output.querySelector('[data-theme="light"]');
+            const mark = output.querySelector<HTMLElement>('[aria-label="Preview target"]');
+
+            if (!mark) throw new Error('Expected preview target');
+            await act(async () => mark.focus());
+            const tooltip = document.querySelector('[role="tooltip"]');
+
+            expect(tooltip?.textContent).toBe('Preview target');
+            expect(tooltip?.closest('[data-theme-scope]')).toBe(preview);
+            expect(preview?.getAttribute('data-theme')).toBe('light');
+            expect(output.querySelector('[data-theme="dark"]')?.contains(preview)).toBe(true);
+        }
+    );
 });
 
 it('dims disabled progress and clamps negative marks to the start of the rail', () => {

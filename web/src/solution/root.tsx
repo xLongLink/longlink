@@ -1,14 +1,11 @@
 import * as icons from '@/lib/icons';
 import type { ReactNode } from 'react';
 import { PageLoading } from '@/components/Utils';
-import { Link as RouterLink } from 'react-router';
 import { ApiBoundary } from '@/components/ApiBoundary';
 import { ApiProvider } from '@/components/ApiProvider';
 import { appearanceBootstrap } from '@/lib/appearance';
-import { LinkProvider } from '@/components/astryx/Link';
 import { AppearanceProvider } from '@/components/Appearance';
 import { IconRequestContext } from '@/components/ui/contexts';
-import { LayerProvider } from '@/components/astryx/LayerProvider';
 import { Links, Meta, Outlet, Scripts, ScrollRestoration } from 'react-router';
 import '@/index.css';
 
@@ -20,20 +17,16 @@ export function HydrateFallback() {
 
 /** Provides isolated runtime state around the active Solution route. */
 export default function SolutionRoot() {
-    // Keep theme, link, layer, and API ownership around the active route.
+    // Keep theme and API ownership around the active route.
     return (
         <AppearanceProvider>
-            <LinkProvider component={RouterLink}>
-                <LayerProvider toast={{ position: 'bottomEnd' }}>
-                    <IconRequestContext value={icons.load}>
-                        <ApiProvider>
-                            <ApiBoundary>
-                                <Outlet />
-                            </ApiBoundary>
-                        </ApiProvider>
-                    </IconRequestContext>
-                </LayerProvider>
-            </LinkProvider>
+            <IconRequestContext value={icons.load}>
+                <ApiProvider>
+                    <ApiBoundary>
+                        <Outlet />
+                    </ApiBoundary>
+                </ApiProvider>
+            </IconRequestContext>
         </AppearanceProvider>
     );
 }
@@ -41,7 +34,7 @@ export default function SolutionRoot() {
 /** Renders the Solution HTML document shell. */
 export function Layout({ children }: { children: ReactNode }) {
     return (
-        <html lang="en" data-astryx-theme="stone" suppressHydrationWarning>
+        <html lang="en" data-theme-scope="stone" suppressHydrationWarning>
             <head>
                 <meta charSet="utf-8" />
                 <meta name="viewport" content="width=device-width, initial-scale=1.0" />

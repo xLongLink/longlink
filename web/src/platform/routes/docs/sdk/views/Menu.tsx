@@ -1,8 +1,8 @@
 import ViewLayout from './ViewLayout';
-import { Text } from '@/components/astryx/Text';
-import { Stack } from '@/components/astryx/Stack';
 import { useLocation, useNavigate } from 'react-router';
+import { NativeText as Text } from '@/components/ui/NativeText';
 import { MenuNavigationContext } from '@/components/ui/contexts';
+import { NativeStack as Stack } from '@/components/ui/NativeStack';
 import { Menu, MenuSection, MenuSubSection, MenuItem } from '@/components/ui/Menu';
 
 /** Documents section navigation and selected content. */
@@ -11,7 +11,6 @@ export default function MenuPage() {
     return (
         <ViewLayout
             name="Menu"
-            isLongLinkSpecific
             properties={[
                 {
                     name: 'children',
@@ -68,7 +67,7 @@ export default function MenuPage() {
                     description: 'Label displayed on the collapsible navigation group.',
                 },
             ]}
-            introduction="Menu combines section navigation with the selected section’s content using Astryx SideNav. At View viewport widths of 768px and below, navigation moves above content rather than competing for its width. Resizing keeps the active content mounted; changing sections mounts only the selected section."
+            introduction="Menu combines section navigation with the selected section’s content. At View viewport widths of 768px and below, navigation moves above content rather than competing for its width. Resizing keeps the active content mounted; changing sections mounts only the selected section."
             example={{
                 title: 'Menu',
                 preview: <MenuExample />,

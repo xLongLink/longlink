@@ -1,9 +1,11 @@
+import '@/components/ui/inlinecode.css';
 import { GridExample } from './views/Grid';
 import { IconExample } from './views/Icon';
 import { LinkExample } from './views/Link';
 import { TextExample } from './views/Text';
 import { Card } from '@/components/ui/Card';
 import { Form } from '@/components/ui/Form';
+import { Grid } from '@/components/ui/Grid';
 import { BadgeExample } from './views/Badge';
 import { StackExample } from './views/Stack';
 import { TableExample } from './views/Table';
@@ -13,19 +15,14 @@ import { DialogExample } from './views/Dialog';
 import { SliderExample } from './views/Slider';
 import { SwitchExample } from './views/Switch';
 import { ButtonExample } from './views/Buttons';
-import { Code } from '@/components/astryx/Code';
-import { Grid } from '@/components/astryx/Grid';
-import { Link } from '@/components/astryx/Link';
-import { Text } from '@/components/astryx/Text';
 import { DividerExample } from './views/Divider';
 import { HeadingExample } from './views/Heading';
 import { StepperExample } from './views/Stepper';
-import { Stack } from '@/components/astryx/Stack';
+import { Tab, Tabs } from '@/components/ui/Tabs';
 import { Link as RouterLink } from 'react-router';
 import { MoreMenuExample } from './views/MoreMenu';
 import { SelectorExample } from './views/Selector';
 import { TextAreaExample } from './views/TextArea';
-import { Center } from '@/components/astryx/Center';
 import { Currency } from '@/components/ui/Currency';
 import { DateInputExample } from './views/DateInput';
 import { FileInputExample } from './views/FileInput';
@@ -33,26 +30,26 @@ import { RadioListExample } from './views/RadioList';
 import { TextInputExample } from './views/TextInput';
 import { TimeInputExample } from './views/TimeInput';
 import { TimestampExample } from './views/Timestamp';
-import { Heading } from '@/components/astryx/Heading';
 import { EmptyStateExample } from './views/EmptyState';
 import { FileViewerExample } from './views/FileViewer';
 import { IconButtonExample } from './views/IconButton';
 import { CollapsibleExample } from './views/Collapsible';
 import { NumberInputExample } from './views/NumberInput';
 import { ProgressBarExample } from './views/ProgressBar';
-import { CodeBlock } from '@/components/astryx/CodeBlock';
+import { Collapsible } from '@/components/ui/Collapsible';
 import { DropdownMenuExample } from './views/DropdownMenu';
 import { MetadataListExample } from './views/MetadataList';
-import { Tab, TabList } from '@/components/astryx/TabList';
-import { Blockquote } from '@/components/astryx/Blockquote';
 import { CheckboxInputExample } from './views/CheckboxInput';
 import { MultiSelectorExample } from './views/MultiSelector';
-import { Collapsible } from '@/components/astryx/Collapsible';
-import { Table, proportional } from '@/components/astryx/Table';
+import { NativeText as Text } from '@/components/ui/NativeText';
 import { componentDocumentation } from '@/platform/publications';
+import { NativeStack as Stack } from '@/components/ui/NativeStack';
 import { DocumentationArticle } from '@/components/layouts/Article';
+import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
 import { viewHooks, documentationCategories } from '@/lib/documentation';
-import { SideNav, SideNavItem, SideNavSection } from '@/components/astryx/SideNav';
+import { NativeCodeBlock as CodeBlock } from '@/components/ui/NativeCodeBlock';
+import { NativeTable as Table, proportional } from '@/components/ui/NativeTable';
+import '@/platform/components/settings-navigation.css';
 
 const article = {
     description: 'Build interfaces with LongLink Views and components.',
@@ -96,7 +93,7 @@ const previews = new Map(
         Grid: <GridExample />,
         // Keep article section spacing out of the centered heading thumbnail.
         Heading: (
-            <Stack className="[&_:is(.astryx-heading,.view-heading)]:mt-0">
+            <Stack className="[&_:is(.native-heading,.view-heading)]:mt-0">
                 <HeadingExample />
             </Stack>
         ),
@@ -105,12 +102,12 @@ const previews = new Map(
         Link: <LinkExample />,
         // Show only the navigation in the thumbnail; the full Menu has a fixed-width sidebar and content panel.
         Menu: (
-            <SideNav className="h-auto w-full">
-                <SideNavSection title="Settings">
-                    <SideNavItem label="Profile" isSelected size="sm" />
-                    <SideNavItem label="Workflow" size="sm" />
-                </SideNavSection>
-            </SideNav>
+            <nav aria-label="Settings" className="settings-navigation w-full">
+                <a href="#profile" aria-current="location">
+                    Profile
+                </a>
+                <a href="#workflow">Workflow</a>
+            </nav>
         ),
         MetadataList: <MetadataListExample />,
         MoreMenu: <MoreMenuExample />,
@@ -127,10 +124,10 @@ const previews = new Map(
         Token: <TokenExample />,
         // Keep the thumbnail focused on the tab strip rather than its panel content.
         Tabs: (
-            <TabList value="overview" onChange={() => undefined} size="sm">
+            <Tabs value="overview" gap={0}>
                 <Tab label="Overview" value="overview" />
                 <Tab label="Activity" value="activity" />
-            </TabList>
+            </Tabs>
         ),
         Text: <TextExample />,
         TextArea: <TextAreaExample />,
@@ -148,14 +145,6 @@ export default function DocsArticleRoute() {
                 <Heading id="views" level={1}>
                     Views
                 </Heading>
-                <Blockquote className="border-s-(--color-text-orange) text-(--color-text-orange)">
-                    <Stack gap={0}>
-                        <Text type="inherit">Beta notice: This page is being built.</Text>
-                        <Link color="inherit" href={article.editUrl} hasUnderline isExternalLink type="inherit">
-                            Edit on GitHub
-                        </Link>
-                    </Stack>
-                </Blockquote>
                 <Text as="p">
                     Create each interface as a .jsx file exporting a default React component. LongLink supplies UI
                     components, hooks such as useState() and useEffect(), fragments, queries, and scoped requests
@@ -172,7 +161,7 @@ export default function Item({ params }) {
                     title="items/[item].jsx"
                     hasLanguageLabel={false}
                 />
-                <Collapsible trigger="API reference" chevronPosition="start" defaultIsOpen={false}>
+                <Collapsible trigger="API reference" defaultIsOpen={false}>
                     <Table
                         idKey="name"
                         density="compact"
@@ -197,7 +186,7 @@ export default function Item({ params }) {
                                 width: proportional(1),
                                 renderCell: (api) => (
                                     <Stack gap={0}>
-                                        <Code className="self-start">{api.name}</Code>
+                                        <code className="inline-code self-start">{api.name}</code>
                                         <Text type="supporting">{api.description}</Text>
                                     </Stack>
                                 ),
@@ -205,40 +194,6 @@ export default function Item({ params }) {
                         ]}
                     />
                 </Collapsible>
-                <Heading level={2}>Compact confirmations</Heading>
-                <Text as="p">
-                    Use useConfirm() for title-only Continue/Cancel confirmations. Render its element once; no separate
-                    open state is needed. Description is optional. Cancel receives initial focus and Escape cancels;
-                    backdrop clicks do not dismiss. While an action runs, loading prevents repeated submissions and
-                    dismissal, including hide() and replacement through show(). Success closes the confirmation; failure
-                    keeps it open for retry. Scoped request failures are reported by the host; other failures appear in
-                    the dialog. Focus returns to the trigger after dismissal.
-                </Text>
-                <CodeBlock
-                    language="jsx"
-                    title="variants.jsx"
-                    hasLanguageLabel={false}
-                    code={`export default function Variants() {
-  const confirmation = useConfirm();
-
-  return (
-    <>
-      <Button label="Nuova variante" onClick={() => confirmation.show({
-        title: 'Conferma variante A',
-        cancelLabel: 'Annulla',
-        actionLabel: 'Continua',
-        onAction: async () => {
-          await request('/api/variants', {
-            method: 'POST',
-            json: { variant: 'A' },
-          });
-        },
-      })} />
-      {confirmation.element}
-    </>
-  );
-}`}
-                />
                 {documentationCategories
                     .filter((category) => category !== 'Runtime')
                     .map((category) => (
@@ -260,7 +215,7 @@ export default function Item({ params }) {
                                                 maxWidth="100%"
                                             >
                                                 {/* Constrain artwork before scaling so intrinsic control sizes cannot widen the card. */}
-                                                <Center className="h-40 min-w-0 overflow-hidden" width="100%">
+                                                <div className="flex h-40 w-full min-w-0 items-center justify-center overflow-hidden">
                                                     <Stack
                                                         className="min-w-0 scale-90 [&>*]:min-w-0 [&>*]:max-w-full"
                                                         width="100%"
@@ -269,10 +224,10 @@ export default function Item({ params }) {
                                                         gap={0}
                                                     >
                                                         {previews.get(component.name) ?? (
-                                                            <Code>{`<${component.name} />`}</Code>
+                                                            <code className="inline-code">{`<${component.name} />`}</code>
                                                         )}
                                                     </Stack>
-                                                </Center>
+                                                </div>
                                             </Card>
                                             <Text type="supporting">
                                                 {component.category === 'Action' || component.category === 'Form'

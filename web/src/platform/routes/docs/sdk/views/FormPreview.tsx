@@ -1,9 +1,9 @@
 import { Form } from '@/components/ui/Form';
-import { Text } from '@/components/astryx/Text';
 import { Button } from '@/components/ui/Button';
 import { useState, type ReactNode } from 'react';
-import { Stack } from '@/components/astryx/Stack';
-import { CodeBlock } from '@/components/astryx/CodeBlock';
+import { NativeText as Text } from '@/components/ui/NativeText';
+import { NativeStack as Stack } from '@/components/ui/NativeStack';
+import { NativeCodeBlock as CodeBlock } from '@/components/ui/NativeCodeBlock';
 
 /** Exercises the real Form locally and displays submitted fields without sending API requests. */
 export default function FormPreview({ children, stepped = false }: { children: ReactNode; stepped?: boolean }) {

@@ -1,18 +1,13 @@
+import './article.css';
 import { Page } from '@/components/Page';
-import { Link } from '@/components/astryx/Link';
-import { Text } from '@/components/astryx/Text';
-import { Stack } from '@/components/astryx/Stack';
 import { Divider } from '@/components/ui/Divider';
-import { Button } from '@/components/astryx/Button';
-import { ArrowLeft, ArrowRight } from 'lucide-react';
-import { Outline } from '@/components/astryx/Outline';
-import { useLocation, useNavigate } from 'react-router';
-import { PageContainer } from '@/components/PageContainer';
 import { documentationPaths } from '@/platform/publications';
 import { PathBreadcrumb } from '@/components/breadcrumb/Path';
-import { BreadcrumbItem } from '@/components/astryx/Breadcrumbs';
-import { Layout, LayoutContent, LayoutHeader } from '@/components/astryx/Layout';
-import { useEffect, useEffectEvent, type ComponentProps, type ReactNode } from 'react';
+import { useEffect, useEffectEvent, type ReactNode } from 'react';
+import { ArrowLeft, ArrowRight, ExternalLink } from 'lucide-react';
+import { BreadcrumbItem } from '@/components/breadcrumb/Breadcrumbs';
+import { ArticleOutline, type ArticleOutlineItem } from './ArticleOutline';
+import { Link as RouterLink, useLocation, useNavigate } from 'react-router';
 
 /** Labels for public article route segments shared with visible breadcrumbs. */
 const articleRouteLabels = {
@@ -40,7 +35,7 @@ type ArticleMetadata = {
     description: string;
     lastUpdated: string;
     editUrl: string;
-    toc: ComponentProps<typeof Outline>['items'];
+    toc: readonly ArticleOutlineItem[];
 };
 
 /** Publishes authored documentation within one shared metadata and navigation shell. */
@@ -49,7 +44,7 @@ export function DocumentationArticle({ article, children }: { article: ArticleMe
     return (
         <ArticleRenderer
             article={article}
-            className="[--text-body-size:var(--font-size-lg)] [--article-heading-spacing:calc(var(--spacing-9)*2)] [--font-family-heading:var(--font-family-handwritten)] [&_:is(.astryx-heading,.view-heading):not(dialog_*)]:uppercase [&_:is(.astryx-heading,.view-heading):not(dialog_*)]:tracking-wide"
+            className="[--text-body-size:var(--font-size-lg)] [--article-heading-spacing:calc(var(--spacing-9)*2)] [--font-family-heading:var(--font-family-handwritten)] [&_:is(.native-heading,.view-heading):not(dialog_*)]:uppercase [&_:is(.native-heading,.view-heading):not(dialog_*)]:tracking-wide"
             paths={documentationPaths}
         >
             {children}
@@ -92,74 +87,34 @@ function ArticleRenderer({
     // Keep public articles and documentation in the same flat reading columns.
     return (
         <Page description={article.description} title={article.title}>
-            <Layout
-                height="auto"
-                header={
-                    <LayoutHeader padding={0}>
-                        <Stack>
-                            <Stack className="relative" height={64} width="100%">
-                                <PageContainer height="100%" justify="center" maxWidth={1064} paddingInline={6}>
-                                    <Stack direction="horizontal" gap={6} width="100%">
-                                        <PageContainer className="min-w-0" maxWidth={720}>
-                                            <PathBreadcrumb
-                                                className="min-w-0 overflow-hidden"
-                                                labels={articleRouteLabels}
-                                                root={root}
-                                            />
-                                        </PageContainer>
-                                        {article.toc.length ? (
-                                            <Stack className="hidden shrink-0 lg:flex" width={224} />
-                                        ) : null}
-                                    </Stack>
-                                </PageContainer>
-                            </Stack>
-                        </Stack>
-                    </LayoutHeader>
-                }
-                content={
-                    <LayoutContent isScrollable={false} padding={6}>
-                        <Stack className="mx-auto" direction="horizontal" gap={6} maxWidth={1016} width="100%">
-                            <PageContainer className="min-w-0" maxWidth={720}>
-                                <article
-                                    className={`space-y-7 [&_:is(h2,h3,h4,h5,h6):not(dialog_*)]:[margin-block-start:var(--article-heading-spacing,var(--spacing-8))] [&_p]:opacity-90${className ? ` ${className}` : ''}`}
-                                >
-                                    {children}
-                                    <Stack as="footer" className="pb-30" gap={3} paddingBlockStart={8}>
-                                        <ArticleFooter
-                                            lastUpdated={article.lastUpdated}
-                                            editUrl={article.editUrl}
-                                            paths={paths}
-                                        />
-                                    </Stack>
-                                </article>
-                            </PageContainer>
-                            {article.toc.length ? (
-                                <Stack
-                                    className="sticky top-20 hidden shrink-0 self-start lg:flex"
-                                    padding={5}
-                                    width={224}
-                                >
-                                    <ArticleOutline items={article.toc} />
-                                </Stack>
-                            ) : null}
-                        </Stack>
-                    </LayoutContent>
-                }
-            />
+            <header className="article-header">
+                <div className="article-columns">
+                    <div className="article-reading-column">
+                        <PathBreadcrumb className="min-w-0 overflow-hidden" labels={articleRouteLabels} root={root} />
+                    </div>
+                    {article.toc.length ? <div aria-hidden="true" className="article-outline-spacer" /> : null}
+                </div>
+            </header>
+            <div className="article-content">
+                <div className="article-columns">
+                    <div className="article-reading-column">
+                        <article
+                            className={`space-y-7 [&_:is(h2,h3,h4,h5,h6):not(dialog_*)]:[margin-block-start:var(--article-heading-spacing,var(--spacing-8))] [&_p]:opacity-90${className ? ` ${className}` : ''}`}
+                        >
+                            {children}
+                            <footer className="article-footer">
+                                <ArticleFooter
+                                    lastUpdated={article.lastUpdated}
+                                    editUrl={article.editUrl}
+                                    paths={paths}
+                                />
+                            </footer>
+                        </article>
+                    </div>
+                    {article.toc.length ? <ArticleOutline items={article.toc} /> : null}
+                </div>
+            </div>
         </Page>
-    );
-}
-
-/** Renders the Platform article's authored table of contents. */
-function ArticleOutline({ items }: { items: ComponentProps<typeof Outline>['items'] }) {
-    // Keep the heading and navigation within the same labelled landmark.
-    return (
-        <Stack as="aside" aria-label="On this page" gap={3}>
-            <Text type="label" weight="semibold">
-                On this page
-            </Text>
-            <Outline items={items} density="compact" label="On this page" />
-        </Stack>
     );
 }
 
@@ -224,32 +179,54 @@ export function ArticleFooter({
     return (
         <>
             {currentPage >= 0 ? (
-                <Stack aria-label="Article page navigation" direction="horizontal" hAlign="between" width="100%">
-                    <Button
-                        aria-keyshortcuts="ArrowLeft"
-                        href={previousPage ? `${previousPage}/` : undefined}
-                        icon={<ArrowLeft aria-hidden size={16} />}
-                        isDisabled={previousPage === undefined}
-                        label="Previous"
-                    />
-                    <Button
-                        aria-keyshortcuts="ArrowRight"
-                        endContent={<ArrowRight aria-hidden size={16} />}
-                        href={nextPage ? `${nextPage}/` : undefined}
-                        isDisabled={nextPage === undefined}
-                        label="Next"
-                    />
-                </Stack>
+                <nav aria-label="Article page navigation" className="article-page-navigation">
+                    {previousPage === undefined ? (
+                        <button
+                            type="button"
+                            className="article-page-link"
+                            disabled
+                            aria-disabled="true"
+                            aria-keyshortcuts="ArrowLeft"
+                        >
+                            <ArrowLeft aria-hidden size={16} />
+                            Previous
+                        </button>
+                    ) : (
+                        <RouterLink className="article-page-link" to={`${previousPage}/`} aria-keyshortcuts="ArrowLeft">
+                            <ArrowLeft aria-hidden size={16} />
+                            Previous
+                        </RouterLink>
+                    )}
+                    {nextPage === undefined ? (
+                        <button
+                            type="button"
+                            className="article-page-link"
+                            disabled
+                            aria-disabled="true"
+                            aria-keyshortcuts="ArrowRight"
+                        >
+                            Next
+                            <ArrowRight aria-hidden size={16} />
+                        </button>
+                    ) : (
+                        <RouterLink className="article-page-link" to={`${nextPage}/`} aria-keyshortcuts="ArrowRight">
+                            Next
+                            <ArrowRight aria-hidden size={16} />
+                        </RouterLink>
+                    )}
+                </nav>
             ) : null}
             <Divider />
-            <Stack direction="horizontal" gap={3} hAlign="between" vAlign="center" wrap="wrap">
-                <Text type="supporting">{`Last updated: ${dateFormatter.format(new Date(lastUpdated))}`}</Text>
+            <div className="article-metadata">
+                <span>{`Last updated: ${dateFormatter.format(new Date(lastUpdated))}`}</span>
                 {editUrl ? (
-                    <Link href={editUrl} hasUnderline isExternalLink type="supporting">
+                    <a href={editUrl} target="_blank" rel="noopener noreferrer">
                         Edit this page
-                    </Link>
+                        <ExternalLink aria-hidden size={12} />
+                        <span className="sr-only"> (opens in a new tab)</span>
+                    </a>
                 ) : null}
-            </Stack>
+            </div>
         </>
     );
 }

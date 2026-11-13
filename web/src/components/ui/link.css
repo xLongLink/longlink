@@ -1,0 +1,65 @@
+@layer components {
+    .view-link {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--spacing-0-5);
+        background: transparent;
+        border: none;
+        padding: 0;
+        position: relative;
+        color: var(--color-text-accent);
+        font: inherit;
+        text-align: inherit;
+        text-decoration: none;
+        cursor: pointer;
+        transition:
+            color var(--duration-fast) var(--ease-standard),
+            text-decoration var(--duration-fast) var(--ease-standard);
+    }
+
+    .view-link:focus-visible {
+        outline: var(--focus-outline-width) solid var(--ring);
+        outline-offset: var(--focus-outline-offset);
+    }
+
+    .view-link[aria-disabled='true'] {
+        cursor: default;
+        opacity: 0.5;
+        pointer-events: none;
+    }
+
+    .view-link:not([aria-disabled='true']):active {
+        background-color: var(--color-overlay-pressed);
+    }
+
+    @media (hover: hover) {
+        .view-link:not([aria-disabled='true']):hover {
+            color: color-mix(in srgb, var(--color-text-accent), var(--color-tint-hover) 15%);
+            text-decoration: underline;
+        }
+    }
+
+    .view-link-loading {
+        display: inline-flex;
+        vertical-align: middle;
+    }
+
+    .view-link-spinner {
+        width: calc(var(--spacing-4) - var(--spacing-0-5));
+        height: calc(var(--spacing-4) - var(--spacing-0-5));
+        color: var(--color-text-primary);
+        animation: view-link-spin 1s linear infinite;
+    }
+
+    @keyframes view-link-spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .view-link-spinner {
+            animation: none;
+        }
+    }
+}

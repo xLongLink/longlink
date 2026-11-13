@@ -5,13 +5,12 @@ import type { z } from 'zod';
 import * as icons from '@/lib/icons';
 import { it, expect, vi } from 'vitest';
 import { useApi } from '@/lib/hooks/use-api';
+import { Route, Routes } from 'react-router';
 import { withMounted } from '../../../render';
 import { ApiErrorContext } from '@/lib/errors';
-import { Link, Route, Routes } from 'react-router';
 import userEvent from '@testing-library/user-event';
 import { ApiBoundary } from '@/components/ApiBoundary';
 import Settings from '@/platform/routes/orgs/Settings';
-import { LinkProvider } from '@/components/astryx/Link';
 import Organization from '@/platform/layouts/Organization';
 import { IconRequestContext } from '@/components/ui/contexts';
 import { renderPlatform, membership, user } from '../../render';
@@ -70,7 +69,7 @@ async function withOrganizationSettings(
                 <ApiErrorContext value={(error) => errors.push(error)}>
                     <AuthenticatedUserContext value={user}>
                         <IconRequestContext value={icons.load}>
-                            <LinkProvider component={Link}>
+                            <>
                                 <ApiBoundary>
                                     <AccountRole />
                                 </ApiBoundary>
@@ -82,7 +81,7 @@ async function withOrganizationSettings(
                                         </Route>
                                     </Route>
                                 </Routes>
-                            </LinkProvider>
+                            </>
                         </IconRequestContext>
                     </AuthenticatedUserContext>
                 </ApiErrorContext>
@@ -182,7 +181,7 @@ it('refreshes current membership and account permissions after self-demotion', a
             // Act
             await chooseMemberAction(output, user.name, 'Set as Read');
 
-            const confirm = Array.from(document.querySelectorAll<HTMLButtonElement>('dialog[open] button')).find(
+            const confirm = Array.from(document.querySelectorAll<HTMLButtonElement>('[role="dialog"] button')).find(
                 (button) => button.textContent === 'Confirm'
             );
 
@@ -196,7 +195,7 @@ it('refreshes current membership and account permissions after self-demotion', a
             );
             await vi.waitFor(() => expect(output.querySelector('thead')?.textContent).not.toContain('Actions'));
             expect(output.querySelector('table button[aria-haspopup="menu"]')).toBeNull();
-            await vi.waitFor(() => expect(document.querySelector('dialog[open]')).toBeNull());
+            await vi.waitFor(() => expect(document.querySelector('[role="dialog"]')).toBeNull());
             expect(requests).toEqual(
                 expect.arrayContaining([
                     `PATCH ${base}/members/${user.id}`,
@@ -239,7 +238,7 @@ it('keeps a replacement member confirmation open when an older action completes'
             // Act
             await chooseMemberAction(output, 'Mina', 'Set as Write');
 
-            const confirm = Array.from(document.querySelectorAll<HTMLButtonElement>('dialog[open] button')).find(
+            const confirm = Array.from(document.querySelectorAll<HTMLButtonElement>('[role="dialog"] button')).find(
                 (button) => button.textContent === 'Confirm'
             );
 
@@ -248,16 +247,16 @@ it('keeps a replacement member confirmation open when an older action completes'
             await act(async () => confirm.click());
             await vi.waitFor(() => expect(requests).toContain(`PATCH ${base}/members/${members[1].user.id}`));
 
-            const cancel = Array.from(document.querySelectorAll<HTMLButtonElement>('dialog[open] button')).find(
+            const cancel = Array.from(document.querySelectorAll<HTMLButtonElement>('[role="dialog"] button')).find(
                 (button) => button.textContent === 'Cancel'
             );
 
             if (!cancel) throw new Error('Expected the pending action to remain dismissible');
 
             await act(async () => cancel.click());
-            await vi.waitFor(() => expect(document.querySelector('dialog[open]')).toBeNull());
+            await vi.waitFor(() => expect(document.querySelector('[role="dialog"]')).toBeNull());
             await chooseMemberAction(output, 'Noah', 'Set as Read');
-            expect(document.querySelector('dialog[open]')?.textContent).toContain('Change Noah to read?');
+            expect(document.querySelector('[role="dialog"]')?.textContent).toContain('Change Noah to read?');
 
             await act(async () => finishChange(new Response(null, { status: 204 })));
 
@@ -270,7 +269,7 @@ it('keeps a replacement member confirmation open when an older action completes'
                 ).toContain('write')
             );
 
-            const replacement = document.querySelector('dialog[open]');
+            const replacement = document.querySelector('[role="dialog"]');
             expect(replacement).not.toBeNull();
             expect(replacement?.textContent).toContain('Change Noah to read?');
             expect(requests).not.toContain(`PATCH ${base}/members/${members[2].user.id}`);
@@ -292,14 +291,14 @@ it.each([
         membership,
         members,
         async (output) => {
-            const disclosure = Array.from(output.querySelectorAll('button[aria-expanded]')).find(
-                (button) => button.textContent === group
+            const disclosure = Array.from(output.querySelectorAll('summary')).find(
+                (summary) => summary.textContent === group
             );
 
-            const selected = output.querySelector(`a[href$="#${fragment}"][aria-current="page"]`);
+            const selected = output.querySelector(`a[href$="#${fragment}"][aria-current="location"]`);
 
             // Assert
-            expect(disclosure?.getAttribute('aria-expanded')).toBe('true');
+            expect(disclosure?.parentElement?.hasAttribute('open')).toBe(true);
             expect(selected).not.toBeNull();
             expect(selected?.closest('[inert], [hidden]')).toBeNull();
         },
@@ -338,7 +337,7 @@ it.each(['admin', 'owner'] as const)('leaves revoked organization access after s
             // Act
             await chooseMemberAction(output, user.name, 'Remove member');
 
-            const confirm = Array.from(document.querySelectorAll<HTMLButtonElement>('dialog[open] button')).find(
+            const confirm = Array.from(document.querySelectorAll<HTMLButtonElement>('[role="dialog"] button')).find(
                 (button) => button.textContent === 'Remove member'
             );
 
@@ -353,7 +352,7 @@ it.each(['admin', 'owner'] as const)('leaves revoked organization access after s
             );
             expect(client.getQueryData(['api', base])).toBeUndefined();
             expect(output.querySelector('table')).toBeNull();
-            expect(document.querySelector('dialog[open]')).toBeNull();
+            expect(document.querySelector('[role="dialog"]')).toBeNull();
             expect(requests).toEqual([`DELETE ${base}/members/${user.id}`, 'GET /api/v1/me/organizations']);
         });
     } finally {

@@ -5,10 +5,8 @@ import { it, vi, expect } from 'vitest';
 import { MemoryRouter } from 'react-router';
 import { createRoot } from 'react-dom/client';
 import { ApiErrorContext } from '@/lib/errors';
-import { Theme } from '@astryxdesign/core/theme';
-import { stoneTheme } from '@/lib/generated/stone.js';
 import Invoices from '@/platform/routes/orgs/Invoices';
-import { LayerProvider } from '@/components/astryx/LayerProvider';
+import { AppearanceProvider } from '@/components/Appearance';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 const invoice = {
@@ -45,15 +43,13 @@ async function withInvoices(
         flushSync(() => {
             root.render(
                 <MemoryRouter>
-                    <Theme theme={stoneTheme} mode="dark">
-                        <LayerProvider>
-                            <QueryClientProvider client={client}>
-                                <ApiErrorContext value={(error) => errors.push(error)}>
-                                    <Invoices base={base} canManage={canManage} />
-                                </ApiErrorContext>
-                            </QueryClientProvider>
-                        </LayerProvider>
-                    </Theme>
+                    <AppearanceProvider preference={{ theme: 'dark', accent: 'neutral' }}>
+                        <QueryClientProvider client={client}>
+                            <ApiErrorContext value={(error) => errors.push(error)}>
+                                <Invoices base={base} canManage={canManage} />
+                            </ApiErrorContext>
+                        </QueryClientProvider>
+                    </AppearanceProvider>
                 </MemoryRouter>
             );
         });

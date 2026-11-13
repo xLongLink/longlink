@@ -3,14 +3,14 @@ import { TextField } from './Field';
 import { AuthLayout } from './AuthLayout';
 import { api, ApiError } from '@/lib/api';
 import { useForm } from 'react-hook-form';
+import { CircleCheck } from 'lucide-react';
 import { passwordSchema } from './validation';
-import { Stack } from '@/components/astryx/Stack';
 import { Divider } from '@/components/ui/Divider';
-import { Banner } from '@/components/astryx/Banner';
-import { Button } from '@/components/astryx/Button';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useAnnounce } from '@astryxdesign/core/hooks';
+import { useAnnouncement } from '@/components/ui/announcement';
 import { useFragmentToken } from '@/lib/hooks/use-fragment-token';
+import { NativeStack as Stack } from '@/components/ui/NativeStack';
+import { NativeButton as Button } from '@/components/ui/NativeButton';
 import { useVerification, type VerificationRequest } from '@/lib/hooks/use-verification';
 
 const PASSWORD_RESET_TOKEN_KEY = 'longlink.password-reset.token';
@@ -29,12 +29,18 @@ function isBadTokenError(cause: unknown): boolean {
 /** Accepts a password reset token and saves a new password. */
 export default function ResetPassword() {
     const token = useFragmentToken(PASSWORD_RESET_TOKEN_KEY);
-    const announce = useAnnounce();
 
     const form = useForm<ResetPasswordValues>({
         defaultValues: { password: '' },
         resolver: zodResolver(resetPasswordSchema),
     });
+
+    const confirmation = 'Your password has been reset. You can now sign in.';
+
+    const { root, channel } = useAnnouncement(
+        form.formState.isSubmitSuccessful && !form.formState.errors.root?.credential ? confirmation : '',
+        'event'
+    );
 
     /** Returns the credential outcome while preserving cancellation of token-storage cleanup. */
     async function verify({
@@ -95,11 +101,16 @@ export default function ResetPassword() {
                 <Button isLoading label="Reset password" variant="primary" />
             ) : form.formState.isSubmitSuccessful ? (
                 <Stack gap={4}>
-                    <Banner status="success" title="Your password has been reset. You can now sign in." />
+                    <div ref={root} className="native-auth-banner" data-status="success">
+                        <CircleCheck aria-hidden="true" className="size-5 shrink-0" />
+                        <p>{confirmation}</p>
+                        <span ref={channel} className="sr-only" role="status" aria-atomic="true" />
+                    </div>
                     <Button href="/login" label="Back to sign in" variant="primary" />
                 </Stack>
             ) : (
                 <form
+                    noValidate
                     action={() =>
                         form.handleSubmit(async (payload) => {
                             // Publish the saved result only after the password change succeeds.
@@ -111,9 +122,6 @@ export default function ResetPassword() {
 
                                 return;
                             }
-
-                            // Announce only the completed password change, not a banner render.
-                            announce('Your password has been reset. You can now sign in.');
                         })()
                     }
                 >
@@ -121,9 +129,8 @@ export default function ResetPassword() {
                         <TextField
                             control={form.control}
                             name="password"
-                            isRequired
+                            required
                             label="New password"
-                            width="100%"
                             type="password"
                         />
                         <Button label="Reset password" type="submit" variant="primary" />

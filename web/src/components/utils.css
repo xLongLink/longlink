@@ -1,0 +1,53 @@
+@layer components {
+    .page-status {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 0;
+        min-height: 70dvh;
+    }
+
+    .native-loading {
+        display: inline-flex;
+        flex-direction: column;
+        align-items: center;
+        gap: var(--spacing-2);
+        color: var(--foreground);
+        font-size: var(--text-body-size);
+        font-weight: var(--font-weight-bold);
+        line-height: var(--text-body-leading);
+    }
+
+    .native-loading > svg {
+        width: var(--spacing-5);
+        height: var(--spacing-5);
+        color: var(--primary);
+        animation: view-action-spin 1s linear infinite;
+    }
+
+    .native-empty-copy {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: var(--spacing-1);
+        min-width: 0;
+        max-width: 100%;
+    }
+
+    .native-empty-copy[data-description] {
+        max-width: min(100%, 360px);
+    }
+
+    .native-empty-description {
+        color: var(--muted-foreground);
+        font-size: var(--text-body-size);
+        line-height: var(--text-body-leading);
+        text-wrap: pretty;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .native-loading > svg {
+            animation: none;
+        }
+    }
+}

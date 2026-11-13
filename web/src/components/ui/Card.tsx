@@ -1,10 +1,26 @@
 import { NavigationLink } from './Link';
-import type { MouseEvent, ReactNode } from 'react';
-import { LinkProvider } from '@/components/astryx/Link';
-import { Card as AstryxCard } from '@/components/astryx/Card';
-import { ClickableCard } from '@/components/astryx/ClickableCard';
-import { SelectableCard } from '@/components/astryx/SelectableCard';
-import { hasInteractiveAncestor, hasTextSelection } from '@astryxdesign/core/hooks';
+import type { CSSProperties, MouseEvent, ReactNode } from 'react';
+
+/** Surface gestures must not steal nested controls, portal events, or text selection. */
+function isSurfaceActivation(event: MouseEvent<HTMLElement>) {
+    const root = event.currentTarget;
+    const target = event.target;
+
+    if (event.defaultPrevented || !(target instanceof Element) || !root.contains(target)) return false;
+
+    if (root.closest('[inert]')) return false;
+
+    // A nested card or control owns its event, including disabled and editable controls.
+    const control = target.closest(
+        'a,button,input,select,textarea,summary,label,[contenteditable]:not([contenteditable="false"]),[role="button"],[role="link"],[role="checkbox"],[role="radio"],[role="switch"],[role="tab"],[role="menuitem"],[role="option"],[role="combobox"],[role="listbox"],[role="slider"],[role="spinbutton"],[tabindex],[data-pressable-container]'
+    );
+
+    if (control && control !== root && root.contains(control)) return false;
+
+    const selection = root.ownerDocument.getSelection();
+
+    return !selection || selection.isCollapsed || !root.contains(selection.anchorNode);
+}
 
 /** Activates the card's native anchor synchronously, preserving the user's navigation gesture. */
 function activateLink(event: MouseEvent<HTMLElement>) {
@@ -18,6 +34,10 @@ function activateLink(event: MouseEvent<HTMLElement>) {
 
     // Open during the original middle-button event so the browser retains its tab and focus policy.
     if (event.button === 1) {
+        const destination = new URL(anchor.href);
+
+        if (destination.protocol !== 'http:' && destination.protocol !== 'https:') return;
+
         window.open(anchor.href, '_blank', 'noopener,noreferrer');
 
         return;
@@ -74,7 +94,7 @@ type CardProps = {
     onChange?: (isSelected: boolean) => void;
 };
 
-/** Infers the Astryx card from one shared set of props, giving selection priority over activation. */
+/** Keeps native controls separate from card content, with selection taking priority over actions and links. */
 export function Card({
     label = 'Card',
     padding = 4,
@@ -86,71 +106,141 @@ export function Card({
     isDisabled = false,
     isSelected = false,
     onChange,
-    ...props
+    children,
+    width,
+    height,
+    maxWidth,
+    minHeight,
+    inert,
+    'aria-hidden': ariaHidden,
 }: CardProps) {
-    // Use Astryx's controlled selection behavior whenever a selection callback is supplied.
-    if (onChange !== undefined) {
-        return (
-            <SelectableCard
-                {...props}
-                className={isClipped ? 'overflow-hidden' : undefined}
-                padding={padding}
-                variant={variant}
-                label={label}
-                isSelected={isSelected}
-                onChange={onChange}
-                isDisabled={isDisabled}
-            />
-        );
-    }
+    const mode =
+        onChange !== undefined
+            ? 'selection'
+            : onClick !== undefined
+              ? 'action'
+              : href !== undefined
+                ? 'link'
+                : undefined;
 
-    // Delegate actions and navigation to Astryx's clickable card.
-    if (onClick !== undefined || href !== undefined) {
-        return (
-            <LinkProvider component={NavigationLink}>
-                <ClickableCard
-                    {...props}
-                    className={isClipped ? 'overflow-hidden' : undefined}
-                    padding={padding}
-                    variant={variant}
-                    label={label}
-                    onClick={href !== undefined ? activateLink : onClick}
-                    onClickCapture={(event) => {
-                        // Run surface actions once for both pointer and keyboard activation of the primary link.
-                        if (!isDisabled && event.target === event.currentTarget.querySelector(':scope > a')) {
-                            onClick?.(event);
+    const blocked = isDisabled || inert;
+
+    const style: CSSProperties & { '--view-card-padding': string } = {
+        width,
+        height,
+        maxWidth,
+        minHeight,
+        '--view-card-padding': `var(--spacing-${String(padding).replace('.', '-')})`,
+    };
+
+    // The surface forwards only its own gestures; native controls supply keyboard and accessibility semantics.
+    return (
+        <div
+            className="view-card"
+            data-variant={variant}
+            data-mode={mode}
+            data-pressable-container={mode ? '' : undefined}
+            data-selected={mode === 'selection' && isSelected ? '' : undefined}
+            data-disabled={mode && isDisabled ? '' : undefined}
+            data-clipped={isClipped ? '' : undefined}
+            data-scrollable={height !== undefined && height !== 'auto' ? '' : undefined}
+            inert={inert}
+            aria-hidden={ariaHidden}
+            style={style}
+            onClick={
+                mode && !blocked
+                    ? (event) => {
+                          if (event.button !== 0 || !isSurfaceActivation(event)) return;
+
+                          if (mode === 'selection') onChange?.(!isSelected);
+                          else if (mode === 'action') onClick?.(event);
+                          else activateLink(event);
+                      }
+                    : undefined
+            }
+            onMouseUp={
+                mode === 'link' && !blocked
+                    ? (event) => {
+                          if (event.button === 1 && isSurfaceActivation(event)) activateLink(event);
+                      }
+                    : undefined
+            }
+        >
+            {mode === 'selection' ? (
+                <input
+                    className="view-card-control"
+                    type="checkbox"
+                    aria-label={label}
+                    aria-disabled={isDisabled || undefined}
+                    checked={isSelected}
+                    onClick={
+                        blocked
+                            ? (event) => {
+                                  event.preventDefault();
+                                  event.stopPropagation();
+                              }
+                            : undefined
+                    }
+                    onChange={() => {
+                        if (!blocked) onChange?.(!isSelected);
+                    }}
+                    onKeyDown={(event) => {
+                        if (event.nativeEvent.isComposing || event.keyCode === 229) return;
+
+                        if (blocked && (event.key === ' ' || event.key === 'Enter')) event.preventDefault();
+                        else if (event.key === 'Enter') {
+                            event.preventDefault();
+                            onChange?.(!isSelected);
                         }
                     }}
-                    onMouseUpCapture={(event) => {
-                        // Proxy middle-clicks before Astryx's window.open fallback, leaving nested controls independent.
-                        if (
-                            isDisabled ||
-                            href === undefined ||
-                            event.button !== 1 ||
-                            !(event.target instanceof Element) ||
-                            hasInteractiveAncestor(event.target, event.currentTarget) ||
-                            hasTextSelection(event.currentTarget)
-                        )
-                            return;
-
-                        event.stopPropagation();
-                        activateLink(event);
-                    }}
-                    href={href}
-                    target={target}
-                    isDisabled={isDisabled}
                 />
-            </LinkProvider>
-        );
-    }
-
-    // Keep content-only cards non-interactive.
-    return (
-        <AstryxCard
-            {...props}
-            className={isClipped ? 'overflow-hidden' : undefined}
-            padding={padding}
-            variant={variant}
-        />
+            ) : mode === 'action' ? (
+                <button
+                    className="view-card-control"
+                    type="button"
+                    aria-label={label}
+                    aria-disabled={isDisabled || undefined}
+                    onClick={(event) => {
+                        if (blocked) {
+                            event.preventDefault();
+                            event.stopPropagation();
+                        } else onClick?.(event);
+                    }}
+                    onKeyDown={
+                        blocked
+                            ? (event) => {
+                                  if (event.key === ' ' || event.key === 'Enter') event.preventDefault();
+                              }
+                            : undefined
+                    }
+                />
+            ) : mode === 'link' ? (
+                <NavigationLink
+                    className="view-card-control"
+                    href={blocked ? undefined : href}
+                    target={blocked ? undefined : target}
+                    role="link"
+                    tabIndex={0}
+                    aria-label={label}
+                    aria-disabled={isDisabled || undefined}
+                    onClick={
+                        blocked
+                            ? (event) => {
+                                  event.preventDefault();
+                                  event.stopPropagation();
+                              }
+                            : undefined
+                    }
+                    onKeyDown={
+                        blocked
+                            ? (event) => {
+                                  if (event.key === ' ' || event.key === 'Enter') event.preventDefault();
+                              }
+                            : undefined
+                    }
+                />
+            ) : null}
+            {children}
+        </div>
     );
 }

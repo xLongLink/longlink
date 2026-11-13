@@ -1,6 +1,6 @@
 import ViewLayout from './ViewLayout';
-import { Text } from '@/components/astryx/Text';
 import { Currency } from '@/components/ui/Currency';
+import { NativeText as Text } from '@/components/ui/NativeText';
 
 /** Documents locale-aware currency formatting. */
 export default function CurrencyPage() {
@@ -8,7 +8,6 @@ export default function CurrencyPage() {
     return (
         <ViewLayout
             name="Currency"
-            isLongLinkSpecific
             properties={[
                 {
                     name: 'value',

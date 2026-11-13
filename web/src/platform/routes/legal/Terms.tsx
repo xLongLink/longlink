@@ -1,10 +1,9 @@
-import { Link } from '@/components/astryx/Link';
-import { Text } from '@/components/astryx/Text';
-import { Stack } from '@/components/astryx/Stack';
 import { legalPaths } from '@/platform/publications';
-import { Heading } from '@/components/astryx/Heading';
-import { List, ListItem } from '@/components/astryx/List';
 import { PublicArticle } from '@/components/layouts/Article';
+import { NativeLink as Link } from '@/components/ui/NativeLink';
+import { NativeText as Text } from '@/components/ui/NativeText';
+import { NativeStack as Stack } from '@/components/ui/NativeStack';
+import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
 
 const article = {
     description: 'Read the LongLink terms of service.',
@@ -86,7 +85,7 @@ export default function Terms() {
     return (
         <PublicArticle article={article} paths={legalPaths}>
             <Stack
-                className="[--font-family-heading:var(--font-family-handwritten)] [&_.astryx-heading]:tracking-wide [&_.astryx-heading]:uppercase"
+                className="[--font-family-heading:var(--font-family-handwritten)] [&_.native-heading]:tracking-wide [&_.native-heading]:uppercase"
                 gap={5}
             >
                 <Heading id="terms-of-service" level={1}>
@@ -199,50 +198,40 @@ export default function Terms() {
                     <Text as="p">
                         Use the Service lawfully and within your configured resource limits. You must not:
                     </Text>
-                    <List listStyle="disc">
-                        <ListItem
-                            label={
-                                <Text>
-                                    resell our hosted platform without our written approval (this does not prevent you
-                                    from giving your users access to your Solutions);
-                                </Text>
-                            }
-                        />
-                        <ListItem
-                            label={
-                                <Text>
-                                    use the Service for malware, phishing, spam, denial-of-service attacks, unauthorized
-                                    scanning, or other harmful activity;
-                                </Text>
-                            }
-                        />
-                        <ListItem
-                            label={
-                                <Text>access or interfere with systems, accounts, or data without authorization;</Text>
-                            }
-                        />
-                        <ListItem
-                            label={
-                                <Text>process unlawful content or content that infringes another person's rights;</Text>
-                            }
-                        />
-                        <ListItem
-                            label={
-                                <Text>
-                                    bypass access controls, tenant isolation, rate limits, or other security measures;
-                                </Text>
-                            }
-                        />
-                        <ListItem
-                            label={
-                                <Text>
-                                    run destructive tests or workloads that disrupt shared infrastructure without our
-                                    written approval; or
-                                </Text>
-                            }
-                        />
-                        <ListItem label={<Text>violate applicable sanctions or export-control laws.</Text>} />
-                    </List>
+                    <ul className="m-0 flex list-disc flex-col gap-0.5 ps-8 [&>li]:pe-2 [&>li]:py-2">
+                        <li>
+                            <Text>
+                                resell our hosted platform without our written approval (this does not prevent you from
+                                giving your users access to your Solutions);
+                            </Text>
+                        </li>
+                        <li>
+                            <Text>
+                                use the Service for malware, phishing, spam, denial-of-service attacks, unauthorized
+                                scanning, or other harmful activity;
+                            </Text>
+                        </li>
+                        <li>
+                            <Text>access or interfere with systems, accounts, or data without authorization;</Text>
+                        </li>
+                        <li>
+                            <Text>process unlawful content or content that infringes another person's rights;</Text>
+                        </li>
+                        <li>
+                            <Text>
+                                bypass access controls, tenant isolation, rate limits, or other security measures;
+                            </Text>
+                        </li>
+                        <li>
+                            <Text>
+                                run destructive tests or workloads that disrupt shared infrastructure without our
+                                written approval; or
+                            </Text>
+                        </li>
+                        <li>
+                            <Text>violate applicable sanctions or export-control laws.</Text>
+                        </li>
+                    </ul>
                     <Text as="p">
                         You are responsible for having the rights needed to submit Customer Content and use your
                         software, images, and integrations. Do not reverse engineer or circumvent the hosted platform

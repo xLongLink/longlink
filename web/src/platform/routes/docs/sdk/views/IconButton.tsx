@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import ViewLayout from './ViewLayout';
-import { Text } from '@/components/astryx/Text';
-import { Stack } from '@/components/astryx/Stack';
 import { IconButton } from '@/components/ui/IconButton';
+import { NativeText as Text } from '@/components/ui/NativeText';
+import { NativeStack as Stack } from '@/components/ui/NativeStack';
 
 /** Documents IconButton in LongLink Views. */
 export default function IconButtonPage() {

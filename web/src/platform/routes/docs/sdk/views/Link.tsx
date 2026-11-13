@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import ViewLayout from './ViewLayout';
 import { Link } from '@/components/ui/Link';
-import { Text } from '@/components/astryx/Text';
 import { Dialog } from '@/components/ui/Dialog';
-import { Stack } from '@/components/astryx/Stack';
+import { NativeText as Text } from '@/components/ui/NativeText';
+import { NativeStack as Stack } from '@/components/ui/NativeStack';
 
 /** Documents Link in LongLink Views. */
 export default function LinkPage() {

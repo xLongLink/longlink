@@ -4,9 +4,8 @@ import { ApiError } from '@/lib/api';
 import * as icons from '@/lib/icons';
 import { it, expect, vi } from 'vitest';
 import { withMounted } from '../../render';
+import { Route, Routes } from 'react-router';
 import { ApiErrorContext } from '@/lib/errors';
-import { Link, Route, Routes } from 'react-router';
-import { LinkProvider } from '@/components/astryx/Link';
 import Organization from '@/platform/layouts/Organization';
 import Layout from '@/platform/layouts/OrganizationAccess';
 import { renderPlatform, membership, user } from '../render';
@@ -50,18 +49,16 @@ it.each([
             <ApiErrorContext value={(error) => errors.push(error)}>
                 <AuthenticatedUserContext value={user}>
                     <IconRequestContext value={icons.load}>
-                        <LinkProvider component={Link}>
-                            <Routes>
-                                <Route element={<Layout />}>
-                                    <Route element={<Organization />}>
-                                        <Route
-                                            path="/orgs/:organization"
-                                            element={<h1>Protected organization content</h1>}
-                                        />
-                                    </Route>
+                        <Routes>
+                            <Route element={<Layout />}>
+                                <Route element={<Organization />}>
+                                    <Route
+                                        path="/orgs/:organization"
+                                        element={<h1>Protected organization content</h1>}
+                                    />
                                 </Route>
-                            </Routes>
-                        </LinkProvider>
+                            </Route>
+                        </Routes>
                     </IconRequestContext>
                 </AuthenticatedUserContext>
             </ApiErrorContext>,

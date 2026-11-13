@@ -1,0 +1,40 @@
+@layer components {
+    .identity-option {
+        box-sizing: border-box;
+        width: 100%;
+        border: 0;
+        background: transparent;
+        font-family: inherit;
+        text-align: start;
+        cursor: pointer;
+    }
+
+    .identity-option[aria-current],
+    .identity-option[aria-pressed='true'] {
+        background: var(--color-accent-muted);
+    }
+
+    .identity-option[aria-current]:hover,
+    .identity-option[aria-pressed='true']:hover {
+        background-image: linear-gradient(var(--color-overlay-hover), var(--color-overlay-hover));
+    }
+
+    .identity-option .profile-name,
+    .identity-option .profile-email {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .organization-options {
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-2);
+        max-height: 20rem;
+        overflow-y: auto;
+    }
+
+    .organization-options > p {
+        margin: 0;
+    }
+}

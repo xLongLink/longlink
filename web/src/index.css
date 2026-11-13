@@ -1,4 +1,4 @@
-@layer reset, theme, base, astryx-base, astryx-theme, application-theme, components, utilities;
+@layer reset, theme, base, theme-tokens, application-theme, components, utilities;
 
 @import '@fontsource/figtree/400.css';
 @import '@fontsource/figtree/500.css';
@@ -12,12 +12,11 @@
 @import '@fontsource/jetbrains-mono/700.css';
 @import 'tailwindcss/theme.css' layer(theme);
 @import 'tailwindcss/preflight.css' layer(base);
-@import '@astryxdesign/core/reset.css';
-@import '@astryxdesign/core/astryx.css';
-@import './lib/generated/stone.css';
+@import './reset.css';
+@import './tokens.css';
 @import './accents.css';
 @import './shadcn.css';
-@import './astryx.css';
+@import './tokenscompat.css';
 @import 'tailwindcss/utilities.css' layer(utilities);
 
 @keyframes technology-float {

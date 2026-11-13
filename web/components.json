@@ -19,7 +19,6 @@
         "hooks": "@/lib/hooks"
     },
     "registries": {
-        "@astryx": "https://astryx.atmeta.com/shadcn/{name}.json",
         "@reui": "https://reui.io/r/{style}/{name}.json"
     }
 }

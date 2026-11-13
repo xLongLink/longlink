@@ -1,12 +1,7 @@
 import { SidebarContext } from '@/lib/sidebar';
-import { Item } from '@/components/astryx/Item';
-import { Text } from '@/components/astryx/Text';
 import { Avatar } from '@/components/ui/Avatar';
-import { Stack } from '@/components/astryx/Stack';
+import { Popover } from '@base-ui/react/popover';
 import { Divider } from '@/components/ui/Divider';
-import { Popover } from '@/components/astryx/Popover';
-import { List, ListItem } from '@/components/astryx/List';
-import { IconButton } from '@/components/astryx/IconButton';
 import { useContext, useLayoutEffect, useState } from 'react';
 import { BookOpen, ChevronsUpDown, ExternalLink } from 'lucide-react';
 import { developmentUsers, getDevelopmentUser, setDevelopmentUser } from '@/solution/development';
@@ -24,68 +19,75 @@ export function DevelopmentProfile() {
     }, [profile]);
 
     return (
-        <Popover
-            alignment={sidebar !== null ? 'start' : 'end'}
-            className={sidebar !== null ? 'w-full' : undefined}
-            isOpen={isOpen}
-            label="Development user"
-            onOpenChange={setIsOpen}
-            placement={sidebar !== null ? 'above' : 'below'}
-            width={280}
-            content={
-                <Stack gap={2} width="100%">
-                    <Text color="secondary" type="label">
-                        Development users
-                    </Text>
-                    <List density="compact">
-                        {developmentUsers.map((candidate) => (
-                            <ListItem
-                                key={candidate.user.id}
-                                description={candidate.user.email}
-                                isSelected={candidate.role === profile.role}
-                                label={candidate.user.name}
-                                startContent={<Avatar name={candidate.user.name} seed={candidate.user.id} />}
-                                onClick={() => {
-                                    setDevelopmentUser(candidate);
+        <Popover.Root open={isOpen} onOpenChange={setIsOpen} modal="trap-focus">
+            <Popover.Trigger
+                type="button"
+                aria-label={user.name}
+                className="profile-trigger"
+                data-expanded={sidebar === 'expanded' || undefined}
+            >
+                <Avatar name={user.name} seed={user.id} />
+                {sidebar === 'expanded' && (
+                    <>
+                        <span className="profile-identity-text">
+                            <span className="profile-name">{user.name}</span>
+                            <span className="profile-email">{user.email}</span>
+                        </span>
+                        <ChevronsUpDown aria-hidden="true" className="text-muted-foreground" size={16} />
+                    </>
+                )}
+            </Popover.Trigger>
+            <Popover.Portal>
+                <Popover.Positioner
+                    className="profile-positioner"
+                    side={sidebar === null ? 'bottom' : 'top'}
+                    align={sidebar === null ? 'end' : 'start'}
+                    sideOffset={4}
+                >
+                    <Popover.Popup className="profile-popup" aria-label="Development user">
+                        <section className="profile-links" aria-label="Development users">
+                            <p className="profile-heading">Development users</p>
+                            {developmentUsers.map((candidate) => (
+                                <button
+                                    type="button"
+                                    className="profile-link identity-option"
+                                    key={candidate.user.id}
+                                    aria-pressed={candidate.role === profile.role}
+                                    onClick={() => {
+                                        setDevelopmentUser(candidate);
 
-                                    // Dispose the old View, requests, and cached data together.
-                                    window.location.reload();
-                                }}
-                            />
-                        ))}
-                    </List>
-                    <Divider />
-                    <List density="compact">
-                        <ListItem
-                            endContent={<ExternalLink aria-hidden="true" className="text-muted-foreground" size={12} />}
+                                        // Dispose the old View, requests, and cached data together.
+                                        window.location.reload();
+                                    }}
+                                >
+                                    <Avatar name={candidate.user.name} seed={candidate.user.id} />
+                                    <span className="profile-identity-text">
+                                        <span className="profile-name">{candidate.user.name}</span>
+                                        <span className="profile-email">{candidate.user.email}</span>
+                                    </span>
+                                </button>
+                            ))}
+                        </section>
+                        <Divider />
+                        <a
+                            className="profile-link"
                             href="https://www.longlink.dev/docs/"
-                            label="Documentation"
-                            onClickCapture={() => setIsOpen(false)}
-                            startContent={<BookOpen aria-hidden="true" className="text-muted-foreground" size={16} />}
                             target="_blank"
-                        />
-                    </List>
-                </Stack>
-            }
-        >
-            {sidebar === 'expanded' ? (
-                (trigger) => (
-                    <Item
-                        {...trigger}
-                        as="button"
-                        role="button"
-                        className="w-full rounded-lg px-2 py-1.5 text-left"
-                        description={user.email}
-                        descriptionLines={1}
-                        endContent={<ChevronsUpDown aria-hidden="true" className="text-muted-foreground" size={16} />}
-                        label={user.name}
-                        labelLines={1}
-                        startContent={<Avatar name={user.name} seed={user.id} />}
-                    />
-                )
-            ) : (
-                <IconButton icon={<Avatar name={user.name} seed={user.id} />} label={user.name} variant="ghost" />
-            )}
-        </Popover>
+                            rel="noopener noreferrer"
+                            onClickCapture={() => setIsOpen(false)}
+                        >
+                            <BookOpen aria-hidden="true" className="text-muted-foreground" size={16} />
+                            Documentation
+                            <ExternalLink
+                                aria-hidden="true"
+                                className="profile-external text-muted-foreground"
+                                size={12}
+                            />
+                        </a>
+                        <Popover.Close className="sr-only focus:not-sr-only">Close development user menu</Popover.Close>
+                    </Popover.Popup>
+                </Popover.Positioner>
+            </Popover.Portal>
+        </Popover.Root>
     );
 }

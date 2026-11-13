@@ -2,16 +2,15 @@ import { z } from 'zod';
 import { api } from '@/lib/api';
 import { useState } from 'react';
 import { Form } from '@/components/ui/Form';
-import { Link } from '@/components/astryx/Link';
-import { Text } from '@/components/astryx/Text';
 import { Button } from '@/components/ui/Button';
 import { Dialog } from '@/components/ui/Dialog';
-import { Stack } from '@/components/astryx/Stack';
-import { Heading } from '@/components/astryx/Heading';
 import { TextInput } from '@/components/ui/TextInput';
 import { Step, Stepper } from '@/components/ui/Stepper';
 import { Illustration } from '@/components/Illustration';
+import { NativeText as Text } from '@/components/ui/NativeText';
+import { NativeStack as Stack } from '@/components/ui/NativeStack';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
+import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
 
 /** Owns one creation attempt, shared by the organization list and settings pages. */
 export default function CreateSolution({
@@ -110,15 +109,15 @@ export default function CreateSolution({
                                     required
                                     onChange={setImage}
                                 />
-                                <Link
-                                    className="absolute top-0 right-0"
-                                    size="base"
-                                    color="secondary"
-                                    hasUnderline
+                                <button
+                                    type="button"
+                                    className="view-link absolute top-0 right-0 underline"
                                     onClick={() => setImage('ghcr.io/xlonglink/sample:latest')}
                                 >
-                                    Use sample image
-                                </Link>
+                                    <Text size="base" color="secondary">
+                                        Use sample image
+                                    </Text>
+                                </button>
                             </Stack>
                         </Stack>
                     </Step>

@@ -14,9 +14,9 @@ export function useAdminList() {
             onChange: (search: string) => setFilters({ search, page: 1 }),
         },
         pagination: {
-            page,
+            page: filters.page,
             pageSize,
-            onChange: (page: number) => setFilters({ ...filters, page }),
+            onPageChange: (page: number) => setFilters({ ...filters, page }),
         },
         suffix: `?page=${page}&page_size=${pageSize}&search=${encodeURIComponent(search.trim())}`,
     };

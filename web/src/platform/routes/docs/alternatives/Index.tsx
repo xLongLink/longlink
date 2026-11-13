@@ -1,5 +1,5 @@
-import { Heading } from '@/components/astryx/Heading';
 import { DocumentationArticle } from '@/components/layouts/Article';
+import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
 
 const article = {
     title: 'Alternatives | LongLink',

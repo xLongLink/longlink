@@ -1429,7 +1429,7 @@
                 {
                     "name": "label",
                     "type": "string",
-                    "description": "Accessible navigation label; defaults to Astryx's localized Pagination label.",
+                    "description": "Accessible navigation label; defaults to Pagination.",
                     "default": "Pagination"
                 }
             ]
@@ -2053,7 +2053,7 @@
         {
             "name": "Text",
             "category": "Display",
-            "introduction": "Displays View text with Astryx's semantic typography, alignment, wrapping, and truncation controls.",
+            "introduction": "Displays View text with semantic typography, alignment, wrapping, and truncation controls.",
             "properties": [
                 {
                     "name": "children",

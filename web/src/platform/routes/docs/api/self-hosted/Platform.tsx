@@ -1,11 +1,11 @@
-import { Code } from '@/components/astryx/Code';
-import { Link } from '@/components/astryx/Link';
-import { Text } from '@/components/astryx/Text';
-import { Stack } from '@/components/astryx/Stack';
-import { Heading } from '@/components/astryx/Heading';
-import { CodeBlock } from '@/components/astryx/CodeBlock';
-import { Table, proportional } from '@/components/astryx/Table';
+import '@/components/ui/inlinecode.css';
+import { NativeLink as Link } from '@/components/ui/NativeLink';
+import { NativeText as Text } from '@/components/ui/NativeText';
+import { NativeStack as Stack } from '@/components/ui/NativeStack';
 import { DocumentationArticle } from '@/components/layouts/Article';
+import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
+import { NativeCodeBlock as CodeBlock } from '@/components/ui/NativeCodeBlock';
+import { NativeTable as Table, proportional } from '@/components/ui/NativeTable';
 
 const article = {
     title: 'Platform | LongLink Self Hosted Documentation',
@@ -161,7 +161,7 @@ export default function Platform() {
                                     <Stack gap={0}>
                                         <Stack direction="horizontal" align="center" gap={2} wrap="wrap">
                                             <Text>{environment.name}</Text>
-                                            <Code className="text-sm">{environment.type}</Code>
+                                            <code className="inline-code text-sm">{environment.type}</code>
                                         </Stack>
                                         <Text type="supporting">{environment.description}</Text>
                                     </Stack>

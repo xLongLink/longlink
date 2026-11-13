@@ -1,9 +1,9 @@
+import { Text } from './Text';
 import { Stack } from './Stack';
-import { useState } from 'react';
 import { Button } from './Button';
-import { Text } from '@/components/astryx/Text';
+import { useId, useState } from 'react';
+import { LoaderCircle } from 'lucide-react';
 import { useDownload, usePreview } from './preview';
-import { Spinner } from '@/components/astryx/Spinner';
 
 /** Previews images, PDFs, and plain text on demand and downloads attachments through the scoped host capability. */
 export function FileViewer({
@@ -35,7 +35,11 @@ export function FileViewer({
                     }}
                 />
             </Stack>
-            {attachment.error && <Text role="alert">{attachment.error}</Text>}
+            {attachment.error && (
+                <span role="alert">
+                    <Text>{attachment.error}</Text>
+                </span>
+            )}
             {open && <FilePreview key={src} src={src} title={title} onOpened={() => setOpen(false)} />}
         </Stack>
     );
@@ -44,15 +48,25 @@ export function FileViewer({
 /** Releases image resources locally while the host owns document previews. */
 function FilePreview({ src, title, onOpened }: { src: string; title: string; onOpened: () => void }) {
     const preview = usePreview(src, false, title, onOpened);
+    const labelId = useId();
 
     // Render only the current mounted attempt's loading, error, or image state.
     return preview.status === 'unsupported' ? (
-        <Text role="status">No preview is available. Use Download to save this file.</Text>
+        <span role="status">
+            <Text>No preview is available. Use Download to save this file.</Text>
+        </span>
     ) : preview.status === 'error' ? (
-        <Text role="status">{preview.cause instanceof Error ? preview.cause.message : 'Preview failed'}</Text>
+        <span role="status">
+            <Text>{preview.cause instanceof Error ? preview.cause.message : 'Preview failed'}</Text>
+        </span>
     ) : preview.status === 'ready' ? (
         <img src={preview.url} alt={title} className="max-h-full max-w-full rounded-lg object-contain" />
     ) : (
-        <Spinner label="Loading attachment" />
+        <div className="view-file-loading">
+            <LoaderCircle role="progressbar" aria-hidden={false} aria-labelledby={labelId} />
+            <span id={labelId}>
+                <Text weight="bold">Loading attachment</Text>
+            </span>
+        </div>
     );
 }

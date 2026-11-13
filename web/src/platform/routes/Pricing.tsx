@@ -1,14 +1,12 @@
 import { Page } from '@/components/Page';
+import { Grid } from '@/components/ui/Grid';
 import * as pricing from '@/platform/pricing';
-import { Card } from '@/components/astryx/Card';
-import { Grid } from '@/components/astryx/Grid';
-import { Text } from '@/components/astryx/Text';
-import { Stack } from '@/components/astryx/Stack';
 import { Divider } from '@/components/ui/Divider';
-import { Button } from '@/components/astryx/Button';
-import { Heading } from '@/components/astryx/Heading';
-import { Section } from '@/components/astryx/Section';
 import { Database, HardDrive, UsersRound } from 'lucide-react';
+import { NativeText as Text } from '@/components/ui/NativeText';
+import { NativeStack as Stack } from '@/components/ui/NativeStack';
+import { NativeButton as Button } from '@/components/ui/NativeButton';
+import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
 
 /** Publishes usage pricing from generated backend defaults without introducing plans. */
 export default function Pricing() {
@@ -18,7 +16,7 @@ export default function Pricing() {
             title="Pricing | LongLink"
         >
             <main>
-                <Section variant="transparent" padding={6}>
+                <section className="p-6">
                     <Stack className="mx-auto" width="100%" maxWidth={1000} gap={10} align="center">
                         <Stack gap={3} align="center">
                             <Heading
@@ -44,11 +42,9 @@ export default function Pricing() {
                                           : HardDrive;
 
                                 return (
-                                    <Card
+                                    <div
                                         key={resource.id}
-                                        className="-mb-px -mr-px rounded-none border border-border"
-                                        variant="transparent"
-                                        padding={6}
+                                        className="-mb-px -mr-px min-w-0 overflow-clip rounded-none border border-border bg-transparent p-6"
                                     >
                                         <Stack gap={6} paddingBlock={10} align="center">
                                             <Stack gap={3} align="center">
@@ -76,7 +72,7 @@ export default function Pricing() {
                                                 </Text>
                                             </Stack>
                                         </Stack>
-                                    </Card>
+                                    </div>
                                 );
                             })}
                         </Grid>
@@ -85,7 +81,7 @@ export default function Pricing() {
                             LongLink is currently in beta. Pricing, limits, and included usage may change.
                         </Text>
                     </Stack>
-                </Section>
+                </section>
             </main>
         </Page>
     );

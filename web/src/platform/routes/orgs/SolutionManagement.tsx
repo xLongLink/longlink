@@ -4,26 +4,26 @@ import { useState } from 'react';
 import { SolutionTags } from './Tags';
 import { useApi } from '@/lib/hooks/use-api';
 import CreateSolution from './CreateSolution';
-import { Link } from '@/components/astryx/Link';
-import { Text } from '@/components/astryx/Text';
 import { Dialog } from '@/components/ui/Dialog';
 import { OpenAI } from '@/components/svg/OpenAI';
 import DeploymentReview from './DeploymentReview';
 import { Divider } from '@/components/ui/Divider';
-import { Button } from '@/components/astryx/Button';
-import { useToast } from '@/components/astryx/Toast';
-import { Heading } from '@/components/astryx/Heading';
+import { useNotification } from '@/lib/notifications';
 import * as permissions from '@/platform/permissions';
 import { ApiBoundary } from '@/components/ApiBoundary';
 import { DeletionDialog } from '@/components/Deletion';
 import SolutionPermissions from './SolutionPermissions';
-import { MoreMenu } from '@/components/astryx/MoreMenu';
 import { Illustration } from '@/components/Illustration';
-import { CodeBlock } from '@/components/astryx/CodeBlock';
-import { Stack, StackItem } from '@/components/astryx/Stack';
-import { Table, proportional } from '@/components/astryx/Table';
+import { NativeLink as Link } from '@/components/ui/NativeLink';
+import { NativeMoreMenu } from '@/components/ui/NativeMoreMenu';
+import { NativeText as Text } from '@/components/ui/NativeText';
+import { NativeStack as Stack } from '@/components/ui/NativeStack';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
+import { NativeButton as Button } from '@/components/ui/NativeButton';
+import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
 import type { OrganizationContext } from '@/platform/layouts/Organization';
+import { NativeCodeBlock as CodeBlock } from '@/components/ui/NativeCodeBlock';
+import { NativeTable as Table, proportional } from '@/components/ui/NativeTable';
 import { IllustratedDialogContent } from '@/platform/components/IllustratedDialogContent';
 import { ExternalLink, Logs, Plug, Plus, RefreshCw, Shield, Tags, Trash } from 'lucide-react';
 
@@ -221,7 +221,7 @@ export default function SolutionManagement({
                                           align: 'end' as const,
                                           width: proportional(0.25, { minWidth: 0 }),
                                           renderCell: (row: Solution) => (
-                                              <MoreMenu
+                                              <NativeMoreMenu
                                                   alignment="end"
                                                   size="sm"
                                                   items={[
@@ -405,7 +405,7 @@ export default function SolutionManagement({
                                     <SolutionMcpUrl solutionId={selected.id} onClose={closeSelected} />
                                 </ApiBoundary>
                                 <Button
-                                    as="a"
+                                    download
                                     href={`/api/v1/solutions/${selected.id}/plugin`}
                                     label="Download plugin ZIP"
                                     variant="primary"
@@ -439,7 +439,7 @@ export default function SolutionManagement({
 
 /** Reads the canonical public connection URL without guessing the deployment's origin. */
 function SolutionMcpUrl({ solutionId, onClose }: { solutionId: string; onClose: () => void }) {
-    const showToast = useToast();
+    const showNotification = useNotification();
 
     // Reuse OAuth discovery so the copied URL matches the plugin's configured public address.
     const [{ resource }] = useApi(
@@ -456,7 +456,7 @@ function SolutionMcpUrl({ solutionId, onClose }: { solutionId: string; onClose: 
                 await navigator.clipboard.writeText(resource);
 
                 // Confirm a successful copy and dismiss the MCP dialog.
-                showToast({ body: 'Copied' });
+                showNotification('Copied');
                 onClose();
             }}
         />
@@ -470,7 +470,7 @@ function SolutionLogs({ solutionId, onClose }: { solutionId: string; onClose: ()
     // Keep log scrolling inside CodeBlock while dismissal and refresh remain visible.
     return (
         <Stack gap={3} height="100%">
-            <StackItem size="fill">
+            <div className="min-h-0 min-w-0 grow">
                 <CodeBlock
                     code={logs.join('\n')}
                     hasLineNumbers
@@ -480,7 +480,7 @@ function SolutionLogs({ solutionId, onClose }: { solutionId: string; onClose: ()
                     maxHeight="100%"
                     className="h-full"
                 />
-            </StackItem>
+            </div>
             <Stack direction="horizontal" gap={2} justify="between" wrap="wrap">
                 <Button label="Close" variant="ghost" onClick={onClose} />
                 <Button

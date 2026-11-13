@@ -1,15 +1,15 @@
 import { Search } from 'lucide-react';
 import { useAdminList } from './use-list';
 import { useApi } from '@/lib/hooks/use-api';
-import { Text } from '@/components/astryx/Text';
 import { Avatar } from '@/components/ui/Avatar';
-import { Stack } from '@/components/astryx/Stack';
-import { Heading } from '@/components/astryx/Heading';
 import { TextInput } from '@/components/ui/TextInput';
-import { Timestamp } from '@/components/astryx/Timestamp';
-import { Pagination } from '@/components/astryx/Pagination';
-import { Table, proportional } from '@/components/astryx/Table';
+import { Timestamp } from '@/components/ui/Timestamp';
+import { Pagination } from '@/components/ui/Pagination';
+import { NativeText as Text } from '@/components/ui/NativeText';
+import { NativeStack as Stack } from '@/components/ui/NativeStack';
+import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
 import { zPageAdminUserSummary } from '@/lib/generated/platform-api-v1/zod.gen';
+import { NativeTable as Table, proportional } from '@/components/ui/NativeTable';
 
 /** Lists Platform users with server-side pagination. */
 export default function Users() {
@@ -55,7 +55,7 @@ export default function Users() {
                             renderCell: (row) => (
                                 <Stack align="start">
                                     <Text>
-                                        Created: <Timestamp value={row.created_at} />
+                                        Created: <Timestamp value={row.created_at} format="date_time" />
                                     </Text>
                                     <Text type="supporting">ID: {row.id}</Text>
                                 </Stack>
@@ -64,7 +64,7 @@ export default function Users() {
                     ]}
                 />
                 <Stack as="footer" align="center" paddingBlock={2}>
-                    <Pagination {...pagination} totalItems={users.total} variant="pages" />
+                    <Pagination {...pagination} totalItems={users.total} />
                 </Stack>
             </Stack>
         </Stack>

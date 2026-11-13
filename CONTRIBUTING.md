@@ -10,7 +10,7 @@ The SDK owns each Solution's local users table alongside Python helpers for Solu
 
 ## Theme
 
-Use the Astryx theme primitives rather than custom color or spacing values:
+Use the application theme primitives rather than custom color or spacing values. Edit the owned CSS imported by `web/src/index.css`; the normal web build includes those styles without a separate theme-generation step:
 
 ```text
 background  # Page background color

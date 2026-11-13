@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import ViewLayout from './ViewLayout';
-import { Text } from '@/components/astryx/Text';
-import { Stack } from '@/components/astryx/Stack';
 import { DropdownMenu } from '@/components/ui/DropdownMenu';
+import { NativeText as Text } from '@/components/ui/NativeText';
+import { NativeStack as Stack } from '@/components/ui/NativeStack';
 
 /** Documents DropdownMenu in LongLink Views. */
 export default function DropdownMenuPage() {

@@ -1,9 +1,8 @@
-import { Link } from '@/components/astryx/Link';
-import { Text } from '@/components/astryx/Text';
-import { Stack } from '@/components/astryx/Stack';
-import { Heading } from '@/components/astryx/Heading';
-import { Blockquote } from '@/components/astryx/Blockquote';
 import { PublicArticle } from '@/components/layouts/Article';
+import { NativeLink as Link } from '@/components/ui/NativeLink';
+import { NativeText as Text } from '@/components/ui/NativeText';
+import { NativeStack as Stack } from '@/components/ui/NativeStack';
+import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
 
 const article = {
     description: 'The values behind the LongLink brand.',
@@ -22,14 +21,14 @@ export default function Values() {
                 <Heading id="values" level={1}>
                     Values
                 </Heading>
-                <Blockquote className="border-s-(--color-text-orange) text-(--color-text-orange)">
+                <blockquote className="m-0 border-s-2 border-s-(--color-text-orange) ps-4 wrap-break-word text-(--color-text-orange)">
                     <Stack gap={0}>
                         <Text type="inherit">Beta notice: This page is being built.</Text>
                         <Link color="inherit" href={article.editUrl} hasUnderline isExternalLink type="inherit">
                             Edit on GitHub
                         </Link>
                     </Stack>
-                </Blockquote>
+                </blockquote>
             </Stack>
         </PublicArticle>
     );

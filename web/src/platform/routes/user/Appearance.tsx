@@ -1,13 +1,11 @@
+import { Card } from '@/components/ui/Card';
 import { Circle, Check } from 'lucide-react';
-import { Card } from '@/components/astryx/Card';
-import { Text } from '@/components/astryx/Text';
 import { accentColors } from '@/lib/appearance';
-import { Stack } from '@/components/astryx/Stack';
 import { Button } from '@/components/shadcn/button';
 import { useUpdateUser } from '@/lib/hooks/use-user';
-import { Heading } from '@/components/astryx/Heading';
 import { useAppearance } from '@/lib/hooks/use-appearance';
-import { SelectableCard } from '@/components/astryx/SelectableCard';
+import { NativeText as Text } from '@/components/ui/NativeText';
+import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
 
 /** Previews and saves personal appearance without changing any Solution configuration. */
 export default function AppearanceSettings() {
@@ -15,12 +13,12 @@ export default function AppearanceSettings() {
     const userUpdate = useUpdateUser();
 
     return (
-        <Stack gap={6}>
-            <Stack gap={3} role="group" aria-label="Theme">
+        <div className="flex flex-col gap-(--spacing-6)">
+            <div className="flex flex-col gap-(--spacing-3)" role="group" aria-label="Theme">
                 <Heading level={4} accessibilityLevel={3}>
                     Theme
                 </Heading>
-                <Stack direction="horizontal" wrap="wrap" gap={3}>
+                <div className="flex flex-wrap gap-(--spacing-3)">
                     {(
                         [
                             { value: 'system', label: 'System', image: 'theme_auto.png' },
@@ -28,7 +26,7 @@ export default function AppearanceSettings() {
                             { value: 'dark', label: 'Dark', image: 'theme_dark.png' },
                         ] as const
                     ).map(({ value, label, image }) => (
-                        <SelectableCard
+                        <Card
                             key={value}
                             label={label}
                             padding={2}
@@ -39,7 +37,7 @@ export default function AppearanceSettings() {
                                     userUpdate.mutate({ theme: value });
                             }}
                         >
-                            <Stack gap={2}>
+                            <div className="flex flex-col gap-(--spacing-2)">
                                 <Text>{label}</Text>
                                 <img
                                     src={`/images/${image}`}
@@ -48,55 +46,53 @@ export default function AppearanceSettings() {
                                     height={1024}
                                     className="aspect-3/2 w-40 max-w-full rounded-md object-cover"
                                 />
-                            </Stack>
-                        </SelectableCard>
+                            </div>
+                        </Card>
                     ))}
-                </Stack>
-            </Stack>
-            <Stack gap={3}>
+                </div>
+            </div>
+            <div className="flex flex-col gap-(--spacing-3)">
                 <Heading level={4} accessibilityLevel={3}>
                     Appearance
                 </Heading>
-                <Card>
-                    <Stack gap={4}>
-                        <Stack gap={2} role="group" aria-label="Accent color">
-                            <Text>Accent color</Text>
-                            <Stack direction="horizontal" wrap="wrap" gap={2}>
-                                {accentColors.map((accent) => (
-                                    <Button
-                                        key={accent}
-                                        type="button"
-                                        variant="outline"
-                                        aria-pressed={appearance.accent === accent}
-                                        disabled={userUpdate.isPending}
-                                        onClick={() => {
-                                            if (!userUpdate.isPending && appearance.accent !== accent)
-                                                userUpdate.mutate({ accent });
-                                        }}
-                                    >
-                                        {appearance.accent === accent ? (
-                                            <Check size={16} data-accent-swatch={accent} aria-hidden="true" />
-                                        ) : (
-                                            <Circle
-                                                size={16}
-                                                data-accent-swatch={accent}
-                                                fill="currentColor"
-                                                aria-hidden="true"
-                                            />
-                                        )}
-                                        {accent.charAt(0).toUpperCase() + accent.slice(1)}
-                                    </Button>
-                                ))}
-                            </Stack>
-                        </Stack>
-                    </Stack>
+                <Card padding={3}>
+                    <div className="flex flex-col gap-(--spacing-2)" role="group" aria-label="Accent color">
+                        <Text>Accent color</Text>
+                        <div className="flex flex-wrap gap-(--spacing-2)">
+                            {accentColors.map((accent) => (
+                                <Button
+                                    key={accent}
+                                    type="button"
+                                    variant="outline"
+                                    aria-pressed={appearance.accent === accent}
+                                    disabled={userUpdate.isPending}
+                                    onClick={() => {
+                                        if (!userUpdate.isPending && appearance.accent !== accent)
+                                            userUpdate.mutate({ accent });
+                                    }}
+                                >
+                                    {appearance.accent === accent ? (
+                                        <Check size={16} data-accent-swatch={accent} aria-hidden="true" />
+                                    ) : (
+                                        <Circle
+                                            size={16}
+                                            data-accent-swatch={accent}
+                                            fill="currentColor"
+                                            aria-hidden="true"
+                                        />
+                                    )}
+                                    {accent.charAt(0).toUpperCase() + accent.slice(1)}
+                                </Button>
+                            ))}
+                        </div>
+                    </div>
                 </Card>
-            </Stack>
+            </div>
             {userUpdate.isPending && (
                 <Text type="supporting" color="secondary" role="status">
                     Saving appearance…
                 </Text>
             )}
-        </Stack>
+        </div>
     );
 }

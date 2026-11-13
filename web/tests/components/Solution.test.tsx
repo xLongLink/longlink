@@ -2,6 +2,7 @@
 import { act } from 'react';
 import { createHash } from 'node:crypto';
 import { createRoot } from 'react-dom/client';
+import { Dialog } from '@base-ui/react/dialog';
 import { MessagePort } from 'node:worker_threads';
 import { SolutionPage } from '@/components/SolutionPage';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -70,6 +71,27 @@ describe('SolutionPage', () => {
         // Assert
         await act(async () => vi.waitFor(() => expect(output.textContent).toContain(title)));
         expect(output.textContent).toContain(description);
+    });
+
+    it('replaces a pending manifest indicator with the eventual failure without exposing a frame', async () => {
+        let finish: (response: Response) => void = () => undefined;
+
+        const pending = new Promise<Response>((resolve) => {
+            finish = resolve;
+        });
+
+        stubFetch(() => pending);
+        const output = await renderPage('/home');
+        const progress = output.querySelector('[role="progressbar"]');
+        const labelId = progress?.getAttribute('aria-labelledby');
+
+        expect(progress).not.toBeNull();
+        expect(output.querySelector(`[id="${labelId}"]`)?.textContent).toBe('Loading');
+        expect(output.querySelector('iframe')).toBeNull();
+        await act(async () => finish(Response.json({ detail: 'Unavailable' }, { status: 503 })));
+        await vi.waitFor(() => expect(output.querySelector('h1')?.textContent).toBe('Unable to load this solution'));
+        expect(output.querySelector('[role="progressbar"]')).toBeNull();
+        expect(output.querySelector('iframe')).toBeNull();
     });
 
     it('redirects the solution base to the first tab', async () => {
@@ -389,6 +411,192 @@ describe('SolutionPage', () => {
         await act(async () => vi.waitFor(() => expect(output.textContent).toContain("We can't find that page")));
         expect(response).toHaveBeenCalledOnce();
     });
+
+    it.each(['overlay', 'inset'])(
+        'keeps the live View in place through fullscreen open, close, and unmount with %s scrollbars',
+        async (scrollbars) => {
+            stubFetch((url) =>
+                url.endsWith('/views.json')
+                    ? manifestResponse([{ path: 'home.jsx', route: '/home' }])
+                    : sourceResponse('export default function Home() { return null; }')
+            );
+            const html = document.documentElement;
+            const body = document.body;
+            const originalHtml = html.style.cssText;
+            const originalBody = body.style.cssText;
+            const originalScrollTop = html.scrollTop;
+            const originalScrollLeft = html.scrollLeft;
+
+            // Supply browser geometry without replacing the document's real lock or message channel.
+            const width = window.innerWidth - (scrollbars === 'inset' ? 16 : 0);
+            vi.spyOn(html, 'clientWidth', 'get').mockReturnValue(width);
+            vi.spyOn(body, 'clientWidth', 'get').mockReturnValue(width);
+            vi.spyOn(html, 'scrollHeight', 'get').mockReturnValue(window.innerHeight * 2);
+
+            // Exercise the compensation fallback when stable scrollbar gutters are unavailable.
+            vi.spyOn(CSS, 'supports').mockReturnValue(false);
+
+            try {
+                html.style.paddingRight = '7px';
+                html.style.overscrollBehaviorY = 'contain';
+                body.style.paddingRight = '11px';
+                body.style.overscrollBehaviorY = 'auto';
+                body.style.overflowX = 'auto';
+                body.style.overflowY = 'scroll';
+                html.scrollTop = 320;
+                html.scrollLeft = 24;
+                const initialHtml = html.style.cssText;
+                const initialBody = body.style.cssText;
+                const output = await renderPage('/home');
+                const port = await connectView(output);
+                const frame = output.querySelector('iframe');
+
+                if (!frame) throw new Error('Missing isolated frame');
+                const parent = frame.parentElement;
+                const frameDocument = frame.contentDocument;
+                const frameWindow = frame.contentWindow;
+                const source = frame.srcdoc;
+                const sibling = output.querySelector<HTMLElement>('[data-path]');
+
+                if (!sibling) throw new Error('Missing host navigation');
+                const initialInert = sibling.inert;
+
+                // Happy DOM lacks native top-layer promotion; keep the real mounted frame and document.
+                Object.assign(frame, { showPopover: () => undefined, hidePopover: () => undefined });
+                await act(async () => port.postMessage({ type: 'modal', depth: 1, fullscreen: true }));
+                await vi.waitFor(() => expect(body.style.overflowY).toBe('hidden'));
+                expect(frame.getAttribute('popover')).toBe('manual');
+                expect(sibling.inert).toBe(true);
+                expect(html.style.overscrollBehaviorY).toBe('none');
+                expect(body.style.overscrollBehaviorY).toBe('none');
+                expect(output.querySelector('iframe')).toBe(frame);
+                expect(frame.parentElement).toBe(parent);
+                expect(frame.contentDocument).toBe(frameDocument);
+                expect(frame.contentWindow).toBe(frameWindow);
+                expect(frame.srcdoc).toBe(source);
+
+                // Closing the sandbox modal must not restart the View or leave host scrolling disabled.
+                await act(async () => port.postMessage({ type: 'modal', depth: 0, fullscreen: false }));
+                await vi.waitFor(() => {
+                    expect(body.style.cssText).toBe(initialBody);
+                    expect(html.style.cssText).toBe(initialHtml);
+                });
+                expect(output.querySelector('iframe')).toBe(frame);
+                expect(frame.parentElement).toBe(parent);
+                expect(frame.contentDocument).toBe(frameDocument);
+                expect(frame.contentWindow).toBe(frameWindow);
+                expect(frame.srcdoc).toBe(source);
+                expect(frame.hasAttribute('popover')).toBe(false);
+                expect(sibling.inert).toBe(initialInert);
+                expect(html.scrollTop).toBe(320);
+                expect(html.scrollLeft).toBe(24);
+
+                // A second opening followed by route teardown must release the same document ownership.
+                await act(async () => port.postMessage({ type: 'modal', depth: 1, fullscreen: true }));
+                await vi.waitFor(() => expect(body.style.overflowY).toBe('hidden'));
+                await act(async () => root?.unmount());
+                root = undefined;
+                await vi.waitFor(() => {
+                    expect(body.style.cssText).toBe(initialBody);
+                    expect(html.style.cssText).toBe(initialHtml);
+                });
+                expect(sibling.inert).toBe(initialInert);
+                expect(html.scrollTop).toBe(320);
+                expect(html.scrollLeft).toBe(24);
+            } finally {
+                await act(async () => root?.unmount());
+                root = undefined;
+
+                // Base UI releases its shared scroll lock on the next task.
+                await vi.waitFor(() => expect(body.style.overflowY).toBe('scroll'));
+                html.style.cssText = originalHtml;
+                body.style.cssText = originalBody;
+                html.scrollTop = originalScrollTop;
+                html.scrollLeft = originalScrollLeft;
+            }
+        }
+    );
+
+    it.each(['view', 'dialog'])(
+        'keeps scrolling locked until both overlays release, %s unmounts first',
+        async (first) => {
+            stubFetch((url) =>
+                url.endsWith('/views.json')
+                    ? manifestResponse([{ path: 'home.jsx', route: '/home' }])
+                    : sourceResponse('export default function Home() { return null; }')
+            );
+            const html = document.documentElement;
+            const body = document.body;
+            const originalHtml = html.getAttribute('style');
+            const originalBody = body.getAttribute('style');
+            const dialogContainer = document.createElement('section');
+            body.append(dialogContainer);
+            const dialogRoot = createRoot(dialogContainer);
+            let dialogMounted = true;
+
+            try {
+                html.style.scrollbarGutter = 'stable both-edges';
+                const initialHtml = html.style.cssText;
+                const initialBody = body.style.cssText;
+                const output = await renderPage('/home');
+                const port = await connectView(output);
+                const frame = output.querySelector('iframe');
+
+                if (!frame) throw new Error('Missing isolated frame');
+
+                // Happy DOM does not implement top-layer promotion.
+                Object.assign(frame, { showPopover: () => undefined, hidePopover: () => undefined });
+                await act(async () => port.postMessage({ type: 'modal', depth: 1, fullscreen: true }));
+                await vi.waitFor(() => expect(body.style.overflowY).toBe('hidden'));
+                await act(async () =>
+                    dialogRoot.render(
+                        <Dialog.Root open>
+                            <Dialog.Portal>
+                                <Dialog.Popup>
+                                    <Dialog.Title>Preview</Dialog.Title>
+                                </Dialog.Popup>
+                            </Dialog.Portal>
+                        </Dialog.Root>
+                    )
+                );
+
+                // Exercise both ownership orders, including a View disappearing while its modal is active.
+                if (first === 'view') {
+                    await act(async () => root?.unmount());
+                    root = undefined;
+                } else {
+                    await act(async () => dialogRoot.unmount());
+                    dialogMounted = false;
+                }
+
+                await new Promise((resolve) => setTimeout(resolve, 20));
+                expect(body.style.overflowY).toBe('hidden');
+                expect(html.style.scrollbarGutter).toBe('stable both-edges');
+
+                if (first === 'view') {
+                    await act(async () => dialogRoot.unmount());
+                    dialogMounted = false;
+                } else {
+                    await act(async () => root?.unmount());
+                    root = undefined;
+                }
+
+                await vi.waitFor(() => {
+                    expect(body.style.cssText).toBe(initialBody);
+                    expect(html.style.cssText).toBe(initialHtml);
+                });
+            } finally {
+                if (dialogMounted) await act(async () => dialogRoot.unmount());
+                dialogContainer.remove();
+
+                if (originalHtml === null) html.removeAttribute('style');
+                else html.setAttribute('style', originalHtml);
+
+                if (originalBody === null) body.removeAttribute('style');
+                else body.setAttribute('style', originalBody);
+            }
+        }
+    );
 
     /** Observes the ready frame's capability transfer without dispatching a handshake. */
     async function observeView(output: HTMLElement) {

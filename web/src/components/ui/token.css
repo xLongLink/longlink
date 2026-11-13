@@ -1,0 +1,115 @@
+@layer components {
+    .view-token {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        gap: var(--spacing-1);
+        max-width: 100%;
+        height: calc(var(--size-element-md) - var(--spacing-2));
+        padding-block: 0;
+        padding-inline: var(--spacing-2);
+        overflow: hidden;
+        border: 0;
+        border-radius: var(--radius-inner);
+        background-color: var(--color-neutral);
+        color: var(--color-text-primary);
+        font-family: inherit;
+        font-size: var(--text-supporting-size);
+        font-weight: var(--font-weight-medium);
+        line-height: var(--text-supporting-leading);
+        white-space: nowrap;
+    }
+
+    .view-token[data-size='sm'] {
+        height: calc(var(--size-element-sm) - var(--spacing-2));
+    }
+
+    .view-token[data-size='lg'] {
+        height: calc(var(--size-element-lg) - var(--spacing-2));
+    }
+
+    .view-token-label {
+        display: block;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        unicode-bidi: isolate;
+    }
+
+    .view-token > .view-icon {
+        flex-shrink: 0;
+    }
+
+    .view-token-action,
+    .view-token-remove {
+        padding: 0;
+        border: 0;
+        background: transparent;
+        color: inherit;
+        font: inherit;
+        cursor: pointer;
+    }
+
+    .view-token-action {
+        min-width: 0;
+        overflow: hidden;
+        outline: none;
+    }
+
+    .view-token-action::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+    }
+
+    .view-token-remove {
+        position: relative;
+        z-index: 1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        width: var(--spacing-4);
+        height: var(--spacing-4);
+        margin-inline-end: calc(-1 * var(--spacing-1));
+        border-radius: var(--radius-full);
+    }
+
+    .view-token-remove::after {
+        content: '';
+        position: absolute;
+        inset: calc(-1 * var(--spacing-1));
+    }
+
+    .view-token-remove > svg {
+        width: var(--spacing-3);
+        height: var(--spacing-3);
+    }
+
+    .view-token:has(> .view-token-action:focus-visible),
+    .view-token-remove:focus-visible {
+        outline: var(--focus-outline-width) var(--focus-outline-style) var(--focus-outline-color);
+        outline-offset: var(--focus-outline-offset);
+    }
+
+    .view-token[data-disabled] {
+        opacity: 0.5;
+    }
+
+    .view-token[data-disabled] > button {
+        cursor: default;
+    }
+
+    @media (hover: hover) and (forced-colors: none) {
+        .view-token[data-interactive]:not([data-disabled]):has(> .view-token-action:hover) {
+            background-image: linear-gradient(var(--color-overlay-hover), var(--color-overlay-hover));
+        }
+    }
+
+    @media (forced-colors: none) {
+        .view-token[data-interactive]:not([data-disabled]):has(> .view-token-action:active) {
+            background-image: linear-gradient(var(--color-overlay-pressed), var(--color-overlay-pressed));
+        }
+    }
+}

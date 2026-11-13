@@ -1,6 +1,6 @@
 import ViewLayout from './ViewLayout';
 import { Card } from '@/components/ui/Card';
-import { Text } from '@/components/astryx/Text';
+import { NativeText as Text } from '@/components/ui/NativeText';
 
 /** Documents plain, clickable, and selectable cards. */
 export default function CardPage() {
@@ -8,7 +8,6 @@ export default function CardPage() {
     return (
         <ViewLayout
             name="Card"
-            isLongLinkSpecific
             properties={[
                 {
                     name: 'children',

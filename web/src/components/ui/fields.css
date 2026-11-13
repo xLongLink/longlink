@@ -1,0 +1,225 @@
+@layer components {
+    .view-text-input.view-textarea {
+        position: relative;
+        display: block;
+        height: auto;
+        padding: 0;
+    }
+
+    .view-textarea > textarea {
+        box-sizing: border-box;
+        padding-block: var(--spacing-1);
+        padding-inline: var(--spacing-2);
+        resize: vertical;
+    }
+
+    .view-textarea[data-loading] > textarea {
+        padding-inline-end: calc(var(--spacing-2) + var(--spacing-6));
+    }
+
+    .view-textarea-spinner {
+        position: absolute;
+        top: var(--spacing-2);
+        inset-inline-end: var(--spacing-2);
+        width: calc(var(--spacing) * 3.5);
+        height: calc(var(--spacing) * 3.5);
+        color: var(--muted-foreground);
+        pointer-events: none;
+        animation: view-action-spin 1s linear infinite;
+    }
+
+    .view-boolean-field {
+        display: flex;
+        align-items: center;
+        width: 100%;
+        gap: var(--spacing-2);
+        font-family: var(--font-family-body);
+    }
+
+    .view-checkbox,
+    .view-switch {
+        box-sizing: border-box;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        margin: 0;
+        padding: 0;
+        cursor: pointer;
+        transition:
+            background-color var(--duration-fast) var(--ease-standard),
+            border-color var(--duration-fast) var(--ease-standard);
+    }
+
+    .view-checkbox {
+        width: var(--spacing-6);
+        height: var(--spacing-6);
+        border: var(--border-width) solid var(--color-border-emphasized);
+        border-radius: var(--radius-inner);
+        background: var(--color-background-surface);
+        color: var(--color-on-accent);
+    }
+
+    .view-checkbox[data-checked],
+    .view-checkbox[data-indeterminate] {
+        border-color: var(--color-accent);
+        background: var(--color-accent);
+    }
+
+    .view-checkbox-indicator {
+        display: inline-flex;
+    }
+
+    .view-checkbox-indicator > svg {
+        width: calc(var(--spacing-7) / 2);
+        height: calc(var(--spacing-7) / 2);
+        stroke-width: 3;
+    }
+
+    .view-checkbox[data-indeterminate] .view-checkbox-indicator > svg {
+        width: var(--spacing-3);
+        height: var(--spacing-3);
+        stroke-width: 4;
+    }
+
+    .view-switch {
+        justify-content: flex-start;
+        width: var(--spacing-10);
+        height: var(--spacing-6);
+        padding: var(--spacing-1);
+        border: 0;
+        border-radius: var(--radius-full);
+        background: var(--color-background-gray);
+    }
+
+    .view-switch[data-checked] {
+        background: var(--color-accent);
+    }
+
+    .view-switch-thumb {
+        display: block;
+        flex-shrink: 0;
+        width: var(--spacing-4);
+        height: var(--spacing-4);
+        border-radius: var(--radius-full);
+        background: var(--color-background-surface);
+        transition: transform var(--duration-fast) var(--ease-standard);
+    }
+
+    .view-switch[data-checked] > .view-switch-thumb {
+        width: var(--spacing-5);
+        height: var(--spacing-5);
+        transform: translateX(calc(var(--spacing-7) / 2));
+    }
+
+    .view-switch[data-checked]:dir(rtl) > .view-switch-thumb {
+        transform: translateX(calc(var(--spacing-7) / -2));
+    }
+
+    .view-switch[data-size='sm'] {
+        width: var(--spacing-8);
+        height: var(--spacing-5);
+        padding: var(--spacing-0-5);
+    }
+
+    .view-switch[data-size='sm'] > .view-switch-thumb {
+        width: var(--spacing-3);
+        height: var(--spacing-3);
+    }
+
+    .view-switch[data-size='sm'][data-checked] > .view-switch-thumb {
+        width: var(--spacing-4);
+        height: var(--spacing-4);
+        transform: translateX(var(--spacing-3));
+    }
+
+    .view-switch[data-size='sm'][data-checked]:dir(rtl) > .view-switch-thumb {
+        transform: translateX(calc(-1 * var(--spacing-3)));
+    }
+
+    .view-checkbox:focus-visible,
+    .view-switch:focus-visible {
+        outline: var(--focus-outline-width) solid var(--ring);
+        outline-offset: var(--focus-outline-offset);
+    }
+
+    @media (forced-colors: none) {
+        .view-boolean-field:not([data-disabled]) :is(.view-checkbox, .view-switch):active {
+            background-image: linear-gradient(var(--color-overlay-pressed), var(--color-overlay-pressed));
+        }
+    }
+
+    .view-boolean-field[data-disabled] :is(.view-checkbox, .view-switch) {
+        opacity: 0.5;
+        cursor: default;
+    }
+
+    .view-boolean-field[data-disabled] .view-checkbox {
+        border-color: var(--color-border);
+    }
+
+    .view-boolean-field[data-disabled] .view-checkbox[data-unchecked] {
+        background: var(--color-background-muted);
+    }
+
+    .view-boolean-field[data-disabled] .view-text-field-label {
+        color: var(--color-text-disabled);
+        cursor: default;
+    }
+
+    @media (hover: hover) and (forced-colors: none) {
+        .view-boolean-field:not([data-disabled]):hover .view-checkbox[data-unchecked] {
+            border-color: color-mix(in srgb, var(--color-border-emphasized), var(--color-tint-hover) 20%);
+            background: color-mix(in srgb, var(--color-background-surface), var(--color-tint-hover) 5%);
+        }
+
+        .view-boolean-field:not([data-disabled]):hover
+            :is(.view-checkbox[data-checked], .view-checkbox[data-indeterminate], .view-switch[data-checked]) {
+            border-color: color-mix(in srgb, var(--color-accent), var(--color-tint-hover) 15%);
+            background: color-mix(in srgb, var(--color-accent), var(--color-tint-hover) 15%);
+        }
+
+        .view-boolean-field:not([data-disabled]):hover .view-switch[data-unchecked] {
+            background: color-mix(in srgb, var(--color-background-gray), var(--color-tint-hover) 5%);
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .view-textarea-spinner {
+            animation: none;
+        }
+
+        .view-checkbox,
+        .view-switch,
+        .view-switch-thumb {
+            transition: none;
+        }
+    }
+
+    @media (forced-colors: active) {
+        .view-checkbox {
+            color: CanvasText;
+        }
+
+        .view-switch {
+            border: var(--border-width) solid CanvasText;
+            background: Canvas;
+        }
+
+        .view-switch-thumb {
+            background: CanvasText;
+        }
+
+        .view-switch[data-checked] {
+            background: Highlight;
+        }
+
+        .view-switch[data-checked] > .view-switch-thumb {
+            background: HighlightText;
+        }
+
+        .view-boolean-field[data-disabled] :is(.view-checkbox, .view-switch) {
+            border-color: GrayText;
+        }
+    }
+}

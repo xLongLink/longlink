@@ -1,3 +1,4 @@
+import './jsxview.css';
 import { ApiError } from '@/lib/api';
 import * as icons from '@/lib/icons';
 import * as host from '@/views/host';
@@ -6,14 +7,13 @@ import { textLanguage } from '@/lib/files';
 import { useNavigate } from 'react-router';
 import { resolveNavigationUrl } from '@/lib/url';
 import { useQuery } from '@tanstack/react-query';
-import { Stack } from '@/components/astryx/Stack';
 import type { ViewRuntime } from '@/views/manifest';
 import { PdfPreview } from '@/components/PdfPreview';
 import { TextPreview } from '@/components/TextPreview';
 import { ViewBackdrop } from '@/components/ViewBackdrop';
-import { useScrollLock } from '@astryxdesign/core/hooks';
 import { useAppearance } from '@/lib/hooks/use-appearance';
 import { PageError, PageLoading } from '@/components/Utils';
+import { useScrollLock } from '@base-ui/utils/useScrollLock';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { commandSchema, parametersSchema, iconDataSchema, type ViewData, type ViewAppearance } from '@/views/protocol';
 
@@ -59,7 +59,7 @@ export function JsxView({
         { title: string } & ({ type: 'pdf'; body: Blob } | { type: 'text'; text: string })
     >();
 
-    // Reuse Astryx's shared scroll lock while the sandbox covers the Platform.
+    // Share scroll-lock ownership with native Base UI overlays covering the Platform.
     useScrollLock(modal.fullscreen);
 
     // Promote the existing frame without reparenting it, which would reload its document and lose View state.
@@ -69,6 +69,14 @@ export function JsxView({
         if (!modal.fullscreen || !element) return;
         element.showPopover();
         const siblings = new Map<HTMLElement, boolean>();
+
+        // Preserve host pull-to-refresh suppression while the sandbox owns the viewport.
+        const overscroll = new Map<HTMLElement, string>();
+
+        for (const root of [document.documentElement, document.body]) {
+            overscroll.set(root, root.style.overscrollBehaviorY);
+            root.style.overscrollBehaviorY = 'none';
+        }
 
         // Keep host controls out of keyboard and assistive-technology navigation during the fullscreen modal.
         for (
@@ -88,6 +96,10 @@ export function JsxView({
             if (element.matches(':popover-open')) element.hidePopover();
 
             for (const [sibling, inert] of siblings) sibling.inert = inert;
+
+            for (const [root, value] of overscroll) {
+                if (root.style.overscrollBehaviorY === 'none') root.style.overscrollBehaviorY = value;
+            }
         };
     }, [modal.fullscreen]);
 
@@ -375,7 +387,7 @@ export function JsxView({
                 handshakeTimer = setTimeout(() => fail('readiness'), BOOTSTRAP_TIMEOUT_MS);
                 const appearance = currentAppearance.current;
                 const mode = appearance.theme === 'system' ? '' : ` data-theme="${appearance.theme}"`;
-                const document = `<!doctype html><html class="overflow-hidden [scrollbar-gutter:auto]" data-astryx-theme="stone" data-accent="${appearance.accent}"${mode}><head><meta http-equiv="Content-Security-Policy" content="${policy}"><meta name="referrer" content="no-referrer"><style>${styles.replace(/<\/style/gi, '<\\/style')}</style></head><body class="overflow-hidden bg-transparent text-foreground"><main id="view"></main><script>${code}</script></body></html>`;
+                const document = `<!doctype html><html class="overflow-hidden [scrollbar-gutter:auto]" data-theme-scope="stone" data-accent="${appearance.accent}"${mode}><head><meta http-equiv="Content-Security-Policy" content="${policy}"><meta name="referrer" content="no-referrer"><style>${styles.replace(/<\/style/gi, '<\\/style')}</style></head><body class="overflow-hidden bg-transparent text-foreground"><main id="view"></main><script>${code}</script></body></html>`;
 
                 // Keep startup failure latched until the route owner mounts a fresh View.
                 setBootstrapState((current) =>
@@ -399,10 +411,7 @@ export function JsxView({
     if (bootstrapState.status === 'preparing') return <PageLoading label="Preparing View" />;
 
     return (
-        <Stack
-            height={height}
-            minHeight="calc(100dvh - var(--_app-shell-header-height, 0px) - var(--platform-toolbar-height, 0px) - var(--spacing-2) * 4)"
-        >
+        <div className="jsx-view" style={{ height }}>
             {modal.depth > 0 && !modal.fullscreen && frameBounds && (
                 <ViewBackdrop bounds={frameBounds} depth={modal.depth} />
             )}
@@ -434,6 +443,6 @@ export function JsxView({
                     onClose={() => setFilePreview(undefined)}
                 />
             )}
-        </Stack>
+        </div>
     );
 }

@@ -1,4 +1,3 @@
-import { createElement, type ReactNode } from 'react';
 import {
     X,
     AlertTriangle,
@@ -82,11 +81,3 @@ export const stoneIconComponents = {
     users: Users,
     upload: Upload,
 } satisfies Record<string, LucideIcon>;
-
-// SAFETY: Every registry entry is created from the bundled component map without filtering keys.
-export const stoneIconRegistry = Object.fromEntries(
-    Object.entries(stoneIconComponents).map(([name, IconComponent]) => [
-        name,
-        createElement(IconComponent, { 'aria-hidden': true, size: '1em' }),
-    ])
-) as Record<keyof typeof stoneIconComponents, ReactNode>;

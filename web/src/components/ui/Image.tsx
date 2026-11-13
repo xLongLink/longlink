@@ -1,7 +1,7 @@
 import { Text } from './Text';
+import { useState } from 'react';
 import { usePreview } from './preview';
-import { Stack } from '@/components/astryx/Stack';
-import { Thumbnail } from '@/components/astryx/Thumbnail';
+import { ImageIcon } from 'lucide-react';
 
 type ImageProps = {
     /** Scoped Solution image path, or an image data/blob URL. */
@@ -20,20 +20,35 @@ export function Image(props: ImageProps) {
 function ImageContent({ src, alt }: ImageProps) {
     const inline = src.startsWith('data:image/') || src.startsWith('blob:');
     const preview = usePreview(src, inline);
+    const [erroredUrl, setErroredUrl] = useState<string>();
 
     // Reserve the same landscape frame for loading, errors, and the displayed photo.
     return (
-        <Stack className="aspect-video w-full overflow-hidden bg-muted" align="center" justify="center">
+        <div className="view-image">
             {preview.status === 'error' || preview.status === 'unsupported' ? (
                 <Text type="supporting">Photo unavailable</Text>
             ) : (
-                <Thumbnail
-                    src={preview.status === 'ready' ? preview.url : undefined}
-                    alt={alt}
-                    isLoading={preview.status === 'loading'}
-                    className="w-full! [&>div]:aspect-video! [&>div]:rounded-none!"
-                />
+                <div className="view-image-content" role="group" aria-label={alt}>
+                    {preview.status === 'loading' ? (
+                        <div className="view-image-skeleton" aria-hidden="true" />
+                    ) : erroredUrl === preview.url ? (
+                        <div className="view-image-placeholder">
+                            <ImageIcon size={24} aria-hidden="true" />
+                        </div>
+                    ) : (
+                        <>
+                            <img
+                                src={preview.url}
+                                alt={alt}
+                                role={!alt ? 'presentation' : undefined}
+                                aria-hidden={!alt || undefined}
+                                onError={() => setErroredUrl(preview.url)}
+                            />
+                            <div className="view-image-border" aria-hidden="true" />
+                        </>
+                    )}
+                </div>
             )}
-        </Stack>
+        </div>
     );
 }
