@@ -1,7 +1,7 @@
 import { GridExample } from './views/grid';
-import { IconExample } from './views/icon';
 import { MapsExample } from './views/maps';
 import { TextExample } from './views/text';
+import { IconExample } from './views/icons';
 import { BadgeExample } from './views/badge';
 import { EmptyExample } from './views/empty';
 import { InputExample } from './views/input';

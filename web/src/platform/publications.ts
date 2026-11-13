@@ -137,16 +137,25 @@ export const componentDocumentation = [
         sourceLabel: provenance.source === 'shadcn' ? 'shadcn/ui' : provenance.source === 'reui' ? 'ReUI' : 'Custom',
         reference: 'reference' in provenance ? provenance.reference : undefined,
         justification: 'justification' in provenance ? provenance.justification : undefined,
-        label: component.name === 'Button' ? 'Buttons' : component.name === 'DataTable' ? 'Table' : component.name,
+        label:
+            component.name === 'Button'
+                ? 'Buttons'
+                : component.name === 'Icon'
+                  ? 'Icons'
+                  : component.name === 'DataTable'
+                    ? 'Table'
+                    : component.name,
         slug:
             component.name === 'Button'
                 ? 'buttons'
-                : component.name === 'DataTable'
-                  ? 'table'
-                  : component.name
-                        .replace(/([a-z])([A-Z])/g, '$1-$2')
-                        .replace(/\s+/g, '-')
-                        .toLowerCase()
+                : component.name === 'Icon'
+                  ? 'icons'
+                  : component.name === 'DataTable'
+                    ? 'table'
+                    : component.name
+                          .replace(/([a-z])([A-Z])/g, '$1-$2')
+                          .replace(/\s+/g, '-')
+                          .toLowerCase()
     };
 });
 
