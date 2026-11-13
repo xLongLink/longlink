@@ -2,6 +2,7 @@ import { documentationCategories } from '../lib/documentation';
 import viewCatalog from '../../../sdk/longlink/.static/jsx/components.json';
 import {
     AppWindow,
+    Badge,
     ChartArea,
     ChartColumn,
     ChartLine,
@@ -14,7 +15,6 @@ import {
     Calendar,
     CheckSquare,
     ChevronDown,
-    Circle,
     Clock,
     Columns3,
     CreditCard,
@@ -82,7 +82,7 @@ export const componentDocumentation = [
     { name: 'SankeyChart', category: 'Charts', icon: ChartNoAxesCombined },
     { name: 'Maps', category: 'Others', icon: Map },
     { name: 'Avatar', category: 'Display', icon: Users },
-    { name: 'Badge', category: 'Display', icon: Circle },
+    { name: 'Badge', category: 'Display', icon: Badge },
     { name: 'Button', category: 'Action', icon: PanelTop },
     { name: 'Card', category: 'Layouts', icon: PanelTop },
     { name: 'CheckboxInput', category: 'Form', icon: CheckSquare },
@@ -125,8 +125,7 @@ export const componentDocumentation = [
     { name: 'TextArea', category: 'Form', icon: FileText },
     { name: 'TextInput', category: 'Form', icon: Type },
     { name: 'TimeInput', category: 'Form', icon: Clock },
-    { name: 'Timestamp', category: 'Display', icon: Calendar },
-    { name: 'Token', category: 'Display', icon: Gem }
+    { name: 'Timestamp', category: 'Display', icon: Calendar }
 ].map((component) => {
     // Share component ownership and custom justifications with the packaged SDK documentation.
     const provenance = viewCatalog.components.find((entry) => entry.name === component.name);

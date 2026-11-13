@@ -6,7 +6,6 @@ import { BadgeExample } from './views/badge';
 import { EmptyExample } from './views/empty';
 import { InputExample } from './views/input';
 import { StackExample } from './views/stack';
-import { TokenExample } from './views/token';
 import { AvatarExample } from './views/avatar';
 import { SelectExample } from './views/select';
 import { SliderExample } from './views/slider';
@@ -156,7 +155,6 @@ const previews = new Map(
         Stepper: <StepperExample />,
         Switch: <SwitchExample />,
         DataTable: <ModelDirectory />,
-        Token: <TokenExample />,
         // Keep the thumbnail focused on the tab strip rather than its panel content.
         Tabs: (
             <Tabs defaultValue="overview">

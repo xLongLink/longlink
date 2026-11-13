@@ -18,10 +18,18 @@ export default function BadgePage() {
                 }
             ]}
             example={{
-                title: 'Badge',
+                title: 'Order statuses',
                 preview: <BadgeExample />,
                 code: `function Example() {
-  return <Badge variant="info-light">Open</Badge>;
+  return (
+    <div className="flex flex-wrap items-center justify-center gap-2">
+      <Badge variant="secondary">Draft</Badge>
+      <Badge variant="info-light">Open</Badge>
+      <Badge variant="warning-light">Pending</Badge>
+      <Badge variant="success-light">Paid</Badge>
+      <Badge variant="destructive-light">Overdue</Badge>
+    </div>
+  );
 }`
             }}
         />
@@ -30,6 +38,14 @@ export default function BadgePage() {
 
 /** Renders the page's badge example for documentation and the catalog. */
 export function BadgeExample() {
-    // Display the sample order state.
-    return <Badge variant="info-light">Open</Badge>;
+    // Keep status badges at their default size in a wrapping row.
+    return (
+        <div className="flex flex-wrap items-center justify-center gap-2">
+            <Badge variant="secondary">Draft</Badge>
+            <Badge variant="info-light">Open</Badge>
+            <Badge variant="warning-light">Pending</Badge>
+            <Badge variant="success-light">Paid</Badge>
+            <Badge variant="destructive-light">Overdue</Badge>
+        </div>
+    );
 }
