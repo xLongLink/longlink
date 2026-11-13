@@ -73,10 +73,6 @@ export default function QuantityForm() {
   return (
     <Form action="/api/example" method="post">
       <NumberInput name="quantity" label="Quantity" defaultValue={3} min={1} max={100} step={1} required />
-      <Stack direction="horizontal" gap={2}>
-        <Button type="submit" variant="default">Submit</Button>
-        <Button type="reset" variant="outline">Reset</Button>
-      </Stack>
     </Form>
   );
 }`

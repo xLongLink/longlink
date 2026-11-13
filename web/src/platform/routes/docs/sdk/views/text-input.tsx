@@ -65,10 +65,6 @@ export default function NameForm() {
   return (
     <Form action="/api/example" method="post">
       <TextInput name="name" label="Name" defaultValue="New order" required />
-      <Stack direction="horizontal" gap={2}>
-        <Button type="submit" variant="default">Submit</Button>
-        <Button type="reset" variant="outline">Reset</Button>
-      </Stack>
     </Form>
   );
 }`

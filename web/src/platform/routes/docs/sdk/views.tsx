@@ -10,7 +10,6 @@ import { AvatarExample } from './views/avatar';
 import { SelectExample } from './views/select';
 import { SliderExample } from './views/slider';
 import { SwitchExample } from './views/switch';
-import { Form } from '@/components/custom/form';
 import { Grid } from '@/components/custom/grid';
 import { HeadingExample } from './views/heading';
 import { StepperExample } from './views/stepper';
@@ -118,11 +117,6 @@ const previews = new Map(
         Empty: <EmptyExample />,
         FileInput: <FileInputExample />,
         FileViewer: <FileViewerExample />,
-        Form: (
-            <Form action="/api/items">
-                <TextInputExample />
-            </Form>
-        ),
         Grid: <GridExample />,
         // Keep article section spacing out of the centered heading thumbnail.
         Heading: (

@@ -63,10 +63,6 @@ export default function NotesForm() {
   return (
     <Form action="/api/example" method="post">
       <TextArea name="notes" label="Notes" defaultValue="Review complete" rows={2} maxLength={500} required />
-      <Stack direction="horizontal" gap={2}>
-        <Button type="submit" variant="default">Submit</Button>
-        <Button type="reset" variant="outline">Reset</Button>
-      </Stack>
     </Form>
   );
 }`

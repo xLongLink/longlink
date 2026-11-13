@@ -61,20 +61,20 @@ export default function SwitchPage() {
                 title: 'Preference form',
                 preview: (
                     <FormPreview>
-                        <SwitchExample />
-                        <SwitchField name="notifications" label="Notifications" defaultChecked />
+                        <div className="mx-auto flex w-fit flex-col items-center gap-3">
+                            <SwitchExample />
+                            <SwitchField name="notifications" label="Notifications" defaultChecked />
+                        </div>
                     </FormPreview>
                 ),
                 code: `/** Submits an enabled preference using checkbox semantics. */
 export default function PreferenceForm() {
   return (
     <Form action="/api/example" method="post">
-      <Switch name="enabled" aria-label="Enabled" size="sm" defaultChecked />
-      <SwitchField name="notifications" label="Notifications" defaultChecked />
-      <Stack direction="horizontal" gap={2}>
-        <Button type="submit" variant="default">Submit</Button>
-        <Button type="reset" variant="outline">Reset</Button>
-      </Stack>
+      <div className="mx-auto flex w-fit flex-col items-center gap-3">
+        <Switch name="enabled" aria-label="Enabled" size="sm" defaultChecked />
+        <SwitchField name="notifications" label="Notifications" defaultChecked />
+      </div>
     </Form>
   );
 }`

@@ -70,10 +70,6 @@ export default function ApprovalForm() {
   return (
     <Form action="/api/example" method="post">
       <CheckboxInput name="approved" label="Approved" defaultChecked />
-      <Stack direction="horizontal" gap={2}>
-        <Button type="submit" variant="default">Submit</Button>
-        <Button type="reset" variant="outline">Reset</Button>
-      </Stack>
     </Form>
   );
 }`

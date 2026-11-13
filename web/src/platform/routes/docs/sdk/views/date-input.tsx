@@ -66,10 +66,6 @@ export default function DueDateForm() {
   return (
     <Form action="/api/example" method="post">
       <DateInput name="due_date" label="Due date" defaultValue="2026-10-02" required />
-      <Stack direction="horizontal" gap={2}>
-        <Button type="submit" variant="default">Submit</Button>
-        <Button type="reset" variant="outline">Reset</Button>
-      </Stack>
     </Form>
   );
 }`

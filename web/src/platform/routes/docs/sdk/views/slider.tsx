@@ -68,9 +68,6 @@ export default function ProgressForm() {
   return (
     <Form action="/api/example" method="post">
       <SliderField name="progress" label="Progress" defaultValue={60} min={0} max={100} step={1} />
-      <Stack direction="horizontal" gap={2}>
-        <Button type="submit" variant="default">Submit</Button>
-      </Stack>
     </Form>
   );
 }`

@@ -80,10 +80,6 @@ export default function StartTimeForm() {
   return (
     <Form action="/api/example" method="post">
       <TimeInput name="start_time" label="Start time" required />
-      <Stack direction="horizontal" gap={2}>
-        <Button type="submit" variant="default">Submit</Button>
-        <Button type="reset" variant="outline">Reset</Button>
-      </Stack>
     </Form>
   );
 }`

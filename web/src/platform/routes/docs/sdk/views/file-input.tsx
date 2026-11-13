@@ -80,10 +80,6 @@ export default function AttachmentsForm() {
         maxFiles={3}
         required
       />
-      <Stack direction="horizontal" gap={2}>
-        <Button type="submit" variant="default">Submit</Button>
-        <Button type="reset" variant="outline">Reset</Button>
-      </Stack>
     </Form>
   );
 }`
@@ -92,9 +88,9 @@ export default function AttachmentsForm() {
     );
 }
 
-/** Shows themed multiple-file selection with local submission metadata. */
+/** Shows themed multiple-file selection. */
 export function FileInputExample() {
-    // Keep file objects intact; the preview displays filenames and sizes rather than uploading content.
+    // Keep file selection local rather than uploading content.
     return (
         <FileInput
             name="attachments"

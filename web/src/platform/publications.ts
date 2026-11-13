@@ -97,7 +97,6 @@ export const componentDocumentation = [
     { name: 'Empty', category: 'Display', icon: Package },
     { name: 'FileInput', category: 'Form', icon: FileCode2 },
     { name: 'FileViewer', category: 'Display', icon: FileText },
-    { name: 'Form', category: 'Form', icon: FileText },
     { name: 'Functions', category: 'Runtime' },
     { name: 'Grid', category: 'Layouts', icon: Grip },
     { name: 'Heading', category: 'Display', icon: Type },
