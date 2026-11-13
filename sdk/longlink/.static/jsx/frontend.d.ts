@@ -124,26 +124,6 @@ type ISODateString = `${number}${number}${number}${number}-${number}${number}-${
 /** @category Form @group TimeInput */
 type ISOTimeString = string & { readonly __brand: 'ISOTimeString' };
 
-/** @category Form @group MultiSelector */
-type SelectorOptionData = {
-    value: string;
-    label?: string;
-    description?: ViewNode;
-    icon?: StoneIconName;
-    disabled?: boolean;
-};
-
-/** @category Form @group MultiSelector */
-type SelectorOptionType =
-    | string
-    | SelectorOptionData
-    | { type: 'divider' }
-    | {
-          type: 'section';
-          title?: string;
-          options: SelectorOptionData[];
-      };
-
 /** @category Display @group Table */
 type ColumnWidth = { type: 'proportional'; value: number; minWidth?: number } | { type: 'pixel'; value: number };
 
@@ -4601,19 +4581,6 @@ declare function Form(props: {
 declare function DateInput(props: DateInputProps): React.JSX.Element;
 
 /** @category Form */
-declare function MultiSelector(
-    props: FieldProps & {
-        options: SelectorOptionType[];
-        value?: string[];
-        defaultValue?: string[];
-        onChange?: (value: string[]) => void;
-        placeholder?: string;
-        hasSelectAll?: boolean;
-        hasSearch?: boolean;
-    }
-): React.JSX.Element;
-
-/** @category Form */
 declare function TimeInput(
     props: FieldProps & {
         value?: ISOTimeString;
@@ -4625,22 +4592,6 @@ declare function TimeInput(
         hourFormat?: '12h' | '24h';
         increment?: number;
         placeholder?: string;
-    }
-): React.JSX.Element;
-
-/** @category Form */
-declare function NumberInput(
-    props: FieldProps & {
-        value?: number | null;
-        defaultValue?: number;
-        onChange?: (value: number | null) => void;
-        min?: number | null;
-        max?: number | null;
-        step?: number | null;
-        placeholder?: string;
-        units?: string | null;
-        isIntegerOnly?: boolean;
-        autoComplete?: string;
     }
 ): React.JSX.Element;
 

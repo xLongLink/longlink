@@ -4,7 +4,7 @@ export default function ProjectSettings() {
     const [company, setCompany] = useState('Acme Ink');
     const [currency, setCurrency] = useState('CHF');
     const [approvalRequired, setApprovalRequired] = useState(true);
-    const [approvalThreshold, setApprovalThreshold] = useState(1000);
+    const [approvalThreshold, setApprovalThreshold] = useState('1000');
     const [pendingNotifications, setPendingNotifications] = useState(true);
     const [approvedNotifications, setApprovedNotifications] = useState(false);
     const [isFullscreenOpen, setIsFullscreenOpen] = useState(false);
@@ -58,13 +58,18 @@ export default function ProjectSettings() {
                                 value={approvalRequired}
                                 onChange={setApprovalRequired}
                             />
-                            <NumberInput
-                                label={`Approval threshold (${currency})`}
-                                value={approvalThreshold}
-                                onChange={setApprovalThreshold}
-                                min={0}
-                                disabled={!approvalRequired}
-                            />
+                            <Field>
+                                <FieldLabel htmlFor="approval-threshold">Approval threshold ({currency})</FieldLabel>
+                                <Input
+                                    id="approval-threshold"
+                                    type="number"
+                                    value={approvalThreshold}
+                                    onChange={(event) => setApprovalThreshold(event.currentTarget.value)}
+                                    min={0}
+                                    step="any"
+                                    disabled={!approvalRequired}
+                                />
+                            </Field>
                         </Stack>
                     </MenuItem>
                     <MenuItem label="Notifications">

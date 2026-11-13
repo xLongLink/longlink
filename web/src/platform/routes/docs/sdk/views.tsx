@@ -28,11 +28,9 @@ import { FileViewerExample } from './views/file-viewer';
 import { RadioGroupExample } from './views/radio-group';
 import { ViewDialogExample } from './views/view-dialog';
 import { Currency } from '@/components/custom/currency';
-import { NumberInputExample } from './views/number-input';
 import { DropdownMenuExample } from './views/dropdown-menu';
 import { Disclosure } from '@/components/custom/disclosure';
 import { CheckboxInputExample } from './views/checkbox-input';
-import { MultiSelectorExample } from './views/multi-selector';
 import { componentDocumentation } from '@/platform/publications';
 import { DocumentationArticle } from '@/components/layouts/article';
 import { ModelDirectory } from '@/components/custom/model-directory';
@@ -129,12 +127,6 @@ const previews = new Map(
                 <a href="#workflow">Workflow</a>
             </nav>
         ),
-        MultiSelector: (
-            <div className="w-full">
-                <MultiSelectorExample />
-            </div>
-        ),
-        NumberInput: <NumberInputExample />,
         Progress: <ProgressExample />,
         RadioGroup: <RadioGroupExample />,
         Select: <SelectExample />,

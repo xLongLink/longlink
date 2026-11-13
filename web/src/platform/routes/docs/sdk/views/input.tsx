@@ -16,6 +16,11 @@ export default function InputPage() {
                 { name: 'value', type: 'string | number', description: 'Controlled input value.' },
                 { name: 'onChange', type: 'ChangeEventHandler<HTMLInputElement>', description: 'Native change event.' },
                 {
+                    name: 'min / max / step',
+                    type: 'string | number',
+                    description: 'Native bounds and step validation for type="number". Use step="any" for decimals.'
+                },
+                {
                     name: 'disabled',
                     type: 'boolean',
                     description: 'Disables interaction and excludes the input from submission.'
@@ -75,6 +80,10 @@ export default function InputPage() {
   <FieldDescription id="name-description">Order name.</FieldDescription>
 </Field>
 <Field>
+  <FieldLabel htmlFor="quantity">Quantity</FieldLabel>
+  <Input id="quantity" name="quantity" type="number" defaultValue={3} min={1} max={100} step={1} required />
+</Field>
+<Field>
   <FieldLabel htmlFor="notes">Notes</FieldLabel>
   <Textarea id="notes" name="notes" defaultValue="Order notes" />
 </Field>`
@@ -97,6 +106,19 @@ export function InputExample() {
                     aria-describedby="native-name-description"
                 />
                 <FieldDescription id="native-name-description">Order name.</FieldDescription>
+            </Field>
+            <Field>
+                <FieldLabel htmlFor="native-quantity">Quantity</FieldLabel>
+                <Input
+                    id="native-quantity"
+                    name="quantity"
+                    type="number"
+                    defaultValue={3}
+                    min={1}
+                    max={100}
+                    step={1}
+                    required
+                />
             </Field>
             <Field>
                 <FieldLabel htmlFor="native-notes">Notes</FieldLabel>

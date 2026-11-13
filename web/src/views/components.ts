@@ -101,9 +101,6 @@ export { Form } from '@/components/custom/form';
 export { DateInput } from '@/components/custom/date-input';
 
 /** @category Form */
-export { MultiSelector } from '@/components/custom/multi-selector';
-
-/** @category Form */
 export { TimeInput } from '@/components/custom/time-input';
 
 /** @category Form */
@@ -135,9 +132,6 @@ export {
     InputGroupTextarea,
     InputGroupText
 } from '@/components/shadcn/input-group';
-
-/** @category Form */
-export { NumberInput } from '@/components/custom/number-input';
 
 /** Custom labeled form adapter with reset and focusable disabled controls. @category Form */
 export { CheckboxInput } from '@/components/custom/checkbox-input';

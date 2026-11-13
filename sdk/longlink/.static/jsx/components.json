@@ -12,6 +12,11 @@
                     "description": "Standard HTML form control behavior."
                 },
                 {
+                    "name": "min / max / step",
+                    "type": "string | number",
+                    "description": "Native bounds and step validation for type=\"number\". Use step=\"any\" for decimals."
+                },
+                {
                     "name": "onChange",
                     "type": "ChangeEventHandler<HTMLInputElement>",
                     "description": "DOM event; read event.currentTarget.value."
@@ -1510,169 +1515,6 @@
             "justification": "Coordinates Solution side navigation, section selection, and persistent section content."
         },
         {
-            "name": "MultiSelector",
-            "category": "Form",
-            "introduction": "Selects multiple values using standard option and selected-value rendering.",
-            "keywords": [
-                "multiple selection",
-                "choices",
-                "filter"
-            ],
-            "properties": [
-                {
-                    "name": "label",
-                    "type": "string",
-                    "description": "Label text for accessibility."
-                },
-                {
-                    "name": "description",
-                    "type": "string",
-                    "description": "Helper text displayed below the label."
-                },
-                {
-                    "name": "name",
-                    "type": "string",
-                    "description": "Includes the themed control's value under this form submission name."
-                },
-                {
-                    "name": "required",
-                    "type": "boolean",
-                    "description": "Requires a value before native form submission."
-                },
-                {
-                    "name": "disabled",
-                    "type": "boolean",
-                    "description": "Prevents interaction and excludes the field from submission."
-                },
-                {
-                    "name": "options",
-                    "type": "SelectorOptionType[]",
-                    "description": "Options, dividers, or sections, with optional per-option actions."
-                },
-                {
-                    "name": "value",
-                    "type": "string[]",
-                    "description": "Currently selected values."
-                },
-                {
-                    "name": "defaultValue",
-                    "type": "string[]",
-                    "description": "Initial value."
-                },
-                {
-                    "name": "onChange",
-                    "type": "(value: string[]) => void",
-                    "description": "Receives selected values and an optional descriptor when creating an option."
-                },
-                {
-                    "name": "placeholder",
-                    "type": "string",
-                    "description": "Placeholder text shown when no value is selected.",
-                    "default": "Select..."
-                },
-                {
-                    "name": "hasSelectAll",
-                    "type": "boolean",
-                    "description": "Whether to show a select-all checkbox.",
-                    "default": false
-                },
-                {
-                    "name": "hasSearch",
-                    "type": "boolean",
-                    "description": "Shows a search field for filtering options.",
-                    "default": false
-                }
-            ],
-            "source": "custom",
-            "justification": "Connects multiple selected values to LongLink Form naming, validation, reset, and value callbacks."
-        },
-        {
-            "name": "NumberInput",
-            "category": "Form",
-            "introduction": "Edits a constrained number without wheel editing or custom value formatting.",
-            "properties": [
-                {
-                    "name": "label",
-                    "type": "string",
-                    "description": "Label text for the input (always rendered for accessibility)."
-                },
-                {
-                    "name": "description",
-                    "type": "string",
-                    "description": "Description text displayed between the label and input."
-                },
-                {
-                    "name": "name",
-                    "type": "string",
-                    "description": "Includes the themed control's value under this form submission name."
-                },
-                {
-                    "name": "required",
-                    "type": "boolean",
-                    "description": "Requires a value before native form submission."
-                },
-                {
-                    "name": "disabled",
-                    "type": "boolean",
-                    "description": "Prevents interaction and excludes the field from submission."
-                },
-                {
-                    "name": "value",
-                    "type": "number | null",
-                    "description": "Current value of the input."
-                },
-                {
-                    "name": "defaultValue",
-                    "type": "number",
-                    "description": "Initial value."
-                },
-                {
-                    "name": "min",
-                    "type": "number | null",
-                    "description": "Minimum value allowed. A smaller entry commits at this value on blur or Enter."
-                },
-                {
-                    "name": "max",
-                    "type": "number | null",
-                    "description": "Maximum value allowed. A larger entry commits at this value on blur or Enter."
-                },
-                {
-                    "name": "step",
-                    "type": "number | null",
-                    "description": "Step increment for the input.",
-                    "default": 1
-                },
-                {
-                    "name": "placeholder",
-                    "type": "string",
-                    "description": "Placeholder text."
-                },
-                {
-                    "name": "units",
-                    "type": "string | null",
-                    "description": "Units text to display at the end of the input (e.g., \"%\" or \"GB\")."
-                },
-                {
-                    "name": "isIntegerOnly",
-                    "type": "boolean",
-                    "description": "Only allow integer values (no floating point).",
-                    "default": false
-                },
-                {
-                    "name": "autoComplete",
-                    "type": "string",
-                    "description": "HTML autocomplete attribute."
-                },
-                {
-                    "name": "onChange",
-                    "type": "(value: number | null) => void",
-                    "description": "Receives committed edits, step changes, or cleared values."
-                }
-            ],
-            "source": "custom",
-            "justification": "Preserves locale-aware numeric editing, incomplete drafts, constraints, and LongLink Form validation and reset."
-        },
-        {
             "name": "DataPagination",
             "category": "Action",
             "guidance": "Renamed from Pagination. Existing Views that use page, pageSize, totalItems, and onPageChange must use DataPagination; Pagination now exposes native shadcn composition.",
@@ -1829,7 +1671,7 @@
             "name": "Select",
             "category": "Form",
             "introduction": "Native select composition with single or multiple selection.",
-            "guidance": "Compose SelectTrigger, SelectValue, SelectContent, and SelectItem. SelectGroup, SelectLabel, SelectSeparator, SelectScrollUpButton, and SelectScrollDownButton are also exported.",
+            "guidance": "Compose SelectTrigger, SelectValue, SelectContent, and SelectItem. Use multiple with array values for multiple selection and repeated named form entries. SelectGroup, SelectLabel, SelectSeparator, SelectScrollUpButton, and SelectScrollDownButton are also exported.",
             "properties": [
                 {
                     "name": "items",

@@ -24,7 +24,12 @@ export default function SelectPage() {
                     type: '(value, eventDetails) => void',
                     description: 'Called with the selected value and Base UI event details.'
                 },
-                { name: 'multiple', type: 'boolean', description: 'Enables multiple selection.' },
+                {
+                    name: 'multiple',
+                    type: 'boolean',
+                    description:
+                        'Enables array-valued selection. Named groups submit one form entry per selected value.'
+                },
                 {
                     name: 'items',
                     type: 'Record<string, ReactNode> | { value, label }[]',
@@ -60,10 +65,13 @@ export default function SelectPage() {
                 }
             ]}
             example={{
-                title: 'Native status selection',
+                title: 'Single and multiple selection',
                 preview: (
                     <FormPreview>
-                        <SelectExample />
+                        <div className="flex flex-col gap-4">
+                            <SelectExample />
+                            <MultipleSelectExample />
+                        </div>
                     </FormPreview>
                 ),
                 code: `<Select name="status" defaultValue="open">
@@ -72,9 +80,34 @@ export default function SelectPage() {
     <SelectItem value="open">Open</SelectItem>
     <SelectItem value="closed">Closed</SelectItem>
   </SelectContent>
+</Select>
+<Select name="teams" multiple defaultValue={['design', 'engineering']} required>
+  <SelectTrigger className="w-full" aria-label="Teams"><SelectValue placeholder="Select teams" /></SelectTrigger>
+  <SelectContent>
+    <SelectItem value="design">Design</SelectItem>
+    <SelectItem value="engineering">Engineering</SelectItem>
+    <SelectItem value="support">Support</SelectItem>
+  </SelectContent>
 </Select>`
             }}
         />
+    );
+}
+
+/** Shows array-valued selection using the installed shadcn Select parts. */
+function MultipleSelectExample() {
+    // Native Select owns selection and repeated form entries.
+    return (
+        <Select name="teams" multiple defaultValue={['design', 'engineering']} required>
+            <SelectTrigger className="w-full" aria-label="Teams">
+                <SelectValue placeholder="Select teams" />
+            </SelectTrigger>
+            <SelectContent>
+                <SelectItem value="design">Design</SelectItem>
+                <SelectItem value="engineering">Engineering</SelectItem>
+                <SelectItem value="support">Support</SelectItem>
+            </SelectContent>
+        </Select>
     );
 }
 

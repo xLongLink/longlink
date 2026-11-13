@@ -222,6 +222,23 @@ const nativeComposition = (
                     <SelectItem value="one">One</SelectItem>
                 </SelectContent>
             </Select>
+            <Select
+                multiple
+                name="teams"
+                defaultValue={['design']}
+                onValueChange={(values, details) => {
+                    values.map((value) => value.toUpperCase());
+                    details.cancel();
+                }}
+            >
+                <SelectTrigger aria-label="Teams">
+                    <SelectValue placeholder="Select teams" />
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="design">Design</SelectItem>
+                    <SelectItem value="engineering">Engineering</SelectItem>
+                </SelectContent>
+            </Select>
             <Combobox items={['One', 'Two']}>
                 <ComboboxInput />
                 <ComboboxContent anchor={anchor}>
