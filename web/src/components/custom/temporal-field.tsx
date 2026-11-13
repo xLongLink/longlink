@@ -34,8 +34,9 @@ export function TemporalField<T extends string>(
     const restoreFocus = useRef(true);
     const [draft, setDraft] = useState<{ source: T | undefined; text: string } | null>(null);
 
-    // Coarse pointers open the picker instead of the software keyboard.
+    // Time columns replace the software keyboard on coarse pointers.
     useEffect(() => {
+        if (props.kind !== 'time') return;
         const media = window.matchMedia('(pointer: coarse)');
         const change = () => setCoarse(media.matches);
 
@@ -43,7 +44,7 @@ export function TemporalField<T extends string>(
         media.addEventListener('change', change);
 
         return () => media.removeEventListener('change', change);
-    }, []);
+    }, [props.kind]);
 
     // Portalled controls cannot inherit a fieldset disabled after the picker opened.
     const blocked = () =>
@@ -146,7 +147,7 @@ export function TemporalField<T extends string>(
                         restoreFocus.current = details.reason !== 'outside-press' && details.reason !== 'focus-out';
                         setOpen(next);
                     }}
-                    modal={coarse ? true : 'trap-focus'}
+                    modal={props.kind === 'date' ? false : coarse ? true : 'trap-focus'}
                 >
                     <InputGroup className="data-disabled:opacity-50" data-disabled={props.disabled || undefined}>
                         <InputGroupInput
@@ -258,22 +259,30 @@ export function TemporalField<T extends string>(
                     </InputGroup>
                     <PopoverContent
                         align="start"
-                        className="w-fit max-w-[calc(100vw-1rem)] max-h-[var(--available-height)] overflow-auto"
+                        className={
+                            props.kind === 'date'
+                                ? 'w-auto p-0'
+                                : 'w-fit max-w-[calc(100vw-1rem)] max-h-[var(--available-height)] overflow-auto'
+                        }
                         initialFocus={props.kind === 'date' ? false : true}
                         finalFocus={() => (restoreFocus.current && !blocked() ? input.current : false)}
                         aria-label={`Choose ${props.label}`}
                     >
-                        <PopoverTitle>{props.label}</PopoverTitle>
+                        <PopoverTitle className={props.kind === 'date' ? 'sr-only' : undefined}>
+                            {props.label}
+                        </PopoverTitle>
                         {/* eslint-disable-next-line react/refs -- The factory renders controls; selection runs only from their event handlers. */}
                         {props.picker(validValue ? field.value : undefined, select)}
-                        <Button
-                            type="button"
-                            variant="outline"
-                            className="view-temporal-close"
-                            onClick={() => setOpen(false)}
-                        >
-                            {props.kind === 'time' ? 'Save' : 'Close'}
-                        </Button>
+                        {props.kind === 'time' && (
+                            <Button
+                                type="button"
+                                variant="outline"
+                                className="view-temporal-close"
+                                onClick={() => setOpen(false)}
+                            >
+                                Save
+                            </Button>
+                        )}
                     </PopoverContent>
                 </Popover>
                 {props.kind === 'time' && (

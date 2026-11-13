@@ -940,8 +940,9 @@
                     "default": "Select a date"
                 }
             ],
-            "source": "custom",
-            "justification": "Coordinates ISO date values, constrained calendar selection, clearing, and LongLink Form validation and reset."
+            "source": "shadcn",
+            "reference": "https://ui.shadcn.com/docs/components/base/date-picker",
+            "justification": "Composes the shadcn InputGroup, Popover, and Calendar with ISO date values and LongLink Form integration."
         },
         {
             "name": "ViewDialog",

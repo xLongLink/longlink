@@ -23,46 +23,51 @@ function time(value: string) {
     return value as ISOTimeString;
 }
 
-it.each(['date', 'time'] as const)(
-    'opens the coarse-pointer %s sheet from its read-only field without submitting',
-    async (kind) => {
-        const matchMedia = window.matchMedia.bind(window);
+it.each(['date', 'time'] as const)('opens the coarse-pointer %s picker without submitting', async (kind) => {
+    const matchMedia = window.matchMedia.bind(window);
 
-        const media = vi.spyOn(window, 'matchMedia').mockImplementation((query) => {
-            const result = matchMedia(query);
+    const media = vi.spyOn(window, 'matchMedia').mockImplementation((query) => {
+        const result = matchMedia(query);
 
-            if (query === '(pointer: coarse)') Object.defineProperty(result, 'matches', { value: true });
+        if (query === '(pointer: coarse)') Object.defineProperty(result, 'matches', { value: true });
 
-            return result;
-        });
+        return result;
+    });
 
-        const submissions = vi.fn((event: FormEvent) => event.preventDefault());
-        const user = userEvent.setup();
+    const submissions = vi.fn((event: FormEvent) => event.preventDefault());
+    const user = userEvent.setup();
 
-        try {
-            await withMounted(
-                <form onSubmit={submissions}>
-                    {kind === 'date' ? <DateInput label="When" name="when" /> : <TimeInput label="When" name="when" />}
-                    <button type="submit">Submit</button>
-                </form>,
-                async (output) => {
-                    const input = find<HTMLInputElement>(output, 'input:not([type=hidden])');
-                    expect(input.readOnly).toBe(true);
-                    await act(async () => user.click(input));
-                    expect(document.querySelector('[role=dialog]')).not.toBeNull();
-                    await act(async () => user.click(find(document, '.view-temporal-close')));
-                    await vi.waitFor(() => expect(document.activeElement).toBe(input));
-                    await act(async () => user.keyboard('{Enter}'));
-                    expect(document.querySelector('[role=dialog]')).not.toBeNull();
-                    expect(submissions).not.toHaveBeenCalled();
-                    expect(new FormData(find<HTMLFormElement>(output, 'form')).get('when')).toBe('');
+    try {
+        await withMounted(
+            <form onSubmit={submissions}>
+                {kind === 'date' ? <DateInput label="When" name="when" /> : <TimeInput label="When" name="when" />}
+                <button type="submit">Submit</button>
+            </form>,
+            async (output) => {
+                const input = find<HTMLInputElement>(output, 'input:not([type=hidden])');
+                expect(input.readOnly).toBe(kind === 'time');
+                const trigger = find<HTMLButtonElement>(output, 'button[aria-label="Choose When"]');
+
+                if (kind === 'date') {
+                    await act(async () => user.type(input, '2028-02-29'));
                 }
-            );
-        } finally {
-            media.mockRestore();
-        }
+
+                await act(async () => user.click(kind === 'time' ? input : trigger));
+                expect(document.querySelector('[role=dialog]')).not.toBeNull();
+                await act(async () => user.keyboard('{Escape}'));
+                await vi.waitFor(() => expect(document.activeElement).toBe(input));
+                await act(async () => user.keyboard(kind === 'time' ? '{Enter}' : '{ArrowDown}'));
+                expect(document.querySelector('[role=dialog]')).not.toBeNull();
+                expect(submissions).not.toHaveBeenCalled();
+                expect(new FormData(find<HTMLFormElement>(output, 'form')).get('when')).toBe(
+                    kind === 'date' ? '2028-02-29' : ''
+                );
+            }
+        );
+    } finally {
+        media.mockRestore();
     }
-);
+});
 
 /** Chooses a themed picker option through its label and real portalled list. */
 async function choose(user: ReturnType<typeof userEvent.setup>, root: ParentNode, label: string, value: string) {
