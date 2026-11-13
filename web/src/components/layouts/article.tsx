@@ -1,4 +1,3 @@
-import './article.css';
 import { Page } from '@/components/page';
 import { Separator } from '@/components/shadcn/separator';
 import { documentationPaths } from '@/platform/publications';
@@ -88,27 +87,29 @@ function ArticleRenderer({
     return (
         <Page description={article.description} title={article.title}>
             {root ? (
-                <header className="article-header">
-                    <div className="article-columns">
-                        <div className="article-reading-column">
+                <header className="mx-auto box-border flex h-16 w-full max-w-[1064px] items-center px-6">
+                    <div className="mx-auto flex w-full min-w-0 max-w-[1016px] gap-6">
+                        <div className="mx-auto flex min-w-0 max-w-[720px] flex-1 flex-col">
                             <PathBreadcrumb
                                 className="min-w-0 overflow-hidden"
                                 labels={articleRouteLabels}
                                 root={root}
                             />
                         </div>
-                        {article.toc.length ? <div aria-hidden="true" className="article-outline-spacer" /> : null}
+                        {article.toc.length ? (
+                            <div aria-hidden="true" className="hidden w-56 flex-none min-[64rem]:flex" />
+                        ) : null}
                     </div>
                 </header>
             ) : null}
-            <div className="article-content">
-                <div className="article-columns">
-                    <div className="article-reading-column">
+            <div className="p-6">
+                <div className="mx-auto flex w-full min-w-0 max-w-[1016px] gap-6">
+                    <div className="mx-auto flex min-w-0 max-w-[720px] flex-1 flex-col">
                         <article
                             className={`space-y-7 [&_:is(h2,h3,h4,h5,h6):not(dialog_*)]:[margin-block-start:var(--article-heading-spacing,var(--spacing-8))] [&_p]:opacity-90${className ? ` ${className}` : ''}`}
                         >
                             {children}
-                            <footer className="article-footer">
+                            <footer className="flex flex-col gap-3 pt-8 pb-30">
                                 <ArticleFooter
                                     lastUpdated={article.lastUpdated}
                                     editUrl={article.editUrl}
@@ -141,6 +142,9 @@ export function ArticleFooter({
     const currentPage = paths.indexOf(pagePath);
     const previousPage = paths[currentPage - 1];
     const nextPage = paths[currentPage + 1];
+
+    const pageLinkClassName =
+        'box-border inline-flex h-[max(var(--size-element-md),1lh)] cursor-pointer items-center justify-center gap-2 rounded-(--radius-element) border-0 bg-(--color-neutral) px-3 py-2 [font-family:inherit] text-(length:--text-label-size) leading-(--text-label-leading) font-medium whitespace-nowrap text-(--color-text-primary) no-underline disabled:cursor-default disabled:opacity-50 focus-visible:outline-(length:--focus-outline-width) focus-visible:outline-solid focus-visible:outline-ring focus-visible:outline-offset-(--focus-outline-offset) [&:not(:disabled):hover]:[@media(hover:hover)]:bg-[color-mix(in_srgb,var(--color-text-primary)_8%,var(--color-neutral))]';
 
     // Keep unmodified arrow shortcuts available outside native text-entry controls.
     const handleKeyDown = useEffectEvent((event: KeyboardEvent) => {
@@ -185,11 +189,11 @@ export function ArticleFooter({
     return (
         <>
             {currentPage >= 0 ? (
-                <nav aria-label="Article page navigation" className="article-page-navigation">
+                <nav aria-label="Article page navigation" className="flex w-full items-center justify-between gap-3">
                     {previousPage === undefined ? (
                         <button
                             type="button"
-                            className="article-page-link"
+                            className={pageLinkClassName}
                             disabled
                             aria-disabled="true"
                             aria-keyshortcuts="ArrowLeft"
@@ -198,7 +202,7 @@ export function ArticleFooter({
                             Previous
                         </button>
                     ) : (
-                        <RouterLink className="article-page-link" to={`${previousPage}/`} aria-keyshortcuts="ArrowLeft">
+                        <RouterLink className={pageLinkClassName} to={`${previousPage}/`} aria-keyshortcuts="ArrowLeft">
                             <ArrowLeft aria-hidden size={16} />
                             Previous
                         </RouterLink>
@@ -206,7 +210,7 @@ export function ArticleFooter({
                     {nextPage === undefined ? (
                         <button
                             type="button"
-                            className="article-page-link"
+                            className={pageLinkClassName}
                             disabled
                             aria-disabled="true"
                             aria-keyshortcuts="ArrowRight"
@@ -215,7 +219,7 @@ export function ArticleFooter({
                             <ArrowRight aria-hidden size={16} />
                         </button>
                     ) : (
-                        <RouterLink className="article-page-link" to={`${nextPage}/`} aria-keyshortcuts="ArrowRight">
+                        <RouterLink className={pageLinkClassName} to={`${nextPage}/`} aria-keyshortcuts="ArrowRight">
                             Next
                             <ArrowRight aria-hidden size={16} />
                         </RouterLink>
@@ -223,10 +227,15 @@ export function ArticleFooter({
                 </nav>
             ) : null}
             <Separator />
-            <div className="article-metadata">
+            <div className="flex w-full flex-wrap items-center justify-between gap-3 font-(family-name:--font-family-body) text-(length:--text-supporting-size) leading-(--text-supporting-leading) font-(--text-supporting-weight) text-(--color-text-secondary)">
                 <span>{`Last updated: ${dateFormatter.format(new Date(lastUpdated))}`}</span>
                 {editUrl ? (
-                    <a href={editUrl} target="_blank" rel="noopener noreferrer">
+                    <a
+                        className="inline-flex items-center gap-0.5 text-(--color-text-accent) underline underline-offset-2 hover:text-[color-mix(in_srgb,var(--color-text-accent),var(--color-tint-hover)_15%)] focus-visible:outline-(length:--focus-outline-width) focus-visible:outline-solid focus-visible:outline-ring focus-visible:outline-offset-(--focus-outline-offset)"
+                        href={editUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >
                         Edit this page
                         <ExternalLink aria-hidden size={12} />
                         <span className="sr-only"> (opens in a new tab)</span>

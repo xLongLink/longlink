@@ -272,7 +272,7 @@ it('supports keyboard SPA navigation and restores selection and breadcrumb after
             expect(output.querySelector('a[aria-current="page"]')?.getAttribute('href')).toBe('/admin');
             expect(output.querySelector('nav[aria-label="Breadcrumb"]')?.textContent).toBe('Overview');
 
-            await act(async () => output.querySelector<HTMLAnchorElement>('.platform-skip-link')?.click());
+            await act(async () => output.querySelector<HTMLAnchorElement>('a[href^="#"]')?.click());
             expect(document.activeElement).toBe(output.querySelector('main'));
         },
         '/admin'
@@ -357,8 +357,8 @@ it('describes the initial collapsed rail on keyboard focus and keeps anchors mou
             if (!users || !solution) throw new Error('Missing navigation links');
 
             expect(solution.hidden).toBe(true);
-            expect(output.querySelector('.platform-logo')?.getAttribute('width')).toBe('32');
-            expect(output.querySelector('.platform-logo')?.getAttribute('height')).toBe('32');
+            expect(output.querySelector('img[alt="LongLink"]')?.getAttribute('width')).toBe('32');
+            expect(output.querySelector('img[alt="LongLink"]')?.getAttribute('height')).toBe('32');
             await act(async () => {
                 await user.tab();
                 await user.tab();
@@ -377,8 +377,8 @@ it('describes the initial collapsed rail on keyboard focus and keeps anchors mou
             expect(output.querySelector('a[href="/solution"]')).toBe(solution);
             expect(solution.hidden).toBe(false);
             expect(solution.textContent).toBe('Solution view');
-            expect(output.querySelector('.platform-wordmark')?.getAttribute('width')).toBe('1781');
-            expect(output.querySelector('.platform-wordmark')?.getAttribute('height')).toBe('286');
+            expect(output.querySelector('img[alt="LongLink"]')?.getAttribute('width')).toBe('1781');
+            expect(output.querySelector('img[alt="LongLink"]')?.getAttribute('height')).toBe('286');
             await act(async () => user.tab({ shift: true }));
             expect(document.activeElement).toBe(users);
             expect(document.querySelector('[role="tooltip"]')).toBeNull();

@@ -6,7 +6,6 @@
 @import 'tailwindcss/preflight.css' layer(base);
 @import './tokens.css';
 @import './components/custom/styles.css';
-@import './components/layouts/platform.css';
 @import './components/layouts/publication.css';
 @import './views/runtime.css';
 @import './shadcn.css';

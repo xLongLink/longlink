@@ -157,13 +157,22 @@ export function ArticleOutline({ items }: { items: readonly ArticleOutlineItem[]
     }
 
     return (
-        <aside className="article-outline" aria-label="On this page">
-            <h2 className="article-outline-title">On this page</h2>
+        <aside
+            className="sticky top-20 box-border hidden w-56 flex-none flex-col gap-3 self-start p-5 min-[64rem]:flex"
+            aria-label="On this page"
+        >
+            <h2 className="m-0 font-(family-name:--font-family-body) text-(length:--text-label-size) leading-(--text-label-leading) font-semibold text-(--color-text-primary)">
+                On this page
+            </h2>
             <nav aria-label="On this page">
-                <ul>
+                <ul className="m-0 flex list-none flex-col gap-0.5 border-s-2 border-(--color-border) p-0">
                     {items.map((item) => (
-                        <li key={item.id}>
+                        <li
+                            key={item.id}
+                            className="m-0 p-0 has-[[aria-current=location]]:shadow-[-2px_0_var(--color-icon-primary)]"
+                        >
                             <a
+                                className="relative block truncate rounded-(--radius-element) py-1 ps-3 pe-2 text-(length:--text-body-size) leading-(--text-body-leading) font-normal text-(--color-text-secondary) no-underline data-[level=3]:ps-7 data-[level=4]:ps-11 data-[level=5]:ps-12 data-[level=6]:ps-12 aria-[current=location]:font-semibold aria-[current=location]:text-(--color-text-primary) hover:text-(--color-text-primary) focus-visible:outline-(length:--focus-outline-width) focus-visible:outline-solid focus-visible:outline-ring focus-visible:outline-offset-(--focus-outline-offset)"
                                 href={`#${encodeURIComponent(item.id)}`}
                                 data-level={item.level}
                                 aria-current={activeId === item.id ? 'location' : undefined}
