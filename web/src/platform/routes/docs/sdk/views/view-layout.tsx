@@ -42,13 +42,12 @@ function ExampleWindow({ example }: { example: ViewExample }) {
                     </Stack>
                 </div>
                 <div
-                    className="min-h-0 min-w-0 flex-1 overflow-auto p-2 data-code:overflow-hidden"
+                    className="flex min-h-0 min-w-0 flex-1 flex-col overflow-auto p-2 data-code:overflow-hidden"
                     data-code={showCode || undefined}
                 >
                     <Stack
-                        className={showCode ? 'hidden' : 'min-h-full [&_:is(.native-heading,.view-heading)]:mt-0'}
+                        className={showCode ? 'hidden' : 'my-auto shrink-0 [&_:is(.native-heading,.view-heading)]:mt-0'}
                         align="center"
-                        justify="center"
                         aria-label={`${example.title} preview`}
                     >
                         {example.preview}

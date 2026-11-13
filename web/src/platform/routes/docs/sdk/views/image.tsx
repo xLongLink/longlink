@@ -19,9 +19,17 @@ export default function ImagePage() {
             ]}
             example={{
                 title: 'Card photo',
-                preview: <Image src={photo} alt="Skyline office towers" ratio={16 / 9} />,
+                preview: (
+                    <div className="w-4/5">
+                        <Image src={photo} alt="Skyline office towers" ratio={16 / 9} />
+                    </div>
+                ),
                 code: `function Example() {
-  return <Image src="/assets/skyline.jpg" alt="Skyline office towers" ratio={16 / 9} />;
+  return (
+    <div className="w-4/5">
+      <Image src="/assets/skyline.jpg" alt="Skyline office towers" ratio={16 / 9} />
+    </div>
+  );
 }`
             }}
         />

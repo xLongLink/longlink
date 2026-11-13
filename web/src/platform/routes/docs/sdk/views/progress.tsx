@@ -17,7 +17,7 @@ export default function ProgressPage() {
                 preview: <ProgressExample />,
                 code: `function Example() {
   return (
-    <Progress value={60}>
+    <Progress value={60} className="w-4/5">
       <ProgressLabel>Progress</ProgressLabel>
       <ProgressValue />
     </Progress>
@@ -31,7 +31,7 @@ export default function ProgressPage() {
 /** Renders labeled progress for the documentation catalog. */
 export function ProgressExample() {
     return (
-        <Progress value={60}>
+        <Progress value={60} className="w-4/5">
             <ProgressLabel>Progress</ProgressLabel>
             <ProgressValue />
         </Progress>

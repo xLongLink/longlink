@@ -22,7 +22,7 @@ export default function DividerPage() {
                 preview: <DividerExample />,
                 code: `function Example() {
   return (
-    <Stack gap={3}>
+    <Stack gap={3} width="80%">
       <Text>Before</Text>
       <Separator />
       <Text>After</Text>
@@ -39,9 +39,9 @@ export default function DividerPage() {
 export function DividerExample() {
     // Display the standard content separator.
     return (
-        <>
+        <div className="flex w-4/5 flex-col gap-3">
             <Separator />
             <Divider label="or" />
-        </>
+        </div>
     );
 }
