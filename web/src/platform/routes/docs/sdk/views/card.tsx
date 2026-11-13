@@ -1,6 +1,8 @@
+import { Link } from 'react-router';
 import ViewLayout from './view-layout';
-import { InteractiveCard } from '@/components/custom/interactive-card';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/shadcn/card';
+import { ArrowRight } from 'lucide-react';
+import { Button } from '@/components/shadcn/button';
+import { Card, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/shadcn/card';
 
 /** Documents native card composition and the custom interactive wrapper. */
 export default function CardPage() {
@@ -63,40 +65,60 @@ export default function CardPage() {
                 ].map((property) => ({ ...property, name: `InteractiveCard.${property.name}` }))
             ]}
             example={{
-                title: 'Native composition and interactive navigation',
-                preview: (
-                    <div className="flex flex-col gap-4">
-                        <Card size="sm">
-                            <CardHeader>
-                                <CardTitle>Order</CardTitle>
-                                <CardDescription>Delivery information</CardDescription>
-                            </CardHeader>
-                            <CardContent>Order details</CardContent>
-                            <CardFooter>Ready to ship</CardFooter>
-                        </Card>
-                        <InteractiveCard label="Open orders" href="/orders" size="sm">
-                            <CardContent>Open orders</CardContent>
-                        </InteractiveCard>
-                    </div>
-                ),
+                title: 'Card with an image',
+                preview: <CardExample />,
                 code: `function Example() {
   return (
-    <>
-      <Card size="sm">
-        <CardHeader>
-          <CardTitle>Order</CardTitle>
-          <CardDescription>Delivery information</CardDescription>
-        </CardHeader>
-        <CardContent>Order details</CardContent>
-        <CardFooter>Ready to ship</CardFooter>
-      </Card>
-      <InteractiveCard label="Open orders" href="/orders" size="sm">
-        <CardContent>Open orders</CardContent>
-      </InteractiveCard>
-    </>
+    <Card className="w-4/5">
+      <img
+        src="/images/organized-work.webp"
+        alt="Illustrated library with curved bookshelves and sweeping staircases"
+        className="aspect-[2/1] w-full object-cover"
+        width={1672}
+        height={941}
+      />
+      <CardHeader>
+        <CardTitle>Views component library</CardTitle>
+        <CardDescription>
+          Forms, layouts, and data displays for LongLink solutions.
+        </CardDescription>
+      </CardHeader>
+      <CardFooter className="justify-end">
+        <Button nativeButton={false} render={<a href="/docs/sdk/views/" />}>
+          Browse components
+          <Icon icon="arrow-right" size="sm" />
+        </Button>
+      </CardFooter>
+    </Card>
   );
 }`
             }}
         />
+    );
+}
+
+/** Shows native card composition with an image and a navigation action. */
+export function CardExample() {
+    // Keep the image flush with the card while its parts own content spacing.
+    return (
+        <Card className="w-4/5">
+            <img
+                src="/images/organized-work.webp"
+                alt="Illustrated library with curved bookshelves and sweeping staircases"
+                className="aspect-[2/1] w-full object-cover"
+                width={1672}
+                height={941}
+            />
+            <CardHeader>
+                <CardTitle>Views component library</CardTitle>
+                <CardDescription>Forms, layouts, and data displays for LongLink solutions.</CardDescription>
+            </CardHeader>
+            <CardFooter className="justify-end">
+                <Button nativeButton={false} render={<Link to="/docs/sdk/views/" />}>
+                    Browse components
+                    <ArrowRight aria-hidden="true" />
+                </Button>
+            </CardFooter>
+        </Card>
     );
 }
