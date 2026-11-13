@@ -57,8 +57,11 @@ export function DeletionDialog({
                 });
             }}
         >
-            <span className="view-action-content" aria-hidden={isDeleting || undefined}>
-                <span className="view-action-label">Delete</span>
+            <span
+                className="view-action-content flex min-w-0 max-w-full flex-1 items-center justify-center gap-[inherit]"
+                aria-hidden={isDeleting || undefined}
+            >
+                <span className="min-w-0 overflow-hidden text-ellipsis">Delete</span>
             </span>
             {isDeleting && <LoaderCircle aria-hidden="true" className="view-action-spinner" />}
         </Button>

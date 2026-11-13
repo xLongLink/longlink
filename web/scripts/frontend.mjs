@@ -100,9 +100,9 @@ const namespace = statements
     )
     .join('\n');
 const names = [...exports].filter((name) => name !== 'FrontendElement').sort();
-// Image keeps its callable declaration above to avoid a block-scoped collision with lib.dom.
+// Image and Text keep callable declarations above to avoid block-scoped collisions with lib.dom.
 const aliases = names
-    .filter((name) => name !== 'Image')
+    .filter((name) => name !== 'Image' && name !== 'Text')
     .map((name) => `declare const ${name}: typeof NativeFrontend.${name};`)
     .join('\n');
 const output = `${retained.trimEnd()}\n\n${marker}declare namespace NativeFrontend {\n${namespace}\n}\n\n${aliases}\n`;

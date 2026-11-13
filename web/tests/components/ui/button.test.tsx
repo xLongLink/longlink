@@ -1,12 +1,12 @@
 import { it, expect, vi } from 'vitest';
 import { ReportedError } from '@/lib/reported';
 import { Form } from '@/components/custom/form';
+import { Icon } from '@/components/custom/icon';
 import userEvent from '@testing-library/user-event';
 import { ErrorBoundary } from 'react-error-boundary';
 // @vitest-environment happy-dom
 import { act, createRef, type MouseEvent } from 'react';
 import { renderStatic, withMounted } from '../../render';
-import { IconButton } from '@/components/custom/icon-button';
 import { ActionButton } from '@/components/custom/action-button';
 import { Dialog, DialogTrigger } from '@/components/shadcn/dialog';
 import { LinkNavigationContext } from '@/components/custom/contexts';
@@ -119,7 +119,9 @@ it.each(['button', 'icon'] as const)(
                 kind === 'button' ? (
                     <ActionButton onClick={action}>Save</ActionButton>
                 ) : (
-                    <IconButton label="Save" icon="check" onClick={action} />
+                    <ActionButton size="icon" aria-label="Save" onClick={action}>
+                        <Icon icon="check" size="md" />
+                    </ActionButton>
                 ),
                 async (output) => {
                     const control = output.querySelector<HTMLButtonElement>('button');
@@ -206,7 +208,9 @@ it('keeps grouped actions sized and disabled, excluding disabled submitter data'
                     <ActionButton type="submit" name="intent" value="publish" onClick={action}>
                         Publish
                     </ActionButton>
-                    <IconButton label="Delete" icon="trash" onClick={action} />
+                    <ActionButton size="icon-lg" aria-label="Delete" onClick={action}>
+                        <Icon icon="trash" size="lg" />
+                    </ActionButton>
                 </ActionButtonGroup>
             </form>
         </section>,

@@ -2,6 +2,7 @@ const anchor = useComboboxAnchor();
 
 const [selected, setSelected] = useState('one');
 const remembered = useRef(/** @type {HTMLButtonElement | null} */ (null));
+const textRef = useRef(/** @type {HTMLElement | null} */ (null));
 useEffect(() => {}, []);
 const label = useMemo(() => selected.toUpperCase(), [selected]);
 const confirmation = useConfirm();
@@ -14,6 +15,19 @@ const nativeComposition = (
             <CardDescription>Settings</CardDescription>
         </CardHeader>
         <CardContent>
+            <Text
+                as="h4"
+                id="publication-status"
+                role="status"
+                aria-live="polite"
+                data-publication="current"
+                ref={textRef}
+                className="text-muted-foreground"
+                style={{ textWrap: 'balance' }}
+                onClick={(event) => event.currentTarget.focus()}
+            >
+                Ready to publish
+            </Text>
             <Avatar name="Account" src="/account.png" />
             <Separator orientation="vertical" id="account-divider" aria-label="Account sections" />
             <Divider label={<a href="/login">Sign in</a>} />
@@ -163,15 +177,16 @@ const nativeComposition = (
                 Save
             </Button>
             <ActionButtonGroup label="Actions" size="default">
-                <IconButton
-                    icon="check"
-                    label="Approve"
-                    size="xs"
+                <ActionButton
+                    aria-label="Approve"
+                    size="icon-xs"
                     variant="outline"
                     onClick={async (event) => {
                         event.currentTarget.focus();
                     }}
-                />
+                >
+                    <Icon icon="check" size="sm" />
+                </ActionButton>
             </ActionButtonGroup>
             <FileViewer src="/attachment" title="Attachment" />
             <Tabs value={selected} onValueChange={(value) => setSelected(String(value))}>
@@ -243,8 +258,8 @@ const _legacyDialog = <ViewDialog isOpen title="Title" />;
 // @ts-expect-error ActionButtonGroup no longer accepts the legacy medium size.
 const _legacyGroupSize = <ActionButtonGroup label="Actions" size="md" />;
 
-// @ts-expect-error IconButton uses native Button variants.
-const _legacyIconVariant = <IconButton icon="check" label="Approve" variant="primary" />;
+// @ts-expect-error ActionButton uses native Button variants.
+const _legacyIconVariant = <ActionButton aria-label="Approve" variant="primary"><Icon icon="check" size="sm" /></ActionButton>;
 
 // @ts-expect-error Native Table accepts HTML composition, not the data adapter contract.
 const _legacyTable = <Table data={[{ name: 'Order' }]} />;

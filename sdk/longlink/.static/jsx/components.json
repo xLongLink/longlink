@@ -606,7 +606,7 @@
                 {
                     "name": "children",
                     "type": "ReactNode",
-                    "description": "ActionButton or IconButton children for coordinated keyboard navigation."
+                    "description": "ActionButton children for coordinated keyboard navigation."
                 },
                 {
                     "name": "label",
@@ -1568,48 +1568,6 @@
             ],
             "source": "custom",
             "justification": "Resolves LongLink icon aliases and loads Lucide icons through the isolated runtime's icon capability."
-        },
-        {
-            "name": "IconButton",
-            "category": "Action",
-            "introduction": "Runs a labeled icon action with automatic async feedback.",
-            "properties": [
-                {
-                    "name": "label",
-                    "type": "string",
-                    "description": "Accessible label. Used as aria-label (not rendered as visible text)."
-                },
-                {
-                    "name": "icon",
-                    "type": "StoneIconName",
-                    "description": "Icon displayed inside the button."
-                },
-                {
-                    "name": "variant",
-                    "type": "\"default\" | \"outline\" | \"secondary\" | \"ghost\" | \"destructive\" | \"link\"",
-                    "description": "Visual style variant.",
-                    "default": "default"
-                },
-                {
-                    "name": "size",
-                    "type": "\"xs\" | \"sm\" | \"default\" | \"lg\"",
-                    "description": "Size variant.",
-                    "default": "default"
-                },
-                {
-                    "name": "isDisabled",
-                    "type": "boolean",
-                    "description": "Disables the button.",
-                    "default": false
-                },
-                {
-                    "name": "onClick",
-                    "type": "(event: ViewMouseEvent) => void | Promise<void>",
-                    "description": "Standard click handler."
-                }
-            ],
-            "source": "custom",
-            "justification": "Adds accessible icon lookup and asynchronous Solution action handling to native Button styling."
         },
         {
             "name": "Image",
@@ -2899,7 +2857,8 @@
         {
             "name": "Text",
             "category": "Display",
-            "introduction": "Displays View text with semantic typography, alignment, wrapping, and truncation controls.",
+            "introduction": "Displays View text with native HTML attributes, semantic typography, and truncation controls.",
+            "guidance": "Native HTML attributes, ARIA and data attributes, className, style, event handlers, and refs are forwarded to the rendered element.",
             "properties": [
                 {
                     "name": "children",
@@ -2935,7 +2894,7 @@
                 },
                 {
                     "name": "as",
-                    "type": "\"label\" | \"span\" | \"p\" | \"div\" | \"h1\" | \"h2\" | \"h3\"",
+                    "type": "\"label\" | \"span\" | \"p\" | \"div\" | \"h1\" | \"h2\" | \"h3\" | \"h4\" | \"h5\" | \"h6\"",
                     "description": "HTML element to render.",
                     "default": "span"
                 },

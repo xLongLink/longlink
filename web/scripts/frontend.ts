@@ -10,6 +10,7 @@ export * from '../src/components/shadcn/table';
 export { Separator } from '../src/components/shadcn/separator';
 export { Divider } from '../src/components/custom/divider';
 export { Image } from '../src/components/custom/image';
+export { Text } from '../src/components/custom/text';
 export {
     CodeBlock,
     CodeBlockContent,

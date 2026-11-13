@@ -77,9 +77,6 @@ export {
 /** Custom data-driven actions with asynchronous recovery and scoped navigation. @category Action */
 export { ActionMenu } from '@/components/custom/action-menu';
 
-/** @category Action @group Button */
-export { IconButton } from '@/components/custom/icon-button';
-
 /** @category Display */
 export { Separator } from '@/components/shadcn/separator';
 

@@ -1,6 +1,6 @@
 import ViewLayout from './view-layout';
+import { Icon } from '@/components/custom/icon';
 import { Button } from '@/components/shadcn/button';
-import { IconButton } from '@/components/custom/icon-button';
 import { ButtonGroup } from '@/components/shadcn/button-group';
 import { ActionButton } from '@/components/custom/action-button';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
@@ -54,20 +54,7 @@ export default function ButtonsPage() {
                     description:
                         'Custom adapter that awaits actions with loading feedback and duplicate-activation protection.'
                 },
-                { name: 'IconButton.label', type: 'string', description: 'Accessible label for the icon-only button.' },
-                { name: 'IconButton.icon', type: 'StoneIconName', description: 'Icon displayed inside the button.' },
-                {
-                    name: 'IconButton.variant',
-                    type: '"default" | "outline" | "secondary" | "ghost" | "destructive" | "link"',
-                    description: 'Visual style variant.'
-                },
-                { name: 'IconButton.size', type: '"xs" | "sm" | "default" | "lg"', description: 'Icon button size.' },
-                { name: 'IconButton.isDisabled', type: 'boolean', description: 'Disables the icon button.' },
-                {
-                    name: 'IconButton.onClick',
-                    type: '(event: ViewMouseEvent) => void | Promise<void>',
-                    description: 'Runs an action with automatic loading and duplicate-click prevention.'
-                },
+                { name: 'aria-label', type: 'string', description: 'Accessible name for an icon-only button.' },
                 {
                     name: 'ButtonGroup.orientation',
                     type: '"horizontal" | "vertical"',
@@ -81,7 +68,7 @@ export default function ButtonsPage() {
                 },
                 {
                     type: 'ReactNode',
-                    description: 'ActionButton or IconButton children for coordinated keyboard navigation.',
+                    description: 'ActionButton children for coordinated keyboard navigation.',
                     name: 'ActionButtonGroup.children'
                 },
                 {
@@ -127,19 +114,19 @@ export default function ButtonsPage() {
         <Button size="lg">Large</Button>
       </Stack>
       <Stack direction="horizontal" gap={2} align="center" wrap="wrap">
-        <IconButton icon="plus" label="Add" />
-        <IconButton icon="edit" label="Edit" variant="outline" />
-        <IconButton icon="copy" label="Copy" variant="secondary" />
-        <IconButton icon="close" label="Close" variant="ghost" />
-        <IconButton icon="delete" label="Delete" variant="destructive" />
-        <IconButton icon="link" label="Link" variant="link" />
-        <IconButton icon="plus" label="Add (disabled)" isDisabled />
+        <ActionButton size="icon" aria-label="Add"><Icon icon="plus" size="md" /></ActionButton>
+        <ActionButton size="icon" aria-label="Edit" variant="outline"><Icon icon="edit" size="md" /></ActionButton>
+        <ActionButton size="icon" aria-label="Copy" variant="secondary"><Icon icon="copy" size="md" /></ActionButton>
+        <ActionButton size="icon" aria-label="Close" variant="ghost"><Icon icon="close" size="md" /></ActionButton>
+        <ActionButton size="icon" aria-label="Delete" variant="destructive"><Icon icon="delete" size="md" /></ActionButton>
+        <ActionButton size="icon" aria-label="Link" variant="link"><Icon icon="link" size="md" /></ActionButton>
+        <ActionButton size="icon" aria-label="Add (disabled)" disabled><Icon icon="plus" size="md" /></ActionButton>
       </Stack>
       <Stack direction="horizontal" gap={2} align="center" wrap="wrap">
-        <IconButton icon="plus" label="Add (extra small)" size="xs" />
-        <IconButton icon="plus" label="Add (small)" size="sm" />
-        <IconButton icon="plus" label="Add (default)" />
-        <IconButton icon="plus" label="Add (large)" size="lg" />
+        <ActionButton size="icon-xs" aria-label="Add (extra small)"><Icon icon="plus" size="md" /></ActionButton>
+        <ActionButton size="icon-sm" aria-label="Add (small)"><Icon icon="plus" size="sm" /></ActionButton>
+        <ActionButton size="icon" aria-label="Add (default)"><Icon icon="plus" size="md" /></ActionButton>
+        <ActionButton size="icon-lg" aria-label="Add (large)"><Icon icon="plus" size="lg" /></ActionButton>
       </Stack>
       <Stack direction="horizontal" gap={4} align="center" wrap="wrap">
         <ButtonGroup aria-label="Native actions">
@@ -149,7 +136,7 @@ export default function ButtonsPage() {
         <ActionButtonGroup label="Actions">
           <ActionButton variant="outline">Save</ActionButton>
           <ActionButton variant="outline">Cancel</ActionButton>
-          <IconButton icon="plus" label="Add" variant="outline" />
+          <ActionButton size="icon" aria-label="Add" variant="outline"><Icon icon="plus" size="md" /></ActionButton>
         </ActionButtonGroup>
         <ActionButtonGroup label="Vertical actions" orientation="vertical">
           <ActionButton variant="outline">Edit</ActionButton>
@@ -185,19 +172,41 @@ export function ButtonExample() {
                 <Button size="lg">Large</Button>
             </Stack>
             <Stack direction="horizontal" gap={2} align="center" wrap="wrap">
-                <IconButton icon="plus" label="Add" />
-                <IconButton icon="edit" label="Edit" variant="outline" />
-                <IconButton icon="copy" label="Copy" variant="secondary" />
-                <IconButton icon="close" label="Close" variant="ghost" />
-                <IconButton icon="delete" label="Delete" variant="destructive" />
-                <IconButton icon="link" label="Link" variant="link" />
-                <IconButton icon="plus" label="Add (disabled)" isDisabled />
+                <ActionButton size="icon" aria-label="Add">
+                    <Icon icon="plus" size="md" />
+                </ActionButton>
+                <ActionButton size="icon" aria-label="Edit" variant="outline">
+                    <Icon icon="edit" size="md" />
+                </ActionButton>
+                <ActionButton size="icon" aria-label="Copy" variant="secondary">
+                    <Icon icon="copy" size="md" />
+                </ActionButton>
+                <ActionButton size="icon" aria-label="Close" variant="ghost">
+                    <Icon icon="close" size="md" />
+                </ActionButton>
+                <ActionButton size="icon" aria-label="Delete" variant="destructive">
+                    <Icon icon="delete" size="md" />
+                </ActionButton>
+                <ActionButton size="icon" aria-label="Link" variant="link">
+                    <Icon icon="link" size="md" />
+                </ActionButton>
+                <ActionButton size="icon" aria-label="Add (disabled)" disabled>
+                    <Icon icon="plus" size="md" />
+                </ActionButton>
             </Stack>
             <Stack direction="horizontal" gap={2} align="center" wrap="wrap">
-                <IconButton icon="plus" label="Add (extra small)" size="xs" />
-                <IconButton icon="plus" label="Add (small)" size="sm" />
-                <IconButton icon="plus" label="Add (default)" />
-                <IconButton icon="plus" label="Add (large)" size="lg" />
+                <ActionButton size="icon-xs" aria-label="Add (extra small)">
+                    <Icon icon="plus" size="md" />
+                </ActionButton>
+                <ActionButton size="icon-sm" aria-label="Add (small)">
+                    <Icon icon="plus" size="sm" />
+                </ActionButton>
+                <ActionButton size="icon" aria-label="Add (default)">
+                    <Icon icon="plus" size="md" />
+                </ActionButton>
+                <ActionButton size="icon-lg" aria-label="Add (large)">
+                    <Icon icon="plus" size="lg" />
+                </ActionButton>
             </Stack>
             <Stack direction="horizontal" gap={4} align="center" wrap="wrap">
                 <ButtonGroup aria-label="Native actions">
@@ -207,7 +216,9 @@ export function ButtonExample() {
                 <ActionButtonGroup label="Actions">
                     <ActionButton variant="outline">Save</ActionButton>
                     <ActionButton variant="outline">Cancel</ActionButton>
-                    <IconButton icon="plus" label="Add" variant="outline" />
+                    <ActionButton size="icon" aria-label="Add" variant="outline">
+                        <Icon icon="plus" size="md" />
+                    </ActionButton>
                 </ActionButtonGroup>
                 <ActionButtonGroup label="Vertical actions" orientation="vertical">
                     <ActionButton variant="outline">Edit</ActionButton>

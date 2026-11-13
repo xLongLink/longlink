@@ -4,7 +4,6 @@ import { it, expect, vi } from 'vitest';
 import { Text } from '@/components/custom/text';
 import userEvent from '@testing-library/user-event';
 import { renderStatic, withMounted } from '../../render';
-import { NativeText } from '@/components/custom/native-text';
 import { NativeHeading } from '@/components/custom/native-heading';
 
 it('preserves heading targets while separating the accessible level from visual sizing', () => {
@@ -28,9 +27,9 @@ it('keeps native refs, focus and caller handlers working with truncation details
     const onFocus = vi.fn();
 
     await withMounted(
-        <NativeText as="p" ref={ref} tabIndex={0} onFocus={onFocus} maxLines={1}>
+        <Text as="p" ref={ref} tabIndex={0} onFocus={onFocus} maxLines={1}>
             Account details
-        </NativeText>,
+        </Text>,
         async (output) => {
             const paragraph = output.querySelector('p');
 
@@ -54,16 +53,4 @@ it('keeps native refs, focus and caller handlers working with truncation details
     );
 
     expect(ref.current).toBeNull();
-});
-
-it('does not forward trusted native attributes through the isolated View text API', () => {
-    const attributes = { id: 'injected', className: 'injected', tabIndex: 0, role: 'button' };
-    const output = renderStatic(<Text {...attributes}>Read-only content</Text>);
-    const text = output.querySelector('.view-text');
-
-    expect(text?.textContent).toBe('Read-only content');
-    expect(text?.id).not.toBe('injected');
-    expect(text?.classList.contains('injected')).toBe(false);
-    expect(text?.hasAttribute('tabindex')).toBe(false);
-    expect(text?.hasAttribute('role')).toBe(false);
 });

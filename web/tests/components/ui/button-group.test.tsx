@@ -1,10 +1,10 @@
 // @vitest-environment happy-dom
 import { act, useState } from 'react';
 import { it, expect, vi } from 'vitest';
+import { Icon } from '@/components/custom/icon';
 import userEvent from '@testing-library/user-event';
 import { renderStatic, withMounted } from '../../render';
 import { ActionMenu } from '@/components/custom/action-menu';
-import { IconButton } from '@/components/custom/icon-button';
 import { ViewDialog } from '@/components/custom/view-dialog';
 import { ActionButton } from '@/components/custom/action-button';
 import { ControlSizeContext } from '@/components/custom/contexts';
@@ -127,7 +127,9 @@ it('roves text actions, icon actions and menu triggers without opening the menu'
     await withMounted(
         <ActionButtonGroup label="Mixed" size="lg">
             <ActionButton variant="outline">Native</ActionButton>
-            <IconButton label="Copy" icon="copy" />
+            <ActionButton size="icon-lg" aria-label="Copy">
+                <Icon icon="copy" size="lg" />
+            </ActionButton>
             <ActionMenu button={{ label: 'More' }} items={[]} onOpenChange={open} />
         </ActionButtonGroup>,
         async (output) => {
@@ -153,7 +155,9 @@ it('disables all grouped actions without leaking group membership into a dialog'
             <ActionButton variant="outline" onClick={blocked}>
                 Native
             </ActionButton>
-            <IconButton label="Copy" icon="copy" onClick={blocked} />
+            <ActionButton size="icon" aria-label="Copy" onClick={blocked}>
+                <Icon icon="copy" size="md" />
+            </ActionButton>
             <ActionMenu button={{ label: 'More' }} items={[]} />
             <ViewDialog isOpen title="Recovery" onOpenChange={() => {}}>
                 <ActionButton variant="outline" onClick={recover}>
@@ -229,7 +233,9 @@ it.each(['touch', 'pen'] as const)(
                 <ActionButton variant="outline" onClick={first}>
                     Native
                 </ActionButton>
-                <IconButton label="Copy" icon="copy" onClick={other} />
+                <ActionButton size="icon" aria-label="Copy" onClick={other}>
+                    <Icon icon="copy" size="md" />
+                </ActionButton>
                 <ActionButton variant="outline" disabled onClick={disabled}>
                     Unavailable
                 </ActionButton>
@@ -526,9 +532,13 @@ it('expands touch targets without reaching through nested groups or treating a p
 
     await withMounted(
         <ActionButtonGroup label="Outer">
-            <IconButton label="Outer action" icon="copy" onClick={outer} />
+            <ActionButton size="icon" aria-label="Outer action" onClick={outer}>
+                <Icon icon="copy" size="md" />
+            </ActionButton>
             <ActionButtonGroup label="Inner">
-                <IconButton label="Inner action" icon="copy" onClick={inner} />
+                <ActionButton size="icon" aria-label="Inner action" onClick={inner}>
+                    <Icon icon="copy" size="md" />
+                </ActionButton>
             </ActionButtonGroup>
         </ActionButtonGroup>,
         async (output) => {

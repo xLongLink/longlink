@@ -96,8 +96,11 @@ export function ConfirmationDialog({
                                 aria-label={isPending ? options.actionLabel : undefined}
                                 onClick={onAction}
                             >
-                                <span className="view-action-content" aria-hidden={isPending || undefined}>
-                                    <span className="view-action-label">{options.actionLabel}</span>
+                                <span
+                                    className="view-action-content flex min-w-0 max-w-full flex-1 items-center justify-center gap-[inherit]"
+                                    aria-hidden={isPending || undefined}
+                                >
+                                    <span className="min-w-0 overflow-hidden text-ellipsis">{options.actionLabel}</span>
                                 </span>
                                 {isPending && <LoaderCircle aria-hidden="true" className="view-action-spinner" />}
                             </Button>

@@ -116,13 +116,16 @@ export function NativeButton({
                     if (isLink && event.key === ' ') event.preventBaseUIHandler();
                 }}
             >
-                <span className="view-action-content" aria-hidden={busy || undefined}>
+                <span
+                    className="view-action-content flex min-w-0 max-w-full flex-1 items-center justify-center gap-[inherit]"
+                    aria-hidden={busy || undefined}
+                >
                     {icon && (
                         <span className="view-action-icon" data-size={size}>
                             {icon}
                         </span>
                     )}
-                    <span className="view-action-label">{label}</span>
+                    <span className="min-w-0 overflow-hidden text-ellipsis">{label}</span>
                     {endContent}
                 </span>
                 {busy && <LoaderCircle aria-hidden="true" className="view-action-spinner size-3.5" />}

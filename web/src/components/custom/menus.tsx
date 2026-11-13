@@ -126,7 +126,7 @@ export function MenuControl({
                 )
             ) : (
                 <>
-                    <span className="view-action-label">{label}</span>
+                    <span className="min-w-0 overflow-hidden text-ellipsis">{label}</span>
                     <ChevronDown className="ml-auto size-4 shrink-0" aria-hidden="true" />
                 </>
             )}

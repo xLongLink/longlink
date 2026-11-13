@@ -115,7 +115,10 @@ export function ActionControl({
                 if (isLink && event.key === ' ') event.preventBaseUIHandler();
             }}
         >
-            <span className="view-action-content" aria-hidden={pending || undefined}>
+            <span
+                className="view-action-content flex min-w-0 max-w-full flex-1 items-center justify-center gap-[inherit]"
+                aria-hidden={pending || undefined}
+            >
                 {children}
             </span>
             {pending && <LoaderCircle aria-hidden="true" className="view-action-spinner" />}

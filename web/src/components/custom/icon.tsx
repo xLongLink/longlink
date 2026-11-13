@@ -10,6 +10,8 @@ export type StoneIconName = keyof typeof stoneIconComponents | IconName | `lucid
 // A blank Lucide glyph retains the requested dimensions while an icon loads.
 const emptyIcon = createLucideIcon({ size: 24, node: [] });
 
+const iconSizes = { sm: 'size-4', md: 'size-5', lg: 'size-6' };
+
 /** Renders any Lucide icon by its kebab-case name. Existing LongLink aliases remain immediate; other icons load on demand and are cached without blocking the View or changing icon dimensions. */
 export function Icon({
     icon,
@@ -24,7 +26,7 @@ export function Icon({
         // SAFETY: The own-property check restricts the lookup to the bundled icon names.
         const Component = stoneIconComponents[icon as keyof typeof stoneIconComponents];
 
-        return <Component aria-hidden="true" className="view-icon" data-size={size} />;
+        return <Component aria-hidden="true" className={`shrink-0 ${iconSizes[size]}`} data-size={size} />;
     }
 
     // Explicit Lucide names bypass legacy aliases but share the same on-demand cache.
@@ -53,5 +55,5 @@ export function DeferredIcon({ icon, size }: { icon: string; size: 'sm' | 'md' |
     // Keep labeled controls usable even if an icon cannot be loaded.
     const Component = component ?? (isError ? AlertTriangle : emptyIcon);
 
-    return <Component aria-hidden="true" className="view-icon" data-size={size} />;
+    return <Component aria-hidden="true" className={`shrink-0 ${iconSizes[size]}`} data-size={size} />;
 }

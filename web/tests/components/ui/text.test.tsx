@@ -1,5 +1,5 @@
 // @vitest-environment happy-dom
-import { act } from 'react';
+import { act, createRef } from 'react';
 import { it, expect, vi } from 'vitest';
 import { Text } from '@/components/custom/text';
 import userEvent from '@testing-library/user-event';
@@ -28,17 +28,34 @@ it('keeps absent children empty and preserves nested text without adding button 
     expect(output.querySelector('button, [role="button"], [tabindex]')).toBeNull();
 });
 
-it('tracks overflow and changed text while retaining the native truncation anchor', async () => {
+it('preserves a labelled live status and its ref while updating truncation details', async () => {
     // Layout dimensions are supplied on this node; tooltip interactions and content observation remain real.
     const user = userEvent.setup();
-    await withMounted(
-        <Text as="p" maxLines={1} hasTruncateTooltip="below">
-            Original detail
-        </Text>,
-        async (output) => {
-            const paragraph = output.querySelector('p');
+    const textRef = createRef<HTMLElement>();
 
-            if (!paragraph) throw new Error('Missing paragraph');
+    await withMounted(
+        <>
+            <span id="status-label">Publication status</span>
+            <Text
+                as="p"
+                id="publication-status"
+                role="status"
+                aria-live="polite"
+                aria-labelledby="status-label"
+                data-publication="draft"
+                className="publication-status"
+                style={{ maxWidth: 80 }}
+                ref={textRef}
+                maxLines={1}
+                hasTruncateTooltip="below"
+            >
+                Original detail
+            </Text>
+        </>,
+        async (output) => {
+            const paragraph = output.querySelector('p[role="status"]');
+
+            if (!(paragraph instanceof HTMLElement)) throw new Error('Missing live status');
 
             Object.defineProperty(paragraph, 'offsetWidth', { configurable: true, value: 80 });
             Object.defineProperty(paragraph, 'scrollWidth', { configurable: true, value: 240 });
@@ -51,6 +68,15 @@ it('tracks overflow and changed text while retaining the native truncation ancho
             );
 
             expect(output.querySelector('p')).toBe(paragraph);
+            expect(textRef.current).toBe(paragraph);
+            expect(paragraph.id).toBe('publication-status');
+            expect(paragraph.getAttribute('aria-live')).toBe('polite');
+            expect(paragraph.getAttribute('aria-labelledby')).toBe('status-label');
+            expect(document.getElementById('status-label')?.textContent).toBe('Publication status');
+            expect(paragraph.dataset.publication).toBe('draft');
+            expect(paragraph.classList.contains('publication-status')).toBe(true);
+            expect(paragraph.classList.contains('view-text')).toBe(true);
+            expect(paragraph.style.maxWidth).toBe('80px');
             expect(paragraph.hasAttribute('tabindex')).toBe(false);
             expect(paragraph.getAttribute('aria-describedby')).toBe(document.querySelector('[role="tooltip"]')?.id);
             expect(paragraph.getAttribute('data-clamp')).toBe('single');
@@ -63,8 +89,12 @@ it('tracks overflow and changed text while retaining the native truncation ancho
             });
             await act(async () => await user.hover(paragraph));
             await vi.waitFor(() => expect(document.querySelector('[role="tooltip"]')).toBeNull());
+            expect(textRef.current).toBe(paragraph);
+            expect(paragraph.getAttribute('aria-labelledby')).toBe('status-label');
         }
     );
+
+    expect(textRef.current).toBeNull();
 });
 
 it('clips text without exposing a tooltip when truncation details are disabled', async () => {
