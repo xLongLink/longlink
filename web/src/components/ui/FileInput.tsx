@@ -2,7 +2,10 @@ import { useValue } from './value';
 import { FormField } from './FormField';
 import { FieldLabel } from './FieldLabel';
 import type { FieldProps } from './types';
+import { Button } from '@/components/shadcn/button';
+import { FieldDescription, FieldError } from '@/components/shadcn/field';
 import { useEffect, useId, useRef, useState, type DragEvent } from 'react';
+import { InputGroup, InputGroupButton } from '@/components/shadcn/input-group';
 import { CircleAlert, CircleCheck, TriangleAlert, Upload, X } from 'lucide-react';
 
 type FileInputProps = FieldProps & {
@@ -175,7 +178,7 @@ export function NativeFileInput({
                 data-status={statusType}
             >
                 <FieldLabel controlId={id} label={label} description={description} required={required} />
-                <div
+                <InputGroup
                     className="view-file-input"
                     data-mode={mode}
                     data-dragging={(!disabled && dragging) || undefined}
@@ -209,10 +212,11 @@ export function NativeFileInput({
                             : undefined
                     }
                 >
-                    <button
+                    <Button
                         ref={trigger}
                         id={id}
-                        className="view-file-trigger"
+                        className="view-file-trigger min-w-0 flex-1 justify-start"
+                        variant="ghost"
                         type="button"
                         aria-label={fileNames ? `${label}, ${fileNames}` : label}
                         aria-disabled={disabled || undefined}
@@ -229,7 +233,7 @@ export function NativeFileInput({
                         <span className="view-file-name" data-placeholder={!files.length || undefined}>
                             {fileNames || (dragging && !disabled ? 'Drop files here' : placeholder)}
                         </span>
-                    </button>
+                    </Button>
                     {statusType && mode === 'input' && (
                         <StatusIcon className="view-file-status-icon" aria-hidden="true" />
                     )}
@@ -248,9 +252,9 @@ export function NativeFileInput({
                         }}
                     />
                     {!!files.length && !disabled && (
-                        <button
+                        <InputGroupButton
                             type="button"
-                            className="view-file-clear"
+                            size="icon-xs"
                             aria-label={`Clear ${label}`}
                             onClick={() => {
                                 setError(undefined);
@@ -259,20 +263,24 @@ export function NativeFileInput({
                             }}
                         >
                             <X aria-hidden="true" />
-                        </button>
+                        </InputGroupButton>
                     )}
-                </div>
+                </InputGroup>
                 {required && (
                     <span id={`${id}-required`} className="view-file-native">
                         Required
                     </span>
                 )}
-                {message && (
-                    <div id={`${id}-status`} className="view-file-status" role={invalid ? 'alert' : 'status'}>
-                        {mode === 'dropzone' && <StatusIcon className="view-file-status-icon" aria-hidden="true" />}
-                        {message}
-                    </div>
-                )}
+                {message &&
+                    (invalid ? (
+                        <FieldError id={`${id}-status`} className="view-file-status">
+                            {message}
+                        </FieldError>
+                    ) : (
+                        <FieldDescription id={`${id}-status`} className="view-file-status" role="status">
+                            {message}
+                        </FieldDescription>
+                    ))}
                 <span className="view-file-native" role="status">
                     {!message && fileNames ? `Selected: ${fileNames}` : ''}
                 </span>

@@ -189,7 +189,7 @@ it('ignores backdrop dismissal but allows Escape while deletion is pending', asy
                 (button) => button.textContent === 'Delete'
             );
 
-            const backdrop = document.querySelector<HTMLElement>('.view-dialog-backdrop');
+            const backdrop = document.querySelector<HTMLElement>('[data-slot="alert-dialog-overlay"]');
 
             if (!confirm || !backdrop) throw new Error('Expected deletion dialog');
 

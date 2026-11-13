@@ -1,10 +1,9 @@
-import { Menu } from '@base-ui/react/menu';
 import { useMenuTouch } from './menu-touch';
 import { ReportedError } from '@/lib/reported';
 import { Toolbar } from '@base-ui/react/toolbar';
 import { Icon, type StoneIconName } from './Icon';
 import { Button as Control } from '@/components/shadcn/button';
-import { ChevronDown, ChevronRight, Ellipsis, LoaderCircle } from 'lucide-react';
+import { ChevronDown, Ellipsis, LoaderCircle } from 'lucide-react';
 import { ButtonGroupContext, ControlSizeContext, LinkNavigationContext } from './contexts';
 import {
     isValidElement,
@@ -17,6 +16,18 @@ import {
     type ReactElement,
     type ReactNode,
 } from 'react';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuGroup,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuSub,
+    DropdownMenuSubContent,
+    DropdownMenuSubTrigger,
+    DropdownMenuTrigger,
+} from '@/components/shadcn/dropdown-menu';
 
 export type DropdownMenuItemData = {
     id?: string;
@@ -90,7 +101,7 @@ export function ActionMenu({
     const touch = useMenuTouch(owner, open, disabled, changeOpen);
 
     const trigger = (
-        <Menu.Trigger
+        <DropdownMenuTrigger
             {...touch}
             data-menu-trigger=""
             disabled={disabled}
@@ -115,22 +126,22 @@ export function ActionMenu({
             ) : (
                 <>
                     <span className="view-action-label">{label}</span>
-                    <ChevronDown className="view-menu-chevron" aria-hidden="true" />
+                    <ChevronDown className="ml-auto size-4 shrink-0" aria-hidden="true" />
                 </>
             )}
-        </Menu.Trigger>
+        </DropdownMenuTrigger>
     );
 
     // Only the trigger participates in its surrounding control group.
     return (
-        <Menu.Root open={open} onOpenChange={changeOpen}>
+        <DropdownMenu open={open} onOpenChange={changeOpen}>
             {group ? (
                 <Toolbar.Button disabled={disabled} focusableWhenDisabled={group.isDisabled} render={trigger} />
             ) : (
                 trigger
             )}
             <MenuSurface owner={owner} items={items} alignment={alignment} closeMenu={() => changeOpen(false)} />
-        </Menu.Root>
+        </DropdownMenu>
     );
 }
 
@@ -148,21 +159,14 @@ function MenuSurface({
     nested?: boolean;
     alignment?: 'start' | 'center' | 'end';
 }) {
+    const Content = nested ? DropdownMenuSubContent : DropdownMenuContent;
+
     return (
         <ButtonGroupContext value={null}>
             <ControlSizeContext value={null}>
-                <Menu.Portal>
-                    <Menu.Positioner
-                        className="view-menu-positioner"
-                        align={alignment}
-                        side={nested ? 'inline-end' : 'bottom'}
-                        sideOffset={4}
-                    >
-                        <Menu.Popup className="view-menu-popup" data-view-menu={owner}>
-                            <MenuItems owner={owner} items={items} closeMenu={closeMenu} />
-                        </Menu.Popup>
-                    </Menu.Positioner>
-                </Menu.Portal>
+                <Content align={alignment} side={nested ? 'inline-end' : 'bottom'} data-view-menu={owner}>
+                    <MenuItems owner={owner} items={items} closeMenu={closeMenu} />
+                </Content>
             </ControlSizeContext>
         </ButtonGroupContext>
     );
@@ -175,30 +179,25 @@ function MenuItems({ owner, items, closeMenu }: { owner: string; items: NativeMe
             if (item.type === 'divider') {
                 // Dividers have no authored identity in the public data contract.
                 // eslint-disable-next-line react/no-array-index-key
-                return <Menu.Separator key={index} className="view-menu-separator" />;
+                return <DropdownMenuSeparator key={index} />;
             }
 
             return (
-                <Menu.Group key={item.id ?? index}>
-                    {item.title && <Menu.GroupLabel className="view-menu-heading">{item.title}</Menu.GroupLabel>}
+                <DropdownMenuGroup key={item.id ?? index}>
+                    {item.title && <DropdownMenuLabel>{item.title}</DropdownMenuLabel>}
                     <MenuItems owner={owner} items={item.items} closeMenu={closeMenu} />
-                </Menu.Group>
+                </DropdownMenuGroup>
             );
         }
 
         if (item.items) {
             return (
-                <Menu.SubmenuRoot key={item.id ?? index}>
-                    <Menu.SubmenuTrigger
-                        className="view-menu-item"
-                        disabled={item.isDisabled}
-                        data-variant={item.variant}
-                    >
+                <DropdownMenuSub key={item.id ?? index}>
+                    <DropdownMenuSubTrigger disabled={item.isDisabled} data-variant={item.variant}>
                         <MenuItemContent item={item} />
-                        <ChevronRight className="view-menu-chevron" aria-hidden="true" />
-                    </Menu.SubmenuTrigger>
+                    </DropdownMenuSubTrigger>
                     <MenuSurface owner={owner} items={item.items} closeMenu={closeMenu} nested />
-                </Menu.SubmenuRoot>
+                </DropdownMenuSub>
             );
         }
 
@@ -253,11 +252,10 @@ function MenuAction({ item, closeMenu }: { item: NativeMenuItem; closeMenu: () =
     }
 
     return (
-        <Menu.Item
-            className="view-menu-item"
+        <DropdownMenuItem
             disabled={disabled}
             aria-busy={pending || undefined}
-            data-variant={item.variant}
+            variant={item.variant}
             closeOnClick={item.hasCloseOnSelect ?? true}
             render={
                 item.href ? (
@@ -281,7 +279,7 @@ function MenuAction({ item, closeMenu }: { item: NativeMenuItem; closeMenu: () =
             }}
         >
             <MenuItemContent item={item} pending={pending} />
-        </Menu.Item>
+        </DropdownMenuItem>
     );
 }
 
@@ -290,15 +288,19 @@ function MenuItemContent({ item, pending = false }: { item: NativeMenuItem; pend
     return (
         <>
             {pending ? (
-                <LoaderCircle className="view-menu-spinner" aria-hidden="true" />
+                <LoaderCircle className="animate-spin motion-reduce:animate-none" aria-hidden="true" />
             ) : isValidElement(item.icon) ? (
                 item.icon
             ) : (
                 item.icon && <Icon icon={item.icon} size="sm" />
             )}
-            <span className="view-menu-text">
+            <span className="flex min-w-0 flex-1 flex-col">
                 <span>{item.label}</span>
-                {item.description != null && <span className="view-menu-description">{item.description}</span>}
+                {item.description != null && (
+                    <span className={item.variant === 'destructive' ? 'text-xs' : 'text-xs text-muted-foreground'}>
+                        {item.description}
+                    </span>
+                )}
             </span>
             {item.endContent}
             {pending && (

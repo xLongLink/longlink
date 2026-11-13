@@ -1,113 +1,34 @@
 @layer components {
-    .view-file-input {
-        position: relative;
-        z-index: 1;
-        display: flex;
-        align-items: center;
-        gap: var(--spacing-2);
-        height: var(--size-element-md);
-        padding-block: var(--spacing-1);
-        padding-inline: var(--spacing-2);
-        border: var(--border-width) solid var(--color-border-emphasized);
-        border-radius: var(--radius-element);
-        background: var(--color-background-surface);
-    }
-
-    .view-file-trigger {
-        display: flex;
-        align-items: center;
-        gap: var(--spacing-2);
-        flex: 1;
-        align-self: stretch;
-        min-width: 0;
-        padding: 0;
-        border: 0;
-        outline: none;
-        background: transparent;
-        color: var(--foreground);
-        font: inherit;
-        font-size: var(--text-body-size);
-        line-height: var(--text-body-leading);
-        text-align: start;
-        cursor: pointer;
-    }
-
     .view-file-name {
-        flex: 1;
         min-width: 0;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
     }
 
-    .view-file-name[data-placeholder],
-    .view-file-trigger > svg,
-    .view-file-clear {
+    .view-file-name[data-placeholder] {
         color: var(--muted-foreground);
     }
 
-    .view-file-trigger > svg,
-    .view-file-status-icon,
-    .view-file-clear > svg {
+    .view-file-status-icon {
         flex-shrink: 0;
         width: var(--spacing-4);
         height: var(--spacing-4);
-    }
-
-    .view-file-clear {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        flex-shrink: 0;
-        width: var(--spacing-5);
-        height: var(--spacing-5);
-        padding: 0;
-        border: 0;
-        border-radius: var(--radius-element);
-        background: transparent;
-        cursor: pointer;
-    }
-
-    .view-file-clear:hover {
-        background: var(--secondary);
-    }
-
-    .view-file-clear:focus-visible {
-        outline: var(--focus-outline-width) solid var(--ring);
-        outline-offset: var(--focus-outline-offset);
-    }
-
-    .view-file-input:focus-within {
-        border-color: var(--ring);
+        color: var(--muted-foreground);
     }
 
     .view-file-input[data-mode='dropzone'] {
         height: auto;
-        min-height: var(--size-element-md);
         padding-block: var(--spacing-6);
         padding-inline: var(--spacing-4);
         border-style: dashed;
         flex-direction: column;
-    }
-
-    .view-file-input[data-mode='dropzone'] .view-file-trigger {
-        flex-direction: column;
-        text-align: center;
-    }
-
-    .view-file-input[data-mode='dropzone'] .view-file-trigger > svg {
-        width: var(--spacing-5);
-        height: var(--spacing-5);
-    }
-
-    .view-file-input[data-mode='dropzone'] .view-file-name {
-        white-space: normal;
-        overflow-wrap: anywhere;
+        gap: var(--spacing-2);
     }
 
     .view-file-input[data-dragging] {
         border-color: var(--ring);
-        background: var(--color-accent-muted);
+        background: var(--muted);
     }
 
     .view-file-field[data-disabled] .view-file-input {
@@ -116,64 +37,6 @@
 
     .view-file-trigger[aria-disabled='true'] {
         cursor: default;
-    }
-
-    .view-file-input[data-status='error'] {
-        border-color: var(--color-border-error);
-    }
-
-    .view-file-input[data-status='warning'] {
-        border-color: var(--color-border-warning);
-    }
-
-    .view-file-input[data-status='success'] {
-        border-color: var(--color-border-success);
-    }
-
-    .view-file-status {
-        display: flex;
-        align-items: flex-start;
-        gap: var(--spacing-1);
-        padding: var(--spacing-2);
-        border-radius: var(--radius-element);
-        font-size: var(--text-supporting-size);
-        line-height: var(--text-supporting-leading);
-        overflow-wrap: anywhere;
-    }
-
-    .view-file-field[data-mode='input'] .view-file-status {
-        margin-top: calc(-1 * (var(--spacing-1) + var(--spacing-1-5)));
-        padding-top: calc(var(--spacing-1-5) + var(--spacing-2));
-        border-start-start-radius: 0;
-        border-start-end-radius: 0;
-        pointer-events: none;
-    }
-
-    .view-file-field[data-status='error'] .view-file-status {
-        background: var(--color-error-muted);
-        color: var(--color-on-error-muted);
-    }
-
-    .view-file-field[data-status='warning'] .view-file-status {
-        background: var(--color-warning-muted);
-        color: var(--color-on-warning-muted);
-    }
-
-    .view-file-field[data-status='success'] .view-file-status {
-        background: var(--color-success-muted);
-        color: var(--color-on-success-muted);
-    }
-
-    .view-file-input[data-status='error'] .view-file-status-icon {
-        color: var(--color-error);
-    }
-
-    .view-file-input[data-status='warning'] .view-file-status-icon {
-        color: var(--color-warning);
-    }
-
-    .view-file-input[data-status='success'] .view-file-status-icon {
-        color: var(--color-success);
     }
 
     .view-file-native {
@@ -186,26 +49,5 @@
         clip-path: inset(50%);
         white-space: nowrap;
         border: 0;
-    }
-
-    @media (hover: hover) {
-        .view-file-field:not([data-disabled]) .view-file-input:hover {
-            box-shadow: inset 0 0 0 var(--spacing-0-5) color-mix(in srgb, var(--color-accent) 20%, transparent);
-        }
-    }
-
-    @media (pointer: coarse) {
-        @supports (-webkit-touch-callout: none) {
-            .view-file-trigger {
-                font-size: max(1rem, var(--text-body-size));
-            }
-        }
-    }
-
-    @media (forced-colors: active) {
-        .view-file-status {
-            outline: var(--border-width) solid CanvasText;
-            outline-offset: calc(-1 * var(--border-width));
-        }
     }
 }

@@ -1,23 +1,8 @@
 import type { FieldProps } from './types';
 import { format, parseISO } from 'date-fns';
 import { TemporalField } from './TemporalField';
-import { DayPicker, type ChevronProps } from 'react-day-picker';
-import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp } from 'lucide-react';
+import { Calendar } from '@/components/shadcn/calendar';
 import { displayDate, readDate, validDate, type ISODateString } from './temporal';
-
-/** Uses the application's icon family for the maintained calendar renderer. */
-function CalendarChevron({ orientation, className }: ChevronProps) {
-    const Icon =
-        orientation === 'left'
-            ? ChevronLeft
-            : orientation === 'right'
-              ? ChevronRight
-              : orientation === 'up'
-                ? ChevronUp
-                : ChevronDown;
-
-    return <Icon className={className} aria-hidden="true" />;
-}
 
 /** Selects or types a real calendar date using inclusive bounds and additional constraints. */
 export function DateInput(
@@ -59,8 +44,7 @@ export function DateInput(
             format={displayDate}
             accepts={accepts}
             picker={(value, select) => (
-                <DayPicker
-                    className="view-date-calendar"
+                <Calendar
                     mode="single"
                     selected={value ? parseISO(value) : undefined}
                     startMonth={props.min && validDate(props.min) ? parseISO(props.min) : undefined}
@@ -71,7 +55,6 @@ export function DateInput(
                     weekStartsOn={0}
                     autoFocus
                     showOutsideDays
-                    components={{ Chevron: CalendarChevron }}
                     disabled={(date) => {
                         const value = format(date, 'yyyy-MM-dd');
 

@@ -1,12 +1,31 @@
 import { isString } from 'es-toolkit';
-import { FieldLabel } from './FieldLabel';
 import type { FieldProps } from './types';
-import { Button } from '@base-ui/react/button';
 import { Select } from '@base-ui/react/select';
+import { Check, Minus, X } from 'lucide-react';
+import { Badge } from '@/components/reui/badge';
 import { Combobox } from '@base-ui/react/combobox';
+import { Button } from '@/components/shadcn/button';
 import type { PickerOption, PickerOptionType } from './options';
-import { useId, useRef, useState, type ReactNode } from 'react';
-import { Check, ChevronDown, Minus, Search, X } from 'lucide-react';
+import { Fragment, useId, useRef, useState, type ReactNode } from 'react';
+import { Field, FieldContent, FieldDescription, FieldLabel } from '@/components/shadcn/field';
+import {
+    SelectContent,
+    SelectGroup,
+    SelectItem,
+    SelectLabel,
+    SelectSeparator,
+    SelectTrigger,
+} from '@/components/shadcn/select';
+import {
+    ComboboxContent,
+    ComboboxGroup,
+    ComboboxInput,
+    ComboboxItem,
+    ComboboxLabel,
+    ComboboxList,
+    ComboboxSeparator,
+    ComboboxTrigger,
+} from '@/components/shadcn/combobox';
 
 type PickerProps = Omit<FieldProps, 'name'> & {
     options: PickerOptionType[];
@@ -85,7 +104,13 @@ export function Picker(props: PickerProps) {
     while (items.some((item) => item.value === selectAllValue) || selected.includes(selectAllValue))
         selectAllValue += '-';
     const hasSelectAll = props.multiple && props.hasSelectAll && visibleItems.length > 0;
-    const P = props.hasSearch ? Combobox : Select;
+    const Item = props.hasSearch ? ComboboxItem : SelectItem;
+    const Group = props.hasSearch ? ComboboxGroup : SelectGroup;
+    const GroupLabel = props.hasSearch ? ComboboxLabel : SelectLabel;
+    const Separator = props.hasSearch ? ComboboxSeparator : SelectSeparator;
+    const Content = props.hasSearch ? ComboboxContent : SelectContent;
+    const List = props.hasSearch ? ComboboxList : Fragment;
+    const Trigger = props.hasSearch ? ComboboxTrigger : SelectTrigger;
 
     // Portalled rows must still honor a field disabled after the panel opened.
     const blocked = () => props.disabled || trigger.current?.matches(':disabled');
@@ -132,7 +157,7 @@ export function Picker(props: PickerProps) {
 
     // Both primitives share presentation, but only the combobox renders an input.
     const row = (item: PickerOption) => (
-        <P.Item key={item.value} value={item.value} disabled={item.disabled} className="view-picker-option">
+        <Item key={item.value} value={item.value} disabled={item.disabled}>
             <span className="view-picker-option-content">
                 {item.icon && (
                     <span className="view-picker-option-icon" aria-hidden="true">
@@ -140,49 +165,32 @@ export function Picker(props: PickerProps) {
                     </span>
                 )}
                 <span className="view-picker-option-copy">
-                    {props.hasSearch ? (
-                        <span>{item.label ?? item.value}</span>
-                    ) : (
-                        <Select.ItemText render={<span />}>{item.label ?? item.value}</Select.ItemText>
-                    )}
-                    {item.description && <span className="view-picker-option-description">{item.description}</span>}
+                    <span>{item.label ?? item.value}</span>
+                    {item.description && <span className="text-xs text-muted-foreground">{item.description}</span>}
                 </span>
             </span>
-            {props.multiple ? (
-                <span
-                    className="view-picker-check"
-                    data-checked={selected.includes(item.value) || undefined}
-                    aria-hidden="true"
-                >
-                    {selected.includes(item.value) && <Check />}
-                </span>
-            ) : (
-                <P.ItemIndicator className="view-picker-mark">
-                    <Check />
-                </P.ItemIndicator>
-            )}
-        </P.Item>
+        </Item>
     );
 
     const contents = (
-        <div
-            className="view-text-field view-picker"
+        <Field
+            className="view-picker"
             data-multiple={props.multiple || undefined}
             data-disabled={props.disabled || undefined}
         >
-            <div className={props.labelHidden ? 'view-picker-hidden-label' : undefined}>
-                <FieldLabel
-                    controlId={id}
-                    label={props.label}
-                    description={props.description}
-                    required={props.required}
-                />
-            </div>
+            <FieldContent className={props.labelHidden ? 'sr-only' : undefined}>
+                <FieldLabel htmlFor={id} id={`${id}-label`}>
+                    {props.label}
+                    {props.required && <span className="text-muted-foreground">Required</span>}
+                </FieldLabel>
+                {props.description && <FieldDescription id={`${id}-description`}>{props.description}</FieldDescription>}
+            </FieldContent>
             <div ref={control} className="view-picker-control">
-                <P.Trigger
+                <Trigger
                     ref={trigger}
                     id={id}
-                    className="view-picker-trigger"
+                    className="view-picker-trigger aria-disabled:cursor-not-allowed aria-disabled:opacity-50"
+                    {...(props.hasSearch ? { render: <Button variant="outline" /> } : {})}
                     aria-labelledby={`${id}-label ${id}-value`}
                     aria-describedby={props.description ? `${id}-description` : undefined}
                     aria-required={props.required || undefined}
@@ -199,9 +207,9 @@ export function Picker(props: PickerProps) {
                             props.triggerDisplay === 'badges' ? (
                                 <span className="view-picker-badges">
                                     {labels.slice(0, 3).map((label, index) => (
-                                        <span className="view-picker-badge" key={selected[index]}>
+                                        <Badge variant="secondary" className="view-picker-badge" key={selected[index]}>
                                             {label}
-                                        </span>
+                                        </Badge>
                                     ))}
                                     {labels.length > 3 && (
                                         <span className="view-picker-overflow">+{labels.length - 3}</span>
@@ -227,11 +235,12 @@ export function Picker(props: PickerProps) {
                             </>
                         )}
                     </span>
-                    <ChevronDown className="view-picker-chevron" aria-hidden="true" />
-                </P.Trigger>
+                </Trigger>
                 {props.hasClear && selected.length > 0 && !props.disabled && (
                     <Button
                         type="button"
+                        variant="ghost"
+                        size="icon-xs"
                         className="view-picker-clear"
                         aria-label={`Clear ${props.label}`}
                         onMouseDown={(event) => event.preventDefault()}
@@ -244,94 +253,73 @@ export function Picker(props: PickerProps) {
                     </Button>
                 )}
             </div>
-            <P.Portal>
-                <P.Positioner
-                    className="view-picker-positioner"
-                    anchor={control}
-                    align="start"
-                    sideOffset={props.multiple || props.hasSearch ? 4 : 0}
-                    {...(!props.hasSearch ? { alignItemWithTrigger: !props.multiple } : {})}
-                >
-                    <P.Popup
-                        className="view-picker-popup"
-                        aria-label={props.label}
-                        data-multiple={props.multiple || undefined}
+            <Content
+                {...(props.hasSearch ? { anchor: control } : { alignItemWithTrigger: !props.multiple })}
+                align="start"
+                aria-label={props.label}
+            >
+                {props.hasSearch && (
+                    <ComboboxInput
+                        ref={search}
+                        showTrigger={false}
+                        aria-label={`Search ${props.label}`}
+                        placeholder="Search..."
                     >
-                        {props.hasSearch && (
-                            <div className="view-picker-search">
-                                <div className="view-picker-search-field">
-                                    <Search aria-hidden="true" />
-                                    <Combobox.Input
-                                        ref={search}
-                                        className="view-picker-search-input"
-                                        aria-label={`Search ${props.label}`}
-                                        placeholder="Search..."
-                                    />
-                                    {query && (
-                                        <Button
-                                            type="button"
-                                            className="view-picker-search-clear"
-                                            aria-label="Clear search"
-                                            onClick={() => {
-                                                setQuery('');
-                                                search.current?.focus();
-                                            }}
-                                        >
-                                            <X aria-hidden="true" />
-                                        </Button>
-                                    )}
-                                </div>
-                            </div>
+                        {query && (
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon-xs"
+                                aria-label="Clear search"
+                                onClick={() => {
+                                    setQuery('');
+                                    search.current?.focus();
+                                }}
+                            >
+                                <X aria-hidden="true" />
+                            </Button>
                         )}
-                        {visibleItems.length === 0 && (
-                            <div className="view-picker-empty" role="status">
-                                {query ? 'No results found' : (props.emptyText ?? 'No options')}
-                            </div>
-                        )}
-                        <P.List className="view-picker-list">
-                            {hasSelectAll && (
-                                <P.Item
-                                    value={selectAllValue}
-                                    className="view-picker-option view-picker-select-all"
-                                    disabled={enabled.length === 0}
-                                    aria-selected={allSelected}
-                                    aria-label={
-                                        someSelected && !allSelected ? 'Select all, partially selected' : undefined
-                                    }
-                                >
-                                    <span>Select all</span>
-                                    <span
-                                        className="view-picker-check"
-                                        data-checked={allSelected || someSelected || undefined}
-                                        aria-hidden="true"
-                                    >
-                                        {allSelected ? <Check /> : someSelected ? <Minus /> : null}
-                                    </span>
-                                </P.Item>
-                            )}
-                            {filteredGroups.map((group, index) =>
-                                group.divider ? (
-                                    !query && (
-                                        // eslint-disable-next-line react/no-array-index-key -- Separators retain their source positions.
-                                        <P.Separator key={index} className="view-picker-divider" aria-hidden="true" />
-                                    )
-                                ) : group.items.length > 0 ? (
-                                    // eslint-disable-next-line react/no-array-index-key -- Group titles need not be unique.
-                                    <P.Group key={index}>
-                                        {group.title && (
-                                            <P.GroupLabel className="view-picker-group-label">
-                                                {group.title}
-                                            </P.GroupLabel>
-                                        )}
-                                        {group.items.map(row)}
-                                    </P.Group>
-                                ) : null
-                            )}
-                        </P.List>
-                    </P.Popup>
-                </P.Positioner>
-            </P.Portal>
-        </div>
+                    </ComboboxInput>
+                )}
+                {visibleItems.length === 0 && (
+                    <div className="py-2 text-center text-sm text-muted-foreground" role="status">
+                        {query ? 'No results found' : (props.emptyText ?? 'No options')}
+                    </div>
+                )}
+                <List>
+                    {hasSelectAll && (
+                        <Item
+                            value={selectAllValue}
+                            disabled={enabled.length === 0}
+                            aria-selected={allSelected}
+                            aria-label={someSelected && !allSelected ? 'Select all, partially selected' : undefined}
+                        >
+                            <span>Select all</span>
+                            <span
+                                className="absolute right-2 flex size-4 items-center justify-center"
+                                aria-hidden="true"
+                            >
+                                {allSelected ? <Check /> : someSelected ? <Minus /> : null}
+                            </span>
+                        </Item>
+                    )}
+                    {filteredGroups.map((group, index) =>
+                        group.divider ? (
+                            !query && (
+                                // eslint-disable-next-line react/no-array-index-key -- Separators retain their source positions.
+                                <Separator key={index} aria-hidden="true" />
+                            )
+                        ) : group.items.length > 0 ? (
+                            // eslint-disable-next-line react/no-array-index-key -- Group titles need not be unique.
+                            <Group key={index}>
+                                {group.title && <GroupLabel>{group.title}</GroupLabel>}
+                                {group.items.map(row)}
+                            </Group>
+                        ) : null
+                    )}
+                </List>
+            </Content>
+        </Field>
     );
 
     if (props.hasSearch)

@@ -59,6 +59,7 @@ it('recovers from a required denial, clears to null, and honors canceled and com
                 options={['Alice', 'Bob']}
                 onChange={change}
                 defaultValue="Alice"
+                description="Choose an owner"
                 required
             />
         </form>,
@@ -75,7 +76,11 @@ it('recovers from a required denial, clears to null, and honors canceled and com
             await act(async () => form.dispatchEvent(denied));
             expect(denied.defaultPrevented).toBe(true);
             expect(output.querySelector('[role="alert"]')?.textContent).toContain('Please complete this field.');
-            await act(async () => user.click(trigger));
+            const label = output.querySelector<HTMLLabelElement>(`label[for="${trigger.id}"]`);
+
+            if (!label) throw new Error('Expected associated owner label');
+
+            await act(async () => user.click(label));
 
             const bob = Array.from(document.querySelectorAll<HTMLElement>('[role="option"]')).find(
                 (option) => option.textContent === 'Bob'
@@ -137,7 +142,7 @@ it('selects only enabled filtered multi options, preserves other selections, and
 
             await act(async () => user.type(search, 'unmatched'));
             expect(document.querySelector('[role="status"]')?.textContent).toBe('No results found');
-            expect(document.querySelector('[role="group"]')).toBeNull();
+            expect(document.querySelector('[role="listbox"] [role="group"]')).toBeNull();
             const clearSearch = document.querySelector<HTMLButtonElement>('button[aria-label="Clear search"]');
 
             if (!clearSearch) throw new Error('Expected query recovery action');

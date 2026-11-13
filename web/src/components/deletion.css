@@ -9,7 +9,6 @@
         align-items: flex-start;
         justify-content: space-between;
         gap: var(--spacing-3);
-        padding: var(--spacing-4);
     }
 
     .deletion-header > :first-child {
@@ -24,9 +23,5 @@
     .deletion-header > button {
         margin-block: calc(-1 * var(--spacing-2));
         margin-inline-end: calc(-1 * var(--spacing-2));
-    }
-
-    .deletion-description {
-        padding-inline: var(--spacing-4);
     }
 }

@@ -3,7 +3,13 @@ import { useRef, useTransition } from 'react';
 import { X, LoaderCircle } from 'lucide-react';
 import { Heading } from '@/components/ui/Heading';
 import { Button } from '@/components/shadcn/button';
-import { AlertDialog } from '@base-ui/react/alert-dialog';
+import {
+    AlertDialog,
+    AlertDialogContent,
+    AlertDialogTitle,
+    AlertDialogDescription,
+    AlertDialogFooter,
+} from '@/components/shadcn/alert-dialog';
 
 /** Tracks deletion for its mounted lifetime; callers own the resource, mounting, and success-only closure. */
 export function DeletionDialog({
@@ -60,40 +66,37 @@ export function DeletionDialog({
 
     // Preserve alert semantics and cancellation focus while adding explicit header dismissal.
     return (
-        <AlertDialog.Root
+        <AlertDialog
             open
             onOpenChange={(open) => {
                 if (!open) onClose();
             }}
         >
-            <AlertDialog.Portal className="view-dialog-layer">
-                <AlertDialog.Backdrop className="view-dialog-backdrop" />
-                <AlertDialog.Popup
-                    className="view-dialog view-confirmation deletion-dialog"
-                    initialFocus={cancel}
-                    aria-busy={isDeleting || undefined}
-                    onClick={(event) => event.stopPropagation()}
-                >
-                    <header className="deletion-header">
-                        <AlertDialog.Title render={<div />}>
-                            <Heading level={2}>{confirmation.title}</Heading>
-                        </AlertDialog.Title>
-                        <Button type="button" variant="ghost" size="icon" aria-label="Close" onClick={onClose}>
-                            <X aria-hidden="true" />
-                        </Button>
-                    </header>
-                    <AlertDialog.Description className="deletion-description" render={<div />}>
-                        <Text color="secondary">{confirmation.description}</Text>
-                    </AlertDialog.Description>
-                    <footer className="view-confirmation-actions">
-                        {cancelButton}
-                        {deleteButton}
-                        <span role="status" className="sr-only">
-                            {isDeleting ? 'Loading' : ''}
-                        </span>
-                    </footer>
-                </AlertDialog.Popup>
-            </AlertDialog.Portal>
-        </AlertDialog.Root>
+            <AlertDialogContent
+                className="view-confirmation deletion-dialog"
+                initialFocus={cancel}
+                aria-busy={isDeleting || undefined}
+                onClick={(event) => event.stopPropagation()}
+            >
+                <header className="deletion-header">
+                    <AlertDialogTitle render={<div />}>
+                        <Heading level={2}>{confirmation.title}</Heading>
+                    </AlertDialogTitle>
+                    <Button type="button" variant="ghost" size="icon" aria-label="Close" onClick={onClose}>
+                        <X aria-hidden="true" />
+                    </Button>
+                </header>
+                <AlertDialogDescription render={<div />}>
+                    <Text color="secondary">{confirmation.description}</Text>
+                </AlertDialogDescription>
+                <AlertDialogFooter>
+                    {cancelButton}
+                    {deleteButton}
+                    <span role="status" className="sr-only">
+                        {isDeleting ? 'Loading' : ''}
+                    </span>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
     );
 }

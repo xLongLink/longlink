@@ -108,7 +108,7 @@ it('traps keyboard focus, ignores backdrop presses, and restores focus after Esc
         expect(document.activeElement).toBe(title);
         expect(close.disabled).toBe(false);
         expect(close.getAttribute('aria-disabled')).not.toBe('true');
-        const backdrop = document.querySelector('.view-dialog-backdrop');
+        const backdrop = document.querySelector('[data-slot="dialog-overlay"]');
 
         if (!backdrop) throw new Error('Missing backdrop');
 

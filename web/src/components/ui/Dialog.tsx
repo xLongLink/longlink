@@ -5,6 +5,7 @@ import type { ReactNode } from 'react';
 import { use, useEffect, useRef } from 'react';
 import { Button } from '@/components/shadcn/button';
 import { Dialog as BaseDialog } from '@base-ui/react/dialog';
+import { DialogContent, DialogTitle } from '@/components/shadcn/dialog';
 import { ButtonGroupContext, ControlSizeContext, DialogActivityContext } from './contexts';
 
 /** Displays an accessible modal that closes with Escape or its close button, not backdrop clicks. */
@@ -36,51 +37,54 @@ export function Dialog(props: {
     // Keep the header fixed while bounding the content to the available viewport height.
     return (
         <BaseDialog.Root open={props.isOpen} onOpenChange={(open) => props.onOpenChange(open)} disablePointerDismissal>
-            <BaseDialog.Portal className="view-dialog-layer">
-                <BaseDialog.Backdrop className="view-dialog-backdrop" />
-                <BaseDialog.Popup
-                    ref={popup}
-                    className="view-dialog"
-                    data-fullscreen={fullscreen || undefined}
-                    aria-label={props.title ? undefined : 'Dialog'}
-                    onClick={(event) => event.stopPropagation()}
-                    initialFocus={() =>
-                        popup.current?.querySelector<HTMLElement>('[data-autofocus]') ?? title.current ?? true
-                    }
-                >
-                    <ButtonGroupContext value={null}>
-                        <ControlSizeContext value={null}>
-                            <div className="view-dialog-close">
-                                <BaseDialog.Close
-                                    aria-label="Close dialog"
-                                    render={<Button variant="ghost" size="icon" type="button" />}
-                                >
-                                    <Icon icon="close" size="md" />
-                                </BaseDialog.Close>
-                            </div>
-                            {props.title && (
-                                <BaseDialog.Title
-                                    ref={title}
-                                    render={<div />}
-                                    tabIndex={-1}
-                                    className="view-dialog-title"
-                                >
-                                    <Heading level={2}>{props.title}</Heading>
-                                </BaseDialog.Title>
-                            )}
-                            <div
-                                className="view-dialog-content"
-                                style={{
-                                    paddingInline: `calc(var(--spacing-1) * ${props.paddingInline ?? 4})`,
-                                    paddingBlockStart: props.title ? `calc(var(--spacing-1) * ${props.gap ?? 3})` : 0,
-                                }}
+            <DialogContent
+                ref={popup}
+                className="view-dialog flex min-h-0 flex-col gap-0 overflow-hidden p-0"
+                showCloseButton={false}
+                style={{
+                    top: fullscreen
+                        ? '50dvh'
+                        : 'calc(var(--view-viewport-top, 0px) + var(--view-viewport-height, 100dvh) / 2)',
+                    width: fullscreen ? '95dvw' : 960,
+                    maxWidth: 'calc(100dvw - var(--spacing-4) * 2)',
+                    height: fullscreen
+                        ? '95dvh'
+                        : 'min(560px, calc(var(--view-viewport-height, 100dvh) - var(--spacing-10) * 4))',
+                }}
+                data-fullscreen={fullscreen || undefined}
+                aria-label={props.title ? undefined : 'Dialog'}
+                onClick={(event) => event.stopPropagation()}
+                initialFocus={() =>
+                    popup.current?.querySelector<HTMLElement>('[data-autofocus]') ?? title.current ?? true
+                }
+            >
+                <ButtonGroupContext value={null}>
+                    <ControlSizeContext value={null}>
+                        <div className="view-dialog-close">
+                            <BaseDialog.Close
+                                aria-label="Close dialog"
+                                render={<Button variant="ghost" size="icon" type="button" />}
                             >
-                                {props.children}
-                            </div>
-                        </ControlSizeContext>
-                    </ButtonGroupContext>
-                </BaseDialog.Popup>
-            </BaseDialog.Portal>
+                                <Icon icon="close" size="md" />
+                            </BaseDialog.Close>
+                        </div>
+                        {props.title && (
+                            <DialogTitle ref={title} render={<div />} tabIndex={-1} className="view-dialog-title">
+                                <Heading level={2}>{props.title}</Heading>
+                            </DialogTitle>
+                        )}
+                        <div
+                            className="view-dialog-content"
+                            style={{
+                                paddingInline: `calc(var(--spacing-1) * ${props.paddingInline ?? 4})`,
+                                paddingBlockStart: props.title ? `calc(var(--spacing-1) * ${props.gap ?? 3})` : 0,
+                            }}
+                        >
+                            {props.children}
+                        </div>
+                    </ControlSizeContext>
+                </ButtonGroupContext>
+            </DialogContent>
         </BaseDialog.Root>
     );
 }

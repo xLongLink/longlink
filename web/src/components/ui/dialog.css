@@ -3,42 +3,9 @@
         position: relative;
     }
 
-    .view-dialog-backdrop {
-        position: fixed;
-        inset: 0;
-        z-index: 100;
-        background: var(--color-overlay);
-    }
-
     .view-dialog {
-        position: fixed;
-        inset-block-start: var(--view-viewport-top, 0px);
-        inset-block-end: var(--view-viewport-bottom, 0px);
-        inset-inline: 0;
-        z-index: 100;
-        margin: auto;
-        display: flex;
-        flex-direction: column;
-        width: 960px;
-        max-width: calc(100dvw - var(--spacing-4) * 2);
-        height: min(560px, calc(var(--view-viewport-height, 100dvh) - var(--spacing-10) * 4));
-        min-height: 0;
-        padding: 0;
-        border: 0;
-        border-radius: var(--radius-container);
-        background: var(--color-background-surface);
-        color: var(--color-text-primary);
-        box-shadow: var(--shadow-high);
         overscroll-behavior: contain;
-        overflow: hidden;
-        outline: none;
         text-align: start;
-    }
-
-    .view-dialog[data-fullscreen] {
-        inset-block: 0;
-        width: 95dvw;
-        height: 95dvh;
     }
 
     .view-dialog-close {
@@ -62,35 +29,14 @@
     }
 
     .view-confirmation {
-        width: 400px;
-        height: fit-content;
-        max-height: calc(var(--view-viewport-height, 100dvh) - var(--spacing-10) * 2);
         overflow: auto;
-    }
-
-    .view-confirmation-content {
-        display: flex;
-        flex-direction: column;
-        gap: var(--spacing-3);
-        padding: var(--spacing-4);
-    }
-
-    .view-confirmation-actions {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: end;
-        gap: var(--spacing-2);
-        padding: var(--spacing-4);
     }
 
     .view-confirmation-error {
         display: flex;
         align-items: center;
         gap: var(--spacing-2);
-        padding: var(--spacing-3) var(--spacing-4);
-        border-radius: var(--radius-container);
-        background: var(--color-background-red);
-        color: var(--color-text-red);
+        color: var(--destructive);
     }
 
     .view-confirmation-error > svg {
@@ -107,14 +53,6 @@
         font-weight: var(--font-weight-semibold);
         line-height: var(--text-label-leading);
         overflow-wrap: anywhere;
-    }
-
-    @media (max-width: 640px) {
-        .view-confirmation-actions {
-            flex-direction: column-reverse;
-            align-items: stretch;
-            flex-wrap: nowrap;
-        }
     }
 
     @media (forced-colors: active) {

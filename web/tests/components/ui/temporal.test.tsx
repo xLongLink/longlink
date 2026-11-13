@@ -72,8 +72,8 @@ async function choose(user: ReturnType<typeof userEvent.setup>, root: ParentNode
     if (!control) throw new Error(`Missing picker: ${label}`);
     await act(async () => user.click(control));
 
-    const option = [...document.querySelectorAll<HTMLElement>('.view-picker-popup[data-open] [role=option]')].find(
-        (element) => element.textContent === value
+    const option = [...document.querySelectorAll<HTMLElement>('[role=listbox] [role=option]')].find(
+        (element) => !element.closest('[data-closed]') && element.textContent === value
     );
 
     if (!option) throw new Error(`Missing option: ${value}`);

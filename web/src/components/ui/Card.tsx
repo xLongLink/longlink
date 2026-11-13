@@ -1,4 +1,5 @@
 import { NavigationLink } from './Link';
+import { Card as Surface } from '@/components/shadcn/card';
 import type { CSSProperties, MouseEvent, ReactNode } from 'react';
 
 /** Surface gestures must not steal nested controls, portal events, or text selection. */
@@ -130,13 +131,14 @@ export function Card({
         height,
         maxWidth,
         minHeight,
+        padding: 'var(--view-card-padding)',
         '--view-card-padding': `var(--spacing-${String(padding).replace('.', '-')})`,
     };
 
     // The surface forwards only its own gestures; native controls supply keyboard and accessibility semantics.
     return (
-        <div
-            className="view-card"
+        <Surface
+            className={`view-card block gap-0 ${variant === 'transparent' ? 'bg-transparent ring-0' : variant === 'muted' ? 'bg-muted ring-0' : ''}`}
             data-variant={variant}
             data-mode={mode}
             data-pressable-container={mode ? '' : undefined}
@@ -241,6 +243,6 @@ export function Card({
                 />
             ) : null}
             {children}
-        </div>
+        </Surface>
     );
 }

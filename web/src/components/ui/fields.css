@@ -1,33 +1,4 @@
 @layer components {
-    .view-text-input.view-textarea {
-        position: relative;
-        display: block;
-        height: auto;
-        padding: 0;
-    }
-
-    .view-textarea > textarea {
-        box-sizing: border-box;
-        padding-block: var(--spacing-1);
-        padding-inline: var(--spacing-2);
-        resize: vertical;
-    }
-
-    .view-textarea[data-loading] > textarea {
-        padding-inline-end: calc(var(--spacing-2) + var(--spacing-6));
-    }
-
-    .view-textarea-spinner {
-        position: absolute;
-        top: var(--spacing-2);
-        inset-inline-end: var(--spacing-2);
-        width: calc(var(--spacing) * 3.5);
-        height: calc(var(--spacing) * 3.5);
-        color: var(--muted-foreground);
-        pointer-events: none;
-        animation: view-action-spin 1s linear infinite;
-    }
-
     .view-boolean-field {
         display: flex;
         align-items: center;
@@ -185,10 +156,6 @@
     }
 
     @media (prefers-reduced-motion: reduce) {
-        .view-textarea-spinner {
-            animation: none;
-        }
-
         .view-checkbox,
         .view-switch,
         .view-switch-thumb {

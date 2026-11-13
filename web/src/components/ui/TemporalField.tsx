@@ -3,11 +3,11 @@ import { flushSync } from 'react-dom';
 import { FormField } from './FormField';
 import { FieldLabel } from './FieldLabel';
 import type { FieldProps } from './types';
-import { Button } from '@base-ui/react/button';
-import { Popover } from '@base-ui/react/popover';
-import { Input } from '@/components/shadcn/input';
+import { Button } from '@/components/shadcn/button';
 import { CalendarDays, Clock, X } from 'lucide-react';
 import { useEffect, useEffectEvent, useId, useRef, useState, type ReactNode } from 'react';
+import { Popover, PopoverContent, PopoverTitle, PopoverTrigger } from '@/components/shadcn/popover';
+import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from '@/components/shadcn/input-group';
 
 /** Owns editable temporal drafts while only the accepted ISO value owns submission. */
 export function TemporalField<T extends string>(
@@ -34,7 +34,7 @@ export function TemporalField<T extends string>(
     const restoreFocus = useRef(true);
     const [draft, setDraft] = useState<{ source: T | undefined; text: string } | null>(null);
 
-    // Keep the sheet modal only while the primary pointer is coarse, matching its CSS presentation.
+    // Coarse pointers open the picker instead of the software keyboard.
     useEffect(() => {
         const media = window.matchMedia('(pointer: coarse)');
         const change = () => setCoarse(media.matches);
@@ -129,7 +129,7 @@ export function TemporalField<T extends string>(
                     description={props.description}
                     required={props.required}
                 />
-                <Popover.Root
+                <Popover
                     open={open}
                     onOpenChange={(next, details) => {
                         if (next && blocked()) return;
@@ -138,9 +138,8 @@ export function TemporalField<T extends string>(
                     }}
                     modal={coarse ? true : 'trap-focus'}
                 >
-                    <div className="view-text-input view-temporal-input">
-                        <Input
-                            variant="view"
+                    <InputGroup className="data-disabled:opacity-50" data-disabled={props.disabled || undefined}>
+                        <InputGroupInput
                             ref={input}
                             id={id}
                             value={text}
@@ -213,53 +212,60 @@ export function TemporalField<T extends string>(
                                 }
                             }}
                         />
-                        {(text || field.value) && !props.disabled && (
-                            <Button
+                        <InputGroupAddon align="inline-end">
+                            {(text || field.value) && !props.disabled && (
+                                <InputGroupButton
+                                    type="button"
+                                    size="icon-xs"
+                                    aria-label={`Clear ${props.label}`}
+                                    onMouseDown={(event) => event.preventDefault()}
+                                    onClick={() => {
+                                        if (blocked()) return;
+                                        setDraft(null);
+                                        field.onChange(undefined);
+                                        input.current?.focus({ preventScroll: true });
+                                    }}
+                                >
+                                    <X aria-hidden="true" />
+                                </InputGroupButton>
+                            )}
+                            <PopoverTrigger
                                 type="button"
-                                className="view-text-input-clear"
-                                aria-label={`Clear ${props.label}`}
-                                onMouseDown={(event) => event.preventDefault()}
-                                onClick={() => {
-                                    if (blocked()) return;
-                                    setDraft(null);
-                                    field.onChange(undefined);
-                                    input.current?.focus({ preventScroll: true });
+                                render={<InputGroupButton size="icon-xs" />}
+                                aria-label={`Choose ${props.label}`}
+                                aria-disabled={props.disabled || undefined}
+                                onClick={(event) => {
+                                    if (blocked()) event.preventDefault();
                                 }}
                             >
-                                <X aria-hidden="true" />
-                            </Button>
-                        )}
-                        <Popover.Trigger
+                                {props.kind === 'date' ? (
+                                    <CalendarDays aria-hidden="true" />
+                                ) : (
+                                    <Clock aria-hidden="true" />
+                                )}
+                            </PopoverTrigger>
+                        </InputGroupAddon>
+                    </InputGroup>
+                    <PopoverContent
+                        align="start"
+                        className="w-fit max-w-[calc(100vw-1rem)] max-h-[var(--available-height)] overflow-auto"
+                        initialFocus={props.kind === 'date' ? false : true}
+                        finalFocus={() => (restoreFocus.current && !blocked() ? input.current : false)}
+                        aria-label={`Choose ${props.label}`}
+                    >
+                        <PopoverTitle>{props.label}</PopoverTitle>
+                        {/* eslint-disable-next-line react/refs -- The factory renders controls; selection runs only from their event handlers. */}
+                        {props.picker(validValue ? field.value : undefined, select)}
+                        <Button
                             type="button"
-                            className="view-temporal-trigger"
-                            aria-label={`Choose ${props.label}`}
-                            aria-disabled={props.disabled || undefined}
-                            onClick={(event) => {
-                                if (blocked()) event.preventDefault();
-                            }}
+                            variant="outline"
+                            className="view-temporal-close"
+                            onClick={() => setOpen(false)}
                         >
-                            {props.kind === 'date' ? <CalendarDays aria-hidden="true" /> : <Clock aria-hidden="true" />}
-                        </Popover.Trigger>
-                    </div>
-                    <Popover.Portal>
-                        <Popover.Backdrop className="view-temporal-backdrop" />
-                        <Popover.Positioner sideOffset={4} align="start" className="view-temporal-positioner">
-                            <Popover.Popup
-                                className="view-temporal-popup"
-                                initialFocus={props.kind === 'date' ? false : true}
-                                finalFocus={() => (restoreFocus.current && !blocked() ? input.current : false)}
-                                aria-label={`Choose ${props.label}`}
-                            >
-                                <Popover.Title className="view-temporal-title">{props.label}</Popover.Title>
-                                {/* eslint-disable-next-line react/refs -- The factory renders controls; selection runs only from their event handlers. */}
-                                {props.picker(validValue ? field.value : undefined, select)}
-                                <Popover.Close type="button" className="view-temporal-close">
-                                    {props.kind === 'time' ? 'Save' : 'Close'}
-                                </Popover.Close>
-                            </Popover.Popup>
-                        </Popover.Positioner>
-                    </Popover.Portal>
-                </Popover.Root>
+                            {props.kind === 'time' ? 'Save' : 'Close'}
+                        </Button>
+                    </PopoverContent>
+                </Popover>
                 {props.kind === 'time' && (
                     <span className="sr-only" role="status">
                         {validValue && field.value ? props.format(field.value) : ''}
