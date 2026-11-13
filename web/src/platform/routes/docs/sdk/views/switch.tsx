@@ -61,8 +61,7 @@ export default function SwitchPage() {
                 title: 'Preference form',
                 preview: (
                     <FormPreview>
-                        <div className="mx-auto flex w-fit flex-col items-center gap-3">
-                            <SwitchExample />
+                        <div className="mx-auto w-fit">
                             <SwitchField name="notifications" label="Notifications" defaultChecked />
                         </div>
                     </FormPreview>
@@ -71,8 +70,7 @@ export default function SwitchPage() {
 export default function PreferenceForm() {
   return (
     <Form action="/api/example" method="post">
-      <div className="mx-auto flex w-fit flex-col items-center gap-3">
-        <Switch name="enabled" aria-label="Enabled" size="sm" defaultChecked />
+      <div className="mx-auto w-fit">
         <SwitchField name="notifications" label="Notifications" defaultChecked />
       </div>
     </Form>
