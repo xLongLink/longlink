@@ -24,6 +24,8 @@ export default [
             { path: 'docs/sdk/storage', file: './routes/docs/sdk/storage.tsx' },
             { path: 'docs/sdk/testing', file: './routes/docs/sdk/testing.tsx' },
             { path: 'docs/sdk/views', index: true, file: './routes/docs/sdk/views.tsx' },
+            { path: 'docs/sdk/views/button-group', file: './routes/docs/sdk/views/button-group.tsx' },
+            { path: 'docs/sdk/views/action-button-group', file: './routes/docs/sdk/views/action-button-group.tsx' },
 
             // Keep component routes aligned with the published documentation catalog.
             ...componentDocumentation.map(({ slug }) => ({

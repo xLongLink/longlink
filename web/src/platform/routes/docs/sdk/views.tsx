@@ -38,7 +38,6 @@ import { FileViewerExample } from './views/file-viewer';
 import { ViewDialogExample } from './views/view-dialog';
 import { Currency } from '@/components/custom/currency';
 import { CollapsibleExample } from './views/collapsible';
-import { ButtonGroupExample } from './views/button-group';
 import { NumberInputExample } from './views/number-input';
 import { DropdownMenuExample } from './views/dropdown-menu';
 import { Disclosure } from '@/components/custom/disclosure';
@@ -49,7 +48,6 @@ import { componentDocumentation } from '@/platform/publications';
 import { GeneratedAvatarExample } from './views/generated-avatar';
 import { DocumentationArticle } from '@/components/layouts/article';
 import { NativeText as Text } from '@/components/custom/native-text';
-import { ActionButtonGroupExample } from './views/action-button-group';
 import { Tabs, TabsList, TabsTrigger } from '@/components/shadcn/tabs';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { DataTable, proportional } from '@/components/custom/data-table';
@@ -90,8 +88,6 @@ const previews = new Map(
         Maps: <MapsExample height={150} />,
         Avatar: <AvatarExample />,
         GeneratedAvatar: <GeneratedAvatarExample />,
-        ButtonGroup: <ButtonGroupExample />,
-        ActionButtonGroup: <ActionButtonGroupExample />,
         ViewDialog: <ViewDialogExample />,
         Pagination: <PaginationExample />,
         DataPagination: <DataPaginationExample />,

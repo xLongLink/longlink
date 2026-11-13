@@ -1,38 +1,7 @@
-import ViewLayout from './view-layout';
-import { ActionButton } from '@/components/custom/action-button';
-import { ActionButtonGroup } from '@/components/custom/action-button-group';
+import { redirect } from 'react-router';
 
-export default function ActionButtonGroupPage() {
-    return (
-        <ViewLayout
-            name="ActionButtonGroup"
-            properties={[
-                { name: 'label', type: 'string', description: 'Accessible group label.' },
-                {
-                    name: 'orientation',
-                    type: '"horizontal" | "vertical"',
-                    description: 'Layout and keyboard navigation direction.'
-                },
-                { name: 'size', type: '"sm" | "default" | "lg"', description: 'Inherited action size.' },
-                { name: 'isDisabled', type: 'boolean', description: 'Disables every grouped action.' }
-            ]}
-            example={{
-                title: 'Action group',
-                preview: <ActionButtonGroupExample />,
-                code: `<ActionButtonGroup label="Actions">
-  <ActionButton variant="outline">Save</ActionButton>
-  <ActionButton variant="outline">Cancel</ActionButton>
-</ActionButtonGroup>`
-            }}
-        />
-    );
-}
-
-export function ActionButtonGroupExample() {
-    return (
-        <ActionButtonGroup label="Actions">
-            <ActionButton variant="outline">Save</ActionButton>
-            <ActionButton variant="outline">Cancel</ActionButton>
-        </ActionButtonGroup>
-    );
+/** Redirects the former action group reference to the consolidated Buttons page. */
+export function loader() {
+    // Preserve existing documentation links.
+    return redirect('/docs/sdk/views/buttons/', 301);
 }

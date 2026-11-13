@@ -1,6 +1,7 @@
 import ViewLayout from './view-layout';
 import { Button } from '@/components/shadcn/button';
 import { IconButton } from '@/components/custom/icon-button';
+import { ButtonGroup } from '@/components/shadcn/button-group';
 import { ActionButton } from '@/components/custom/action-button';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { ActionButtonGroup } from '@/components/custom/action-button-group';
@@ -68,6 +69,17 @@ export default function ButtonsPage() {
                     description: 'Runs an action with automatic loading and duplicate-click prevention.'
                 },
                 {
+                    name: 'ButtonGroup.orientation',
+                    type: '"horizontal" | "vertical"',
+                    description: 'Connected button layout.'
+                },
+                { name: 'ButtonGroup.aria-label', type: 'string', description: 'Accessible group label.' },
+                {
+                    name: 'ButtonGroup.children',
+                    type: 'ReactNode',
+                    description: 'Native Button or composed control children.'
+                },
+                {
                     type: 'ReactNode',
                     description: 'ActionButton or IconButton children for coordinated keyboard navigation.',
                     name: 'ActionButtonGroup.children'
@@ -130,14 +142,18 @@ export default function ButtonsPage() {
         <IconButton icon="plus" label="Add (large)" size="lg" />
       </Stack>
       <Stack direction="horizontal" gap={4} align="center" wrap="wrap">
+        <ButtonGroup aria-label="Native actions">
+          <Button variant="outline">Save</Button>
+          <Button variant="outline">Cancel</Button>
+        </ButtonGroup>
         <ActionButtonGroup label="Actions">
-           <ActionButton variant="outline">Save</ActionButton>
-           <ActionButton variant="outline">Cancel</ActionButton>
+          <ActionButton variant="outline">Save</ActionButton>
+          <ActionButton variant="outline">Cancel</ActionButton>
           <IconButton icon="plus" label="Add" variant="outline" />
         </ActionButtonGroup>
         <ActionButtonGroup label="Vertical actions" orientation="vertical">
-           <ActionButton variant="outline">Edit</ActionButton>
-           <ActionButton variant="outline">Duplicate</ActionButton>
+          <ActionButton variant="outline">Edit</ActionButton>
+          <ActionButton variant="outline">Duplicate</ActionButton>
         </ActionButtonGroup>
       </Stack>
     </Stack>
@@ -184,6 +200,10 @@ export function ButtonExample() {
                 <IconButton icon="plus" label="Add (large)" size="lg" />
             </Stack>
             <Stack direction="horizontal" gap={4} align="center" wrap="wrap">
+                <ButtonGroup aria-label="Native actions">
+                    <Button variant="outline">Save</Button>
+                    <Button variant="outline">Cancel</Button>
+                </ButtonGroup>
                 <ActionButtonGroup label="Actions">
                     <ActionButton variant="outline">Save</ActionButton>
                     <ActionButton variant="outline">Cancel</ActionButton>

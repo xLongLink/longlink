@@ -85,8 +85,6 @@ export const componentDocumentation = [
     { name: 'GeneratedAvatar', category: 'Display', icon: Users },
     { name: 'Badge', category: 'Display', icon: Circle },
     { name: 'Button', category: 'Action', icon: PanelTop },
-    { name: 'ButtonGroup', category: 'Action', icon: PanelTop },
-    { name: 'ActionButtonGroup', category: 'Action', icon: PanelTop },
     { name: 'Card', category: 'Layouts', icon: PanelTop },
     { name: 'CheckboxInput', category: 'Form', icon: CheckSquare },
     { name: 'Collapsible', category: 'Layouts', icon: ChevronDown },
