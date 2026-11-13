@@ -10,7 +10,6 @@ import { PageContainer } from '@/components/PageContainer';
 import OrganizationManagement from './OrganizationManagement';
 import { NativeText as Text } from '@/components/ui/NativeText';
 import { NativeTextInput } from '@/components/ui/NativeTextInput';
-import '../settings.css';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
 import { useUpdateUser, useAuthenticatedUser } from '@/lib/hooks/use-user';
@@ -62,7 +61,7 @@ function SettingsPage({ user }: { user: z.output<typeof schemas.zCurrentUser> })
                     <Text type="supporting">{user.email}</Text>
                 </div>
             </div>
-            <div className="platform-settings-layout">
+            <div className="grid min-w-0 grid-cols-[260px_minmax(0,1fr)] items-start max-[47.999rem]:grid-cols-[minmax(0,1fr)] max-[47.999rem]:gap-6 [&>nav]:min-w-0">
                 <nav aria-label="Settings sections" className="settings-navigation">
                     <Link
                         to={`${location.pathname}${location.search}#account`}

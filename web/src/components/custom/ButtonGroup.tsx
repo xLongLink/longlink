@@ -30,7 +30,7 @@ export function ButtonGroup({
                 <Toolbar.Root
                     render={<ControlGroup orientation={orientation} />}
                     ref={root}
-                    className="view-button-group"
+                    className="relative data-group-tracking:[&_[data-slot=button]:active:not([data-group-pressed])]:transform-none [@media(pointer:coarse)]:before:absolute [@media(pointer:coarse)]:before:-inset-2 [@media(pointer:coarse)]:before:content-['']"
                     data-orientation={orientation}
                     data-size={size}
                     role="group"

@@ -27,7 +27,7 @@ function TimePicker({
 
     // Reuse the trusted themed picker without giving display parts submission names.
     return (
-        <div className="view-time-picker">
+        <div className="flex max-w-[calc(var(--spacing-8)*10)] flex-wrap gap-2 [&>.view-text-field]:w-auto [&>.view-text-field]:min-w-[calc(var(--spacing-8)*2)] [&>.view-text-field]:flex-1">
             {['Hour', 'Minute', ...(seconds ? ['Second'] : [])].map((label, index) => (
                 <Picker
                     key={label}

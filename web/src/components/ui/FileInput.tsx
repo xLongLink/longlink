@@ -171,7 +171,7 @@ export function NativeFileInput({
             serialize
         >
             <Field
-                className="view-text-field view-file-field"
+                className="view-text-field view-file-field group/file"
                 data-disabled={disabled || undefined}
                 data-mode={mode}
                 data-status={statusType}
@@ -193,7 +193,7 @@ export function NativeFileInput({
                     )}
                 </FieldContent>
                 <InputGroup
-                    className="view-file-input"
+                    className="view-file-input data-[mode=dropzone]:h-auto data-[mode=dropzone]:flex-col data-[mode=dropzone]:gap-2 data-[mode=dropzone]:border-dashed data-[mode=dropzone]:px-4 data-[mode=dropzone]:py-6 data-dragging:border-ring data-dragging:bg-muted group-data-disabled/file:opacity-50"
                     data-mode={mode}
                     data-dragging={(!disabled && dragging) || undefined}
                     data-status={statusType}
@@ -229,7 +229,7 @@ export function NativeFileInput({
                     <Button
                         ref={trigger}
                         id={id}
-                        className="view-file-trigger min-w-0 flex-1 justify-start"
+                        className="view-file-trigger min-w-0 flex-1 justify-start aria-disabled:cursor-default"
                         variant="ghost"
                         type="button"
                         aria-label={fileNames ? `${label}, ${fileNames}` : label}
@@ -244,17 +244,20 @@ export function NativeFileInput({
                         }}
                     >
                         {(mode === 'input' || !files.length) && <Upload aria-hidden="true" />}
-                        <span className="view-file-name" data-placeholder={!files.length || undefined}>
+                        <span
+                            className="min-w-0 truncate data-placeholder:text-muted-foreground"
+                            data-placeholder={!files.length || undefined}
+                        >
                             {fileNames || (dragging && !disabled ? 'Drop files here' : placeholder)}
                         </span>
                     </Button>
                     {statusType && mode === 'input' && (
-                        <StatusIcon className="view-file-status-icon" aria-hidden="true" />
+                        <StatusIcon className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
                     )}
                     <input
                         ref={input}
                         type="file"
-                        className="view-file-native"
+                        className="sr-only [clip-path:inset(50%)]"
                         accept={accept}
                         multiple={multiple}
                         disabled={disabled}
@@ -281,7 +284,7 @@ export function NativeFileInput({
                     )}
                 </InputGroup>
                 {required && (
-                    <span id={`${id}-required`} className="view-file-native">
+                    <span id={`${id}-required`} className="sr-only [clip-path:inset(50%)]">
                         Required
                     </span>
                 )}
@@ -295,7 +298,7 @@ export function NativeFileInput({
                             {message}
                         </FieldDescription>
                     ))}
-                <span className="view-file-native" role="status">
+                <span className="sr-only [clip-path:inset(50%)]" role="status">
                     {!message && fileNames ? `Selected: ${fileNames}` : ''}
                 </span>
             </Field>

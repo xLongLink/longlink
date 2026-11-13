@@ -26,7 +26,6 @@ import { NativeText as Text } from '@/components/ui/NativeText';
 import { NativeStack as Stack } from '@/components/ui/NativeStack';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { Boxes, Building2, CreditCard, Users } from 'lucide-react';
-import '../settings.css';
 import { NativeButton as Button } from '@/components/ui/NativeButton';
 import { DataTable, proportional } from '@/components/custom/DataTable';
 import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
@@ -79,7 +78,7 @@ export default function OrganizationSettings() {
                     <Text type="supporting">Organization</Text>
                 </Stack>
             </Stack>
-            <div className="platform-settings-layout">
+            <div className="grid min-w-0 grid-cols-[260px_minmax(0,1fr)] items-start max-[47.999rem]:grid-cols-[minmax(0,1fr)] max-[47.999rem]:gap-6 [&>nav]:min-w-0">
                 <nav aria-label="Settings sections" className="settings-navigation">
                     <details open>
                         <summary>

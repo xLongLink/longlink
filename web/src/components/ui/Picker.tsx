@@ -158,13 +158,13 @@ export function Picker(props: PickerProps) {
     // Both primitives share presentation, but only the combobox renders an input.
     const row = (item: PickerOption) => (
         <Item key={item.value} value={item.value} disabled={item.disabled}>
-            <span className="view-picker-option-content">
+            <span className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden">
                 {item.icon && (
-                    <span className="view-picker-option-icon" aria-hidden="true">
+                    <span className="inline-flex shrink-0" aria-hidden="true">
                         {item.icon}
                     </span>
                 )}
-                <span className="view-picker-option-copy">
+                <span className="flex min-w-0 flex-col">
                     <span>{item.label ?? item.value}</span>
                     {item.description && <span className="text-xs text-muted-foreground">{item.description}</span>}
                 </span>
@@ -185,11 +185,11 @@ export function Picker(props: PickerProps) {
                 </FieldLabel>
                 {props.description && <FieldDescription id={`${id}-description`}>{props.description}</FieldDescription>}
             </FieldContent>
-            <div ref={control} className="view-picker-control">
+            <div ref={control} className="flex min-w-0 items-center gap-1">
                 <Trigger
                     ref={trigger}
                     id={id}
-                    className="view-picker-trigger aria-disabled:cursor-not-allowed aria-disabled:opacity-50"
+                    className="view-picker-trigger w-full min-w-0 flex-1 aria-disabled:cursor-not-allowed aria-disabled:opacity-50"
                     {...(props.hasSearch ? { render: <Button variant="outline" /> } : {})}
                     aria-labelledby={`${id}-label ${id}-value`}
                     aria-describedby={props.description ? `${id}-description` : undefined}
@@ -198,14 +198,14 @@ export function Picker(props: PickerProps) {
                 >
                     <span
                         id={`${id}-value`}
-                        className="view-picker-value"
+                        className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden data-placeholder:text-muted-foreground [&>span:not(.view-picker-badges)]:truncate"
                         data-placeholder={(props.multiple ? selected.length === 0 : !selectedItem) || undefined}
                     >
                         {selected.length === 0 ? (
                             <span>{props.placeholder ?? 'Select...'}</span>
                         ) : props.multiple ? (
                             props.triggerDisplay === 'badges' ? (
-                                <span className="view-picker-badges">
+                                <span className="view-picker-badges flex min-w-0 items-center gap-1">
                                     {labels.slice(0, 3).map((label, index) => (
                                         <Badge variant="secondary" className="view-picker-badge" key={selected[index]}>
                                             {label}
@@ -223,7 +223,7 @@ export function Picker(props: PickerProps) {
                         ) : (
                             <>
                                 {selectedItem?.icon && (
-                                    <span className="view-picker-option-icon" aria-hidden="true">
+                                    <span className="inline-flex shrink-0" aria-hidden="true">
                                         {selectedItem.icon}
                                     </span>
                                 )}

@@ -39,7 +39,7 @@ export function Dialog(props: {
         <BaseDialog.Root open={props.isOpen} onOpenChange={(open) => props.onOpenChange(open)} disablePointerDismissal>
             <DialogContent
                 ref={popup}
-                className="view-dialog flex min-h-0 flex-col gap-0 overflow-hidden p-0"
+                className="flex min-h-0 flex-col gap-0 overflow-hidden overscroll-contain p-0 text-start forced-colors:border forced-colors:border-[CanvasText]"
                 showCloseButton={false}
                 style={{
                     top: fullscreen
@@ -60,7 +60,7 @@ export function Dialog(props: {
             >
                 <ButtonGroupContext value={null}>
                     <ControlSizeContext value={null}>
-                        <div className="view-dialog-close">
+                        <div className="absolute end-3 top-3 z-1">
                             <BaseDialog.Close
                                 aria-label="Close dialog"
                                 render={<Button variant="ghost" size="icon" type="button" />}
@@ -69,12 +69,17 @@ export function Dialog(props: {
                             </BaseDialog.Close>
                         </div>
                         {props.title && (
-                            <DialogTitle ref={title} render={<div />} tabIndex={-1} className="view-dialog-title">
+                            <DialogTitle
+                                ref={title}
+                                render={<div />}
+                                tabIndex={-1}
+                                className="shrink-0 p-4 pe-12 outline-none"
+                            >
                                 <Heading level={2}>{props.title}</Heading>
                             </DialogTitle>
                         )}
                         <div
-                            className="view-dialog-content"
+                            className="min-h-0 flex-1 overflow-auto"
                             style={{
                                 paddingInline: `calc(var(--spacing-1) * ${props.paddingInline ?? 4})`,
                                 paddingBlockStart: props.title ? `calc(var(--spacing-1) * ${props.gap ?? 3})` : 0

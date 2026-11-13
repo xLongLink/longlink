@@ -165,7 +165,7 @@ export function SolutionPage({
         content = <PageError description="The view could not be loaded." title="Unable to load this view" />;
     } else {
         content = (
-            <div className="solution-page-loading">
+            <div className="flex min-h-[calc(100vh-14rem)] w-full min-w-0 items-center justify-center">
                 <NativeLoading label="Loading" />
             </div>
         );

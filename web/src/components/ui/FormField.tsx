@@ -113,7 +113,7 @@ export function FormField({
             ref={(element) => {
                 fieldRef.current = element;
             }}
-            className="view-form-field"
+            className="flex w-full flex-col gap-2"
         >
             {children}
             {serialize &&

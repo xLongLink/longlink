@@ -13,7 +13,7 @@ export function PageContainer({ className, maxWidth = 1000, ...props }: PageCont
 
     return (
         <div
-            className={`platform-page-container${className ? ` ${className}` : ''}`}
+            className={`platform-page-container mx-auto flex w-full flex-col [--container-padding-block-end:var(--spacing-2)] [--container-padding-block-start:0px] [--container-padding-inline-end:0px] [--container-padding-inline-start:0px]${className ? ` ${className}` : ''}`}
             style={{
                 height: props.height,
                 minHeight: props.minHeight,

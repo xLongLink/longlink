@@ -11,7 +11,6 @@ import { NativeTextInput } from '@/components/ui/NativeTextInput';
 import { NativeStack as Stack } from '@/components/ui/NativeStack';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { NativeButton as Button } from '@/components/ui/NativeButton';
-import '@/platform/components/dialogcontent.css';
 import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
 
 type DeploymentReviewProps = {
@@ -89,8 +88,8 @@ export default function DeploymentReview({ item, onSuccess, onClose }: Deploymen
             }}
         >
             {!candidate ? (
-                <div className="platform-dialog-frame">
-                    <div className="platform-dialog-scroll">
+                <div className="h-[min(560px,calc(100dvh-var(--spacing-10)*4))] min-h-0 min-w-0 overflow-hidden">
+                    <div className="box-border h-full min-h-0 min-w-0 flex-1 overflow-auto p-8">
                         <Stack gap={4} align="center" justify="center" minHeight="100%">
                             <Heading level={2}>Update {item.name}</Heading>
                             <Text as="p" role="status">

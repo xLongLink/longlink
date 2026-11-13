@@ -1,27 +1,11 @@
-@import './components/ui/group.css';
 @import './components/ui/typography.css';
-@import './components/ui/layout.css';
-@import './components/ui/dialog.css';
-@import './components/deletion.css';
-@import './components/ui/menu.css';
-@import './components/ui/navigation.css';
 @import './components/ui/image.css';
 @import './components/ui/card.css';
 @import './components/ui/codeblock.css';
-@import './components/ui/fileinput.css';
-@import './components/ui/selector.css';
-@import './components/ui/temporal.css';
-@import './components/layouts/content.css';
 @import './components/layouts/platform.css';
 @import './components/layouts/publication.css';
 @import './components/ui/table.css';
-@import './components/utils.css';
-@import './components/apiboundary.css';
 @import './components/native-toaster.css';
-@import './components/brand.css';
-@import './components/footer.css';
-@import './components/navbar.css';
-@import './components/solution.css';
 @import './views/runtime.css';
 
 @custom-variant dark {

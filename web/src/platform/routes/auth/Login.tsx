@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import './login.css';
 import { TextField } from './Field';
 import { AuthLayout } from './AuthLayout';
 import { api, ApiError } from '@/lib/api';
@@ -87,9 +86,9 @@ export default function Login() {
             description={null}
         >
             <title>Sign In | LongLink</title>
-            <div className="login-sections">
+            <div className="flex flex-col gap-4">
                 <Divider />
-                <div className="login-controls">
+                <div className="flex flex-col gap-2">
                     <form
                         noValidate
                         action={() =>
@@ -110,19 +109,22 @@ export default function Login() {
                             })()
                         }
                     >
-                        <div className="login-controls">
-                            <div className="login-field">
+                        <div className="flex flex-col gap-2">
+                            <div className="flex flex-col gap-1">
                                 <Text type="label">Email</Text>
                                 <TextField control={form.control} name="email" labelHidden label="Email" type="email" />
                             </div>
-                            <div className="login-field">
-                                <div className="login-password-heading">
+                            <div className="flex flex-col gap-1">
+                                <div className="flex items-center justify-between">
                                     <Text type="label">Password</Text>
-                                    <Link to="/auth/forgot-password" className="login-link login-recovery-link">
+                                    <Link
+                                        to="/auth/forgot-password"
+                                        className="text-[length:var(--text-supporting-size)] leading-(--text-supporting-leading) font-(--text-supporting-weight) text-(--color-text-accent) no-underline hover:underline focus-visible:outline-(length:--focus-outline-width) focus-visible:outline-(--focus-outline-color) focus-visible:outline-solid focus-visible:outline-offset-(--focus-outline-offset)"
+                                    >
                                         Forgot password?
                                     </Link>
                                 </div>
-                                <div className="login-password-control">
+                                <div className="relative flex flex-col">
                                     <TextField
                                         control={form.control}
                                         name="password"
@@ -133,7 +135,7 @@ export default function Login() {
                                         type={isPasswordVisible ? 'text' : 'password'}
                                     />
                                     <button
-                                        className="native-auth-password-toggle"
+                                        className="absolute start-auto end-0 top-0 inline-flex size-(--size-element-md) cursor-pointer items-center justify-center rounded-(--radius-element) border-0 bg-transparent p-0 text-(--color-text-primary) hover:bg-(--color-overlay-hover) active:bg-(--color-overlay-pressed) focus-visible:outline-(length:--focus-outline-width) focus-visible:outline-(--focus-outline-color) focus-visible:outline-solid focus-visible:outline-offset-(--focus-outline-offset)"
                                         aria-label={isPasswordVisible ? 'Hide password' : 'Show password'}
                                         onClick={() => {
                                             // Toggle visibility without changing the password value.
@@ -150,20 +152,20 @@ export default function Login() {
                                     </button>
                                 </div>
                             </div>
-                            <Button className="login-button" type="submit" variant="default">
+                            <Button className="w-full max-w-full" type="submit" variant="default">
                                 <LogIn aria-hidden="true" size={16} />
                                 Sign In
                             </Button>
                         </div>
                     </form>
                     {availableOAuthProviders.length > 0 ? (
-                        <div className="login-controls">
+                        <div className="flex flex-col gap-2">
                             <Divider label="or" />
-                            <div className="login-controls">
+                            <div className="flex flex-col gap-2">
                                 {availableOAuthProviders.map((provider) => (
                                     <Button
                                         key={provider.availability}
-                                        className="login-button"
+                                        className="w-full max-w-full"
                                         variant="secondary"
                                         type="button"
                                         onClick={() =>
@@ -185,7 +187,10 @@ export default function Login() {
                     label={
                         <>
                             New to LongLink?{' '}
-                            <Link to={`/auth/register${registerSearch}`} className="login-link login-register-link">
+                            <Link
+                                to={`/auth/register${registerSearch}`}
+                                className="font-medium text-(--color-text-accent) no-underline hover:underline focus-visible:outline-(length:--focus-outline-width) focus-visible:outline-(--focus-outline-color) focus-visible:outline-solid focus-visible:outline-offset-(--focus-outline-offset)"
+                            >
                                 Create account
                             </Link>
                         </>

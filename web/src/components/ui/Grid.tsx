@@ -62,7 +62,7 @@ export function Grid(props: {
     return (
         <GridCollapseContext value={collapsed}>
             <div
-                className="view-grid"
+                className="grid"
                 style={{
                     gridTemplateColumns: template,
                     rowGap: spacing(props.rowGap ?? props.gap ?? 3),
@@ -93,7 +93,7 @@ export function GridSpan(props: {
 
     return (
         <div
-            className="view-grid-span"
+            className="view-grid-span grid h-full min-w-0 grid-cols-[minmax(0,1fr)]"
             style={{ gridColumn: collapsed || props.columns === 'full' ? '1 / -1' : `span ${props.columns ?? 1}` }}
         >
             {props.children}

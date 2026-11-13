@@ -1,9 +1,0 @@
-@layer components {
-    .jsx-view {
-        display: flex;
-        flex-direction: column;
-        min-height: calc(
-            100dvh - var(--_app-shell-header-height, 0px) - var(--platform-toolbar-height, 0px) - var(--spacing-2) * 4
-        );
-    }
-}

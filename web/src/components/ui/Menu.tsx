@@ -98,7 +98,7 @@ export function Menu({
             <a
                 className={cn(
                     buttonVariants({ variant: 'ghost' }),
-                    'view-section-nav-link w-full justify-start text-start aria-[current=page]:bg-muted'
+                    'w-full justify-start text-start aria-[current=page]:bg-muted'
                 )}
                 href={`#${id}`}
                 aria-current={item === activeItem ? 'page' : undefined}
@@ -118,22 +118,20 @@ export function Menu({
                 }}
             >
                 {item.props.icon && <Icon icon={item.props.icon} size="sm" />}
-                <span className="view-section-nav-label">{item.props.label}</span>
+                <span className="min-w-0 flex-1 truncate">{item.props.label}</span>
             </a>
         );
     }
 
     // CSS changes the rail's position without remounting its disclosures or the active content.
     return (
-        <div className="view-section-menu">
-            <nav className="view-section-nav" aria-label="Settings navigation">
+        <div className="grid min-w-0 grid-cols-[260px_minmax(0,1fr)] items-start max-[768px]:grid-cols-[minmax(0,1fr)]">
+            <nav
+                className="box-border min-w-0 bg-inherit ps-2 pe-6 pb-2 font-sans max-[768px]:pe-2"
+                aria-label="Settings navigation"
+            >
                 {sections.map(({ entries, section }) => (
-                    <div
-                        role="group"
-                        aria-label={section.props.title}
-                        className="view-section-nav-section"
-                        key={section.props.title}
-                    >
+                    <div role="group" aria-label={section.props.title} className="-mx-2 pb-1" key={section.props.title}>
                         <div
                             className={cn(
                                 'truncate pb-1 pe-2 text-xs font-medium text-muted-foreground',
@@ -142,7 +140,7 @@ export function Menu({
                         >
                             {section.props.title}
                         </div>
-                        <div className="view-section-nav-items">
+                        <div className="flex min-w-0 flex-col gap-0.5">
                             {entries.map((entry) => {
                                 if (entry.kind === 'subsection') {
                                     const { icon, label } = entry.group.props;
@@ -154,14 +152,14 @@ export function Menu({
                                                 render={
                                                     <Button
                                                         variant="ghost"
-                                                        className="view-section-nav-link w-full justify-start text-start"
+                                                        className="group/section w-full justify-start text-start"
                                                     />
                                                 }
                                             >
                                                 {icon && <Icon icon={icon} size="sm" />}
-                                                <span className="view-section-nav-label">{label}</span>
+                                                <span className="min-w-0 flex-1 truncate">{label}</span>
                                                 <ChevronDown
-                                                    className="view-section-nav-chevron size-4 shrink-0"
+                                                    className="size-4 shrink-0 group-aria-expanded/section:rotate-180"
                                                     aria-hidden="true"
                                                 />
                                             </CollapsibleTrigger>
@@ -169,7 +167,7 @@ export function Menu({
                                                 keepMounted
                                                 role="group"
                                                 aria-label={label}
-                                                className="view-section-nav-nested"
+                                                className="flex min-w-0 flex-col gap-0.5 ps-6"
                                             >
                                                 {entry.items.map(renderItem)}
                                             </CollapsibleContent>
@@ -183,7 +181,7 @@ export function Menu({
                     </div>
                 ))}
             </nav>
-            <div className="view-section-menu-content" style={{ gap: spacing(gap) }}>
+            <div className="flex min-w-0 flex-col" style={{ gap: spacing(gap) }}>
                 {activeItem?.props.children}
             </div>
         </div>

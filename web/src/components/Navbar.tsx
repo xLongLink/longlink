@@ -52,7 +52,7 @@ export function Navbar({
     return (
         <header
             className={cn(
-                'public-navbar border-b',
+                'border-b px-6',
                 expandOnTop
                     ? [
                           'sticky top-0 z-30',
@@ -63,18 +63,22 @@ export function Navbar({
                     : 'border-border bg-background'
             )}
         >
-            <div className="public-navbar-content" style={{ maxWidth: expandOnTop && !scrolled ? '100%' : maxWidth }}>
+            <div className="mx-auto w-full" style={{ maxWidth: expandOnTop && !scrolled ? '100%' : maxWidth }}>
                 <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
-                    <nav className="public-navbar-bar" aria-label="Main navigation">
-                        <RouterLink to="/" aria-label="LongLink home" className="public-navbar-home">
+                    <nav className="flex w-full flex-wrap items-center px-2 py-3" aria-label="Main navigation">
+                        <RouterLink
+                            to="/"
+                            aria-label="LongLink home"
+                            className="flex min-w-fit flex-1 items-center text-inherit no-underline focus-visible:outline-(length:--focus-outline-width) focus-visible:outline-ring focus-visible:outline-solid focus-visible:outline-offset-(--focus-outline-offset)"
+                        >
                             <Wordmark size="heading" />
                         </RouterLink>
-                        <div className="public-navbar-actions">
-                            <div className="public-navbar-desktop">
+                        <div className="ms-auto flex max-w-full items-center justify-end gap-1">
+                            <div className="hidden items-center gap-6 sm:flex">
                                 <PublicLinks />
                             </div>
                             <SheetTrigger
-                                className="public-navbar-toggle"
+                                className="sm:hidden"
                                 aria-label="Open navigation"
                                 render={<Button variant="ghost" size="icon" type="button" />}
                             >
@@ -104,15 +108,21 @@ export function Navbar({
 
 /** Keeps public destinations and native link gestures identical in both navigation regions. */
 function PublicLinks({ mobile = false, onNavigate }: { mobile?: boolean; onNavigate?: () => void }) {
+    // Keep shared link states identical while preserving the desktop's muted emphasis.
+    const linkClassName = cn(
+        'inline-flex items-center gap-0.5 font-sans text-[length:var(--text-body-size)] leading-(--text-body-leading) no-underline hover:underline focus-visible:outline-(length:--focus-outline-width) focus-visible:outline-ring focus-visible:outline-solid focus-visible:outline-offset-(--focus-outline-offset) [&>svg]:size-3 [&>svg]:shrink-0',
+        mobile ? 'text-inherit' : 'font-medium text-muted-foreground'
+    );
+
     return (
         <>
             {publicLinks.map((link) => (
-                <RouterLink key={link.href} className="public-navbar-link" to={link.href} onClick={onNavigate}>
+                <RouterLink key={link.href} className={linkClassName} to={link.href} onClick={onNavigate}>
                     {link.label}
                 </RouterLink>
             ))}
             <a
-                className="public-navbar-link"
+                className={linkClassName}
                 href="https://github.com/xLongLink/longlink"
                 target="_blank"
                 rel="noopener noreferrer"

@@ -6,7 +6,7 @@ const wordmarkSizeClasses = { default: ' text-base', full: ' w-full', heading: '
 /** Renders the shared LongLink welcome title used by authentication screens. */
 export function Welcome() {
     return (
-        <span className="brand-welcome">
+        <span className="block text-center whitespace-nowrap">
             Welcome to <Wordmark size="inherit" />
         </span>
     );

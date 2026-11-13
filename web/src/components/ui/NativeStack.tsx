@@ -1,4 +1,4 @@
-import './native-stack.css';
+import { cn } from 'cn';
 import { spacing } from './layout';
 import type { Spacing } from './types';
 import { createElement, type CSSProperties, type HTMLAttributes, type Ref } from 'react';
@@ -47,7 +47,10 @@ export function NativeStack({
         {
             ...props,
             ref,
-            className: className ? `native-stack ${className}` : 'native-stack',
+            className: cn(
+                'flex flex-col data-[direction=horizontal]:flex-row data-[justify=start]:justify-start data-[justify=center]:justify-center data-[justify=end]:justify-end data-[justify=between]:justify-between data-[justify=around]:justify-around data-[justify=evenly]:justify-evenly data-[align=start]:items-start data-[align=center]:items-center data-[align=end]:items-end data-[align=stretch]:items-stretch',
+                className
+            ),
             'data-direction': direction,
             'data-justify': justify,
             'data-align': align,

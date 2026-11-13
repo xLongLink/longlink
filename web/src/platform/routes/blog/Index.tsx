@@ -1,4 +1,3 @@
-import './blog.css';
 import { BookOpen } from 'lucide-react';
 import { Page } from '@/components/Page';
 import { Grid } from '@/components/ui/Grid';
@@ -31,7 +30,7 @@ export default function Blog() {
                             </Text>
                         </Stack>
                         <Grid columns={{ minWidth: 280, max: 3, repeat: 'fit' }} gap={4} width="100%">
-                            <div className="blog-card">
+                            <div className="min-w-0 overflow-clip rounded-none border-(length:--border-width) border-(--color-border) bg-transparent p-[calc(var(--spacing-3)-var(--border-width))]">
                                 <Stack className="min-h-80" gap={0} paddingBlock={8} align="center">
                                     <Stack gap={2} align="center">
                                         <BookOpen aria-hidden="true" className="text-primary" size={20} />
@@ -48,8 +47,14 @@ export default function Blog() {
                                     </Stack>
                                 </Stack>
                             </div>
-                            <div aria-hidden="true" className="blog-card min-h-80" />
-                            <div aria-hidden="true" className="blog-card min-h-80" />
+                            <div
+                                aria-hidden="true"
+                                className="min-h-80 min-w-0 overflow-clip rounded-none border-(length:--border-width) border-(--color-border) bg-transparent p-[calc(var(--spacing-3)-var(--border-width))]"
+                            />
+                            <div
+                                aria-hidden="true"
+                                className="min-h-80 min-w-0 overflow-clip rounded-none border-(length:--border-width) border-(--color-border) bg-transparent p-[calc(var(--spacing-3)-var(--border-width))]"
+                            />
                         </Grid>
                     </Stack>
                 </section>

@@ -73,16 +73,26 @@ export function DeletionDialog({
             }}
         >
             <AlertDialogContent
-                className="view-confirmation deletion-dialog"
+                className="max-h-[75dvh] overflow-auto"
                 initialFocus={cancel}
                 aria-busy={isDeleting || undefined}
                 onClick={(event) => event.stopPropagation()}
             >
-                <header className="deletion-header">
-                    <AlertDialogTitle render={<div />}>
+                <header className="flex shrink-0 items-start justify-between gap-3">
+                    <AlertDialogTitle
+                        className="my-[calc(var(--size-element-md)/2-var(--spacing-2)-var(--text-heading-2-size)*var(--text-heading-2-leading)/2)] min-w-0 flex-1"
+                        render={<div />}
+                    >
                         <Heading level={2}>{confirmation.title}</Heading>
                     </AlertDialogTitle>
-                    <Button type="button" variant="ghost" size="icon" aria-label="Close" onClick={onClose}>
+                    <Button
+                        className="-my-2 -me-2"
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        aria-label="Close"
+                        onClick={onClose}
+                    >
                         <X aria-hidden="true" />
                     </Button>
                 </header>

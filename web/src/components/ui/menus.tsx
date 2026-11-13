@@ -103,6 +103,7 @@ export function MenuControl({
     const trigger = (
         <DropdownMenuTrigger
             {...touch}
+            className="touch-none"
             data-menu-trigger=""
             disabled={disabled}
             aria-label={iconOnly ? label : undefined}

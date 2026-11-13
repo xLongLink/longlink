@@ -1,7 +1,6 @@
 import { ApiError } from '@/lib/api';
 import { CircleX } from 'lucide-react';
 import type { ReactNode } from 'react';
-import '@/platform/layouts/auth.css';
 import Brand from '@/platform/layouts/Brand';
 import { Navigate, Outlet } from 'react-router';
 import { PageLoading } from '@/components/Utils';
@@ -26,11 +25,16 @@ export default function AuthenticatedLayout() {
         return (
             <Brand>
                 <title>Unable to Load Account | LongLink</title>
-                <div className="native-auth-center">
-                    <div className="native-auth-recovery">
-                        <div role="status" className="native-auth-banner">
-                            <CircleX aria-hidden="true" className="native-auth-error-icon" />
-                            <p>Unable to load your account.</p>
+                <div className="flex min-h-[calc(100dvh-var(--\_app-shell-header-height,0px)-var(--spacing-4))] w-full items-center justify-center">
+                    <div className="flex max-w-full flex-col items-center gap-4">
+                        <div
+                            role="status"
+                            className="flex max-w-full items-start gap-2 rounded-(--radius-container) bg-destructive-muted px-4 py-3 font-[inherit] text-destructive-foreground forced-colors:outline forced-colors:outline-offset-[-1px] forced-colors:outline-[CanvasText]"
+                        >
+                            <CircleX aria-hidden="true" className="size-5 shrink-0" />
+                            <p className="m-0 min-w-0 text-[length:var(--text-label-size)] leading-(--text-label-leading) font-semibold wrap-anywhere">
+                                Unable to load your account.
+                            </p>
                         </div>
                         <Button
                             type="button"

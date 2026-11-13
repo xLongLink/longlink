@@ -32,7 +32,7 @@ export function Stack({ background, ...props }: StackProps) {
     // Resolve logical padding independently so axis overrides retain precedence.
     return (
         <div
-            className="view-stack"
+            className="flex flex-col"
             style={{
                 width: props.width,
                 height: props.height,
@@ -138,7 +138,7 @@ export function StackItem(props: {
     return (
         <div
             ref={ref}
-            className="view-stack-item"
+            className="view-stack-item min-h-0 min-w-0"
             role={props.isScrollable && overflows ? 'group' : undefined}
             aria-label={props.isScrollable && overflows ? 'Content' : undefined}
             style={{

@@ -10,7 +10,6 @@ import { DocumentationArticle } from '@/components/layouts/Article';
 import { DataTable, proportional } from '@/components/custom/DataTable';
 import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
 import { NativeCodeBlock as CodeBlock } from '@/components/ui/NativeCodeBlock';
-import './viewlayout.css';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/Tabs';
 
 type ViewProperty = { name: string; type: string; description?: string };
@@ -24,8 +23,8 @@ function ExampleWindow({ example }: { example: ViewExample }) {
     // Bound both modes to the same window with a persistent header and scrollable body.
     return (
         <InteractiveCard height={480} padding={0} isClipped>
-            <div className="documentation-example-window">
-                <div className="documentation-example-toolbar bg-surface">
+            <div className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden">
+                <div className="shrink-0 border-b-(length:--border-width) border-(--color-border) bg-surface p-2">
                     <Stack direction="horizontal" justify="between" align="center" gap={3} paddingInline={2}>
                         <Stack direction="horizontal" gap={2} aria-hidden="true" className="shrink-0">
                             <Circle size={12} fill="currentColor" className="text-(--color-window-close)" />
@@ -42,7 +41,10 @@ function ExampleWindow({ example }: { example: ViewExample }) {
                         />
                     </Stack>
                 </div>
-                <div className="documentation-example-body" data-code={showCode || undefined}>
+                <div
+                    className="min-h-0 min-w-0 flex-1 overflow-auto px-4 pt-6 pb-4 data-code:overflow-hidden"
+                    data-code={showCode || undefined}
+                >
                     <Stack className={showCode ? 'hidden' : undefined} aria-label={`${example.title} preview`}>
                         {example.preview}
                     </Stack>

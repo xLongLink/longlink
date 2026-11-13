@@ -1,5 +1,0 @@
-@layer components {
-    [data-menu-trigger] {
-        touch-action: none;
-    }
-}

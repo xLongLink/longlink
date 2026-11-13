@@ -38,9 +38,15 @@ export default function ForgotPassword() {
             />
             {form.formState.isSubmitSuccessful ? (
                 <Stack gap={4}>
-                    <div ref={root} className="native-auth-banner" data-status="success">
+                    <div
+                        ref={root}
+                        className="native-auth-banner flex max-w-full items-start gap-2 rounded-(--radius-container) bg-(--color-success-muted) px-4 py-3 font-[inherit] text-(--color-on-success-muted) forced-colors:outline forced-colors:outline-offset-[-1px] forced-colors:outline-[CanvasText]"
+                        data-status="success"
+                    >
                         <CircleCheck aria-hidden="true" className="size-5 shrink-0" />
-                        <p>{confirmation}</p>
+                        <p className="m-0 min-w-0 text-[length:var(--text-label-size)] leading-(--text-label-leading) font-semibold wrap-anywhere">
+                            {confirmation}
+                        </p>
                         <span ref={channel} className="sr-only" role="status" aria-atomic="true" />
                     </div>
                     <Button href="/login" label="Back to sign in" variant="default" />

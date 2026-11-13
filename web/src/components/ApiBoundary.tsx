@@ -30,10 +30,15 @@ export function ApiBoundary({
                     fallbackRender={
                         fallbackRender ??
                         (({ resetErrorBoundary }) => (
-                            <div className="api-boundary-error">
-                                <div role="status" className="api-boundary-banner">
-                                    <CircleX aria-hidden="true" className="api-boundary-icon" />
-                                    <p>Unable to load this page.</p>
+                            <div className="flex flex-col items-center gap-4 p-6">
+                                <div
+                                    role="status"
+                                    className="flex max-w-full items-start gap-2 rounded-(--radius-container) bg-destructive-muted px-4 py-3 font-[inherit] text-destructive-foreground forced-colors:outline forced-colors:outline-offset-[-1px] forced-colors:outline-[CanvasText]"
+                                >
+                                    <CircleX aria-hidden="true" className="size-5 shrink-0" />
+                                    <p className="m-0 min-w-0 text-[length:var(--text-label-size)] leading-(--text-label-leading) font-semibold wrap-anywhere">
+                                        Unable to load this page.
+                                    </p>
                                 </div>
                                 <Button type="button" variant="default" onClick={resetErrorBoundary}>
                                     Retry

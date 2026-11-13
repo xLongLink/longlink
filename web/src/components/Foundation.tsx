@@ -1,4 +1,3 @@
-import './foundation.css';
 import { useEffect, useRef } from 'react';
 import { industryGroups, sharedUseCaseGroups } from '@/lib/industries';
 
@@ -122,7 +121,7 @@ export function Foundation() {
             ref={sectionRef}
             aria-labelledby="foundation-heading"
             aria-describedby="foundation-motion-description"
-            className="foundation overflow-hidden py-20 sm:py-32"
+            className="foundation overflow-hidden py-20 font-sans sm:py-32"
             data-paused="true"
             tabIndex={0}
         >
@@ -131,16 +130,16 @@ export function Foundation() {
                     Automatic motion pauses while this section has keyboard focus.
                 </p>
                 <MovingRow items={industryNames} label="Industries" />
-                <div className="foundation-copy mx-auto flex flex-col items-center gap-5 px-6 py-10 text-center">
+                <div className="mx-auto flex max-w-[1000px] flex-col items-center gap-5 px-6 py-10 text-center">
                     <h2
                         id="foundation-heading"
-                        className="foundation-heading text-center text-3xl tracking-tight text-balance sm:text-5xl"
+                        className="text-center font-(family-name:--font-family-heading) text-3xl leading-(--text-heading-2-leading) font-(--text-heading-2-weight) tracking-tight text-balance text-foreground sm:text-5xl"
                     >
                         One foundation.
                         <br />
                         Every way you work.
                     </h2>
-                    <p className="foundation-description max-w-xl text-pretty">
+                    <p className="max-w-xl text-[length:var(--text-large-size)] leading-(--text-large-leading) font-(--text-large-weight) text-pretty text-muted-foreground">
                         Start with one process. Build the next. LongLink gives your team a foundation for dedicated
                         business software, across industries and wherever your work takes you.
                     </p>

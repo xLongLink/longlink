@@ -1,4 +1,3 @@
-import './jsxview.css';
 import { ApiError } from '@/lib/api';
 import * as icons from '@/lib/icons';
 import * as host from '@/views/host';
@@ -411,7 +410,10 @@ export function JsxView({
     if (bootstrapState.status === 'preparing') return <PageLoading label="Preparing View" />;
 
     return (
-        <div className="jsx-view" style={{ height }}>
+        <div
+            className="flex min-h-[calc(100dvh-var(--\_app-shell-header-height,0px)-var(--platform-toolbar-height,0px)-var(--spacing-2)*4)] flex-col"
+            style={{ height }}
+        >
             {modal.depth > 0 && !modal.fullscreen && frameBounds && (
                 <ViewBackdrop bounds={frameBounds} depth={modal.depth} />
             )}
